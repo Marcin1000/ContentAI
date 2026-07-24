@@ -53,7 +53,10 @@
         "dmg"
       ],
       "category": "public.app-category.productivity",
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Content AI używa mikrofonu do dyktowania treści i nagrywania materiału do transkrypcji."
+      }
     },
     "dmg": {
       "title": "Content AI"

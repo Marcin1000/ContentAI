@@ -1,113 +1,141 @@
-# Content AI - instrukcja naniesienia dzisiejszych zmian (odbrand i DHL)
+# Content AI - zmiany F1-F17 i reskin: co to jest i jak tego pilnować
 
-Ten pakiet pozwala nanieść wszystkie zmiany z dzisiejszej sesji na dowolną kopię aplikacji
-Content AI, w wersji odbrandowanej i z brandingiem DHL. Zawiera dwa skrypty, które są dokładnym,
-przetestowanym zapisem zmian (mają wpisane konkretne stringi do podmiany).
+Ten dokument opisuje zmiany, które kiedyś nanoszono na aplikację skryptami. **Dziś wszystkie
+są już wtopione w `app/contentai.html`** — nie ma ich czym „nanosić", są częścią kodu.
 
-Proces jest dwuetapowy:
-1. Poprawki bazowe (F1-F11) - `rebuild_all.py`
-2. Warstwa kinowa (reskin: Faza 1+2+3 + splash + mobile) - `apply_faza.py`
+Dokument służy teraz do dwóch rzeczy:
+1. wyjaśnia, co każda zmiana robi i gdzie jej szukać, gdy trzeba coś zmodyfikować;
+2. opisuje, jak sprawdzić, że żadna z nich nie wypadła ze źródła (`sprawdz_zrodlo.py`).
 
-Kolejność jest istotna: najpierw poprawki, potem reskin.
+---
 
+## Jak dziś wprowadza się zmianę
 
-## Jak uruchomić
+Nie ma etapu „patchowania". Edytujesz `app/contentai.html` bezpośrednio, a warianty
+keys/proxy/owner powstają z niego przy budowaniu:
 
-### Etap 1 - poprawki bazowe (`rebuild_all.py`)
-Skrypt sam obsługuje obie wersje (DHL i odbrand) i sam wykrywa różnice brandingowe.
-Na górze pliku, w słowniku `KITS`, ustaw ścieżki do swoich plików źródłowych:
-- `dev` - czytelny wariant DEV (np. ContentAI.html albo DHL_ContentAI.html)
-- `owner` - wariant z kluczem w pliku
-- `out` - katalog docelowy na warianty
-- `btn` - kolor przycisku panelu Klucze API (`var(--accent,#d97706)` dla odbrand, `var(--red)` dla DHL)
+```bash
+cd pakowanie
+python3 warianty.py --wszystkie      # trzy warianty do app/dist/
+python3 zbuduj_web.py                # payload web/ dla opakowań
+```
 
-Uruchom: `python3 rebuild_all.py`
-Efekt: pliki `web-keys.html`, `web-proxy.html`, `web-owner.html` z naniesionymi F1-F11.
+Jeśli zmiana ma dotyczyć tylko części wariantów, otocz ją dyrektywą — komentarz HTML
+w treści strony, komentarz JS wewnątrz `<script>`:
 
-### Etap 2 - reskin (`apply_faza.py`)
-Na górze ustaw:
-- `SRC` - wariant keys z etapu 1 (np. .../zrodlo/web-keys.html)
-- `OUT` - plik wynikowy (np. ContentAI_faza2.html)
+```html
+<!--@@IF keys-->        //@@IF owner,proxy
+  ...tylko keys           ...owner i proxy
+<!--@@ELSE-->           //@@ELSE
+<!--@@ENDIF-->          //@@ENDIF
+```
 
-Uruchom: `python3 apply_faza.py`
-Efekt: gotowa reskinowana aplikacja (splash, animacje, poprawki mobile).
+Pełny opis dyrektyw: `../README.md`, sekcja „Dyrektywy warunkowe".
 
+---
 
-## Co dokładnie zmieniają skrypty
+## Kontrola po zmianie
 
-### Etap 1 - poprawki bazowe (funkcje w `rebuild_all.py`)
+```bash
+cd narzedzia
+python3 sprawdz_zrodlo.py            # buduje 3 warianty i sprawdza każdą poprawkę
+python3 sprawdz_zrodlo.py --cicho    # tylko podsumowanie (do CI)
+```
 
-| Kod | Co robi | Gdzie / kotwica |
-|-----|---------|-----------------|
-| F1 | Render historii używa `_t()` zamiast sztywnego PL | `${history.length ? 'Brak wyników...' : 'Brak historii...'}` |
-| F2 | Dodaje klucz i18n `history-no-filter` (PL i EN) | słowniki i18n, po `history-empty` |
-| F3 | Wykrywa język przegladarki przy 1. uruchomieniu | `var currentLang = localStorage.getItem(...) || 'pl'` |
-| F4 | Panel Klucze API (wariant keys): pozycja w menu, klucze z localStorage, modal z i18n, komunikat nokey | tylko wariant DEV z placeholderami `WSTAW_TUTAJ...` |
-| F5 | Nazwa sekcji Kluczowe wnioski w języku artykułu | glowny prompt, `"Kluczowe wnioski" (or its equivalent...)` |
-| F6 | Prompt SERP: jezyk POZA schematem JSON (naprawia parsowanie, przywraca przycisk SERP) | `fetchSerpContext`, `in the same language as keyword` |
-| F7 | Spinner: natychmiastowy pierwszy krok (usuwa stary komunikat Premium) + zaszyty PL komunikat premium -> `_t()` | `const activeSteps = buildSteps(...)` + `'Premium: oceniam i poprawiam...'` |
-| F8 | Przerobki (repurpose) w jezyku tresci zamiast Napisz po polsku | `runRepurpose`, 5 promptow + system prompt |
-| F9 | Auto-poprawka SEO/AIO: jezyk w improvePrompt + usuniecie mylacego prefiksu Premium | `improvePrompt` + `'Premium: ' + (currentLang...)` |
-| F10 | Usuwa regule CSS psujaca panele (tylko odbrand; DHL jej nie ma) | `.seo-panel, .aio-panel { position: relative; }` (warunkowo) |
-| F11 | Uzupelnianie luk: status tylko na gorze, bez skoku na dol | `art.appendChild(_genInd);` + `_genInd.scrollIntoView(...)` |
-| F12 | Dropdown Przerobek: z-index nad sidebar (200 -> 9000) + otwieranie w prawo (`left:0;right:auto`) | CSS `.repurpose-menu { ... z-index:200 }` |
-| F13 | Panel Luk semantycznych: scroll przy dlugiej liscie (`max-height:65vh;overflow-y:auto`) | `id="gap-panel" style="...margin:0 0 0"` |
-| F14 | Przycisk generacji sekcji: krecace sie kolko (`progress-spinner`) zamiast klepsydry. Kolko + tekst w wewnetrznym wrapperze `inline-flex; align-items:center; gap:8px` (pionowe wyrownanie i rowny odstep, niezaleznie od renderu `<button>`) | `if (btn) { btn.disabled = true; btn.textContent = _t('msg-spin-sections'); }` |
-| F16 | Eksport PDF: jawne wyciagniecie meta-box z klonu i doklejenie na samym koncu (gwarancja pozycji) | `function _runPdf() { const articleContent = buildContent(art.innerHTML); }` |
-| F17 | Empty state: gwiazdka jako wysrodkowany SVG zamiast znaku Unicode U+2726 (znak nie jest optycznie wysrodkowany w glyphie na fontach mobilnych) | `<div class="placeholder-box">✦</div>` |
+Skrypt zna sygnaturę każdej zmiany z tabel poniżej: fragment, który **musi** wystąpić po
+poprawce, i często fragment sprzed poprawki, który **nie może** wrócić. Dzięki temu wychodzi
+zarówno wycięcie zmiany, jak i cofnięcie jej do stanu pierwotnego. Kod wyjścia 1 przy
+jakiejkolwiek niezgodności.
 
-Uwaga do docx: meta-box w eksporcie docx ma juz wymuszone jasne tlo (`.meta-box { background:#FFF8CC }`
-w osobnym stylu eksportu, niezalezne od trybu dark aplikacji), wiec render docx jest poprawny bez
-osobnego fixu (dlatego nie ma F15 w kodzie zrodlowym).
+Poza tym warto przejść ręcznie:
 
-### Etap 2 - reskin (`apply_faza.py`, append-only + splash)
+- aplikacja wstaje w ciemnym motywie, splash pokazuje się raz na sesję
+- panele SEO / AIO / AEO / GEO otwierają się w tym samym miejscu
+- uzupełnianie luk nie przewija na dół artykułu
+- przeróbki, auto-poprawka i sekcja wniosków wychodzą w języku treści
+- analiza SERP zwraca dane i pokazuje przycisk SERP
 
-- Splash (Faza 3): ciemny `#07080D` na stale (nie `var(--bg)`, bo w light-mode robi sie jasny),
-  czasteczki 2D na caly ekran, logo + pasek, raz na sesje (sessionStorage), pomijalny tapnieciem,
-  reduced-motion pomija. Wstawiany PO `</head>` i realnym `<body>` (uwaga: w `<head>` jest
-  komentarz CSS z tekstem `<body>` - nie trafiac w niego, stad szukanie po `</head>`).
-- Faza 1: przejscia zakladek + wejscie pol formularza (sterowane JS, bez migania przy powrocie
-  z Grafiki/Audio - guard `MODULE`, opakowane `switchTab` i `switchMobileTab`).
-- Faza 2: odliczanie wyniku SEO/AIO/AEO/GEO (0 -> wynik), pasek postepu generowania tresci,
-  pasek postepu generowania grafiki (obserwacja `#img-spinner`, ta sama mechanika co dla tresci:
-  wypelnianie 0 -> 92% podczas generacji, 100% i reset po zakonczeniu), pop nowego slowa
-  kluczowego, wejscia widokow, wejscie paneli Grafika/Audio, press przyciskow.
-- Pozycja paneli oceny (CSS): SEO/AIO/AEO/GEO w tym samym miejscu (`right:20px;top:60px;width:290px`,
-  scoped do `body:not(.is-mobile)`).
-- Mobile: pusty stan i spinner wysrodkowane w pionie (`min-height:52vh`), immersyjny scroll do
-  miejsca generacji po kliknieciu Generuj.
+---
 
+## Poprawki bazowe F1-F17
 
-## Roznice DHL vs odbrand (skrypty obsluguja to automatycznie)
+| Kod | Co robi | Gdzie szukać w źródle |
+|-----|---------|-----------------------|
+| F1 | Render historii przez `_t()` zamiast sztywnego polskiego tekstu | `${history.length ? _t('history-no-filter') : _t('history-empty')}` |
+| F2 | Klucz i18n `history-no-filter` w słowniku PL i EN | obok `history-empty` |
+| F3 | Wykrycie języka przeglądarki przy pierwszym uruchomieniu | `var currentLang = localStorage.getItem('cai_lang')` |
+| F4 | Panel Klucze API: pozycja w menu, klucze z `localStorage`, modal z i18n, komunikat „brak klucza" | tylko wariant `keys`; `openKeysModal`, `id="keys-modal"` |
+| F5 | Nazwa sekcji „Kluczowe wnioski" w języku artykułu | `const kwName = ({ 'Polish':'Kluczowe wnioski'` |
+| F6 | Prompt SERP: język **poza** schematem JSON — naprawia parsowanie i przywraca przycisk SERP | `_serpLang`, `fetchSerpContext` |
+| F7 | Spinner pokazuje pierwszy krok natychmiast; zaszyty polski komunikat premium → `_t()` | `_tickStep`, `msg-spin-premium-eval` |
+| F8 | Przeróbki w języku treści zamiast „Napisz po polsku" | `_rpLang`, `runRepurpose` |
+| F9 | Auto-poprawka SEO/AIO trzyma język; usunięty mylący prefiks „Premium:" | `improvePrompt`, `LANGUAGE: Write the improved article` |
+| F10 | Usunięta reguła CSS psująca panele oceny | brak `.seo-panel, .aio-panel { position: relative; }` |
+| F11 | Uzupełnianie luk: status tylko na górze, bez skoku na dół artykułu | komentarz „status generowania sekcji tylko na gorze" |
+| F12 | Dropdown przeróbek nad sidebarem (`z-index` 200 → 9000) i otwierany w prawo | `.repurpose-menu`, `left:0;right:auto` |
+| F13 | Panel Luk semantycznych scrolluje przy długiej liście | `max-height:65vh;overflow-y:auto` |
+| F14 | Przycisk generacji sekcji: kręcące się kółko zamiast klepsydry, kółko i tekst w `inline-flex` | `progress-spinner` |
+| F16 | Eksport PDF: meta-box wyciągany z klonu i doklejany na samym końcu | `_runPdf`, `_mbClone` |
+| F17 | Empty state jako wyśrodkowany SVG zamiast znaku U+2726 (znak siedzi krzywo w glyphie na fontach mobilnych) | `<div class="placeholder-box"><svg` |
 
-- Klucz localStorage jezyka: `dhl_ai_lang` (DHL) vs `cai_lang` (odbrand). F3 obsluguje oba.
-- Kolor we wskazniku luk: `var(--red)` (DHL) vs `var(--accent)` (odbrand). F11 jest niezalezny
-  od koloru (usuwa tylko append + scroll).
-- Bug CSS z F10 wystepuje tylko w odbrand. Skrypt usuwa go warunkowo (w DHL nic nie robi).
-- Reskin uzywa `var(--accent)`, ktory rozwiazuje sie zaleznie od motywu - dziala w obu.
+**Dlaczego nie ma F15.** Meta-box w eksporcie DOCX ma wymuszone jasne tło (`.meta-box { background:#FFF8CC }`
+w osobnym stylu eksportu, niezależnym od ciemnego motywu aplikacji), więc render DOCX był poprawny
+bez osobnej poprawki.
 
+---
 
-## Branding splasha (przelacznik `SPLASH` w apply_faza.py)
+## Warstwa reskinu
 
-Na gorze `apply_faza.py` jest przelacznik `SPLASH`:
-- `SPLASH='odbrand'` - splash z czasteczkami bursztyn+cyan na ciemnym tle (#07080D), wordmark CONTENTAI.
-- `SPLASH='dhl'` - splash tradycyjny: zolte tlo DHL (#FFCC00), oficjalne SVG logo DHL (czerwone #D40511),
-  wordmark "Content AI" 1:1 z topbarem aplikacji (font DM Sans, Content waga 500, AI waga 700, kolor #D40511),
-  pasek ladowania czerwony, bez czastek. Ta sama mechanika: raz na sesje (sessionStorage), fade out,
-  pomijalny tapnieciem, reduced-motion pomija.
+| Element | Co robi | Gdzie szukać |
+|---------|---------|--------------|
+| Splash | Ciemne tło `#07080D` na stałe (nie `var(--bg)`, bo w jasnym motywie robiło się białe), cząsteczki na cały ekran, logo i pasek, raz na sesję (`sessionStorage`), pomijalny tapnięciem, pomijany przy reduced-motion | `id="cin-splash"`, `id="cin-splash-css"` |
+| Faza 1 | Przejścia zakładek i wejście pól formularza, bez migania przy powrocie z Grafiki/Audio | `<style id="cin-reskin">`, `switchTab` |
+| Faza 2 | Odliczanie wyniku SEO/AIO/AEO/GEO od zera, pasek postępu treści i grafiki, pop nowego słowa kluczowego, wejścia widoków | `cin-progress`, `#img-spinner` |
+| Pozycja paneli | SEO/AIO/AEO/GEO w tym samym miejscu, tylko poza mobile | `body:not(.is-mobile)` |
+| Mobile | Pusty stan i spinner wyśrodkowane w pionie, scroll do miejsca generacji po kliknięciu Generuj | `min-height:52vh` |
 
-Dla `SPLASH='dhl'` skrypt dodatkowo przekolorowuje reskin na branding DHL (pasek postepu tresci i grafiki
-oraz focus): gradient bursztyn+cyan -> `#D40511`+`#FFCC00`, poswiata spinnera -> `rgba(212,5,17,.35)`,
-`var(--accent)` -> `#D40511`. Font DM Sans jest juz ladowany w `<head>` aplikacji DHL, wiec wordmark
-dziedziczy dokladny krój bez dodatkowego importu.
+Uwaga historyczna: splash wstawiano **po** `</head>` i realnym `<body>`, bo w `<head>` jest
+komentarz CSS zawierający tekst `<body>`. Dziś nie ma to znaczenia (splash jest już w źródle),
+ale ta pułapka wraca przy każdym skrypcie, który wstrzykuje coś „po `<body>`".
 
+---
 
-## Weryfikacja po naniesieniu (szybka checklista)
+## Różnice między wariantami
 
-- Aplikacja wstaje normalnie (ciemny motyw), splash na start (raz na sesje).
-- Bilans tagow: `<style>` == `</style>` oraz `<script>` == `</script>` (gdyby sie rozjechalo,
-  to znak zlego wstrzykniecia - patrz uwaga o komentarzu `<body>` w `<head>`).
-- Panele SEO/AIO/AEO/GEO otwieraja sie w tym samym miejscu.
-- Uzupelnianie luk nie rzuca na dol artykulu.
-- Przerobki, auto-poprawka i sekcja wnioskow wychodza w jezyku tresci.
-- Analiza SERP zwraca dane i pokazuje przycisk SERP.
+Warianty różnią się w 10 miejscach, wszystkie oznaczone dyrektywami w źródle:
+
+- pozycja „Klucze API" w menu ustawień — tylko `keys`
+- klucze i18n panelu, słownik PL i EN — tylko `keys`
+- komunikat „brak klucza" (PL i EN) — `keys` kieruje do panelu, `owner`/`proxy` do edycji pliku
+- deklaracja `API_KEY` — `keys` z `localStorage`, `owner` z placeholderem, `proxy` puste + adresy workera
+- deklaracje `OPENAI_API_KEY` i `ELEVEN_API_KEY` — jak wyżej
+- `OWNER_MODE` — `true` tylko w `owner`
+- modal Kluczy API wraz ze skryptem — tylko `keys`
+
+---
+
+## Co zniknęło z tego katalogu i gdzie tego szukać
+
+Były tu dwa skrypty: `rebuild_all.py` (nanosił F1-F17 i budował trzy warianty)
+i `apply_faza.py` (nanosił reskin). Usunięto je, bo:
+
+- ich zadanie jest wykonane — wszystkie zmiany są w źródle;
+- nie dało się ich uruchomić: odwoływały się do ścieżek `/home/claude/...` i do czytelnych
+  plików DEV (`ContentAI.html`, `ContentAI_owner.html`), których nie było w przekazanych paczkach;
+- budowanie wariantów przejął `pakowanie/warianty.py`, który działa na jednym źródle.
+
+Oba pliki zostają w historii gita — w commicie, który wniósł Content AI do repo:
+
+```bash
+git show c658683:contentai/narzedzia/rebuild_all.py
+git show c658683:contentai/narzedzia/apply_faza.py
+```
+
+Zawierają dokładne pary „string przed → string po" dla każdej poprawki, przydatne przy
+analizie, skąd wziął się dany fragment kodu.
+
+**Jedna rzecz nie ma dziś odpowiednika:** `apply_faza.py` miał przełącznik `SPLASH='dhl'`,
+który przemalowywał splash i reskin na branding DHL (żółte tło `#FFCC00`, logo DHL `#D40511`,
+czerwony pasek ładowania, bez cząsteczek). W repo jest wyłącznie wersja odbrandowana.
+Gdyby wariant brandowany był znów potrzebny, trzeba go świadomie odtworzyć — to decyzja
+o umieszczeniu cudzego znaku towarowego w repozytorium, nie zwykła zmiana techniczna.

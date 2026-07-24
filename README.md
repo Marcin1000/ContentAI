@@ -85,7 +85,9 @@ contentai/
     zbuduj_web.py      buduje payload web/ z wybranego wariantu
     electron/          Windows (.exe) i macOS (.dmg)
     capacitor/         Android (APK) i iOS (Xcode) + ikony natywne i splashe
-  narzedzia/         skrypty patchujące z sesji, w której powstały zmiany F1–F17 + reskin
+  narzedzia/
+    sprawdz_zrodlo.py  kontrola, czy źródło nadal zawiera poprawki F1–F17 i reskin
+    INSTRUKCJA_...md   co robi każda z tych zmian i gdzie jej szukać
   dokumenty/         AdminGuide + dokumentacja v27 (PL/EN) + ocena vs konkurencja
   prezentacje/       PL/ i EN/ — deck produktowy, onboarding, security
 ```
@@ -124,23 +126,35 @@ w aplikacji natywnej.
 
 ## Stan zastany — co trzeba wiedzieć przed dalszą pracą
 
-### 1. Skrypty w `narzedzia/` są dokumentacją, nie narzędziem
+### 1. Poprawki F1–F17 i reskin są wtopione w źródło
 
-`rebuild_all.py` i `apply_faza.py` generowały warianty z plików `ContentAI.html`
-i `ContentAI_owner.html`. **Tych plików nie było w przekazanych paczkach** — skrypty
-odwołują się do nieistniejących ścieżek `/home/claude/...` i nie da się ich uruchomić.
+Nie ma etapu „patchowania" — te zmiany są częścią `app/contentai.html`. Pilnuje ich
+`narzedzia/sprawdz_zrodlo.py`: buduje wszystkie trzy warianty i sprawdza, czy w każdym
+widać ślad po każdej zmianie. Zna sygnaturę „po poprawce" i „sprzed poprawki", więc wyłapuje
+zarówno wycięcie zmiany, jak i cofnięcie jej. Kod wyjścia 1 przy niezgodności, więc nadaje
+się do CI.
 
-Zastąpił je `pakowanie/warianty.py`, który buduje warianty z `app/contentai.html`.
-Skrypty zostają jako zapis tego, co i gdzie zostało zmienione w F1–F17 i w reskinie
-(kotwice, konkretne stringi) — przydatne przy analizie, skąd wziął się dany fragment kodu.
+```bash
+cd narzedzia && python3 sprawdz_zrodlo.py --cicho
+```
+
+Poprzednie skrypty (`rebuild_all.py`, `apply_faza.py`) usunięto — nie dało się ich uruchomić
+(ścieżki `/home/claude/...`, brak plików DEV), a ich zadanie jest wykonane. Zostają w historii
+gita, szczegóły w `narzedzia/INSTRUKCJA_naniesienia_zmian.md`.
 
 Jedno źródło powstało przez złożenie trzech wariantów z powrotem w komplet, z weryfikacją
 przez porównanie bajtowe: warianty `owner` i `proxy` odtwarzają się **co do bajtu**, a `keys`
 różni się jedną linią komentarza. Ta różnica jest zamierzona — `keys` z paczki miał starszą
-wersję komentarza niż ta, którą generuje bieżący `apply_faza.py`, więc ujednolicono do wersji
+wersję komentarza niż ta, którą generował bieżący `apply_faza.py`, więc ujednolicono do wersji
 zgodnej z narzędziem.
 
-### 2. Zasoby natywne pochodzą ze starszej paczki
+### 2. Wariant brandowany nie ma odpowiednika
+
+`apply_faza.py` miał przełącznik `SPLASH='dhl'`, przemalowujący splash i reskin na branding DHL.
+W repo jest wyłącznie wersja odbrandowana. Odtworzenie wariantu brandowanego to świadoma decyzja
+o umieszczeniu cudzego znaku towarowego w repozytorium, nie zwykła zmiana techniczna.
+
+### 3. Zasoby natywne pochodzą ze starszej paczki
 
 `ContentAI_komplet_reskin.zip` miał nowszy kod aplikacji, ale **zgubił** ikony natywne
 i część instrukcji. Przy przenoszeniu odtworzono ze starszego `ContentAI_pakowanie.zip`:
@@ -153,7 +167,7 @@ i część instrukcji. Przy przenoszeniu odtworzono ze starszego `ContentAI_pako
 
 Ikony są odbrandowane (bursztynowa gwiazda na `#07080D`), zgodne z logo z showcase.
 
-### 3. Aplikacja nie działa offline
+### 4. Aplikacja nie działa offline
 
 Biblioteki do plików i fonty ładują się z CDN, a same generacje i tak wymagają internetu.
 Pełny offline to osobny zakres (wbudowanie bibliotek lokalnie).
@@ -174,15 +188,16 @@ przeróbek nad sidebarem, scroll panelu Luk, spinner sekcji, eksport PDF, empty-
 zakładek i wejścia pól, odliczanie wyników oceny, paski postępu treści i grafiki, ujednolicona
 pozycja paneli oceny, poprawki mobile.
 
-`apply_faza.py` ma przełącznik `SPLASH` — wariant `odbrand` (bursztyn + cyan) i `dhl`
-(żółte tło, logo DHL). W repo jest wersja odbrandowana.
+Obecność każdej z tych zmian sprawdza `narzedzia/sprawdz_zrodlo.py`.
 
 ---
 
 ## Checklista weryfikacyjna po zmianach
 
+Automatycznie — `cd narzedzia && python3 sprawdz_zrodlo.py` (buduje trzy warianty, sprawdza
+obecność wszystkich poprawek oraz bilans `<style>`/`<script>`). Ręcznie:
+
 - Aplikacja wstaje w ciemnym motywie, splash pokazuje się raz na sesję
-- Bilans tagów: `<style>` == `</style>`, `<script>` == `</script>`
 - Panele SEO / AIO / AEO / GEO otwierają się w tym samym miejscu
 - Uzupełnianie luk nie przewija na dół artykułu
 - Przeróbki, auto-poprawka i sekcja wniosków wychodzą w języku treści

@@ -17,10 +17,27 @@
  *   POST /api/images → proxy do OpenAI API   (generowanie grafik)
  */
 
-// Dozwolone originy — dodaj domeny z których korzystają Twoi klienci
+// Dozwolone originy — dodaj domeny z których korzystają Twoi klienci.
+//
+// Uwaga: nagłówek Origin jest wiarygodny tylko w przeglądarce — klient inny niż
+// przeglądarka może wpisać dowolną wartość. To filtr odsiewający obce strony WWW,
+// a nie mechanizm uwierzytelniania. Klucze i tak chroni to, że nigdy nie opuszczają workera.
+
+// Dopasowanie po dokładnej wartości (bez prefiksu, żeby https://localhost.cokolwiek.pl nie przeszło)
 const ALLOWED_ORIGINS = [
-  'file://',   // lokalne pliki HTML (Android/desktop)
-  'null',      // niektore przegladarki dla file://
+  'null',                    // niektore przegladarki dla file://
+  'https://localhost',       // Capacitor Android (androidScheme: "https")
+  'http://localhost',        // lokalny podglad (python3 -m http.server)
+];
+
+// Dopasowanie po prefiksie — schematy aplikacji natywnych, gdzie host bywa pusty lub zmienny
+const ALLOWED_ORIGIN_PREFIXES = [
+  'file://',                 // lokalne pliki HTML
+  'app://',                  // Electron (Windows/macOS) — payload serwowany jako app://./index.html
+  'capacitor://',            // Capacitor iOS (domyslnie capacitor://localhost)
+  'ionic://',                // starsze wersje Capacitora/Ionica na iOS
+  'http://localhost:',       // lokalny podglad na dowolnym porcie
+  'https://localhost:',      // Capacitor Android z jawnym portem
 ];
 
 export default {
@@ -37,7 +54,8 @@ export default {
 
     // ── Sprawdz origin ──────────────────────────────────────────────────────
     const origin = request.headers.get('Origin') || 'null';
-    const allowed = ALLOWED_ORIGINS.some(o => origin === o || origin.startsWith(o));
+    const allowed = ALLOWED_ORIGINS.includes(origin)
+      || ALLOWED_ORIGIN_PREFIXES.some(o => origin.startsWith(o));
     if (!allowed) {
       console.warn(`Blocked origin: ${origin}`);
       return new Response('Unauthorized', { status: 403 });
