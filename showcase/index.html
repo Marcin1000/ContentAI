@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content AI - silnik treści pod Google i modele AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07080B; --bg2:#0B0D12;
+    --amber:#F6A623; --amber-soft:#FFC661; --cyan:#35E0D0; --glow-amber:rgba(245,163,0,0.34);
+    --text:#ECEBE6; --muted:#A7A9B0;
+    --line:rgba(255,255,255,0.09); --glass:rgba(255,255,255,0.035); --glass-brd:rgba(255,255,255,0.10);
+    --maxw:1200px;
+    --display:"IBM Plex Sans",system-ui,sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--text);font-family:var(--body);line-height:1.5;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  ::selection{background:var(--amber);color:#101010}
+  a{color:inherit;text-decoration:none}
+  canvas#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+  .veil{position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:linear-gradient(180deg, rgba(7,8,11,0.78) 0%, rgba(7,8,11,0.42) 26%, rgba(7,8,11,0.42) 62%, rgba(7,8,11,0.9) 100%),
+               radial-gradient(120% 80% at 50% 0%, rgba(7,8,11,0) 45%, rgba(7,8,11,0.55) 100%)}
+  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .wrap{position:relative;z-index:2}
+  .container{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+
+  /* NAV + LOGO jak w generatorze */
+  header{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+    padding:18px 28px;transition:background .4s ease,border-color .4s ease;border-bottom:1px solid transparent}
+  header.scrolled{background:rgba(7,8,11,0.72);backdrop-filter:blur(14px);border-bottom-color:var(--line)}
+  .brand{display:flex;align-items:center;gap:13px;font-family:var(--mono);text-transform:uppercase}
+  .ca-mark{color:var(--amber);display:inline-flex;line-height:0;filter:drop-shadow(0 0 5px var(--glow-amber));animation:caSpark 7s ease-in-out infinite}
+  .ca-mark svg{width:24px;height:24px;display:block}
+  .brand .word{color:var(--text);font-weight:600;font-size:14px;letter-spacing:0.22em}
+  .brand .word b{color:var(--amber);font-weight:700;margin-left:0.16em}
+  @keyframes caSpark{0%,100%{filter:drop-shadow(0 0 5px var(--glow-amber));transform:rotate(0deg) scale(1)}50%{filter:drop-shadow(0 0 12px var(--glow-amber));transform:rotate(90deg) scale(1.06)}}
+  .nav-right{display:flex;align-items:center;gap:12px}
+  .lang-switch{display:inline-flex;border:1px solid var(--glass-brd);border-radius:100px;overflow:hidden;background:var(--glass);backdrop-filter:blur(8px)}
+  .lang-switch button{font-family:var(--mono);font-size:11px;letter-spacing:0.08em;padding:7px 12px;background:transparent;color:var(--muted);border:0;cursor:pointer;transition:color .2s,background .2s}
+  .lang-switch button.on{color:#120A00;background:var(--amber)}
+  .nav-cta{font-family:var(--mono);font-size:12px;letter-spacing:0.08em;text-transform:uppercase;padding:9px 16px;border:1px solid var(--glass-brd);border-radius:100px;background:var(--glass);backdrop-filter:blur(8px);transition:border-color .25s,color .25s}
+  .nav-cta:hover{border-color:var(--amber);color:var(--amber-soft)}
+
+  /* HERO */
+  .hero{min-height:100svh;display:flex;flex-direction:column;justify-content:center;padding:120px 0 80px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:0.28em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:12px;margin-bottom:26px}
+  .eyebrow::before{content:"";width:34px;height:1px;background:linear-gradient(90deg,var(--amber),transparent)}
+  h1{font-family:var(--display);font-weight:600;font-size:clamp(2.6rem,7.2vw,6rem);line-height:0.98;letter-spacing:-0.02em;max-width:15ch}
+  h1 .grad{background:linear-gradient(100deg,var(--amber) 0%,var(--amber-soft) 40%,var(--cyan) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{margin-top:28px;max-width:52ch;color:#C3C4C0;font-size:clamp(1rem,1.6vw,1.22rem);line-height:1.6}
+  .hero-actions{margin-top:40px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .btn{font-family:var(--display);font-weight:500;font-size:0.95rem;padding:14px 26px;border-radius:100px;border:1px solid transparent;cursor:pointer;transition:transform .2s ease,box-shadow .3s ease,background .3s ease}
+  .btn-primary{background:var(--amber);color:#120A00;box-shadow:0 0 0 0 rgba(246,166,35,0.5)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 34px -8px rgba(246,166,35,0.6)}
+  .btn-ghost{border-color:var(--glass-brd);background:var(--glass);color:var(--text);backdrop-filter:blur(8px)}
+  .btn-ghost:hover{border-color:var(--cyan);color:#CFFFF7}
+  .readout{margin-top:52px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;font-family:var(--mono);font-size:12.5px;letter-spacing:0.03em;color:var(--muted);padding:16px 20px;border:1px solid var(--glass-brd);border-radius:14px;background:rgba(9,11,16,0.6);backdrop-filter:blur(12px);max-width:720px}
+  .readout b{color:var(--text);font-weight:500}
+  .readout .sep{width:1px;height:12px;background:var(--line)}
+
+  /* SECTIONS */
+  section.block{padding:clamp(80px,12vh,150px) 0;position:relative}
+  .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:56px}
+  .sec-kicker{font-family:var(--mono);font-size:12px;letter-spacing:0.22em;text-transform:uppercase;color:var(--cyan);margin-bottom:16px}
+  .sec-title{font-family:var(--display);font-weight:600;font-size:clamp(1.8rem,4vw,3rem);letter-spacing:-0.02em;line-height:1.02;max-width:18ch}
+  .sec-note{font-family:var(--mono);font-size:12px;color:var(--muted);max-width:30ch;text-align:right}
+
+  .steps{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .step{background:linear-gradient(180deg,rgba(11,13,18,0.86),rgba(9,10,14,0.86));padding:34px 30px 38px;position:relative;min-height:220px;display:flex;flex-direction:column;transition:background .35s ease;backdrop-filter:blur(4px)}
+  .step:hover{background:linear-gradient(180deg,rgba(20,17,10,0.9),rgba(9,10,14,0.9))}
+  .step-n{font-family:var(--mono);font-size:12px;color:var(--amber);letter-spacing:0.1em;margin-bottom:auto}
+  .step h3{font-family:var(--display);font-weight:600;font-size:1.35rem;margin:26px 0 12px;letter-spacing:-0.01em}
+  .step p{color:var(--muted);font-size:0.98rem;line-height:1.55;max-width:40ch}
+  .step::after{content:"";position:absolute;left:30px;bottom:0;width:0;height:2px;background:linear-gradient(90deg,var(--amber),var(--cyan));transition:width .5s cubic-bezier(.2,.7,.2,1)}
+  .step:hover::after{width:56px}
+
+  .band{border:1px solid var(--glass-brd);border-radius:20px;background:var(--glass);backdrop-filter:blur(10px);padding:48px;display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center}
+  .band h2{font-family:var(--display);font-weight:600;font-size:clamp(1.6rem,3vw,2.4rem);letter-spacing:-0.02em;line-height:1.05}
+  .band p{color:var(--muted);margin-top:18px;max-width:44ch;line-height:1.6}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+  .chip{font-family:var(--mono);font-size:12px;letter-spacing:0.04em;padding:8px 14px;border:1px solid var(--line);border-radius:100px;color:#BFC0BB}
+  .chip.on{border-color:var(--amber);color:var(--amber-soft)}
+  .score{font-family:var(--mono);text-align:center;border:1px solid var(--line);border-radius:16px;padding:34px 20px;background:linear-gradient(180deg,rgba(53,224,208,0.05),transparent)}
+  .score .big{font-family:var(--display);font-weight:700;font-size:4.6rem;line-height:1;color:var(--cyan)}
+  .score .lab{font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+  .score ul{list-style:none;margin-top:24px;text-align:left;display:flex;flex-direction:column;gap:12px}
+  .score li{font-family:var(--body);font-size:0.9rem;color:#C7C8C3;display:flex;gap:10px;align-items:flex-start}
+  .score li .tick{color:var(--amber);font-family:var(--mono)}
+
+  /* LEGENDA SILNIKOW (band) */
+  .legend{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,rgba(246,166,35,0.045),transparent)}
+  .leg-row{display:flex;align-items:center;gap:16px;padding:17px 22px;border-bottom:1px solid var(--line)}
+  .leg-row:last-child{border-bottom:0}
+  .leg-k{font-family:var(--mono);font-weight:700;color:var(--amber);width:52px;flex-shrink:0;letter-spacing:0.04em}
+  .leg-v{color:#C9CAC5;font-size:0.98rem}
+
+  /* PANELE ANALIZY (SEO / AIO) */
+  .panels{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .ipanel{border:1px solid var(--glass-brd);border-radius:16px;background:rgba(9,11,16,0.62);backdrop-filter:blur(12px);padding:24px}
+  .ipanel-head{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:12px;letter-spacing:0.06em}
+  .ipanel-name{color:var(--text);font-weight:600}
+  .ipanel-tag{color:var(--muted);font-size:10px;border:1px solid var(--line);border-radius:100px;padding:3px 9px}
+  .ipanel-score{font-family:var(--mono);font-weight:700;font-size:3.2rem;line-height:1;margin:16px 0 20px}
+  .ipanel-score small{font-size:0.9rem;color:var(--muted);font-weight:500;margin-left:5px}
+  .ipanel-score.amber{color:var(--amber)}
+  .ipanel-score.cyan{color:var(--cyan)}
+  .ipanel-list{list-style:none;display:flex;flex-direction:column;gap:11px}
+  .ipanel-list li{font-size:0.92rem;color:#C9CAC5;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+  .ipanel-list li::before{font-family:var(--mono);font-size:12px;flex-shrink:0;margin-top:1px}
+  .ipanel-list li.ok::before{content:"OK";color:var(--amber)}
+  .ipanel-list li.warn::before{content:"!";color:var(--cyan)}
+
+  /* MODULY: GRAFIKA / AUDIO */
+  .modules{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .mod{border:1px solid var(--glass-brd);border-radius:16px;background:rgba(9,11,16,0.62);backdrop-filter:blur(12px);padding:22px;display:flex;flex-direction:column;gap:16px}
+  .mod-head{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:0.06em;color:var(--text)}
+  .mod-ico{color:var(--amber);font-size:16px}
+  .mod-canvas{height:150px;border-radius:12px;position:relative;overflow:hidden;border:1px solid var(--line)}
+  .mod-canvas.gfx{background:linear-gradient(130deg,rgba(246,166,35,0.24),rgba(53,224,208,0.14) 58%,rgba(9,11,16,0.6));display:flex;align-items:center;justify-content:center}
+  .mod-frame{width:62%;height:62%;border:1px dashed rgba(255,255,255,0.3);border-radius:8px}
+  .mod-canvas.audio{background:rgba(9,11,16,0.5);display:flex;align-items:center;justify-content:center;gap:4px;padding:0 18px}
+  .wave{display:flex;align-items:center;gap:4px;height:66px}
+  .wave i{width:4px;height:100%;border-radius:4px;transform-origin:center;background:linear-gradient(180deg,var(--amber),var(--cyan));animation:wv 1.15s ease-in-out infinite;animation-delay:calc(var(--i)*0.05s)}
+  @keyframes wv{0%,100%{transform:scaleY(0.28)}50%{transform:scaleY(1)}}
+  .mod-foot{display:flex;flex-wrap:wrap;gap:8px}
+  .mchip{font-family:var(--mono);font-size:11px;padding:6px 11px;border:1px solid var(--line);border-radius:100px;color:#C2C3BE}
+  .mchip.on{border-color:var(--amber);color:var(--amber-soft)}
+
+  /* GRAFIKA - wypelniony podglad + prompt */
+  .mod-canvas.gfx{background:#0a0c11;padding:0}
+  .gfx-img{position:absolute;inset:10px;border-radius:9px;
+    background:
+      radial-gradient(58% 78% at 30% 26%, rgba(246,166,35,0.6), transparent 60%),
+      radial-gradient(70% 90% at 78% 74%, rgba(53,224,208,0.5), transparent 62%),
+      conic-gradient(from 200deg at 62% 38%, rgba(255,255,255,0.08), transparent 42%),
+      linear-gradient(140deg,#181b23,#0c0e13);}
+  .gfx-prompt{position:absolute;left:14px;right:14px;bottom:14px;display:flex;align-items:center;gap:8px;
+    font-family:var(--mono);font-size:11px;color:#DDDEDA;background:rgba(6,8,11,0.62);backdrop-filter:blur(6px);
+    border:1px solid var(--line);border-radius:100px;padding:7px 12px}
+  .gfx-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber);flex-shrink:0}
+
+  /* AUDIO - odtwarzacz artykulu */
+  .mod-canvas.audio{background:rgba(9,11,16,0.5);display:flex;align-items:center;gap:14px;padding:0 16px}
+  .au-play{width:40px;height:40px;flex-shrink:0;border-radius:50%;background:var(--amber);color:#120A00;font-size:12px;display:flex;align-items:center;justify-content:center}
+  .au-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:9px}
+  .au-body .wave{height:40px;width:100%;justify-content:space-between;gap:0}
+  .au-time{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .au-time span:nth-child(2){color:#C9CAC5}
+
+  /* LUKI SEMANTYCZNE */
+  .gaps{max-width:760px;border:1px solid var(--glass-brd);border-radius:16px;background:rgba(9,11,16,0.62);backdrop-filter:blur(12px);padding:26px 28px}
+  .gaps-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .gaps-name{font-family:var(--mono);font-size:12px;letter-spacing:0.06em;color:var(--text);font-weight:600}
+  .gaps-count{font-family:var(--mono);font-size:12px;color:var(--amber);border:1px solid var(--amber);border-radius:100px;padding:2px 10px}
+  .gaps-list{list-style:none;display:flex;flex-direction:column;margin-bottom:22px}
+  .gaps-list li{display:flex;align-items:center;gap:12px;padding:13px 2px;border-bottom:1px solid var(--line);color:#C9CAC5;font-size:0.98rem}
+  .gaps-list li:last-child{border-bottom:0}
+  .gaps-list li::before{content:"+";font-family:var(--mono);color:var(--cyan);font-weight:700;flex-shrink:0}
+  .gaps-cta{font-family:var(--mono);font-size:12.5px;letter-spacing:0.04em;padding:12px 22px;border-radius:100px;border:1px solid var(--amber);background:transparent;color:var(--amber-soft);cursor:pointer;transition:background .2s,color .2s}
+  .gaps-cta:hover{background:var(--amber);color:#120A00}
+  @media (prefers-reduced-motion:reduce){.wave i{animation:none;transform:scaleY(0.6)}}
+
+  .cta-final{text-align:center;padding:clamp(90px,16vh,180px) 0}
+  .cta-final h2{font-family:var(--display);font-weight:600;font-size:clamp(2rem,5.5vw,4.2rem);letter-spacing:-0.02em;line-height:1.02;max-width:16ch;margin:0 auto}
+  .cta-final p{color:var(--muted);margin:22px auto 0;max-width:46ch}
+  .cta-final .hero-actions{justify-content:center}
+
+  footer{border-top:1px solid var(--line);padding:40px 0;position:relative;z-index:2}
+  .foot{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:0.04em}
+  .foot .brand{font-size:13px}
+
+  .reveal{opacity:0;transform:translateY(26px)}
+
+  @media (max-width:860px){
+    .steps{grid-template-columns:1fr}
+    .band{grid-template-columns:1fr;padding:32px}
+    .sec-note{text-align:left}
+    header{padding:14px 20px}
+    .container{padding:0 20px}
+    .nav-cta{display:none}
+    .readout{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+    .readout .sep{display:none}
+    .panels,.modules{grid-template-columns:1fr}
+    h1{font-size:clamp(2.2rem,9vw,3.2rem)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .reveal{opacity:1;transform:none}
+    .ca-mark{animation:none}
+    *{scroll-behavior:auto!important}
+  }
+  :focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:4px}
+</style>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+<div class="veil" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<header id="nav">
+  <a class="brand" href="#top" aria-label="Content AI">
+    <span class="ca-mark" aria-hidden="true">
+      <svg viewBox="0 0 32 32"><path d="M16 1.5 L18.4 13.6 L30.5 16 L18.4 18.4 L16 30.5 L13.6 18.4 L1.5 16 L13.6 13.6 Z" fill="currentColor"/><circle cx="16" cy="16" r="1.7" fill="var(--bg)"/></svg>
+    </span>
+    <span class="word">CONTENT<b>AI</b></span>
+  </a>
+  <div class="nav-right">
+    <div class="lang-switch" role="group" aria-label="Język / Language">
+      <button data-set="pl" class="on" type="button">PL</button>
+      <button data-set="en" type="button">EN</button>
+    </div>
+    <a class="nav-cta" href="#cta" data-i18n="cta-nav">Uruchom generator</a>
+  </div>
+</header>
+
+<div class="wrap" id="top">
+<main class="container">
+
+  <section class="hero">
+    <div class="eyebrow reveal" data-i18n="hero-eyebrow">Content AI // silnik treści</div>
+    <h1 class="reveal" data-i18n="hero-h1">Treść gotowa pod <span class="grad">Google i modele AI</span>.</h1>
+    <p class="lede reveal" data-i18n="hero-lede">Generuje artykuły SEO, AIO, AEO i GEO na bazie Twojej wiedzy i realnych wyników wyszukiwania. Ocenia jakość, poprawia strukturę i eksportuje jednym kliknięciem.</p>
+    <div class="hero-actions reveal">
+      <a class="btn btn-primary" href="#cta" data-i18n="hero-cta1">Zobacz w akcji</a>
+      <a class="btn btn-ghost" href="#pipeline" data-i18n="hero-cta2">Jak to działa</a>
+    </div>
+    <div class="readout reveal">
+      <span data-i18n="ro1">SEO <b>88</b>/100</span><span class="sep"></span>
+      <span data-i18n="ro2">AIO <b>gotowe</b></span><span class="sep"></span>
+      <span data-i18n="ro3">FOG <b>30.1</b></span><span class="sep"></span>
+      <span data-i18n="ro4">KD <b>2.78%</b></span><span class="sep"></span>
+      <span data-i18n="ro5"><b>862</b> słowa</span><span class="sep"></span>
+      <span data-i18n="ro6">Meta <b>159 zn.</b></span>
+    </div>
+  </section>
+
+  <section class="block" id="pipeline">
+    <div class="sec-head">
+      <div>
+        <div class="sec-kicker reveal">Pipeline</div>
+        <h2 class="sec-title reveal" data-i18n="pipe-title">Sześć kroków od bazy wiedzy do gotowej publikacji.</h2>
+      </div>
+      <p class="sec-note reveal" data-i18n="pipe-note">Każdy krok pracuje w języku wybranym przy generowaniu.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal"><div class="step-n">01</div><h3 data-i18n="s1t">Baza wiedzy</h3><p data-i18n="s1p">Wgrywasz dokumenty i dane firmy. Model pisze z Twojego kontekstu, a nie z domysłów.</p></div>
+      <div class="step reveal"><div class="step-n">02</div><h3 data-i18n="s2t">Analiza SERP</h3><p data-i18n="s2p">Sprawdza, co realnie rankuje w Google dla Twojej frazy, i wykorzystuje to jako kontekst.</p></div>
+      <div class="step reveal"><div class="step-n">03</div><h3 data-i18n="s3t">Generacja</h3><p data-i18n="s3p">Tworzy artykuł w trybie SEO, AIO, AEO lub hybrydowym, w wybranym języku i tonie.</p></div>
+      <div class="step reveal"><div class="step-n">04</div><h3 data-i18n="s4t">Ocena jakości</h3><p data-i18n="s4p">Punktuje SEO i AIO, wskazuje braki i automatycznie poprawia strukturę tekstu.</p></div>
+      <div class="step reveal"><div class="step-n">05</div><h3 data-i18n="s5t">Przeróbki</h3><p data-i18n="s5p">Zamienia artykuł na post LinkedIn, e-mail, sekcję FAQ lub landing, w tym samym języku.</p></div>
+      <div class="step reveal"><div class="step-n">06</div><h3 data-i18n="s6t">Eksport</h3><p data-i18n="s6p">Pobierasz .docx, .pdf lub audio. Kopiujesz JSON-LD pod wyniki wyszukiwania.</p></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="band reveal">
+      <div>
+        <div class="sec-kicker" data-i18n="band-kicker">Optymalizacja</div>
+        <h2 data-i18n="band-h2">Jedna treść, cztery silniki odpowiedzi.</h2>
+        <p data-i18n="band-p">SEO pod klasyczne wyniki Google. AIO i AEO pod odpowiedzi generowane przez AI. GEO pod cytowania w modelach. Content AI pisze raz i optymalizuje pod wszystkie naraz.</p>
+        <div class="chips">
+          <span class="chip on">SEO</span><span class="chip on">AIO</span><span class="chip on">AEO</span><span class="chip on">GEO</span>
+          <span class="chip" data-i18n="chip-hybrid">Hybryda</span><span class="chip">JSON-LD</span>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="leg-row"><span class="leg-k">SEO</span><span class="leg-v" data-i18n="leg-seo">wyniki Google</span></div>
+        <div class="leg-row"><span class="leg-k">AIO</span><span class="leg-v" data-i18n="leg-aio">AI Overviews</span></div>
+        <div class="leg-row"><span class="leg-k">AEO</span><span class="leg-v" data-i18n="leg-aeo">odpowiedzi i asystenci</span></div>
+        <div class="leg-row"><span class="leg-k">GEO</span><span class="leg-v" data-i18n="leg-geo">cytowania w modelach</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="sec-head">
+      <div>
+        <div class="sec-kicker reveal">Analiza</div>
+        <h2 class="sec-title reveal" data-i18n="an-title">Panele oceny w czasie rzeczywistym.</h2>
+      </div>
+      <p class="sec-note reveal" data-i18n="an-note">SEO, AIO, AEO i GEO, każdy z własnym wynikiem.</p>
+    </div>
+    <div class="panels">
+      <div class="ipanel reveal">
+        <div class="ipanel-head"><span class="ipanel-name">Ocena SEO</span><span class="ipanel-tag">cache</span></div>
+        <div class="ipanel-score amber">88<small>/100</small></div>
+        <ul class="ipanel-list">
+          <li class="ok" data-i18n="an-seo1">Słowa kluczowe w H1, H2 i treści</li>
+          <li class="ok" data-i18n="an-seo2">Struktura nagłówków logiczna i pełna</li>
+          <li class="ok" data-i18n="an-seo3">Meta description zwięzła, z frazą</li>
+          <li class="warn" data-i18n="an-seo4">Brak nazwy marki w 2 sekcjach</li>
+        </ul>
+      </div>
+      <div class="ipanel reveal">
+        <div class="ipanel-head"><span class="ipanel-name">Ocena AIO</span><span class="ipanel-tag">cache</span></div>
+        <div class="ipanel-score cyan">82<small>/100</small></div>
+        <ul class="ipanel-list">
+          <li class="ok" data-i18n="an-aio1">Bezpośrednia odpowiedź w pierwszym akapicie</li>
+          <li class="ok" data-i18n="an-aio2">Fragmenty łatwe do zacytowania przez AI</li>
+          <li class="ok" data-i18n="an-aio3">Definicje pojęć i sekcja FAQ obecne</li>
+          <li class="warn" data-i18n="an-aio4">Dodaj liczby do sekcji porównania</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="sec-head">
+      <div>
+        <div class="sec-kicker reveal">Moduły</div>
+        <h2 class="sec-title reveal" data-i18n="mod-title">Grafika i audio z tego samego okna.</h2>
+      </div>
+      <p class="sec-note reveal" data-i18n="mod-note">Do artykułu dokładasz obraz i wersję do odsłuchania.</p>
+    </div>
+    <div class="modules">
+      <div class="mod reveal">
+        <div class="mod-head"><span class="mod-ico" aria-hidden="true">&#9635;</span><span data-i18n="mod-gfx">Grafika</span></div>
+        <div class="mod-canvas gfx"><span class="gfx-img"></span><span class="gfx-prompt"><span class="gfx-dot"></span><span data-i18n="mod-gfx-prompt">z tematu artykułu &rarr; ilustracja</span></span></div>
+        <div class="mod-foot"><span class="mchip">1:1</span><span class="mchip">16:9</span><span class="mchip">9:16</span><span class="mchip on" data-i18n="mod-gfx-style">styl marki</span></div>
+      </div>
+      <div class="mod reveal">
+        <div class="mod-head"><span class="mod-ico" aria-hidden="true">&#9834;</span><span data-i18n="mod-audio">Audio</span></div>
+        <div class="mod-canvas audio"><span class="au-play" aria-hidden="true">&#9654;</span><span class="au-body"><span class="wave"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i><i style="--i:10"></i><i style="--i:11"></i><i style="--i:12"></i><i style="--i:13"></i><i style="--i:14"></i><i style="--i:15"></i><i style="--i:16"></i><i style="--i:17"></i><i style="--i:18"></i><i style="--i:19"></i><i style="--i:20"></i><i style="--i:21"></i></span><span class="au-time"><span>0:00</span><span data-i18n="mod-audio-label">artykuł na głos</span><span>3:42</span></span></span></div>
+        <div class="mod-foot"><span class="mchip on" data-i18n="mod-audio-play">Posłuchaj</span><span class="mchip">MP3</span><span class="mchip" data-i18n="mod-audio-voice">głos: pro</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="sec-head">
+      <div>
+        <div class="sec-kicker reveal">Luki</div>
+        <h2 class="sec-title reveal" data-i18n="gap-title">Analiza luk semantycznych.</h2>
+      </div>
+      <p class="sec-note reveal" data-i18n="gap-note">Pokazuje, czego brakuje względem tego, co rankuje.</p>
+    </div>
+    <div class="gaps reveal">
+      <div class="gaps-head"><span class="gaps-name" data-i18n="gap-panel">Braki do uzupełnienia</span><span class="gaps-count">4</span></div>
+      <ul class="gaps-list">
+        <li data-i18n="gap1">Koszty wdrożenia i model rozliczeń</li>
+        <li data-i18n="gap2">Porównanie z konkurencją</li>
+        <li data-i18n="gap3">Wymagania techniczne i integracje</li>
+        <li data-i18n="gap4">Najczęstsze pytania (FAQ)</li>
+      </ul>
+      <button class="gaps-cta" type="button" data-i18n="gap-cta">Uzupełnij luki jednym kliknięciem</button>
+    </div>
+  </section>
+
+  <section class="cta-final" id="cta">
+    <h2 class="reveal" data-i18n="cta-h2">Napisz raz. Rankuj wszędzie.</h2>
+    <p class="reveal" data-i18n="cta-p">Od bazy wiedzy do gotowego artykułu, posta i pliku, w jednym narzędziu, w Twoim języku.</p>
+    <div class="hero-actions reveal">
+      <a class="btn btn-primary" href="#top" data-i18n="cta-btn1">Uruchom generator</a>
+      <a class="btn btn-ghost" href="#pipeline" data-i18n="cta-btn2">Zobacz pipeline</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="container foot">
+    <a class="brand" href="#top" aria-label="Content AI">
+      <span class="ca-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 1.5 L18.4 13.6 L30.5 16 L18.4 18.4 L16 30.5 L13.6 18.4 L1.5 16 L13.6 13.6 Z" fill="currentColor"/><circle cx="16" cy="16" r="1.7" fill="var(--bg)"/></svg></span>
+      <span class="word">CONTENT<b>AI</b></span>
+    </a>
+    <span>SEO &middot; AIO &middot; AEO &middot; GEO</span>
+  </div>
+</footer>
+</div>
+
+<script>
+/* ---------- i18n PL/EN ---------- */
+(function(){
+  var DICT = {
+    pl:{
+      "cta-nav":"Uruchom generator",
+      "hero-eyebrow":"Content AI // silnik treści",
+      "hero-h1":"Treść gotowa pod <span class=\"grad\">Google i modele AI</span>.",
+      "hero-lede":"Generuje artykuły SEO, AIO, AEO i GEO na bazie Twojej wiedzy i realnych wyników wyszukiwania. Ocenia jakość, poprawia strukturę i eksportuje jednym kliknięciem.",
+      "hero-cta1":"Zobacz w akcji","hero-cta2":"Jak to działa",
+      "ro1":"SEO <b>88</b>/100","ro2":"AIO <b>gotowe</b>","ro3":"FOG <b>30.1</b>","ro4":"KD <b>2.78%</b>","ro5":"<b>862</b> słowa","ro6":"Meta <b>159 zn.</b>",
+      "pipe-title":"Sześć kroków od bazy wiedzy do gotowej publikacji.",
+      "pipe-note":"Każdy krok pracuje w języku wybranym przy generowaniu.",
+      "s1t":"Baza wiedzy","s1p":"Wgrywasz dokumenty i dane firmy. Model pisze z Twojego kontekstu, a nie z domysłów.",
+      "s2t":"Analiza SERP","s2p":"Sprawdza, co realnie rankuje w Google dla Twojej frazy, i wykorzystuje to jako kontekst.",
+      "s3t":"Generacja","s3p":"Tworzy artykuł w trybie SEO, AIO, AEO lub hybrydowym, w wybranym języku i tonie.",
+      "s4t":"Ocena jakości","s4p":"Punktuje SEO i AIO, wskazuje braki i automatycznie poprawia strukturę tekstu.",
+      "s5t":"Przeróbki","s5p":"Zamienia artykuł na post LinkedIn, e-mail, sekcję FAQ lub landing, w tym samym języku.",
+      "s6t":"Eksport","s6p":"Pobierasz .docx, .pdf lub audio. Kopiujesz JSON-LD pod wyniki wyszukiwania.",
+      "band-kicker":"Optymalizacja","band-h2":"Jedna treść, cztery silniki odpowiedzi.",
+      "band-p":"SEO pod klasyczne wyniki Google. AIO i AEO pod odpowiedzi generowane przez AI. GEO pod cytowania w modelach. Content AI pisze raz i optymalizuje pod wszystkie naraz.",
+      "chip-hybrid":"Hybryda","score-lab":"/ 100 pkt SEO",
+      "score-li1":"Słowa kluczowe w H1, H2 i treści","score-li2":"Struktura nagłówków logiczna i pełna",
+      "score-li3":"Meta description zwięzła, z frazą","score-li4":"Wskazane braki poprawione automatycznie",
+      "cta-h2":"Napisz raz. Rankuj wszędzie.",
+      "cta-p":"Od bazy wiedzy do gotowego artykułu, posta i pliku, w jednym narzędziu, w Twoim języku.",
+      "cta-btn1":"Uruchom generator","cta-btn2":"Zobacz pipeline",
+      "an-title":"Panele oceny w czasie rzeczywistym.","an-note":"SEO, AIO, AEO i GEO, każdy z własnym wynikiem.",
+      "an-seo1":"Słowa kluczowe w H1, H2 i treści","an-seo2":"Struktura nagłówków logiczna i pełna","an-seo3":"Meta description zwięzła, z frazą","an-seo4":"Brak nazwy marki w 2 sekcjach",
+      "an-aio1":"Bezpośrednia odpowiedź w pierwszym akapicie","an-aio2":"Fragmenty łatwe do zacytowania przez AI","an-aio3":"Definicje pojęć i sekcja FAQ obecne","an-aio4":"Dodaj liczby do sekcji porównania",
+      "mod-title":"Grafika i audio z tego samego okna.","mod-note":"Do artykułu dokładasz obraz i wersję do odsłuchania.",
+      "mod-gfx":"Grafika","mod-gfx-style":"styl marki","mod-audio":"Audio","mod-audio-play":"Posłuchaj","mod-audio-voice":"głos: pro",
+      "leg-seo":"wyniki Google","leg-aio":"AI Overviews","leg-aeo":"odpowiedzi i asystenci","leg-geo":"cytowania w modelach",
+      "mod-gfx-prompt":"z tematu artykułu → ilustracja","mod-audio-label":"artykuł na głos",
+      "gap-title":"Analiza luk semantycznych.","gap-note":"Pokazuje, czego brakuje względem tego, co rankuje.",
+      "gap-panel":"Braki do uzupełnienia","gap1":"Koszty wdrożenia i model rozliczeń","gap2":"Porównanie z konkurencją","gap3":"Wymagania techniczne i integracje","gap4":"Najczęstsze pytania (FAQ)","gap-cta":"Uzupełnij luki jednym kliknięciem"
+    },
+    en:{
+      "cta-nav":"Launch generator",
+      "hero-eyebrow":"Content AI // content engine",
+      "hero-h1":"Content ready for <span class=\"grad\">Google and AI models</span>.",
+      "hero-lede":"It generates SEO, AIO, AEO and GEO articles from your own knowledge and real search results. It scores quality, fixes structure and exports in one click.",
+      "hero-cta1":"See it in action","hero-cta2":"How it works",
+      "ro1":"SEO <b>88</b>/100","ro2":"AIO <b>ready</b>","ro3":"FOG <b>30.1</b>","ro4":"KD <b>2.78%</b>","ro5":"<b>862</b> words","ro6":"Meta <b>159 chars</b>",
+      "pipe-title":"Six steps from knowledge base to ready to publish.",
+      "pipe-note":"Every step works in the language chosen at generation.",
+      "s1t":"Knowledge base","s1p":"You upload your documents and company data. The model writes from your context, not from guesses.",
+      "s2t":"SERP analysis","s2p":"It checks what actually ranks in Google for your keyword and uses it as context.",
+      "s3t":"Generation","s3p":"It writes the article in SEO, AIO, AEO or hybrid mode, in the chosen language and tone.",
+      "s4t":"Quality scoring","s4p":"It scores SEO and AIO, flags gaps and fixes the structure automatically.",
+      "s5t":"Repurposing","s5p":"It turns the article into a LinkedIn post, email, FAQ section or landing, in the same language.",
+      "s6t":"Export","s6p":"You download .docx, .pdf or audio. You copy JSON-LD for search results.",
+      "band-kicker":"Optimization","band-h2":"One piece of content, four answer engines.",
+      "band-p":"SEO for classic Google results. AIO and AEO for AI generated answers. GEO for citations in models. Content AI writes once and optimizes for all at once.",
+      "chip-hybrid":"Hybrid","score-lab":"/ 100 SEO pts",
+      "score-li1":"Keywords in H1, H2 and body","score-li2":"Heading structure logical and complete",
+      "score-li3":"Meta description concise, with keyword","score-li4":"Flagged gaps fixed automatically",
+      "cta-h2":"Write once. Rank everywhere.",
+      "cta-p":"From knowledge base to finished article, post and file, in one tool, in your language.",
+      "cta-btn1":"Launch generator","cta-btn2":"See the pipeline",
+      "an-title":"Real time scoring panels.","an-note":"SEO, AIO, AEO and GEO, each with its own score.",
+      "an-seo1":"Keywords in H1, H2 and body","an-seo2":"Heading structure logical and complete","an-seo3":"Meta description concise, with keyword","an-seo4":"Brand name missing in 2 sections",
+      "an-aio1":"Direct answer in the first paragraph","an-aio2":"Passages easy for AI to quote","an-aio3":"Term definitions and FAQ present","an-aio4":"Add numbers to the comparison section",
+      "mod-title":"Graphics and audio from the same window.","mod-note":"You add an image and a listenable version to the article.",
+      "mod-gfx":"Graphics","mod-gfx-style":"brand style","mod-audio":"Audio","mod-audio-play":"Listen","mod-audio-voice":"voice: pro",
+      "leg-seo":"Google results","leg-aio":"AI Overviews","leg-aeo":"answers and assistants","leg-geo":"citations in models",
+      "mod-gfx-prompt":"from the article topic → illustration","mod-audio-label":"article as audio",
+      "gap-title":"Semantic gap analysis.","gap-note":"Shows what is missing versus what ranks.",
+      "gap-panel":"Gaps to fill","gap1":"Implementation cost and pricing model","gap2":"Comparison with competitors","gap3":"Technical requirements and integrations","gap4":"Frequently asked questions (FAQ)","gap-cta":"Fill the gaps in one click"
+    }
+  };
+  function stored(){ try{ return localStorage.getItem("cai_showcase_lang"); }catch(e){ return null; } }
+  function detect(){ return (navigator.language||"pl").toLowerCase().indexOf("pl")===0 ? "pl":"en"; }
+  var lang = stored() || detect();
+  function applyLang(l){
+    if(!DICT[l]) l="pl";
+    lang=l;
+    document.documentElement.setAttribute("lang", l);
+    document.querySelectorAll("[data-i18n]").forEach(function(el){
+      var v = DICT[l][el.getAttribute("data-i18n")];
+      if(v!=null) el.innerHTML = v;
+    });
+    document.querySelectorAll(".lang-switch button").forEach(function(b){
+      b.classList.toggle("on", b.getAttribute("data-set")===l);
+    });
+    try{ localStorage.setItem("cai_showcase_lang", l); }catch(e){}
+  }
+  document.querySelectorAll(".lang-switch button").forEach(function(b){
+    b.addEventListener("click", function(){ applyLang(b.getAttribute("data-set")); });
+  });
+  applyLang(lang);
+})();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+  var nav = document.getElementById("nav");
+  function onScrollNav(){ if(window.scrollY>24) nav.classList.add("scrolled"); else nav.classList.remove("scrolled"); }
+  window.addEventListener("scroll", onScrollNav, {passive:true}); onScrollNav();
+
+  var lenis = null;
+  if(!reduce && window.Lenis){
+    lenis = new Lenis({ duration:1.1, smoothWheel:true, lerp:0.09 });
+    (function raf(t){ lenis.raf(t); requestAnimationFrame(raf); })();
+    if(window.gsap && window.ScrollTrigger) lenis.on("scroll", ScrollTrigger.update);
+  }
+  document.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener("click", function(e){
+      var id=a.getAttribute("href"); if(id.length<2) return;
+      var el=document.querySelector(id); if(!el) return;
+      e.preventDefault();
+      if(lenis) lenis.scrollTo(el,{offset:-10}); else el.scrollIntoView({behavior:reduce?"auto":"smooth"});
+    });
+  });
+
+  if(window.gsap && window.ScrollTrigger){
+    gsap.registerPlugin(ScrollTrigger);
+    if(!reduce){
+      gsap.utils.toArray(".hero .reveal").forEach(function(el,i){ gsap.to(el,{opacity:1,y:0,duration:0.9,ease:"power3.out",delay:0.15+i*0.09}); });
+      gsap.utils.toArray(".block .reveal, .cta-final .reveal").forEach(function(el){ gsap.to(el,{opacity:1,y:0,duration:0.8,ease:"power3.out",scrollTrigger:{trigger:el,start:"top 86%"}}); });
+      gsap.utils.toArray(".steps .step").forEach(function(el,i){ gsap.to(el,{opacity:1,y:0,duration:0.7,ease:"power2.out",scrollTrigger:{trigger:".steps",start:"top 80%"},delay:i*0.07}); });
+    } else { document.querySelectorAll(".reveal").forEach(function(el){el.style.opacity=1;el.style.transform="none";}); }
+  } else { document.querySelectorAll(".reveal").forEach(function(el){el.style.opacity=1;el.style.transform="none";}); }
+
+  var canvas=document.getElementById("bg");
+  var hasWebGL=(function(){ try{ var c=document.createElement("canvas"); return !!(window.WebGLRenderingContext&&(c.getContext("webgl")||c.getContext("experimental-webgl"))); }catch(e){ return false; } })();
+
+  if(window.THREE && hasWebGL){
+    var scene=new THREE.Scene();
+    var camera=new THREE.PerspectiveCamera(52, window.innerWidth/window.innerHeight, 0.1, 100);
+    camera.position.set(0,0,15);
+    var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    var COL_AMBER=new THREE.Color(0xF6A623), COL_CYAN=new THREE.Color(0x35E0D0);
+    var group=new THREE.Group(); scene.add(group);
+
+    function spriteTexture(){
+      var s=64, cv=document.createElement("canvas"); cv.width=cv.height=s;
+      var g=cv.getContext("2d"), grd=g.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
+      grd.addColorStop(0,"rgba(255,255,255,1)"); grd.addColorStop(0.25,"rgba(255,255,255,0.55)"); grd.addColorStop(1,"rgba(255,255,255,0)");
+      g.fillStyle=grd; g.fillRect(0,0,s,s);
+      var t=new THREE.Texture(cv); t.needsUpdate=true; return t;
+    }
+    var soft=spriteTexture();
+
+    var layers=new THREE.Group(), LN=5;
+    for(var i=0;i<LN;i++){
+      var geo=new THREE.PlaneGeometry(7.2-i*0.35, 4.6-i*0.22, 9, 6);
+      var mat=new THREE.MeshBasicMaterial({color:COL_AMBER.clone().lerp(COL_CYAN,i/(LN-1)),wireframe:true,transparent:true,opacity:0.085+(i/LN)*0.055});
+      var pl=new THREE.Mesh(geo,mat); pl.position.z=(i-(LN-1)/2)*0.9; pl.rotation.x=-0.15; layers.add(pl);
+    }
+    group.add(layers); layers.scale.setScalar(0.9);
+
+    var PCOUNT=Math.floor(window.innerWidth<760?900:1700);
+    var pgeo=new THREE.BufferGeometry();
+    var pos=new Float32Array(PCOUNT*3), col=new Float32Array(PCOUNT*3), seed=new Float32Array(PCOUNT);
+    for(var p=0;p<PCOUNT;p++){
+      var r=6+Math.random()*16, a=Math.random()*Math.PI*2, hh=(Math.random()-0.5)*18;
+      pos[p*3]=Math.cos(a)*r; pos[p*3+1]=hh*0.5; pos[p*3+2]=Math.sin(a)*r*0.6;
+      var c=COL_AMBER.clone().lerp(COL_CYAN,Math.random());
+      col[p*3]=c.r; col[p*3+1]=c.g; col[p*3+2]=c.b; seed[p]=Math.random();
+    }
+    pgeo.setAttribute("position", new THREE.BufferAttribute(pos,3));
+    pgeo.setAttribute("color", new THREE.BufferAttribute(col,3));
+    var pmat=new THREE.PointsMaterial({size:0.12,map:soft,vertexColors:true,transparent:true,opacity:0.68,depthWrite:false,blending:THREE.AdditiveBlending});
+    var points=new THREE.Points(pgeo,pmat); group.add(points);
+
+    var nodesGeo=new THREE.BufferGeometry(), NN=7;
+    var npos=new Float32Array(NN*3), ncol=new Float32Array(NN*3), nAng=[];
+    for(var n=0;n<NN;n++){
+      nAng.push({a:Math.random()*Math.PI*2,r:4.6+Math.random()*2.2,y:(Math.random()-0.5)*3,s:0.3+Math.random()*0.5});
+      var nc=COL_CYAN.clone().lerp(COL_AMBER,Math.random()*0.5);
+      ncol[n*3]=nc.r; ncol[n*3+1]=nc.g; ncol[n*3+2]=nc.b;
+    }
+    nodesGeo.setAttribute("position", new THREE.BufferAttribute(npos,3));
+    nodesGeo.setAttribute("color", new THREE.BufferAttribute(ncol,3));
+    var nmat=new THREE.PointsMaterial({size:0.5,map:soft,vertexColors:true,transparent:true,opacity:1,depthWrite:false,blending:THREE.AdditiveBlending});
+    var nodes=new THREE.Points(nodesGeo,nmat); group.add(nodes);
+
+    var mx=0,my=0,tmx=0,tmy=0;
+    window.addEventListener("pointermove", function(e){ tmx=(e.clientX/window.innerWidth-0.5); tmy=(e.clientY/window.innerHeight-0.5); }, {passive:true});
+
+    var scrollP=0;
+    if(window.ScrollTrigger){ ScrollTrigger.create({trigger:document.body,start:"top top",end:"bottom bottom",onUpdate:function(self){ scrollP=self.progress; }}); }
+
+    var t0=performance.now(), basePos=pos.slice(0);
+    function render(now){
+      var t=(now-t0)/1000;
+      layers.rotation.y=Math.sin(t*0.15)*0.35+scrollP*Math.PI*0.8;
+      layers.rotation.z=Math.cos(t*0.12)*0.06;
+      group.rotation.x=-0.05+scrollP*0.35;
+      var pa=pgeo.attributes.position.array, pull=0.35+scrollP*0.45;
+      for(var i2=0;i2<PCOUNT;i2++){
+        var ix=i2*3, breathe=1-pull*(0.35+0.4*Math.sin(t*0.5+seed[i2]*6.28));
+        pa[ix]=basePos[ix]*breathe;
+        pa[ix+1]=basePos[ix+1]*(1-pull*0.25)+Math.sin(t*0.4+seed[i2]*10)*0.15;
+        pa[ix+2]=basePos[ix+2]*breathe;
+      }
+      pgeo.attributes.position.needsUpdate=true;
+      var na=nodesGeo.attributes.position.array;
+      for(var k=0;k<NN;k++){
+        var o=nAng[k], ang=o.a+t*o.s*0.4;
+        na[k*3]=Math.cos(ang)*o.r*(1-scrollP*0.3);
+        na[k*3+1]=o.y+Math.sin(t*0.5+k)*0.4;
+        na[k*3+2]=Math.sin(ang)*o.r*0.6*(1-scrollP*0.3);
+      }
+      nodesGeo.attributes.position.needsUpdate=true;
+      mx+=(tmx-mx)*0.05; my+=(tmy-my)*0.05;
+      camera.position.x=mx*2.4; camera.position.y=-my*1.6; camera.position.z=15-scrollP*3.5;
+      camera.lookAt(0,0,0);
+      renderer.render(scene,camera);
+      if(!reduce) requestAnimationFrame(render);
+    }
+    if(reduce){ render(performance.now()); } else { requestAnimationFrame(render); }
+
+    window.addEventListener("resize", function(){
+      camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  } else {
+    canvas.style.background="radial-gradient(60% 50% at 50% 20%, rgba(246,166,35,0.10), transparent 70%), radial-gradient(50% 50% at 70% 80%, rgba(53,224,208,0.08), transparent 70%)";
+  }
+})();
+</script>
+</body>
+</html>

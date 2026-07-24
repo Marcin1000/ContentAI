@@ -1,0 +1,21 @@
+{
+  "name": "content-ai-mobile",
+  "version": "2.8.0",
+  "description": "Content AI - opakowanie mobilne (Android APK + iOS)",
+  "private": true,
+  "scripts": {
+    "sync": "cap sync",
+    "add:android": "cap add android",
+    "add:ios": "cap add ios",
+    "open:android": "cap open android",
+    "open:ios": "cap open ios"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.0"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.1.0",
+    "@capacitor/android": "^6.1.0",
+    "@capacitor/ios": "^6.1.0"
+  }
+}

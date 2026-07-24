@@ -1,0 +1,11 @@
+{
+  "appId": "com.contentai.app",
+  "appName": "Content AI",
+  "webDir": "web",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

@@ -1,0 +1,15 @@
+# Payload budowany przez pakowanie/zbuduj_web.py — generowany, nie wersjonowany.
+# Powstaje z app/web-*.html + app/pwa/ i jest kopiowany do opakowań.
+pakowanie/web/
+pakowanie/electron/web/
+pakowanie/capacitor/web/
+
+# Artefakty budowania opakowań
+pakowanie/electron/dist/
+pakowanie/capacitor/android/
+pakowanie/capacitor/ios/
+
+# Warianty z wpisanymi na stałe kluczami — nigdy do repo.
+# (app/web-owner.html w repo ma wyłącznie placeholdery WSTAW_TUTAJ_*)
+*-owner-local.html
+*_owner_local.html

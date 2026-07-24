@@ -1,0 +1,82 @@
+{
+  "name": "Content AI",
+  "short_name": "Content AI",
+  "description": "Generator treści SEO i AIO dla Content AI",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F5A300",
+  "theme_color": "#F5A300",
+  "lang": "pl",
+  "categories": [
+    "productivity",
+    "business"
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Generator treści",
+      "short_name": "Generator",
+      "description": "Otwórz generator treści SEO/AIO",
+      "url": "/?tab=generator",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Generator grafik",
+      "short_name": "Grafika",
+      "description": "Otwórz generator grafik Content AI",
+      "url": "/?tab=image",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Audio i podcast",
+      "short_name": "Audio",
+      "description": "Otwórz moduł audio (podcast, czytanie, transkrypcja)",
+      "url": "/?tab=audio",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
