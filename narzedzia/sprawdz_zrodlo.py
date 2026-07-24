@@ -2,7 +2,7 @@
 """
 Content AI - kontrola, czy zrodlo nadal zawiera wszystkie poprawki F1-F17 i reskin.
 
-Poprawki F1-F17 oraz warstwa reskinu sa juz wtopione w app/contentai.html. Nie ma ich
+Poprawki F1-F17 oraz warstwa reskinu sa juz wtopione w app/contentai.src.html. Nie ma ich
 czym "nanosic" - sa czescia kodu. Ten skrypt pilnuje, zeby przypadkiem z niego nie wypadly:
 buduje kazdy wariant i sprawdza, czy widac w nim slad po kazdej zmianie.
 
@@ -143,6 +143,54 @@ KONTROLE = [
 ]
 
 
+# Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi
+# do przegladarki bez przetworzenia, kazda z nich jest potrojona -> SyntaxError
+# "Identifier ... has already been declared" wywala caly blok <script> i zabija UI.
+DEKLARACJE = ("API_KEY", "OPENAI_API_KEY", "ELEVEN_API_KEY")
+
+
+def sprawdz_deklaracje(html, wariant, cicho=False):
+    """Kazda deklaracja klucza dokladnie raz - inaczej caly skrypt nie wykona sie."""
+    bledy = []
+    for nazwa in DEKLARACJE:
+        ile = sum(
+            1 for l in html.split("\n")
+            if l.startswith(f"let {nazwa} =") or l.startswith(f"const {nazwa} =")
+        )
+        if ile == 1:
+            if not cicho:
+                print(f"    ok    {'D/' + nazwa:20} zadeklarowany dokladnie raz")
+        else:
+            powod = f"deklaracji: {ile} (ma byc 1)"
+            bledy.append(("D/" + nazwa, f"{nazwa} zadeklarowany raz", powod))
+            if not cicho:
+                print(f"    BLAD  {'D/' + nazwa:20} {nazwa}: {powod}")
+    return bledy
+
+
+def sprawdz_warianty_w_repo(zrodlo, cicho=False):
+    """Warianty lezace w app/ musza odpowiadac temu, co wychodzi ze zrodla."""
+    bledy = []
+    katalog = ZRODLO.parent
+    for w in WARIANTY:
+        plik = katalog / f"web-{w}.html"
+        if not plik.exists():
+            bledy.append((f"S/{w}", f"web-{w}.html obecny w app/", "pliku brak"))
+            if not cicho:
+                print(f"    BLAD  {'S/' + w:20} brak app/web-{w}.html")
+            continue
+        swiezy = zbuduj_wariant(zrodlo, w)
+        if plik.read_text(encoding="utf-8") == swiezy:
+            if not cicho:
+                print(f"    ok    {'S/' + w:20} app/web-{w}.html zgodny ze zrodlem")
+        else:
+            bledy.append((f"S/{w}", f"web-{w}.html zgodny ze zrodlem",
+                          "plik w repo rozjechal sie ze zrodlem - przebuduj warianty"))
+            if not cicho:
+                print(f"    BLAD  {'S/' + w:20} app/web-{w}.html rozjechal sie ze zrodlem")
+    return bledy
+
+
 def sprawdz(html, wariant, cicho=False):
     """Uruchamia kontrole dla jednego wariantu. Zwraca liczbe bledow."""
     bledy = []
@@ -192,9 +240,17 @@ def main():
         if not args.cicho:
             print(f"\n  wariant {w}")
         zrobione, bledy = sprawdz(html, w, args.cicho)
+        bledy += sprawdz_deklaracje(html, w, args.cicho)
+        zrobione += len(DEKLARACJE)
         wszystkie_bledy += [(w, *b) for b in bledy]
         if not args.cicho:
             print(f"    {zrobione} kontroli, bledow: {len(bledy)}")
+
+    if not args.wariant:
+        if not args.cicho:
+            print("\n  warianty w repo")
+        bledy = sprawdz_warianty_w_repo(zrodlo, args.cicho)
+        wszystkie_bledy += [("repo", *b) for b in bledy]
 
     print()
     if wszystkie_bledy:

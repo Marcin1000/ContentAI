@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Content AI - budowanie wariantow aplikacji z jednego zrodla (app/contentai.html).
+Content AI - budowanie wariantow aplikacji z jednego zrodla (app/contentai.src.html).
 
 Zrodlo zawiera wszystkie warianty naraz, oznaczone dyrektywami warunkowymi.
 Ten modul wycina z niego to, co nie nalezy do wybranego wariantu.
@@ -27,7 +27,7 @@ Uzycie jako modul:
 
 Uzycie z linii polecen:
     python3 warianty.py --wariant proxy --worker-url https://moj.workers.dev -o web-proxy.html
-    python3 warianty.py --wszystkie -o ../app/dist
+    python3 warianty.py --wszystkie -o ../app
 """
 
 import argparse
@@ -36,9 +36,15 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-ZRODLO = ROOT.parent / "app" / "contentai.html"
+ZRODLO = ROOT.parent / "app" / "contentai.src.html"
 
 WARIANTY = ("keys", "proxy", "owner")
+
+# Pseudo-wariant: blok @@IF zrodlo nie trafia do zadnego wariantu, bo nigdy nie budujemy
+# "zrodla". Sluzy do rzeczy, ktore maja istniec wylacznie w pliku zrodlowym - np. ostrzezenie
+# dla kogos, kto otworzy zrodlo w przegladarce zamiast zbudowanego wariantu.
+ZRODLO_ONLY = "zrodlo"
+ZNANE = WARIANTY + (ZRODLO_ONLY,)
 
 PLACEHOLDER_WORKER = "https://twoj-worker.workers.dev"
 
@@ -83,7 +89,7 @@ def przetworz(tekst, wariant):
             lista = [w for w in arg.split(",") if w]
             if not lista:
                 raise BladZrodla(f"linia {nr}: @@IF bez wariantu")
-            nieznane = [w for w in lista if w not in WARIANTY]
+            nieznane = [w for w in lista if w not in ZNANE]
             if nieznane:
                 raise BladZrodla(f"linia {nr}: nieznany wariant w @@IF: {', '.join(nieznane)}")
             blok = (nr, wariant in lista, False)

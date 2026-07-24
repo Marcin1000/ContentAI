@@ -1,7 +1,7 @@
 # Content AI - zmiany F1-F17 i reskin: co to jest i jak tego pilnować
 
 Ten dokument opisuje zmiany, które kiedyś nanoszono na aplikację skryptami. **Dziś wszystkie
-są już wtopione w `app/contentai.html`** — nie ma ich czym „nanosić", są częścią kodu.
+są już wtopione w `app/contentai.src.html`** — nie ma ich czym „nanosić", są częścią kodu.
 
 Dokument służy teraz do dwóch rzeczy:
 1. wyjaśnia, co każda zmiana robi i gdzie jej szukać, gdy trzeba coś zmodyfikować;
@@ -11,12 +11,12 @@ Dokument służy teraz do dwóch rzeczy:
 
 ## Jak dziś wprowadza się zmianę
 
-Nie ma etapu „patchowania". Edytujesz `app/contentai.html` bezpośrednio, a warianty
+Nie ma etapu „patchowania". Edytujesz `app/contentai.src.html` bezpośrednio, a warianty
 keys/proxy/owner powstają z niego przy budowaniu:
 
 ```bash
 cd pakowanie
-python3 warianty.py --wszystkie      # trzy warianty do app/dist/
+python3 warianty.py --wszystkie -o ../app   # przebuduj warianty w app/
 python3 zbuduj_web.py                # payload web/ dla opakowań
 ```
 

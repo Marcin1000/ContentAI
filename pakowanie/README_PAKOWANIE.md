@@ -71,7 +71,10 @@ zbudowac aplikacje w Xcode na Macu, albo uzyc PWA.
 ```
 contentai/
   app/
-    contentai.html         <- JEDNO ZRODLO wszystkich trzech wariantow
+    contentai.src.html     <- JEDNO ZRODLO (nie otwierac w przegladarce)
+    web-keys.html          <- gotowa aplikacja, wariant KEYS
+    web-proxy.html         <- gotowa aplikacja, wariant PROXY
+    web-owner.html         <- gotowa aplikacja, wariant OWNER
     worker.js              <- Cloudflare Worker (potrzebny dla wariantu PROXY)
     pwa/                   <- manifest.json + ikony
   pakowanie/
@@ -88,9 +91,10 @@ contentai/
       android-res/, ios-res/, resources/   <- ikony natywne i splashe
 ```
 
-Warianty KEYS, PROXY i OWNER nie leza w repo jako osobne pliki - powstaja ze zrodla
-przy budowaniu. `zbuduj_web.py --wariant <nazwa>` robi to sam; osobne pliki HTML
-(np. do recznego rozdania) wyjmiesz przez `python3 warianty.py --wszystkie`.
+Warianty KEYS, PROXY i OWNER leza gotowe w `app/` - mozna je otworzyc wprost w przegladarce.
+Powstaja ze zrodla; po kazdej zmianie w `contentai.src.html` przebuduj je:
+`cd pakowanie && python3 warianty.py --wszystkie -o ../app`.
+`zbuduj_web.py --wariant <nazwa>` buduje payload web/ prosto ze zrodla, niezaleznie od tych plikow.
 
 ---
 

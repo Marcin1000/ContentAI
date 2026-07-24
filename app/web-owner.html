@@ -1273,13 +1273,6 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
     <div class="settings-wrap" id="settings-wrap">
       <button class="settings-btn" id="settings-btn" onclick="toggleSettingsMenu()" title="Ustawienia CMS i Brand Voice" aria-label="Ustawienia CMS i Brand Voice" data-i18n-title="title-settings" aria-haspopup="true">⚙️</button>
       <div class="settings-menu" id="settings-menu">
-<!--@@IF keys-->
-        <div class="settings-item" onclick="openKeysModal();closeSettingsMenu()">
-          <span>🔑</span>
-          <div><div style="font-weight:600;font-size:13px" data-i18n="keys-menu-title">Klucze API</div><div style="font-size:11px;color:var(--text3)">Anthropic, OpenAI, ElevenLabs</div></div>
-        </div>
-        <div style="height:1px;background:var(--border);margin:4px 0"></div>
-<!--@@ENDIF-->
         <div class="settings-item" onclick="openWpModal();closeSettingsMenu()">
           <span id="cms-menu-icon">🌐</span>
           <div><div style="font-weight:600;font-size:13px" data-i18n="settings-cms-title">Integracja CMS</div><div id="cms-menu-sub" style="font-size:11px;color:var(--text3)" data-i18n="settings-cms-sub">WordPress / Drupal</div></div>
@@ -2836,17 +2829,6 @@ var I18N = {
     // ── History ──
     'history-empty':'Brak historii - wygeneruj pierwszą treść.',
     'history-no-filter':'Brak wyników dla wybranego filtra.',
-//@@IF keys
-    'keys-menu-title':'Klucze API',
-    'keys-modal-title':'Klucze API',
-    'keys-modal-desc':'Klucze zapisują się tylko lokalnie na tym urządzeniu (localStorage tej aplikacji). Nie są nigdzie wysyłane poza wywołania do API danego dostawcy.',
-    'keys-anthropic-label':'Anthropic <span style="color:var(--text3);font-weight:400">(treść, wymagany)</span>',
-    'keys-openai-label':'OpenAI <span style="color:var(--text3);font-weight:400">(grafiki, audio, transkrypcja)</span>',
-    'keys-eleven-label':'ElevenLabs <span style="color:var(--text3);font-weight:400">(głos premium, opcjonalny)</span>',
-    'keys-save':'Zapisz',
-    'keys-cancel':'Anuluj',
-    'keys-clear':'Wyczyść',
-//@@ENDIF
     'history-select':'Wybierz artykuł z listy',
     // ── Tooltips ──
     'title-brief-tooltip':'Wygeneruj brief przed artykułem',
@@ -2899,11 +2881,7 @@ var I18N = {
     'jsonld-hint-full':'Wklej ten kod w sekcji &lt;head&gt; lub przed &lt;/body&gt; na stronie WP.',
     'out-placeholder-sub-full':'AI przeanalizuje bazę wiedzy i stworzy treść',
     'premium-more-time':'2 do 3 razy więcej czasu',
-//@@IF keys
-    'nokey-title':'Brak klucza API','nokey-line1':'Kliknij ikonę ustawień i wybierz Klucze API.','nokey-line2':'Wpisz klucz Anthropic z console.anthropic.com i zapisz.','badge-nokey':'brak klucza',
-//@@ELSE
     'nokey-title':'Brak klucza API','nokey-line1':'Otwórz plik w edytorze tekstowym i znajdź linię:','nokey-line2':'Zastąp WSTAW_TUTAJ_NOWY_KLUCZ_API swoim kluczem z console.anthropic.com','badge-nokey':'brak klucza',
-//@@ENDIF
     'hist-docs-base':'Dokumenty w bazie','hist-cost':'Est. koszt sesji',
     'hist-filter-all':'Wszystkie','hist-filter-hybrid':'Hybryda',
     'bulk-gen-all-txt':'Generuj wszystkie','improve-action-txt':'Popraw artykuł',
@@ -3244,17 +3222,6 @@ var I18N = {
     // ── History ──
     'history-empty':'No history - generate your first content.',
     'history-no-filter':'No results for the selected filter.',
-//@@IF keys
-    'keys-menu-title':'API keys',
-    'keys-modal-title':'API keys',
-    'keys-modal-desc':'Keys are stored only locally on this device (this app localStorage). They are never sent anywhere except calls to the selected provider API.',
-    'keys-anthropic-label':'Anthropic <span style="color:var(--text3);font-weight:400">(content, required)</span>',
-    'keys-openai-label':'OpenAI <span style="color:var(--text3);font-weight:400">(images, audio, transcription)</span>',
-    'keys-eleven-label':'ElevenLabs <span style="color:var(--text3);font-weight:400">(premium voice, optional)</span>',
-    'keys-save':'Save',
-    'keys-cancel':'Cancel',
-    'keys-clear':'Clear',
-//@@ENDIF
     'history-select':'Select an article from the list',
     // ── Tooltips ──
     'title-brief-tooltip':'Generate brief before article',
@@ -3310,11 +3277,7 @@ var I18N = {
     'jsonld-hint-full':'Paste this code in the &lt;head&gt; section or before &lt;/body&gt; on your WP page.',
     'out-placeholder-sub-full':'AI will analyze the knowledge base and create content',
     'premium-more-time':'2-3 times longer',
-//@@IF keys
-    'nokey-title':'Missing API key','nokey-line1':'Click the settings icon and choose API keys.','nokey-line2':'Enter your Anthropic key from console.anthropic.com and save.','badge-nokey':'no key',
-//@@ELSE
     'nokey-title':'Missing API key','nokey-line1':'Open the file in a text editor and find the line:','nokey-line2':'Replace WSTAW_TUTAJ_NOWY_KLUCZ_API with your key from console.anthropic.com','badge-nokey':'no key',
-//@@ENDIF
     'hist-docs-base':'Documents in base','hist-cost':'Est. session cost',
     'hist-filter-all':'All','hist-filter-hybrid':'Hybrid',
     'bulk-gen-all-txt':'Generate all','improve-action-txt':'Improve article',
@@ -3473,20 +3436,7 @@ function toggleLang() {
 }
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-//@@IF keys
-let API_KEY = localStorage.getItem('cai_key_anthropic') || 'WSTAW_TUTAJ_NOWY_KLUCZ_API'; // klucz z panelu Klucze API (localStorage)
-//@@ENDIF
-//@@IF owner
 const API_KEY = 'WSTAW_TUTAJ_NOWY_KLUCZ_API'; // ← wklej nowy klucz z console.anthropic.com po unieważnieniu starego
-//@@ENDIF
-//@@IF proxy
-window.API_ENDPOINT_OVERRIDE        = 'https://twoj-worker.workers.dev/api';
-window.OPENAI_IMG_ENDPOINT_OVERRIDE = 'https://twoj-worker.workers.dev/api/images';
-window.OPENAI_TTS_ENDPOINT_OVERRIDE = 'https://twoj-worker.workers.dev/api/tts';
-window.OPENAI_STT_ENDPOINT_OVERRIDE = 'https://twoj-worker.workers.dev/api/transcribe';
-window.ELEVEN_TTS_ENDPOINT_OVERRIDE = 'https://twoj-worker.workers.dev/api/eleven-tts';
-const API_KEY = ''; // wersja proxy - klucz po stronie workera
-//@@ENDIF
 // ─── API ENDPOINT ────────────────────────────────────────────────────────────
 // DIRECT:  'https://api.anthropic.com/v1/messages'  (domyślne, klucz w pliku)
 // PROXY:   ustaw window.API_ENDPOINT_OVERRIDE przed załadowaniem skryptu
@@ -3494,18 +3444,8 @@ const API_ENDPOINT = window.API_ENDPOINT_OVERRIDE || 'https://api.anthropic.com/
 
 // ─── OPENAI (grafiki) ─────────────────────────────────────────────────────────
 // PROXY: jesli window.OPENAI_IMG_ENDPOINT_OVERRIDE jest ustawiony, klucz nie jest potrzebny
-//@@IF keys
-let OPENAI_API_KEY = localStorage.getItem('cai_key_openai') || 'WSTAW_TUTAJ_KLUCZ_OPENAI'; // klucz z panelu Klucze API (localStorage)
-let ELEVEN_API_KEY = localStorage.getItem('cai_key_eleven') || 'WSTAW_TUTAJ_KLUCZ_ELEVENLABS'; // klucz z panelu Klucze API (localStorage)
-//@@ENDIF
-//@@IF owner
 const OPENAI_API_KEY = 'WSTAW_TUTAJ_KLUCZ_OPENAI'; // ← klucz z platform.openai.com
 const ELEVEN_API_KEY = 'WSTAW_TUTAJ_KLUCZ_ELEVENLABS'; // ← klucz z elevenlabs.io (opcjonalnie, dla silnika ElevenLabs)
-//@@ENDIF
-//@@IF proxy
-const OPENAI_API_KEY = ''; // wersja proxy - klucz po stronie workera
-const ELEVEN_API_KEY = ''; // wersja proxy - klucz po stronie workera
-//@@ENDIF
 const OPENAI_IMG_ENDPOINT = window.OPENAI_IMG_ENDPOINT_OVERRIDE || 'https://api.openai.com/v1/images/generations';
 
 // ─── AZURE AI FOUNDRY (opcjonalna integracja firmowa) ────────────────────────
@@ -3570,11 +3510,7 @@ function brandHosts() {
 }
 
 // OWNER_MODE = true → wyłącza blokadę urządzenia (tylko dla admina/autora)
-//@@IF owner
 const OWNER_MODE = true;  // OWNER — brak blokady urządzenia
-//@@ELSE
-const OWNER_MODE = false;
-//@@ENDIF
 
 // VOICE_INPUT_ENABLED = false → mikrofony dyktowania w polach generatora sa w kodzie, ale ukryte.
 // Dyktowanie wymaga warstwy serwerowej. Po jej wdrozeniu ustaw true, aby je pokazac.
@@ -10351,72 +10287,6 @@ if ('serviceWorker' in navigator) {
   <button id="audio-bar-close" type="button" title="Zamknij" aria-label="Zamknij" onclick="audioBarClose()">&#10005;</button>
 </div>
 
-<!--@@IF keys-->
-<!-- PANEL KLUCZY API (i18n PL/EN) -->
-<div id="keys-modal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:16px">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);max-width:480px;width:100%;max-height:90vh;overflow:auto;padding:20px">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <span style="font-size:18px">🔑</span>
-      <div style="font-weight:700;font-size:16px;color:var(--text)" data-i18n="keys-modal-title">Klucze API</div>
-    </div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5" data-i18n="keys-modal-desc">Klucze zapisują się tylko lokalnie na tym urządzeniu (localStorage tej aplikacji). Nie są nigdzie wysyłane poza wywołania do API danego dostawcy.</div>
-    <label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px" data-i18n="keys-anthropic-label">Anthropic <span style="color:var(--text3);font-weight:400">(treść, wymagany)</span></label>
-    <input id="key-in-anthropic" type="password" autocomplete="off" placeholder="sk-ant-..." style="width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:14px">
-    <label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px" data-i18n="keys-openai-label">OpenAI <span style="color:var(--text3);font-weight:400">(grafiki, audio, transkrypcja)</span></label>
-    <input id="key-in-openai" type="password" autocomplete="off" placeholder="sk-proj-..." style="width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:14px">
-    <label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px" data-i18n="keys-eleven-label">ElevenLabs <span style="color:var(--text3);font-weight:400">(głos premium, opcjonalny)</span></label>
-    <input id="key-in-eleven" type="password" autocomplete="off" placeholder="..." style="width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:18px">
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button onclick="saveKeys()" style="flex:1;min-width:120px;padding:10px;border:none;border-radius:var(--radius);background:var(--accent,#d97706);color:#fff;font-weight:600;font-size:13px;cursor:pointer" data-i18n="keys-save">Zapisz</button>
-      <button onclick="closeKeysModal()" style="padding:10px 16px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer" data-i18n="keys-cancel">Anuluj</button>
-      <button onclick="clearKeys()" style="padding:10px 16px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text2);font-size:13px;cursor:pointer" data-i18n="keys-clear">Wyczyść</button>
-    </div>
-  </div>
-</div>
-<script>
-(function(){
-  var PH = { a:'WSTAW_TUTAJ_NOWY_KLUCZ_API', o:'WSTAW_TUTAJ_KLUCZ_OPENAI', e:'WSTAW_TUTAJ_KLUCZ_ELEVENLABS' };
-  window.openKeysModal = function(){
-    try {
-      document.getElementById('key-in-anthropic').value = localStorage.getItem('cai_key_anthropic') || '';
-      document.getElementById('key-in-openai').value    = localStorage.getItem('cai_key_openai')    || '';
-      document.getElementById('key-in-eleven').value    = localStorage.getItem('cai_key_eleven')    || '';
-    } catch(e){}
-    document.getElementById('keys-modal').style.display = 'flex';
-  };
-  window.closeKeysModal = function(){ document.getElementById('keys-modal').style.display = 'none'; };
-  window.saveKeys = function(){
-    var a = (document.getElementById('key-in-anthropic').value || '').trim();
-    var o = (document.getElementById('key-in-openai').value    || '').trim();
-    var e = (document.getElementById('key-in-eleven').value    || '').trim();
-    try {
-      a ? localStorage.setItem('cai_key_anthropic', a) : localStorage.removeItem('cai_key_anthropic');
-      o ? localStorage.setItem('cai_key_openai', o)    : localStorage.removeItem('cai_key_openai');
-      e ? localStorage.setItem('cai_key_eleven', e)    : localStorage.removeItem('cai_key_eleven');
-    } catch(err){}
-    API_KEY        = a || PH.a;
-    OPENAI_API_KEY = o || PH.o;
-    ELEVEN_API_KEY = e || PH.e;
-    closeKeysModal();
-  };
-  window.clearKeys = function(){
-    try {
-      localStorage.removeItem('cai_key_anthropic');
-      localStorage.removeItem('cai_key_openai');
-      localStorage.removeItem('cai_key_eleven');
-    } catch(err){}
-    document.getElementById('key-in-anthropic').value = '';
-    document.getElementById('key-in-openai').value = '';
-    document.getElementById('key-in-eleven').value = '';
-    API_KEY = PH.a; OPENAI_API_KEY = PH.o; ELEVEN_API_KEY = PH.e;
-  };
-  window.addEventListener('load', function(){
-    try { if(!localStorage.getItem('cai_key_anthropic')) window.openKeysModal(); } catch(e){}
-  });
-})();
-</script>
-
-<!--@@ENDIF-->
 <!-- ============ Content AI - reskin (Faza 1 fix + Faza 2 + Faza 3 splash), append-only ============ -->
 <style id="cin-reskin">
   @keyframes cinRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}

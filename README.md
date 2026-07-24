@@ -11,6 +11,16 @@ na Windows, macOS, Androida i iOS.
 
 ---
 
+## Jak uruchomić
+
+Otwórz w przeglądarce **`app/web-keys.html`**. Nic nie trzeba budować ani instalować.
+Panel „Klucze API" otworzy się sam — wpisz klucz Anthropic i gotowe.
+
+Pozostałe warianty: `app/web-proxy.html` (klucze na Cloudflare Workerze),
+`app/web-owner.html` (klucze wpisane w pliku).
+
+---
+
 ## Jak to działa
 
 Cała aplikacja to **jeden plik HTML** (~666 KB, ~10,5 tys. linii, 9 bloków `<script>`).
@@ -23,7 +33,7 @@ Modele: `claude-sonnet-4-6` (treść), `claude-haiku-4-5` (zadania pomocnicze),
 
 ### Jedno źródło, trzy warianty
 
-Źródłem prawdy jest **`app/contentai.html`** — jeden plik, z którego budowane są trzy
+Źródłem prawdy jest **`app/contentai.src.html`** — jeden plik, z którego budowane są trzy
 warianty różniące się wyłącznie sposobem podawania kluczy API:
 
 | Wariant | Klucze API | Do czego |
@@ -32,14 +42,21 @@ warianty różniące się wyłącznie sposobem podawania kluczy API:
 | `proxy` | po stronie Cloudflare Workera | szersza dystrybucja, użytkownik nie ma własnego klucza |
 | `owner` | wpisane w pliku | jedno zaufane urządzenie wewnętrzne |
 
+Gotowe warianty **leżą w repo** i są od razu do otwarcia. Po każdej zmianie w źródle
+trzeba je przebudować:
+
 ```bash
 cd pakowanie
-python3 warianty.py --wariant proxy --worker-url https://moj.workers.dev -o /tmp/proxy.html
-python3 warianty.py --wszystkie          # wszystkie trzy do app/dist/
+python3 warianty.py --wszystkie -o ../app     # przebuduj wszystkie trzy
 ```
 
-Pliki `web-keys.html`, `web-proxy.html`, `web-owner.html` są **generowane** i nie leżą
-w repo (patrz `.gitignore`). Poprawkę nanosisz raz, w `app/contentai.html`.
+Poprawkę nanosisz raz, w `app/contentai.src.html`. Że warianty w repo nie rozjechały się
+ze źródłem, pilnuje `narzedzia/sprawdz_zrodlo.py`.
+
+> **Nie otwieraj `contentai.src.html` w przeglądarce.** To źródło, w którym leżą obok siebie
+> wszystkie trzy warianty — `API_KEY` jest w nim zadeklarowany trzy razy, przez co cały główny
+> skrypt nie wykonuje się (martwe zakładki, motyw i przyciski). Plik pokaże w takiej sytuacji
+> ostrzeżenie zamiast udawać działającą aplikację.
 
 `app/worker.js` to Cloudflare Worker dla wariantu PROXY (proxy do Anthropic, OpenAI, ElevenLabs).
 
@@ -76,7 +93,10 @@ komunikat „brak klucza" (PL i EN), deklaracje `API_KEY`, `OPENAI_API_KEY`/`ELE
 ```
 contentai/
   app/
-    contentai.html     ŹRÓDŁO PRAWDY — jeden plik z dyrektywami wariantów
+    contentai.src.html ŹRÓDŁO — jeden plik z dyrektywami; NIE otwierać w przeglądarce
+    web-keys.html      gotowa aplikacja do otwarcia (wariant keys)
+    web-proxy.html     gotowa aplikacja (wariant proxy)
+    web-owner.html     gotowa aplikacja (wariant owner)
     worker.js          Cloudflare Worker dla wariantu proxy
     pwa/               manifest.json + ikony
   showcase/          landing page produktu (osobna strona, nie część aplikacji)
@@ -99,7 +119,7 @@ przez `zbuduj_web.py` i celowo nie są wersjonowane (patrz `.gitignore`).
 
 ## Budowanie
 
-`zbuduj_web.py` buduje wariant prosto z `app/contentai.html` — nie trzeba nic generować wcześniej.
+`zbuduj_web.py` buduje wariant prosto z `app/contentai.src.html` — nie trzeba nic generować wcześniej.
 
 ```bash
 cd pakowanie
@@ -128,7 +148,7 @@ w aplikacji natywnej.
 
 ### 1. Poprawki F1–F17 i reskin są wtopione w źródło
 
-Nie ma etapu „patchowania" — te zmiany są częścią `app/contentai.html`. Pilnuje ich
+Nie ma etapu „patchowania" — te zmiany są częścią `app/contentai.src.html`. Pilnuje ich
 `narzedzia/sprawdz_zrodlo.py`: buduje wszystkie trzy warianty i sprawdza, czy w każdym
 widać ślad po każdej zmianie. Zna sygnaturę „po poprawce" i „sprzed poprawki", więc wyłapuje
 zarówno wycięcie zmiany, jak i cofnięcie jej. Kod wyjścia 1 przy niezgodności, więc nadaje

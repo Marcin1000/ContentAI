@@ -1,9 +1,8 @@
-# Warianty budowane z app/contentai.html przez pakowanie/warianty.py — generowane.
-# Źródłem prawdy jest wyłącznie app/contentai.html.
+# Warianty w app/ (web-keys / web-proxy / web-owner) SĄ wersjonowane, mimo że są
+# generowane z app/contentai.src.html. Powód: mają być gotowe do otwarcia po sklonowaniu
+# repo, bez uruchamiania Pythona. Zgodność ze źródłem pilnuje narzedzia/sprawdz_zrodlo.py.
+# Po każdej zmianie źródła: cd pakowanie && python3 warianty.py --wszystkie -o ../app
 app/dist/
-web-keys.html
-web-owner.html
-web-proxy.html
 
 # Payload budowany przez pakowanie/zbuduj_web.py — generowany, nie wersjonowany.
 # Powstaje z app/contentai.html + app/pwa/ i jest kopiowany do opakowań.
