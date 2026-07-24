@@ -124,11 +124,11 @@ i `apply_faza.py` (nanosił reskin). Usunięto je, bo:
   plików DEV (`ContentAI.html`, `ContentAI_owner.html`), których nie było w przekazanych paczkach;
 - budowanie wariantów przejął `pakowanie/warianty.py`, który działa na jednym źródle.
 
-Oba pliki zostają w historii gita — w commicie, który wniósł Content AI do repo:
+Oba pliki zostają w historii gita — w pierwszym commicie tego repozytorium:
 
 ```bash
-git show c658683:contentai/narzedzia/rebuild_all.py
-git show c658683:contentai/narzedzia/apply_faza.py
+git show e281ec2:narzedzia/rebuild_all.py
+git show e281ec2:narzedzia/apply_faza.py
 ```
 
 Zawierają dokładne pary „string przed → string po" dla każdej poprawki, przydatne przy

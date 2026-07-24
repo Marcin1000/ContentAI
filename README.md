@@ -6,8 +6,8 @@ na Windows, macOS, Androida i iOS.
 
 **Wersja:** 2.8.0 (poprawki bazowe F1–F17 + reskin) · **Status:** przeniesiona do repo, gotowa do dalszej pracy
 
-> Content AI jest niezależna od Cosmosa, który mieszka w katalogu głównym tego repo.
-> Oba projekty nie współdzielą kodu.
+> Aplikacja powstała wcześniej w repozytorium `Marcin1000/Bear` (obok Cosmosa) i została
+> stąd wydzielona do własnego repo. Historia tamtych commitów jest zachowana.
 
 ---
 
