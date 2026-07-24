@@ -69,23 +69,28 @@ zbudowac aplikacje w Xcode na Macu, albo uzyc PWA.
 ## 3. Struktura zestawu
 
 ```
-ContentAI_pakowanie/
-  README_PAKOWANIE.md      <- ten plik
-  zbuduj_web.py            <- przygotowuje wspolny payload web/ dla obu opakowan
-  zrodlo/
-    web-keys.html          <- wariant KEYS (klucze wpisywane w UI) - domyslny, na spotkania
-    web-proxy.html         <- wariant PROXY (klucze na Cloudflare Worker)
-    web-owner.html         <- wariant OWNER (klucz w pliku, tylko wewnetrznie)
+contentai/
+  app/
+    contentai.html         <- JEDNO ZRODLO wszystkich trzech wariantow
     worker.js              <- Cloudflare Worker (potrzebny dla wariantu PROXY)
     pwa/                   <- manifest.json + ikony
-  electron/                <- opakowanie Windows i macOS
-    README.md
-    main.js, preload.js, package.json, build/icon.png
-  capacitor/               <- opakowanie Android i iOS
-    android-notes.md
-    ios-notes.md
-    capacitor.config.json, package.json
+  pakowanie/
+    README_PAKOWANIE.md    <- ten plik
+    warianty.py            <- buduje wybrany wariant ze zrodla
+    zbuduj_web.py          <- przygotowuje wspolny payload web/ dla obu opakowan
+    electron/              <- opakowanie Windows i macOS
+      README.md
+      main.js, preload.js, package.json, build/icon.png
+    capacitor/             <- opakowanie Android i iOS
+      android-notes.md
+      ios-notes.md
+      capacitor.config.json, package.json
+      android-res/, ios-res/, resources/   <- ikony natywne i splashe
 ```
+
+Warianty KEYS, PROXY i OWNER nie leza w repo jako osobne pliki - powstaja ze zrodla
+przy budowaniu. `zbuduj_web.py --wariant <nazwa>` robi to sam; osobne pliki HTML
+(np. do recznego rozdania) wyjmiesz przez `python3 warianty.py --wszystkie`.
 
 ---
 
@@ -93,7 +98,7 @@ ContentAI_pakowanie/
 
 ### 4.1 Wariant PROXY wymaga dzialajacego Cloudflare Worker
 
-Bez tego aplikacja nie ma jak wolac API. Worker masz w `zrodlo/worker.js`.
+Bez tego aplikacja nie ma jak wolac API. Worker masz w `app/worker.js`.
 W skrocie (instrukcja jest w komentarzu na gorze worker.js):
 1. Wdroz `worker.js` na Cloudflare Workers.
 2. Ustaw zmienne srodowiskowe workera: `ANTHROPIC_KEY`, `OPENAI_KEY`, opcjonalnie `ELEVEN_KEY`.

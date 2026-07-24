@@ -22,29 +22,26 @@ import shutil
 import sys
 from pathlib import Path
 
+import warianty
+from warianty import BladZrodla, PLACEHOLDER_WORKER, WARIANTY, ZRODLO
+
 ROOT = Path(__file__).resolve().parent
 WEB = ROOT / "web"
 APP = ROOT.parent / "app"   # kod aplikacji lezy obok pakowania, w contentai/app/
 
-PLACEHOLDER_WORKER = "https://twoj-worker.workers.dev"
-
-WARIANTY = {
-    "keys":  APP / "web-keys.html",    # klucze wpisywane w UI aplikacji (panel "Klucze API"); na spotkania i pokazy
-    "proxy": APP / "web-proxy.html",   # bez kluczy w pliku, ruch przez Cloudflare Worker (do szerszej dystrybucji)
-    "owner": APP / "web-owner.html",   # klucze w pliku, bez blokady urzadzenia (tylko dla zaufanego, wewnetrznego uzytku)
-}
-
 
 def main():
     p = argparse.ArgumentParser(description="Przygotuj web/ dla opakowania natywnego")
-    p.add_argument("--wariant", choices=list(WARIANTY.keys()), default="keys",
-                   help="ktory wariant HTML opakowac (domyslnie: keys - klucze wpisywane w UI)")
-    p.add_argument("--app", help="wlasna sciezka do pliku HTML (nadpisuje --wariant)")
+    p.add_argument("--wariant", choices=list(WARIANTY), default="keys",
+                   help="ktory wariant zbudowac ze zrodla (domyslnie: keys - klucze wpisywane w UI)")
+    p.add_argument("--zrodlo", default=str(ZRODLO),
+                   help=f"jedno zrodlo aplikacji (domyslnie: {ZRODLO})")
+    p.add_argument("--app", help="gotowy plik HTML zamiast budowania ze zrodla (pomija --wariant)")
     p.add_argument("--pwa", help="wlasna sciezka do katalogu pwa (manifest.json + icons/)")
     p.add_argument("--worker-url", help="bazowy adres Cloudflare Worker, np. https://moj-worker.example.workers.dev (tylko wariant proxy)")
     args = p.parse_args()
 
-    app_src = Path(args.app).resolve() if args.app else WARIANTY[args.wariant]
+    app_src = Path(args.app).resolve() if args.app else Path(args.zrodlo).resolve()
     pwa_src = Path(args.pwa).resolve() if args.pwa else (APP / "pwa")
 
     if not app_src.exists():
@@ -59,21 +56,28 @@ def main():
         shutil.rmtree(WEB)
     (WEB / "icons").mkdir(parents=True)
 
-    # index.html z wybranego wariantu
-    html = app_src.read_text(encoding="utf-8")
+    zrodlo_tekst = app_src.read_text(encoding="utf-8")
 
-    # podmiana adresu workera (dotyczy tylko wariantu proxy; w innych placeholder nie wystepuje)
-    if args.worker_url:
-        base = args.worker_url.rstrip("/")
-        if PLACEHOLDER_WORKER in html:
-            html = html.replace(PLACEHOLDER_WORKER, base)
-            print(f"Podmieniono adres workera na: {base}")
-        else:
-            print("Uwaga: placeholder workera nie wystepuje w pliku (wariant inny niz proxy lub juz podmieniony).")
+    if args.app:
+        # gotowy plik: bierzemy jak lezy, podmieniamy tylko adres workera
+        html = zrodlo_tekst
+        opis = app_src.name
+        if args.worker_url and PLACEHOLDER_WORKER in html:
+            html = html.replace(PLACEHOLDER_WORKER, args.worker_url.rstrip("/"))
+            print(f"Podmieniono adres workera na: {args.worker_url.rstrip('/')}")
     else:
-        if PLACEHOLDER_WORKER in html:
-            print("Uwaga: wariant proxy bez --worker-url. W web/index.html zostaje placeholder")
-            print("       https://twoj-worker.workers.dev - aplikacja nie polaczy sie z API, dopoki go nie ustawisz.")
+        # jedno zrodlo -> wybrany wariant
+        try:
+            html = warianty.zbuduj_wariant(zrodlo_tekst, args.wariant, args.worker_url)
+        except BladZrodla as e:
+            sys.exit(f"BLAD: {e}")
+        opis = f"{app_src.name} (wariant: {args.wariant})"
+        if args.worker_url:
+            print(f"Podmieniono adres workera na: {args.worker_url.rstrip('/')}")
+
+    if PLACEHOLDER_WORKER in html:
+        print("Uwaga: wariant proxy bez --worker-url. W web/index.html zostaje placeholder")
+        print(f"       {PLACEHOLDER_WORKER} - aplikacja nie polaczy sie z API, dopoki go nie ustawisz.")
 
     (WEB / "index.html").write_text(html, encoding="utf-8")
 
@@ -83,7 +87,7 @@ def main():
         if icon.is_file():
             shutil.copy2(icon, WEB / "icons" / icon.name)
 
-    print(f"Gotowe. Payload web/ zbudowany z: {app_src.name}")
+    print(f"Gotowe. Payload web/ zbudowany z: {opis}")
     print(f"  -> {WEB}")
     print("Service Worker celowo pominiety (sw.js nie jest kopiowany).")
 

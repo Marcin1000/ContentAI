@@ -1,5 +1,12 @@
+# Warianty budowane z app/contentai.html przez pakowanie/warianty.py — generowane.
+# Źródłem prawdy jest wyłącznie app/contentai.html.
+app/dist/
+web-keys.html
+web-owner.html
+web-proxy.html
+
 # Payload budowany przez pakowanie/zbuduj_web.py — generowany, nie wersjonowany.
-# Powstaje z app/web-*.html + app/pwa/ i jest kopiowany do opakowań.
+# Powstaje z app/contentai.html + app/pwa/ i jest kopiowany do opakowań.
 pakowanie/web/
 pakowanie/electron/web/
 pakowanie/capacitor/web/
@@ -10,6 +17,10 @@ pakowanie/capacitor/android/
 pakowanie/capacitor/ios/
 
 # Warianty z wpisanymi na stałe kluczami — nigdy do repo.
-# (app/web-owner.html w repo ma wyłącznie placeholdery WSTAW_TUTAJ_*)
+# (app/contentai.html ma wyłącznie placeholdery WSTAW_TUTAJ_*)
 *-owner-local.html
 *_owner_local.html
+
+# Python
+__pycache__/
+*.pyc

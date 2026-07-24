@@ -21,18 +21,53 @@ Modele: `claude-sonnet-4-6` (treść), `claude-haiku-4-5` (zadania pomocnicze),
 `gpt-image-1` (grafiki), `gpt-4o-mini-tts` i ElevenLabs (audio), `gpt-4o-transcribe`
 (transkrypcja). Biblioteki do plików (mammoth, pdf.js, xlsx, html-docx-js) ładowane z CDN.
 
-### Trzy warianty tego samego kodu
+### Jedno źródło, trzy warianty
 
-| Plik | Klucze API | Do czego |
-|------|-----------|----------|
-| `app/web-keys.html` | wpisywane w UI, `localStorage` | **domyślny** — pokazy, spotkania, bezpieczny do rozdania |
-| `app/web-proxy.html` | po stronie Cloudflare Workera | szersza dystrybucja, użytkownik nie ma własnego klucza |
-| `app/web-owner.html` | wpisane w pliku | jedno zaufane urządzenie wewnętrzne |
+Źródłem prawdy jest **`app/contentai.html`** — jeden plik, z którego budowane są trzy
+warianty różniące się wyłącznie sposobem podawania kluczy API:
+
+| Wariant | Klucze API | Do czego |
+|---------|-----------|----------|
+| `keys` | wpisywane w UI, `localStorage` | **domyślny** — pokazy, spotkania, bezpieczny do rozdania |
+| `proxy` | po stronie Cloudflare Workera | szersza dystrybucja, użytkownik nie ma własnego klucza |
+| `owner` | wpisane w pliku | jedno zaufane urządzenie wewnętrzne |
+
+```bash
+cd pakowanie
+python3 warianty.py --wariant proxy --worker-url https://moj.workers.dev -o /tmp/proxy.html
+python3 warianty.py --wszystkie          # wszystkie trzy do app/dist/
+```
+
+Pliki `web-keys.html`, `web-proxy.html`, `web-owner.html` są **generowane** i nie leżą
+w repo (patrz `.gitignore`). Poprawkę nanosisz raz, w `app/contentai.html`.
 
 `app/worker.js` to Cloudflare Worker dla wariantu PROXY (proxy do Anthropic, OpenAI, ElevenLabs).
 
-W repo **nie ma żadnych prawdziwych kluczy** — `web-owner.html` zawiera wyłącznie
-placeholdery `WSTAW_TUTAJ_KLUCZ_*`. Wypełniaj je lokalnie i nie commituj wyniku.
+W repo **nie ma żadnych prawdziwych kluczy** — źródło zawiera wyłącznie placeholdery
+`WSTAW_TUTAJ_KLUCZ_*`. Wypełniaj je lokalnie i nie commituj wyniku.
+
+### Dyrektywy warunkowe
+
+Fragmenty specyficzne dla wariantu są w źródle otoczone dyrektywami — w HTML jako komentarz
+HTML, wewnątrz `<script>` jako komentarz JS:
+
+```html
+<!--@@IF keys-->        //@@IF owner,proxy
+  ...tylko dla keys       ...dla owner i proxy
+<!--@@ELSE-->           //@@ELSE
+  ...dla pozostałych      ...dla keys
+<!--@@ENDIF-->          //@@ENDIF
+```
+
+`@@IF` przyjmuje listę wariantów po przecinku. Zagnieżdżanie jest celowo niedozwolone —
+płaska struktura daje się sprawdzić wzrokiem. Preprocesor (`pakowanie/warianty.py`) odrzuca
+niedomknięty `@@IF`, `@@ELSE`/`@@ENDIF` bez `@@IF`, podwójny `@@ELSE` i nieznany wariant,
+a po złożeniu kontroluje bilans `<style>`/`<script>` i to, że żadna dyrektywa nie została
+w wyniku.
+
+W źródle jest **10 takich bloków**: pozycja „Klucze API" w menu ustawień, klucze i18n PL i EN,
+komunikat „brak klucza" (PL i EN), deklaracje `API_KEY`, `OPENAI_API_KEY`/`ELEVEN_API_KEY`,
+`OWNER_MODE` oraz modal kluczy wraz z jego skryptem.
 
 ---
 
@@ -40,9 +75,13 @@ placeholdery `WSTAW_TUTAJ_KLUCZ_*`. Wypełniaj je lokalnie i nie commituj wyniku
 
 ```
 contentai/
-  app/               kod aplikacji — 3 warianty + worker + PWA (manifest, ikony)
+  app/
+    contentai.html     ŹRÓDŁO PRAWDY — jeden plik z dyrektywami wariantów
+    worker.js          Cloudflare Worker dla wariantu proxy
+    pwa/               manifest.json + ikony
   showcase/          landing page produktu (osobna strona, nie część aplikacji)
   pakowanie/         opakowania instalacyjne
+    warianty.py        preprocesor: źródło -> wybrany wariant
     zbuduj_web.py      buduje payload web/ z wybranego wariantu
     electron/          Windows (.exe) i macOS (.dmg)
     capacitor/         Android (APK) i iOS (Xcode) + ikony natywne i splashe
@@ -57,6 +96,8 @@ przez `zbuduj_web.py` i celowo nie są wersjonowane (patrz `.gitignore`).
 ---
 
 ## Budowanie
+
+`zbuduj_web.py` buduje wariant prosto z `app/contentai.html` — nie trzeba nic generować wcześniej.
 
 ```bash
 cd pakowanie
@@ -83,21 +124,21 @@ w aplikacji natywnej.
 
 ## Stan zastany — co trzeba wiedzieć przed dalszą pracą
 
-### 1. Brakuje czytelnego źródła DEV
+### 1. Skrypty w `narzedzia/` są dokumentacją, nie narzędziem
 
-Skrypty w `narzedzia/` (`rebuild_all.py`, `apply_faza.py`) generowały warianty
-keys/proxy/owner z plików `ContentAI.html` i `ContentAI_owner.html`. **Tych plików nie było
-w przekazanych paczkach** — skrypty odwołują się do nieistniejących ścieżek `/home/claude/...`
-i w tej postaci nie da się ich uruchomić.
+`rebuild_all.py` i `apply_faza.py` generowały warianty z plików `ContentAI.html`
+i `ContentAI_owner.html`. **Tych plików nie było w przekazanych paczkach** — skrypty
+odwołują się do nieistniejących ścieżek `/home/claude/...` i nie da się ich uruchomić.
 
-W praktyce znaczy to, że **`app/web-keys.html` jest teraz źródłem prawdy**, a nie artefaktem
-budowania. Zmiany nanosi się bezpośrednio na warianty. Skrypty w `narzedzia/` zostają jako
-dokumentacja tego, co i gdzie zostało zmienione (kotwice, konkretne stringi) — przydatne przy
-odtwarzaniu zmiany w drugim wariancie.
+Zastąpił je `pakowanie/warianty.py`, który buduje warianty z `app/contentai.html`.
+Skrypty zostają jako zapis tego, co i gdzie zostało zmienione w F1–F17 i w reskinie
+(kotwice, konkretne stringi) — przydatne przy analizie, skąd wziął się dany fragment kodu.
 
-Do rozważenia w dalszej pracy: sprowadzenie trzech wariantów do jednego źródła z parametrem
-budowania, żeby każda poprawka nie wymagała trzech edycji. Warianty różnią się dziś w ok. 165
-miejscach każdy — głównie w warstwie kluczy i wywołań API.
+Jedno źródło powstało przez złożenie trzech wariantów z powrotem w komplet, z weryfikacją
+przez porównanie bajtowe: warianty `owner` i `proxy` odtwarzają się **co do bajtu**, a `keys`
+różni się jedną linią komentarza. Ta różnica jest zamierzona — `keys` z paczki miał starszą
+wersję komentarza niż ta, którą generuje bieżący `apply_faza.py`, więc ujednolicono do wersji
+zgodnej z narzędziem.
 
 ### 2. Zasoby natywne pochodzą ze starszej paczki
 
