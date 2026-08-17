@@ -1,0 +1,34 @@
+# Caddy - Content AI i OpenSEO na jednym serwerze
+#
+# Wklej oba bloki do /etc/caddy/Caddyfile, podmien domeny i hash hasla, potem:
+#   caddy hash-password          # generuje hash do wklejenia nizej
+#   sudo systemctl reload caddy
+#
+# Wczesniej ustaw w DNS rekordy A obu poddomen na IP serwera.
+
+# ── Content AI ───────────────────────────────────────────────────────────────
+# Ma wlasne logowanie (konta z rolami) w serwerze Node, wiec Caddy tylko
+# przekazuje ruch. NIE dodawaj tu basicauth - dwa ekrany logowania pod rzad
+# tylko mecza uzytkownika.
+contentai.twojadomena.pl {
+    reverse_proxy 127.0.0.1:3100
+}
+
+# ── OpenSEO ──────────────────────────────────────────────────────────────────
+# UWAGA: wersja Docker OpenSEO startuje z AUTH_MODE=local_noauth, czyli BEZ
+# zadnego logowania. Ponizszy blok jest jedyna oslona tej aplikacji.
+# Bez niego kazdy, kto trafi na adres, zobaczy dane i bedzie wypalal Twoje
+# kredyty DataForSEO. Nie usuwaj go, dopoki OpenSEO nie dostanie wlasnego
+# uwierzytelniania.
+#
+# Nazwa dyrektywy zalezy od wersji Caddy:
+#   Caddy 2.8 i nowszy  -> basic_auth   (jak nizej)
+#   starszy niz 2.8     -> basicauth
+# Wersje sprawdzisz poleceniem: caddy version
+seo.twojadomena.pl {
+    basic_auth {
+        # login  hash-z-polecenia-caddy-hash-password
+        marcin  WKLEJ_HASH_TUTAJ
+    }
+    reverse_proxy 127.0.0.1:3001
+}
