@@ -1,0 +1,35 @@
+[Unit]
+Description=Content AI - generator tresci (serwer aplikacji i proxy API)
+Documentation=https://github.com/Marcin1000/ContentAI
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/contentai
+ExecStart=/usr/bin/node /srv/contentai/serwer/server.js
+
+# Klucze i konfiguracja - plik ma miec uprawnienia 600
+EnvironmentFile=/etc/contentai/srodowisko
+
+Restart=always
+RestartSec=5
+
+# Ograniczenia: usluga nie potrzebuje uprawnien roota ani dostepu do reszty systemu
+DynamicUser=yes
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+# Jedyny katalog do zapisu: konta uzytkownikow
+ReadWritePaths=/srv/contentai/serwer/dane
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=contentai
+
+[Install]
+WantedBy=multi-user.target

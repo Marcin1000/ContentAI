@@ -13,10 +13,14 @@ na Windows, macOS, Androida i iOS.
 
 ## Jak uruchomić
 
-Otwórz w przeglądarce **`app/web-keys.html`**. Nic nie trzeba budować ani instalować.
-Panel „Klucze API" otworzy się sam — wpisz klucz Anthropic i gotowe.
+**Na własnym komputerze** — otwórz w przeglądarce `app/web-keys.html`. Nic nie trzeba
+budować ani instalować; panel „Klucze API" otworzy się sam.
 
-Pozostałe warianty: `app/web-proxy.html` (klucze na Cloudflare Workerze),
+**Na serwerze, dla zespołu** — `serwer/` zawiera serwer Node z logowaniem (konta z rolami)
+i proxy do API, dzięki czemu klucze nie trafiają do przeglądarek użytkowników. Instrukcja
+wdrożenia: **`serwer/README.md`**, obsługa kont: **`dokumenty/ContentAI_AdminGuide.md`**.
+
+Pozostałe warianty: `app/web-proxy.html` (klucze po stronie serwera lub Cloudflare Workera),
 `app/web-owner.html` (klucze wpisane w pliku).
 
 ---
@@ -105,6 +109,11 @@ contentai/
     zbuduj_web.py      buduje payload web/ z wybranego wariantu
     electron/          Windows (.exe) i macOS (.dmg)
     capacitor/         Android (APK) i iOS (Xcode) + ikony natywne i splashe
+  serwer/            serwer Node: logowanie, role, proxy do API (zero zależności npm)
+    server.js          aplikacja serwerowa
+    uzytkownicy.js     zarządzanie kontami z linii poleceń
+    testy.js           testy haseł i tłumaczenia Anthropic <-> OpenAI
+    contentai.service  jednostka systemd
   narzedzia/
     sprawdz_zrodlo.py  kontrola, czy źródło nadal zawiera poprawki F1–F17 i reskin
     INSTRUKCJA_...md   co robi każda z tych zmian i gdzie jej szukać
