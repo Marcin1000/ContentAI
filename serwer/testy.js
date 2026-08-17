@@ -85,6 +85,56 @@ console.log('\n  tlumaczenie OpenAI -> Anthropic');
   sprawdz('brak usage daje zera zamiast undefined', bezUsage.usage.output_tokens === 0);
 }
 
+
+console.log('\n  rozpoznawanie zapytania SERP');
+{
+  const serp = require('./serp.js');
+  const zadanieSerp = {
+    tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+    system: 'Write the context, topics and phrases in Polish. Search for top Google results',
+    messages: [{ role: 'user', content: 'Keyword: kurier ecommerce\nSearch and analyze top results.' }],
+  };
+  sprawdz('rozpoznaje zapytanie SERP', serp.czyZapytanieSerp(zadanieSerp));
+  sprawdz('zwykle zadanie nie jest SERP', !serp.czyZapytanieSerp({ messages: [] }));
+  sprawdz('brak tools nie jest SERP', !serp.czyZapytanieSerp({ tools: null, messages: [] }));
+  sprawdz('wyciaga fraze', serp.frazaZZadania(zadanieSerp) === 'kurier ecommerce');
+  sprawdz('brak frazy zwraca pusty ciag', serp.frazaZZadania({ messages: [{ role: 'user', content: 'nic' }] }) === '');
+  sprawdz('wykrywa jezyk polski', serp.jezykZZadania(zadanieSerp) === 'Polski');
+  sprawdz('wykrywa jezyk angielski', serp.jezykZZadania({ system: 'Write ... in English.' }) === 'English');
+  sprawdz('mapuje jezyk na kod DataForSEO', serp.jezykDoDataForSeo('Polski').kod === 'pl');
+  sprawdz('nieznany jezyk wpada na polski', serp.jezykDoDataForSeo('Klingon').kod === 'pl');
+  sprawdz('fraza z blokow tresci', serp.frazaZZadania({
+    messages: [{ role: 'user', content: [{ type: 'text', text: 'Keyword: buty zimowe\nx' }] }],
+  }) === 'buty zimowe');
+}
+
+console.log('\n  przetwarzanie odpowiedzi DataForSEO');
+{
+  const serp = require('./serp.js');
+  const odpowiedzApi = {
+    tasks: [{ result: [{ items: [
+      { type: 'organic', title: 'Najlepszy kurier dla sklepu internetowego', description: 'Porownanie firm kurierskich pod katem wysylki paczek ze sklepu.' },
+      { type: 'organic', title: 'Kurier ecommerce - ranking firm kurierskich', description: 'Ranking firm kurierskich i porownanie cennikow wysylki.' },
+      { type: 'paid', title: 'Reklama', description: 'Reklama nie powinna trafic do wynikow' },
+      { type: 'organic', title: 'Wysylka paczek dla sklepu', description: 'Cennik wysylki paczek i porownanie firm.' },
+    ] }] }],
+  };
+  const w = serp.zbudujWynik(odpowiedzApi, 'kurier ecommerce');
+  sprawdz('liczy tylko wyniki organiczne', w.wynikow === 3);
+  sprawdz('zwraca tematy', Array.isArray(w.topics) && w.topics.length > 0);
+  sprawdz('zwraca frazy', Array.isArray(w.phrases) && w.phrases.length > 0);
+  sprawdz('kontekst wspomina fraze', w.context.includes('kurier ecommerce'));
+  sprawdz('oznacza zrodlo', w.zrodlo === 'dataforseo');
+  sprawdz('nie zmysla dlugosci tresci', w.avgWords === 0 && w.avgH2 === 0);
+  sprawdz('pomija slowa z samej frazy', !w.topics.includes('kurier') && !w.topics.includes('ecommerce'));
+  sprawdz('pomija slowa nieznaczace', !w.topics.includes('oraz') && !w.phrases.includes('oraz'));
+  sprawdz('najczestsze slowo na czele', w.phrases[0] === 'wysylki' || w.phrases.includes('wysylki'));
+
+  const pusta = serp.zbudujWynik({ tasks: [{ result: [{ items: [] }] }] }, 'fraza');
+  sprawdz('pusta odpowiedz nie wywala', pusta.wynikow === 0 && pusta.topics.length === 0);
+  sprawdz('uszkodzona odpowiedz nie wywala', serp.zbudujWynik(null, 'x').wynikow === 0);
+}
+
 console.log(`\n  ${zaliczone} zaliczonych, ${bledy.length} bledow\n`);
 if (bledy.length) {
   for (const b of bledy) console.error(`  nie przeszlo: ${b}`);

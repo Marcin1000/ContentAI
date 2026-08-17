@@ -25,6 +25,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const serp = require('./serp.js');
 
 const KATALOG = __dirname;
 const APP = path.join(KATALOG, '..', 'app');
@@ -48,6 +49,13 @@ const KONF = {
     openai: process.env.OPENAI_KEY || '',
     eleven: process.env.ELEVEN_KEY || '',
     nvidia: process.env.NVIDIA_KEY || '',
+  },
+
+  // Zrodlo danych SERP: 'model' (model z web_search, tylko Anthropic) albo 'dataforseo'
+  serp: (process.env.CAI_SERP || 'model').toLowerCase(),
+  dataForSeo: {
+    login: process.env.DATAFORSEO_LOGIN || '',
+    haslo: process.env.DATAFORSEO_HASLO || '',
   },
 };
 
@@ -263,12 +271,65 @@ function czytajCialo(req, limitBajtow = 25 * 1024 * 1024) {
 
 // ─── Proxy do dostawcow ───────────────────────────────────────────────────────
 
+/**
+ * Kontekst SERP. Zwraca { status, dane } gdy obsluzylismy zapytanie tutaj,
+ * albo null gdy ma poleciec dotychczasowa sciezka do modelu.
+ *
+ * Aplikacja parsuje tresc bloku tekstowego jako JSON, wiec odpowiedz musi miec
+ * ksztalt Anthropic z JSON-em w srodku - inaczej fetchSerpContext nic nie zrozumie.
+ */
+async function obsluzSerp(body) {
+  const wAnthropic = (obiekt) => ({
+    content: [{ type: 'text', text: JSON.stringify(obiekt) }],
+    usage: { input_tokens: 0, output_tokens: 0 },
+  });
+
+  if (KONF.serp === 'dataforseo') {
+    if (!KONF.dataForSeo.login || !KONF.dataForSeo.haslo) {
+      console.error('[serp] CAI_SERP=dataforseo, ale brak DATAFORSEO_LOGIN/DATAFORSEO_HASLO');
+      return { status: 500, dane: { content: [], error: { komunikat: 'Brak danych dostepowych DataForSEO' } } };
+    }
+    const fraza = serp.frazaZZadania(body);
+    if (!fraza) return { status: 200, dane: wAnthropic({ context: '', topics: [], phrases: [] }) };
+    try {
+      const wynik = await serp.zDataForSeo(fraza, serp.jezykZZadania(body), KONF.dataForSeo);
+      console.log(`[serp] dataforseo "${fraza}": ${wynik.wynikow} wynikow`);
+      return { status: 200, dane: wAnthropic(wynik) };
+    } catch (e) {
+      console.error('[serp] dataforseo:', e.message);
+      return { status: 502, dane: { content: [], error: { komunikat: 'Nie udalo sie pobrac danych SERP' } } };
+    }
+  }
+
+  // CAI_SERP=model, ale dostawca nie ma web_search - lepiej powiedziec to wprost,
+  // niz pozwolic modelowi zmyslic dane SERP i podac je dalej jako fakty.
+  if (KONF.dostawca !== 'anthropic') {
+    console.error(`[serp] dostawca ${KONF.dostawca} nie obsluguje web_search; ustaw CAI_SERP=dataforseo`);
+    return {
+      status: 501,
+      dane: {
+        content: [],
+        error: { komunikat: 'Analiza SERP wymaga dostawcy anthropic albo CAI_SERP=dataforseo' },
+      },
+    };
+  }
+
+  return null;
+}
+
 async function proxyTresc(req, res) {
   let body;
   try {
     body = JSON.parse((await czytajCialo(req)).toString('utf8'));
   } catch {
     return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' });
+  }
+
+  // Zapytanie o kontekst SERP obslugujemy osobno - patrz serwer/serp.js
+  if (serp.czyZapytanieSerp(body)) {
+    const wynik = await obsluzSerp(body);
+    if (wynik) return odpowiedzJson(res, wynik.status, wynik.dane);
+    // null = zostaw dotychczasowa sciezke (dostawca anthropic z web_search)
   }
 
   if (KONF.dostawca === 'nvidia') {
@@ -482,6 +543,8 @@ async function obsluz(req, res) {
         eleven: Boolean(KONF.klucze.eleven),
         nvidia: Boolean(KONF.klucze.nvidia),
       },
+      serp: KONF.serp,
+      dataForSeo: Boolean(KONF.dataForSeo.login && KONF.dataForSeo.haslo),
       uzytkownikow: wczytajUzytkownikow().length,
       aktywnychSesji: sesje.size,
     });
