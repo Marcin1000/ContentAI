@@ -33,6 +33,18 @@ jobs:
       - name: Poprawki F1-F17, reskin i zgodność wariantów
         run: python3 narzedzia/sprawdz_zrodlo.py
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Serwer nie ma zależności npm, więc wystarczy kontrola składni i testy
+      # haszowania haseł oraz tłumaczenia Anthropic <-> OpenAI.
+      - name: Serwer — składnia i testy
+        run: |
+          node --check serwer/server.js
+          node --check serwer/uzytkownicy.js
+          node serwer/testy.js
+
       # Placeholdery w aplikacji ("sk-ant-...", "sk-proj-...") są krótkie,
       # więc wymóg 40+ znaków po prefiksie ich nie łapie. Prawdziwe klucze łapie.
       - name: Brak prawdziwych kluczy API

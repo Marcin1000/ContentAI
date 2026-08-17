@@ -23,3 +23,6 @@ pakowanie/capacitor/ios/
 # Python
 __pycache__/
 *.pyc
+
+# Konta i hasła serwera — nigdy do repo
+serwer/dane/
