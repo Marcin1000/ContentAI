@@ -125,6 +125,22 @@ z komunikatem, zamiast po cichu podać zmyślone dane.
 
 ---
 
+## Baza wiedzy — prywatna i wspólna
+
+Każdy zalogowany ma **własną bazę prywatną**, widoczną tylko dla niego. Obok jest **baza
+wspólna**, widoczna dla wszystkich — i do niej dodaje **wyłącznie admin**. Dzięki temu
+wiedza firmowa jest jedna i nikt jej przypadkiem nie podmieni.
+
+Dokumenty leżą na serwerze, więc użytkownik ma swoją bazę na każdym urządzeniu.
+
+Żeby wyszukiwanie działało po znaczeniu, a nie po słowach, wystarczy `NVIDIA_KEY`
+w `/etc/contentai/srodowisko` — ten sam klucz, którego używasz do modeli. Bez niego baza
+nadal działa, ale schodzi na dopasowanie słów kluczowych.
+
+Stan sprawdzisz jako admin pod `/api/status` — pole `wektory` mówi, czy klucz jest ustawiony.
+
+---
+
 ## Najczęstsze problemy
 
 **„Niepoprawny login lub hasło" mimo dobrego hasła.** Po 8 nieudanych próbach z jednego

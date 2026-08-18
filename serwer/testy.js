@@ -135,8 +135,102 @@ console.log('\n  przetwarzanie odpowiedzi DataForSEO');
   sprawdz('uszkodzona odpowiedz nie wywala', serp.zbudujWynik(null, 'x').wynikow === 0);
 }
 
-console.log(`\n  ${zaliczone} zaliczonych, ${bledy.length} bledow\n`);
-if (bledy.length) {
-  for (const b of bledy) console.error(`  nie przeszlo: ${b}`);
-  process.exit(1);
+console.log('\n  baza wiedzy - fragmenty i podobienstwo');
+{
+  const baza = require('./baza.js');
+  const dlugi = 'a'.repeat(3500);
+  const fr = baza.podzielNaFragmenty(dlugi, 1000, 10);
+  sprawdz('dzieli dlugi tekst', fr.length === 4);
+  sprawdz('respektuje limit fragmentow', baza.podzielNaFragmenty('b'.repeat(50000), 1000, 5).length === 5);
+  sprawdz('pusty tekst daje zero fragmentow', baza.podzielNaFragmenty('').length === 0);
+  sprawdz('same biale znaki daja zero', baza.podzielNaFragmenty('   \n\t  ').length === 0);
+
+  sprawdz('cosinus identycznych = 1', Math.abs(baza.cosinus([1, 2, 3], [1, 2, 3]) - 1) < 1e-9);
+  sprawdz('cosinus prostopadlych = 0', Math.abs(baza.cosinus([1, 0], [0, 1])) < 1e-9);
+  sprawdz('cosinus przeciwnych = -1', Math.abs(baza.cosinus([1, 0], [-1, 0]) + 1) < 1e-9);
+  sprawdz('cosinus wektora zerowego = 0', baza.cosinus([0, 0], [1, 1]) === 0);
+  sprawdz('cosinus nie-tablicy = 0', baza.cosinus(null, [1]) === 0);
+
+  sprawdz('slowa: pelne trafienie', baza.dopasowanieSlow('kurier ecommerce', 'oferta kurier dla ecommerce') === 1);
+  sprawdz('slowa: brak trafien', baza.dopasowanieSlow('kurier', 'zupelnie inny tekst') === 0);
+  sprawdz('slowa: krotkie pomijane', baza.dopasowanieSlow('a to', 'cokolwiek') === 0);
+}
+
+console.log('\n  baza wiedzy - nazwy plikow');
+{
+  const baza = require('./baza.js');
+  sprawdz('wspolna ma stala nazwe', baza.nazwaPliku(baza.WSPOLNA) === 'wspolna.json');
+  sprawdz('prywatna wg loginu', baza.nazwaPliku('prywatna', 'marcin') === 'u-marcin.json');
+  sprawdz('czysci probe wyjscia z katalogu', baza.nazwaPliku('prywatna', '../../etc/passwd') === 'u-.._.._etc_passwd.json');
+  let odrzucil = false;
+  try { baza.nazwaPliku('prywatna', ''); } catch { odrzucil = true; }
+  sprawdz('pusty login odrzucony', odrzucil);
+}
+
+console.log('\n  baza wiedzy - dodawanie i szukanie');
+{
+  const baza = require('./baza.js');
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const katalog = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-baza-'));
+
+  // zaslepka wektorow: kazdy tekst dostaje wektor wg tego, czy zawiera slowo "kurier"
+  let ostatniRodzaj = null;
+  const fakeFetch = async (url, opts) => {
+    const body = JSON.parse(opts.body);
+    ostatniRodzaj = body.input_type;
+    return { ok: true, json: async () => ({
+      data: body.input.map((t) => ({ embedding: /kurier/i.test(t) ? [1, 0] : [0, 1] })),
+    }) };
+  };
+  const konf = { klucz: 'test', url: 'http://x', model: 'm' };
+  const zPodmiana = { ...konf };
+  // podmieniamy globalny fetch na czas testu
+  const oryginalnyFetch = global.fetch;
+  global.fetch = fakeFetch;
+
+  (async () => {
+    const d1 = await baza.dodaj({ katalog, zakres: baza.WSPOLNA, nazwa: 'Cennik', tresc: 'Wysylka kurier dla sklepu', konfWektorow: zPodmiana });
+    sprawdz('dodaje do wspolnej', d1.zakres === baza.WSPOLNA && d1.fragmentow === 1);
+    sprawdz('liczy wektory dla dokumentu', d1.zWektorami === true);
+    sprawdz('dokument oznaczony jako passage', ostatniRodzaj === 'passage');
+
+    const d2 = await baza.dodaj({ katalog, zakres: 'prywatna', login: 'marcin', nazwa: 'Notatki', tresc: 'Zupelnie inny temat o pogodzie', konfWektorow: zPodmiana });
+    sprawdz('dodaje do prywatnej', d2.zakres === 'prywatna' && d2.wlasciciel === 'marcin');
+
+    const l = baza.lista({ katalog, login: 'marcin' });
+    sprawdz('lista laczy wspolna i prywatna', l.length === 2);
+    sprawdz('lista nie zawiera tresci ani wektorow', !('fragmenty' in l[0]) && !('wektor' in l[0]));
+
+    const lObcy = baza.lista({ katalog, login: 'anna' });
+    sprawdz('obcy nie widzi cudzej prywatnej', lObcy.length === 1 && lObcy[0].zakres === baza.WSPOLNA);
+
+    const w = await baza.szukaj({ katalog, login: 'marcin', zapytanie: 'kurier', konfWektorow: zPodmiana });
+    sprawdz('szuka po wektorach', w.metoda === 'wektory');
+    sprawdz('zapytanie oznaczone jako query', ostatniRodzaj === 'query');
+    sprawdz('najlepszy fragment to ten o kurierze', w.fragmenty[0].tekst.includes('kurier'));
+    sprawdz('prompt zawiera naglowek wiedzy', baza.doPromptu(w).startsWith('## WIEDZA FIRMOWA'));
+    sprawdz('prompt oznacza zrodlo wspolne', baza.doPromptu(w).includes('(wspólna)'));
+
+    // bez klucza - zejscie na slowa kluczowe
+    const wBez = await baza.szukaj({ katalog, login: 'marcin', zapytanie: 'kurier', konfWektorow: { klucz: '' } });
+    sprawdz('bez klucza schodzi na slowa kluczowe', wBez.metoda === 'slowa-kluczowe');
+    sprawdz('slowa kluczowe tez znajduja fragment', wBez.fragmenty.length > 0);
+
+    sprawdz('usuwa dokument', baza.usun({ katalog, zakres: 'prywatna', login: 'marcin', id: d2.id }) === true);
+    sprawdz('usuniecie nieistniejacego zwraca false', baza.usun({ katalog, zakres: 'prywatna', login: 'marcin', id: 'brak' }) === false);
+
+    const pusto = await baza.szukaj({ katalog, login: 'nikt-taki', zapytanie: 'x', konfWektorow: { klucz: '' } });
+    sprawdz('szukanie dziala przy samej wspolnej', Array.isArray(pusto.fragmenty));
+
+    global.fetch = oryginalnyFetch;
+    fs.rmSync(katalog, { recursive: true, force: true });
+
+    console.log(`\n  ${zaliczone} zaliczonych, ${bledy.length} bledow\n`);
+    if (bledy.length) {
+      for (const b of bledy) console.error(`  nie przeszlo: ${b}`);
+      process.exit(1);
+    }
+  })();
 }
