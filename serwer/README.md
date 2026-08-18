@@ -77,6 +77,9 @@ Wszystko przez zmienne środowiskowe.
 | `NVIDIA_KEY` | — | klucz treści (dostawca `nvidia`) |
 | `OPENAI_KEY` | — | grafiki, TTS, transkrypcja |
 | `ELEVEN_KEY` | — | głos premium |
+| `CAI_SERP` | `model` | źródło danych SERP: `model` albo `dataforseo` |
+| `DATAFORSEO_LOGIN` | — | login DataForSEO (przy `CAI_SERP=dataforseo`) |
+| `DATAFORSEO_HASLO` | — | hasło DataForSEO |
 
 ### Klucze mieszane
 
@@ -84,6 +87,30 @@ Klucz serwera jest domyślny. Jeśli użytkownik poda **własny** klucz, serwer 
 zamiast serwerowego — aplikacja wysyła go w nagłówku `x-api-key` (oraz `x-openai-key`,
 `x-eleven-key`). Pusty nagłówek, który aplikacja wysyła w trybie proxy, jest ignorowany
 i wraca klucz serwera. Nie wymaga to żadnej zmiany w aplikacji.
+
+### Dane SERP
+
+Aplikacja przed generowaniem może sprawdzić, co rankuje w Google. Domyślnie (`CAI_SERP=model`)
+robi to, prosząc model o wyszukanie — narzędziem `web_search`, które **istnieje tylko
+u Anthropic**. Ma to dwie konsekwencje:
+
+- dane są **szacowane przez model**, a nie mierzone,
+- przy `CAI_DOSTAWCA=nvidia` narzędzia nie ma, więc serwer zwraca **HTTP 501 z jasnym
+  komunikatem** zamiast pozwolić modelowi zmyślić wyniki i podać je dalej jako fakty.
+
+`CAI_SERP=dataforseo` bierze dane z API DataForSEO — realne wyniki organiczne, niezależnie
+od dostawcy modelu. To **to samo źródło, z którego korzysta OpenSEO**.
+
+```
+CAI_SERP=dataforseo
+DATAFORSEO_LOGIN=twoj@email.pl
+DATAFORSEO_HASLO=...
+```
+
+Zwracane `avgWords` i `avgH2` to zera — ten endpoint DataForSEO nie podaje długości treści
+konkurencji, a zero jest uczciwsze niż zmyślona liczba. Aplikacja traktuje je jako brak danych.
+
+DataForSEO jest płatne za zapytanie. Konto zakładasz na dataforseo.com.
 
 ### Modele open source
 

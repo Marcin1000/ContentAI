@@ -102,6 +102,29 @@ Ich odpowiedniki open source wymagają własnego GPU, więc na VPS bez karty nie
 
 ---
 
+## Dane SERP — realne zamiast szacowanych
+
+Analiza SERP przed generowaniem domyślnie prosi model, żeby wyszukał w Google. Działa to
+**tylko przy dostawcy Anthropic** i daje dane szacowane, nie mierzone.
+
+Żeby mieć realne wyniki niezależnie od modelu, w `/etc/contentai/srodowisko`:
+
+```
+CAI_SERP=dataforseo
+DATAFORSEO_LOGIN=twoj@email.pl
+DATAFORSEO_HASLO=...
+```
+
+```bash
+sudo systemctl restart contentai
+```
+
+To samo źródło danych, z którego korzysta OpenSEO. **Płatne za zapytanie** — konto na
+dataforseo.com. Bez tego przy `CAI_DOSTAWCA=nvidia` analiza SERP zwróci błąd 501
+z komunikatem, zamiast po cichu podać zmyślone dane.
+
+---
+
 ## Najczęstsze problemy
 
 **„Niepoprawny login lub hasło" mimo dobrego hasła.** Po 8 nieudanych próbach z jednego
