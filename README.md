@@ -114,6 +114,7 @@ contentai/
     uzytkownicy.js     zarządzanie kontami z linii poleceń
     testy.js           testy haseł i tłumaczenia Anthropic <-> OpenAI
     contentai.service  jednostka systemd
+  openseo/          instrukcja postawienia OpenSEO obok (osobna usługa, nie moduł)
   narzedzia/
     sprawdz_zrodlo.py  kontrola, czy źródło nadal zawiera poprawki F1–F17 i reskin
     INSTRUKCJA_...md   co robi każda z tych zmian i gdzie jej szukać
