@@ -141,8 +141,9 @@ contentai/
   narzedzia/
     sprawdz_zrodlo.py  kontrola źródła: poprawki F1–F17, reskin, warianty, funkcje serwerowe
     INSTRUKCJA_...md   co robi każda z tych zmian i gdzie jej szukać
-  dokumenty/         AdminGuide + dokumentacja v27 (PL/EN) + ocena vs konkurencja
+  dokumenty/         AdminGuide (obowiązujący) + ARCHIWUM_* (dokumentacja v27) + ocena
   prezentacje/       PL/ i EN/ — deck produktowy, onboarding, security
+    zrodlo/            generator decku security (PL i EN z jednego skryptu)
 ```
 
 Katalogi `web/` w `pakowanie/electron` i `pakowanie/capacitor` są **generowane**
