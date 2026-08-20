@@ -1,0 +1,221 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   OpenSEO w barwach Content AI
+
+   OpenSEO stoi na daisyUI, a daisyUI bierze wszystkie kolory, promienie
+   i obramowania ze zmiennych CSS. Dzieki temu nie trzeba dotykac ani jednej
+   klasy w ich kodzie - wystarczy podmienic te zmienne. To jest powod, dla
+   ktorego ten plik przezyje `docker compose pull`: nie zaczepiamy sie
+   o nazwy klas, ktore moga sie zmienic przy kazdej aktualizacji, tylko
+   o kontrakt zmiennych, ktory jest publiczna czescia daisyUI.
+
+   Plik doklada serwer Content AI przy przepuszczaniu strony (serwer/openseo.js).
+   W kontenerze OpenSEO nic sie nie zmienia.
+
+   Kolejnosc blokow ma znaczenie - nizsze wygrywaja przy tej samej mocy
+   selektora. Klasy .cai-ciemny / .cai-jasny sa mocniejsze od :root, wiec
+   swiadomy wybor uzytkownika bije ustawienie systemu.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Jasna paleta ─────────────────────────────────────────────────────────
+   Odpowiednik jasnego motywu Content AI. "openseo" to nazwa ich motywu
+   domyslnego; wymieniamy oba, bo daisyUI generuje selektor i dla :root,
+   i dla [data-theme]. */
+:root,
+[data-theme='openseo'],
+[data-theme='openseo-dark'] {
+  --color-base-100: #ffffff; /* powierzchnia kart */
+  --color-base-200: #eef1f6; /* tlo strony */
+  --color-base-300: #dce2ec; /* obramowania, separatory */
+  --color-base-content: #0d1320; /* tekst */
+
+  --color-primary: #f5a300; /* bursztyn - akcent podstawowy */
+  --color-primary-content: #0d1320; /* ciemny tekst na bursztynie */
+  --color-secondary: #1fa8c7; /* cyan techniczny */
+  --color-secondary-content: #ffffff;
+  --color-accent: #1fa8c7;
+  --color-accent-content: #ffffff;
+
+  --color-neutral: #0d1320;
+  --color-neutral-content: #ffffff;
+
+  --color-info: #1fa8c7;
+  --color-info-content: #ffffff;
+  --color-success: #059669;
+  --color-success-content: #ffffff;
+  --color-warning: #f5a300;
+  --color-warning-content: #0d1320;
+  --color-error: #e23244;
+  --color-error-content: #ffffff;
+
+  /* Geometria - Content AI ma 10px na polach i 14px na kartach */
+  --radius-selector: 10px;
+  --radius-field: 10px;
+  --radius-box: 14px;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* ─── Ciemna paleta wg ustawienia systemu ──────────────────────────────────
+   "Deep Space" - w Content AI to motyw domyslny. */
+@media (prefers-color-scheme: dark) {
+  :root,
+  [data-theme='openseo'],
+  [data-theme='openseo-dark'] {
+    --color-base-100: #11131d;
+    --color-base-200: #07080d;
+    --color-base-300: #242a3b;
+    --color-base-content: #e9edf6;
+
+    --color-primary: #ffb000; /* bursztyn na czerni */
+    --color-primary-content: #04050a;
+    --color-secondary: #46d5f2; /* cyan swiecacy */
+    --color-secondary-content: #04050a;
+    --color-accent: #46d5f2;
+    --color-accent-content: #04050a;
+
+    --color-neutral: #171a27;
+    --color-neutral-content: #e9edf6;
+
+    --color-info: #46d5f2;
+    --color-info-content: #04050a;
+    --color-success: #34d399;
+    --color-success-content: #04050a;
+    --color-warning: #ffb000;
+    --color-warning-content: #04050a;
+    --color-error: #ff5566;
+    --color-error-content: #04050a;
+  }
+}
+
+/* ─── Ciemna paleta wybrana swiadomie ──────────────────────────────────────
+   Klase ustawia skrypt doklejany przez serwer, na podstawie ciasteczka
+   zapisanego przez przelacznik w Content AI. Selektor jest mocniejszy niz
+   :root, wiec bije ustawienie systemu niezaleznie od kolejnosci. */
+html.cai-ciemny {
+  --color-base-100: #11131d;
+  --color-base-200: #07080d;
+  --color-base-300: #242a3b;
+  --color-base-content: #e9edf6;
+
+  --color-primary: #ffb000;
+  --color-primary-content: #04050a;
+  --color-secondary: #46d5f2;
+  --color-secondary-content: #04050a;
+  --color-accent: #46d5f2;
+  --color-accent-content: #04050a;
+
+  --color-neutral: #171a27;
+  --color-neutral-content: #e9edf6;
+
+  --color-info: #46d5f2;
+  --color-info-content: #04050a;
+  --color-success: #34d399;
+  --color-success-content: #04050a;
+  --color-warning: #ffb000;
+  --color-warning-content: #04050a;
+  --color-error: #ff5566;
+  --color-error-content: #04050a;
+
+  color-scheme: dark;
+}
+
+/* ─── Jasna paleta wybrana swiadomie ───────────────────────────────────────
+   Potrzebna, bo bez niej ciemny system przebilby wybor uzytkownika. */
+html.cai-jasny {
+  --color-base-100: #ffffff;
+  --color-base-200: #eef1f6;
+  --color-base-300: #dce2ec;
+  --color-base-content: #0d1320;
+
+  --color-primary: #f5a300;
+  --color-primary-content: #0d1320;
+  --color-secondary: #1fa8c7;
+  --color-secondary-content: #ffffff;
+  --color-accent: #1fa8c7;
+  --color-accent-content: #ffffff;
+
+  --color-neutral: #0d1320;
+  --color-neutral-content: #ffffff;
+
+  --color-info: #1fa8c7;
+  --color-info-content: #ffffff;
+  --color-success: #059669;
+  --color-success-content: #ffffff;
+  --color-warning: #f5a300;
+  --color-warning-content: #0d1320;
+  --color-error: #e23244;
+  --color-error-content: #ffffff;
+
+  color-scheme: light;
+}
+
+/* ─── Typografia ───────────────────────────────────────────────────────────
+   Ten sam krój co w Content AI. To pojedyncza rzecz, która najmocniej
+   decyduje o tym, czy dwa ekrany czyta sie jak jedna aplikacja. */
+html,
+body,
+button,
+input,
+select,
+textarea,
+.btn,
+.input,
+.select,
+.textarea {
+  font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+}
+
+code,
+pre,
+kbd,
+samp,
+.font-mono {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* ─── Detale wykonczenia ───────────────────────────────────────────────────
+   Tylko to, czego nie da sie ustawic zmienna. Celowo trzymam sie selektorow
+   elementowych i podstawowych klas daisyUI (btn, card, input) - te sa
+   czescia ich publicznego API i nie znikaja przy aktualizacji. */
+
+/* Content AI ma paski przewijania w kolorze obramowania, nie systemowe. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-base-200);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-base-300);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+/* Przyciski w Content AI reaguja szybko - 0.13s, nie domyslne 0.2s. */
+.btn {
+  transition: all 0.13s;
+  font-weight: 500;
+
+  /* Przycisk bez koloru (Anuluj, Zamknij) daisyUI stawia na --color-base-200,
+     czyli w tej palecie na kolorze tla strony - i przy --depth:0 znika razem
+     z obramowaniem. Podmieniamy tu wylacznie WARTOSC ZAPASOWA: gdy klasa
+     koloru ustawi --btn-color (btn-primary itd.), ponizsze i tak rozwinie sie
+     do niego i przycisk wyglada dokladnie tak, jak chcialo daisyUI. */
+  --btn-bg: var(--btn-color, var(--color-base-100));
+  --btn-border: var(--btn-color, var(--color-base-300));
+}
+
+/* Pola aktywne obrysowane cyanem, jak w calej aplikacji. */
+.input:focus,
+.input:focus-visible,
+.textarea:focus,
+.textarea:focus-visible,
+.select:focus,
+.select:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+}

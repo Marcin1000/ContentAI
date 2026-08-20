@@ -27,6 +27,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const serp = require('./serp.js');
 const baza = require('./baza.js');
+const openseo = require('./openseo.js');
 
 const KATALOG = __dirname;
 const APP = path.join(KATALOG, '..', 'app');
@@ -38,7 +39,22 @@ const KONF = {
   // Secure na cookie: wymagane, gdy serwer stoi za HTTPS (Caddy/nginx). Domyslnie wlaczone,
   // bo docelowo aplikacja stoi publicznie; do testow lokalnych ustaw CAI_COOKIE_SECURE=0.
   cookieSecure: process.env.CAI_COOKIE_SECURE !== '0',
+  // Domena ciasteczka. Pusta = ciasteczko wazne tylko na biezacym hoscie.
+  // Ustawiona na domene nadrzedna (np. .twojadomena.pl) sprawia, ze jedno
+  // logowanie obejmuje i Content AI, i OpenSEO stojace pod poddomena.
+  cookieDomena: process.env.CAI_COOKIE_DOMENA || '',
   sesjaGodzin: Number(process.env.CAI_SESJA_GODZIN || 24 * 14),
+
+  // OpenSEO: osobny kontener, przed ktorym stoimy. Wlacza sie podaniem portu
+  // nasluchu; wtedy serwer otwiera drugi port, wpuszcza na niego wylacznie
+  // zalogowanych i dokleja do stron palete Content AI. Szczegoly: openseo.js.
+  openseo: {
+    portNasluchu: Number(process.env.CAI_OPENSEO_PORT || 0),
+    host: process.env.CAI_OPENSEO_HOST || '127.0.0.1',
+    port: Number(process.env.CAI_OPENSEO_UPSTREAM || 3001),
+    // Publiczny adres, pod ktory prowadzi pozycja w menu aplikacji.
+    adres: process.env.CAI_OPENSEO_ADRES || '',
+  },
 
   // Dostawca tresci: 'anthropic' (domyslnie) albo 'nvidia' (modele open source przez NVIDIA NIM)
   dostawca: (process.env.CAI_DOSTAWCA || 'anthropic').toLowerCase(),
@@ -182,6 +198,8 @@ function adresIp(req) {
 // dzieki czemu adresy staja sie wzgledne (/api, /api/images, ...) i trafiaja tutaj.
 
 const PLACEHOLDER_WORKER = 'https://twoj-worker.workers.dev';
+const PLACEHOLDER_OPENSEO = 'WSTAW_TUTAJ_ADRES_OPENSEO';
+const PLACEHOLDER_DOMENA = 'WSTAW_TUTAJ_DOMENA_CIASTECZKA';
 let htmlAplikacji = null;
 
 function wczytajAplikacje() {
@@ -194,6 +212,16 @@ function wczytajAplikacje() {
     throw new Error('web-proxy.html nie zawiera placeholdera workera - czy na pewno to wariant proxy?');
   }
   htmlAplikacji = html.split(PLACEHOLDER_WORKER).join('');
+
+  // Adres OpenSEO i domena ciasteczka. Niepodstawione placeholdery zostaja
+  // nietkniete - aplikacja sama rozpoznaje, ze OpenSEO nie ma, i chowa pozycje
+  // w menu.
+  if (KONF.openseo.adres) {
+    htmlAplikacji = htmlAplikacji.split(PLACEHOLDER_OPENSEO).join(KONF.openseo.adres);
+  }
+  if (KONF.cookieDomena) {
+    htmlAplikacji = htmlAplikacji.split(PLACEHOLDER_DOMENA).join(KONF.cookieDomena);
+  }
   return htmlAplikacji;
 }
 
@@ -486,6 +514,41 @@ function stronaLogowania(komunikat = '') {
 </body></html>`;
 }
 
+// ─── Logowanie ────────────────────────────────────────────────────────────────
+// Wydzielone z routera, bo tego samego ekranu uzywa port OpenSEO - jedno konto
+// i jedno logowanie na obie aplikacje.
+
+/** Wspolny ogon ciasteczka sesji; domena tylko wtedy, gdy ustawiona w konfiguracji. */
+function atrybutyCiasteczka() {
+  return (
+    '; HttpOnly; SameSite=Lax; Path=/' +
+    (KONF.cookieDomena ? `; Domain=${KONF.cookieDomena}` : '') +
+    (KONF.cookieSecure ? '; Secure' : '')
+  );
+}
+
+async function obslugaLogowania(req, res) {
+  const ip = adresIp(req);
+  if (zablokowany(ip)) {
+    return odpowiedzTekst(res, 429, stronaLogowania('Za dużo prób. Spróbuj za 15 minut.'), 'text/html; charset=utf-8');
+  }
+  const dane = new URLSearchParams((await czytajCialo(req, 8192)).toString('utf8'));
+  const login = (dane.get('login') || '').trim();
+  const haslo = dane.get('haslo') || '';
+  const uzytkownik = wczytajUzytkownikow().find((u) => u.login === login);
+
+  if (!uzytkownik || !hasloPasuje(haslo, uzytkownik)) {
+    nieudanaProba(ip);
+    return odpowiedzTekst(res, 401, stronaLogowania('Niepoprawny login lub hasło.'), 'text/html; charset=utf-8');
+  }
+
+  proby.delete(ip);
+  const token = utworzSesje(uzytkownik);
+  const ciasteczko = `cai_auth=${token}${atrybutyCiasteczka()}; Max-Age=${KONF.sesjaGodzin * 3600}`;
+  res.writeHead(302, { Location: '/', 'Set-Cookie': ciasteczko });
+  return res.end();
+}
+
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 async function obsluz(req, res) {
@@ -494,27 +557,7 @@ async function obsluz(req, res) {
 
   // Logowanie
   if (sciezka === '/auth/login' && req.method === 'POST') {
-    const ip = adresIp(req);
-    if (zablokowany(ip)) {
-      return odpowiedzTekst(res, 429, stronaLogowania('Za dużo prób. Spróbuj za 15 minut.'), 'text/html; charset=utf-8');
-    }
-    const dane = new URLSearchParams((await czytajCialo(req, 8192)).toString('utf8'));
-    const login = (dane.get('login') || '').trim();
-    const haslo = dane.get('haslo') || '';
-    const uzytkownik = wczytajUzytkownikow().find((u) => u.login === login);
-
-    if (!uzytkownik || !hasloPasuje(haslo, uzytkownik)) {
-      nieudanaProba(ip);
-      return odpowiedzTekst(res, 401, stronaLogowania('Niepoprawny login lub hasło.'), 'text/html; charset=utf-8');
-    }
-
-    proby.delete(ip);
-    const token = utworzSesje(uzytkownik);
-    const ciasteczko =
-      `cai_auth=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${KONF.sesjaGodzin * 3600}` +
-      (KONF.cookieSecure ? '; Secure' : '');
-    res.writeHead(302, { Location: '/', 'Set-Cookie': ciasteczko });
-    return res.end();
+    return obslugaLogowania(req, res);
   }
 
   if (sciezka === '/auth/logout') {
@@ -522,7 +565,7 @@ async function obsluz(req, res) {
     if (s) sesje.delete(s.token);
     res.writeHead(302, {
       Location: '/',
-      'Set-Cookie': 'cai_auth=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0',
+      'Set-Cookie': `cai_auth=${atrybutyCiasteczka()}; Max-Age=0`,
     });
     return res.end();
   }
@@ -557,6 +600,8 @@ async function obsluz(req, res) {
       wektory: Boolean(KONF.wektory.klucz),
       modelWektorow: KONF.wektory.model,
       dataForSeo: Boolean(KONF.dataForSeo.login && KONF.dataForSeo.haslo),
+      openseo: Boolean(KONF.openseo.portNasluchu),
+      cookieDomena: Boolean(KONF.cookieDomena),
       uzytkownikow: wczytajUzytkownikow().length,
       aktywnychSesji: sesje.size,
     });
@@ -700,6 +745,39 @@ function start() {
     console.log(`Content AI: http://${KONF.host}:${KONF.port}`);
     console.log(`  dostawca tresci: ${KONF.dostawca}${KONF.dostawca === 'nvidia' ? ' (' + KONF.modelNvidia + ')' : ''}`);
     console.log(`  kont: ${uzytkownicy.length}, cookie Secure: ${KONF.cookieSecure ? 'tak' : 'NIE (tylko do testow lokalnych)'}`);
+  });
+
+  if (KONF.openseo.portNasluchu) startOpenSeo();
+}
+
+/**
+ * Drugi port - przed OpenSEO. Osobny nasluch, bo OpenSEO dostaje wlasny host
+ * (seo.twojadomena.pl) i wlasny korzen; szczegoly i uzasadnienie w openseo.js.
+ */
+function startOpenSeo() {
+  const brama = openseo.utworz(KONF.openseo, {
+    sesjaZadania,
+    obslugaLogowania,
+    stronaLogowania,
+    adresIp,
+  });
+
+  const serwer = http.createServer((req, res) => {
+    brama.obsluz(req, res).catch((e) => {
+      console.error('[openseo]', e.message);
+      if (!res.headersSent) odpowiedzTekst(res, 500, 'Blad serwera');
+      else res.end();
+    });
+  });
+
+  serwer.on('upgrade', (req, gniazdo, glowa) => brama.obsluzUpgrade(req, gniazdo, glowa));
+
+  serwer.listen(KONF.openseo.portNasluchu, KONF.host, () => {
+    console.log(`OpenSEO za logowaniem: http://${KONF.host}:${KONF.openseo.portNasluchu}`);
+    console.log(`  kontener: http://${KONF.openseo.host}:${KONF.openseo.port}`);
+    if (!KONF.cookieDomena) {
+      console.warn('  UWAGA: bez CAI_COOKIE_DOMENA logowanie nie przechodzi miedzy poddomenami.');
+    }
   });
 }
 

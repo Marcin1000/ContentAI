@@ -140,6 +140,26 @@ KONTROLE = [
     ("W/proxy", "proxy nie trzyma kluczy w pliku",
      "const API_KEY = ''; // wersja proxy - klucz po stronie workera",
      "const API_KEY = 'WSTAW_TUTAJ_NOWY_KLUCZ_API'; //", ("proxy",)),
+
+    # ── baza wiedzy na serwerze (tylko wariant proxy) ──
+    ("B/menu", "pozycja Baza wiedzy w menu ustawien",
+     'onclick="otworzBazeSerwera();closeSettingsMenu()"', None, ("proxy",)),
+    ("B/prompt", "wiedza do promptu idzie z serwera, nie z calych dokumentow",
+     "kbContext += await wiedzaZSerwera(", None, ("proxy",)),
+    ("B/api", "okno bazy rozmawia z endpointem wyszukiwania",
+     "fetch('/api/baza/szukaj'", None, ("proxy",)),
+
+    # ── brama OpenSEO (tylko wariant proxy) ──
+    # Adres i domene podstawia serwer przy serwowaniu strony; w repo maja zostac
+    # placeholdery, inaczej kazdy klon niesie czyjas domene.
+    ("O/menu", "pozycja OpenSEO w menu ustawien",
+     'onclick="otworzOpenSeo();closeSettingsMenu()"', None, ("proxy",)),
+    ("O/adres", "adres OpenSEO zostaje placeholderem",
+     "var ADRES = 'WSTAW_TUTAJ_ADRES_OPENSEO';", None, ("proxy",)),
+    ("O/domena", "domena ciasteczka zostaje placeholderem",
+     "var DOMENA = 'WSTAW_TUTAJ_DOMENA_CIASTECZKA';", None, ("proxy",)),
+    ("O/motyw", "wybor jasny/ciemny idzie do OpenSEO ciasteczkiem",
+     "document.cookie = 'cai_motyw=' + (ciemny ? 'ciemny' : 'jasny')", None, ("proxy",)),
 ]
 
 

@@ -1319,6 +1319,10 @@ document.addEventListener('DOMContentLoaded', function () {
           <span>📚</span>
           <div><div style="font-weight:600;font-size:13px" data-i18n="bazas-menu-title">Baza wiedzy</div><div style="font-size:11px;color:var(--text3)" data-i18n="bazas-menu-sub">prywatna i wspólna, na serwerze</div></div>
         </div>
+        <div class="settings-item" id="openseo-item" style="display:none" onclick="otworzOpenSeo();closeSettingsMenu()">
+          <span>📈</span>
+          <div><div style="font-weight:600;font-size:13px" data-i18n="openseo-menu-title">OpenSEO</div><div style="font-size:11px;color:var(--text3)" data-i18n="openseo-menu-sub">pozycje, backlinki, audyty</div></div>
+        </div>
         <div style="height:1px;background:var(--border);margin:4px 0"></div>
 <!--@@ENDIF-->
 <!--@@IF keys-->
@@ -2903,6 +2907,7 @@ var I18N = {
     'bazas-pusto':'Brak dokumentów. Dodaj pierwszy poniżej.','bazas-usun':'Usuń',
     'bazas-zamknij':'Zamknij','bazas-tylko-admin':'Do bazy wspólnej dodaje wyłącznie administrator.',
     'bazas-blad':'Nie udało się połączyć z serwerem.','bazas-dodaje':'Dodaję...',
+    'openseo-menu-title':'OpenSEO','openseo-menu-sub':'pozycje, backlinki, audyty',
 //@@ENDIF
     'history-select':'Wybierz artykuł z listy',
     // ── Tooltips ──
@@ -3320,6 +3325,7 @@ var I18N = {
     'bazas-pusto':'No documents yet. Add the first one below.','bazas-usun':'Remove',
     'bazas-zamknij':'Close','bazas-tylko-admin':'Only an administrator can add to the shared base.',
     'bazas-blad':'Could not reach the server.','bazas-dodaje':'Adding...',
+    'openseo-menu-title':'OpenSEO','openseo-menu-sub':'rankings, backlinks, audits',
 //@@ENDIF
     'history-select':'Select an article from the list',
     // ── Tooltips ──
@@ -10641,6 +10647,53 @@ if ('serviceWorker' in navigator) {
       return dane.prompt || '';
     } catch(e){ return ''; }
   };
+})();
+</script>
+<script>
+// ─── OpenSEO: wejscie z menu i wspolny motyw ──────────────────────────────────
+// Adres podstawia serwer przy serwowaniu strony. Gdy OpenSEO nie jest wdrozone,
+// placeholder zostaje nietkniety, pozycja w menu sie nie pokazuje i nic sie nie
+// dzieje - aplikacja dziala tak samo jak przedtem.
+(function(){
+  'use strict';
+  var ADRES = 'WSTAW_TUTAJ_ADRES_OPENSEO';
+  var DOMENA = 'WSTAW_TUTAJ_DOMENA_CIASTECZKA';
+  var wdrozone = ADRES && ADRES.indexOf('WSTAW_TUTAJ') !== 0;
+
+  window.otworzOpenSeo = function(){
+    if (wdrozone) window.open(ADRES, '_blank', 'noopener');
+  };
+
+  /**
+   * Wybor jasny/ciemny podajemy dalej ciasteczkiem, zeby OpenSEO otwieralo sie
+   * w tym samym motywie. localStorage odpada - OpenSEO stoi pod inna poddomena,
+   * a to inne zrodlo. Domena ciasteczka bierze sie z konfiguracji serwera
+   * (CAI_COOKIE_DOMENA); bez niej ciasteczko zostaje na tym hoscie, a OpenSEO
+   * idzie za ustawieniem systemu - nadal spojnie, tylko bez synchronizacji.
+   */
+  function zapiszMotyw(){
+    try {
+      var ciemny = document.body.classList.contains('dark-mode');
+      var domena = DOMENA.indexOf('WSTAW_TUTAJ') === 0 ? '' : DOMENA;
+      document.cookie = 'cai_motyw=' + (ciemny ? 'ciemny' : 'jasny')
+        + '; Path=/; Max-Age=31536000; SameSite=Lax'
+        + (domena ? '; Domain=' + domena : '')
+        + (location.protocol === 'https:' ? '; Secure' : '');
+    } catch(e){}
+  }
+
+  // Przelacznik jest zdefiniowany wyzej; owijamy go, zeby nie ruszac oryginalu.
+  var pierwotny = window.toggleDarkMode;
+  if (typeof pierwotny === 'function') {
+    window.toggleDarkMode = function(){ var w = pierwotny.apply(this, arguments); zapiszMotyw(); return w; };
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    zapiszMotyw();
+    if (!wdrozone) return;
+    var poz = document.getElementById('openseo-item');
+    if (poz) poz.style.display = '';
+  });
 })();
 </script>
 <!--@@ENDIF-->

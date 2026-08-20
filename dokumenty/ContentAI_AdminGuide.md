@@ -150,6 +150,38 @@ Stan sprawdzisz jako admin pod `/api/status` — pole `wektory` mówi, czy klucz
 
 ---
 
+## OpenSEO pod jednym logowaniem
+
+OpenSEO to osobna aplikacja w kontenerze — analiza SEO: pozycje, backlinki, audyty.
+Dla użytkownika ma jednak wyglądać jak część całości, więc Content AI stoi przed nią jako
+brama: **to samo konto, ten sam wygląd, żadnego drugiego hasła.**
+
+W `/etc/contentai/srodowisko`:
+
+```
+CAI_OPENSEO_PORT=3110
+CAI_OPENSEO_ADRES=https://seo.twojadomena.pl
+CAI_COOKIE_DOMENA=.twojadomena.pl
+```
+
+```bash
+sudo systemctl restart contentai
+```
+
+W menu ustawień pojawia się wtedy pozycja **OpenSEO**, otwierająca panel w nowej karcie.
+Osoba niezalogowana dostaje ekran logowania Content AI, a żądanie w ogóle nie dociera
+do kontenera. Odebranie komuś konta odcina go od obu aplikacji naraz.
+
+Jasny/ciemny idzie za przełącznikiem w Content AI — OpenSEO otwiera się w tym samym motywie.
+
+**Uwaga przy Caddy:** kieruj `seo.twojadomena.pl` na port **3110**, nigdy na 3001.
+3001 to goły kontener, który nie ma żadnego logowania — wystawienie go wprost oznacza,
+że każdy zobaczy Twoje dane i będzie wypalał kredyty DataForSEO.
+
+Instalacja samego OpenSEO i pełna konfiguracja: **`openseo/README.md`**.
+
+---
+
 ## Najczęstsze problemy
 
 **„Niepoprawny login lub hasło" mimo dobrego hasła.** Po 8 nieudanych próbach z jednego
@@ -171,6 +203,20 @@ komunikat; prawdziwy jest w logu:
 ```bash
 sudo journalctl -u contentai -n 50
 ```
+
+**OpenSEO prosi o logowanie mimo zalogowania w Content AI.** Brakuje `CAI_COOKIE_DOMENA`
+albo obie aplikacje stoją pod różnymi domenami. Ciasteczko sesji nie przechodzi między
+domenami — muszą to być poddomeny tej samej domeny.
+
+**OpenSEO pokazuje „OpenSEO nie odpowiada".** Brama działa, kontener nie:
+
+```bash
+sudo docker compose -f /srv/openseo/compose.yaml ps
+```
+
+**OpenSEO wygląda jak obca aplikacja (fiolet zamiast bursztynu).** Zniknął plik
+`app/openseo-motyw.css` — w logu jest wtedy ostrzeżenie przy starcie. Przywróć go
+z repozytorium i zrestartuj usługę.
 
 **Aplikacja się nie uruchamia, w logu brak `app/web-proxy.html`.** Warianty nie zostały
 zbudowane po aktualizacji:

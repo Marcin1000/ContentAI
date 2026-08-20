@@ -4,27 +4,60 @@
 i Ahrefsa: badanie fraz, monitoring pozycji, analiza konkurencji, backlinki, audyty stron
 i widoczność w AI. Licencja MIT.
 
-To **osobna aplikacja**, nie moduł Content AI. Stoi obok, na tym samym serwerze, pod własną
-domeną. Content AI nie zależy od niej i działa bez niej.
+Kod OpenSEO jest **osobny** i tak zostaje — nie forkujemy go i nie budujemy własnego obrazu.
+Dla użytkownika ma to jednak wyglądać jak jedna aplikacja, więc Content AI staje przed
+OpenSEO jako **brama**: jedno logowanie i ta sama paleta barw.
 
 > Ten katalog zawiera wyłącznie konfigurację i instrukcję wdrożenia po naszej stronie.
 > Kod OpenSEO mieszka w swoim repozytorium i stamtąd się aktualizuje.
 
 ---
 
-## ⚠️ Najpierw to: wersja Docker nie ma logowania
+## Jak to jest poskładane
 
-Self-hosting przez Dockera startuje z `AUTH_MODE=local_noauth` — **aplikacja nie ma żadnego
+```
+przeglądarka ──HTTPS──► Caddy ──► brama Content AI ──► kontener OpenSEO
+   seo.twojadomena.pl              (port 3110)            (port 3001)
+                                        │
+                                        ├── wpuszcza tylko zalogowanych
+                                        └── dokleja paletę Content AI
+```
+
+**Brama to `serwer/openseo.js`** — ten sam proces Node, który obsługuje Content AI, tylko
+nasłuchujący na drugim porcie. Robi dokładnie dwie rzeczy i nic ponadto.
+
+### 1. Jedno logowanie
+
+Wersja Docker OpenSEO startuje z `AUTH_MODE=local_noauth` — **aplikacja nie ma żadnego
 logowania**. Dokumentacja OpenSEO mówi wprost, że wystawienie jej na świat wymaga własnego
 „auth-protected reverse proxy, tunnel, or private network".
 
-Co to znaczy praktycznie: jeśli podepniesz domenę bez zabezpieczenia, **każdy, kto trafi
-na adres, dostanie pełny dostęp** — zobaczy Twoje dane i będzie wypalał Twoje kredyty
-DataForSEO, za które płacisz od zapytania.
+Co to znaczy praktycznie: gdybyś podpiął domenę wprost pod port 3001, **każdy, kto trafi
+na adres, dostałby pełny dostęp** — zobaczyłby Twoje dane i wypalał Twoje kredyty DataForSEO,
+za które płacisz od zapytania.
 
-Domyślnie ryzyka nie ma, bo `compose.yaml` wiąże port z `127.0.0.1` — z zewnątrz nic nie widać.
-**Ryzyko pojawia się dopiero w momencie dodania reverse proxy.** Dlatego konfiguracja Caddy
-niżej ma logowanie wbudowane i nie należy go z niej usuwać.
+Bramę przechodzą wyłącznie osoby zalogowane do Content AI — **tym samym kontem**, bez drugiego
+hasła. Kto nie ma sesji, dostaje ekran logowania Content AI, a żądanie w ogóle nie dociera
+do kontenera. Odebranie komuś konta odcina go od obu aplikacji naraz.
+
+Warunek: obie poddomeny muszą należeć do tej samej domeny, a serwer musi mieć ustawione
+`CAI_COOKIE_DOMENA` (np. `.twojadomena.pl`). Bez tego wszystko działa, tylko logujesz się
+osobno na każdej poddomenie.
+
+### 2. Ta sama paleta
+
+Do każdej strony brama dokleja `app/openseo-motyw.css` — barwy, promienie i krój pisma
+Content AI. OpenSEO stoi na daisyUI, a daisyUI bierze kolory ze **zmiennych CSS**, więc
+przemalowanie to podmiana ~25 zmiennych, a nie grzebanie w ich komponentach.
+
+To jest powód, dla którego przeżyje `docker compose pull`: zaczepiamy się o kontrakt
+zmiennych daisyUI, a nie o nazwy klas OpenSEO, które mogą się zmienić w każdej wersji.
+
+Jasny/ciemny idzie za przełącznikiem w Content AI (ciasteczko `cai_motyw`). Gdy ciasteczka
+nie ma, OpenSEO idzie za ustawieniem systemu — nadal spójnie, tylko bez synchronizacji.
+
+**Czego brama nie robi:** nie zmienia układu ekranów, nie tłumaczy interfejsu i nie dodaje
+funkcji. OpenSEO zostaje OpenSEO — po prostu w barwach Content AI.
 
 ---
 
@@ -95,36 +128,63 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3001
 
 ---
 
-## Caddy — HTTPS **i logowanie**
+## Włączenie bramy
 
-Dopisz do `/etc/caddy/Caddyfile` obok wpisu Content AI:
+W `/etc/contentai/srodowisko` (to plik **Content AI**, nie OpenSEO):
+
+```
+CAI_OPENSEO_PORT=3110
+CAI_OPENSEO_UPSTREAM=3001
+CAI_OPENSEO_ADRES=https://seo.twojadomena.pl
+CAI_COOKIE_DOMENA=.twojadomena.pl
+```
+
+```bash
+sudo systemctl restart contentai
+```
+
+W logu powinny być dwa nasłuchy:
+
+```bash
+sudo journalctl -u contentai -n 20
+#   Content AI: http://127.0.0.1:3100
+#   OpenSEO za logowaniem: http://127.0.0.1:3110
+```
+
+`CAI_OPENSEO_ADRES` dokłada pozycję **OpenSEO** w menu ustawień Content AI. Bez tej zmiennej
+brama działa tak samo, tylko w menu nie ma skrótu.
+
+Zmiana `CAI_COOKIE_DOMENA` unieważnia bieżące ciasteczka — po pierwszym restarcie wszyscy
+logują się ponownie. Później już nie.
+
+---
+
+## Caddy — HTTPS
+
+Dopisz do `/etc/caddy/Caddyfile` obok wpisu Content AI (pełny wzór: `Caddyfile.przyklad`):
 
 ```
 seo.twojadomena.pl {
-    # OpenSEO w wersji Docker nie ma wlasnego logowania - to jest jedyna oslona.
-    # NIE usuwaj tego bloku, dopoki aplikacja nie dostanie wlasnego uwierzytelniania.
-    basic_auth {
-        marcin WKLEJ_HASH_Z_CADDY_HASH_PASSWORD
-    }
-    reverse_proxy 127.0.0.1:3001
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:3110
 }
 ```
 
-Hash hasła:
-
 ```bash
-caddy version           # sprawdz wersje
-caddy hash-password     # wygeneruj hash
 sudo systemctl reload caddy
 ```
 
-Dyrektywa nazywa się `basic_auth` od **Caddy 2.8**; w starszych wersjach to `basicauth`.
-Jeśli Caddy odmówi startu z komunikatem o nierozpoznanej dyrektywie, użyj drugiej nazwy.
+**Port 3110, nie 3001.** 3001 to goły kontener bez logowania; 3110 to brama. To jedyne
+miejsce, w którym łatwo zrobić sobie krzywdę — wpisanie tam 3001 wystawia OpenSEO na świat
+bez żadnej ochrony.
+
+`encode` nie jest ozdobnikiem: brama oddaje treść nieskompresowaną, bo musi widzieć HTML,
+żeby dokleić motyw. Kompresję do przeglądarki robi Caddy.
 
 Wcześniej ustaw w DNS rekord A `seo.twojadomena.pl` → IP serwera.
 
-**Alternatywa bez hasła w Caddy:** wpuść ruch wyłącznie przez Tailscale, tak jak Cosmos.
-Wtedy `basicauth` nie jest potrzebny, bo do adresu nie da się dostać z internetu.
+**Alternatywa:** wpuść ruch wyłącznie przez Tailscale, tak jak Cosmos. Brama i tak zostaje —
+logowanie Content AI działa niezależnie od tego, którędy przyszedł ruch.
 
 ---
 
@@ -159,23 +219,41 @@ schodzą z jednego salda.
 |---|---|---|
 | Do czego | pisanie treści pod SEO/AIO/AEO/GEO | analiza SEO: pozycje, backlinki, audyty |
 | Dane SERP | `CAI_SERP=dataforseo` — prosto z API | pełny interfejs nad tymi danymi |
-| Logowanie | konta z rolami, wbudowane | brak w wersji Docker — osłania Caddy |
-| Port | 3100 | 3001 |
+| Logowanie | konta z rolami, wbudowane | to samo konto, przez bramę |
+| Wygląd | paleta Content AI | ta sama paleta, doklejana przez bramę |
+| Port | 3100 | 3110 (brama) → 3001 (kontener) |
 
-Content AI **nie woła OpenSEO** i nie jest od niego zależny. Po dane SERP idzie prosto
-do DataForSEO, bo przechodzenie przez OpenSEO oznaczałoby dodatkową warstwę po to,
-żeby dostać te same dane z tego samego źródła.
+Content AI **nie woła OpenSEO** i nie jest od niego zależny — poza bramą, która tylko
+przepuszcza ruch. Po dane SERP Content AI idzie prosto do DataForSEO, bo przechodzenie
+przez OpenSEO oznaczałoby dodatkową warstwę po to, żeby dostać te same dane z tego
+samego źródła.
+
+Gdy kontener nie działa, Content AI działa dalej bez zmian — brama pokazuje wtedy stronę
+z podpowiedzią, co sprawdzić.
 
 OpenSEO wystawia serwer MCP dla agentów AI (Claude Code i podobne) — to naturalna ścieżka,
 gdyby kiedyś sięgać do jego danych programowo, ale dziś nic z niej nie korzysta.
 
 ---
 
-## Czego nie sprawdziłem
+## Co jest sprawdzone, a co nie
 
-Wdrożenia nie dało się przetestować w środowisku, w którym powstawała ta instrukcja —
-nie ma tam Dockera ani konta DataForSEO. Zweryfikowane są **fakty z repozytorium OpenSEO**:
-nazwa pliku `compose.yaml`, powiązanie portu z `127.0.0.1`, wolumen `open_seo_data`, brak
-osobnej usługi bazy danych, nazwy zmiennych i domyślny `AUTH_MODE=local_noauth`.
+**Sprawdzone automatycznie** (`node serwer/testy.js`, 34 testy samej bramy): odmowa bez
+sesji i to, że żądanie nie dociera wtedy do kontenera; doklejanie motywu przed `</head>`;
+przeliczanie długości treści; przepuszczanie zasobów bez zmian; odcinanie nagłówków
+hop-by-hop; to, że token sesji Content AI **nie wycieka** do OpenSEO; zachowanie nagłówka
+`Host` (wymaga tego `ALLOWED_HOST`); strona 502, gdy kontener nie odpowiada.
+
+**Sprawdzone w przeglądarce:** paleta na prawdziwym daisyUI 5.7.19 — komponenty `btn`,
+`input`, `select`, `badge`, karty i tabele w wersji jasnej i ciemnej.
+
+**Niesprawdzone:** samo wdrożenie Dockera. W środowisku, w którym powstawała ta instrukcja,
+nie ma demona Dockera ani konta DataForSEO, więc bramę testowałem wobec atrapy mówiącej tym
+samym protokołem, a nie wobec żywego OpenSEO. Zweryfikowane są **fakty z repozytorium
+OpenSEO**: nazwa pliku `compose.yaml`, powiązanie portu z `127.0.0.1`, wolumen
+`open_seo_data`, brak osobnej usługi bazy danych, nazwy zmiennych, domyślny
+`AUTH_MODE=local_noauth` oraz to, że motywy są zbudowane na zmiennych daisyUI.
 
 Same polecenia uruchom u siebie i obserwuj `docker compose logs -f` przy pierwszym starcie.
+Przy pierwszym wejściu na `seo.twojadomena.pl` sprawdź dwie rzeczy: że w trybie incognito
+dostajesz ekran logowania, i że po zalogowaniu strona jest w barwach Content AI.

@@ -227,10 +227,145 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
     global.fetch = oryginalnyFetch;
     fs.rmSync(katalog, { recursive: true, force: true });
 
+    await testyOpenSeo();
+
     console.log(`\n  ${zaliczone} zaliczonych, ${bledy.length} bledow\n`);
     if (bledy.length) {
       for (const b of bledy) console.error(`  nie przeszlo: ${b}`);
       process.exit(1);
     }
   })();
+}
+
+// ─── Brama OpenSEO ────────────────────────────────────────────────────────────
+// Prawdziwego OpenSEO tu nie ma (to kontener Dockera), wiec w jego miejsce
+// stawiamy atrape mowiaca tym samym protokolem: strona HTML, zasob statyczny
+// i echo naglowkow. To wystarcza, bo sprawdzamy nasza brame, nie ich aplikacje.
+
+async function testyOpenSeo() {
+  const http = require('node:http');
+  const openseo = require('./openseo.js');
+
+  console.log('\n  brama OpenSEO - skladanie odpowiedzi');
+  {
+    const blok = openseo.blokMotywu(7);
+    sprawdz(
+      'motyw ladauje sie przed </head>',
+      openseo.wstrzyknij('<html><head><title>x</title></head><body>y</body></html>', blok)
+        .indexOf('/__cai/motyw.css') < '<html><head><title>x</title></head>'.length + blok.length
+    );
+    sprawdz(
+      'bez <head> motyw idzie przed </body>',
+      /motyw\.css[\s\S]*<\/body>/.test(openseo.wstrzyknij('<body>y</body>', blok))
+    );
+    sprawdz('bez <head> i <body> motyw i tak jest', openseo.wstrzyknij('goly tekst', blok).includes('motyw.css'));
+    sprawdz('wersja arkusza trafia do adresu', blok.includes('motyw.css?v=7'));
+    sprawdz('krój pisma ten sam co w Content AI', blok.includes('IBM+Plex+Sans'));
+
+    sprawdz('HTML rozpoznany', openseo.czyHtml({ 'content-type': 'text/html; charset=utf-8' }));
+    sprawdz('JSON to nie HTML', !openseo.czyHtml({ 'content-type': 'application/json' }));
+    sprawdz('brak typu to nie HTML', !openseo.czyHtml({}));
+  }
+
+  console.log('\n  brama OpenSEO - naglowki');
+  {
+    const req = {
+      headers: {
+        host: 'seo.example.pl',
+        cookie: 'cai_auth=tajny-token; openseo_sesja=abc',
+        connection: 'keep-alive',
+        'accept-encoding': 'gzip, br',
+      },
+    };
+    const g = openseo.naglowkiDoGory(req, '198.51.100.7');
+    sprawdz('token sesji Content AI nie idzie do OpenSEO', !String(g.cookie).includes('cai_auth'));
+    sprawdz('wlasne ciasteczka OpenSEO przechodza', String(g.cookie).includes('openseo_sesja=abc'));
+    sprawdz('naglowki hop-by-hop odciete', !('connection' in g));
+    sprawdz('zadamy nieskompresowanej tresci', g['accept-encoding'] === 'identity');
+    sprawdz('adres klienta przekazany', g['x-forwarded-for'] === '198.51.100.7');
+    sprawdz('host zachowany dla ALLOWED_HOST', g.host === 'seo.example.pl');
+
+    const samoCai = openseo.naglowkiDoGory({ headers: { cookie: 'cai_auth=x' } }, null);
+    sprawdz('puste ciasteczko nie zostaje pustym naglowkiem', !('cookie' in samoCai));
+
+    const d = openseo.naglowkiWDol({ 'content-type': 'text/html', 'transfer-encoding': 'chunked' });
+    sprawdz('transfer-encoding nie wraca do przegladarki', !('transfer-encoding' in d));
+  }
+
+  console.log('\n  brama OpenSEO - ruch');
+  {
+    let doszloDoOpenSeo = 0;
+    let ostatnieCiasteczko = null;
+
+    const atrapa = http.createServer((req, res) => {
+      doszloDoOpenSeo += 1;
+      ostatnieCiasteczko = req.headers.cookie || null;
+      if (req.url === '/zasob.js') {
+        res.writeHead(200, { 'Content-Type': 'application/javascript' });
+        return res.end('console.log(1)');
+      }
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end('<html><head><title>OpenSEO</title></head><body class="bg-base-200">panel</body></html>');
+    });
+    await new Promise((r) => atrapa.listen(0, '127.0.0.1', r));
+
+    let zalogowany = false;
+    const brama = openseo.utworz(
+      { host: '127.0.0.1', port: atrapa.address().port },
+      {
+        sesjaZadania: () => (zalogowany ? { login: 'marcin', rola: 'admin' } : null),
+        obslugaLogowania: async (req, res) => res.writeHead(302, { Location: '/' }).end(),
+        stronaLogowania: (k) => `<html><body>${k || 'logowanie'}</body></html>`,
+        adresIp: () => '127.0.0.1',
+      }
+    );
+
+    const serwer = http.createServer((req, res) => {
+      brama.obsluz(req, res).catch(() => res.writeHead(500).end());
+    });
+    await new Promise((r) => serwer.listen(0, '127.0.0.1', r));
+    const adres = `http://127.0.0.1:${serwer.address().port}`;
+
+    // Bez sesji
+    const bez = await fetch(adres + '/', { redirect: 'manual' });
+    const bezTresc = await bez.text();
+    sprawdz('bez logowania brama odmawia', bez.status === 401);
+    sprawdz('bez logowania pokazuje ekran logowania', bezTresc.includes('Zaloguj'));
+    sprawdz('bez logowania OpenSEO nie dostaje zadania', doszloDoOpenSeo === 0);
+
+    // Arkusz z paleta - serwujemy go sami, bez pytania OpenSEO
+    const css = await fetch(adres + '/__cai/motyw.css');
+    const cssTresc = await css.text();
+    sprawdz('arkusz palety dostepny bez logowania', css.status === 200);
+    sprawdz('arkusz to CSS', /text\/css/.test(css.headers.get('content-type') || ''));
+    sprawdz('arkusz podmienia zmienne daisyUI', cssTresc.includes('--color-base-100'));
+    sprawdz('arkusz niesie bursztyn Content AI', cssTresc.includes('#ffb000'));
+    sprawdz('arkusz nie pyta OpenSEO', doszloDoOpenSeo === 0);
+
+    // Po zalogowaniu
+    zalogowany = true;
+    const strona = await fetch(adres + '/', { headers: { cookie: 'cai_auth=tajny; inne=1' } });
+    const html = await strona.text();
+    sprawdz('po zalogowaniu strona przechodzi', strona.status === 200);
+    sprawdz('strona OpenSEO dotarla w calosci', html.includes('panel'));
+    sprawdz('motyw doklejony do strony', html.includes('/__cai/motyw.css'));
+    sprawdz('motyw przed </head>', html.indexOf('motyw.css') < html.indexOf('</head>'));
+    sprawdz('dlugosc tresci przeliczona po wstrzyknieciu',
+      Number(strona.headers.get('content-length')) === Buffer.byteLength(html));
+    sprawdz('token sesji nie wyciekl do OpenSEO', !String(ostatnieCiasteczko).includes('tajny'));
+
+    const zasob = await fetch(adres + '/zasob.js');
+    const zasobTresc = await zasob.text();
+    sprawdz('zasoby przechodza bez zmian', zasobTresc === 'console.log(1)');
+    sprawdz('w zasoby nic nie wstrzykujemy', !zasobTresc.includes('motyw.css'));
+
+    // Kontener padl
+    await new Promise((r) => atrapa.close(r));
+    const padl = await fetch(adres + '/');
+    const padlTresc = await padl.text();
+    sprawdz('gdy kontener nie odpowiada, jest 502', padl.status === 502);
+    sprawdz('502 tlumaczy, co sprawdzic', padlTresc.includes('docker compose'));
+
+    await new Promise((r) => serwer.close(r));
+  }
 }

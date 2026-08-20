@@ -83,6 +83,11 @@ Wszystko przez zmienne środowiskowe.
 | `CAI_BAZA` | `serwer/dane/baza` | katalog bazy wiedzy |
 | `CAI_MODEL_EMBED` | `nvidia/nv-embedqa-e5-v5` | model wektorów |
 | `CAI_URL_EMBED` | `https://integrate.api.nvidia.com/v1/embeddings` | endpoint wektorów |
+| `CAI_COOKIE_DOMENA` | — | domena ciasteczka sesji, np. `.twojadomena.pl` |
+| `CAI_OPENSEO_PORT` | — | port bramy OpenSEO; puste = brama wyłączona |
+| `CAI_OPENSEO_UPSTREAM` | `3001` | port kontenera OpenSEO |
+| `CAI_OPENSEO_HOST` | `127.0.0.1` | host kontenera OpenSEO |
+| `CAI_OPENSEO_ADRES` | — | publiczny adres OpenSEO — dokłada pozycję w menu |
 
 ### Klucze mieszane
 
@@ -154,6 +159,30 @@ Zwracane `avgWords` i `avgH2` to zera — ten endpoint DataForSEO nie podaje dł
 konkurencji, a zero jest uczciwsze niż zmyślona liczba. Aplikacja traktuje je jako brak danych.
 
 DataForSEO jest płatne za zapytanie. Konto zakładasz na dataforseo.com.
+
+### Brama OpenSEO
+
+Podanie `CAI_OPENSEO_PORT` otwiera **drugi port**, na którym ten sam proces stoi przed
+kontenerem OpenSEO. Robi dwie rzeczy: wpuszcza wyłącznie zalogowanych do Content AI
+i dokleja do stron `app/openseo-motyw.css`, czyli paletę Content AI.
+
+```
+CAI_OPENSEO_PORT=3110
+CAI_OPENSEO_ADRES=https://seo.twojadomena.pl
+CAI_COOKIE_DOMENA=.twojadomena.pl
+```
+
+Caddy kieruje `seo.twojadomena.pl` na **3110**, nigdy na 3001 — 3001 to goły kontener,
+który startuje z `AUTH_MODE=local_noauth`, czyli bez żadnego logowania.
+
+`CAI_COOKIE_DOMENA` sprawia, że jedna sesja obejmuje obie poddomeny. Bez tego wszystko
+działa, tylko logujesz się osobno na każdej. Zmiana tej wartości unieważnia bieżące
+ciasteczka — po restarcie wszyscy logują się ponownie.
+
+Token sesji Content AI jest **wycinany** z nagłówka `Cookie` przed przekazaniem żądania
+do kontenera — obca aplikacja go nie widzi.
+
+Szczegóły, uzasadnienie wyborów i wdrożenie: **`openseo/README.md`**.
 
 ### Modele open source
 
