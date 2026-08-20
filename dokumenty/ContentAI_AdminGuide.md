@@ -252,6 +252,19 @@ sudo systemctl restart contentai
 
 ---
 
+## Aplikacja nie łączy się z obcymi serwerami
+
+Biblioteki do wczytywania i eksportu plików oraz krój pisma leżą w repozytorium i są
+serwowane z Twojego serwera. Poza wywołaniami do Anthropic, OpenAI i ElevenLabs przeglądarka
+użytkownika nie wysyła nic na zewnątrz.
+
+Praktycznie znaczy to dwie rzeczy: aplikacja działa w zamkniętej sieci firmowej, a nikt spoza
+organizacji nie może podmienić kodu, który wykonuje się u Twoich użytkowników.
+
+Po aktualizacji repozytorium biblioteki aktualizują się razem z kodem — nie ma osobnego kroku.
+
+---
+
 ## Zasady przetwarzania danych osobowych (ODO)
 
 Niezależnie od modułu admin pilnuje zasad zgłoszonych do ODO.

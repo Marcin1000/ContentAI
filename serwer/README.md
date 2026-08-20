@@ -277,8 +277,11 @@ Co serwer robi:
 - **8 nieudanych prób logowania z jednego IP → blokada na 15 minut**
 - cookie `HttpOnly`, `SameSite=Lax`, `Secure` (gdy `CAI_COOKIE_SECURE=1`)
 - klucze API nigdy nie docierają do przeglądarki
-- pliki statyczne tylko z `app/pwa/` — reszta katalogu jest niedostępna, próby wyjścia
-  poza katalog kończą się 404
+- pliki statyczne tylko z listy dozwolonych: `manifest.json`, `icons/*`, `pwa/lib/*.js`
+  i `pwa/fonty/*.woff2` — reszta katalogu jest niedostępna, próby wyjścia poza katalog
+  kończą się 404
+- aplikacja nie pobiera niczego z obcych serwerów: biblioteki (mammoth, pdf.js, pdfmake,
+  xlsx, html-docx-js) i krój IBM Plex leżą w repozytorium i idą z Twojego hosta
 - szczegóły błędów dostawcy trafiają do logu serwera, nie do przeglądarki
 
 Czego **nie** robi — i o czym trzeba wiedzieć:

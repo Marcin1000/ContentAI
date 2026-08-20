@@ -34,6 +34,7 @@ Pozostałe warianty: `app/web-proxy.html` (klucze po stronie serwera lub Cloudfl
 | **Modele open source** | `CAI_DOSTAWCA=nvidia` — serwer tłumaczy format, aplikacja nie wymaga zmian |
 | **Realne dane SERP** | `CAI_SERP=dataforseo` albo `openseo` zamiast szacowania przez model |
 | **OpenSEO za tym samym logowaniem** | brama: jedno konto, ta sama paleta, wymiana fraz w obie strony |
+| **Zero obcych serwerów** | biblioteki i krój pisma hostowane razem z aplikacją |
 
 ---
 
@@ -45,7 +46,9 @@ albo jest opakowywany w Electron / Capacitor.
 
 Modele: `claude-sonnet-4-6` (treść), `claude-haiku-4-5` (zadania pomocnicze),
 `gpt-image-1` (grafiki), `gpt-4o-mini-tts` i ElevenLabs (audio), `gpt-4o-transcribe`
-(transkrypcja). Biblioteki do plików (mammoth, pdf.js, xlsx, html-docx-js) ładowane z CDN.
+(transkrypcja). Biblioteki do plików (mammoth, pdf.js, pdfmake, xlsx, html-docx-js) oraz krój
+IBM Plex leżą **w repozytorium**, w `app/pwa/lib/` i `app/pwa/fonty/` — aplikacja nie pobiera
+niczego z obcych serwerów.
 
 ### Jedno źródło, trzy warianty
 
@@ -220,10 +223,19 @@ i część instrukcji. Przy przenoszeniu odtworzono ze starszego `ContentAI_pako
 
 Ikony są odbrandowane (bursztynowa gwiazda na `#07080D`), zgodne z logo z showcase.
 
-### 4. Aplikacja nie działa offline
+### 4. Aplikacja nie wysyła żądań poza wywołaniami API
 
-Biblioteki do plików i fonty ładują się z CDN, a same generacje i tak wymagają internetu.
-Pełny offline to osobny zakres (wbudowanie bibliotek lokalnie).
+Biblioteki i krój pisma są hostowane razem z aplikacją — poza wywołaniami do Anthropic,
+OpenAI i ElevenLabs (albo do Twojego serwera, w wariancie proxy) nie leci nic. Dzięki temu
+działa w zamkniętej sieci firmowej i nikt z zewnątrz nie może podmienić kodu, który się
+w niej wykonuje.
+
+Pełnego trybu offline nadal nie ma i mieć nie może — generowanie treści wymaga API modelu.
+Nie ma też service workera: aplikacja to jeden plik aktualizowany przez `git pull` i restart
+usługi, więc cache oznaczałby użytkowników pracujących na starej wersji.
+
+Ścieżki do bibliotek są względne (`pwa/lib/…`), więc działają tak samo przy otwarciu pliku
+z dysku, z serwera i w paczce natywnej. `zbuduj_web.py` kopiuje oba katalogi do payloadu.
 
 ---
 

@@ -120,6 +120,14 @@
   .modules{display:grid;grid-template-columns:1fr 1fr;gap:18px}
   .mod{border:1px solid var(--glass-brd);border-radius:16px;background:rgba(9,11,16,0.62);backdrop-filter:blur(12px);padding:22px;display:flex;flex-direction:column;gap:16px}
   .mod-head{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:0.06em;color:var(--text)}
+  /* Wdrozenie zespolowe */
+  .team{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .tcard{border:1px solid var(--glass-brd);border-radius:16px;background:rgba(9,11,16,0.62);backdrop-filter:blur(12px);padding:22px;display:flex;flex-direction:column;gap:10px}
+  .tcard-ico{font-family:var(--mono);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--cyan)}
+  .tcard h3{font-size:16px;font-weight:600;color:var(--text);letter-spacing:-0.01em}
+  .tcard p{font-size:14px;color:var(--muted);line-height:1.6}
+  .tnote{margin-top:20px;font-family:var(--mono);font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px 22px}
+  .tnote b{color:var(--amber);font-weight:600}
   .mod-ico{color:var(--amber);font-size:16px}
   .mod-canvas{height:150px;border-radius:12px;position:relative;overflow:hidden;border:1px solid var(--line)}
   .mod-canvas.gfx{background:linear-gradient(130deg,rgba(246,166,35,0.24),rgba(53,224,208,0.14) 58%,rgba(9,11,16,0.6));display:flex;align-items:center;justify-content:center}
@@ -187,6 +195,7 @@
     .readout{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
     .readout .sep{display:none}
     .panels,.modules{grid-template-columns:1fr}
+    .team{grid-template-columns:1fr}
     h1{font-size:clamp(2.2rem,9vw,3.2rem)}
   }
   @media (prefers-reduced-motion:reduce){
@@ -242,7 +251,7 @@
   <section class="block" id="pipeline">
     <div class="sec-head">
       <div>
-        <div class="sec-kicker reveal">Pipeline</div>
+        <div class="sec-kicker reveal" data-i18n="k-pipe">Pipeline</div>
         <h2 class="sec-title reveal" data-i18n="pipe-title">Sześć kroków od bazy wiedzy do gotowej publikacji.</h2>
       </div>
       <p class="sec-note reveal" data-i18n="pipe-note">Każdy krok pracuje w języku wybranym przy generowaniu.</p>
@@ -280,7 +289,7 @@
   <section class="block">
     <div class="sec-head">
       <div>
-        <div class="sec-kicker reveal">Analiza</div>
+        <div class="sec-kicker reveal" data-i18n="k-analiza">Analiza</div>
         <h2 class="sec-title reveal" data-i18n="an-title">Panele oceny w czasie rzeczywistym.</h2>
       </div>
       <p class="sec-note reveal" data-i18n="an-note">SEO, AIO, AEO i GEO, każdy z własnym wynikiem.</p>
@@ -312,7 +321,7 @@
   <section class="block">
     <div class="sec-head">
       <div>
-        <div class="sec-kicker reveal">Moduły</div>
+        <div class="sec-kicker reveal" data-i18n="k-moduly">Moduły</div>
         <h2 class="sec-title reveal" data-i18n="mod-title">Grafika i audio z tego samego okna.</h2>
       </div>
       <p class="sec-note reveal" data-i18n="mod-note">Do artykułu dokładasz obraz i wersję do odsłuchania.</p>
@@ -334,7 +343,7 @@
   <section class="block">
     <div class="sec-head">
       <div>
-        <div class="sec-kicker reveal">Luki</div>
+        <div class="sec-kicker reveal" data-i18n="k-luki">Luki</div>
         <h2 class="sec-title reveal" data-i18n="gap-title">Analiza luk semantycznych.</h2>
       </div>
       <p class="sec-note reveal" data-i18n="gap-note">Pokazuje, czego brakuje względem tego, co rankuje.</p>
@@ -348,6 +357,53 @@
         <li data-i18n="gap4">Najczęstsze pytania (FAQ)</li>
       </ul>
       <button class="gaps-cta" type="button" data-i18n="gap-cta">Uzupełnij luki jednym kliknięciem</button>
+    </div>
+  </section>
+
+  <section class="block" id="zespol">
+    <div class="sec-head">
+      <div>
+        <div class="sec-kicker reveal" data-i18n="k-zespol">Zespół</div>
+        <h2 class="sec-title reveal" data-i18n="team-title">Na Twoim serwerze, pod jednym logowaniem.</h2>
+      </div>
+      <p class="sec-note reveal" data-i18n="team-note">Konta zamiast rozdawania plików. Klucze API zostają po Twojej stronie.</p>
+    </div>
+    <div class="team">
+      <div class="tcard reveal">
+        <div class="tcard-ico">01</div>
+        <h3 data-i18n="t1t">Konta i role</h3>
+        <p data-i18n="t1p">Każdy loguje się swoim hasłem. Dostęp odbierasz jednym poleceniem, bez wymiany kluczy u pozostałych.</p>
+      </div>
+      <div class="tcard reveal">
+        <div class="tcard-ico">02</div>
+        <h3 data-i18n="t2t">Baza wiedzy, która rozumie temat</h3>
+        <p data-i18n="t2p">Dokumenty leżą na serwerze — prywatne i wspólne. Do promptu trafiają tylko fragmenty pasujące do tematu, nie cała baza.</p>
+      </div>
+      <div class="tcard reveal">
+        <div class="tcard-ico">03</div>
+        <h3 data-i18n="t3t">SEO i treść w jednym systemie</h3>
+        <p data-i18n="t3p">Analityka SEO stoi obok generatora, za tym samym logowaniem. Sprawdzone frazy wchodzą do artykułu jednym kliknięciem i wracają, żeby śledzić pozycje.</p>
+      </div>
+      <div class="tcard reveal">
+        <div class="tcard-ico">04</div>
+        <h3 data-i18n="t4t">Wybór modelu należy do Ciebie</h3>
+        <p data-i18n="t4p">Komercyjny albo open source — serwer tłumaczy format, więc przełączenie nie wymaga zmiany w aplikacji.</p>
+      </div>
+      <div class="tcard reveal">
+        <div class="tcard-ico">05</div>
+        <h3 data-i18n="t5t">Realne dane, nie szacunki</h3>
+        <p data-i18n="t5p">Analiza SERP może brać wyniki prosto z API zamiast pytać model. To, co widzisz, jest zmierzone.</p>
+      </div>
+      <div class="tcard reveal">
+        <div class="tcard-ico">06</div>
+        <h3 data-i18n="t6t">Zero obcych serwerów</h3>
+        <p data-i18n="t6p">Biblioteki i krój pisma idą z Twojego hosta. Aplikacja działa w zamkniętej sieci firmowej i nikt z zewnątrz nie podmieni kodu, który się w niej wykonuje.</p>
+      </div>
+    </div>
+    <div class="tnote reveal">
+      <span data-i18n="tn1">Serwer bez zależności npm</span>
+      <span data-i18n="tn2">Hasła haszowane <b>scryptem</b></span>
+      <span data-i18n="tn3">Klucze API <b>nigdy</b> w przeglądarce</span>
     </div>
   </section>
 
@@ -408,7 +464,17 @@
       "leg-seo":"wyniki Google","leg-aio":"AI Overviews","leg-aeo":"odpowiedzi i asystenci","leg-geo":"cytowania w modelach",
       "mod-gfx-prompt":"z tematu artykułu → ilustracja","mod-audio-label":"artykuł na głos",
       "gap-title":"Analiza luk semantycznych.","gap-note":"Pokazuje, czego brakuje względem tego, co rankuje.",
-      "gap-panel":"Braki do uzupełnienia","gap1":"Koszty wdrożenia i model rozliczeń","gap2":"Porównanie z konkurencją","gap3":"Wymagania techniczne i integracje","gap4":"Najczęstsze pytania (FAQ)","gap-cta":"Uzupełnij luki jednym kliknięciem"
+      "gap-panel":"Braki do uzupełnienia","gap1":"Koszty wdrożenia i model rozliczeń","gap2":"Porównanie z konkurencją","gap3":"Wymagania techniczne i integracje","gap4":"Najczęstsze pytania (FAQ)","gap-cta":"Uzupełnij luki jednym kliknięciem",
+      "team-title":"Na Twoim serwerze, pod jednym logowaniem.",
+      "team-note":"Konta zamiast rozdawania plików. Klucze API zostają po Twojej stronie.",
+      "t1t":"Konta i role","t1p":"Każdy loguje się swoim hasłem. Dostęp odbierasz jednym poleceniem, bez wymiany kluczy u pozostałych.",
+      "t2t":"Baza wiedzy, która rozumie temat","t2p":"Dokumenty leżą na serwerze — prywatne i wspólne. Do promptu trafiają tylko fragmenty pasujące do tematu, nie cała baza.",
+      "t3t":"SEO i treść w jednym systemie","t3p":"Analityka SEO stoi obok generatora, za tym samym logowaniem. Sprawdzone frazy wchodzą do artykułu jednym kliknięciem i wracają, żeby śledzić pozycje.",
+      "t4t":"Wybór modelu należy do Ciebie","t4p":"Komercyjny albo open source — serwer tłumaczy format, więc przełączenie nie wymaga zmiany w aplikacji.",
+      "t5t":"Realne dane, nie szacunki","t5p":"Analiza SERP może brać wyniki prosto z API zamiast pytać model. To, co widzisz, jest zmierzone.",
+      "t6t":"Zero obcych serwerów","t6p":"Biblioteki i krój pisma idą z Twojego hosta. Aplikacja działa w zamkniętej sieci firmowej i nikt z zewnątrz nie podmieni kodu, który się w niej wykonuje.",
+      "tn1":"Serwer bez zależności npm","tn2":"Hasła haszowane <b>scryptem</b>","tn3":"Klucze API <b>nigdy</b> w przeglądarce",
+      "k-pipe":"Pipeline","k-analiza":"Analiza","k-moduly":"Moduły","k-luki":"Luki","k-zespol":"Zespół"
     },
     en:{
       "cta-nav":"Launch generator",
@@ -441,7 +507,17 @@
       "leg-seo":"Google results","leg-aio":"AI Overviews","leg-aeo":"answers and assistants","leg-geo":"citations in models",
       "mod-gfx-prompt":"from the article topic → illustration","mod-audio-label":"article as audio",
       "gap-title":"Semantic gap analysis.","gap-note":"Shows what is missing versus what ranks.",
-      "gap-panel":"Gaps to fill","gap1":"Implementation cost and pricing model","gap2":"Comparison with competitors","gap3":"Technical requirements and integrations","gap4":"Frequently asked questions (FAQ)","gap-cta":"Fill the gaps in one click"
+      "gap-panel":"Gaps to fill","gap1":"Implementation cost and pricing model","gap2":"Comparison with competitors","gap3":"Technical requirements and integrations","gap4":"Frequently asked questions (FAQ)","gap-cta":"Fill the gaps in one click",
+      "team-title":"On your server, behind a single login.",
+      "team-note":"Accounts instead of handing out files. API keys stay on your side.",
+      "t1t":"Accounts and roles","t1p":"Everyone signs in with their own password. You revoke access with one command, without rotating keys for everyone else.",
+      "t2t":"A knowledge base that understands the topic","t2p":"Documents live on the server — private and shared. Only the passages matching the topic reach the prompt, not the whole base.",
+      "t3t":"SEO and content in one system","t3p":"SEO analytics sits next to the generator, behind the same login. Vetted keywords go into the article in one click and come back so their rankings can be tracked.",
+      "t4t":"The model choice is yours","t4p":"Commercial or open source — the server translates the format, so switching needs no change in the app.",
+      "t5t":"Measured data, not estimates","t5p":"SERP analysis can pull results straight from an API instead of asking the model. What you see was measured.",
+      "t6t":"No third-party servers","t6p":"Libraries and the typeface come from your own host. The app works on a closed corporate network and nobody outside can swap the code running inside it.",
+      "tn1":"Server with zero npm dependencies","tn2":"Passwords hashed with <b>scrypt</b>","tn3":"API keys <b>never</b> in the browser",
+      "k-pipe":"Pipeline","k-analiza":"Analysis","k-moduly":"Modules","k-luki":"Gaps","k-zespol":"Team"
     }
   };
   function stored(){ try{ return localStorage.getItem("cai_showcase_lang"); }catch(e){ return null; } }

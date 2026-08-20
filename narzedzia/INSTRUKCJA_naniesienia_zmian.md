@@ -47,6 +47,21 @@ poprawce, i często fragment sprzed poprawki, który **nie może** wrócić. Dzi
 zarówno wycięcie zmiany, jak i cofnięcie jej do stanu pierwotnego. Kod wyjścia 1 przy
 jakiejkolwiek niezgodności.
 
+Kontrole mają prefiksy — po nich widać, czego dotyczy zgłoszenie:
+
+| Prefiks | Czego pilnuje |
+|---|---|
+| `F1`–`F17` | poprawki bazowe (tabela niżej) |
+| `R/*` | warstwa reskinu |
+| `W/*` | różnice między wariantami; `W/blokada*` — że nie wróci blokada urządzenia |
+| `D/*` | każda deklaracja klucza występuje **dokładnie raz** (potrójna = martwe UI) |
+| `S/*` | pliki `app/web-*.html` zgadzają się ze źródłem |
+| `B/*` | baza wiedzy na serwerze |
+| `O/*` | brama OpenSEO i synchronizacja motywu |
+| `I/*` | okno fraz z OpenSEO w formularzu |
+| `Z/*` | zero zależności od obcych serwerów (biblioteki i krój z własnego hosta) |
+| `A/*` | dostępność — atrybut `lang` idzie za językiem interfejsu |
+
 Poza tym warto przejść ręcznie:
 
 - aplikacja wstaje w ciemnym motywie, splash pokazuje się raz na sesję
@@ -102,7 +117,9 @@ ale ta pułapka wraca przy każdym skrypcie, który wstrzykuje coś „po `<body
 
 ## Różnice między wariantami
 
-Warianty różnią się w 10 miejscach, wszystkie oznaczone dyrektywami w źródle:
+Warianty różnią się w 22 miejscach, wszystkie oznaczone dyrektywami w źródle.
+
+**Sposób podawania kluczy** — dziesięć pierwotnych bloków:
 
 - pozycja „Klucze API" w menu ustawień — tylko `keys`
 - klucze i18n panelu, słownik PL i EN — tylko `keys`
@@ -111,6 +128,16 @@ Warianty różnią się w 10 miejscach, wszystkie oznaczone dyrektywami w źród
 - deklaracje `OPENAI_API_KEY` i `ELEVEN_API_KEY` — jak wyżej
 - `OWNER_MODE` — `true` tylko w `owner`
 - modal Kluczy API wraz ze skryptem — tylko `keys`
+
+**Funkcje wymagające własnego serwera** — wyłącznie `@@IF proxy`, bo bez serwera nie mają
+z czym rozmawiać:
+
+- pozycja „Baza wiedzy" w menu i okno bazy (prywatna + wspólna, na serwerze)
+- wstrzyknięcie wiedzy z serwera do promptu zamiast wklejania całych dokumentów
+- pozycja „OpenSEO" w menu i otwieranie panelu
+- synchronizacja jasny/ciemny do OpenSEO przez ciasteczko `cai_motyw`
+- przycisk 📈 przy polu słów kluczowych i okno fraz z OpenSEO
+- klucze i18n tych trzech funkcji, słownik PL i EN
 
 ---
 
