@@ -68,6 +68,7 @@ Wszystko przez zmienne środowiskowe.
 |---|---|---|
 | `PORT` | `3100` | port nasłuchu |
 | `CAI_HOST` | `127.0.0.1` | interfejs; zostaw lokalny, ruch z zewnątrz puszcza Caddy |
+| `CAI_UZYTKOWNICY` | `serwer/dane/uzytkownicy.json` | plik z kontami |
 | `CAI_COOKIE_SECURE` | `1` | `0` **tylko** do testów lokalnych bez HTTPS |
 | `CAI_SESJA_GODZIN` | `336` (14 dni) | ważność sesji |
 | `CAI_DOSTAWCA` | `anthropic` | `anthropic` albo `nvidia` |
