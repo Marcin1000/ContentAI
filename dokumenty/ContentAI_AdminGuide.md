@@ -133,6 +133,15 @@ wiedza firmowa jest jedna i nikt jej przypadkiem nie podmieni.
 
 Dokumenty leżą na serwerze, więc użytkownik ma swoją bazę na każdym urządzeniu.
 
+**Gdzie to jest w aplikacji.** Menu ustawień → **Baza wiedzy**. Okno pokazuje jedną listę,
+w której wspólne dokumenty mają znaczek 🌐, a prywatne 🔒. Wybór zakresu przy dodawaniu
+widzi tylko admin — użytkownik dodaje zawsze do swojej prywatnej i nie musi o tym myśleć.
+
+Baza działa **w tle**: przy każdym generowaniu serwer sam dobiera fragmenty pasujące
+do tematu i dokłada je do promptu. Użytkownik niczego nie zaznacza. Stare okno „Baza
+wiedzy" z dokumentami w przeglądarce zostaje i działa jak dotąd — te dwa źródła się
+sumują, więc nikomu nie znika to, co już miał wgrane.
+
 Żeby wyszukiwanie działało po znaczeniu, a nie po słowach, wystarczy `NVIDIA_KEY`
 w `/etc/contentai/srodowisko` — ten sam klucz, którego używasz do modeli. Bez niego baza
 nadal działa, ale schodzi na dopasowanie słów kluczowych.

@@ -1314,6 +1314,13 @@ document.addEventListener('DOMContentLoaded', function () {
     <div class="settings-wrap" id="settings-wrap">
       <button class="settings-btn" id="settings-btn" onclick="toggleSettingsMenu()" title="Ustawienia CMS i Brand Voice" aria-label="Ustawienia CMS i Brand Voice" data-i18n-title="title-settings" aria-haspopup="true">⚙️</button>
       <div class="settings-menu" id="settings-menu">
+<!--@@IF proxy-->
+        <div class="settings-item" onclick="otworzBazeSerwera();closeSettingsMenu()">
+          <span>📚</span>
+          <div><div style="font-weight:600;font-size:13px" data-i18n="bazas-menu-title">Baza wiedzy</div><div style="font-size:11px;color:var(--text3)" data-i18n="bazas-menu-sub">prywatna i wspólna, na serwerze</div></div>
+        </div>
+        <div style="height:1px;background:var(--border);margin:4px 0"></div>
+<!--@@ENDIF-->
 <!--@@IF keys-->
         <div class="settings-item" onclick="openKeysModal();closeSettingsMenu()">
           <span>🔑</span>
@@ -2888,6 +2895,15 @@ var I18N = {
     'keys-cancel':'Anuluj',
     'keys-clear':'Wyczyść',
 //@@ENDIF
+//@@IF proxy
+    'bazas-menu-title':'Baza wiedzy','bazas-menu-sub':'prywatna i wspólna, na serwerze',
+    'bazas-title':'📚 Baza wiedzy','bazas-desc':'Dokumenty leżą na serwerze, więc masz je na każdym urządzeniu. Przy generowaniu dobierane są tylko fragmenty pasujące do tematu.',
+    'bazas-prywatna':'Prywatna (tylko Ty)','bazas-wspolna':'Wspólna (cały zespół)',
+    'bazas-nazwa':'Nazwa dokumentu','bazas-tresc':'Treść','bazas-dodaj':'Dodaj',
+    'bazas-pusto':'Brak dokumentów. Dodaj pierwszy poniżej.','bazas-usun':'Usuń',
+    'bazas-zamknij':'Zamknij','bazas-tylko-admin':'Do bazy wspólnej dodaje wyłącznie administrator.',
+    'bazas-blad':'Nie udało się połączyć z serwerem.','bazas-dodaje':'Dodaję...',
+//@@ENDIF
     'history-select':'Wybierz artykuł z listy',
     // ── Tooltips ──
     'title-brief-tooltip':'Wygeneruj brief przed artykułem',
@@ -3295,6 +3311,15 @@ var I18N = {
     'keys-save':'Save',
     'keys-cancel':'Cancel',
     'keys-clear':'Clear',
+//@@ENDIF
+//@@IF proxy
+    'bazas-menu-title':'Knowledge base','bazas-menu-sub':'private and shared, on the server',
+    'bazas-title':'📚 Knowledge base','bazas-desc':'Documents live on the server, so you have them on every device. Only passages matching the topic are used when generating.',
+    'bazas-prywatna':'Private (only you)','bazas-wspolna':'Shared (whole team)',
+    'bazas-nazwa':'Document name','bazas-tresc':'Content','bazas-dodaj':'Add',
+    'bazas-pusto':'No documents yet. Add the first one below.','bazas-usun':'Remove',
+    'bazas-zamknij':'Close','bazas-tylko-admin':'Only an administrator can add to the shared base.',
+    'bazas-blad':'Could not reach the server.','bazas-dodaje':'Adding...',
 //@@ENDIF
     'history-select':'Select an article from the list',
     // ── Tooltips ──
@@ -4500,6 +4525,11 @@ async function generate(skipPremiumModal = false) {
     const texts  = activeDocs.filter(d => d.icon === '✏️');
 
     let kbContext = '';
+//@@IF proxy
+    // Wiedza z serwerowej bazy: dobierane sa tylko fragmenty pasujace do tematu,
+    // zamiast wklejania calych dokumentow. Dokumenty z tego okna dzialaja jak dotad.
+    kbContext += await wiedzaZSerwera(keywords.length ? keywords.join(', ') : topic);
+//@@ENDIF
     if (files.length)  kbContext += `## DOKUMENTY FIRMOWE\n${files.map(d => `### ${d.name}\n${d.content}`).join('\n\n---\n\n')}\n\n`;
     if (urls.length)   kbContext += `## STRONY WWW\n${urls.map(d => `### ${d.name}\n${d.content}`).join('\n\n---\n\n')}\n\n`;
     if (texts.length)  kbContext += `## TEKST RĘCZNY\n${texts.map(d => `### ${d.name}\n${d.content}`).join('\n\n---\n\n')}\n\n`;
@@ -10457,6 +10487,162 @@ if ('serviceWorker' in navigator) {
 })();
 </script>
 
+<!--@@ENDIF-->
+<!--@@IF proxy-->
+<!-- BAZA WIEDZY NA SERWERZE (wariant proxy - tylko tam istnieje /api/baza) -->
+<div id="bazas-modal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);max-width:620px;width:100%;max-height:90vh;overflow:auto;padding:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+      <div style="font-weight:700;font-size:16px;color:var(--text)" data-i18n="bazas-title">📚 Baza wiedzy</div>
+      <span id="bazas-stan" style="font-size:11px;color:var(--text3)"></span>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5" data-i18n="bazas-desc">Dokumenty leżą na serwerze, więc masz je na każdym urządzeniu. Przy generowaniu dobierane są tylko fragmenty pasujące do tematu.</div>
+
+    <div id="bazas-lista" style="margin-bottom:18px"></div>
+
+    <div style="border-top:1px solid var(--border);padding-top:16px">
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <select id="bazas-zakres" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px">
+          <option value="prywatna" data-i18n="bazas-prywatna">Prywatna (tylko Ty)</option>
+          <option value="wspolna" id="bazas-opt-wspolna" data-i18n="bazas-wspolna">Wspólna (cały zespół)</option>
+        </select>
+        <input id="bazas-nazwa" data-i18n-placeholder="bazas-nazwa" placeholder="Nazwa dokumentu" style="flex:1;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px">
+      </div>
+      <textarea id="bazas-tresc" rows="5" data-i18n-placeholder="bazas-tresc" placeholder="Treść" style="width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:12px;resize:vertical"></textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="bazas-btn-dodaj" onclick="dodajDoBazySerwera()" style="flex:1;min-width:120px;padding:10px;border:none;border-radius:var(--radius);background:var(--accent,#d97706);color:#fff;font-weight:600;font-size:13px;cursor:pointer" data-i18n="bazas-dodaj">Dodaj</button>
+        <button onclick="zamknijBazeSerwera()" style="padding:10px 16px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer" data-i18n="bazas-zamknij">Zamknij</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var rolaUzytkownika = null;
+
+  function el(id){ return document.getElementById(id); }
+  function tekst(klucz, zapas){ try { return _t(klucz) || zapas; } catch(e){ return zapas; } }
+
+  window.otworzBazeSerwera = async function(){
+    el('bazas-modal').style.display = 'flex';
+    el('bazas-stan').textContent = '';
+    try {
+      var ja = await (await fetch('/auth/me')).json();
+      rolaUzytkownika = ja.rola;
+      // Do bazy wspolnej pisze wylacznie admin - u pozostalych chowamy te opcje,
+      // zeby nie proponowac czegos, co i tak skonczy sie odmowa.
+      var opt = el('bazas-opt-wspolna');
+      if (opt) opt.style.display = (ja.rola === 'admin') ? '' : 'none';
+      if (ja.rola !== 'admin') el('bazas-zakres').value = 'prywatna';
+    } catch(e){ rolaUzytkownika = null; }
+    // Aplikacja tlumaczy tylko data-i18n i data-i18n-title, nie placeholdery -
+    // ustawiamy je tutaj, zeby pola nie zostawaly po polsku w angielskim UI.
+    el('bazas-nazwa').placeholder = tekst('bazas-nazwa', 'Nazwa dokumentu');
+    el('bazas-tresc').placeholder = tekst('bazas-tresc', 'Treść');
+    await odswiezListeBazy();
+  };
+
+  window.zamknijBazeSerwera = function(){ el('bazas-modal').style.display = 'none'; };
+
+  async function odswiezListeBazy(){
+    var cel = el('bazas-lista');
+    try {
+      var dane = await (await fetch('/api/baza')).json();
+      var dokumenty = dane.dokumenty || [];
+      if (!dokumenty.length){
+        cel.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:10px 0">'
+          + tekst('bazas-pusto','Brak dokumentów. Dodaj pierwszy poniżej.') + '</div>';
+        return;
+      }
+      cel.innerHTML = dokumenty.map(function(d){
+        var wspolna = d.zakres === 'wspolna';
+        var mozeUsunac = !wspolna || rolaUzytkownika === 'admin';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'
+          + '<span style="font-size:15px">' + (wspolna ? '🌐' : '🔒') + '</span>'
+          + '<div style="flex:1;min-width:0">'
+          + '<div style="font-size:13px;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+          + escapeHtml(d.nazwa) + '</div>'
+          + '<div style="font-size:11px;color:var(--text3)">' + d.fragmentow + ' fragm. · '
+          + (d.zWektorami ? 'wektory' : 'słowa kluczowe') + '</div></div>'
+          + (mozeUsunac
+              ? '<button onclick="usunZBazySerwera(\'' + d.id + '\',\'' + d.zakres + '\')" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text2);font-size:11px;cursor:pointer">'
+                + tekst('bazas-usun','Usuń') + '</button>'
+              : '')
+          + '</div>';
+      }).join('');
+    } catch(e){
+      cel.innerHTML = '<div style="font-size:12px;color:#e06c6c;padding:10px 0">'
+        + tekst('bazas-blad','Nie udało się połączyć z serwerem.') + '</div>';
+    }
+  }
+  window.odswiezListeBazy = odswiezListeBazy;
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(z){
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[z];
+    });
+  }
+
+  window.dodajDoBazySerwera = async function(){
+    var nazwa = (el('bazas-nazwa').value || '').trim();
+    var tresc = (el('bazas-tresc').value || '').trim();
+    if (!nazwa || !tresc) return;
+    var btn = el('bazas-btn-dodaj');
+    var etykieta = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = tekst('bazas-dodaje','Dodaję...');
+    try {
+      var odp = await fetch('/api/baza', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zakres: el('bazas-zakres').value, nazwa: nazwa, tresc: tresc })
+      });
+      if (odp.status === 403) {
+        el('bazas-stan').textContent = tekst('bazas-tylko-admin','Do bazy wspólnej dodaje wyłącznie administrator.');
+      } else if (odp.ok) {
+        el('bazas-nazwa').value = '';
+        el('bazas-tresc').value = '';
+        el('bazas-stan').textContent = '';
+        await odswiezListeBazy();
+      } else {
+        el('bazas-stan').textContent = tekst('bazas-blad','Nie udało się połączyć z serwerem.');
+      }
+    } catch(e){
+      el('bazas-stan').textContent = tekst('bazas-blad','Nie udało się połączyć z serwerem.');
+    }
+    btn.disabled = false;
+    btn.textContent = etykieta;
+  };
+
+  window.usunZBazySerwera = async function(id, zakres){
+    try {
+      await fetch('/api/baza/usun', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, zakres: zakres })
+      });
+      await odswiezListeBazy();
+    } catch(e){}
+  };
+
+  // Wolane przy generowaniu: zwraca gotowy blok wiedzy albo pusty ciag.
+  // Blad nigdy nie przerywa generowania - lepiej napisac bez wiedzy firmowej
+  // niz nie napisac wcale.
+  window.wiedzaZSerwera = async function(zapytanie){
+    if (!zapytanie) return '';
+    try {
+      var odp = await fetch('/api/baza/szukaj', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zapytanie: zapytanie })
+      });
+      if (!odp.ok) return '';
+      var dane = await odp.json();
+      return dane.prompt || '';
+    } catch(e){ return ''; }
+  };
+})();
+</script>
 <!--@@ENDIF-->
 <!-- ============ Content AI - reskin (Faza 1 fix + Faza 2 + Faza 3 splash), append-only ============ -->
 <style id="cin-reskin">

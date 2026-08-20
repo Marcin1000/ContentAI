@@ -123,6 +123,14 @@ która ścieżka zadziałała.
 | `POST /api/baza/usun` | usunięcie |
 | `POST /api/baza/szukaj` | najtrafniejsze fragmenty + gotowy blok do promptu |
 
+**W aplikacji** (tylko wariant `proxy` — pozostałe nie mają serwera): menu ustawień →
+**Baza wiedzy**. Lista łączy oba zakresy, 🌐 to wspólny, 🔒 prywatny; wybór zakresu przy
+dodawaniu pokazuje się wyłącznie adminowi.
+
+Przy generowaniu aplikacja woła `/api/baza/szukaj` i wstawia zwrócony blok do promptu —
+bez zaznaczania czegokolwiek przez użytkownika. Dawna baza w `localStorage` działa dalej
+i dokłada się do tego samego promptu, więc aktualizacja nie zabiera nikomu jego dokumentów.
+
 ### Dane SERP
 
 Aplikacja przed generowaniem może sprawdzić, co rankuje w Google. Domyślnie (`CAI_SERP=model`)
