@@ -168,6 +168,25 @@ KONTROLE = [
      "'/api/seo/frazy?projekt='", None, ("proxy",)),
     ("I/oddawanie", "frazy artykulu wracaja do OpenSEO",
      "window.oddajFrazySeo", None, ("proxy",)),
+
+    # ── samowystarczalnosc: zero zaleznosci od obcych serwerow ──
+    ("Z/biblioteki", "biblioteki serwowane z wlasnego hosta",
+     "pwa/lib/mammoth.browser.min.js", "cdnjs.cloudflare.com", None),
+    ("Z/pdfmake", "pdfmake i jego fonty z wlasnego hosta",
+     "pwa/lib/pdfmake.min.js", None, None),
+    ("Z/fonty", "IBM Plex z wlasnego hosta, nie z Google Fonts",
+     "pwa/fonty/ibm-plex-sans-latin-ext-400-normal.woff2", "fonts.googleapis.com", None),
+    ("Z/sw", "aplikacja nie rejestruje nieistniejacego service workera",
+     None, "navigator.serviceWorker.register", None),
+
+    # ── usunieta pozorna blokada urzadzenia ──
+    ("W/blokada", "brak blokady po odcisku przegladarki",
+     None, "function checkFingerprint", None),
+    ("W/blokada-okno", "brak okna nieautoryzowanego urzadzenia",
+     None, 'id="fp-error-modal"', None),
+
+    ("A/lang", "atrybut lang idzie za jezykiem interfejsu",
+     "document.documentElement.lang = lang;", None, None),
 ]
 
 

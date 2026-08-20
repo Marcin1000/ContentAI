@@ -14,14 +14,160 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-i18n="page-title">Content AI - Generator treści, grafik i audio</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJnIiBjeD0iNTAlIiBjeT0iNTAlIiByPSI2MCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNGRkQyN0EiLz48c3RvcCBvZmZzZXQ9IjU1JSIgc3RvcC1jb2xvcj0iI0ZGQjAwMCIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI0UwOEEwMCIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgcng9IjciIGZpbGw9IiMwQTBCMTEiLz48cGF0aCBkPSJNMTYgMi41IEwxOC4xIDEzLjkgTDI5LjUgMTYgTDE4LjEgMTguMSBMMTYgMjkuNSBMMTMuOSAxOC4xIEwyLjUgMTYgTDEzLjkgMTMuOSBaIiBmaWxsPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTE2IDggTDE2LjkgMTUuMSBMMjQgMTYgTDE2LjkgMTYuOSBMMTYgMjQgTDE1LjEgMTYuOSBMOCAxNiBMMTUuMSAxNS4xIFoiIGZpbGw9IiMwQTBCMTEiIG9wYWNpdHk9IjAuMzUiLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxLjYiIGZpbGw9IiNGRkU5QzIiLz48L3N2Zz4K">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* IBM Plex hostowany razem z aplikacja. Wczesniej szedl z Google Fonts, przez co
+     w zamknietej sieci firmowej aplikacja traci wlasciwy kroj, a kazde uruchomienie
+     melduje sie u zewnetrznego dostawcy. Latin-ext jest konieczny dla polskich znakow. */
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-300-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-ext-300-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-400-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-ext-400-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-500-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-ext-500-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-600-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-ext-600-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-700-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-ext-700-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-400-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-ext-400-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-500-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-ext-500-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-600-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-ext-600-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-700-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-ext-700-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+</style>
 <!-- File parsing libraries -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html-docx-js/dist/html-docx.js"></script>
+<script src="pwa/lib/mammoth.browser.min.js"></script>
+<script src="pwa/lib/xlsx.full.min.js"></script>
+<script src="pwa/lib/pdf.min.js"></script>
+<script src="pwa/lib/html-docx.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -155,7 +301,6 @@ body.is-mobile .aio-panel {
 .h-item-meta { font-size:11px;color:var(--text3); }
 .output-col { position:relative; }
 
-
 html { height: 100%; overflow: hidden; }
 
 body { font-family: 'IBM Plex Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); height: 100%; overflow: hidden; display: flex; flex-direction: column; font-size: 14px; }
@@ -206,7 +351,6 @@ body.is-mobile .settings-btn { font-size: 16px; padding: 3px 4px; }
 .sidebar-head h2 { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); }
 
 
-
 .kb-item {
   display: flex; align-items: flex-start; gap: 10px;
   padding: 9px 10px; border-radius: var(--radius);
@@ -225,7 +369,6 @@ body.is-mobile .settings-btn { font-size: 16px; padding: 3px 4px; }
 .kb-select-bar { display: none; align-items: center; justify-content: space-between; padding: 5px 10px; background: var(--yellow-light); border-bottom: 1px solid var(--yellow-dark); font-size: 11px; color: #7A6000; }
 .kb-select-bar.show { display: flex; }
 .kb-select-bar button { background: none; border: none; font-size: 11px; color: var(--red); cursor: pointer; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-weight: 500; padding: 0; }
-
 
 .kb-icon {
   width: 30px; height: 30px; border-radius: 7px;
@@ -246,7 +389,6 @@ body.is-mobile .settings-btn { font-size: 16px; padding: 3px 4px; }
 .kb-empty-icon { font-size: 28px; display: block; margin-bottom: 8px; }
 
 /* ADD SECTION */
-
 
 .upload-zone {
   border: 2px dashed var(--border2);
@@ -800,6 +942,17 @@ body.is-mobile .output-bar .btn-secondary { white-space: nowrap; font-size: 11px
 body.is-mobile .output-bar .output-bar-left { flex-shrink: 0; }
 body.is-mobile .output-bar .badge { font-size: 10px; padding: 2px 8px; }
 
+/* Cele dotykowe: na telefonie te przyciski mialy 26-31 px wysokosci, czyli
+   znacznie ponizej wygodnego minimum. Rozmiar czcionki zostaje bez zmian -
+   podnosimy sama wysokosc, zeby uklad sie nie rozjechal. */
+body.is-mobile .btn-secondary,
+body.is-mobile .btn-module,
+body.is-mobile .btn-premium { min-height: 40px; }
+/* Naglowek: kolko ustawien i przelacznik jezyka. !important, bo wysokosc
+   przelacznika jest wpisana w atrybut style. */
+body.is-mobile .settings-btn { min-height: 40px; min-width: 40px; }
+body.is-mobile #lang-toggle-btn { height: 40px !important; min-width: 44px; }
+
 /* FIX 3: Historia na mobile - lista pełnoekranowa, podgląd jako modal */
 body.is-mobile #tab-history { padding-bottom: 80px; }
 body.is-mobile #tab-history > div:last-child { flex-direction: column; overflow: visible; height: auto; }
@@ -854,7 +1007,6 @@ body.is-mobile .h-item { padding: 14px 16px; }
 .jsonld-box { display:none;padding:14px 18px;background:var(--surface2);border-top:1px solid var(--border); }
 .jsonld-box.show { display:block; }
 .jsonld-code { background:#1A1916;color:#A8E6CF;border-radius:var(--radius);padding:12px;font-size:11px;font-family:monospace;overflow-x:auto;white-space:pre;line-height:1.5;max-height:180px;overflow-y:auto;margin-top:8px; }
-
 
 
 /* ── CUSTOM CONTEXT MENU ──────────────────────────────────────────────── */
@@ -1216,7 +1368,6 @@ body.audio-bar-open #audio-panel { padding-bottom: 240px; }
 }
 #audio-bar-pct { color: var(--accent); }
 
-
 /* -- Poprawki responsywne (batch) -- */
 .modal { max-width: 94vw; box-sizing: border-box; }
 #bulk-modal .btn-generate, #improve-modal .btn-generate { white-space: nowrap; }
@@ -1256,7 +1407,6 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
   </div>
   <div class="cin-splash-bar"><div class="cin-splash-fill"></div></div>
 </div>
-
 
 <div class="topbar">
   <div class="topbar-logo">
@@ -1372,7 +1522,6 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 </nav>
 
 <!-- MOBILE FAB (generate) - widoczny tylko na zakładce Generator -->
-
 
 <div class="layout">
   <!-- SIDEBAR -->
@@ -2361,19 +2510,6 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 </div>
 
 <!-- FINGERPRINT ERROR MODAL ─────────────────────────────────────────── -->
-<div class="overlay" id="fp-error-modal">
-  <div class="modal no-source-modal-inner">
-    <div class="modal-head">
-      <h3 data-i18n="err-device">🔒 Nieautoryzowane urządzenie</h3>
-    </div>
-    <p style="margin-bottom:12px">Ten plik jest przypisany do konkretnego urządzenia i nie może być używany na innym komputerze.</p>
-    <p style="font-size:13px;color:var(--text3);margin-bottom:16px" data-i18n="device-msg">Jeśli to Twój komputer i widzisz ten błąd, skontaktuj się z administratorem. Kod urządzenia mógł ulec zmianie po reinstalacji systemu lub po zmianie przeglądarki.</p>
-    <div class="modal-footer" style="margin-top:8px">
-      <button class="btn-secondary" style="width:100%;justify-content:center;opacity:.6" disabled data-i18n="btn-generate-blocked">🚫 Generowanie zablokowane</button>
-    </div>
-  </div>
-</div>
-
 <!-- CUSTOM CONTEXT MENU (right-click / long-press in edit mode) -->
 <div class="ctx-menu" id="ctx-menu">
   <div class="ctx-item" onclick="ctxAction('bold')"><b style="width:16px;text-align:center">B</b> <span data-i18n="ctx-bold">Pogrub</span></div>
@@ -2690,7 +2826,7 @@ var I18N = {
     'bv-active':'Aktywny profil Brand Voice:','bv-delete':'🗑 Usuń profil',
     'bv-ph':'Wklej tutaj 2-5 przykładowych artykułów firmowych (jeden po drugim)...',
     // Errors / dialogs
-    'err-device':'🔒 Nieautoryzowane urządzenie','err-no-src':'⚠️ Brak źródeł wiedzy',
+    'err-no-src':'⚠️ Brak źródeł wiedzy',
     'err-add-src':'📁 Dodaj źródła do bazy',
     // Inne
     'premium-info':'⭐ Tryb Jakość premium','rp-strong':'Przeróbki artykułu',
@@ -2827,7 +2963,7 @@ var I18N = {
     'premium-desc':'Tryb Premium uruchamia automatyczną samokorekcję. Artykuł jest najpierw generowany, potem oceniany przez AI, a na końcu poprawiany na podstawie wyników oceny. Generowanie trwa 2 do 3 razy więcej czasu.',
     'premium-2-3x':'2 do 3 razy więcej czasu',
     // ── Device error ──
-    'device-msg':'Jeśli to Twój komputer i widzisz ten błąd, skontaktuj się z administratorem. Kod pliku jest przypisany do innego urządzenia.',
+    
     // ── Repurpose ──
     // ── Stats ──
     'stat-words':'Słowa','stat-avg-words':'Średnia słów',
@@ -2858,7 +2994,7 @@ var I18N = {
     'no-kw-warning-full':'⚠️ Nie podałeś słowa kluczowego. Jako zapytanie zostanie użyty temat artykułu. Wpisz główną frazę kluczową żeby analiza SERP była trafna.',
     'img-close-title':'Zamknij',
     'text-modal-desc-full':'Wklej dowolną treść firmową - oferty, FAQ, opisy usług, dane o produktach, polityki. AI będzie używać tej treści podczas generowania.',
-    'device-msg-full':'Jeśli to Twój komputer i widzisz ten błąd, skontaktuj się z administratorem. Kod urządzenia zmienił się (możliwe powody: reinstalacja systemu, zmiana przeglądarki, czyszczenie danych przeglądarki).',
+    
     'img-prompt-used':'▸ Użyty prompt',
     'img-spin-init':'Analizuję artykuł...',
     'no-kw-warning':'⚠️ Nie podałeś słowa kluczowego. Jako zapytanie zostanie użyty temat artykułu. Wynik może być mniej trafny.',
@@ -2948,7 +3084,7 @@ var I18N = {
     'hint-aio-no-def':'Brak definicji kluczowych pojęć (encji)',
     'hint-aio-natural':'Język naturalny, czytelny dla użytkownika',
     'premium-continue-1':'Generowanie może zająć ','premium-continue-2':' niż zwykle.',
-    'btn-generate-blocked':'🚫 Generowanie zablokowane',
+    
     'ctx-bold':'Pogrub','ctx-italic':'Pochyl',
     'link-dialog-label':'🔗 Dodaj link',
     'err-api-generic':'Błąd API',
@@ -3092,7 +3228,7 @@ var I18N = {
     'bv-active':'Active Brand Voice profile:','bv-delete':'🗑 Delete profile',
     'bv-ph':'Paste 2-5 sample company articles here (one after another)...',
     // Errors / dialogs
-    'err-device':'🔒 Unauthorized device','err-no-src':'⚠️ No knowledge sources',
+    'err-no-src':'⚠️ No knowledge sources',
     'err-add-src':'📁 Add sources to base',
     // Other
     'premium-info':'⭐ Premium Quality mode','rp-strong':'Article repurpose',
@@ -3229,7 +3365,7 @@ var I18N = {
     'premium-desc':'Premium mode runs automatic self-correction. The article is first generated, then assessed by AI, and finally improved based on the assessment results. Generation takes 2-3 times longer.',
     'premium-2-3x':'2-3 times longer',
     // ── Device error ──
-    'device-msg':'If this is your computer and you see this error, contact your administrator. The file code is assigned to a different device.',
+    
     // ── Repurpose ──
     // ── Stats ──
     'stat-words':'Words','stat-avg-words':'Avg. words',
@@ -3353,10 +3489,10 @@ var I18N = {
     'hint-aio-no-def':'Missing definitions of key concepts (entities)',
     'hint-aio-natural':'Natural language, readable for the user',
     'premium-continue-1':'Generation may take ','premium-continue-2':' than usual.',
-    'btn-generate-blocked':'🚫 Generation blocked',
+    
     'ctx-bold':'Bold','ctx-italic':'Italic',
     'link-dialog-label':'🔗 Add link',
-    'device-msg-full':'If this is your computer and you see this error, contact your administrator. The device code has changed (possible reasons: system reinstall, browser change, clearing browser data).',
+    
     'img-close-title':'Close',
     'img-spin-init':'Analyzing article...',
     'text-modal-desc-full':'Paste any company content - offers, FAQs, service descriptions, product data, policies. AI will use this content during generation.',
@@ -3378,6 +3514,9 @@ function _t(key) { return (I18N[currentLang] || I18N.pl)[key] || (I18N.pl)[key] 
 function applyLang(lang) {
   currentLang = lang;
   localStorage.setItem('cai_lang', lang);
+  // Bez tego czytniki ekranu czytaja angielski tekst polska fonetyka - atrybut
+  // zostawal na "pl" niezaleznie od wybranego jezyka interfejsu.
+  document.documentElement.lang = lang;
   const T = I18N[lang] || I18N.pl;
 
   // 1. Elementy z data-i18n — textContent lub placeholder
@@ -3539,59 +3678,6 @@ const OWNER_MODE = false;
 // Dyktowanie wymaga warstwy serwerowej. Po jej wdrozeniu ustaw true, aby je pokazac.
 const VOICE_INPUT_ENABLED = false;
 
-const FP_KEY = 'cai_fp_v1';
-
-function buildFingerprint() {
-  const parts = [
-    navigator.userAgent || '',
-    navigator.language || '',
-    (screen.width || 0) + 'x' + (screen.height || 0),
-    screen.colorDepth || 0,
-    Intl.DateTimeFormat().resolvedOptions().timeZone || '',
-    navigator.platform || '',
-    navigator.hardwareConcurrency || 0,
-    navigator.maxTouchPoints || 0,
-  ];
-  // Canvas fingerprint (szybki, skuteczny)
-  try {
-    const cv = document.createElement('canvas');
-    const ctx = cv.getContext('2d');
-    ctx.textBaseline = 'top';
-    ctx.font = '14px "Arial"';
-    ctx.fillStyle = '#FFB000';
-    ctx.fillRect(0, 0, 80, 20);
-    ctx.fillStyle = '#1A1916';
-    ctx.fillText('CONTENTAI\u00A9', 2, 2);
-    parts.push(cv.toDataURL().slice(-60));
-  } catch (e) {}
-  // Hash (FNV-like)
-  const str = parts.join('||');
-  let h = 0x811c9dc5;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = (h * 0x01000193) >>> 0;
-  }
-  return h.toString(36);
-}
-
-function checkFingerprint() {
-  // OWNER_MODE lub brak USER_LABEL = tryb dev, bez blokady
-  if (OWNER_MODE) return true;
-  if (!USER_LABEL || USER_LABEL === 'WSTAW_TUTAJ_IMIE_LUB_ID') return true;
-  try {
-    const current = buildFingerprint();
-    const stored = localStorage.getItem(FP_KEY);
-    if (!stored) {
-      // Pierwsze uruchomienie na tym urządzeniu — rejestruj
-      localStorage.setItem(FP_KEY, current);
-      return true;
-    }
-    return stored === current;
-  } catch (e) {
-    return true; // localStorage zablokowany (np. tryb prywatny) — przepuść
-  }
-}
-
 let docs = [];
 let skipSourceCheck = false;
 let webEnabledByModal = false;
@@ -3726,7 +3812,7 @@ function triggerFileInput(id) {
 }
 
 // ─── FILE UPLOAD & PARSING ────────────────────────────────────────────────────
-if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; }
+if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = 'pwa/lib/pdf.worker.min.js'; }
 
 // Drag & drop only on non-touch devices
 const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
@@ -4309,7 +4395,6 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
   return improved || originalHtml;
 }
 
-
 async function generate(skipPremiumModal = false) {
   const topic = document.getElementById('topic').value.trim();
   const ctype = document.getElementById('ctype').value;
@@ -4319,12 +4404,6 @@ async function generate(skipPremiumModal = false) {
   const extra = document.getElementById('extra').value.trim();
 
   if (typeof isTranscriptionType === 'function' && isTranscriptionType(ctype)) { if (typeof transRun === 'function') transRun(); return false; }
-
-  // ── Blokada: nieautoryzowane urządzenie
-  if (!checkFingerprint()) {
-    document.getElementById('fp-error-modal').classList.add('open');
-    return false;
-  }
 
   // ── Blokada: brak tematu
   if (!topic) {
@@ -5175,8 +5254,8 @@ function dlPdf() {
     document.head.appendChild(s);
   }
   if (window.pdfMake) { _runPdf(); return; }
-  loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js', () => {
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js', _runPdf);
+  loadScript('pwa/lib/pdfmake.min.js', () => {
+    loadScript('pwa/lib/vfs_fonts.js', _runPdf);
   });
 }
 
@@ -5398,7 +5477,6 @@ function refreshGapAnalysis() {
   gapCache = null;
   runGapAnalysis();
 }
-
 
 function gapToggleItem(i) {
   const chk = document.getElementById('gap-chk-' + i);
@@ -5774,7 +5852,6 @@ async function improveFromGaps() {
   document.getElementById('gap-gen-indicator')?.remove();
   if (btn) { btn.disabled = false; updateGapBtn(); }
 }
-
 
 // ─── FEATURE: SUGESTIE LINKÓW WEWNĘTRZNYCH ─────────────────────────────────────
 let linksOpen = false;
@@ -8117,7 +8194,7 @@ function dlReportPdf() {
   }
   function load(src, cb) { const s = document.createElement('script'); s.src = src; s.onload = cb; s.onerror = () => alert(_t('msg-pdf-load-fail')); document.head.appendChild(s); }
   if (window.pdfMake) { run(); return; }
-  load('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js', () => load('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js', run));
+  load('pwa/lib/pdfmake.min.js', () => load('pwa/lib/vfs_fonts.js', run));
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -8419,7 +8496,6 @@ document.addEventListener('selectionchange', () => {
   }
 });
 
-
 // Keyboard shortcuts
 document.addEventListener('keydown', e => {
   if (!editMode) return;
@@ -8618,7 +8694,7 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#ctx-menu')) closeContextMenu();
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeContextMenu(); closeLinkDialog(); closeNoSourceModal(); closePremiumModal(); closeTitlesModal(); closeGapPanel(); closeSerpPanel(); if(seoOpen){seoOpen=false;document.getElementById('seo-panel')?.classList.remove('show');} if(aioOpen){aioOpen=false;document.getElementById('aio-panel')?.classList.remove('show');} if(aeoOpen){aeoOpen=false;document.getElementById('aeo-panel')?.classList.remove('show');} if(geoOpen){geoOpen=false;document.getElementById('geo-panel')?.classList.remove('show');} closeBriefPanel(); if(linksOpen) toggleLinksPanel(); closeImgPanelSmart(); closeBvModal(); closeLlmsModal(); closeVisModal(); closeRepModal(); closeTrkModal(); closeTextModal(); closeUrlModal(); if(!bulkRunning) closeBulkModal(); closeImproveModal(); closeWpModal(); closeTplModal(); closeWpPublishModal(); closeSettingsMenu(); const fi=document.getElementById('fog-panel'); if(fi) fi.style.display='none'; document.getElementById('fp-error-modal').classList.remove('open'); }
+  if (e.key === 'Escape') { closeContextMenu(); closeLinkDialog(); closeNoSourceModal(); closePremiumModal(); closeTitlesModal(); closeGapPanel(); closeSerpPanel(); if(seoOpen){seoOpen=false;document.getElementById('seo-panel')?.classList.remove('show');} if(aioOpen){aioOpen=false;document.getElementById('aio-panel')?.classList.remove('show');} if(aeoOpen){aeoOpen=false;document.getElementById('aeo-panel')?.classList.remove('show');} if(geoOpen){geoOpen=false;document.getElementById('geo-panel')?.classList.remove('show');} closeBriefPanel(); if(linksOpen) toggleLinksPanel(); closeImgPanelSmart(); closeBvModal(); closeLlmsModal(); closeVisModal(); closeRepModal(); closeTrkModal(); closeTextModal(); closeUrlModal(); if(!bulkRunning) closeBulkModal(); closeImproveModal(); closeWpModal(); closeTplModal(); closeWpPublishModal(); closeSettingsMenu(); const fi=document.getElementById('fog-panel'); if(fi) fi.style.display='none'; }
 });
 // ═══════════════════════════════════════════════════════════════════════
 // ── MOBILE DETECTION & INIT ─────────────────────────────────────────────
@@ -8785,7 +8861,6 @@ function imgGetOpenAIKey() {
   return (typeof OPENAI_API_KEY !== 'undefined' && !OPENAI_API_KEY.startsWith('WSTAW'))
     ? OPENAI_API_KEY : null;
 }
-
 
 // ─── GRAFIKA REFERENCYJNA ─────────────────────────────────────────────────────
 async function imgLoadReferenceFile(input) {
@@ -9172,7 +9247,6 @@ function imgLoadFromHistory(idx) {
   imgShowResult(item.blob, item.label, item.w, item.h, '');
   imgRenderHistory();
 }
-
 
 /* ───────────────────────── TRACKER WIDOCZNOSCI W AI (AI VISIBILITY) ───────────────────────── */
 var AIV_DEFAULT = {
@@ -10185,30 +10259,15 @@ async function kbAudioTranscribeAndOpen(file) {
 }
 
 
-
 // ── Zachowaj toggle ────────────────────────────────────────────────────────────
 
 </script>
 <script>
-// ─── PWA SERVICE WORKER ───────────────────────────────────────────────────
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js')
-      .then(function(reg) {
-        console.log('[PWA] Service Worker:', reg.scope);
-        reg.addEventListener('updatefound', function() {
-          var newSW = reg.installing;
-          newSW.addEventListener('statechange', function() {
-            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[PWA] Nowa wersja - odśwież stronę');
-            }
-          });
-        });
-      })
-      .catch(function(err) { console.warn('[PWA] SW error:', err); });
-  });
-}
-// ──────────────────────────────────────────────────────────────────────────
+// ─── PWA ──────────────────────────────────────────────────────────────────
+// Bez service workera i bez powloki offline. Aplikacja to jeden plik ~660 KB
+// aktualizowany przez git pull i restart uslugi; cache service workera
+// oznaczalby uzytkownikow pracujacych na starej wersji po kazdej aktualizacji.
+// Manifest PWA zostaje - daje ikone i uruchamianie w osobnym oknie.
 </script>
 
 <div id="audio-panel" style="display:none;position:fixed;top:56px;right:0;bottom:0;left:0;background:var(--bg);overflow-y:auto;z-index:150;padding:24px 18px 90px">

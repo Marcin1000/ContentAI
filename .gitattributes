@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Biblioteki i fonty pobrane z npm - maja zostac bajt w bajt takie, jak wydal
+# ich autor. Konwersja koncow linii zmienialaby plik wzgledem oryginalu.
+app/pwa/lib/** -text
+app/pwa/fonty/** binary

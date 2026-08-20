@@ -849,14 +849,22 @@ const TYPY = {
   '.jpg': 'image/jpeg',
   '.svg': 'image/svg+xml',
   '.webmanifest': 'application/manifest+json',
+  '.woff2': 'font/woff2',
 };
 
 function plikStatyczny(res, sciezka) {
-  // Tylko manifest i ikony PWA; reszta katalogu nie jest publiczna.
-  const dozwolone = /^\/(manifest\.json|icons\/[A-Za-z0-9._-]+)$/;
+  // Manifest, ikony i biblioteki aplikacji; reszta katalogu nie jest publiczna.
+  // Biblioteki (mammoth, pdf.js, pdfmake, xlsx, html-docx-js) leza u nas zamiast
+  // na obcym CDN - dzieki temu dzialaja w zamknietej sieci i nikt z zewnatrz
+  // nie moze podmienic kodu wykonywanego w aplikacji.
+  const dozwolone = /^\/(manifest\.json|icons\/[A-Za-z0-9._-]+|pwa\/(lib\/[A-Za-z0-9._-]+\.js|fonty\/[A-Za-z0-9._-]+\.woff2))$/;
   if (!dozwolone.test(sciezka)) return odpowiedzTekst(res, 404, 'Nie znaleziono');
 
-  const plik = path.join(APP, 'pwa', sciezka);
+  // Aplikacja wola biblioteki sciezka wzgledna (pwa/lib/...), zeby dzialaly tez
+  // przy otwarciu pliku z dysku. Serwer widzi wtedy /pwa/lib/... i musi zdjac
+  // ten przedrostek, bo katalogiem bazowym jest juz app/pwa.
+  const wzgledna = sciezka.startsWith('/pwa/') ? sciezka.slice(4) : sciezka;
+  const plik = path.join(APP, 'pwa', wzgledna);
   const wKatalogu = path.resolve(plik).startsWith(path.resolve(path.join(APP, 'pwa')));
   if (!wKatalogu || !fs.existsSync(plik)) return odpowiedzTekst(res, 404, 'Nie znaleziono');
 
