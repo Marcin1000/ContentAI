@@ -26,6 +26,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const serp = require('./serp.js');
+const baza = require('./baza.js');
 
 const KATALOG = __dirname;
 const APP = path.join(KATALOG, '..', 'app');
@@ -49,6 +50,15 @@ const KONF = {
     openai: process.env.OPENAI_KEY || '',
     eleven: process.env.ELEVEN_KEY || '',
     nvidia: process.env.NVIDIA_KEY || '',
+  },
+
+  // Baza wiedzy: katalog na dokumenty i konfiguracja liczenia wektorow.
+  // Bez klucza wyszukiwanie dziala na slowach kluczowych zamiast na znaczeniu.
+  katalogBazy: process.env.CAI_BAZA || path.join(KATALOG, 'dane', 'baza'),
+  wektory: {
+    klucz: process.env.NVIDIA_KEY || '',
+    url: process.env.CAI_URL_EMBED || 'https://integrate.api.nvidia.com/v1/embeddings',
+    model: process.env.CAI_MODEL_EMBED || 'nvidia/nv-embedqa-e5-v5',
   },
 
   // Zrodlo danych SERP: 'model' (model z web_search, tylko Anthropic) albo 'dataforseo'
@@ -544,10 +554,64 @@ async function obsluz(req, res) {
         nvidia: Boolean(KONF.klucze.nvidia),
       },
       serp: KONF.serp,
+      wektory: Boolean(KONF.wektory.klucz),
+      modelWektorow: KONF.wektory.model,
       dataForSeo: Boolean(KONF.dataForSeo.login && KONF.dataForSeo.haslo),
       uzytkownikow: wczytajUzytkownikow().length,
       aktywnychSesji: sesje.size,
     });
+  }
+
+  // ─── Baza wiedzy ───────────────────────────────────────────────────────────
+  if (sciezka === '/api/baza' && req.method === 'GET') {
+    return odpowiedzJson(res, 200, { dokumenty: baza.lista({ katalog: KONF.katalogBazy, login: sesja.login }) });
+  }
+
+  if (sciezka === '/api/baza' && req.method === 'POST') {
+    let dane;
+    try { dane = JSON.parse((await czytajCialo(req)).toString('utf8')); }
+    catch { return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' }); }
+
+    const zakres = dane.zakres === baza.WSPOLNA ? baza.WSPOLNA : 'prywatna';
+    // Do bazy wspolnej pisze wylacznie admin - inaczej kazdy zmienialby wiedze zespolu.
+    if (zakres === baza.WSPOLNA && sesja.rola !== 'admin') {
+      return odpowiedzJson(res, 403, { error: 'Do bazy wspólnej dodaje wyłącznie admin' });
+    }
+    try {
+      const opis = await baza.dodaj({
+        katalog: KONF.katalogBazy, zakres, login: sesja.login,
+        nazwa: dane.nazwa, tresc: dane.tresc, konfWektorow: KONF.wektory,
+      });
+      console.log(`[baza] +${zakres} "${opis.nazwa}" (${opis.fragmentow} fragm., wektory: ${opis.zWektorami})`);
+      return odpowiedzJson(res, 200, opis);
+    } catch (e) {
+      return odpowiedzJson(res, 400, { error: e.message });
+    }
+  }
+
+  if (sciezka === '/api/baza/usun' && req.method === 'POST') {
+    let dane;
+    try { dane = JSON.parse((await czytajCialo(req)).toString('utf8')); }
+    catch { return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' }); }
+    const zakres = dane.zakres === baza.WSPOLNA ? baza.WSPOLNA : 'prywatna';
+    if (zakres === baza.WSPOLNA && sesja.rola !== 'admin') {
+      return odpowiedzJson(res, 403, { error: 'Z bazy wspólnej usuwa wyłącznie admin' });
+    }
+    const usuniety = baza.usun({ katalog: KONF.katalogBazy, zakres, login: sesja.login, id: dane.id });
+    return odpowiedzJson(res, usuniety ? 200 : 404, usuniety ? { ok: true } : { error: 'Nie znaleziono dokumentu' });
+  }
+
+  if (sciezka === '/api/baza/szukaj' && req.method === 'POST') {
+    let dane;
+    try { dane = JSON.parse((await czytajCialo(req)).toString('utf8')); }
+    catch { return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' }); }
+    const wynik = await baza.szukaj({
+      katalog: KONF.katalogBazy, login: sesja.login,
+      zapytanie: String(dane.zapytanie || ''),
+      ile: Math.min(Number(dane.ile) || baza.DOMYSLNIE_FRAGMENTOW, 30),
+      konfWektorow: KONF.wektory,
+    });
+    return odpowiedzJson(res, 200, { ...wynik, prompt: baza.doPromptu(wynik) });
   }
 
   // Proxy

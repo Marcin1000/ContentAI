@@ -80,6 +80,9 @@ Wszystko przez zmienne środowiskowe.
 | `CAI_SERP` | `model` | źródło danych SERP: `model` albo `dataforseo` |
 | `DATAFORSEO_LOGIN` | — | login DataForSEO (przy `CAI_SERP=dataforseo`) |
 | `DATAFORSEO_HASLO` | — | hasło DataForSEO |
+| `CAI_BAZA` | `serwer/dane/baza` | katalog bazy wiedzy |
+| `CAI_MODEL_EMBED` | `nvidia/nv-embedqa-e5-v5` | model wektorów |
+| `CAI_URL_EMBED` | `https://integrate.api.nvidia.com/v1/embeddings` | endpoint wektorów |
 
 ### Klucze mieszane
 
@@ -87,6 +90,38 @@ Klucz serwera jest domyślny. Jeśli użytkownik poda **własny** klucz, serwer 
 zamiast serwerowego — aplikacja wysyła go w nagłówku `x-api-key` (oraz `x-openai-key`,
 `x-eleven-key`). Pusty nagłówek, który aplikacja wysyła w trybie proxy, jest ignorowany
 i wraca klucz serwera. Nie wymaga to żadnej zmiany w aplikacji.
+
+### Baza wiedzy (RAG)
+
+Dwa zakresy:
+
+| Zakres | Kto widzi | Kto dodaje |
+|---|---|---|
+| **prywatna** | tylko właściciel | każdy zalogowany, w swojej |
+| **wspólna** | wszyscy | **wyłącznie admin** |
+
+Dokumenty leżą na serwerze (`serwer/dane/baza/`), więc chodzą za użytkownikiem na każde
+urządzenie — inaczej niż dotąd, gdy siedziały w `localStorage` przeglądarki.
+
+**Dlaczego to ważne.** Aplikacja wklejała do promptu **całą treść** każdego zaznaczonego
+dokumentu. Koszt rósł liniowo z wielkością bazy, przy większej bazie kończył się kontekst,
+a trafne fragmenty tonęły w szumie. Teraz tekst jest dzielony na fragmenty po 1500 znaków,
+każdy dostaje wektor, a przy generowaniu dobieranych jest tylko kilka najtrafniejszych.
+
+To odwzorowanie rozwiązania z Cosmosa. Różnica jedna: Cosmos liczy wektory lokalnie na GPU
+(usługa `senses`, model bge-m3), a tu VPS nie ma karty — więc liczy je API NVIDIA, gdzie
+bge-m3 też jest dostępny. Klucz to ten sam `NVIDIA_KEY`.
+
+**Bez klucza to nadal działa**, tylko gorzej: wyszukiwanie schodzi na dopasowanie słów
+kluczowych, dokładnie jak awaryjna ścieżka w Cosmosie. Pole `metoda` w odpowiedzi mówi,
+która ścieżka zadziałała.
+
+| Endpoint | Do czego |
+|---|---|
+| `GET /api/baza` | lista dokumentów (wspólne + własne prywatne) |
+| `POST /api/baza` | dodanie; `zakres: "wspolna"` wymaga roli admin |
+| `POST /api/baza/usun` | usunięcie |
+| `POST /api/baza/szukaj` | najtrafniejsze fragmenty + gotowy blok do promptu |
 
 ### Dane SERP
 
