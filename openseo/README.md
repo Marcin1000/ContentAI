@@ -61,6 +61,73 @@ funkcji. OpenSEO zostaje OpenSEO — po prostu w barwach Content AI.
 
 ---
 
+## Zależność funkcjonalna: frazy krążą między aplikacjami
+
+Poza wyglądem i logowaniem obie aplikacje **wymieniają dane**. Zamysł jest jeden:
+
+> OpenSEO wie, **co warto napisać**. Content AI to **pisze**. Po napisaniu frazy wracają
+> do OpenSEO, żeby dało się śledzić ich pozycje.
+
+```
+OpenSEO                          Content AI
+──────────────────────────────   ──────────────────────────────
+człowiek bada i taguje frazy
+        │
+        └──► zapisane frazy ────► 📈 przy polu „Słowa kluczowe"
+                                          │
+                                  artykuł powstaje na tych frazach
+                                          │
+        ◄──── tag content-ai ◄────────────┘
+   rank tracking śledzi pozycje
+```
+
+**W aplikacji:** w formularzu artykułu, obok pola „Słowa kluczowe", pojawia się przycisk 📈.
+Otwiera listę fraz zapisanych w projekcie OpenSEO — z wolumenem, trudnością i tagami.
+Zaznaczasz, klikasz „Dodaj zaznaczone" i lądują w polu fraz. W tym samym oknie jest ruch
+powrotny: „Oddaj frazy tego artykułu do OpenSEO" zapisuje je z tagiem `content-ai`.
+
+Przycisk pokazuje się tylko wtedy, gdy OpenSEO faktycznie odpowiada.
+
+### Skąd te dane — i ile kosztują
+
+Content AI rozmawia z OpenSEO przez jego **serwer MCP** (`/mcp` w kontenerze). W trybie
+Docker (`AUTH_MODE=local_noauth`) ten endpoint nie wymaga tokenu, a my pukamy po pętli
+zwrotnej, więc nie trzeba nic dodatkowo konfigurować.
+
+**Podział kosztów jest tu najważniejszy.** Część narzędzi OpenSEO czyta tylko jego własną
+bazę i nie kosztuje nic. Część woła DataForSEO i jest płatna za zapytanie — z tego samego
+salda, którego używa Content AI.
+
+| Co robi aplikacja | Endpoint | Koszt |
+|---|---|---|
+| lista projektów | `GET /api/seo/projekty` | **0** |
+| zapisane frazy z metrykami | `GET /api/seo/frazy` | **0** |
+| oddanie fraz z tagiem | `POST /api/seo/frazy` | **0** |
+| strony blisko czołówki (poz. 4–20) | `GET /api/seo/okazje` | **0** |
+| badanie nowych fraz | `POST /api/seo/badaj` | **płatne** |
+
+Wywołanie płatnego narzędzia wymaga jawnego `potwierdzam: true` i trafia do logu razem
+z loginem osoby, która je uruchomiła. Okno fraz w aplikacji celowo **nie ma** badania —
+robi się je w OpenSEO, gdzie widać koszt zapytania.
+
+`GET /api/seo/okazje` wymaga podłączonego Search Console i GA4 po stronie OpenSEO. Bez
+nich zwraca błąd z komunikatem, a nie puste dane.
+
+### SERP przez OpenSEO
+
+Trzecie źródło danych SERP dla Content AI:
+
+```
+CAI_SERP=openseo
+CAI_SEO_PROJEKT=<id projektu z OpenSEO>
+```
+
+To te same dane DataForSEO co przy `CAI_SERP=dataforseo` (i tak samo płatne), ale zapytanie
+idzie przez kontener, więc wynik widać też w panelu OpenSEO. Id projektu odczytasz
+z `GET /api/seo/projekty` albo z adresu w panelu.
+
+---
+
 ## Czego potrzeba
 
 | | |

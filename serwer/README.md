@@ -77,7 +77,8 @@ Wszystko przez zmienne środowiskowe.
 | `NVIDIA_KEY` | — | klucz treści (dostawca `nvidia`) |
 | `OPENAI_KEY` | — | grafiki, TTS, transkrypcja |
 | `ELEVEN_KEY` | — | głos premium |
-| `CAI_SERP` | `model` | źródło danych SERP: `model` albo `dataforseo` |
+| `CAI_SERP` | `model` | źródło danych SERP: `model`, `dataforseo` albo `openseo` |
+| `CAI_SEO_PROJEKT` | — | id projektu OpenSEO (wymagane przy `CAI_SERP=openseo`) |
 | `DATAFORSEO_LOGIN` | — | login DataForSEO (przy `CAI_SERP=dataforseo`) |
 | `DATAFORSEO_HASLO` | — | hasło DataForSEO |
 | `CAI_BAZA` | `serwer/dane/baza` | katalog bazy wiedzy |
@@ -181,6 +182,23 @@ ciasteczka — po restarcie wszyscy logują się ponownie.
 
 Token sesji Content AI jest **wycinany** z nagłówka `Cookie` przed przekazaniem żądania
 do kontenera — obca aplikacja go nie widzi.
+
+### Dane z OpenSEO (`/api/seo/*`)
+
+Content AI pyta OpenSEO o jego dane przez serwer MCP kontenera (`serwer/openseo-mcp.js`).
+W trybie `local_noauth` ten endpoint nie wymaga tokenu, a ruch idzie po pętli zwrotnej.
+
+| Endpoint | Do czego | Koszt |
+|---|---|---|
+| `GET /api/seo/projekty` | lista projektów | **0** |
+| `GET /api/seo/frazy` | zapisane frazy z metrykami i tagami | **0** |
+| `POST /api/seo/frazy` | oddanie fraz z tagiem (domyślnie `content-ai`) | **0** |
+| `GET /api/seo/okazje` | strony na pozycjach 4–20 (wymaga GSC + GA4) | **0** |
+| `POST /api/seo/badaj` | badanie nowych fraz | **płatne** |
+
+Zero oznacza tu dosłownie zero: te narzędzia czytają bazę OpenSEO i nie wołają DataForSEO.
+Płatne narzędzie odmówi wywołania bez jawnego `potwierdzam: true` i zapisze do logu login
+osoby, która je uruchomiła — wydatek ma mieć właściciela.
 
 Szczegóły, uzasadnienie wyborów i wdrożenie: **`openseo/README.md`**.
 

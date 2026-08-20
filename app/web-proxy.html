@@ -1499,6 +1499,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
               <input type="text" id="kw-input" placeholder="Wpisz frazę i naciśnij Enter..." data-i18n="ph-kw" onkeydown="addKw(event)" onkeyup="addKwMobile(event)" style="flex:1;min-width:0" />
               <button type="button" class="mic-btn" onclick="dictate('kw-input', this)" data-i18n-title="voice-dictate-title" title="Dyktuj">🎙</button>
               <button onclick="addKwBtn()" title="Dodaj frazę" data-i18n-title="title-kw-add" style="flex-shrink:0;height:38px;width:38px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">+</button>
+              <button type="button" id="seo-frazy-btn" style="display:none;flex-shrink:0;height:38px;width:38px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:17px;cursor:pointer;align-items:center;justify-content:center;line-height:1" onclick="otworzFrazySeo()" data-i18n-title="seo-frazy-title" title="Frazy sprawdzone w OpenSEO">📈</button>
             </div>
             <div class="kw-wrap" id="kw-tags"></div>
           </div>
@@ -2846,6 +2847,16 @@ var I18N = {
     'bazas-zamknij':'Zamknij','bazas-tylko-admin':'Do bazy wspólnej dodaje wyłącznie administrator.',
     'bazas-blad':'Nie udało się połączyć z serwerem.','bazas-dodaje':'Dodaję...',
     'openseo-menu-title':'OpenSEO','openseo-menu-sub':'pozycje, backlinki, audyty',
+    'seo-frazy-title':'Frazy sprawdzone w OpenSEO',
+    'seo-title':'📈 Frazy z OpenSEO','seo-desc':'Frazy zapisane i otagowane w OpenSEO. Odczyt nie kosztuje kredytów — dane pochodzą z bazy OpenSEO, nie z nowego zapytania.',
+    'seo-projekt':'Projekt','seo-tag':'Tag (wszystkie)','seo-szukaj':'Szukaj frazy',
+    'seo-dodaj':'Dodaj zaznaczone','seo-oddaj':'Oddaj frazy tego artykułu do OpenSEO',
+    'seo-oddaj-hint':'Zapisuje bieżące frazy z tagiem content-ai, żeby dało się śledzić ich pozycje.',
+    'seo-pusto':'Brak zapisanych fraz w tym projekcie.','seo-zamknij':'Zamknij',
+    'seo-wolumen':'wyszukań/mc','seo-trudnosc':'trudność','seo-brak-danych':'brak danych',
+    'seo-blad':'Nie udało się połączyć z OpenSEO.','seo-laduje':'Wczytuję...',
+    'seo-zapisano':'Zapisano w OpenSEO','seo-nic-nie-zaznaczono':'Najpierw zaznacz frazy.',
+    'seo-brak-fraz':'Najpierw dodaj frazy do artykułu.',
     'history-select':'Wybierz artykuł z listy',
     // ── Tooltips ──
     'title-brief-tooltip':'Wygeneruj brief przed artykułem',
@@ -3247,6 +3258,16 @@ var I18N = {
     'bazas-zamknij':'Close','bazas-tylko-admin':'Only an administrator can add to the shared base.',
     'bazas-blad':'Could not reach the server.','bazas-dodaje':'Adding...',
     'openseo-menu-title':'OpenSEO','openseo-menu-sub':'rankings, backlinks, audits',
+    'seo-frazy-title':'Keywords vetted in OpenSEO',
+    'seo-title':'📈 Keywords from OpenSEO','seo-desc':'Keywords saved and tagged in OpenSEO. Reading them costs no credits — the data comes from OpenSEO\'s database, not from a new query.',
+    'seo-projekt':'Project','seo-tag':'Tag (all)','seo-szukaj':'Search keyword',
+    'seo-dodaj':'Add selected','seo-oddaj':'Send this article\'s keywords to OpenSEO',
+    'seo-oddaj-hint':'Saves the current keywords with the content-ai tag so their rankings can be tracked.',
+    'seo-pusto':'No saved keywords in this project.','seo-zamknij':'Close',
+    'seo-wolumen':'searches/mo','seo-trudnosc':'difficulty','seo-brak-danych':'no data',
+    'seo-blad':'Could not reach OpenSEO.','seo-laduje':'Loading...',
+    'seo-zapisano':'Saved in OpenSEO','seo-nic-nie-zaznaczono':'Select some keywords first.',
+    'seo-brak-fraz':'Add keywords to the article first.',
     'history-select':'Select an article from the list',
     // ── Tooltips ──
     'title-brief-tooltip':'Generate brief before article',
@@ -10518,6 +10539,190 @@ if ('serviceWorker' in navigator) {
     if (!wdrozone) return;
     var poz = document.getElementById('openseo-item');
     if (poz) poz.style.display = '';
+  });
+})();
+</script>
+
+<!-- ============ Frazy z OpenSEO ============ -->
+<div id="seo-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10001;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:660px;width:100%;max-height:86vh;overflow:auto;padding:24px;box-shadow:var(--shadow)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-weight:700;font-size:16px;color:var(--text)" data-i18n="seo-title">📈 Frazy z OpenSEO</div>
+      <button onclick="zamknijFrazySeo()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5" data-i18n="seo-desc">Frazy zapisane i otagowane w OpenSEO. Odczyt nie kosztuje kredytów — dane pochodzą z bazy OpenSEO, nie z nowego zapytania.</div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <select id="seo-projekt" onchange="odswiezFrazySeo()" style="flex:1;min-width:150px"></select>
+      <select id="seo-tag" onchange="odswiezFrazySeo()" style="flex:1;min-width:130px"></select>
+      <input type="text" id="seo-szukaj" oninput="szukajFrazSeo()" style="flex:1;min-width:130px">
+    </div>
+
+    <div id="seo-lista" style="margin-bottom:16px;max-height:40vh;overflow:auto"></div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="dodajZaznaczoneSeo()" style="flex:1;min-width:140px;padding:10px;border:none;border-radius:var(--radius);background:var(--accent,#d97706);color:#fff;font-weight:600;font-size:13px;cursor:pointer" data-i18n="seo-dodaj">Dodaj zaznaczone</button>
+      <button onclick="zamknijFrazySeo()" style="padding:10px 16px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer" data-i18n="seo-zamknij">Zamknij</button>
+    </div>
+
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <button onclick="oddajFrazySeo()" style="width:100%;padding:10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;cursor:pointer" data-i18n="seo-oddaj">Oddaj frazy tego artykułu do OpenSEO</button>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5" data-i18n="seo-oddaj-hint">Zapisuje bieżące frazy z tagiem content-ai, żeby dało się śledzić ich pozycje.</div>
+    </div>
+
+    <div id="seo-status" style="font-size:12px;color:var(--text2);margin-top:12px;min-height:16px"></div>
+  </div>
+</div>
+<script>
+// ─── Frazy z OpenSEO w formularzu artykulu ────────────────────────────────────
+// Zamysl calosci: czlowiek sprawdza i taguje frazy w OpenSEO, Content AI je
+// stad bierze, a po napisaniu oddaje z powrotem - wtedy OpenSEO moze sledzic
+// pozycje tego, co faktycznie napisalismy. Bez przeklejania przez schowek.
+//
+// Wszystko tutaj jest DARMOWE: czytanie zapisanych fraz i oddawanie ich
+// z powrotem dotyka tylko bazy OpenSEO, bez wywolan DataForSEO. Badanie nowych
+// fraz jest platne i celowo nie ma go w tym oknie - robi sie je w OpenSEO,
+// gdzie widac koszt.
+(function(){
+  'use strict';
+  function el(id){ return document.getElementById(id); }
+  function tekst(klucz, zapas){
+    try { return (typeof _t === 'function' && _t(klucz)) || zapas; } catch(e){ return zapas; }
+  }
+  function bezpieczny(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(z){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[z];
+    });
+  }
+  function status(s){ var e = el('seo-status'); if (e) e.textContent = s || ''; }
+
+  var frazy = [];
+  var czasSzukania = null;
+
+  window.otworzFrazySeo = async function(){
+    el('seo-szukaj').placeholder = tekst('seo-szukaj', 'Szukaj frazy');
+    el('seo-modal').style.display = 'flex';
+    status(tekst('seo-laduje', 'Wczytuję...'));
+    try {
+      var odp = await fetch('/api/seo/projekty');
+      if (!odp.ok) throw new Error('projekty');
+      var dane = await odp.json();
+      var wybor = el('seo-projekt');
+      wybor.innerHTML = (dane.projekty || []).map(function(p){
+        return '<option value="' + bezpieczny(p.id) + '">' + bezpieczny(p.nazwa) + '</option>';
+      }).join('');
+      status('');
+      if (!(dane.projekty || []).length) { el('seo-lista').innerHTML = ''; return; }
+      await odswiezFrazySeo();
+    } catch(e){
+      status(tekst('seo-blad', 'Nie udało się połączyć z OpenSEO.'));
+    }
+  };
+
+  window.zamknijFrazySeo = function(){ el('seo-modal').style.display = 'none'; };
+
+  window.odswiezFrazySeo = async function(){
+    var projekt = el('seo-projekt').value;
+    if (!projekt) return;
+    status(tekst('seo-laduje', 'Wczytuję...'));
+    var adres = '/api/seo/frazy?projekt=' + encodeURIComponent(projekt);
+    var tag = el('seo-tag').value;
+    if (tag) adres += '&tag=' + encodeURIComponent(tag);
+    var szukaj = el('seo-szukaj').value.trim();
+    if (szukaj) adres += '&szukaj=' + encodeURIComponent(szukaj);
+    try {
+      var odp = await fetch(adres);
+      if (!odp.ok) throw new Error('frazy');
+      var dane = await odp.json();
+      frazy = dane.frazy || [];
+      // Lista tagow odswiezana tylko bez filtra, zeby wybrany tag nie wypadl
+      // z listy razem z odfiltrowanymi wierszami.
+      if (!tag) {
+        var wyborTagu = el('seo-tag');
+        wyborTagu.innerHTML = '<option value="">' + bezpieczny(tekst('seo-tag', 'Tag (wszystkie)')) + '</option>'
+          + (dane.tagi || []).map(function(t){
+              return '<option value="' + bezpieczny(t) + '">' + bezpieczny(t) + '</option>';
+            }).join('');
+      }
+      rysujFrazy();
+      status('');
+    } catch(e){
+      status(tekst('seo-blad', 'Nie udało się połączyć z OpenSEO.'));
+    }
+  };
+
+  window.szukajFrazSeo = function(){
+    clearTimeout(czasSzukania);
+    czasSzukania = setTimeout(odswiezFrazySeo, 350);
+  };
+
+  function rysujFrazy(){
+    var lista = el('seo-lista');
+    if (!frazy.length){
+      lista.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px 0">'
+        + bezpieczny(tekst('seo-pusto', 'Brak zapisanych fraz w tym projekcie.')) + '</div>';
+      return;
+    }
+    var brak = tekst('seo-brak-danych', 'brak danych');
+    var jednostka = tekst('seo-wolumen', 'wyszukań/mc');
+    var trudno = tekst('seo-trudnosc', 'trudność');
+    lista.innerHTML = frazy.map(function(f, i){
+      var metryki = f.wolumen === null
+        ? bezpieczny(brak)
+        : bezpieczny(f.wolumen + ' ' + jednostka) + (f.trudnosc === null ? '' : ' · ' + bezpieczny(trudno + ' ' + f.trudnosc));
+      var tagi = f.tagi.length
+        ? ' · ' + f.tagi.map(bezpieczny).join(', ')
+        : '';
+      return '<label style="display:flex;gap:10px;align-items:flex-start;padding:8px;border-bottom:1px solid var(--border);cursor:pointer">'
+        + '<input type="checkbox" data-seo-i="' + i + '" style="margin-top:3px">'
+        + '<div style="min-width:0"><div style="font-size:13px;color:var(--text);word-break:break-word">' + bezpieczny(f.fraza) + '</div>'
+        + '<div style="font-size:11px;color:var(--text3)">' + metryki + tagi + '</div></div></label>';
+    }).join('');
+  }
+
+  window.dodajZaznaczoneSeo = function(){
+    var zaznaczone = [].slice.call(el('seo-lista').querySelectorAll('input[data-seo-i]:checked'));
+    if (!zaznaczone.length) return status(tekst('seo-nic-nie-zaznaczono', 'Najpierw zaznacz frazy.'));
+    zaznaczone.forEach(function(pole){
+      var f = frazy[Number(pole.getAttribute('data-seo-i'))];
+      if (f && typeof keywords !== 'undefined' && keywords.indexOf(f.fraza) === -1) keywords.push(f.fraza);
+    });
+    if (typeof renderKws === 'function') renderKws();
+    zamknijFrazySeo();
+  };
+
+  window.oddajFrazySeo = async function(){
+    var projekt = el('seo-projekt').value;
+    if (!projekt) return status(tekst('seo-blad', 'Nie udało się połączyć z OpenSEO.'));
+    if (typeof keywords === 'undefined' || !keywords.length) {
+      return status(tekst('seo-brak-fraz', 'Najpierw dodaj frazy do artykułu.'));
+    }
+    status(tekst('seo-laduje', 'Wczytuję...'));
+    try {
+      var odp = await fetch('/api/seo/frazy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projekt: projekt, frazy: keywords, tagi: ['content-ai'] })
+      });
+      if (!odp.ok) throw new Error('zapis');
+      var dane = await odp.json();
+      // Odswiezenie listy konczy sie wyczyszczeniem statusu, wiec potwierdzenie
+      // ustawiamy PO nim - inaczej uzytkownik zapisuje frazy i nie widzi nic.
+      await odswiezFrazySeo();
+      status(tekst('seo-zapisano', 'Zapisano w OpenSEO') + ': ' + dane.zapisano);
+    } catch(e){
+      status(tekst('seo-blad', 'Nie udało się połączyć z OpenSEO.'));
+    }
+  };
+
+  // Przycisk przy polu fraz pokazuje sie dopiero, gdy serwer potwierdzi, ze
+  // OpenSEO faktycznie odpowiada. Inaczej otwieraloby sie puste okno z bledem.
+  document.addEventListener('DOMContentLoaded', function(){
+    fetch('/api/seo/projekty').then(function(o){
+      if (!o.ok) return;
+      var b = el('seo-frazy-btn');
+      if (b) b.style.display = 'flex';
+    }).catch(function(){});
   });
 })();
 </script>

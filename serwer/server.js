@@ -28,6 +28,7 @@ const crypto = require('node:crypto');
 const serp = require('./serp.js');
 const baza = require('./baza.js');
 const openseo = require('./openseo.js');
+const openseoMcp = require('./openseo-mcp.js');
 
 const KATALOG = __dirname;
 const APP = path.join(KATALOG, '..', 'app');
@@ -77,8 +78,11 @@ const KONF = {
     model: process.env.CAI_MODEL_EMBED || 'nvidia/nv-embedqa-e5-v5',
   },
 
-  // Zrodlo danych SERP: 'model' (model z web_search, tylko Anthropic) albo 'dataforseo'
+  // Zrodlo danych SERP: 'model' (model z web_search, tylko Anthropic),
+  // 'dataforseo' (prosto z API) albo 'openseo' (przez kontener OpenSEO)
   serp: (process.env.CAI_SERP || 'model').toLowerCase(),
+  // Projekt OpenSEO, w kontekscie ktorego pytamy o dane; narzedzia OpenSEO sa projektowe.
+  seoProjekt: process.env.CAI_SEO_PROJEKT || '',
   dataForSeo: {
     login: process.env.DATAFORSEO_LOGIN || '',
     haslo: process.env.DATAFORSEO_HASLO || '',
@@ -322,6 +326,33 @@ async function obsluzSerp(body) {
     usage: { input_tokens: 0, output_tokens: 0 },
   });
 
+  // Przez OpenSEO: te same dane DataForSEO, ale zapytanie idzie przez kontener,
+  // wiec wynik laduje tez w jego historii i widac go w panelu SEO. Wymaga
+  // wskazania projektu (CAI_SEO_PROJEKT), bo narzedzia OpenSEO sa projektowe.
+  if (KONF.serp === 'openseo') {
+    const fraza = serp.frazaZZadania(body);
+    if (!fraza) return { status: 200, dane: wAnthropic({ context: '', topics: [], phrases: [] }) };
+    if (!KONF.openseo.portNasluchu || !KONF.seoProjekt) {
+      console.error('[serp] CAI_SERP=openseo wymaga CAI_OPENSEO_PORT i CAI_SEO_PROJEKT');
+      return { status: 500, dane: { content: [], error: { komunikat: 'OpenSEO nie jest skonfigurowane jako zrodlo SERP' } } };
+    }
+    try {
+      const surowe = await openseoMcp.wolaj(
+        'get_serp_results',
+        { projectId: KONF.seoProjekt, queries: [{ keyword: fraza }] },
+        KONF.openseo,
+        { platne: true }
+      );
+      const wynik = serp.zbudujWynik(openseoMcp.serpJakDataForSeo(surowe, fraza), fraza);
+      wynik.zrodlo = 'openseo';
+      console.log(`[serp] openseo "${fraza}": ${wynik.wynikow} wynikow`);
+      return { status: 200, dane: wAnthropic(wynik) };
+    } catch (e) {
+      console.error('[serp] openseo:', e.message);
+      return { status: 502, dane: { content: [], error: { komunikat: 'Nie udalo sie pobrac danych SERP z OpenSEO' } } };
+    }
+  }
+
   if (KONF.serp === 'dataforseo') {
     if (!KONF.dataForSeo.login || !KONF.dataForSeo.haslo) {
       console.error('[serp] CAI_SERP=dataforseo, ale brak DATAFORSEO_LOGIN/DATAFORSEO_HASLO');
@@ -342,12 +373,12 @@ async function obsluzSerp(body) {
   // CAI_SERP=model, ale dostawca nie ma web_search - lepiej powiedziec to wprost,
   // niz pozwolic modelowi zmyslic dane SERP i podac je dalej jako fakty.
   if (KONF.dostawca !== 'anthropic') {
-    console.error(`[serp] dostawca ${KONF.dostawca} nie obsluguje web_search; ustaw CAI_SERP=dataforseo`);
+    console.error(`[serp] dostawca ${KONF.dostawca} nie obsluguje web_search; ustaw CAI_SERP=dataforseo albo openseo`);
     return {
       status: 501,
       dane: {
         content: [],
-        error: { komunikat: 'Analiza SERP wymaga dostawcy anthropic albo CAI_SERP=dataforseo' },
+        error: { komunikat: 'Analiza SERP wymaga dostawcy anthropic albo CAI_SERP=dataforseo/openseo' },
       },
     };
   }
@@ -549,6 +580,114 @@ async function obslugaLogowania(req, res) {
   return res.end();
 }
 
+// ─── Dane z OpenSEO ───────────────────────────────────────────────────────────
+// Zamysl: OpenSEO wie, co warto pisac (frazy sprawdzone i otagowane przez
+// czlowieka), Content AI to pisze, a po napisaniu oddaje frazy z powrotem, zeby
+// dalo sie sledzic pozycje. Petla zamyka sie bez przeklejania przez schowek.
+//
+// Podzial kosztow jest tu swiadomy: czytanie zapisanych fraz i oddawanie ich
+// z powrotem nie kosztuje nic, bo dotyka tylko bazy OpenSEO. Badanie nowych fraz
+// wola DataForSEO i jest platne za zapytanie, wiec wymaga jawnego potwierdzenia
+// z aplikacji i trafia do logu z loginem osoby, ktora je uruchomila.
+
+async function obsluzSeo(sciezka, req, res, sesja) {
+  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const konf = KONF.openseo;
+
+  // Lista projektow - od niej zaczyna aplikacja, bo reszta narzedzi potrzebuje id.
+  if (sciezka === '/api/seo/projekty' && req.method === 'GET') {
+    const dane = await openseoMcp.wolaj('list_projects', {}, konf);
+    return odpowiedzJson(res, 200, { projekty: openseoMcp.projektyDoAplikacji(dane) });
+  }
+
+  // Frazy zapisane w projekcie. Darmowe - czyta baze OpenSEO, nie DataForSEO.
+  if (sciezka === '/api/seo/frazy' && req.method === 'GET') {
+    const projekt = url.searchParams.get('projekt');
+    if (!projekt) return odpowiedzJson(res, 400, { error: 'Brak projektu' });
+    const argumenty = { projectId: projekt, limit: 100 };
+    const tag = url.searchParams.get('tag');
+    const szukaj = url.searchParams.get('szukaj');
+    if (tag) argumenty.tags = [tag];
+    if (szukaj) argumenty.search = szukaj;
+    const dane = await openseoMcp.wolaj('list_saved_keywords', argumenty, konf);
+    return odpowiedzJson(res, 200, openseoMcp.frazyDoAplikacji(dane));
+  }
+
+  // Oddanie fraz do OpenSEO po napisaniu tekstu. Darmowe i idempotentne.
+  if (sciezka === '/api/seo/frazy' && req.method === 'POST') {
+    const dane = await cialoJson(req);
+    const frazy = (Array.isArray(dane.frazy) ? dane.frazy : [])
+      .map((f) => String(f || '').trim())
+      .filter(Boolean)
+      .slice(0, 100);
+    if (!dane.projekt) return odpowiedzJson(res, 400, { error: 'Brak projektu' });
+    if (!frazy.length) return odpowiedzJson(res, 400, { error: 'Brak fraz do zapisania' });
+
+    const tagi = (Array.isArray(dane.tagi) ? dane.tagi : ['content-ai'])
+      .map((t) => String(t || '').trim().slice(0, 64))
+      .filter(Boolean)
+      .slice(0, 20);
+
+    const wynik = await openseoMcp.wolaj(
+      'save_keywords',
+      { projectId: String(dane.projekt), keywords: frazy, tags: tagi, tagMode: 'append' },
+      konf
+    );
+    return odpowiedzJson(res, 200, { zapisano: frazy.length, tagi, wynik });
+  }
+
+  // Strony blisko czolowki (pozycje 4-20) - naturalna lista "co odswiezyc".
+  // Wymaga podlaczonego Search Console i GA4 po stronie OpenSEO.
+  if (sciezka === '/api/seo/okazje' && req.method === 'GET') {
+    const projekt = url.searchParams.get('projekt');
+    if (!projekt) return odpowiedzJson(res, 400, { error: 'Brak projektu' });
+    const dane = await openseoMcp.wolaj(
+      'get_search_opportunities',
+      { projectId: projekt, limit: 25 },
+      konf
+    );
+    return odpowiedzJson(res, 200, dane);
+  }
+
+  // Badanie nowych fraz. PLATNE - wola DataForSEO z tego samego salda, ktorego
+  // uzywa Content AI. Bez jawnego potwierdzenia klient MCP odmowi wywolania.
+  if (sciezka === '/api/seo/badaj' && req.method === 'POST') {
+    const dane = await cialoJson(req);
+    if (!dane.projekt) return odpowiedzJson(res, 400, { error: 'Brak projektu' });
+    if (dane.potwierdzam !== true) {
+      return odpowiedzJson(res, 400, { error: 'Badanie fraz jest platne - wymaga potwierdzenia.' });
+    }
+    const zarodki = (Array.isArray(dane.frazy) ? dane.frazy : [])
+      .map((f) => String(f || '').trim())
+      .filter(Boolean)
+      .slice(0, 10);
+    if (!zarodki.length) return odpowiedzJson(res, 400, { error: 'Brak fraz wyjsciowych' });
+
+    // Do logu, bo to wydatek: ma byc widac, kto go uruchomil.
+    console.log(`[seo] platne badanie fraz (${zarodki.length}) - ${sesja.login}`);
+    const wynik = await openseoMcp.wolaj(
+      'research_keywords',
+      { projectId: String(dane.projekt), seeds: zarodki.map((s) => ({ seed: s })) },
+      konf,
+      { platne: true }
+    );
+    return odpowiedzJson(res, 200, wynik);
+  }
+
+  return odpowiedzJson(res, 404, { error: 'Nieznany endpoint SEO' });
+}
+
+/** Cialo zadania jako JSON, z czytelnym bledem zamiast wyjatku. */
+async function cialoJson(req) {
+  try {
+    return JSON.parse((await czytajCialo(req)).toString('utf8'));
+  } catch {
+    const e = new Error('Niepoprawny JSON');
+    e.status = 400;
+    throw e;
+  }
+}
+
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 async function obsluz(req, res) {
@@ -601,6 +740,8 @@ async function obsluz(req, res) {
       modelWektorow: KONF.wektory.model,
       dataForSeo: Boolean(KONF.dataForSeo.login && KONF.dataForSeo.haslo),
       openseo: Boolean(KONF.openseo.portNasluchu),
+      openseoOdpowiada: KONF.openseo.portNasluchu ? await openseoMcp.czyDziala(KONF.openseo) : false,
+      seoProjekt: Boolean(KONF.seoProjekt),
       cookieDomena: Boolean(KONF.cookieDomena),
       uzytkownikow: wczytajUzytkownikow().length,
       aktywnychSesji: sesje.size,
@@ -657,6 +798,23 @@ async function obsluz(req, res) {
       konfWektorow: KONF.wektory,
     });
     return odpowiedzJson(res, 200, { ...wynik, prompt: baza.doPromptu(wynik) });
+  }
+
+  // ─── Dane z OpenSEO ────────────────────────────────────────────────────────
+  // Content AI pyta OpenSEO o jego wlasne dane przez serwer MCP kontenera.
+  // Domyslna sciezka jest DARMOWA (czyta baze OpenSEO). Narzedzia platne, ktore
+  // wolaja DataForSEO, wymagaja jawnego potwierdzenia - patrz openseo-mcp.js.
+  if (sciezka.startsWith('/api/seo/')) {
+    if (!KONF.openseo.portNasluchu) {
+      return odpowiedzJson(res, 501, { error: 'OpenSEO nie jest wdrozone na tym serwerze.' });
+    }
+    try {
+      return await obsluzSeo(sciezka, req, res, sesja);
+    } catch (e) {
+      const status = e.status || 502;
+      if (status >= 500) console.error('[seo]', e.message);
+      return odpowiedzJson(res, status, { error: e.message });
+    }
   }
 
   // Proxy

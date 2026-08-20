@@ -178,6 +178,30 @@ Jasny/ciemny idzie za przełącznikiem w Content AI — OpenSEO otwiera się w t
 3001 to goły kontener, który nie ma żadnego logowania — wystawienie go wprost oznacza,
 że każdy zobaczy Twoje dane i będzie wypalał kredyty DataForSEO.
 
+### Frazy krążą między aplikacjami
+
+Obie aplikacje wymieniają dane. Zamysł: **OpenSEO wie, co warto napisać; Content AI to pisze;
+po napisaniu frazy wracają do OpenSEO, żeby dało się śledzić pozycje.**
+
+W formularzu artykułu, obok pola „Słowa kluczowe", jest przycisk 📈. Otwiera frazy zapisane
+w projekcie OpenSEO — z wolumenem, trudnością i tagami. W tym samym oknie działa ruch
+powrotny: „Oddaj frazy tego artykułu do OpenSEO" zapisuje je z tagiem `content-ai`.
+
+**Praktyczny obieg pracy:** w OpenSEO zbadaj frazy i otaguj te do napisania (np. tagiem
+`do-napisania`). W Content AI filtrujesz po tym tagu, piszesz tekst, oddajesz frazy z powrotem.
+Rank tracking w OpenSEO ma wtedy komplet fraz, na których faktycznie piszecie.
+
+**Koszty.** Czytanie zapisanych fraz i oddawanie ich z powrotem **nie kosztuje nic** — dotyka
+tylko bazy OpenSEO. Badanie nowych fraz woła DataForSEO i jest płatne, dlatego celowo nie ma
+go w tym oknie: robi się je w OpenSEO, gdzie widać koszt zapytania.
+
+Opcjonalnie SERP dla Content AI może też iść przez OpenSEO — wtedy wyniki widać w jego panelu:
+
+```
+CAI_SERP=openseo
+CAI_SEO_PROJEKT=<id projektu>
+```
+
 Instalacja samego OpenSEO i pełna konfiguracja: **`openseo/README.md`**.
 
 ---

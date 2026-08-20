@@ -228,6 +228,7 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
     fs.rmSync(katalog, { recursive: true, force: true });
 
     await testyOpenSeo();
+    await testyOpenSeoMcp();
 
     console.log(`\n  ${zaliczone} zaliczonych, ${bledy.length} bledow\n`);
     if (bledy.length) {
@@ -367,5 +368,150 @@ async function testyOpenSeo() {
     sprawdz('502 tlumaczy, co sprawdzic', padlTresc.includes('docker compose'));
 
     await new Promise((r) => serwer.close(r));
+  }
+}
+
+// ─── Klient MCP: Content AI pyta OpenSEO ──────────────────────────────────────
+// Zywego OpenSEO tu nie ma, wiec podstawiamy wlasna funkcje wysylajaca. Testuje
+// to nasza strone kontraktu: koszty, ksztalt danych i obsluge bledow.
+
+async function testyOpenSeoMcp() {
+  const mcp = require('./openseo-mcp.js');
+  const serp = require('./serp.js');
+  const http = require('node:http');
+
+  console.log('\n  OpenSEO MCP - koszty');
+  {
+    let wywolane = null;
+    const konf = {
+      host: '127.0.0.1',
+      port: 1,
+      poslijImpl: async (cialo) => {
+        wywolane = cialo;
+        return { jsonrpc: '2.0', id: cialo.id, result: { structuredContent: { rows: [], totalCount: 0 } } };
+      },
+    };
+
+    await mcp.wolaj('list_saved_keywords', { projectId: 'p1' }, konf);
+    sprawdz('darmowe narzedzie idzie bez potwierdzenia', wywolane.params.name === 'list_saved_keywords');
+    sprawdz('wolanie ma ksztalt JSON-RPC tools/call', wywolane.jsonrpc === '2.0' && wywolane.method === 'tools/call');
+
+    let odmowa = null;
+    wywolane = null;
+    try { await mcp.wolaj('research_keywords', { projectId: 'p1' }, konf); }
+    catch (e) { odmowa = e; }
+    sprawdz('platne narzedzie bez zgody odmawia', odmowa !== null && odmowa.status === 400);
+    sprawdz('platne narzedzie bez zgody NIE wysyla zadania', wywolane === null);
+
+    await mcp.wolaj('research_keywords', { projectId: 'p1' }, konf, { platne: true });
+    sprawdz('platne narzedzie ze zgoda przechodzi', wywolane && wywolane.params.name === 'research_keywords');
+
+    let nieznane = null;
+    try { await mcp.wolaj('rm_-rf', {}, konf); } catch (e) { nieznane = e; }
+    sprawdz('nieznane narzedzie odrzucone', nieznane !== null && nieznane.status === 400);
+  }
+
+  console.log('\n  OpenSEO MCP - bledy');
+  {
+    const zBledem = (odp) => ({ host: 'x', port: 1, poslijImpl: async () => odp });
+
+    let e1 = null;
+    try { await mcp.wolaj('list_projects', {}, zBledem({ jsonrpc: '2.0', id: 1, error: { message: 'brak projektu' } })); }
+    catch (e) { e1 = e; }
+    sprawdz('blad JSON-RPC zamienia sie w wyjatek', e1 !== null && e1.message.includes('brak projektu'));
+
+    let e2 = null;
+    try {
+      await mcp.wolaj('list_projects', {}, zBledem({
+        jsonrpc: '2.0', id: 1,
+        result: { isError: true, content: [{ type: 'text', text: 'Projekt nie istnieje' }] },
+      }));
+    } catch (e) { e2 = e; }
+    sprawdz('isError niesie komunikat narzedzia', e2 !== null && e2.message.includes('Projekt nie istnieje'));
+    sprawdz('isError to blad wolajacego, nie serwera', e2 !== null && e2.status === 400);
+
+    let e3 = null;
+    try { await mcp.wolaj('list_projects', {}, zBledem({ jsonrpc: '2.0', id: 1 })); } catch (e) { e3 = e; }
+    sprawdz('brak wyniku to blad', e3 !== null);
+  }
+
+  console.log('\n  OpenSEO MCP - odpakowanie odpowiedzi');
+  {
+    sprawdz('czysty JSON', mcp.odpakuj('application/json', '{"jsonrpc":"2.0","id":1}').id === 1);
+    const sse = 'event: message\ndata: {"jsonrpc":"2.0","id":7,"result":{"ok":true}}\n\n';
+    sprawdz('strumien SSE', mcp.odpakuj('text/event-stream; charset=utf-8', sse).id === 7);
+    let pusty = null;
+    try { mcp.odpakuj('text/event-stream', 'event: ping\n\n'); } catch (e) { pusty = e; }
+    sprawdz('pusty SSE to blad, nie cicha cisza', pusty !== null);
+  }
+
+  console.log('\n  OpenSEO MCP - ksztalt danych dla aplikacji');
+  {
+    const w = mcp.frazyDoAplikacji({
+      rows: [
+        { keyword: 'kurier dla sklepu', searchVolume: 1300, keywordDifficulty: 21, cpc: 2.4, intent: 'commercial', tags: [{ name: 'do-napisania' }] },
+        { keyword: 'paczkomat cennik', searchVolume: null, tags: ['zrobione'] },
+        { keyword: '' },
+      ],
+      totalCount: 3,
+      tags: [{ name: 'do-napisania' }, 'zrobione'],
+    });
+    sprawdz('puste frazy odpadaja', w.frazy.length === 2);
+    sprawdz('metryki przepisane', w.frazy[0].wolumen === 1300 && w.frazy[0].trudnosc === 21);
+    sprawdz('tagi jako obiekt i jako tekst', w.frazy[0].tagi[0] === 'do-napisania' && w.frazy[1].tagi[0] === 'zrobione');
+    sprawdz('brak metryki to null, nie zero', w.frazy[1].wolumen === null);
+    sprawdz('lista tagow projektu splaszczona', w.tagi.length === 2);
+
+    const p = mcp.projektyDoAplikacji({ projects: [{ id: 'p1', name: 'Sklep', domain: 'sklep.pl' }, { id: 'p2' }] });
+    sprawdz('projekty przepisane', p[0].nazwa === 'Sklep' && p[0].domena === 'sklep.pl');
+    sprawdz('projekt bez nazwy dostaje id', p[1].nazwa === 'p2');
+  }
+
+  console.log('\n  OpenSEO MCP - SERP w formacie wspolnym z DataForSEO');
+  {
+    const koperta = mcp.serpJakDataForSeo({
+      results: [{
+        keyword: 'kurier dla sklepu', ok: true,
+        items: [
+          { rank: 1, title: 'Kurier dla sklepu internetowego', description: 'Tania wysylka paczek dla sklepu', url: 'https://a.pl', domain: 'a.pl' },
+          { rank: 2, type: 'organic', title: 'Wysylka paczek ze sklepu', description: 'Kurier i paczkomat dla sklepu', url: 'https://b.pl', domain: 'b.pl' },
+        ],
+      }],
+    }, 'kurier dla sklepu');
+    const wynik = serp.zbudujWynik(koperta, 'kurier dla sklepu');
+    sprawdz('wyniki przechodza przez wspolny parser', wynik.context.includes('kurier dla sklepu'));
+    sprawdz('type null traktowany jak organic', wynik.topics.length > 0);
+    sprawdz('frazy wyciagniete z opisow', wynik.phrases.length > 0);
+
+    const bezWynikow = mcp.serpJakDataForSeo({ results: [{ keyword: 'x', ok: false, error: 'limit' }] }, 'x');
+    sprawdz('blad pojedynczej frazy to brak wynikow, nie wyjatek',
+      bezWynikow.tasks[0].result[0].items.length === 0);
+  }
+
+  console.log('\n  OpenSEO MCP - prawdziwy POST');
+  {
+    let trafienie = null;
+    const atrapa = http.createServer((req, res) => {
+      const kawalki = [];
+      req.on('data', (c) => kawalki.push(c));
+      req.on('end', () => {
+        trafienie = { sciezka: req.url, accept: req.headers.accept, cialo: JSON.parse(Buffer.concat(kawalki).toString('utf8')) };
+        res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+        res.end('event: message\ndata: {"jsonrpc":"2.0","id":1,"result":{"structuredContent":{"projects":[{"id":"p1","name":"Sklep"}]}}}\n\n');
+      });
+    });
+    await new Promise((r) => atrapa.listen(0, '127.0.0.1', r));
+    const konf = { host: '127.0.0.1', port: atrapa.address().port };
+
+    const dane = await mcp.wolaj('list_projects', {}, konf);
+    sprawdz('trafia pod /mcp', trafienie.sciezka === '/mcp');
+    sprawdz('Accept obejmuje oba typy tresci', /application\/json/.test(trafienie.accept) && /text\/event-stream/.test(trafienie.accept));
+    sprawdz('odpowiedz SSE odczytana', mcp.projektyDoAplikacji(dane)[0].nazwa === 'Sklep');
+    sprawdz('czyDziala widzi martwy serwer', (await mcp.czyDziala({ host: '127.0.0.1', port: 1 })) === false);
+
+    await new Promise((r) => atrapa.close(r));
+    let brak = null;
+    try { await mcp.wolaj('list_projects', {}, konf); } catch (e) { brak = e; }
+    sprawdz('brak kontenera to czytelny blad', brak !== null && brak.message.includes('OpenSEO'));
   }
 }

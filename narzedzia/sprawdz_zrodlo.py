@@ -160,6 +160,14 @@ KONTROLE = [
      "var DOMENA = 'WSTAW_TUTAJ_DOMENA_CIASTECZKA';", None, ("proxy",)),
     ("O/motyw", "wybor jasny/ciemny idzie do OpenSEO ciasteczkiem",
      "document.cookie = 'cai_motyw=' + (ciemny ? 'ciemny' : 'jasny')", None, ("proxy",)),
+
+    # ── frazy z OpenSEO w formularzu (tylko wariant proxy) ──
+    ("I/przycisk", "przycisk fraz OpenSEO przy polu slow kluczowych",
+     'id="seo-frazy-btn"', None, ("proxy",)),
+    ("I/czytanie", "okno czyta zapisane frazy z serwera",
+     "'/api/seo/frazy?projekt='", None, ("proxy",)),
+    ("I/oddawanie", "frazy artykulu wracaja do OpenSEO",
+     "window.oddajFrazySeo", None, ("proxy",)),
 ]
 
 
