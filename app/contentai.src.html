@@ -1461,6 +1461,9 @@ document.addEventListener('DOMContentLoaded', function () {
     <span class="ca-status" aria-hidden="true"><i></i>SYSTEM READY</span>
   </div>
   <div class="topbar-right">
+<!--@@IF proxy-->
+    <button id="pakiet-badge" onclick="otworzPakiet()" data-i18n-title="pakiet-badge-title" title="Twój pakiet i zużycie" style="display:none;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text);font-family:inherit;line-height:1;height:28px"></button>
+<!--@@ENDIF-->
     <div class="settings-wrap" id="settings-wrap">
       <button class="settings-btn" id="settings-btn" onclick="toggleSettingsMenu()" title="Ustawienia CMS i Brand Voice" aria-label="Ustawienia CMS i Brand Voice" data-i18n-title="title-settings" aria-haspopup="true">⚙️</button>
       <div class="settings-menu" id="settings-menu">
@@ -3056,6 +3059,26 @@ var I18N = {
     'seo-blad':'Nie udało się połączyć z OpenSEO.','seo-laduje':'Wczytuję...',
     'seo-zapisano':'Zapisano w OpenSEO','seo-nic-nie-zaznaczono':'Najpierw zaznacz frazy.',
     'seo-brak-fraz':'Najpierw dodaj frazy do artykułu.',
+    'pakiet-badge-title':'Twój pakiet i zużycie',
+    'pakiet-title':'🎟 Twój pakiet','pakiet-zamknij':'Zamknij',
+    'pakiet-blad':'Nie udało się odczytać stanu pakietu.',
+    'pakiet-artykul':'Artykuły','pakiet-grafika':'Grafiki',
+    'pakiet-audio':'Audio (lektor)','pakiet-transkrypcja':'Transkrypcje',
+    'pakiet-dokumenty':'Dokumenty w bazie wiedzy',
+    'pakiet-bez-limitu':'bez limitu','pakiet-zostalo':'zostało',
+    'pakiet-okres-miesiac':'Liczniki odnawiają się pierwszego dnia miesiąca.',
+    'pakiet-okres-zawsze':'To pula jednorazowa — nie odnawia się.',
+    'pakiet-funkcje':'Funkcje w tym pakiecie',
+    'pakiet-fn-bazaWiedzy':'Baza wiedzy','pakiet-fn-serp':'Analiza SERP',
+    'pakiet-fn-openseo':'Dane z OpenSEO','pakiet-fn-cms':'Publikacja do CMS',
+    'pakiet-fn-wlasnyKlucz':'Własny klucz API',
+    'pakiet-limit-title':'Limit pakietu wyczerpany',
+    'pakiet-limit-odnawialny':'Licznik odnowi się pierwszego dnia przyszłego miesiąca.',
+    'pakiet-limit-zawsze':'Ta pula się nie odnawia — żeby generować dalej, potrzebny jest wyższy pakiet.',
+    'pakiet-limit-zuzyto':'Zużyto',
+    'pakiet-funkcja-title':'Ta funkcja nie wchodzi w Twój pakiet',
+    'pakiet-wywolania':'Wywołania modelu',
+    'pakiet-wywolania-opis':'Jeden artykuł to kilka wywołań: brief, treść, korekta, przeróbki.',
 //@@ENDIF
     'history-select':'Wybierz artykuł z listy',
     // ── Tooltips ──
@@ -3484,6 +3507,26 @@ var I18N = {
     'seo-blad':'Could not reach OpenSEO.','seo-laduje':'Loading...',
     'seo-zapisano':'Saved in OpenSEO','seo-nic-nie-zaznaczono':'Select some keywords first.',
     'seo-brak-fraz':'Add keywords to the article first.',
+    'pakiet-badge-title':'Your plan and usage',
+    'pakiet-title':'🎟 Your plan','pakiet-zamknij':'Close',
+    'pakiet-blad':'Could not read the plan status.',
+    'pakiet-artykul':'Articles','pakiet-grafika':'Images',
+    'pakiet-audio':'Audio (voice-over)','pakiet-transkrypcja':'Transcriptions',
+    'pakiet-dokumenty':'Documents in the knowledge base',
+    'pakiet-bez-limitu':'unlimited','pakiet-zostalo':'left',
+    'pakiet-okres-miesiac':'Counters reset on the first day of each month.',
+    'pakiet-okres-zawsze':'This is a one-off allowance — it does not reset.',
+    'pakiet-funkcje':'Features in this plan',
+    'pakiet-fn-bazaWiedzy':'Knowledge base','pakiet-fn-serp':'SERP analysis',
+    'pakiet-fn-openseo':'OpenSEO data','pakiet-fn-cms':'Publishing to CMS',
+    'pakiet-fn-wlasnyKlucz':'Own API key',
+    'pakiet-limit-title':'Plan limit reached',
+    'pakiet-limit-odnawialny':'The counter resets on the first day of next month.',
+    'pakiet-limit-zawsze':'This allowance does not reset — generating more needs a higher plan.',
+    'pakiet-limit-zuzyto':'Used',
+    'pakiet-funkcja-title':'This feature is not part of your plan',
+    'pakiet-wywolania':'Model calls',
+    'pakiet-wywolania-opis':'One article takes several calls: brief, content, review, rewrites.',
 //@@ENDIF
     'history-select':'Select an article from the list',
     // ── Tooltips ──
@@ -3691,6 +3734,10 @@ function applyLang(lang) {
   try { if (typeof renderHistoryFilters === 'function') renderHistoryFilters(); } catch(e) {}
   // Podpisy generatora grafik (ustawiane dynamicznie, bez data-i18n) - przetlumacz na biezacy jezyk
   try { if (typeof imgRenderHistory === 'function') imgRenderHistory(); } catch(e) {}
+//@@IF proxy
+  // Odznaka pakietu niesie nazwe planu, wiec zmiana jezyka musi ja przerysowac.
+  try { if (typeof window.przerysujPakiet === 'function') window.przerysujPakiet(); } catch(e) {}
+//@@ENDIF
   try {
     const rl = document.getElementById('img-result-label');
     const rw = document.getElementById('img-result-wrap');
@@ -4763,6 +4810,11 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': API_KEY,
+//@@IF proxy
+        // Jedyne miejsce, ktore zglasza sie jako artykul. Brief, korekta premium,
+        // przerobki i analizy ida na licznik wywolan, nie na pakiet artykulow.
+        'x-cai-czynnosc': 'artykul',
+//@@ENDIF
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
@@ -6899,14 +6951,9 @@ async function openBriefPanel() {
 let briefState = null;
 
 function renderBriefKwsHtml() {
-  return '<div class="brief-section"><h4>' + _t('brief-kw-section') + '</h4><div id="brief-kw-list">' +
-    briefKeywords.map(function(k, i) {
-      var added = keywords.includes(k);
-      return '<span class="brief-kw"' +
-        (added ? ' style="opacity:.45;cursor:default;text-decoration:line-through" onclick=""'
-               : ' onclick="addKeywordFromBriefIdx(' + i + ')"') +
-        '>' + (added ? '\u2713 ' : '+ ') + escapeHtml(k) + '</span>';
-    }).join('') + '</div></div>';
+  // Pusty kontener; wypelnia go refreshBriefKwList, zeby oznaczanie fraz
+  // zweryfikowanych bylo w jednym miejscu, a nie w dwoch kopiach.
+  return '<div class="brief-section"><h4>' + _t('brief-kw-section') + '</h4><div id="brief-kw-list"></div></div>';
 }
 
 function refreshBriefKwList() {
@@ -6914,16 +6961,30 @@ function refreshBriefKwList() {
   if (!el) return;
   el.innerHTML = briefKeywords.map(function(k, i) {
     var added = keywords.includes(k);
+    // Fraza zweryfikowana w OpenSEO dostaje wolumen i obramowanie w kolorze
+    // akcentu. Bez tego uzytkownik nie odroznilby faktu od domyslu modelu.
+    var wolumen = (typeof window.briefZSeo === 'object' && window.briefZSeo) ? window.briefZSeo[k] : undefined;
+    var zweryfikowana = wolumen !== undefined;
+    var etykieta = zweryfikowana && wolumen !== null
+      ? ' <span style="opacity:.75;font-size:10px">' + escapeHtml(String(wolumen)) + '/mc</span>'
+      : '';
     return '<span class="brief-kw"' +
       (added ? ' style="opacity:.45;cursor:default;text-decoration:line-through" onclick=""'
-             : ' onclick="addKeywordFromBriefIdx(' + i + ')"') +
-      '>' + (added ? '\u2713 ' : '+ ') + escapeHtml(k) + '</span>';
+             : (zweryfikowana
+                 ? ' style="border-color:var(--accent2)" title="Sprawdzona w OpenSEO" onclick="addKeywordFromBriefIdx(' + i + ')"'
+                 : ' onclick="addKeywordFromBriefIdx(' + i + ')"')) +
+      '>' + (added ? '\u2713 ' : '+ ') + escapeHtml(k) + etykieta + '</span>';
   }).join('');
 }
 
 function showBrief(b) {
   briefState = b;
   briefKeywords = b.keywords || [];
+//@@IF proxy
+  // Frazy sprawdzone w OpenSEO sa zrodlem prawdy: maja realny wolumen i przeszly
+  // przez czyjas decyzje. Ida przed propozycjami modelu, ktore sa tylko domyslem.
+  wzbogacBriefOSeo(b);
+//@@ENDIF
   document.getElementById('brief-content').innerHTML =
     renderBriefKwsHtml() +
     '<div class="brief-section"><h4>' + _t('brief-h2-section') + '</h4>' +
@@ -6932,6 +6993,7 @@ function showBrief(b) {
     '<p style="font-size:12px;color:var(--text2);margin:0">'+escapeHtml(b.gap || (currentLang === 'en' ? 'No data' : 'Brak danych'))+'</p></div>' +
     '<div class="brief-section"><h4>' + _t('brief-words-section') + '</h4>' +
     '<p style="font-size:12px;color:var(--text2);margin:0">'+escapeHtml(b.words||'800-1000')+' ' + _t('brief-words-suffix') + '</p></div>';
+  refreshBriefKwList();
 }
 
 function addKeywordFromBrief(kw) {
@@ -10949,6 +11011,44 @@ async function kbAudioTranscribeAndOpen(file) {
     }
   };
 
+  /**
+   * Dokleja do Briefu frazy zapisane w OpenSEO, pasujace do tematu artykulu.
+   *
+   * Kolejnosc jest tu cala tresc pomyslu: fraza z OpenSEO przeszla przez badanie
+   * i przez czyjas decyzje o otagowaniu, wiec jest faktem. Propozycja modelu to
+   * domysl. Fakty ida pierwsze i sa oznaczone wolumenem, zeby dalo sie je odroznic
+   * na pierwszy rzut oka.
+   *
+   * Gdy OpenSEO nie odpowiada albo nie ma pasujacych fraz, Brief wyglada
+   * dokladnie tak jak dotad.
+   */
+  window.wzbogacBriefOSeo = async function(brief){
+    try {
+      var temat = (document.getElementById('topic') || {}).value || '';
+      if (!temat.trim()) return;
+
+      var odp = await fetch('/api/seo/frazy?szukaj=' + encodeURIComponent(temat.trim().split(/\s+/)[0]));
+      if (!odp.ok) return;
+      var dane = await odp.json();
+      var zSeo = (dane.frazy || []).filter(function(f){ return f.fraza; });
+      if (!zSeo.length) return;
+
+      // Fraza moze byc i w OpenSEO, i w propozycjach modelu - liczy sie raz,
+      // po stronie zweryfikowanej.
+      var znane = {};
+      zSeo.forEach(function(f){ znane[f.fraza.toLowerCase()] = true; });
+      var odModelu = (brief.keywords || []).filter(function(k){ return !znane[String(k).toLowerCase()]; });
+
+      briefKeywords = zSeo.map(function(f){ return f.fraza; }).concat(odModelu);
+      window.briefZSeo = zSeo.reduce(function(acc, f){
+        acc[f.fraza] = f.wolumen;
+        return acc;
+      }, {});
+
+      if (typeof refreshBriefKwList === 'function') refreshBriefKwList();
+    } catch(e){ /* brak OpenSEO nie moze psuc Briefu */ }
+  };
+
   // Przycisk przy polu fraz pokazuje sie dopiero, gdy serwer potwierdzi, ze
   // OpenSEO faktycznie odpowiada. Inaczej otwieraloby sie puste okno z bledem.
   document.addEventListener('DOMContentLoaded', function(){
@@ -10958,6 +11058,210 @@ async function kbAudioTranscribeAndOpen(file) {
       if (b) b.style.display = 'flex';
     }).catch(function(){});
   });
+})();
+</script>
+
+<!-- PAKIET: ile zostalo i co zrobic, gdy sie skonczy (wariant proxy - tylko tam istnieje /api/pakiet) -->
+<div id="pakiet-modal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);max-width:460px;width:100%;max-height:90vh;overflow:auto;padding:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+      <div style="font-weight:700;font-size:16px;color:var(--text)" data-i18n="pakiet-title">🎟 Twój pakiet</div>
+      <span id="pakiet-nazwa" style="font-size:12px;font-weight:700;color:var(--accent,#d97706)"></span>
+    </div>
+    <div id="pakiet-alarm" style="display:none;margin:12px 0;padding:10px 12px;border-radius:var(--radius);border:1px solid rgba(226,50,68,.35);background:rgba(226,50,68,.08);font-size:12px;line-height:1.5;color:var(--text)"></div>
+    <div id="pakiet-opis" style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5"></div>
+    <div id="pakiet-pule"></div>
+    <div id="pakiet-funkcje" style="margin-top:16px"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:18px">
+      <button onclick="zamknijPakiet()" style="padding:10px 16px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer" data-i18n="pakiet-zamknij">Zamknij</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  // Pule pokazywane uzytkownikowi, w tej kolejnosci. `wywolanie` jest osobno,
+  // na dole i drobnym drukiem - to sufit kosztu, a nie obietnica sprzedazowa.
+  var PULE = ['artykul', 'grafika', 'audio', 'transkrypcja'];
+  var FUNKCJE = ['bazaWiedzy', 'serp', 'openseo', 'cms', 'wlasnyKlucz'];
+  // Endpointy, ktore kosztuja - tylko po nich ma sens odswiezac licznik.
+  var PLATNE = { '/api':1, '/api/images':1, '/api/tts':1, '/api/eleven-tts':1, '/api/transcribe':1 };
+
+  var stan = null;
+
+  function el(id){ return document.getElementById(id); }
+  function tekst(klucz, zapas){ try { return _t(klucz) || zapas; } catch(e){ return zapas; } }
+  function bezpieczny(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(z){
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[z];
+    });
+  }
+
+  // Wywolania wewnetrzne omijaja opakowany fetch - inaczej odswiezanie licznika
+  // wywolywaloby samo siebie.
+  var oryginalnyFetch = window.fetch.bind(window);
+
+  function pasek(etykieta, wartosc, procent, bezLimitu){
+    var kolor = procent >= 100 ? '#e06c6c' : 'var(--accent,#d97706)';
+    return '<div style="margin-bottom:10px">'
+      + '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--text);margin-bottom:4px">'
+      + '<span>' + bezpieczny(etykieta) + '</span>'
+      + '<span style="color:var(--text3)">' + bezpieczny(wartosc) + '</span></div>'
+      + '<div style="height:5px;border-radius:3px;background:var(--surface2);overflow:hidden">'
+      + (bezLimitu ? '' : '<div style="height:100%;width:' + procent + '%;background:' + kolor + '"></div>')
+      + '</div></div>';
+  }
+
+  function wierszPuli(nazwa, poz){
+    var etykieta = tekst('pakiet-' + nazwa, nazwa);
+    if (poz.limit === null) return pasek(etykieta, tekst('pakiet-bez-limitu','bez limitu'), 0, true);
+    // Limit 0 rysujemy jako pasek pelny: funkcji w tym pakiecie po prostu nie ma.
+    var procent = poz.limit === 0 ? 100 : Math.min(100, Math.round(poz.zuzyte / poz.limit * 100));
+    return pasek(etykieta, poz.zuzyte + ' / ' + poz.limit, procent, false);
+  }
+
+  // Nazwa i opis pakietu przychodza z serwera w obu jezykach. Tabela pakietow
+  // jest jedynym miejscem, gdzie ta tresc zyje - w slowniku i18n bylaby jej
+  // druga kopia, ktora predzej czy pozniej rozjedzie sie z cennikiem.
+  function poJezyku(pole){
+    var en = currentLang === 'en';
+    return (en && stan[pole + 'En']) ? stan[pole + 'En'] : (stan[pole] || '');
+  }
+
+  function rysujBadge(){
+    var b = el('pakiet-badge');
+    if (!b || !stan) return;
+    var a = stan.uzycie && stan.uzycie.artykul;
+    var licznik = (!a || a.limit === null) ? '∞' : (a.zuzyte + '/' + a.limit);
+    b.textContent = poJezyku('nazwa') + ' · ' + licznik;
+    b.style.display = 'flex';
+    // Ostatnia sztuka ma byc widoczna, zanim uzytkownik w nia wejdzie.
+    var malo = a && a.limit !== null && a.zostalo <= 1;
+    b.style.borderColor = malo ? 'rgba(226,50,68,.45)' : 'var(--border)';
+    b.style.color = malo ? '#e06c6c' : 'var(--text)';
+  }
+
+  function rysujTresc(){
+    if (!stan){
+      el('pakiet-pule').innerHTML = '<div style="font-size:12px;color:#e06c6c">'
+        + tekst('pakiet-blad','Nie udało się odczytać stanu pakietu.') + '</div>';
+      return;
+    }
+    el('pakiet-nazwa').textContent = poJezyku('nazwa');
+    el('pakiet-opis').textContent = poJezyku('opis') + ' '
+      + tekst(stan.okres === 'miesiac' ? 'pakiet-okres-miesiac' : 'pakiet-okres-zawsze', '');
+
+    var html = PULE.map(function(n){
+      var poz = stan.uzycie && stan.uzycie[n];
+      return poz ? wierszPuli(n, poz) : '';
+    }).join('');
+
+    // Dokumenty to limit, ale nie licznik uzycia - pokazujemy sam pulap.
+    html += '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--text2);padding-top:8px;border-top:1px solid var(--border)">'
+      + '<span>' + bezpieczny(tekst('pakiet-dokumenty','Dokumenty w bazie wiedzy')) + '</span><span style="color:var(--text3)">'
+      + (stan.limitDokumentow === null ? bezpieczny(tekst('pakiet-bez-limitu','bez limitu')) : Number(stan.limitDokumentow))
+      + '</span></div>';
+
+    var w = stan.uzycie && stan.uzycie.wywolanie;
+    if (w && w.limit !== null){
+      html += '<div style="display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--text3);margin-top:8px">'
+        + '<span>' + bezpieczny(tekst('pakiet-wywolania','Wywołania modelu')) + '</span><span>' + w.zuzyte + ' / ' + w.limit + '</span></div>'
+        + '<div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.45">'
+        + bezpieczny(tekst('pakiet-wywolania-opis','Jeden artykuł to kilka wywołań: brief, treść, korekta, przeróbki.')) + '</div>';
+    }
+
+    el('pakiet-pule').innerHTML = html;
+    el('pakiet-funkcje').innerHTML =
+      '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">'
+      + bezpieczny(tekst('pakiet-funkcje','Funkcje w tym pakiecie')) + '</div>'
+      + FUNKCJE.map(function(f){
+          var ma = Boolean(stan.funkcje && stan.funkcje[f]);
+          return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 0;color:'
+            + (ma ? 'var(--text2)' : 'var(--text3)') + (ma ? '"' : ';opacity:.7"') + '>'
+            + '<span>' + (ma ? '✓' : '·') + '</span><span>' + bezpieczny(tekst('pakiet-fn-' + f, f)) + '</span></div>';
+        }).join('');
+  }
+
+  function odswiez(){
+    return oryginalnyFetch('/api/pakiet').then(function(o){
+      if (!o.ok) throw new Error('HTTP ' + o.status);
+      return o.json();
+    }).then(function(d){
+      stan = d;
+      rysujBadge();
+      if (el('pakiet-modal').style.display === 'flex') rysujTresc();
+      return d;
+    }).catch(function(){
+      // Brak odpowiedzi o pakiecie nie moze zablokowac aplikacji - wtedy po
+      // prostu nie ma odznaki, a limit i tak egzekwuje serwer.
+    });
+  }
+  window.odswiezPakiet = odswiez;
+
+  /** Sam rysunek, bez pytania serwera - po przelaczeniu jezyka. */
+  window.przerysujPakiet = function(){
+    if (!stan) return;
+    rysujBadge();
+    if (el('pakiet-modal').style.display === 'flex') rysujTresc();
+  };
+
+  window.otworzPakiet = function(){
+    el('pakiet-alarm').style.display = 'none';
+    el('pakiet-modal').style.display = 'flex';
+    rysujTresc();
+    odswiez();
+  };
+
+  window.zamknijPakiet = function(){ el('pakiet-modal').style.display = 'none'; };
+
+  /** Ekran po HTTP 402. Dane pochodza z serwera - patrz odmowaLimitu(). */
+  window.pokazLimitPakietu = function(dane){
+    var alarm = el('pakiet-alarm');
+    if (dane && dane.funkcja){
+      // Bramka funkcji, nie wyczerpany licznik - to dwie rozne rozmowy.
+      alarm.innerHTML = '<div style="font-weight:600;margin-bottom:4px">'
+        + bezpieczny(tekst('pakiet-funkcja-title','Ta funkcja nie wchodzi w Twój pakiet')) + '</div>'
+        + '<div style="color:var(--text2)">' + bezpieczny((dane.error && dane.error.komunikat) || '') + '</div>';
+    } else {
+      var czynnosc = dane && dane.czynnosc ? tekst('pakiet-' + dane.czynnosc, dane.czynnosc) : '';
+      alarm.innerHTML = '<div style="font-weight:600;margin-bottom:4px">'
+        + bezpieczny(tekst('pakiet-limit-title','Limit pakietu wyczerpany')) + '</div>'
+        + (czynnosc
+            ? '<div>' + bezpieczny(czynnosc) + ': ' + bezpieczny(tekst('pakiet-limit-zuzyto','Zużyto'))
+              + ' ' + Number(dane.zuzyte) + ' / ' + Number(dane.limit) + '</div>'
+            : '')
+        + '<div style="margin-top:4px;color:var(--text2)">'
+        + bezpieczny(tekst(dane && dane.odnawialny ? 'pakiet-limit-odnawialny' : 'pakiet-limit-zawsze', '')) + '</div>';
+    }
+    alarm.style.display = 'block';
+    el('pakiet-modal').style.display = 'flex';
+    odswiez();
+  };
+
+  function sciezkaZadania(zasob){
+    var url = (typeof zasob === 'string') ? zasob : (zasob && zasob.url) || '';
+    if (!url) return '';
+    try { return new URL(url, location.href).pathname; } catch(e){ return String(url).split('?')[0]; }
+  }
+
+  // Jeden punkt przechwytu zamiast poprawki w kazdej z ponad dwudziestu funkcji
+  // wolajacych model: przez fetch przechodzi kazde platne zapytanie, wiec i
+  // odswiezenie licznika, i ekran wyczerpanego pakietu maja tu jedno miejsce.
+  window.fetch = function(zasob){
+    var wynik = oryginalnyFetch.apply(null, arguments);
+    if (!PLATNE[sciezkaZadania(zasob)]) return wynik;
+    return wynik.then(function(odp){
+      if (odp.status === 402){
+        odp.clone().json()
+          .then(function(d){ window.pokazLimitPakietu(d); })
+          .catch(function(){ window.pokazLimitPakietu(null); });
+      } else if (odp.ok){
+        odswiez();
+      }
+      return odp;
+    });
+  };
+
+  document.addEventListener('DOMContentLoaded', odswiez);
 })();
 </script>
 <!--@@ENDIF-->

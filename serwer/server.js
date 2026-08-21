@@ -29,6 +29,7 @@ const serp = require('./serp.js');
 const baza = require('./baza.js');
 const openseo = require('./openseo.js');
 const openseoMcp = require('./openseo-mcp.js');
+const plany = require('./plany.js');
 
 const KATALOG = __dirname;
 const APP = path.join(KATALOG, '..', 'app');
@@ -84,6 +85,8 @@ const KONF = {
   // Baza wiedzy: katalog na dokumenty i konfiguracja liczenia wektorow.
   // Bez klucza wyszukiwanie dziala na slowach kluczowych zamiast na znaczeniu.
   katalogBazy: process.env.CAI_BAZA || path.join(KATALOG, 'dane', 'baza'),
+  // Liczniki uzycia pakietow - jeden plik JSON na konto.
+  katalogUzycia: process.env.CAI_UZYCIE || path.join(KATALOG, 'dane', 'uzycie'),
   wektory: {
     klucz: process.env.NVIDIA_KEY || '',
     url: process.env.CAI_URL_EMBED || 'https://integrate.api.nvidia.com/v1/embeddings',
@@ -541,7 +544,65 @@ async function obsluzSerp(body) {
   return null;
 }
 
-async function proxyTresc(req, res) {
+// ─── Pakiety: limity i zliczanie ──────────────────────────────────────────────
+
+/** Konto z pliku - plan i rola sa tam, nie w ciasteczku. */
+function kontoSesji(sesja) {
+  return wczytajUzytkownikow().find((u) => u.login === sesja.login) || { login: sesja.login, rola: sesja.rola };
+}
+
+/**
+ * Zwraca opis odmowy albo null, gdy wolno. Komunikat jest budowany tak, zeby
+ * aplikacja miala z czego zrobic sensowny ekran, a nie tylko "brak dostepu":
+ * widac plan, limit, zuzycie i to, czy limit sie kiedykolwiek odnowi.
+ */
+function odmowaLimitu(sesja, czynnosc) {
+  const konto = kontoSesji(sesja);
+  const wynik = plany.sprawdzLimit({ katalog: KONF.katalogUzycia, uzytkownik: konto, czynnosc });
+  if (wynik.wolno) return null;
+
+  if (wynik.powod === 'nieznana-czynnosc') {
+    console.error(`[plany] nieznana czynnosc: ${czynnosc}`);
+    return { error: 'Nieznana czynność', czynnosc };
+  }
+
+  return {
+    error: 'Limit pakietu wyczerpany',
+    czynnosc,
+    plan: wynik.plan,
+    limit: wynik.limit,
+    zuzyte: wynik.zuzyte,
+    // 'zawsze' znaczy, ze licznik sie nie odnowi - jedyne wyjscie to wyzszy pakiet
+    odnawialny: wynik.okres === 'miesiac',
+  };
+}
+
+/**
+ * Co obciazyc za to zapytanie do /api. Zawsze wywolanie modelu, a dodatkowo
+ * artykul - ale tylko gdy aplikacja sama zadeklaruje, ze to wlasnie artykul.
+ *
+ * Jedno generowanie to kilka wywolan modelu (brief, tresc, korekta, przerobki).
+ * Liczenie kazdego jako artykulu zjadaloby pakiet darmowy w polowie pierwszego
+ * tekstu. Naglowek pochodzi z przegladarki i da sie go nie wyslac - dlatego
+ * osobny licznik `wywolanie` jest sufitem kosztu niezaleznym od deklaracji.
+ */
+function czynnosciTresci(req) {
+  const deklaracja = String(req.headers['x-cai-czynnosc'] || '').toLowerCase();
+  return deklaracja === 'artykul' ? ['wywolanie', 'artykul'] : ['wywolanie'];
+}
+
+/** Dopisuje uzycie po udanej odpowiedzi dostawcy. */
+function policzUzycie(sesja, czynnosc) {
+  try {
+    plany.policz({ katalog: KONF.katalogUzycia, uzytkownik: kontoSesji(sesja), czynnosc });
+  } catch (e) {
+    // Blad licznika nie moze zabrac uzytkownikowi gotowego wyniku - lepiej
+    // policzyc o jedno mniej niz oddac blad na juz wykonana prace.
+    console.error('[plany] zapis uzycia:', e.message);
+  }
+}
+
+async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
   let body;
   try {
     body = JSON.parse((await czytajCialo(req)).toString('utf8'));
@@ -551,8 +612,20 @@ async function proxyTresc(req, res) {
 
   // Zapytanie o kontekst SERP obslugujemy osobno - patrz serwer/serp.js
   if (serp.czyZapytanieSerp(body)) {
+    // Analiza SERP kosztuje osobno (DataForSEO albo dluzsze wywolanie modelu),
+    // wiec jest funkcja pakietowa, a nie czescia limitu artykulow.
+    if (sesja && !plany.maFunkcje(kontoSesji(sesja), 'serp')) {
+      return odpowiedzJson(res, 402, {
+        content: [],
+        error: { komunikat: 'Analiza SERP jest dostępna od pakietu Standard.' },
+        funkcja: 'serp',
+      });
+    }
     const wynik = await obsluzSerp(body);
-    if (wynik) return odpowiedzJson(res, wynik.status, wynik.dane);
+    if (wynik) {
+      if (wynik.status < 400) policzUzycie(sesja, 'wywolanie');
+      return odpowiedzJson(res, wynik.status, wynik.dane);
+    }
     // null = zostaw dotychczasowa sciezke (dostawca anthropic z web_search)
   }
 
@@ -575,6 +648,7 @@ async function proxyTresc(req, res) {
         error: { komunikat: `Dostawca NVIDIA odrzucil zadanie (HTTP ${odp.status})` },
       });
     }
+    for (const czynnosc of czynnosci) policzUzycie(sesja, czynnosc);
     return odpowiedzJson(res, 200, openaiNaAnthropic(dane));
   }
 
@@ -590,11 +664,12 @@ async function proxyTresc(req, res) {
     body: JSON.stringify(body),
   });
   const tekst = await odp.text();
+  if (odp.ok) for (const czynnosc of czynnosci) policzUzycie(sesja, czynnosc);
   res.writeHead(odp.status, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(tekst);
 }
 
-async function proxyOpenAiJson(req, res, url) {
+async function proxyOpenAiJson(req, res, url, sesja, czynnosc) {
   const { klucz } = kluczDoUzycia(req, 'x-openai-key', KONF.klucze.openai);
   if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak OPENAI_KEY na serwerze' });
   const cialo = await czytajCialo(req);
@@ -604,6 +679,7 @@ async function proxyOpenAiJson(req, res, url) {
     body: cialo,
   });
   const bufor = Buffer.from(await odp.arrayBuffer());
+  if (odp.ok) policzUzycie(sesja, czynnosc);
   res.writeHead(odp.status, {
     'Content-Type': odp.headers.get('content-type') || 'application/json; charset=utf-8',
     'Content-Length': bufor.length,
@@ -611,7 +687,7 @@ async function proxyOpenAiJson(req, res, url) {
   res.end(bufor);
 }
 
-async function proxyTranskrypcja(req, res) {
+async function proxyTranskrypcja(req, res, sesja) {
   const { klucz } = kluczDoUzycia(req, 'x-openai-key', KONF.klucze.openai);
   if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak OPENAI_KEY na serwerze' });
   const cialo = await czytajCialo(req);
@@ -624,11 +700,12 @@ async function proxyTranskrypcja(req, res) {
     body: cialo,
   });
   const tekst = await odp.text();
+  if (odp.ok) policzUzycie(sesja, 'transkrypcja');
   res.writeHead(odp.status, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(tekst);
 }
 
-async function proxyEleven(req, res) {
+async function proxyEleven(req, res, sesja) {
   const { klucz } = kluczDoUzycia(req, 'x-eleven-key', KONF.klucze.eleven);
   if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak ELEVEN_KEY na serwerze' });
   let dane;
@@ -651,6 +728,7 @@ async function proxyEleven(req, res) {
     }
   );
   const bufor = Buffer.from(await odp.arrayBuffer());
+  if (odp.ok) policzUzycie(sesja, 'audio');
   res.writeHead(odp.status, {
     'Content-Type': odp.headers.get('content-type') || 'audio/mpeg',
     'Content-Length': bufor.length,
@@ -757,7 +835,7 @@ async function obsluzSeo(sciezka, req, res, sesja) {
 
   // Frazy zapisane w projekcie. Darmowe - czyta baze OpenSEO, nie DataForSEO.
   if (sciezka === '/api/seo/frazy' && req.method === 'GET') {
-    const projekt = url.searchParams.get('projekt');
+    const projekt = await projektDomyslny(url.searchParams.get('projekt'), konf);
     if (!projekt) return odpowiedzJson(res, 400, { error: 'Brak projektu' });
     const argumenty = { projectId: projekt, limit: 100 };
     const tag = url.searchParams.get('tag');
@@ -830,6 +908,25 @@ async function obsluzSeo(sciezka, req, res, sesja) {
   }
 
   return odpowiedzJson(res, 404, { error: 'Nieznany endpoint SEO' });
+}
+
+/**
+ * Projekt, w kontekscie ktorego pytamy OpenSEO. Kolejnosc: to, co podala
+ * aplikacja, potem CAI_SEO_PROJEKT, a na koncu pierwszy projekt z listy.
+ *
+ * Ostatni krok jest po to, zeby Brief dzialal bez zadnej konfiguracji: przy
+ * jednym projekcie - a tak zaczyna kazdy - nie ma czego wybierac, wiec pytanie
+ * uzytkownika o to byloby pustym krokiem.
+ */
+async function projektDomyslny(podany, konf) {
+  if (podany) return podany;
+  if (KONF.seoProjekt) return KONF.seoProjekt;
+  try {
+    const dane = await openseoMcp.wolaj('list_projects', {}, konf);
+    return openseoMcp.projektyDoAplikacji(dane)[0]?.id || null;
+  } catch (e) {
+    return null;
+  }
 }
 
 /** Cialo zadania jako JSON, z czytelnym bledem zamiast wyjatku. */
@@ -929,12 +1026,34 @@ async function obsluz(req, res) {
     });
   }
 
+  // Wlasny pakiet: limity, zuzycie i dostepne funkcje. Kazdy widzi swoj.
+  if (sciezka === '/api/pakiet' && req.method === 'GET') {
+    return odpowiedzJson(res, 200, plany.stanPakietu({
+      katalog: KONF.katalogUzycia,
+      uzytkownik: kontoSesji(sesja),
+    }));
+  }
+
   // ─── Baza wiedzy ───────────────────────────────────────────────────────────
   if (sciezka === '/api/baza' && req.method === 'GET') {
     return odpowiedzJson(res, 200, { dokumenty: baza.lista({ katalog: KONF.katalogBazy, login: sesja.login }) });
   }
 
   if (sciezka === '/api/baza' && req.method === 'POST') {
+    // Limit dokumentow jest pakietowy: darmowy ma trzy, premium bez ograniczenia.
+    const konto = kontoSesji(sesja);
+    const limitDok = plany.planKonta(konto).limitDokumentow;
+    if (limitDok !== null) {
+      const wlasne = baza.lista({ katalog: KONF.katalogBazy, login: sesja.login })
+        .filter((d) => d.zakres !== baza.WSPOLNA).length;
+      if (wlasne >= limitDok) {
+        return odpowiedzJson(res, 402, {
+          error: `Limit dokumentów w tym pakiecie: ${limitDok}.`,
+          limit: limitDok,
+          zuzyte: wlasne,
+        });
+      }
+    }
     let dane;
     try { dane = JSON.parse((await czytajCialo(req)).toString('utf8')); }
     catch { return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' }); }
@@ -989,6 +1108,9 @@ async function obsluz(req, res) {
     if (!KONF.openseo.portNasluchu) {
       return odpowiedzJson(res, 501, { error: 'OpenSEO nie jest wdrozone na tym serwerze.' });
     }
+    if (!plany.maFunkcje(kontoSesji(sesja), 'openseo')) {
+      return odpowiedzJson(res, 402, { error: 'Dane z OpenSEO są dostępne w pakiecie Premium.', funkcja: 'openseo' });
+    }
     try {
       return await obsluzSeo(sciezka, req, res, sesja);
     } catch (e) {
@@ -998,14 +1120,30 @@ async function obsluz(req, res) {
     }
   }
 
-  // Proxy
+  // Proxy - kazde wywolanie kosztuje, wiec przechodzi przez limit pakietu.
+  // Czynnosc jest liczona dopiero po udanej odpowiedzi dostawcy: gdy generowanie
+  // padnie na bledzie API, uzytkownik nie traci sztuki z pakietu.
   if (req.method === 'POST') {
+    const CZYNNOSCI = {
+      '/api/images': 'grafika',
+      '/api/tts': 'audio',
+      '/api/eleven-tts': 'audio',
+      '/api/transcribe': 'transkrypcja',
+    };
+    // /api obsluguje zarowno artykul, jak i wywolania pomocnicze - patrz czynnosciTresci()
+    const czynnosci = sciezka === '/api' ? czynnosciTresci(req) : [CZYNNOSCI[sciezka]];
+    for (const czynnosc of czynnosci) {
+      if (!czynnosc) continue;
+      const odmowa = odmowaLimitu(sesja, czynnosc);
+      if (odmowa) return odpowiedzJson(res, 402, odmowa);
+    }
+
     try {
-      if (sciezka === '/api') return await proxyTresc(req, res);
-      if (sciezka === '/api/images') return await proxyOpenAiJson(req, res, 'https://api.openai.com/v1/images/generations');
-      if (sciezka === '/api/tts') return await proxyOpenAiJson(req, res, 'https://api.openai.com/v1/audio/speech');
-      if (sciezka === '/api/transcribe') return await proxyTranskrypcja(req, res);
-      if (sciezka === '/api/eleven-tts') return await proxyEleven(req, res);
+      if (sciezka === '/api') return await proxyTresc(req, res, sesja, czynnosci);
+      if (sciezka === '/api/images') return await proxyOpenAiJson(req, res, 'https://api.openai.com/v1/images/generations', sesja, 'grafika');
+      if (sciezka === '/api/tts') return await proxyOpenAiJson(req, res, 'https://api.openai.com/v1/audio/speech', sesja, 'audio');
+      if (sciezka === '/api/transcribe') return await proxyTranskrypcja(req, res, sesja);
+      if (sciezka === '/api/eleven-tts') return await proxyEleven(req, res, sesja);
     } catch (e) {
       console.error(`[proxy] ${sciezka}:`, e.message);
       return odpowiedzJson(res, 502, { error: 'Błąd połączenia z dostawcą API' });
@@ -1135,4 +1273,5 @@ module.exports = {
   PLIK_UZYTKOWNIKOW, wczytajUzytkownikow, zapiszUzytkownikow,
   // Sesje - wystawione do testow; produkcyjnie wola je tylko router.
   utworzSesje, sesjaZadania, zapiszWylogowanie, wylogowane, PLIK_WYLOGOWANYCH,
+  czynnosciTresci,
 };

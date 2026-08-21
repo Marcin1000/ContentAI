@@ -187,6 +187,27 @@ KONTROLE = [
 
     ("A/lang", "atrybut lang idzie za jezykiem interfejsu",
      "document.documentElement.lang = lang;", None, None),
+
+    # ── Brief czerpie z OpenSEO (tylko wariant proxy) ──
+    ("P/brief", "Brief pyta OpenSEO o sprawdzone frazy",
+     "wzbogacBriefOSeo(b);", None, ("proxy",)),
+    # ── pakiet widoczny w aplikacji (tylko wariant proxy) ──
+    ("U/odznaka", "odznaka pakietu w pasku gornym",
+     'id="pakiet-badge"', None, ("proxy",)),
+    ("U/przechwyt", "jeden punkt przechwytu platnych wywolan",
+     "if (!PLATNE[sciezkaZadania(zasob)]) return wynik;", None, ("proxy",)),
+    ("U/402", "ekran wyczerpanego pakietu po HTTP 402",
+     "window.pokazLimitPakietu", None, ("proxy",)),
+    ("U/artykul", "tylko generowanie tresci zglasza sie jako artykul",
+     "'x-cai-czynnosc': 'artykul',", None, ("proxy",)),
+    # Naglowek spoza listy CORS Anthropic wywolalby preflight i zabil warianty,
+    # ktore lacza sie z api.anthropic.com prosto z przegladarki.
+    ("U/artykul", "naglowek czynnosci nie trafia do wywolan bezposrednich",
+     None, "x-cai-czynnosc", ("keys", "owner")),
+
+    ("P/kolejnosc", "frazy renderowane w jednym miejscu, nie w dwoch kopiach",
+     'return \'<div class="brief-section"><h4>\' + _t(\'brief-kw-section\') + \'</h4><div id="brief-kw-list"></div></div>\';',
+     None, None),
 ]
 
 

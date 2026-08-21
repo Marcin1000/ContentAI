@@ -231,6 +231,7 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
     await testyOpenSeoMcp();
     testySesji();
     testyBramy();
+    testyPlanow();
 
     console.log(`\n  ${zaliczone} zaliczonych, ${bledy.length} bledow\n`);
     if (bledy.length) {
@@ -720,4 +721,158 @@ function testyBramy() {
   else process.env.CAI_ZAUFANY_NAGLOWEK = przedNaglowek;
   delete require.cache[require.resolve('./server.js')];
   if (kopiaModulu) require.cache[sciezkaModulu] = kopiaModulu;
+}
+
+// ─── Plany i limity ───────────────────────────────────────────────────────────
+// Fundament komercyjny: darmowy pakiet ma sie konczyc, platny odnawiac,
+// a admin nie moze sobie zablokowac wlasnego narzedzia.
+
+function testyPlanow() {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const plany = require('./plany.js');
+
+  const katalog = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-plany-'));
+  const wolny = { login: 'nowy', rola: 'uzytkownik', plan: 'darmowy' };
+  const platny = { login: 'anna', rola: 'uzytkownik', plan: 'standard' };
+  const szef = { login: 'marcin', rola: 'admin', plan: 'darmowy' };
+
+  console.log('\n  plany - przypisanie');
+  {
+    sprawdz('konto bez planu dostaje darmowy', plany.nazwaPlanu({ login: 'x', rola: 'uzytkownik' }) === 'darmowy');
+    sprawdz('nieznany plan schodzi na darmowy', plany.nazwaPlanu({ login: 'x', rola: 'uzytkownik', plan: 'zmyslony' }) === 'darmowy');
+    sprawdz('admin zawsze premium, mimo wpisu darmowy', plany.nazwaPlanu(szef) === 'premium');
+    sprawdz('platny plan zachowany', plany.nazwaPlanu(platny) === 'standard');
+  }
+
+  console.log('\n  plany - limit sie wyczerpuje');
+  {
+    const limit = (u) => plany.sprawdzLimit({ katalog, uzytkownik: u, czynnosc: 'artykul' });
+
+    sprawdz('darmowy zaczyna z trzema artykulami', limit(wolny).zostalo === 3);
+    for (let i = 0; i < 3; i++) plany.policz({ katalog, uzytkownik: wolny, czynnosc: 'artykul' });
+
+    const po = limit(wolny);
+    sprawdz('po trzech artykulach limit wyczerpany', po.wolno === false);
+    sprawdz('powod nazwany wprost', po.powod === 'limit-wyczerpany');
+    sprawdz('zostalo zero, nie liczba ujemna', po.zostalo === 0);
+    sprawdz('darmowy limit sie NIE odnawia', po.okres === 'zawsze');
+
+    // Inne czynnosci maja wlasne liczniki
+    sprawdz('grafiki w darmowym od razu zablokowane', limit(wolny).wolno === false
+      && plany.sprawdzLimit({ katalog, uzytkownik: wolny, czynnosc: 'grafika' }).limit === 0);
+  }
+
+  console.log('\n  plany - liczniki sa rozdzielne');
+  {
+    sprawdz('platny ma swoj wlasny licznik',
+      plany.sprawdzLimit({ katalog, uzytkownik: platny, czynnosc: 'artykul' }).zostalo === 50);
+    plany.policz({ katalog, uzytkownik: platny, czynnosc: 'artykul' });
+    sprawdz('zliczenie u jednego nie rusza drugiego',
+      plany.sprawdzLimit({ katalog, uzytkownik: platny, czynnosc: 'artykul' }).zostalo === 49
+      && plany.sprawdzLimit({ katalog, uzytkownik: wolny, czynnosc: 'artykul' }).zostalo === 0);
+
+    sprawdz('premium nie ma limitu sztukowego',
+      plany.sprawdzLimit({ katalog, uzytkownik: szef, czynnosc: 'artykul' }).limit === null);
+    plany.policz({ katalog, uzytkownik: szef, czynnosc: 'artykul' });
+    sprawdz('przy braku limitu nic sie nie zapisuje',
+      Object.keys(plany.wczytajUzycie(katalog, 'marcin')).length === 0);
+  }
+
+  console.log('\n  plany - okres miesieczny');
+  {
+    const sierpien = new Date(Date.UTC(2026, 7, 15));
+    const wrzesien = new Date(Date.UTC(2026, 8, 1));
+    sprawdz('okres miesieczny ma format RRRR-MM',
+      plany.okresTeraz(plany.PLANY.standard, sierpien) === '2026-08');
+    sprawdz('pakiet bez odnawiania ma jeden okres',
+      plany.okresTeraz(plany.PLANY.darmowy, sierpien) === 'zawsze');
+
+    const kowal = { login: 'kowal', rola: 'uzytkownik', plan: 'standard' };
+    for (let i = 0; i < 50; i++) plany.policz({ katalog, uzytkownik: kowal, czynnosc: 'artykul', teraz: sierpien });
+    sprawdz('limit miesieczny sie wyczerpuje',
+      plany.sprawdzLimit({ katalog, uzytkownik: kowal, czynnosc: 'artykul', teraz: sierpien }).wolno === false);
+    sprawdz('nowy miesiac zeruje licznik',
+      plany.sprawdzLimit({ katalog, uzytkownik: kowal, czynnosc: 'artykul', teraz: wrzesien }).zostalo === 50);
+  }
+
+  console.log('\n  plany - bramki funkcji');
+  {
+    sprawdz('darmowy bez analizy SERP', plany.maFunkcje(wolny, 'serp') === false);
+    sprawdz('standard z analiza SERP', plany.maFunkcje(platny, 'serp') === true);
+    sprawdz('standard bez danych z OpenSEO', plany.maFunkcje(platny, 'openseo') === false);
+    sprawdz('premium z OpenSEO', plany.maFunkcje({ login: 'p', rola: 'uzytkownik', plan: 'premium' }, 'openseo') === true);
+    sprawdz('admin ma wszystkie funkcje', plany.maFunkcje(szef, 'openseo') === true);
+    sprawdz('nieznana funkcja to nie', plany.maFunkcje(platny, 'teleportacja') === false);
+  }
+
+  console.log('\n  plany - stan dla aplikacji');
+  {
+    const stan = plany.stanPakietu({ katalog, uzytkownik: wolny });
+    sprawdz('stan niesie nazwe pakietu', stan.plan === 'darmowy' && stan.nazwa === 'Darmowy');
+    sprawdz('stan pokazuje zuzycie', stan.uzycie.artykul.zuzyte === 3 && stan.uzycie.artykul.zostalo === 0);
+    sprawdz('stan niesie liste funkcji', stan.funkcje.serp === false);
+
+    const stanPremium = plany.stanPakietu({ katalog, uzytkownik: szef });
+    sprawdz('bez limitu widac null, nie zero', stanPremium.uzycie.artykul.limit === null);
+  }
+
+  console.log('\n  plany - artykul to nie to samo co wywolanie modelu');
+  {
+    // Jedno generowanie to kilka wywolan modelu. Gdyby kazde liczylo sie jako
+    // artykul, pakiet darmowy skonczylby sie w polowie pierwszego tekstu.
+    const nowak = { login: 'nowak', rola: 'uzytkownik', plan: 'darmowy' };
+    for (let i = 0; i < 8; i++) plany.policz({ katalog, uzytkownik: nowak, czynnosc: 'wywolanie' });
+    sprawdz('wywolania pomocnicze nie ruszaja licznika artykulow',
+      plany.sprawdzLimit({ katalog, uzytkownik: nowak, czynnosc: 'artykul' }).zuzyte === 0);
+    sprawdz('wywolania maja wlasny licznik',
+      plany.sprawdzLimit({ katalog, uzytkownik: nowak, czynnosc: 'wywolanie' }).zuzyte === 8);
+
+    // Sufit kosztu: konto, ktore nigdy nie przyzna sie do artykulu, i tak sie
+    // konczy. To nie jest zamek, tylko granica wydatku.
+    const sufit = plany.PLANY.darmowy.limity.wywolanie;
+    sprawdz('darmowy ma sufit wywolan', typeof sufit === 'number' && sufit > 0);
+    sprawdz('sufit jest wielokrotnoscia puli artykulow, nie rowny jej',
+      sufit > plany.PLANY.darmowy.limity.artykul * 3);
+    for (let i = 8; i < sufit; i++) plany.policz({ katalog, uzytkownik: nowak, czynnosc: 'wywolanie' });
+    sprawdz('po wyczerpaniu sufitu nie wolno nic',
+      plany.sprawdzLimit({ katalog, uzytkownik: nowak, czynnosc: 'wywolanie' }).wolno === false);
+
+    sprawdz('premium nie ma sufitu wywolan', plany.PLANY.premium.limity.wywolanie === null);
+    sprawdz('standard ma sufit ponad pule artykulow',
+      plany.PLANY.standard.limity.wywolanie > plany.PLANY.standard.limity.artykul);
+  }
+
+  console.log('\n  plany - deklaracja czynnosci z aplikacji');
+  {
+    const { czynnosciTresci } = require('./server.js');
+    const zNaglowkiem = (w) => czynnosciTresci({ headers: w === null ? {} : { 'x-cai-czynnosc': w } });
+
+    sprawdz('bez naglowka liczy sie tylko wywolanie',
+      JSON.stringify(zNaglowkiem(null)) === JSON.stringify(['wywolanie']));
+    sprawdz('deklaracja artykulu obciaza oba liczniki',
+      JSON.stringify(zNaglowkiem('artykul')) === JSON.stringify(['wywolanie', 'artykul']));
+    sprawdz('wielkosc liter w naglowku bez znaczenia',
+      JSON.stringify(zNaglowkiem('Artykul')) === JSON.stringify(['wywolanie', 'artykul']));
+    // Cudza wartosc nie moze przypadkiem trafic na zaden inny licznik.
+    sprawdz('zmyslona czynnosc nie otwiera nowego licznika',
+      JSON.stringify(zNaglowkiem('grafika')) === JSON.stringify(['wywolanie']));
+  }
+
+  console.log('\n  plany - bezpieczenstwo zapisu');
+  {
+    // Sanityzacja zamienia ukosniki na podkreslenia, wiec ".." moze zostac
+    // w nazwie jako nieszkodliwy fragment. Liczy sie jedno: czy sciezka po
+    // rozwinieciu nadal wskazuje wewnatrz katalogu.
+    const zloliwe = ['../../etc/passwd', '/etc/shadow', 'a/../../b', '....//x'];
+    const wszystkieWewnatrz = zloliwe.every((zly) =>
+      path.resolve(plany.plikUzycia(katalog, zly)).startsWith(path.resolve(katalog) + path.sep));
+    sprawdz('zaden login nie wyprowadza poza katalog', wszystkieWewnatrz);
+    let pusty = null;
+    try { plany.plikUzycia(katalog, ''); } catch (e) { pusty = e; }
+    sprawdz('pusty login odrzucony', pusty !== null);
+  }
+
+  fs.rmSync(katalog, { recursive: true, force: true });
 }

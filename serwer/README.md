@@ -104,6 +104,7 @@ Wszystko przez zmienne środowiskowe.
 | `DATAFORSEO_LOGIN` | — | login DataForSEO (przy `CAI_SERP=dataforseo`) |
 | `DATAFORSEO_HASLO` | — | hasło DataForSEO |
 | `CAI_BAZA` | `serwer/dane/baza` | katalog bazy wiedzy |
+| `CAI_UZYCIE` | `serwer/dane/uzycie` | katalog liczników pakietów |
 | `CAI_MODEL_EMBED` | `nvidia/nv-embedqa-e5-v5` | model wektorów |
 | `CAI_URL_EMBED` | `https://integrate.api.nvidia.com/v1/embeddings` | endpoint wektorów |
 | `CAI_COOKIE_DOMENA` | — | domena ciasteczka sesji, np. `.twojadomena.pl` |
@@ -204,6 +205,66 @@ ciasteczka — po restarcie wszyscy logują się ponownie.
 
 Token sesji Content AI jest **wycinany** z nagłówka `Cookie` przed przekazaniem żądania
 do kontenera — obca aplikacja go nie widzi.
+
+### Pakiety i limity
+
+Trzy pakiety w `serwer/plany.js`. To **tabela danych**, nie kod: zmiana „3 artykuły"
+na „5" albo dołożenie grafik do standardu to edycja jednej linii.
+
+| | Darmowy | Standard | Premium |
+|---|---|---|---|
+| Artykuły | 3 (bez odnawiania) | 50/mies. | bez limitu |
+| Grafiki | — | 50/mies. | bez limitu |
+| Audio, transkrypcja | — | 20/mies. | bez limitu |
+| Wywołania modelu (sufit) | 30 | 750/mies. | bez limitu |
+| Dokumenty w bazie | 3 | 50 | bez limitu |
+| Analiza SERP | — | tak | tak |
+| Dane z OpenSEO | — | — | tak |
+| Własny klucz API, CMS | — | tak | tak |
+
+```bash
+node serwer/uzytkownicy.js plan anna standard
+```
+
+Konto bez wpisanego planu dostaje darmowy. **Admin zawsze działa jak premium**, niezależnie
+od wpisu — inaczej właściciel systemu mógłby sobie zablokować własne narzędzie.
+
+Dwie rzeczy warte uwagi przy zmianach:
+
+- **Limit** dotyczy rzeczy liczonych na sztuki (artykuły, grafiki). **Bramka** dotyczy całych
+  funkcji (SERP, OpenSEO) — albo je masz, albo nie. Mieszanie tego w jednym mechanizmie
+  kończy się zwykle tym, że nie wiadomo, dlaczego komuś coś nie działa.
+- Zliczanie następuje **po udanej odpowiedzi dostawcy**. Gdy generowanie padnie na błędzie
+  API, użytkownik nie traci sztuki z pakietu — dostał przecież nic.
+
+#### Artykuł to nie to samo co wywołanie modelu
+
+Jedno generowanie artykułu to kilka wywołań: brief, treść, korekta premium, uzupełnianie
+luk, przeróbki fragmentów. Gdyby każde liczyło się jako artykuł, pakiet darmowy skończyłby
+się w połowie pierwszego tekstu.
+
+Dlatego artykuł liczy się **tylko wtedy, gdy aplikacja się o to zgłosi** — nagłówkiem
+`x-cai-czynnosc: artykul`, wysyłanym z jedynego miejsca, które faktycznie generuje treść.
+Wszystkie pozostałe wywołania idą na osobny licznik `wywolanie`.
+
+Deklaracja przychodzi z przeglądarki, więc nie jest dowodem — i nie musi nim być. Licznik
+wywołań jest **sufitem kosztu**: konto, które nigdy nie przyzna się do artykułu, i tak ma
+skończoną pulę. To nie zamek, tylko granica wydatku.
+
+Nagłówek istnieje wyłącznie w wariancie `proxy`. W wariantach łączących się prosto
+z `api.anthropic.com` własny nagłówek wywołałby preflight CORS i zablokował generowanie —
+pilnuje tego kontrola `U/artykul` w `narzedzia/sprawdz_zrodlo.py`.
+
+Przekroczenie limitu to **HTTP 402** z opisem: plan, limit, zużycie i to, czy licznik się
+kiedykolwiek odnowi. Aplikacja przechwytuje to w jednym miejscu (opakowany `fetch`) i
+pokazuje okno pakietu z paskami zużycia, zamiast ogólnego błędu API.
+
+| Endpoint | Do czego |
+|---|---|
+| `GET /api/pakiet` | własny pakiet: limity, zużycie, dostępne funkcje, nazwa i opis PL/EN |
+
+Liczniki leżą w `serwer/dane/uzycie/` — jeden plik JSON na konto. Miesięczne okresy starsze
+niż rok wypadają przy kolejnym zapisie, żeby plik nie puchł.
 
 ### Logowanie przez bramę
 

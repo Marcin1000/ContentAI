@@ -6735,14 +6735,9 @@ async function openBriefPanel() {
 let briefState = null;
 
 function renderBriefKwsHtml() {
-  return '<div class="brief-section"><h4>' + _t('brief-kw-section') + '</h4><div id="brief-kw-list">' +
-    briefKeywords.map(function(k, i) {
-      var added = keywords.includes(k);
-      return '<span class="brief-kw"' +
-        (added ? ' style="opacity:.45;cursor:default;text-decoration:line-through" onclick=""'
-               : ' onclick="addKeywordFromBriefIdx(' + i + ')"') +
-        '>' + (added ? '\u2713 ' : '+ ') + escapeHtml(k) + '</span>';
-    }).join('') + '</div></div>';
+  // Pusty kontener; wypelnia go refreshBriefKwList, zeby oznaczanie fraz
+  // zweryfikowanych bylo w jednym miejscu, a nie w dwoch kopiach.
+  return '<div class="brief-section"><h4>' + _t('brief-kw-section') + '</h4><div id="brief-kw-list"></div></div>';
 }
 
 function refreshBriefKwList() {
@@ -6750,10 +6745,19 @@ function refreshBriefKwList() {
   if (!el) return;
   el.innerHTML = briefKeywords.map(function(k, i) {
     var added = keywords.includes(k);
+    // Fraza zweryfikowana w OpenSEO dostaje wolumen i obramowanie w kolorze
+    // akcentu. Bez tego uzytkownik nie odroznilby faktu od domyslu modelu.
+    var wolumen = (typeof window.briefZSeo === 'object' && window.briefZSeo) ? window.briefZSeo[k] : undefined;
+    var zweryfikowana = wolumen !== undefined;
+    var etykieta = zweryfikowana && wolumen !== null
+      ? ' <span style="opacity:.75;font-size:10px">' + escapeHtml(String(wolumen)) + '/mc</span>'
+      : '';
     return '<span class="brief-kw"' +
       (added ? ' style="opacity:.45;cursor:default;text-decoration:line-through" onclick=""'
-             : ' onclick="addKeywordFromBriefIdx(' + i + ')"') +
-      '>' + (added ? '\u2713 ' : '+ ') + escapeHtml(k) + '</span>';
+             : (zweryfikowana
+                 ? ' style="border-color:var(--accent2)" title="Sprawdzona w OpenSEO" onclick="addKeywordFromBriefIdx(' + i + ')"'
+                 : ' onclick="addKeywordFromBriefIdx(' + i + ')"')) +
+      '>' + (added ? '\u2713 ' : '+ ') + escapeHtml(k) + etykieta + '</span>';
   }).join('');
 }
 
@@ -6768,6 +6772,7 @@ function showBrief(b) {
     '<p style="font-size:12px;color:var(--text2);margin:0">'+escapeHtml(b.gap || (currentLang === 'en' ? 'No data' : 'Brak danych'))+'</p></div>' +
     '<div class="brief-section"><h4>' + _t('brief-words-section') + '</h4>' +
     '<p style="font-size:12px;color:var(--text2);margin:0">'+escapeHtml(b.words||'800-1000')+' ' + _t('brief-words-suffix') + '</p></div>';
+  refreshBriefKwList();
 }
 
 function addKeywordFromBrief(kw) {

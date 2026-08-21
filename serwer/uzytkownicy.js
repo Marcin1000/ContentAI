@@ -5,6 +5,7 @@
  *   node serwer/uzytkownicy.js lista
  *   node serwer/uzytkownicy.js dodaj <login> [admin|uzytkownik]
  *   node serwer/uzytkownicy.js haslo <login>
+  node serwer/uzytkownicy.js plan <login> <darmowy|standard|premium>
  *   node serwer/uzytkownicy.js rola  <login> <admin|uzytkownik>
  *   node serwer/uzytkownicy.js usun  <login>
  *
@@ -15,6 +16,7 @@
 'use strict';
 
 const readline = require('node:readline');
+const plany = require('./plany.js');
 const {
   zahaszuj, ROLE, PLIK_UZYTKOWNIKOW, wczytajUzytkownikow, zapiszUzytkownikow,
 } = require('./server.js');
@@ -71,7 +73,8 @@ async function main() {
       }
       console.log(`Konta (${PLIK_UZYTKOWNIKOW}):\n`);
       for (const u of lista) {
-        console.log(`  ${u.login.padEnd(20)} ${u.rola.padEnd(12)} utworzony: ${u.utworzony || '-'}`);
+        const pakiet = plany.nazwaPlanu(u) + (u.rola === 'admin' ? ' (admin: bez limitów)' : '');
+        console.log(`  ${u.login.padEnd(20)} ${u.rola.padEnd(12)} ${pakiet.padEnd(26)} utworzony: ${u.utworzony || '-'}`);
       }
       return;
     }
@@ -86,7 +89,11 @@ async function main() {
       }
       const haslo = await noweHaslo();
       const { hash, sol } = zahaszuj(haslo);
-      lista.push({ login, hash, sol, rola, utworzony: new Date().toISOString().slice(0, 10) });
+      lista.push({
+        login, hash, sol, rola,
+        plan: plany.DOMYSLNY,
+        utworzony: new Date().toISOString().slice(0, 10),
+      });
       zapiszUzytkownikow(lista);
       console.log(`Dodano konto "${login}" z rolą ${rola}.`);
       return;
@@ -128,6 +135,24 @@ async function main() {
       return;
     }
 
+    case 'plan': {
+      if (!login || !arg) return uzycie('plan <login> <darmowy|standard|premium>');
+      if (!plany.PLANY[arg]) {
+        console.error(`BŁĄD: nieznany plan "${arg}". Dostępne: ${Object.keys(plany.PLANY).join(', ')}`);
+        process.exit(1);
+      }
+      const u = lista.find((x) => x.login === login);
+      if (!u) return brakKonta(login);
+      u.plan = arg;
+      zapiszUzytkownikow(lista);
+      const p = plany.PLANY[arg];
+      console.log(`Konto "${login}" ma teraz pakiet ${p.nazwa}.`);
+      if (u.rola === 'admin') {
+        console.log('Uwaga: to konto ma rolę admin, więc i tak działa bez limitów.');
+      }
+      return;
+    }
+
     case 'usun': {
       if (!login) return uzycie('usun <login>');
       const u = lista.find((x) => x.login === login);
@@ -150,6 +175,7 @@ async function main() {
   node serwer/uzytkownicy.js lista
   node serwer/uzytkownicy.js dodaj <login> [admin|uzytkownik]
   node serwer/uzytkownicy.js haslo <login>
+  node serwer/uzytkownicy.js plan <login> <darmowy|standard|premium>
   node serwer/uzytkownicy.js rola  <login> <admin|uzytkownik>
   node serwer/uzytkownicy.js usun  <login>
 

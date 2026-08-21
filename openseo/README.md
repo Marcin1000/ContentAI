@@ -113,6 +113,22 @@ robi się je w OpenSEO, gdzie widać koszt zapytania.
 `GET /api/seo/okazje` wymaga podłączonego Search Console i GA4 po stronie OpenSEO. Bez
 nich zwraca błąd z komunikatem, a nie puste dane.
 
+### Brief bierze frazy z OpenSEO
+
+Przy generowaniu Briefu aplikacja pyta OpenSEO o zapisane frazy pasujące do tematu i **stawia
+je przed propozycjami modelu**. Zweryfikowane mają obramowanie w kolorze akcentu i wolumen
+obok nazwy.
+
+Kolejność jest tu całą treścią pomysłu: fraza z OpenSEO przeszła przez badanie i przez czyjąś
+decyzję o otagowaniu, więc jest **faktem**. Propozycja modelu to **domysł**. Gdy ta sama fraza
+jest po obu stronach, liczy się raz — po stronie zweryfikowanej.
+
+Projekt dobierany jest automatycznie: `CAI_SEO_PROJEKT`, a bez niego pierwszy z listy. Przy
+jednym projekcie — a tak zaczyna każdy — nie ma czego wybierać, więc pytanie o to byłoby
+pustym krokiem.
+
+Gdy OpenSEO nie odpowiada, Brief wygląda dokładnie jak dotąd.
+
 ### SERP przez OpenSEO
 
 Trzecie źródło danych SERP dla Content AI:
