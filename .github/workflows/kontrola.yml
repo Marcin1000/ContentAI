@@ -60,10 +60,14 @@ jobs:
       - name: JavaScript aplikacji — ESLint
         run: |
           npm install --no-save --no-audit --no-fund eslint
+          # Wycięte skrypty muszą leżeć WEWNĄTRZ repozytorium: ESLint 9 pomija
+          # pliki spoza katalogu bazowego konfiguracji i kończy się zerem,
+          # czyli krok przechodziłby nie sprawdzając niczego.
+          mkdir -p .eslint-tmp
           for wariant in keys proxy owner; do
-            python3 narzedzia/wytnij_skrypty.py "app/web-$wariant.html" "/tmp/web-$wariant.js"
+            python3 narzedzia/wytnij_skrypty.py "app/web-$wariant.html" ".eslint-tmp/$wariant.js"
           done
-          npx eslint /tmp/web-keys.js /tmp/web-proxy.js /tmp/web-owner.js
+          npx eslint .eslint-tmp/keys.js .eslint-tmp/proxy.js .eslint-tmp/owner.js
 
       # Placeholdery w aplikacji ("sk-ant-...", "sk-proj-...") są krótkie,
       # więc wymóg 40+ znaków po prefiksie ich nie łapie. Prawdziwe klucze łapie.
