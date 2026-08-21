@@ -6899,14 +6899,9 @@ async function openBriefPanel() {
 let briefState = null;
 
 function renderBriefKwsHtml() {
-  return '<div class="brief-section"><h4>' + _t('brief-kw-section') + '</h4><div id="brief-kw-list">' +
-    briefKeywords.map(function(k, i) {
-      var added = keywords.includes(k);
-      return '<span class="brief-kw"' +
-        (added ? ' style="opacity:.45;cursor:default;text-decoration:line-through" onclick=""'
-               : ' onclick="addKeywordFromBriefIdx(' + i + ')"') +
-        '>' + (added ? '\u2713 ' : '+ ') + escapeHtml(k) + '</span>';
-    }).join('') + '</div></div>';
+  // Pusty kontener; wypelnia go refreshBriefKwList, zeby oznaczanie fraz
+  // zweryfikowanych bylo w jednym miejscu, a nie w dwoch kopiach.
+  return '<div class="brief-section"><h4>' + _t('brief-kw-section') + '</h4><div id="brief-kw-list"></div></div>';
 }
 
 function refreshBriefKwList() {
@@ -6914,16 +6909,30 @@ function refreshBriefKwList() {
   if (!el) return;
   el.innerHTML = briefKeywords.map(function(k, i) {
     var added = keywords.includes(k);
+    // Fraza zweryfikowana w OpenSEO dostaje wolumen i obramowanie w kolorze
+    // akcentu. Bez tego uzytkownik nie odroznilby faktu od domyslu modelu.
+    var wolumen = (typeof window.briefZSeo === 'object' && window.briefZSeo) ? window.briefZSeo[k] : undefined;
+    var zweryfikowana = wolumen !== undefined;
+    var etykieta = zweryfikowana && wolumen !== null
+      ? ' <span style="opacity:.75;font-size:10px">' + escapeHtml(String(wolumen)) + '/mc</span>'
+      : '';
     return '<span class="brief-kw"' +
       (added ? ' style="opacity:.45;cursor:default;text-decoration:line-through" onclick=""'
-             : ' onclick="addKeywordFromBriefIdx(' + i + ')"') +
-      '>' + (added ? '\u2713 ' : '+ ') + escapeHtml(k) + '</span>';
+             : (zweryfikowana
+                 ? ' style="border-color:var(--accent2)" title="Sprawdzona w OpenSEO" onclick="addKeywordFromBriefIdx(' + i + ')"'
+                 : ' onclick="addKeywordFromBriefIdx(' + i + ')"')) +
+      '>' + (added ? '\u2713 ' : '+ ') + escapeHtml(k) + etykieta + '</span>';
   }).join('');
 }
 
 function showBrief(b) {
   briefState = b;
   briefKeywords = b.keywords || [];
+//@@IF proxy
+  // Frazy sprawdzone w OpenSEO sa zrodlem prawdy: maja realny wolumen i przeszly
+  // przez czyjas decyzje. Ida przed propozycjami modelu, ktore sa tylko domyslem.
+  wzbogacBriefOSeo(b);
+//@@ENDIF
   document.getElementById('brief-content').innerHTML =
     renderBriefKwsHtml() +
     '<div class="brief-section"><h4>' + _t('brief-h2-section') + '</h4>' +
@@ -6932,6 +6941,7 @@ function showBrief(b) {
     '<p style="font-size:12px;color:var(--text2);margin:0">'+escapeHtml(b.gap || (currentLang === 'en' ? 'No data' : 'Brak danych'))+'</p></div>' +
     '<div class="brief-section"><h4>' + _t('brief-words-section') + '</h4>' +
     '<p style="font-size:12px;color:var(--text2);margin:0">'+escapeHtml(b.words||'800-1000')+' ' + _t('brief-words-suffix') + '</p></div>';
+  refreshBriefKwList();
 }
 
 function addKeywordFromBrief(kw) {
@@ -10947,6 +10957,44 @@ async function kbAudioTranscribeAndOpen(file) {
     } catch(e){
       status(tekst('seo-blad', 'Nie udało się połączyć z OpenSEO.'));
     }
+  };
+
+  /**
+   * Dokleja do Briefu frazy zapisane w OpenSEO, pasujace do tematu artykulu.
+   *
+   * Kolejnosc jest tu cala tresc pomyslu: fraza z OpenSEO przeszla przez badanie
+   * i przez czyjas decyzje o otagowaniu, wiec jest faktem. Propozycja modelu to
+   * domysl. Fakty ida pierwsze i sa oznaczone wolumenem, zeby dalo sie je odroznic
+   * na pierwszy rzut oka.
+   *
+   * Gdy OpenSEO nie odpowiada albo nie ma pasujacych fraz, Brief wyglada
+   * dokladnie tak jak dotad.
+   */
+  window.wzbogacBriefOSeo = async function(brief){
+    try {
+      var temat = (document.getElementById('topic') || {}).value || '';
+      if (!temat.trim()) return;
+
+      var odp = await fetch('/api/seo/frazy?szukaj=' + encodeURIComponent(temat.trim().split(/\s+/)[0]));
+      if (!odp.ok) return;
+      var dane = await odp.json();
+      var zSeo = (dane.frazy || []).filter(function(f){ return f.fraza; });
+      if (!zSeo.length) return;
+
+      // Fraza moze byc i w OpenSEO, i w propozycjach modelu - liczy sie raz,
+      // po stronie zweryfikowanej.
+      var znane = {};
+      zSeo.forEach(function(f){ znane[f.fraza.toLowerCase()] = true; });
+      var odModelu = (brief.keywords || []).filter(function(k){ return !znane[String(k).toLowerCase()]; });
+
+      briefKeywords = zSeo.map(function(f){ return f.fraza; }).concat(odModelu);
+      window.briefZSeo = zSeo.reduce(function(acc, f){
+        acc[f.fraza] = f.wolumen;
+        return acc;
+      }, {});
+
+      if (typeof refreshBriefKwList === 'function') refreshBriefKwList();
+    } catch(e){ /* brak OpenSEO nie moze psuc Briefu */ }
   };
 
   // Przycisk przy polu fraz pokazuje sie dopiero, gdy serwer potwierdzi, ze

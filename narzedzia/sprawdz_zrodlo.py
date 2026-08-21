@@ -187,6 +187,13 @@ KONTROLE = [
 
     ("A/lang", "atrybut lang idzie za jezykiem interfejsu",
      "document.documentElement.lang = lang;", None, None),
+
+    # ── Brief czerpie z OpenSEO (tylko wariant proxy) ──
+    ("P/brief", "Brief pyta OpenSEO o sprawdzone frazy",
+     "wzbogacBriefOSeo(b);", None, ("proxy",)),
+    ("P/kolejnosc", "frazy renderowane w jednym miejscu, nie w dwoch kopiach",
+     'return \'<div class="brief-section"><h4>\' + _t(\'brief-kw-section\') + \'</h4><div id="brief-kw-list"></div></div>\';',
+     None, None),
 ]
 
 
