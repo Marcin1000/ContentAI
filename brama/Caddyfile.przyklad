@@ -1,0 +1,50 @@
+# Caddy z bramą uwierzytelniającą przed Content AI i OpenSEO.
+# Zastepuje wpisy z openseo/Caddyfile.przyklad - nie dodawaj obu naraz.
+#
+# W DNS potrzebne sa rekordy A dla auth., contentai. i seo. na IP serwera.
+# Wszystkie musza byc poddomenami TEJ SAMEJ domeny, inaczej sesja Autheli
+# nie obejmie ich razem.
+
+# ── Snippet: pytanie do bramy ────────────────────────────────────────────────
+# Definiujemy raz, uzywamy w kazdej chronionej aplikacji. Dzieki temu nie da sie
+# przez przeoczenie zostawic jednej bez ochrony.
+(brama) {
+    forward_auth 127.0.0.1:9091 {
+        uri /api/authz/forward-auth
+        copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
+    }
+}
+
+# ── Sama brama ───────────────────────────────────────────────────────────────
+# Ekran logowania. Bez forward_auth - to on jest tym ekranem.
+auth.twojadomena.pl {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:9091
+}
+
+# ── Content AI ───────────────────────────────────────────────────────────────
+# Wymaga CAI_ZAUFANY_NAGLOWEK=Remote-User po stronie serwera - bez tego serwer
+# zignoruje naglowek i pokaze swoj wlasny ekran logowania.
+contentai.twojadomena.pl {
+    encode zstd gzip
+    import brama
+    reverse_proxy 127.0.0.1:3100
+}
+
+# ── OpenSEO ──────────────────────────────────────────────────────────────────
+# Nadal port 3110 (brama Content AI), nigdy 3001 (goly kontener). Teraz sa dwie
+# warstwy: Authelia sprawdza drugi skladnik, brama Content AI dokleja paletę.
+seo.twojadomena.pl {
+    encode zstd gzip
+    import brama
+    reverse_proxy 127.0.0.1:3110
+}
+
+# ── Cosmos ───────────────────────────────────────────────────────────────────
+# Ta sama brama obejmie i jego - wystarczy import.
+#
+# cosmos.twojadomena.pl {
+#     encode zstd gzip
+#     import brama
+#     reverse_proxy 127.0.0.1:PORT_COSMOSA
+# }

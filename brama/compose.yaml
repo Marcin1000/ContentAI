@@ -1,0 +1,35 @@
+# Authelia - brama uwierzytelniajaca przed Content AI, OpenSEO i Cosmosem.
+# Backend plikowy, bez bazy danych. Port zwiazany z petla zwrotna: ruch
+# z zewnatrz wpuszcza wylacznie Caddy.
+
+services:
+  authelia:
+    image: authelia/authelia:latest
+    restart: unless-stopped
+    volumes:
+      - ./config:/config
+    environment:
+      - AUTHELIA_JWT_SECRET=${AUTHELIA_JWT_SECRET}
+      - AUTHELIA_SESSION_SECRET=${AUTHELIA_SESSION_SECRET}
+      - AUTHELIA_STORAGE_ENCRYPTION_KEY=${AUTHELIA_STORAGE_ENCRYPTION_KEY}
+    ports:
+      - "127.0.0.1:9091:9091"
+    healthcheck:
+      test: ["CMD", "authelia", "health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Bez Redisa sesje Autheli zyja w pamieci kontenera - restart wylogowuje
+  # wszystkich. Odkomentuj, jesli to przeszkadza; kosztuje okolo 20 MB.
+  # W authelia.yml trzeba wtedy odkomentowac sekcje session.redis.
+  #
+  # redis:
+  #   image: redis:7-alpine
+  #   restart: unless-stopped
+  #   command: redis-server --save 60 1 --loglevel warning
+  #   volumes:
+  #     - authelia_redis:/data
+
+# volumes:
+#   authelia_redis:

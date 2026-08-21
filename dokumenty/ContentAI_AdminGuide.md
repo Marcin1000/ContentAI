@@ -47,8 +47,8 @@ node serwer/uzytkownicy.js usun anna
 sudo systemctl restart contentai
 ```
 
-Restart jest istotny: sesje żyją w pamięci, więc bez niego osoba zostaje zalogowana
-do czasu wygaśnięcia sesji (domyślnie 14 dni).
+Restart **nie jest już potrzebny** — weryfikacja sesji sięga do pliku kont, więc brak
+konta odcina dostęp natychmiast. Zostawiam polecenie w przykładzie, bo nie szkodzi.
 
 ### Pozostałe polecenia
 
@@ -215,8 +215,10 @@ Poczekaj albo zrestartuj usługę.
 **Wszyscy w biurze zablokowani naraz.** Licznik prób jest per adres IP. Za wspólnym NAT-em
 cała sieć wygląda jak jeden adres.
 
-**Użytkownik został wylogowany bez powodu.** Sesje są w pamięci — każdy restart usługi
-(w tym aktualizacja) wylogowuje wszystkich.
+**Użytkownik został wylogowany bez powodu.** Sesje przeżywają restart, więc sprawdź trzy
+rzeczy: czy nie zmieniłeś mu hasła lub roli (jedno i drugie unieważnia stare sesje), czy
+nie minęło 14 dni, i czy nie zniknął plik `serwer/dane/sekret` — jego skasowanie wylogowuje
+wszystkich naraz.
 
 **„Brak ANTHROPIC_KEY na serwerze".** Klucza nie ma w `/etc/contentai/srodowisko` albo
 usługa nie została zrestartowana po jego dodaniu.
@@ -262,6 +264,35 @@ Praktycznie znaczy to dwie rzeczy: aplikacja działa w zamkniętej sieci firmowe
 organizacji nie może podmienić kodu, który wykonuje się u Twoich użytkowników.
 
 Po aktualizacji repozytorium biblioteki aktualizują się razem z kodem — nie ma osobnego kroku.
+
+---
+
+## Drugi składnik logowania
+
+Content AI ma własne konta z hasłami, ale **nie ma drugiego składnika** — a konto admina
+zarządza wszystkimi. Zamiast dopisywać TOTP do naszego serwera, stawia się przed nim gotową
+bramę uwierzytelniającą.
+
+Zysk jest większy niż samo 2FA: jedno logowanie obejmuje wtedy **Content AI, OpenSEO
+i Cosmos**, a kod od uwierzytelniania utrzymuje ktoś, kto robi to na pełen etat.
+
+```
+CAI_ZAUFANY_NAGLOWEK=Remote-User
+```
+
+Po tej zmianie własny ekran logowania Content AI znika — hasło i drugi składnik sprawdza
+brama, a my czytamy z nagłówka sam login. Role zostają w naszym pliku kont, więc konto musi
+istnieć po obu stronach.
+
+**Warunek bezpieczeństwa:** port 3100 nie może być wtedy osiągalny z zewnątrz. Serwer ufa
+nagłówkowi tylko z pętli zwrotnej, ale gdyby ktoś dosięgnął portu bezpośrednio, zostałby
+adminem przez dopisanie jednej linijki. Sprawdzenie:
+
+```bash
+sudo ss -tlnp | grep 3100     # ma być 127.0.0.1:3100, nigdy 0.0.0.0:3100
+```
+
+Gotowe pliki konfiguracyjne i instrukcja krok po kroku: **`brama/README.md`**.
 
 ---
 

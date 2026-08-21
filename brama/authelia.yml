@@ -1,0 +1,78 @@
+# Authelia - konfiguracja dla Content AI.
+# Wzor z dokumentacji Autheli, przyciety do tego, czego tu naprawde potrzeba.
+# Podmien twojadomena.pl na swoja domene w CZTERECH miejscach nizej.
+
+theme: dark
+
+server:
+  address: 'tcp://0.0.0.0:9091'
+
+log:
+  level: info
+
+totp:
+  issuer: 'Content AI'
+
+# ─── Konta ────────────────────────────────────────────────────────────────────
+# Backend plikowy: zadnej bazy danych, konta w jednym pliku YAML.
+authentication_backend:
+  password_reset:
+    disable: true          # reset hasla robi admin, nie ma serwera poczty
+  file:
+    path: '/config/users.yml'
+    password:
+      algorithm: 'argon2'
+      argon2:
+        variant: 'argon2id'
+        iterations: 3
+        # 64 MB to domyslna wartosc Autheli. Przy 2 vCPU i Cosmosie oraz OpenSEO
+        # obok kazde logowanie zabieraloby zauwazalny kawalek pamieci naraz.
+        # 32 MB przy trzech iteracjach nadal jest mocno powyzej zalecen OWASP.
+        memory: 32768
+        parallelism: 2
+        key_length: 32
+        salt_length: 16
+
+# ─── Kto gdzie wchodzi ────────────────────────────────────────────────────────
+# two_factor wszedzie: sam login z haslem nie wystarcza. O to w tym chodzi.
+access_control:
+  default_policy: 'deny'
+  rules:
+    - domain: 'contentai.twojadomena.pl'
+      policy: 'two_factor'
+    - domain: 'seo.twojadomena.pl'
+      policy: 'two_factor'
+
+session:
+  name: 'authelia_session'
+  expiration: '12h'
+  inactivity: '2h'
+  remember_me: '1M'
+  cookies:
+    - domain: 'twojadomena.pl'
+      authelia_url: 'https://auth.twojadomena.pl'
+      default_redirection_url: 'https://contentai.twojadomena.pl'
+
+  # Bez tego sesje sa w pamieci kontenera i restart wylogowuje wszystkich.
+  # Wymaga odkomentowania uslugi redis w compose.yaml.
+  #
+  # redis:
+  #   host: 'redis'
+  #   port: 6379
+
+regulation:
+  max_retries: 5
+  find_time: '2m'
+  ban_time: '10m'
+
+storage:
+  local:
+    path: '/config/db.sqlite3'
+
+# Powiadomienia ida do pliku, bo nie ma tu serwera poczty. Kod rejestracji
+# drugiego skladnika odczytasz z tego pliku:
+#   sudo docker compose exec authelia cat /config/notification.txt
+notifier:
+  disable_startup_check: true
+  filesystem:
+    filename: '/config/notification.txt'

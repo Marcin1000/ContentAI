@@ -88,9 +88,9 @@ T.pl.s = {
   haslaKarty: [
     ['scrypt', 'Hasła haszowane z losową solą. W pliku kont nie ma hasła jawnego, a porównanie jest odporne na pomiar czasu.'],
     ['8 prób / 15 minut', 'Po ośmiu nieudanych próbach z jednego adresu IP logowanie jest blokowane na kwadrans.'],
-    ['Cookie HttpOnly', 'Token sesji niedostępny dla JavaScriptu, SameSite=Lax, Secure przy HTTPS.'],
+    ['Podpisane ciasteczko', 'HMAC-SHA256 z sekretu serwera. HttpOnly, SameSite=Lax, Secure przy HTTPS. Podmiana psuje podpis.'],
   ],
-  haslaNota: 'Sesje żyją w pamięci procesu — restart usługi wylogowuje wszystkich. To świadomy wybór: zero zależności, a ponowne logowanie kosztuje kilka sekund.',
+  haslaNota: 'Sesja siedzi w podpisanym ciasteczku, nie w pamięci procesu, więc restart usługi nie wylogowuje zespołu. Cztery drogi unieważnienia działają bez restartu: usunięcie konta, zmiana hasła, zmiana roli i wylogowanie.',
   kluczeTytul: 'Klucze API',
   kluczeNota: 'Klucz nigdy nie trafia do przeglądarki użytkownika.',
   kluczePunkty: [
@@ -135,11 +135,11 @@ T.pl.s = {
   ryzykaTytul: 'Ryzyka i ograniczenia',
   ryzykaNota: 'Czego ten model nie obejmuje — świadomie.',
   ryzyka: [
-    ['Brak 2FA', 'Logowanie opiera się na haśle. Rekomendacja: hasła z menedżera, minimum 16 znaków.'],
-    ['Sesje w pamięci', 'Każdy restart usługi, w tym aktualizacja, wylogowuje wszystkich.'],
+    ['2FA tylko z bramą', 'Własne logowanie to samo hasło. Drugi składnik daje brama uwierzytelniająca postawiona przed całością.'],
+    ['Brak resetu przez e-mail', 'Hasło zmienia administrator poleceniem — nie ma samoobsługi.'],
     ['Licznik prób per IP', 'Za wspólnym NAT-em blokada dotknie całe biuro naraz.'],
-    ['Brak resetu hasła', 'Hasło zmienia administrator poleceniem — nie ma samoobsługi przez e-mail.'],
     ['Zaufanie do X-Forwarded-For', 'Serwer ufa temu nagłówkowi, więc ma sens wyłącznie za własnym Caddy.'],
+    ['Port tylko lokalnie', 'Przy bramie port 3100 nie może być wystawiony — nagłówek tożsamości byłby wtedy do podrobienia.'],
     ['Treści u dostawcy', 'Temat i dobrane fragmenty bazy trafiają do modelu. Zasady ODO obowiązują.'],
   ],
   rekTytul: 'Rekomendacje wdrożenia',
@@ -207,9 +207,9 @@ T.en.s = {
   haslaKarty: [
     ['scrypt', 'Passwords hashed with a random salt. The accounts file holds no plaintext, and the comparison is timing-safe.'],
     ['8 attempts / 15 minutes', 'After eight failed attempts from one IP address, login is blocked for fifteen minutes.'],
-    ['HttpOnly cookie', 'The session token is unreachable from JavaScript, SameSite=Lax, Secure over HTTPS.'],
+    ['Signed cookie', 'HMAC-SHA256 from the server secret. HttpOnly, SameSite=Lax, Secure over HTTPS. Tampering breaks the signature.'],
   ],
-  haslaNota: 'Sessions live in process memory — restarting the service signs everyone out. A deliberate trade: zero dependencies, and signing back in costs a few seconds.',
+  haslaNota: 'The session lives in a signed cookie rather than process memory, so restarting the service does not sign the team out. Four revocation paths work without a restart: deleting the account, changing the password, changing the role, and signing out.',
   kluczeTytul: 'API keys',
   kluczeNota: 'The key never reaches a user’s browser.',
   kluczePunkty: [
@@ -254,11 +254,11 @@ T.en.s = {
   ryzykaTytul: 'Risks and limits',
   ryzykaNota: 'What this model deliberately does not cover.',
   ryzyka: [
-    ['No 2FA', 'Login rests on a password. Recommendation: manager-generated passwords, 16 characters minimum.'],
-    ['Sessions in memory', 'Every service restart, updates included, signs everyone out.'],
+    ['2FA needs the gateway', 'Our own login is a password alone. The second factor comes from an authentication gateway placed in front.'],
+    ['No email reset', 'An administrator changes passwords by command — there is no self-service.'],
     ['Attempt counter per IP', 'Behind shared NAT, a block affects the whole office at once.'],
-    ['No password reset', 'An administrator changes passwords by command — there is no email self-service.'],
     ['Trusts X-Forwarded-For', 'The server trusts this header, so it belongs behind your own Caddy only.'],
+    ['Port stays local', 'With the gateway, port 3100 must not be exposed — the identity header would be forgeable.'],
     ['Content reaches the provider', 'The topic and selected passages go to the model. Data-protection rules still apply.'],
   ],
   rekTytul: 'Deployment recommendations',

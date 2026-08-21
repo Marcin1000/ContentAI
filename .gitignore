@@ -26,3 +26,6 @@ __pycache__/
 
 # Konta i hasła serwera — nigdy do repo
 serwer/dane/
+
+# Skrypty wycięte z wariantów na potrzeby ESLinta — generowane, nie wersjonowane
+.eslint-tmp/

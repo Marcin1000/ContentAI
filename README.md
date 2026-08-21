@@ -35,6 +35,8 @@ Pozostałe warianty: `app/web-proxy.html` (klucze po stronie serwera lub Cloudfl
 | **Realne dane SERP** | `CAI_SERP=dataforseo` albo `openseo` zamiast szacowania przez model |
 | **OpenSEO za tym samym logowaniem** | brama: jedno konto, ta sama paleta, wymiana fraz w obie strony |
 | **Zero obcych serwerów** | biblioteki i krój pisma hostowane razem z aplikacją |
+| **Sesje przeżywają restart** | podpisane ciasteczka — aktualizacja nie wylogowuje zespołu |
+| **2FA i SSO opcjonalnie** | brama uwierzytelniająca przed całością, patrz `brama/` |
 
 ---
 
@@ -137,6 +139,7 @@ contentai/
     testy.js           testy (uruchamiane w CI)
     contentai.service  jednostka systemd
   openseo/          wdrożenie OpenSEO obok Content AI + zależności między nimi
+  brama/            opcjonalna brama uwierzytelniająca (2FA, passkeys, SSO)
   .github/workflows/ CI: kontrola źródła, testy serwera, skan prawdziwych kluczy
   narzedzia/
     sprawdz_zrodlo.py  kontrola źródła: poprawki F1–F17, reskin, warianty, funkcje serwerowe
