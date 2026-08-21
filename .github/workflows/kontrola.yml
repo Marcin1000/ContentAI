@@ -37,12 +37,11 @@ jobs:
         with:
           node-version: '22'
 
-      # Serwer nie ma zależności npm, więc wystarczy kontrola składni i testy
-      # haszowania haseł oraz tłumaczenia Anthropic <-> OpenAI.
+      # Serwer nie ma zależności npm, więc wystarczy kontrola składni i testy.
+      # Pętla po katalogu, żeby nowy moduł nie wypadł z kontroli przez przeoczenie.
       - name: Serwer — składnia i testy
         run: |
-          node --check serwer/server.js
-          node --check serwer/uzytkownicy.js
+          for plik in serwer/*.js; do node --check "$plik"; done
           node serwer/testy.js
 
       # Placeholdery w aplikacji ("sk-ant-...", "sk-proj-...") są krótkie,

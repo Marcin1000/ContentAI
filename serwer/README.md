@@ -68,6 +68,7 @@ Wszystko przez zmienne środowiskowe.
 |---|---|---|
 | `PORT` | `3100` | port nasłuchu |
 | `CAI_HOST` | `127.0.0.1` | interfejs; zostaw lokalny, ruch z zewnątrz puszcza Caddy |
+| `CAI_UZYTKOWNICY` | `serwer/dane/uzytkownicy.json` | plik z kontami |
 | `CAI_COOKIE_SECURE` | `1` | `0` **tylko** do testów lokalnych bez HTTPS |
 | `CAI_SESJA_GODZIN` | `336` (14 dni) | ważność sesji |
 | `CAI_DOSTAWCA` | `anthropic` | `anthropic` albo `nvidia` |
@@ -77,12 +78,18 @@ Wszystko przez zmienne środowiskowe.
 | `NVIDIA_KEY` | — | klucz treści (dostawca `nvidia`) |
 | `OPENAI_KEY` | — | grafiki, TTS, transkrypcja |
 | `ELEVEN_KEY` | — | głos premium |
-| `CAI_SERP` | `model` | źródło danych SERP: `model` albo `dataforseo` |
+| `CAI_SERP` | `model` | źródło danych SERP: `model`, `dataforseo` albo `openseo` |
+| `CAI_SEO_PROJEKT` | — | id projektu OpenSEO (wymagane przy `CAI_SERP=openseo`) |
 | `DATAFORSEO_LOGIN` | — | login DataForSEO (przy `CAI_SERP=dataforseo`) |
 | `DATAFORSEO_HASLO` | — | hasło DataForSEO |
 | `CAI_BAZA` | `serwer/dane/baza` | katalog bazy wiedzy |
 | `CAI_MODEL_EMBED` | `nvidia/nv-embedqa-e5-v5` | model wektorów |
 | `CAI_URL_EMBED` | `https://integrate.api.nvidia.com/v1/embeddings` | endpoint wektorów |
+| `CAI_COOKIE_DOMENA` | — | domena ciasteczka sesji, np. `.twojadomena.pl` |
+| `CAI_OPENSEO_PORT` | — | port bramy OpenSEO; puste = brama wyłączona |
+| `CAI_OPENSEO_UPSTREAM` | `3001` | port kontenera OpenSEO |
+| `CAI_OPENSEO_HOST` | `127.0.0.1` | host kontenera OpenSEO |
+| `CAI_OPENSEO_ADRES` | — | publiczny adres OpenSEO — dokłada pozycję w menu |
 
 ### Klucze mieszane
 
@@ -123,6 +130,14 @@ która ścieżka zadziałała.
 | `POST /api/baza/usun` | usunięcie |
 | `POST /api/baza/szukaj` | najtrafniejsze fragmenty + gotowy blok do promptu |
 
+**W aplikacji** (tylko wariant `proxy` — pozostałe nie mają serwera): menu ustawień →
+**Baza wiedzy**. Lista łączy oba zakresy, 🌐 to wspólny, 🔒 prywatny; wybór zakresu przy
+dodawaniu pokazuje się wyłącznie adminowi.
+
+Przy generowaniu aplikacja woła `/api/baza/szukaj` i wstawia zwrócony blok do promptu —
+bez zaznaczania czegokolwiek przez użytkownika. Dawna baza w `localStorage` działa dalej
+i dokłada się do tego samego promptu, więc aktualizacja nie zabiera nikomu jego dokumentów.
+
 ### Dane SERP
 
 Aplikacja przed generowaniem może sprawdzić, co rankuje w Google. Domyślnie (`CAI_SERP=model`)
@@ -146,6 +161,47 @@ Zwracane `avgWords` i `avgH2` to zera — ten endpoint DataForSEO nie podaje dł
 konkurencji, a zero jest uczciwsze niż zmyślona liczba. Aplikacja traktuje je jako brak danych.
 
 DataForSEO jest płatne za zapytanie. Konto zakładasz na dataforseo.com.
+
+### Brama OpenSEO
+
+Podanie `CAI_OPENSEO_PORT` otwiera **drugi port**, na którym ten sam proces stoi przed
+kontenerem OpenSEO. Robi dwie rzeczy: wpuszcza wyłącznie zalogowanych do Content AI
+i dokleja do stron `app/openseo-motyw.css`, czyli paletę Content AI.
+
+```
+CAI_OPENSEO_PORT=3110
+CAI_OPENSEO_ADRES=https://seo.twojadomena.pl
+CAI_COOKIE_DOMENA=.twojadomena.pl
+```
+
+Caddy kieruje `seo.twojadomena.pl` na **3110**, nigdy na 3001 — 3001 to goły kontener,
+który startuje z `AUTH_MODE=local_noauth`, czyli bez żadnego logowania.
+
+`CAI_COOKIE_DOMENA` sprawia, że jedna sesja obejmuje obie poddomeny. Bez tego wszystko
+działa, tylko logujesz się osobno na każdej. Zmiana tej wartości unieważnia bieżące
+ciasteczka — po restarcie wszyscy logują się ponownie.
+
+Token sesji Content AI jest **wycinany** z nagłówka `Cookie` przed przekazaniem żądania
+do kontenera — obca aplikacja go nie widzi.
+
+### Dane z OpenSEO (`/api/seo/*`)
+
+Content AI pyta OpenSEO o jego dane przez serwer MCP kontenera (`serwer/openseo-mcp.js`).
+W trybie `local_noauth` ten endpoint nie wymaga tokenu, a ruch idzie po pętli zwrotnej.
+
+| Endpoint | Do czego | Koszt |
+|---|---|---|
+| `GET /api/seo/projekty` | lista projektów | **0** |
+| `GET /api/seo/frazy` | zapisane frazy z metrykami i tagami | **0** |
+| `POST /api/seo/frazy` | oddanie fraz z tagiem (domyślnie `content-ai`) | **0** |
+| `GET /api/seo/okazje` | strony na pozycjach 4–20 (wymaga GSC + GA4) | **0** |
+| `POST /api/seo/badaj` | badanie nowych fraz | **płatne** |
+
+Zero oznacza tu dosłownie zero: te narzędzia czytają bazę OpenSEO i nie wołają DataForSEO.
+Płatne narzędzie odmówi wywołania bez jawnego `potwierdzam: true` i zapisze do logu login
+osoby, która je uruchomiła — wydatek ma mieć właściciela.
+
+Szczegóły, uzasadnienie wyborów i wdrożenie: **`openseo/README.md`**.
 
 ### Modele open source
 
@@ -221,8 +277,11 @@ Co serwer robi:
 - **8 nieudanych prób logowania z jednego IP → blokada na 15 minut**
 - cookie `HttpOnly`, `SameSite=Lax`, `Secure` (gdy `CAI_COOKIE_SECURE=1`)
 - klucze API nigdy nie docierają do przeglądarki
-- pliki statyczne tylko z `app/pwa/` — reszta katalogu jest niedostępna, próby wyjścia
-  poza katalog kończą się 404
+- pliki statyczne tylko z listy dozwolonych: `manifest.json`, `icons/*`, `pwa/lib/*.js`
+  i `pwa/fonty/*.woff2` — reszta katalogu jest niedostępna, próby wyjścia poza katalog
+  kończą się 404
+- aplikacja nie pobiera niczego z obcych serwerów: biblioteki (mammoth, pdf.js, pdfmake,
+  xlsx, html-docx-js) i krój IBM Plex leżą w repozytorium i idą z Twojego hosta
 - szczegóły błędów dostawcy trafiają do logu serwera, nie do przeglądarki
 
 Czego **nie** robi — i o czym trzeba wiedzieć:

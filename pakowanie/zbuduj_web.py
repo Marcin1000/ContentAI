@@ -87,9 +87,26 @@ def main():
         if icon.is_file():
             shutil.copy2(icon, WEB / "icons" / icon.name)
 
+    # Biblioteki (mammoth, pdf.js, pdfmake, xlsx, html-docx-js). Aplikacja wola je
+    # sciezka wzgledna pwa/lib/..., wiec w paczce musza lezec dokladnie tam - inaczej
+    # w wersji desktopowej i mobilnej przestaje dzialac wczytywanie i eksport plikow.
+    for katalog, rozszerzenie, czego in [("lib", ".js", "Biblioteki"), ("fonty", ".woff2", "Fonty")]:
+        zrodlo = pwa_src / katalog
+        if not zrodlo.exists():
+            print(f"UWAGA: brak app/pwa/{katalog} - w paczce zabraknie tych plikow.")
+            continue
+        cel = WEB / "pwa" / katalog
+        cel.mkdir(parents=True, exist_ok=True)
+        ile = 0
+        for plik in zrodlo.iterdir():
+            if plik.is_file() and plik.suffix == rozszerzenie:
+                shutil.copy2(plik, cel / plik.name)
+                ile += 1
+        print(f"{czego} skopiowane do web/pwa/{katalog}/: {ile}")
+
     print(f"Gotowe. Payload web/ zbudowany z: {opis}")
     print(f"  -> {WEB}")
-    print("Service Worker celowo pominiety (sw.js nie jest kopiowany).")
+    print("Service Worker celowo pominiety - aplikacja nie rejestruje sw.js.")
 
 
 if __name__ == "__main__":

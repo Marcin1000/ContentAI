@@ -133,11 +133,76 @@ wiedza firmowa jest jedna i nikt jej przypadkiem nie podmieni.
 
 Dokumenty leżą na serwerze, więc użytkownik ma swoją bazę na każdym urządzeniu.
 
+**Gdzie to jest w aplikacji.** Menu ustawień → **Baza wiedzy**. Okno pokazuje jedną listę,
+w której wspólne dokumenty mają znaczek 🌐, a prywatne 🔒. Wybór zakresu przy dodawaniu
+widzi tylko admin — użytkownik dodaje zawsze do swojej prywatnej i nie musi o tym myśleć.
+
+Baza działa **w tle**: przy każdym generowaniu serwer sam dobiera fragmenty pasujące
+do tematu i dokłada je do promptu. Użytkownik niczego nie zaznacza. Stare okno „Baza
+wiedzy" z dokumentami w przeglądarce zostaje i działa jak dotąd — te dwa źródła się
+sumują, więc nikomu nie znika to, co już miał wgrane.
+
 Żeby wyszukiwanie działało po znaczeniu, a nie po słowach, wystarczy `NVIDIA_KEY`
 w `/etc/contentai/srodowisko` — ten sam klucz, którego używasz do modeli. Bez niego baza
 nadal działa, ale schodzi na dopasowanie słów kluczowych.
 
 Stan sprawdzisz jako admin pod `/api/status` — pole `wektory` mówi, czy klucz jest ustawiony.
+
+---
+
+## OpenSEO pod jednym logowaniem
+
+OpenSEO to osobna aplikacja w kontenerze — analiza SEO: pozycje, backlinki, audyty.
+Dla użytkownika ma jednak wyglądać jak część całości, więc Content AI stoi przed nią jako
+brama: **to samo konto, ten sam wygląd, żadnego drugiego hasła.**
+
+W `/etc/contentai/srodowisko`:
+
+```
+CAI_OPENSEO_PORT=3110
+CAI_OPENSEO_ADRES=https://seo.twojadomena.pl
+CAI_COOKIE_DOMENA=.twojadomena.pl
+```
+
+```bash
+sudo systemctl restart contentai
+```
+
+W menu ustawień pojawia się wtedy pozycja **OpenSEO**, otwierająca panel w nowej karcie.
+Osoba niezalogowana dostaje ekran logowania Content AI, a żądanie w ogóle nie dociera
+do kontenera. Odebranie komuś konta odcina go od obu aplikacji naraz.
+
+Jasny/ciemny idzie za przełącznikiem w Content AI — OpenSEO otwiera się w tym samym motywie.
+
+**Uwaga przy Caddy:** kieruj `seo.twojadomena.pl` na port **3110**, nigdy na 3001.
+3001 to goły kontener, który nie ma żadnego logowania — wystawienie go wprost oznacza,
+że każdy zobaczy Twoje dane i będzie wypalał kredyty DataForSEO.
+
+### Frazy krążą między aplikacjami
+
+Obie aplikacje wymieniają dane. Zamysł: **OpenSEO wie, co warto napisać; Content AI to pisze;
+po napisaniu frazy wracają do OpenSEO, żeby dało się śledzić pozycje.**
+
+W formularzu artykułu, obok pola „Słowa kluczowe", jest przycisk 📈. Otwiera frazy zapisane
+w projekcie OpenSEO — z wolumenem, trudnością i tagami. W tym samym oknie działa ruch
+powrotny: „Oddaj frazy tego artykułu do OpenSEO" zapisuje je z tagiem `content-ai`.
+
+**Praktyczny obieg pracy:** w OpenSEO zbadaj frazy i otaguj te do napisania (np. tagiem
+`do-napisania`). W Content AI filtrujesz po tym tagu, piszesz tekst, oddajesz frazy z powrotem.
+Rank tracking w OpenSEO ma wtedy komplet fraz, na których faktycznie piszecie.
+
+**Koszty.** Czytanie zapisanych fraz i oddawanie ich z powrotem **nie kosztuje nic** — dotyka
+tylko bazy OpenSEO. Badanie nowych fraz woła DataForSEO i jest płatne, dlatego celowo nie ma
+go w tym oknie: robi się je w OpenSEO, gdzie widać koszt zapytania.
+
+Opcjonalnie SERP dla Content AI może też iść przez OpenSEO — wtedy wyniki widać w jego panelu:
+
+```
+CAI_SERP=openseo
+CAI_SEO_PROJEKT=<id projektu>
+```
+
+Instalacja samego OpenSEO i pełna konfiguracja: **`openseo/README.md`**.
 
 ---
 
@@ -163,6 +228,20 @@ komunikat; prawdziwy jest w logu:
 sudo journalctl -u contentai -n 50
 ```
 
+**OpenSEO prosi o logowanie mimo zalogowania w Content AI.** Brakuje `CAI_COOKIE_DOMENA`
+albo obie aplikacje stoją pod różnymi domenami. Ciasteczko sesji nie przechodzi między
+domenami — muszą to być poddomeny tej samej domeny.
+
+**OpenSEO pokazuje „OpenSEO nie odpowiada".** Brama działa, kontener nie:
+
+```bash
+sudo docker compose -f /srv/openseo/compose.yaml ps
+```
+
+**OpenSEO wygląda jak obca aplikacja (fiolet zamiast bursztynu).** Zniknął plik
+`app/openseo-motyw.css` — w logu jest wtedy ostrzeżenie przy starcie. Przywróć go
+z repozytorium i zrestartuj usługę.
+
 **Aplikacja się nie uruchamia, w logu brak `app/web-proxy.html`.** Warianty nie zostały
 zbudowane po aktualizacji:
 
@@ -170,6 +249,19 @@ zbudowane po aktualizacji:
 cd /srv/contentai && sudo python3 pakowanie/warianty.py --wszystkie -o app
 sudo systemctl restart contentai
 ```
+
+---
+
+## Aplikacja nie łączy się z obcymi serwerami
+
+Biblioteki do wczytywania i eksportu plików oraz krój pisma leżą w repozytorium i są
+serwowane z Twojego serwera. Poza wywołaniami do Anthropic, OpenAI i ElevenLabs przeglądarka
+użytkownika nie wysyła nic na zewnątrz.
+
+Praktycznie znaczy to dwie rzeczy: aplikacja działa w zamkniętej sieci firmowej, a nikt spoza
+organizacji nie może podmienić kodu, który wykonuje się u Twoich użytkowników.
+
+Po aktualizacji repozytorium biblioteki aktualizują się razem z kodem — nie ma osobnego kroku.
 
 ---
 

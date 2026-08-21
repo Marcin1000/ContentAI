@@ -1,34 +1,37 @@
 # Caddy - Content AI i OpenSEO na jednym serwerze
 #
-# Wklej oba bloki do /etc/caddy/Caddyfile, podmien domeny i hash hasla, potem:
-#   caddy hash-password          # generuje hash do wklejenia nizej
+# Wklej oba bloki do /etc/caddy/Caddyfile, podmien domeny, potem:
 #   sudo systemctl reload caddy
 #
 # Wczesniej ustaw w DNS rekordy A obu poddomen na IP serwera.
+# Obie musza byc poddomenami TEJ SAMEJ domeny - inaczej jedno logowanie nie
+# obejmie obu aplikacji, bo ciasteczko sesji nie przechodzi miedzy domenami.
 
 # ── Content AI ───────────────────────────────────────────────────────────────
 # Ma wlasne logowanie (konta z rolami) w serwerze Node, wiec Caddy tylko
-# przekazuje ruch. NIE dodawaj tu basicauth - dwa ekrany logowania pod rzad
+# przekazuje ruch. NIE dodawaj tu basic_auth - dwa ekrany logowania pod rzad
 # tylko mecza uzytkownika.
 contentai.twojadomena.pl {
+    encode zstd gzip
     reverse_proxy 127.0.0.1:3100
 }
 
 # ── OpenSEO ──────────────────────────────────────────────────────────────────
-# UWAGA: wersja Docker OpenSEO startuje z AUTH_MODE=local_noauth, czyli BEZ
-# zadnego logowania. Ponizszy blok jest jedyna oslona tej aplikacji.
-# Bez niego kazdy, kto trafi na adres, zobaczy dane i bedzie wypalal Twoje
-# kredyty DataForSEO. Nie usuwaj go, dopoki OpenSEO nie dostanie wlasnego
-# uwierzytelniania.
+# UWAGA: kierujemy na port 3110, a NIE na 3001.
 #
-# Nazwa dyrektywy zalezy od wersji Caddy:
-#   Caddy 2.8 i nowszy  -> basic_auth   (jak nizej)
-#   starszy niz 2.8     -> basicauth
-# Wersje sprawdzisz poleceniem: caddy version
+# 3001 to goly kontener OpenSEO, ktory startuje z AUTH_MODE=local_noauth, czyli
+# BEZ zadnego logowania. 3110 to brama Content AI (serwer/openseo.js): wpuszcza
+# wylacznie zalogowanych i dokleja do stron palete Content AI. Wystawienie 3001
+# wprost oznacza, ze kazdy, kto trafi na adres, zobaczy dane i bedzie wypalal
+# Twoje kredyty DataForSEO.
+#
+# Dzieki bramie nie ma tu basic_auth: uzytkownik loguje sie raz, tym samym
+# kontem co do Content AI. (Gdybys jednak wystawil 3001 bezposrednio, basic_auth
+# jest obowiazkowy - w Caddy 2.8+ nazywa sie `basic_auth`, wczesniej `basicauth`.)
+#
+# `encode` ma tu znaczenie wydajnosciowe: brama oddaje tresc nieskompresowana,
+# bo musi widziec HTML, zeby doklejic motyw. Pakuje ja dopiero Caddy.
 seo.twojadomena.pl {
-    basic_auth {
-        # login  hash-z-polecenia-caddy-hash-password
-        marcin  WKLEJ_HASH_TUTAJ
-    }
-    reverse_proxy 127.0.0.1:3001
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:3110
 }

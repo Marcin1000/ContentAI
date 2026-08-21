@@ -14,14 +14,160 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title data-i18n="page-title">Content AI - Generator treści, grafik i audio</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJnIiBjeD0iNTAlIiBjeT0iNTAlIiByPSI2MCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNGRkQyN0EiLz48c3RvcCBvZmZzZXQ9IjU1JSIgc3RvcC1jb2xvcj0iI0ZGQjAwMCIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI0UwOEEwMCIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgcng9IjciIGZpbGw9IiMwQTBCMTEiLz48cGF0aCBkPSJNMTYgMi41IEwxOC4xIDEzLjkgTDI5LjUgMTYgTDE4LjEgMTguMSBMMTYgMjkuNSBMMTMuOSAxOC4xIEwyLjUgMTYgTDEzLjkgMTMuOSBaIiBmaWxsPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTE2IDggTDE2LjkgMTUuMSBMMjQgMTYgTDE2LjkgMTYuOSBMMTYgMjQgTDE1LjEgMTYuOSBMOCAxNiBMMTUuMSAxNS4xIFoiIGZpbGw9IiMwQTBCMTEiIG9wYWNpdHk9IjAuMzUiLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxLjYiIGZpbGw9IiNGRkU5QzIiLz48L3N2Zz4K">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* IBM Plex hostowany razem z aplikacja. Wczesniej szedl z Google Fonts, przez co
+     w zamknietej sieci firmowej aplikacja traci wlasciwy kroj, a kazde uruchomienie
+     melduje sie u zewnetrznego dostawcy. Latin-ext jest konieczny dla polskich znakow. */
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-300-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-ext-300-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-400-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-ext-400-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-500-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-ext-500-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-600-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-ext-600-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-700-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-sans-latin-ext-700-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-400-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-ext-400-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-500-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-ext-500-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-600-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-ext-600-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-700-normal.woff2') format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('pwa/fonty/ibm-plex-mono-latin-ext-700-normal.woff2') format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+</style>
 <!-- File parsing libraries -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html-docx-js/dist/html-docx.js"></script>
+<script src="pwa/lib/mammoth.browser.min.js"></script>
+<script src="pwa/lib/xlsx.full.min.js"></script>
+<script src="pwa/lib/pdf.min.js"></script>
+<script src="pwa/lib/html-docx.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -155,7 +301,6 @@ body.is-mobile .aio-panel {
 .h-item-meta { font-size:11px;color:var(--text3); }
 .output-col { position:relative; }
 
-
 html { height: 100%; overflow: hidden; }
 
 body { font-family: 'IBM Plex Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); height: 100%; overflow: hidden; display: flex; flex-direction: column; font-size: 14px; }
@@ -206,7 +351,6 @@ body.is-mobile .settings-btn { font-size: 16px; padding: 3px 4px; }
 .sidebar-head h2 { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); }
 
 
-
 .kb-item {
   display: flex; align-items: flex-start; gap: 10px;
   padding: 9px 10px; border-radius: var(--radius);
@@ -225,7 +369,6 @@ body.is-mobile .settings-btn { font-size: 16px; padding: 3px 4px; }
 .kb-select-bar { display: none; align-items: center; justify-content: space-between; padding: 5px 10px; background: var(--yellow-light); border-bottom: 1px solid var(--yellow-dark); font-size: 11px; color: #7A6000; }
 .kb-select-bar.show { display: flex; }
 .kb-select-bar button { background: none; border: none; font-size: 11px; color: var(--red); cursor: pointer; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-weight: 500; padding: 0; }
-
 
 .kb-icon {
   width: 30px; height: 30px; border-radius: 7px;
@@ -246,7 +389,6 @@ body.is-mobile .settings-btn { font-size: 16px; padding: 3px 4px; }
 .kb-empty-icon { font-size: 28px; display: block; margin-bottom: 8px; }
 
 /* ADD SECTION */
-
 
 .upload-zone {
   border: 2px dashed var(--border2);
@@ -800,6 +942,17 @@ body.is-mobile .output-bar .btn-secondary { white-space: nowrap; font-size: 11px
 body.is-mobile .output-bar .output-bar-left { flex-shrink: 0; }
 body.is-mobile .output-bar .badge { font-size: 10px; padding: 2px 8px; }
 
+/* Cele dotykowe: na telefonie te przyciski mialy 26-31 px wysokosci, czyli
+   znacznie ponizej wygodnego minimum. Rozmiar czcionki zostaje bez zmian -
+   podnosimy sama wysokosc, zeby uklad sie nie rozjechal. */
+body.is-mobile .btn-secondary,
+body.is-mobile .btn-module,
+body.is-mobile .btn-premium { min-height: 40px; }
+/* Naglowek: kolko ustawien i przelacznik jezyka. !important, bo wysokosc
+   przelacznika jest wpisana w atrybut style. */
+body.is-mobile .settings-btn { min-height: 40px; min-width: 40px; }
+body.is-mobile #lang-toggle-btn { height: 40px !important; min-width: 44px; }
+
 /* FIX 3: Historia na mobile - lista pełnoekranowa, podgląd jako modal */
 body.is-mobile #tab-history { padding-bottom: 80px; }
 body.is-mobile #tab-history > div:last-child { flex-direction: column; overflow: visible; height: auto; }
@@ -854,7 +1007,6 @@ body.is-mobile .h-item { padding: 14px 16px; }
 .jsonld-box { display:none;padding:14px 18px;background:var(--surface2);border-top:1px solid var(--border); }
 .jsonld-box.show { display:block; }
 .jsonld-code { background:#1A1916;color:#A8E6CF;border-radius:var(--radius);padding:12px;font-size:11px;font-family:monospace;overflow-x:auto;white-space:pre;line-height:1.5;max-height:180px;overflow-y:auto;margin-top:8px; }
-
 
 
 /* ── CUSTOM CONTEXT MENU ──────────────────────────────────────────────── */
@@ -1216,7 +1368,6 @@ body.audio-bar-open #audio-panel { padding-bottom: 240px; }
 }
 #audio-bar-pct { color: var(--accent); }
 
-
 /* -- Poprawki responsywne (batch) -- */
 .modal { max-width: 94vw; box-sizing: border-box; }
 #bulk-modal .btn-generate, #improve-modal .btn-generate { white-space: nowrap; }
@@ -1257,7 +1408,6 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
   <div class="cin-splash-bar"><div class="cin-splash-fill"></div></div>
 </div>
 
-
 <div class="topbar">
   <div class="topbar-logo">
     <span class="ca-mark" aria-hidden="true">
@@ -1273,6 +1423,15 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
     <div class="settings-wrap" id="settings-wrap">
       <button class="settings-btn" id="settings-btn" onclick="toggleSettingsMenu()" title="Ustawienia CMS i Brand Voice" aria-label="Ustawienia CMS i Brand Voice" data-i18n-title="title-settings" aria-haspopup="true">⚙️</button>
       <div class="settings-menu" id="settings-menu">
+        <div class="settings-item" onclick="otworzBazeSerwera();closeSettingsMenu()">
+          <span>📚</span>
+          <div><div style="font-weight:600;font-size:13px" data-i18n="bazas-menu-title">Baza wiedzy</div><div style="font-size:11px;color:var(--text3)" data-i18n="bazas-menu-sub">prywatna i wspólna, na serwerze</div></div>
+        </div>
+        <div class="settings-item" id="openseo-item" style="display:none" onclick="otworzOpenSeo();closeSettingsMenu()">
+          <span>📈</span>
+          <div><div style="font-weight:600;font-size:13px" data-i18n="openseo-menu-title">OpenSEO</div><div style="font-size:11px;color:var(--text3)" data-i18n="openseo-menu-sub">pozycje, backlinki, audyty</div></div>
+        </div>
+        <div style="height:1px;background:var(--border);margin:4px 0"></div>
         <div class="settings-item" onclick="openWpModal();closeSettingsMenu()">
           <span id="cms-menu-icon">🌐</span>
           <div><div style="font-weight:600;font-size:13px" data-i18n="settings-cms-title">Integracja CMS</div><div id="cms-menu-sub" style="font-size:11px;color:var(--text3)" data-i18n="settings-cms-sub">WordPress / Drupal</div></div>
@@ -1367,7 +1526,6 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 </nav>
 
 <!-- MOBILE FAB (generate) - widoczny tylko na zakładce Generator -->
-
 
 <div class="layout">
   <!-- SIDEBAR -->
@@ -1490,6 +1648,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
               <input type="text" id="kw-input" placeholder="Wpisz frazę i naciśnij Enter..." data-i18n="ph-kw" onkeydown="addKw(event)" onkeyup="addKwMobile(event)" style="flex:1;min-width:0" />
               <button type="button" class="mic-btn" onclick="dictate('kw-input', this)" data-i18n-title="voice-dictate-title" title="Dyktuj">🎙</button>
               <button onclick="addKwBtn()" title="Dodaj frazę" data-i18n-title="title-kw-add" style="flex-shrink:0;height:38px;width:38px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">+</button>
+              <button type="button" id="seo-frazy-btn" style="display:none;flex-shrink:0;height:38px;width:38px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:17px;cursor:pointer;align-items:center;justify-content:center;line-height:1" onclick="otworzFrazySeo()" data-i18n-title="seo-frazy-title" title="Frazy sprawdzone w OpenSEO">📈</button>
             </div>
             <div class="kw-wrap" id="kw-tags"></div>
           </div>
@@ -2356,19 +2515,6 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 </div>
 
 <!-- FINGERPRINT ERROR MODAL ─────────────────────────────────────────── -->
-<div class="overlay" id="fp-error-modal">
-  <div class="modal no-source-modal-inner">
-    <div class="modal-head">
-      <h3 data-i18n="err-device">🔒 Nieautoryzowane urządzenie</h3>
-    </div>
-    <p style="margin-bottom:12px">Ten plik jest przypisany do konkretnego urządzenia i nie może być używany na innym komputerze.</p>
-    <p style="font-size:13px;color:var(--text3);margin-bottom:16px" data-i18n="device-msg">Jeśli to Twój komputer i widzisz ten błąd, skontaktuj się z administratorem. Kod urządzenia mógł ulec zmianie po reinstalacji systemu lub po zmianie przeglądarki.</p>
-    <div class="modal-footer" style="margin-top:8px">
-      <button class="btn-secondary" style="width:100%;justify-content:center;opacity:.6" disabled data-i18n="btn-generate-blocked">🚫 Generowanie zablokowane</button>
-    </div>
-  </div>
-</div>
-
 <!-- CUSTOM CONTEXT MENU (right-click / long-press in edit mode) -->
 <div class="ctx-menu" id="ctx-menu">
   <div class="ctx-item" onclick="ctxAction('bold')"><b style="width:16px;text-align:center">B</b> <span data-i18n="ctx-bold">Pogrub</span></div>
@@ -2685,7 +2831,7 @@ var I18N = {
     'bv-active':'Aktywny profil Brand Voice:','bv-delete':'🗑 Usuń profil',
     'bv-ph':'Wklej tutaj 2-5 przykładowych artykułów firmowych (jeden po drugim)...',
     // Errors / dialogs
-    'err-device':'🔒 Nieautoryzowane urządzenie','err-no-src':'⚠️ Brak źródeł wiedzy',
+    'err-no-src':'⚠️ Brak źródeł wiedzy',
     'err-add-src':'📁 Dodaj źródła do bazy',
     // Inne
     'premium-info':'⭐ Tryb Jakość premium','rp-strong':'Przeróbki artykułu',
@@ -2822,13 +2968,31 @@ var I18N = {
     'premium-desc':'Tryb Premium uruchamia automatyczną samokorekcję. Artykuł jest najpierw generowany, potem oceniany przez AI, a na końcu poprawiany na podstawie wyników oceny. Generowanie trwa 2 do 3 razy więcej czasu.',
     'premium-2-3x':'2 do 3 razy więcej czasu',
     // ── Device error ──
-    'device-msg':'Jeśli to Twój komputer i widzisz ten błąd, skontaktuj się z administratorem. Kod pliku jest przypisany do innego urządzenia.',
+    
     // ── Repurpose ──
     // ── Stats ──
     'stat-words':'Słowa','stat-avg-words':'Średnia słów',
     // ── History ──
     'history-empty':'Brak historii - wygeneruj pierwszą treść.',
     'history-no-filter':'Brak wyników dla wybranego filtra.',
+    'bazas-menu-title':'Baza wiedzy','bazas-menu-sub':'prywatna i wspólna, na serwerze',
+    'bazas-title':'📚 Baza wiedzy','bazas-desc':'Dokumenty leżą na serwerze, więc masz je na każdym urządzeniu. Przy generowaniu dobierane są tylko fragmenty pasujące do tematu.',
+    'bazas-prywatna':'Prywatna (tylko Ty)','bazas-wspolna':'Wspólna (cały zespół)',
+    'bazas-nazwa':'Nazwa dokumentu','bazas-tresc':'Treść','bazas-dodaj':'Dodaj',
+    'bazas-pusto':'Brak dokumentów. Dodaj pierwszy poniżej.','bazas-usun':'Usuń',
+    'bazas-zamknij':'Zamknij','bazas-tylko-admin':'Do bazy wspólnej dodaje wyłącznie administrator.',
+    'bazas-blad':'Nie udało się połączyć z serwerem.','bazas-dodaje':'Dodaję...',
+    'openseo-menu-title':'OpenSEO','openseo-menu-sub':'pozycje, backlinki, audyty',
+    'seo-frazy-title':'Frazy sprawdzone w OpenSEO',
+    'seo-title':'📈 Frazy z OpenSEO','seo-desc':'Frazy zapisane i otagowane w OpenSEO. Odczyt nie kosztuje kredytów — dane pochodzą z bazy OpenSEO, nie z nowego zapytania.',
+    'seo-projekt':'Projekt','seo-tag':'Tag (wszystkie)','seo-szukaj':'Szukaj frazy',
+    'seo-dodaj':'Dodaj zaznaczone','seo-oddaj':'Oddaj frazy tego artykułu do OpenSEO',
+    'seo-oddaj-hint':'Zapisuje bieżące frazy z tagiem content-ai, żeby dało się śledzić ich pozycje.',
+    'seo-pusto':'Brak zapisanych fraz w tym projekcie.','seo-zamknij':'Zamknij',
+    'seo-wolumen':'wyszukań/mc','seo-trudnosc':'trudność','seo-brak-danych':'brak danych',
+    'seo-blad':'Nie udało się połączyć z OpenSEO.','seo-laduje':'Wczytuję...',
+    'seo-zapisano':'Zapisano w OpenSEO','seo-nic-nie-zaznaczono':'Najpierw zaznacz frazy.',
+    'seo-brak-fraz':'Najpierw dodaj frazy do artykułu.',
     'history-select':'Wybierz artykuł z listy',
     // ── Tooltips ──
     'title-brief-tooltip':'Wygeneruj brief przed artykułem',
@@ -2844,7 +3008,7 @@ var I18N = {
     'no-kw-warning-full':'⚠️ Nie podałeś słowa kluczowego. Jako zapytanie zostanie użyty temat artykułu. Wpisz główną frazę kluczową żeby analiza SERP była trafna.',
     'img-close-title':'Zamknij',
     'text-modal-desc-full':'Wklej dowolną treść firmową - oferty, FAQ, opisy usług, dane o produktach, polityki. AI będzie używać tej treści podczas generowania.',
-    'device-msg-full':'Jeśli to Twój komputer i widzisz ten błąd, skontaktuj się z administratorem. Kod urządzenia zmienił się (możliwe powody: reinstalacja systemu, zmiana przeglądarki, czyszczenie danych przeglądarki).',
+    
     'img-prompt-used':'▸ Użyty prompt',
     'img-spin-init':'Analizuję artykuł...',
     'no-kw-warning':'⚠️ Nie podałeś słowa kluczowego. Jako zapytanie zostanie użyty temat artykułu. Wynik może być mniej trafny.',
@@ -2934,7 +3098,7 @@ var I18N = {
     'hint-aio-no-def':'Brak definicji kluczowych pojęć (encji)',
     'hint-aio-natural':'Język naturalny, czytelny dla użytkownika',
     'premium-continue-1':'Generowanie może zająć ','premium-continue-2':' niż zwykle.',
-    'btn-generate-blocked':'🚫 Generowanie zablokowane',
+    
     'ctx-bold':'Pogrub','ctx-italic':'Pochyl',
     'link-dialog-label':'🔗 Dodaj link',
     'err-api-generic':'Błąd API',
@@ -3078,7 +3242,7 @@ var I18N = {
     'bv-active':'Active Brand Voice profile:','bv-delete':'🗑 Delete profile',
     'bv-ph':'Paste 2-5 sample company articles here (one after another)...',
     // Errors / dialogs
-    'err-device':'🔒 Unauthorized device','err-no-src':'⚠️ No knowledge sources',
+    'err-no-src':'⚠️ No knowledge sources',
     'err-add-src':'📁 Add sources to base',
     // Other
     'premium-info':'⭐ Premium Quality mode','rp-strong':'Article repurpose',
@@ -3215,13 +3379,31 @@ var I18N = {
     'premium-desc':'Premium mode runs automatic self-correction. The article is first generated, then assessed by AI, and finally improved based on the assessment results. Generation takes 2-3 times longer.',
     'premium-2-3x':'2-3 times longer',
     // ── Device error ──
-    'device-msg':'If this is your computer and you see this error, contact your administrator. The file code is assigned to a different device.',
+    
     // ── Repurpose ──
     // ── Stats ──
     'stat-words':'Words','stat-avg-words':'Avg. words',
     // ── History ──
     'history-empty':'No history - generate your first content.',
     'history-no-filter':'No results for the selected filter.',
+    'bazas-menu-title':'Knowledge base','bazas-menu-sub':'private and shared, on the server',
+    'bazas-title':'📚 Knowledge base','bazas-desc':'Documents live on the server, so you have them on every device. Only passages matching the topic are used when generating.',
+    'bazas-prywatna':'Private (only you)','bazas-wspolna':'Shared (whole team)',
+    'bazas-nazwa':'Document name','bazas-tresc':'Content','bazas-dodaj':'Add',
+    'bazas-pusto':'No documents yet. Add the first one below.','bazas-usun':'Remove',
+    'bazas-zamknij':'Close','bazas-tylko-admin':'Only an administrator can add to the shared base.',
+    'bazas-blad':'Could not reach the server.','bazas-dodaje':'Adding...',
+    'openseo-menu-title':'OpenSEO','openseo-menu-sub':'rankings, backlinks, audits',
+    'seo-frazy-title':'Keywords vetted in OpenSEO',
+    'seo-title':'📈 Keywords from OpenSEO','seo-desc':'Keywords saved and tagged in OpenSEO. Reading them costs no credits — the data comes from OpenSEO\'s database, not from a new query.',
+    'seo-projekt':'Project','seo-tag':'Tag (all)','seo-szukaj':'Search keyword',
+    'seo-dodaj':'Add selected','seo-oddaj':'Send this article\'s keywords to OpenSEO',
+    'seo-oddaj-hint':'Saves the current keywords with the content-ai tag so their rankings can be tracked.',
+    'seo-pusto':'No saved keywords in this project.','seo-zamknij':'Close',
+    'seo-wolumen':'searches/mo','seo-trudnosc':'difficulty','seo-brak-danych':'no data',
+    'seo-blad':'Could not reach OpenSEO.','seo-laduje':'Loading...',
+    'seo-zapisano':'Saved in OpenSEO','seo-nic-nie-zaznaczono':'Select some keywords first.',
+    'seo-brak-fraz':'Add keywords to the article first.',
     'history-select':'Select an article from the list',
     // ── Tooltips ──
     'title-brief-tooltip':'Generate brief before article',
@@ -3330,10 +3512,10 @@ var I18N = {
     'hint-aio-no-def':'Missing definitions of key concepts (entities)',
     'hint-aio-natural':'Natural language, readable for the user',
     'premium-continue-1':'Generation may take ','premium-continue-2':' than usual.',
-    'btn-generate-blocked':'🚫 Generation blocked',
+    
     'ctx-bold':'Bold','ctx-italic':'Italic',
     'link-dialog-label':'🔗 Add link',
-    'device-msg-full':'If this is your computer and you see this error, contact your administrator. The device code has changed (possible reasons: system reinstall, browser change, clearing browser data).',
+    
     'img-close-title':'Close',
     'img-spin-init':'Analyzing article...',
     'text-modal-desc-full':'Paste any company content - offers, FAQs, service descriptions, product data, policies. AI will use this content during generation.',
@@ -3355,6 +3537,9 @@ function _t(key) { return (I18N[currentLang] || I18N.pl)[key] || (I18N.pl)[key] 
 function applyLang(lang) {
   currentLang = lang;
   localStorage.setItem('cai_lang', lang);
+  // Bez tego czytniki ekranu czytaja angielski tekst polska fonetyka - atrybut
+  // zostawal na "pl" niezaleznie od wybranego jezyka interfejsu.
+  document.documentElement.lang = lang;
   const T = I18N[lang] || I18N.pl;
 
   // 1. Elementy z data-i18n — textContent lub placeholder
@@ -3521,59 +3706,6 @@ const OWNER_MODE = false;
 // Dyktowanie wymaga warstwy serwerowej. Po jej wdrozeniu ustaw true, aby je pokazac.
 const VOICE_INPUT_ENABLED = false;
 
-const FP_KEY = 'cai_fp_v1';
-
-function buildFingerprint() {
-  const parts = [
-    navigator.userAgent || '',
-    navigator.language || '',
-    (screen.width || 0) + 'x' + (screen.height || 0),
-    screen.colorDepth || 0,
-    Intl.DateTimeFormat().resolvedOptions().timeZone || '',
-    navigator.platform || '',
-    navigator.hardwareConcurrency || 0,
-    navigator.maxTouchPoints || 0,
-  ];
-  // Canvas fingerprint (szybki, skuteczny)
-  try {
-    const cv = document.createElement('canvas');
-    const ctx = cv.getContext('2d');
-    ctx.textBaseline = 'top';
-    ctx.font = '14px "Arial"';
-    ctx.fillStyle = '#FFB000';
-    ctx.fillRect(0, 0, 80, 20);
-    ctx.fillStyle = '#1A1916';
-    ctx.fillText('CONTENTAI\u00A9', 2, 2);
-    parts.push(cv.toDataURL().slice(-60));
-  } catch (e) {}
-  // Hash (FNV-like)
-  const str = parts.join('||');
-  let h = 0x811c9dc5;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = (h * 0x01000193) >>> 0;
-  }
-  return h.toString(36);
-}
-
-function checkFingerprint() {
-  // OWNER_MODE lub brak USER_LABEL = tryb dev, bez blokady
-  if (OWNER_MODE) return true;
-  if (!USER_LABEL || USER_LABEL === 'WSTAW_TUTAJ_IMIE_LUB_ID') return true;
-  try {
-    const current = buildFingerprint();
-    const stored = localStorage.getItem(FP_KEY);
-    if (!stored) {
-      // Pierwsze uruchomienie na tym urządzeniu — rejestruj
-      localStorage.setItem(FP_KEY, current);
-      return true;
-    }
-    return stored === current;
-  } catch (e) {
-    return true; // localStorage zablokowany (np. tryb prywatny) — przepuść
-  }
-}
-
 let docs = [];
 let skipSourceCheck = false;
 let webEnabledByModal = false;
@@ -3708,7 +3840,7 @@ function triggerFileInput(id) {
 }
 
 // ─── FILE UPLOAD & PARSING ────────────────────────────────────────────────────
-if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; }
+if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = 'pwa/lib/pdf.worker.min.js'; }
 
 // Drag & drop only on non-touch devices
 const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
@@ -4291,7 +4423,6 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
   return improved || originalHtml;
 }
 
-
 async function generate(skipPremiumModal = false) {
   const topic = document.getElementById('topic').value.trim();
   const ctype = document.getElementById('ctype').value;
@@ -4301,12 +4432,6 @@ async function generate(skipPremiumModal = false) {
   const extra = document.getElementById('extra').value.trim();
 
   if (typeof isTranscriptionType === 'function' && isTranscriptionType(ctype)) { if (typeof transRun === 'function') transRun(); return false; }
-
-  // ── Blokada: nieautoryzowane urządzenie
-  if (!checkFingerprint()) {
-    document.getElementById('fp-error-modal').classList.add('open');
-    return false;
-  }
 
   // ── Blokada: brak tematu
   if (!topic) {
@@ -4400,6 +4525,9 @@ async function generate(skipPremiumModal = false) {
     const texts  = activeDocs.filter(d => d.icon === '✏️');
 
     let kbContext = '';
+    // Wiedza z serwerowej bazy: dobierane sa tylko fragmenty pasujace do tematu,
+    // zamiast wklejania calych dokumentow. Dokumenty z tego okna dzialaja jak dotad.
+    kbContext += await wiedzaZSerwera(keywords.length ? keywords.join(', ') : topic);
     if (files.length)  kbContext += `## DOKUMENTY FIRMOWE\n${files.map(d => `### ${d.name}\n${d.content}`).join('\n\n---\n\n')}\n\n`;
     if (urls.length)   kbContext += `## STRONY WWW\n${urls.map(d => `### ${d.name}\n${d.content}`).join('\n\n---\n\n')}\n\n`;
     if (texts.length)  kbContext += `## TEKST RĘCZNY\n${texts.map(d => `### ${d.name}\n${d.content}`).join('\n\n---\n\n')}\n\n`;
@@ -5157,8 +5285,8 @@ function dlPdf() {
     document.head.appendChild(s);
   }
   if (window.pdfMake) { _runPdf(); return; }
-  loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js', () => {
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js', _runPdf);
+  loadScript('pwa/lib/pdfmake.min.js', () => {
+    loadScript('pwa/lib/vfs_fonts.js', _runPdf);
   });
 }
 
@@ -5380,7 +5508,6 @@ function refreshGapAnalysis() {
   gapCache = null;
   runGapAnalysis();
 }
-
 
 function gapToggleItem(i) {
   const chk = document.getElementById('gap-chk-' + i);
@@ -5756,7 +5883,6 @@ async function improveFromGaps() {
   document.getElementById('gap-gen-indicator')?.remove();
   if (btn) { btn.disabled = false; updateGapBtn(); }
 }
-
 
 // ─── FEATURE: SUGESTIE LINKÓW WEWNĘTRZNYCH ─────────────────────────────────────
 let linksOpen = false;
@@ -8099,7 +8225,7 @@ function dlReportPdf() {
   }
   function load(src, cb) { const s = document.createElement('script'); s.src = src; s.onload = cb; s.onerror = () => alert(_t('msg-pdf-load-fail')); document.head.appendChild(s); }
   if (window.pdfMake) { run(); return; }
-  load('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js', () => load('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js', run));
+  load('pwa/lib/pdfmake.min.js', () => load('pwa/lib/vfs_fonts.js', run));
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -8401,7 +8527,6 @@ document.addEventListener('selectionchange', () => {
   }
 });
 
-
 // Keyboard shortcuts
 document.addEventListener('keydown', e => {
   if (!editMode) return;
@@ -8600,7 +8725,7 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#ctx-menu')) closeContextMenu();
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeContextMenu(); closeLinkDialog(); closeNoSourceModal(); closePremiumModal(); closeTitlesModal(); closeGapPanel(); closeSerpPanel(); if(seoOpen){seoOpen=false;document.getElementById('seo-panel')?.classList.remove('show');} if(aioOpen){aioOpen=false;document.getElementById('aio-panel')?.classList.remove('show');} if(aeoOpen){aeoOpen=false;document.getElementById('aeo-panel')?.classList.remove('show');} if(geoOpen){geoOpen=false;document.getElementById('geo-panel')?.classList.remove('show');} closeBriefPanel(); if(linksOpen) toggleLinksPanel(); closeImgPanelSmart(); closeBvModal(); closeLlmsModal(); closeVisModal(); closeRepModal(); closeTrkModal(); closeTextModal(); closeUrlModal(); if(!bulkRunning) closeBulkModal(); closeImproveModal(); closeWpModal(); closeTplModal(); closeWpPublishModal(); closeSettingsMenu(); const fi=document.getElementById('fog-panel'); if(fi) fi.style.display='none'; document.getElementById('fp-error-modal').classList.remove('open'); }
+  if (e.key === 'Escape') { closeContextMenu(); closeLinkDialog(); closeNoSourceModal(); closePremiumModal(); closeTitlesModal(); closeGapPanel(); closeSerpPanel(); if(seoOpen){seoOpen=false;document.getElementById('seo-panel')?.classList.remove('show');} if(aioOpen){aioOpen=false;document.getElementById('aio-panel')?.classList.remove('show');} if(aeoOpen){aeoOpen=false;document.getElementById('aeo-panel')?.classList.remove('show');} if(geoOpen){geoOpen=false;document.getElementById('geo-panel')?.classList.remove('show');} closeBriefPanel(); if(linksOpen) toggleLinksPanel(); closeImgPanelSmart(); closeBvModal(); closeLlmsModal(); closeVisModal(); closeRepModal(); closeTrkModal(); closeTextModal(); closeUrlModal(); if(!bulkRunning) closeBulkModal(); closeImproveModal(); closeWpModal(); closeTplModal(); closeWpPublishModal(); closeSettingsMenu(); const fi=document.getElementById('fog-panel'); if(fi) fi.style.display='none'; }
 });
 // ═══════════════════════════════════════════════════════════════════════
 // ── MOBILE DETECTION & INIT ─────────────────────────────────────────────
@@ -8767,7 +8892,6 @@ function imgGetOpenAIKey() {
   return (typeof OPENAI_API_KEY !== 'undefined' && !OPENAI_API_KEY.startsWith('WSTAW'))
     ? OPENAI_API_KEY : null;
 }
-
 
 // ─── GRAFIKA REFERENCYJNA ─────────────────────────────────────────────────────
 async function imgLoadReferenceFile(input) {
@@ -9154,7 +9278,6 @@ function imgLoadFromHistory(idx) {
   imgShowResult(item.blob, item.label, item.w, item.h, '');
   imgRenderHistory();
 }
-
 
 /* ───────────────────────── TRACKER WIDOCZNOSCI W AI (AI VISIBILITY) ───────────────────────── */
 var AIV_DEFAULT = {
@@ -10167,30 +10290,15 @@ async function kbAudioTranscribeAndOpen(file) {
 }
 
 
-
 // ── Zachowaj toggle ────────────────────────────────────────────────────────────
 
 </script>
 <script>
-// ─── PWA SERVICE WORKER ───────────────────────────────────────────────────
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js')
-      .then(function(reg) {
-        console.log('[PWA] Service Worker:', reg.scope);
-        reg.addEventListener('updatefound', function() {
-          var newSW = reg.installing;
-          newSW.addEventListener('statechange', function() {
-            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[PWA] Nowa wersja - odśwież stronę');
-            }
-          });
-        });
-      })
-      .catch(function(err) { console.warn('[PWA] SW error:', err); });
-  });
-}
-// ──────────────────────────────────────────────────────────────────────────
+// ─── PWA ──────────────────────────────────────────────────────────────────
+// Bez service workera i bez powloki offline. Aplikacja to jeden plik ~660 KB
+// aktualizowany przez git pull i restart uslugi; cache service workera
+// oznaczalby uzytkownikow pracujacych na starej wersji po kazdej aktualizacji.
+// Manifest PWA zostaje - daje ikone i uruchamianie w osobnym oknie.
 </script>
 
 <div id="audio-panel" style="display:none;position:fixed;top:56px;right:0;bottom:0;left:0;background:var(--bg);overflow-y:auto;z-index:150;padding:24px 18px 90px">
@@ -10292,6 +10400,391 @@ if ('serviceWorker' in navigator) {
   <button id="audio-bar-close" type="button" title="Zamknij" aria-label="Zamknij" onclick="audioBarClose()">&#10005;</button>
 </div>
 
+<!-- BAZA WIEDZY NA SERWERZE (wariant proxy - tylko tam istnieje /api/baza) -->
+<div id="bazas-modal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);max-width:620px;width:100%;max-height:90vh;overflow:auto;padding:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+      <div style="font-weight:700;font-size:16px;color:var(--text)" data-i18n="bazas-title">📚 Baza wiedzy</div>
+      <span id="bazas-stan" style="font-size:11px;color:var(--text3)"></span>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5" data-i18n="bazas-desc">Dokumenty leżą na serwerze, więc masz je na każdym urządzeniu. Przy generowaniu dobierane są tylko fragmenty pasujące do tematu.</div>
+
+    <div id="bazas-lista" style="margin-bottom:18px"></div>
+
+    <div style="border-top:1px solid var(--border);padding-top:16px">
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <select id="bazas-zakres" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px">
+          <option value="prywatna" data-i18n="bazas-prywatna">Prywatna (tylko Ty)</option>
+          <option value="wspolna" id="bazas-opt-wspolna" data-i18n="bazas-wspolna">Wspólna (cały zespół)</option>
+        </select>
+        <input id="bazas-nazwa" data-i18n-placeholder="bazas-nazwa" placeholder="Nazwa dokumentu" style="flex:1;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px">
+      </div>
+      <textarea id="bazas-tresc" rows="5" data-i18n-placeholder="bazas-tresc" placeholder="Treść" style="width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:12px;resize:vertical"></textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="bazas-btn-dodaj" onclick="dodajDoBazySerwera()" style="flex:1;min-width:120px;padding:10px;border:none;border-radius:var(--radius);background:var(--accent,#d97706);color:#fff;font-weight:600;font-size:13px;cursor:pointer" data-i18n="bazas-dodaj">Dodaj</button>
+        <button onclick="zamknijBazeSerwera()" style="padding:10px 16px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer" data-i18n="bazas-zamknij">Zamknij</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var rolaUzytkownika = null;
+
+  function el(id){ return document.getElementById(id); }
+  function tekst(klucz, zapas){ try { return _t(klucz) || zapas; } catch(e){ return zapas; } }
+
+  window.otworzBazeSerwera = async function(){
+    el('bazas-modal').style.display = 'flex';
+    el('bazas-stan').textContent = '';
+    try {
+      var ja = await (await fetch('/auth/me')).json();
+      rolaUzytkownika = ja.rola;
+      // Do bazy wspolnej pisze wylacznie admin - u pozostalych chowamy te opcje,
+      // zeby nie proponowac czegos, co i tak skonczy sie odmowa.
+      var opt = el('bazas-opt-wspolna');
+      if (opt) opt.style.display = (ja.rola === 'admin') ? '' : 'none';
+      if (ja.rola !== 'admin') el('bazas-zakres').value = 'prywatna';
+    } catch(e){ rolaUzytkownika = null; }
+    // Aplikacja tlumaczy tylko data-i18n i data-i18n-title, nie placeholdery -
+    // ustawiamy je tutaj, zeby pola nie zostawaly po polsku w angielskim UI.
+    el('bazas-nazwa').placeholder = tekst('bazas-nazwa', 'Nazwa dokumentu');
+    el('bazas-tresc').placeholder = tekst('bazas-tresc', 'Treść');
+    await odswiezListeBazy();
+  };
+
+  window.zamknijBazeSerwera = function(){ el('bazas-modal').style.display = 'none'; };
+
+  async function odswiezListeBazy(){
+    var cel = el('bazas-lista');
+    try {
+      var dane = await (await fetch('/api/baza')).json();
+      var dokumenty = dane.dokumenty || [];
+      if (!dokumenty.length){
+        cel.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:10px 0">'
+          + tekst('bazas-pusto','Brak dokumentów. Dodaj pierwszy poniżej.') + '</div>';
+        return;
+      }
+      cel.innerHTML = dokumenty.map(function(d){
+        var wspolna = d.zakres === 'wspolna';
+        var mozeUsunac = !wspolna || rolaUzytkownika === 'admin';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'
+          + '<span style="font-size:15px">' + (wspolna ? '🌐' : '🔒') + '</span>'
+          + '<div style="flex:1;min-width:0">'
+          + '<div style="font-size:13px;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+          + escapeHtml(d.nazwa) + '</div>'
+          + '<div style="font-size:11px;color:var(--text3)">' + d.fragmentow + ' fragm. · '
+          + (d.zWektorami ? 'wektory' : 'słowa kluczowe') + '</div></div>'
+          + (mozeUsunac
+              ? '<button onclick="usunZBazySerwera(\'' + d.id + '\',\'' + d.zakres + '\')" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text2);font-size:11px;cursor:pointer">'
+                + tekst('bazas-usun','Usuń') + '</button>'
+              : '')
+          + '</div>';
+      }).join('');
+    } catch(e){
+      cel.innerHTML = '<div style="font-size:12px;color:#e06c6c;padding:10px 0">'
+        + tekst('bazas-blad','Nie udało się połączyć z serwerem.') + '</div>';
+    }
+  }
+  window.odswiezListeBazy = odswiezListeBazy;
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(z){
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[z];
+    });
+  }
+
+  window.dodajDoBazySerwera = async function(){
+    var nazwa = (el('bazas-nazwa').value || '').trim();
+    var tresc = (el('bazas-tresc').value || '').trim();
+    if (!nazwa || !tresc) return;
+    var btn = el('bazas-btn-dodaj');
+    var etykieta = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = tekst('bazas-dodaje','Dodaję...');
+    try {
+      var odp = await fetch('/api/baza', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zakres: el('bazas-zakres').value, nazwa: nazwa, tresc: tresc })
+      });
+      if (odp.status === 403) {
+        el('bazas-stan').textContent = tekst('bazas-tylko-admin','Do bazy wspólnej dodaje wyłącznie administrator.');
+      } else if (odp.ok) {
+        el('bazas-nazwa').value = '';
+        el('bazas-tresc').value = '';
+        el('bazas-stan').textContent = '';
+        await odswiezListeBazy();
+      } else {
+        el('bazas-stan').textContent = tekst('bazas-blad','Nie udało się połączyć z serwerem.');
+      }
+    } catch(e){
+      el('bazas-stan').textContent = tekst('bazas-blad','Nie udało się połączyć z serwerem.');
+    }
+    btn.disabled = false;
+    btn.textContent = etykieta;
+  };
+
+  window.usunZBazySerwera = async function(id, zakres){
+    try {
+      await fetch('/api/baza/usun', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, zakres: zakres })
+      });
+      await odswiezListeBazy();
+    } catch(e){}
+  };
+
+  // Wolane przy generowaniu: zwraca gotowy blok wiedzy albo pusty ciag.
+  // Blad nigdy nie przerywa generowania - lepiej napisac bez wiedzy firmowej
+  // niz nie napisac wcale.
+  window.wiedzaZSerwera = async function(zapytanie){
+    if (!zapytanie) return '';
+    try {
+      var odp = await fetch('/api/baza/szukaj', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zapytanie: zapytanie })
+      });
+      if (!odp.ok) return '';
+      var dane = await odp.json();
+      return dane.prompt || '';
+    } catch(e){ return ''; }
+  };
+})();
+</script>
+<script>
+// ─── OpenSEO: wejscie z menu i wspolny motyw ──────────────────────────────────
+// Adres podstawia serwer przy serwowaniu strony. Gdy OpenSEO nie jest wdrozone,
+// placeholder zostaje nietkniety, pozycja w menu sie nie pokazuje i nic sie nie
+// dzieje - aplikacja dziala tak samo jak przedtem.
+(function(){
+  'use strict';
+  var ADRES = 'WSTAW_TUTAJ_ADRES_OPENSEO';
+  var DOMENA = 'WSTAW_TUTAJ_DOMENA_CIASTECZKA';
+  var wdrozone = ADRES && ADRES.indexOf('WSTAW_TUTAJ') !== 0;
+
+  window.otworzOpenSeo = function(){
+    if (wdrozone) window.open(ADRES, '_blank', 'noopener');
+  };
+
+  /**
+   * Wybor jasny/ciemny podajemy dalej ciasteczkiem, zeby OpenSEO otwieralo sie
+   * w tym samym motywie. localStorage odpada - OpenSEO stoi pod inna poddomena,
+   * a to inne zrodlo. Domena ciasteczka bierze sie z konfiguracji serwera
+   * (CAI_COOKIE_DOMENA); bez niej ciasteczko zostaje na tym hoscie, a OpenSEO
+   * idzie za ustawieniem systemu - nadal spojnie, tylko bez synchronizacji.
+   */
+  function zapiszMotyw(){
+    try {
+      var ciemny = document.body.classList.contains('dark-mode');
+      var domena = DOMENA.indexOf('WSTAW_TUTAJ') === 0 ? '' : DOMENA;
+      document.cookie = 'cai_motyw=' + (ciemny ? 'ciemny' : 'jasny')
+        + '; Path=/; Max-Age=31536000; SameSite=Lax'
+        + (domena ? '; Domain=' + domena : '')
+        + (location.protocol === 'https:' ? '; Secure' : '');
+    } catch(e){}
+  }
+
+  // Przelacznik jest zdefiniowany wyzej; owijamy go, zeby nie ruszac oryginalu.
+  var pierwotny = window.toggleDarkMode;
+  if (typeof pierwotny === 'function') {
+    window.toggleDarkMode = function(){ var w = pierwotny.apply(this, arguments); zapiszMotyw(); return w; };
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    zapiszMotyw();
+    if (!wdrozone) return;
+    var poz = document.getElementById('openseo-item');
+    if (poz) poz.style.display = '';
+  });
+})();
+</script>
+
+<!-- ============ Frazy z OpenSEO ============ -->
+<div id="seo-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10001;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:660px;width:100%;max-height:86vh;overflow:auto;padding:24px;box-shadow:var(--shadow)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-weight:700;font-size:16px;color:var(--text)" data-i18n="seo-title">📈 Frazy z OpenSEO</div>
+      <button onclick="zamknijFrazySeo()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5" data-i18n="seo-desc">Frazy zapisane i otagowane w OpenSEO. Odczyt nie kosztuje kredytów — dane pochodzą z bazy OpenSEO, nie z nowego zapytania.</div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <select id="seo-projekt" onchange="odswiezFrazySeo()" style="flex:1;min-width:150px"></select>
+      <select id="seo-tag" onchange="odswiezFrazySeo()" style="flex:1;min-width:130px"></select>
+      <input type="text" id="seo-szukaj" oninput="szukajFrazSeo()" style="flex:1;min-width:130px">
+    </div>
+
+    <div id="seo-lista" style="margin-bottom:16px;max-height:40vh;overflow:auto"></div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="dodajZaznaczoneSeo()" style="flex:1;min-width:140px;padding:10px;border:none;border-radius:var(--radius);background:var(--accent,#d97706);color:#fff;font-weight:600;font-size:13px;cursor:pointer" data-i18n="seo-dodaj">Dodaj zaznaczone</button>
+      <button onclick="zamknijFrazySeo()" style="padding:10px 16px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer" data-i18n="seo-zamknij">Zamknij</button>
+    </div>
+
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <button onclick="oddajFrazySeo()" style="width:100%;padding:10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:13px;cursor:pointer" data-i18n="seo-oddaj">Oddaj frazy tego artykułu do OpenSEO</button>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5" data-i18n="seo-oddaj-hint">Zapisuje bieżące frazy z tagiem content-ai, żeby dało się śledzić ich pozycje.</div>
+    </div>
+
+    <div id="seo-status" style="font-size:12px;color:var(--text2);margin-top:12px;min-height:16px"></div>
+  </div>
+</div>
+<script>
+// ─── Frazy z OpenSEO w formularzu artykulu ────────────────────────────────────
+// Zamysl calosci: czlowiek sprawdza i taguje frazy w OpenSEO, Content AI je
+// stad bierze, a po napisaniu oddaje z powrotem - wtedy OpenSEO moze sledzic
+// pozycje tego, co faktycznie napisalismy. Bez przeklejania przez schowek.
+//
+// Wszystko tutaj jest DARMOWE: czytanie zapisanych fraz i oddawanie ich
+// z powrotem dotyka tylko bazy OpenSEO, bez wywolan DataForSEO. Badanie nowych
+// fraz jest platne i celowo nie ma go w tym oknie - robi sie je w OpenSEO,
+// gdzie widac koszt.
+(function(){
+  'use strict';
+  function el(id){ return document.getElementById(id); }
+  function tekst(klucz, zapas){
+    try { return (typeof _t === 'function' && _t(klucz)) || zapas; } catch(e){ return zapas; }
+  }
+  function bezpieczny(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(z){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[z];
+    });
+  }
+  function status(s){ var e = el('seo-status'); if (e) e.textContent = s || ''; }
+
+  var frazy = [];
+  var czasSzukania = null;
+
+  window.otworzFrazySeo = async function(){
+    el('seo-szukaj').placeholder = tekst('seo-szukaj', 'Szukaj frazy');
+    el('seo-modal').style.display = 'flex';
+    status(tekst('seo-laduje', 'Wczytuję...'));
+    try {
+      var odp = await fetch('/api/seo/projekty');
+      if (!odp.ok) throw new Error('projekty');
+      var dane = await odp.json();
+      var wybor = el('seo-projekt');
+      wybor.innerHTML = (dane.projekty || []).map(function(p){
+        return '<option value="' + bezpieczny(p.id) + '">' + bezpieczny(p.nazwa) + '</option>';
+      }).join('');
+      status('');
+      if (!(dane.projekty || []).length) { el('seo-lista').innerHTML = ''; return; }
+      await odswiezFrazySeo();
+    } catch(e){
+      status(tekst('seo-blad', 'Nie udało się połączyć z OpenSEO.'));
+    }
+  };
+
+  window.zamknijFrazySeo = function(){ el('seo-modal').style.display = 'none'; };
+
+  window.odswiezFrazySeo = async function(){
+    var projekt = el('seo-projekt').value;
+    if (!projekt) return;
+    status(tekst('seo-laduje', 'Wczytuję...'));
+    var adres = '/api/seo/frazy?projekt=' + encodeURIComponent(projekt);
+    var tag = el('seo-tag').value;
+    if (tag) adres += '&tag=' + encodeURIComponent(tag);
+    var szukaj = el('seo-szukaj').value.trim();
+    if (szukaj) adres += '&szukaj=' + encodeURIComponent(szukaj);
+    try {
+      var odp = await fetch(adres);
+      if (!odp.ok) throw new Error('frazy');
+      var dane = await odp.json();
+      frazy = dane.frazy || [];
+      // Lista tagow odswiezana tylko bez filtra, zeby wybrany tag nie wypadl
+      // z listy razem z odfiltrowanymi wierszami.
+      if (!tag) {
+        var wyborTagu = el('seo-tag');
+        wyborTagu.innerHTML = '<option value="">' + bezpieczny(tekst('seo-tag', 'Tag (wszystkie)')) + '</option>'
+          + (dane.tagi || []).map(function(t){
+              return '<option value="' + bezpieczny(t) + '">' + bezpieczny(t) + '</option>';
+            }).join('');
+      }
+      rysujFrazy();
+      status('');
+    } catch(e){
+      status(tekst('seo-blad', 'Nie udało się połączyć z OpenSEO.'));
+    }
+  };
+
+  window.szukajFrazSeo = function(){
+    clearTimeout(czasSzukania);
+    czasSzukania = setTimeout(odswiezFrazySeo, 350);
+  };
+
+  function rysujFrazy(){
+    var lista = el('seo-lista');
+    if (!frazy.length){
+      lista.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px 0">'
+        + bezpieczny(tekst('seo-pusto', 'Brak zapisanych fraz w tym projekcie.')) + '</div>';
+      return;
+    }
+    var brak = tekst('seo-brak-danych', 'brak danych');
+    var jednostka = tekst('seo-wolumen', 'wyszukań/mc');
+    var trudno = tekst('seo-trudnosc', 'trudność');
+    lista.innerHTML = frazy.map(function(f, i){
+      var metryki = f.wolumen === null
+        ? bezpieczny(brak)
+        : bezpieczny(f.wolumen + ' ' + jednostka) + (f.trudnosc === null ? '' : ' · ' + bezpieczny(trudno + ' ' + f.trudnosc));
+      var tagi = f.tagi.length
+        ? ' · ' + f.tagi.map(bezpieczny).join(', ')
+        : '';
+      return '<label style="display:flex;gap:10px;align-items:flex-start;padding:8px;border-bottom:1px solid var(--border);cursor:pointer">'
+        + '<input type="checkbox" data-seo-i="' + i + '" style="margin-top:3px">'
+        + '<div style="min-width:0"><div style="font-size:13px;color:var(--text);word-break:break-word">' + bezpieczny(f.fraza) + '</div>'
+        + '<div style="font-size:11px;color:var(--text3)">' + metryki + tagi + '</div></div></label>';
+    }).join('');
+  }
+
+  window.dodajZaznaczoneSeo = function(){
+    var zaznaczone = [].slice.call(el('seo-lista').querySelectorAll('input[data-seo-i]:checked'));
+    if (!zaznaczone.length) return status(tekst('seo-nic-nie-zaznaczono', 'Najpierw zaznacz frazy.'));
+    zaznaczone.forEach(function(pole){
+      var f = frazy[Number(pole.getAttribute('data-seo-i'))];
+      if (f && typeof keywords !== 'undefined' && keywords.indexOf(f.fraza) === -1) keywords.push(f.fraza);
+    });
+    if (typeof renderKws === 'function') renderKws();
+    zamknijFrazySeo();
+  };
+
+  window.oddajFrazySeo = async function(){
+    var projekt = el('seo-projekt').value;
+    if (!projekt) return status(tekst('seo-blad', 'Nie udało się połączyć z OpenSEO.'));
+    if (typeof keywords === 'undefined' || !keywords.length) {
+      return status(tekst('seo-brak-fraz', 'Najpierw dodaj frazy do artykułu.'));
+    }
+    status(tekst('seo-laduje', 'Wczytuję...'));
+    try {
+      var odp = await fetch('/api/seo/frazy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projekt: projekt, frazy: keywords, tagi: ['content-ai'] })
+      });
+      if (!odp.ok) throw new Error('zapis');
+      var dane = await odp.json();
+      // Odswiezenie listy konczy sie wyczyszczeniem statusu, wiec potwierdzenie
+      // ustawiamy PO nim - inaczej uzytkownik zapisuje frazy i nie widzi nic.
+      await odswiezFrazySeo();
+      status(tekst('seo-zapisano', 'Zapisano w OpenSEO') + ': ' + dane.zapisano);
+    } catch(e){
+      status(tekst('seo-blad', 'Nie udało się połączyć z OpenSEO.'));
+    }
+  };
+
+  // Przycisk przy polu fraz pokazuje sie dopiero, gdy serwer potwierdzi, ze
+  // OpenSEO faktycznie odpowiada. Inaczej otwieraloby sie puste okno z bledem.
+  document.addEventListener('DOMContentLoaded', function(){
+    fetch('/api/seo/projekty').then(function(o){
+      if (!o.ok) return;
+      var b = el('seo-frazy-btn');
+      if (b) b.style.display = 'flex';
+    }).catch(function(){});
+  });
+})();
+</script>
 <!-- ============ Content AI - reskin (Faza 1 fix + Faza 2 + Faza 3 splash), append-only ============ -->
 <style id="cin-reskin">
   @keyframes cinRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
