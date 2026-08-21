@@ -577,6 +577,20 @@ function odmowaLimitu(sesja, czynnosc) {
   };
 }
 
+/**
+ * Co obciazyc za to zapytanie do /api. Zawsze wywolanie modelu, a dodatkowo
+ * artykul - ale tylko gdy aplikacja sama zadeklaruje, ze to wlasnie artykul.
+ *
+ * Jedno generowanie to kilka wywolan modelu (brief, tresc, korekta, przerobki).
+ * Liczenie kazdego jako artykulu zjadaloby pakiet darmowy w polowie pierwszego
+ * tekstu. Naglowek pochodzi z przegladarki i da sie go nie wyslac - dlatego
+ * osobny licznik `wywolanie` jest sufitem kosztu niezaleznym od deklaracji.
+ */
+function czynnosciTresci(req) {
+  const deklaracja = String(req.headers['x-cai-czynnosc'] || '').toLowerCase();
+  return deklaracja === 'artykul' ? ['wywolanie', 'artykul'] : ['wywolanie'];
+}
+
 /** Dopisuje uzycie po udanej odpowiedzi dostawcy. */
 function policzUzycie(sesja, czynnosc) {
   try {
@@ -588,7 +602,7 @@ function policzUzycie(sesja, czynnosc) {
   }
 }
 
-async function proxyTresc(req, res, sesja) {
+async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
   let body;
   try {
     body = JSON.parse((await czytajCialo(req)).toString('utf8'));
@@ -608,7 +622,10 @@ async function proxyTresc(req, res, sesja) {
       });
     }
     const wynik = await obsluzSerp(body);
-    if (wynik) return odpowiedzJson(res, wynik.status, wynik.dane);
+    if (wynik) {
+      if (wynik.status < 400) policzUzycie(sesja, 'wywolanie');
+      return odpowiedzJson(res, wynik.status, wynik.dane);
+    }
     // null = zostaw dotychczasowa sciezke (dostawca anthropic z web_search)
   }
 
@@ -631,7 +648,7 @@ async function proxyTresc(req, res, sesja) {
         error: { komunikat: `Dostawca NVIDIA odrzucil zadanie (HTTP ${odp.status})` },
       });
     }
-    policzUzycie(sesja, 'artykul');
+    for (const czynnosc of czynnosci) policzUzycie(sesja, czynnosc);
     return odpowiedzJson(res, 200, openaiNaAnthropic(dane));
   }
 
@@ -647,7 +664,7 @@ async function proxyTresc(req, res, sesja) {
     body: JSON.stringify(body),
   });
   const tekst = await odp.text();
-  if (odp.ok) policzUzycie(sesja, 'artykul');
+  if (odp.ok) for (const czynnosc of czynnosci) policzUzycie(sesja, czynnosc);
   res.writeHead(odp.status, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(tekst);
 }
@@ -1108,20 +1125,21 @@ async function obsluz(req, res) {
   // padnie na bledzie API, uzytkownik nie traci sztuki z pakietu.
   if (req.method === 'POST') {
     const CZYNNOSCI = {
-      '/api': 'artykul',
       '/api/images': 'grafika',
       '/api/tts': 'audio',
       '/api/eleven-tts': 'audio',
       '/api/transcribe': 'transkrypcja',
     };
-    const czynnosc = CZYNNOSCI[sciezka];
-    if (czynnosc) {
+    // /api obsluguje zarowno artykul, jak i wywolania pomocnicze - patrz czynnosciTresci()
+    const czynnosci = sciezka === '/api' ? czynnosciTresci(req) : [CZYNNOSCI[sciezka]];
+    for (const czynnosc of czynnosci) {
+      if (!czynnosc) continue;
       const odmowa = odmowaLimitu(sesja, czynnosc);
       if (odmowa) return odpowiedzJson(res, 402, odmowa);
     }
 
     try {
-      if (sciezka === '/api') return await proxyTresc(req, res, sesja);
+      if (sciezka === '/api') return await proxyTresc(req, res, sesja, czynnosci);
       if (sciezka === '/api/images') return await proxyOpenAiJson(req, res, 'https://api.openai.com/v1/images/generations', sesja, 'grafika');
       if (sciezka === '/api/tts') return await proxyOpenAiJson(req, res, 'https://api.openai.com/v1/audio/speech', sesja, 'audio');
       if (sciezka === '/api/transcribe') return await proxyTranskrypcja(req, res, sesja);
@@ -1255,4 +1273,5 @@ module.exports = {
   PLIK_UZYTKOWNIKOW, wczytajUzytkownikow, zapiszUzytkownikow,
   // Sesje - wystawione do testow; produkcyjnie wola je tylko router.
   utworzSesje, sesjaZadania, zapiszWylogowanie, wylogowane, PLIK_WYLOGOWANYCH,
+  czynnosciTresci,
 };

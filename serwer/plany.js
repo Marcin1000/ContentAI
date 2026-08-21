@@ -25,6 +25,18 @@
  * Zliczamy PO udanej odpowiedzi dostawcy, nie przed. Jesli generowanie padnie
  * na bledzie API, uzytkownik nie traci artykulu z pakietu - dostal przeciez
  * nic. To kosztuje jedno dodatkowe wywolanie zapisu i jest tego warte.
+ *
+ * ─── Artykul to nie to samo co wywolanie modelu ──────────────────────────────
+ *
+ * Jedno generowanie artykulu to kilka wywolan modelu: brief, tresc, korekta
+ * premium, uzupelnianie luk, przerobki fragmentow. Gdyby kazde liczylo sie jako
+ * artykul, pakiet darmowy skonczylby sie w polowie pierwszego tekstu. Dlatego
+ * artykul liczy sie tylko wtedy, gdy aplikacja zadeklaruje, ze wlasnie o to
+ * chodzi, a wszystkie pozostale wywolania ida na osobny licznik `wywolanie`.
+ *
+ * Deklaracja przychodzi z przegladarki, wiec nie jest dowodem - i nie musi nim
+ * byc. Licznik wywolan jest tu sufitem: konto, ktore nigdy nie przyzna sie do
+ * artykulu, i tak ma skonczona pule. To nie jest zamek, tylko granica kosztu.
  */
 
 const fs = require('node:fs');
@@ -38,13 +50,16 @@ const path = require('node:path');
 const PLANY = {
   darmowy: {
     nazwa: 'Darmowy',
+    nazwaEn: 'Free',
     opis: 'Na spróbowanie. Trzy artykuły, bez odnawiania.',
+    opisEn: 'To try it out. Three articles, no renewal.',
     okres: 'zawsze',
     limity: {
       artykul: 3,
       grafika: 0,
       audio: 0,
       transkrypcja: 0,
+      wywolanie: 30,
     },
     funkcje: {
       bazaWiedzy: true,        // ale limit dokumentow nizej
@@ -58,13 +73,16 @@ const PLANY = {
 
   standard: {
     nazwa: 'Standard',
+    nazwaEn: 'Standard',
     opis: 'Do regularnej pracy nad treścią.',
+    opisEn: 'For regular work on content.',
     okres: 'miesiac',
     limity: {
       artykul: 50,
       grafika: 50,
       audio: 20,
       transkrypcja: 20,
+      wywolanie: 750,
     },
     funkcje: {
       bazaWiedzy: true,
@@ -78,13 +96,16 @@ const PLANY = {
 
   premium: {
     nazwa: 'Premium',
+    nazwaEn: 'Premium',
     opis: 'Wszystko, bez limitów sztukowych.',
+    opisEn: 'Everything, with no per-item limits.',
     okres: 'miesiac',
     limity: {
       artykul: null,
       grafika: null,
       audio: null,
       transkrypcja: null,
+      wywolanie: null,
     },
     funkcje: {
       bazaWiedzy: true,
@@ -218,7 +239,9 @@ function stanPakietu({ katalog, uzytkownik, teraz }) {
   return {
     plan: nazwaPlanu(uzytkownik),
     nazwa: plan.nazwa,
+    nazwaEn: plan.nazwaEn,
     opis: plan.opis,
+    opisEn: plan.opisEn,
     okres: plan.okres,
     funkcje: { ...plan.funkcje },
     limitDokumentow: plan.limitDokumentow,

@@ -63,6 +63,42 @@ sobie dostępu.
 
 ---
 
+## Pakiety i limity
+
+```bash
+node serwer/uzytkownicy.js plan anna standard
+```
+
+Konto bez wpisanego planu dostaje darmowy. **Ty jako admin zawsze działasz jak premium** —
+niezależnie od wpisu, żebyś nie mógł sobie zablokować własnego narzędzia.
+
+| | Darmowy | Standard | Premium |
+|---|---|---|---|
+| Artykuły | 3, bez odnawiania | 50/mies. | bez limitu |
+| Grafiki | — | 50/mies. | bez limitu |
+| Audio, transkrypcja | — | 20/mies. | bez limitu |
+| Dokumenty w bazie | 3 | 50 | bez limitu |
+| Analiza SERP | — | tak | tak |
+| Dane z OpenSEO | — | — | tak |
+
+Limity zmienia się w jednym miejscu: `serwer/plany.js`. To tabela danych — zmiana
+„3 artykuły" na „5" to edycja jednej linii i restart usługi.
+
+**Artykuł to nie to samo co wywołanie modelu.** Jedno generowanie to kilka wywołań: brief,
+treść, korekta, przeróbki. Na licznik artykułów wchodzi tylko właściwe generowanie treści;
+reszta idzie na osobny licznik wywołań, który jest sufitem kosztu (30 dla darmowego,
+750/mies. dla standardu). Dzięki temu pakiet darmowy naprawdę wystarcza na trzy artykuły,
+a nie kończy się w połowie pierwszego.
+
+Każdy widzi swój stan w odznace w pasku górnym — nazwa pakietu i licznik artykułów.
+Kliknięcie otwiera okno z paskami zużycia i listą funkcji. Po wyczerpaniu limitu serwer
+odpowiada **HTTP 402**, a aplikacja pokazuje to samo okno z wyjaśnieniem, zamiast błędu API.
+
+Liczniki leżą w `serwer/dane/uzycie/` — jeden plik JSON na konto. Żeby komuś wyzerować
+pulę, wystarczy skasować jego plik.
+
+---
+
 ## Klucze API
 
 Klucze siedzą w `/etc/contentai/srodowisko` (uprawnienia `600`) i **nigdy nie docierają

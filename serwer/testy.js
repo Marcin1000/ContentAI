@@ -818,6 +818,48 @@ function testyPlanow() {
     sprawdz('bez limitu widac null, nie zero', stanPremium.uzycie.artykul.limit === null);
   }
 
+  console.log('\n  plany - artykul to nie to samo co wywolanie modelu');
+  {
+    // Jedno generowanie to kilka wywolan modelu. Gdyby kazde liczylo sie jako
+    // artykul, pakiet darmowy skonczylby sie w polowie pierwszego tekstu.
+    const nowak = { login: 'nowak', rola: 'uzytkownik', plan: 'darmowy' };
+    for (let i = 0; i < 8; i++) plany.policz({ katalog, uzytkownik: nowak, czynnosc: 'wywolanie' });
+    sprawdz('wywolania pomocnicze nie ruszaja licznika artykulow',
+      plany.sprawdzLimit({ katalog, uzytkownik: nowak, czynnosc: 'artykul' }).zuzyte === 0);
+    sprawdz('wywolania maja wlasny licznik',
+      plany.sprawdzLimit({ katalog, uzytkownik: nowak, czynnosc: 'wywolanie' }).zuzyte === 8);
+
+    // Sufit kosztu: konto, ktore nigdy nie przyzna sie do artykulu, i tak sie
+    // konczy. To nie jest zamek, tylko granica wydatku.
+    const sufit = plany.PLANY.darmowy.limity.wywolanie;
+    sprawdz('darmowy ma sufit wywolan', typeof sufit === 'number' && sufit > 0);
+    sprawdz('sufit jest wielokrotnoscia puli artykulow, nie rowny jej',
+      sufit > plany.PLANY.darmowy.limity.artykul * 3);
+    for (let i = 8; i < sufit; i++) plany.policz({ katalog, uzytkownik: nowak, czynnosc: 'wywolanie' });
+    sprawdz('po wyczerpaniu sufitu nie wolno nic',
+      plany.sprawdzLimit({ katalog, uzytkownik: nowak, czynnosc: 'wywolanie' }).wolno === false);
+
+    sprawdz('premium nie ma sufitu wywolan', plany.PLANY.premium.limity.wywolanie === null);
+    sprawdz('standard ma sufit ponad pule artykulow',
+      plany.PLANY.standard.limity.wywolanie > plany.PLANY.standard.limity.artykul);
+  }
+
+  console.log('\n  plany - deklaracja czynnosci z aplikacji');
+  {
+    const { czynnosciTresci } = require('./server.js');
+    const zNaglowkiem = (w) => czynnosciTresci({ headers: w === null ? {} : { 'x-cai-czynnosc': w } });
+
+    sprawdz('bez naglowka liczy sie tylko wywolanie',
+      JSON.stringify(zNaglowkiem(null)) === JSON.stringify(['wywolanie']));
+    sprawdz('deklaracja artykulu obciaza oba liczniki',
+      JSON.stringify(zNaglowkiem('artykul')) === JSON.stringify(['wywolanie', 'artykul']));
+    sprawdz('wielkosc liter w naglowku bez znaczenia',
+      JSON.stringify(zNaglowkiem('Artykul')) === JSON.stringify(['wywolanie', 'artykul']));
+    // Cudza wartosc nie moze przypadkiem trafic na zaden inny licznik.
+    sprawdz('zmyslona czynnosc nie otwiera nowego licznika',
+      JSON.stringify(zNaglowkiem('grafika')) === JSON.stringify(['wywolanie']));
+  }
+
   console.log('\n  plany - bezpieczenstwo zapisu');
   {
     // Sanityzacja zamienia ukosniki na podkreslenia, wiec ".." moze zostac

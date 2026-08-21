@@ -29,3 +29,7 @@ serwer/dane/
 
 # Skrypty wycięte z wariantów na potrzeby ESLinta — generowane, nie wersjonowane
 .eslint-tmp/
+
+# ESLint instaluje się doraźnie (aplikacja i serwer nie mają zależności npm)
+node_modules/
+package-lock.json
