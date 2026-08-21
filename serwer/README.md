@@ -54,9 +54,27 @@ node serwer/uzytkownicy.js usun anna
 
 Hasło ma minimum 10 znaków. Ostatniego admina nie da się usunąć ani zdegradować.
 
-Sesje żyją w pamięci — **restart serwera wylogowuje wszystkich**. To świadomy wybór:
-zero zależności, a ponowne logowanie kosztuje kilka sekund. Po odebraniu komuś konta
-zrestartuj serwer, żeby uciąć jego bieżącą sesję.
+Sesja siedzi w **podpisanym ciasteczku**, nie w pamięci procesu — restart usługi,
+a więc każda aktualizacja, nie wylogowuje zespołu.
+
+W ciasteczku jest jawny opis sesji (login, rola, wygaśnięcie, losowy identyfikator)
+plus HMAC-SHA256 z sekretu serwera. Podmiana czegokolwiek psuje podpis. Treść nie jest
+tajna i nie musi być — nie ma w niej nic, czego użytkownik by o sobie nie wiedział.
+
+Sekret bierze się z `CAI_SEKRET_SESJI`, a bez niego jest losowany raz i zapisywany
+do `serwer/dane/sekret` (uprawnienia `600`). Skasowanie tego pliku wylogowuje wszystkich.
+
+Ceną za brak stanu jest to, że samo wygaśnięcie nie odbiera dostępu natychmiast.
+Dlatego są cztery drogi unieważnienia, wszystkie działające **bez restartu**:
+
+| Zdarzenie | Co się dzieje |
+|---|---|
+| `uzytkownicy.js usun` | weryfikacja szuka konta w pliku — brak konta to koniec dostępu |
+| `uzytkownicy.js haslo` | znacznik `sesjeOd` odcina wszystkie sesje wydane wcześniej |
+| `uzytkownicy.js rola` | rola czytana z pliku przy każdym żądaniu — degradacja działa od razu |
+| wylogowanie użytkownika | identyfikator trafia do `serwer/dane/wylogowane.json` |
+
+Ostatni plik sam się sprząta: wpisy po terminie wypadają przy kolejnym zapisie.
 
 ---
 
@@ -71,6 +89,9 @@ Wszystko przez zmienne środowiskowe.
 | `CAI_UZYTKOWNICY` | `serwer/dane/uzytkownicy.json` | plik z kontami |
 | `CAI_COOKIE_SECURE` | `1` | `0` **tylko** do testów lokalnych bez HTTPS |
 | `CAI_SESJA_GODZIN` | `336` (14 dni) | ważność sesji |
+| `CAI_SEKRET_SESJI` | losowany i zapisywany | sekret do podpisu ciasteczek |
+| `CAI_ZAUFANY_NAGLOWEK` | — | nagłówek z loginem z bramy, np. `Remote-User` |
+| `CAI_ZAUFANE_ADRESY` | pętla zwrotna | adresy, z których wolno przyjąć ten nagłówek |
 | `CAI_DOSTAWCA` | `anthropic` | `anthropic` albo `nvidia` |
 | `CAI_MODEL_NVIDIA` | `nvidia/llama-3.3-nemotron-super-49b-v1.5` | model przy `nvidia` |
 | `CAI_URL_NVIDIA` | `https://integrate.api.nvidia.com/v1/chat/completions` | endpoint NIM |
@@ -184,6 +205,27 @@ ciasteczka — po restarcie wszyscy logują się ponownie.
 Token sesji Content AI jest **wycinany** z nagłówka `Cookie` przed przekazaniem żądania
 do kontenera — obca aplikacja go nie widzi.
 
+### Logowanie przez bramę
+
+Ustawienie `CAI_ZAUFANY_NAGLOWEK` przełącza serwer w tryb, w którym uwierzytelnia
+**zewnętrzna brama** (Authelia i pokrewne), a my czytamy z nagłówka sam login.
+Wtedy 2FA, passkeys i SSO robi ona.
+
+```
+CAI_ZAUFANY_NAGLOWEK=Remote-User
+```
+
+Serwer przyjmuje ten nagłówek **wyłącznie z zaufanego adresu** — domyślnie z pętli
+zwrotnej. Bez tego warunku każdy, kto dosięgnie portu z pominięciem bramy, zostaje
+adminem przez dopisanie jednego nagłówka. Dlatego w tym trybie port nie może być
+wystawiony na świat; `CAI_HOST` zostaje na `127.0.0.1`.
+
+Własny ekran logowania jest wtedy wyłączony (`POST /auth/login` → 404), żeby nie
+tworzyć drugiej drogi wejścia omijającej drugi składnik. Role nadal czytamy
+z pliku kont — konto musi istnieć po obu stronach.
+
+Wdrożenie z gotowymi plikami konfiguracyjnymi: **`brama/README.md`**.
+
 ### Dane z OpenSEO (`/api/seo/*`)
 
 Content AI pyta OpenSEO o jego dane przez serwer MCP kontenera (`serwer/openseo-mcp.js`).
@@ -286,8 +328,8 @@ Co serwer robi:
 
 Czego **nie** robi — i o czym trzeba wiedzieć:
 
-- sesje w pamięci, więc restart wylogowuje wszystkich
-- brak 2FA i brak resetu hasła przez e-mail — hasło zmienia admin poleceniem
+- **brak 2FA we własnym logowaniu** — drugi składnik daje dopiero brama, patrz `brama/README.md`
+- brak resetu hasła przez e-mail — hasło zmienia admin poleceniem
 - licznik prób logowania jest w pamięci i per IP; za wspólnym NAT-em zablokuje wszystkich
   z tego adresu naraz
 - serwer ufa nagłówkowi `X-Forwarded-For` — ma sens **tylko** za własnym Caddy/nginx;

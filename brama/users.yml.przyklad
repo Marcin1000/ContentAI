@@ -1,0 +1,28 @@
+# Konta Autheli. Skopiuj jako /srv/authelia/config/users.yml.
+#
+# Hash hasla generujesz poleceniem:
+#   sudo docker run --rm authelia/authelia:latest \
+#     authelia crypto hash generate argon2 --password 'twoje-haslo'
+#
+# WAZNE: login musi byc taki sam jak w Content AI - po nim serwer rozpoznaje,
+# kto przyszedl, i stamtad bierze role. Konto musi istniec po obu stronach.
+#
+# Zgodnie z zasadami zgloszonymi do ODO loginy powinny byc zanonimizowane
+# (u-2207), a nie imieniem i nazwiskiem - ogranicza to dane osobowe w logach.
+
+users:
+  marcin:
+    disabled: false
+    displayname: 'Marcin'
+    password: '$argon2id$v=19$m=32768,t=3,p=2$WKLEJ_TUTAJ_HASH'
+    email: 'marcin@twojadomena.pl'
+    groups:
+      - 'admins'
+
+  u-2207:
+    disabled: false
+    displayname: 'Redakcja'
+    password: '$argon2id$v=19$m=32768,t=3,p=2$WKLEJ_TUTAJ_HASH'
+    email: 'redakcja@twojadomena.pl'
+    groups:
+      - 'uzytkownicy'

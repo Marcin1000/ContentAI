@@ -100,8 +100,11 @@ async function main() {
       const { hash, sol } = zahaszuj(haslo);
       u.hash = hash;
       u.sol = sol;
+      // Sesje sa bezstanowe (podpisane ciasteczko), wiec sam zapis nowego hasla
+      // ich nie unieważnia. Znacznik sesjeOd odcina wszystkie wydane wczesniej.
+      u.sesjeOd = Date.now();
       zapiszUzytkownikow(lista);
-      console.log(`Zmieniono hasło konta "${login}". Aktywne sesje wygasną po restarcie serwera.`);
+      console.log(`Zmieniono hasło konta "${login}". Wszystkie jego sesje zostały unieważnione.`);
       return;
     }
 
@@ -116,8 +119,12 @@ async function main() {
         process.exit(1);
       }
       u.rola = arg;
+      // Rola i tak jest czytana z tego pliku przy kazdym zadaniu, wiec zmiana
+      // dziala natychmiast. Znacznik ustawiamy dla porzadku - degradacja admina
+      // ma odciac takze wszystko, co mogl sobie w miedzyczasie otworzyc.
+      u.sesjeOd = Date.now();
       zapiszUzytkownikow(lista);
-      console.log(`Konto "${login}" ma teraz rolę ${arg}.`);
+      console.log(`Konto "${login}" ma teraz rolę ${arg}. Jego sesje zostały unieważnione.`);
       return;
     }
 
@@ -130,8 +137,10 @@ async function main() {
         console.error('BŁĄD: to jedyne konto admina - nie można go usunąć.');
         process.exit(1);
       }
+      // Sesja jest w podpisanym ciasteczku, ale weryfikacja szuka konta w tym
+      // pliku - brak konta to koniec dostepu, od razu i bez restartu.
       zapiszUzytkownikow(lista.filter((x) => x.login !== login));
-      console.log(`Usunięto konto "${login}". Jego sesja wygaśnie po restarcie serwera.`);
+      console.log(`Usunięto konto "${login}". Dostęp odcięty natychmiast, bez restartu.`);
       return;
     }
 

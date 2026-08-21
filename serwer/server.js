@@ -46,6 +46,18 @@ const KONF = {
   cookieDomena: process.env.CAI_COOKIE_DOMENA || '',
   sesjaGodzin: Number(process.env.CAI_SESJA_GODZIN || 24 * 14),
 
+  // Logowanie przez zewnetrzna bramę (Authelia, Cloudflare Access, oauth2-proxy).
+  // Pusta wartosc = wlasny ekran logowania, czyli stan domyslny. Podanie nazwy
+  // naglowka przelacza serwer w tryb, w ktorym tozsamosc przychodzi z bramy -
+  // wtedy 2FA, passkeys i SSO robi ona, a my tylko czytamy, kto przyszedl.
+  // Szczegoly i uzasadnienie: serwer/README.md, sekcja "Logowanie przez bramę".
+  zaufanyNaglowek: (process.env.CAI_ZAUFANY_NAGLOWEK || '').toLowerCase(),
+  // Adresy, z ktorych wolno przyjac ten naglowek. Domyslnie tylko petla zwrotna,
+  // bo brama stoi na tej samej maszynie. Bez tego kazdy, kto dosiegnie portu
+  // bezposrednio, podszylby sie pod dowolne konto jednym naglowkiem.
+  zaufaneAdresy: (process.env.CAI_ZAUFANE_ADRESY || '127.0.0.1,::1,::ffff:127.0.0.1')
+    .split(',').map((a) => a.trim()).filter(Boolean),
+
   // OpenSEO: osobny kontener, przed ktorym stoimy. Wlacza sie podaniem portu
   // nasluchu; wtedy serwer otwiera drugi port, wpuszcza na niego wylacznie
   // zalogowanych i dokleja do stron palete Content AI. Szczegoly: openseo.js.
@@ -125,32 +137,181 @@ function hasloPasuje(haslo, uzytkownik) {
 }
 
 // ─── Sesje ────────────────────────────────────────────────────────────────────
-// W pamieci - restart serwera wylogowuje wszystkich. Swiadomy wybor: brak zaleznosci,
-// a ponowne zalogowanie kosztuje uzytkownika kilka sekund.
+// Sesja siedzi w podpisanym ciasteczku, nie w pamieci procesu. Dzieki temu
+// restart uslugi - a wiec kazda aktualizacja - nie wylogowuje calego zespolu.
+//
+// W ciasteczku jest jawny opis sesji (login, rola, wygasniecie, losowy
+// identyfikator) plus HMAC-SHA256 z sekretu serwera. Podmiana czegokolwiek
+// psuje podpis, wiec przegladarka nie moze sobie dopisac roli admina.
+// Tresc nie jest tajna - i nie musi byc, bo nie ma w niej nic, czego
+// uzytkownik by o sobie nie wiedzial.
+//
+// Cena za brak stanu: samo wygasniecie nie odbiera dostepu natychmiast.
+// Dlatego sa dwie drogi uniewaznienia, obie przezywajace restart:
+//   - wylogowanie dopisuje identyfikator sesji do serwer/dane/wylogowane.json,
+//   - zmiana hasla, roli albo usuniecie konta podnosi znacznik sesjeOd
+//     w pliku kont, co uniewaznia wszystkie starsze sesje tej osoby naraz.
 
-const sesje = new Map(); // token -> { login, rola, wygasa }
+const PLIK_SEKRETU = process.env.CAI_SEKRET_PLIK || path.join(KATALOG, 'dane', 'sekret');
+const PLIK_WYLOGOWANYCH = path.join(KATALOG, 'dane', 'wylogowane.json');
+
+/**
+ * Sekret do podpisywania. Z konfiguracji, a jesli jej nie ma - losowany raz
+ * i zapisywany obok kont. Bez zapisu kazdy restart generowalby nowy sekret
+ * i uniewazniał wszystkie sesje, czyli dokladnie to, co naprawiamy.
+ */
+function sekretSesji() {
+  if (process.env.CAI_SEKRET_SESJI) return process.env.CAI_SEKRET_SESJI;
+  try {
+    const zapisany = fs.readFileSync(PLIK_SEKRETU, 'utf8').trim();
+    if (zapisany) return zapisany;
+  } catch (e) {
+    if (e.code !== 'ENOENT') console.error('[sesje] odczyt sekretu:', e.message);
+  }
+  const nowy = crypto.randomBytes(32).toString('hex');
+  try {
+    fs.mkdirSync(path.dirname(PLIK_SEKRETU), { recursive: true });
+    fs.writeFileSync(PLIK_SEKRETU, nowy, { mode: 0o600 });
+    console.log(`Wygenerowano sekret sesji: ${PLIK_SEKRETU}`);
+  } catch (e) {
+    console.warn('[sesje] nie udalo sie zapisac sekretu - restart wylogowuje wszystkich:', e.message);
+  }
+  return nowy;
+}
+
+let SEKRET = null;
+
+function b64u(buf) {
+  return Buffer.from(buf).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function zB64u(tekst) {
+  return Buffer.from(String(tekst).replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+}
+
+function podpis(dane) {
+  return b64u(crypto.createHmac('sha256', SEKRET || (SEKRET = sekretSesji())).update(dane).digest());
+}
 
 function utworzSesje(uzytkownik) {
-  const token = crypto.randomBytes(32).toString('hex');
-  sesje.set(token, {
+  const opis = {
     login: uzytkownik.login,
     rola: uzytkownik.rola,
     wygasa: Date.now() + KONF.sesjaGodzin * 3600_000,
-  });
-  return token;
+    wydana: Date.now(),
+    id: crypto.randomBytes(9).toString('hex'),
+  };
+  const cialo = b64u(JSON.stringify(opis));
+  return `${cialo}.${podpis(cialo)}`;
+}
+
+/** Identyfikatory sesji wylogowanych recznie. Maly plik, czytany z dysku. */
+function wylogowane() {
+  try {
+    const dane = JSON.parse(fs.readFileSync(PLIK_WYLOGOWANYCH, 'utf8'));
+    return Array.isArray(dane) ? dane : [];
+  } catch (e) {
+    if (e.code !== 'ENOENT') console.error('[sesje] odczyt listy wylogowanych:', e.message);
+    return [];
+  }
+}
+
+function zapiszWylogowanie(id, wygasa) {
+  // Wpisy starsze niz ich wlasne wygasniecie sa juz bez znaczenia - podpisana
+  // sesja i tak nie przejdzie kontroli daty. Sprzatamy przy okazji zapisu,
+  // zeby plik nie rosl w nieskonczonosc.
+  const teraz = Date.now();
+  const lista = wylogowane().filter((w) => w.wygasa > teraz);
+  lista.push({ id, wygasa });
+  try {
+    fs.mkdirSync(path.dirname(PLIK_WYLOGOWANYCH), { recursive: true });
+    fs.writeFileSync(PLIK_WYLOGOWANYCH, JSON.stringify(lista), { mode: 0o600 });
+  } catch (e) {
+    console.error('[sesje] zapis wylogowania:', e.message);
+  }
+}
+
+/**
+ * Odczytuje i weryfikuje sesje z ciasteczka. Zwraca null przy czymkolwiek
+ * podejrzanym - zlym podpisie, wygasnieciu, wylogowaniu, uniewaznieniu konta.
+ */
+/**
+ * Tozsamosc z zewnetrznej bramy (Authelia i pokrewne).
+ *
+ * Brama uwierzytelnia uzytkownika - haslo, TOTP, klucz sprzetowy - i przekazuje
+ * dalej sam login w naglowku. My mu ufamy pod dwoma warunkami: naglowek jest
+ * skonfigurowany jawnie ORAZ zadanie przyszlo z zaufanego adresu.
+ *
+ * Drugi warunek jest tu istotny, a nie ozdobny. Bez niego kazdy, kto dosiegnie
+ * portu z pominieciem bramy, zostaje adminem przez dopisanie jednego naglowka.
+ * Dlatego domyslnie ufamy wylacznie petli zwrotnej: brama i serwer stoja na tej
+ * samej maszynie, a port nie jest wystawiony na zewnatrz.
+ *
+ * Konta zostaja u nas. Brama mowi KTO przyszedl, role nadal czytamy z pliku
+ * kont - inaczej trzeba by trzymac uprawnienia w dwoch miejscach naraz.
+ */
+function tozsamoscZBramy(req) {
+  if (!KONF.zaufanyNaglowek) return null;
+
+  const skad = req.socket?.remoteAddress || '';
+  if (!KONF.zaufaneAdresy.includes(skad)) {
+    console.warn(`[brama] naglowek tozsamosci z niezaufanego adresu ${skad} - odrzucony`);
+    return null;
+  }
+
+  const login = String(req.headers[KONF.zaufanyNaglowek] || '').trim();
+  if (!login) return null;
+
+  const uzytkownik = wczytajUzytkownikow().find((u) => u.login === login);
+  if (!uzytkownik) {
+    // Swiadomie nie zakladamy konta z marszu: rola musi byc czyjas decyzja,
+    // a nie skutkiem ubocznym pierwszego wejscia.
+    console.warn(`[brama] brama wpuscila "${login}", ale nie ma takiego konta`);
+    return null;
+  }
+  return { login: uzytkownik.login, rola: uzytkownik.rola, token: null, id: null, zBramy: true };
 }
 
 function sesjaZadania(req) {
-  const ciasteczka = parsujCiasteczka(req.headers.cookie || '');
-  const token = ciasteczka.cai_auth;
+  // Brama ma pierwszenstwo - gdy jest wlaczona, wlasne ciasteczko nie ma znaczenia.
+  const zBramy = tozsamoscZBramy(req);
+  if (zBramy) return zBramy;
+  if (KONF.zaufanyNaglowek) return null;
+
+  const token = parsujCiasteczka(req.headers.cookie || '').cai_auth;
   if (!token) return null;
-  const s = sesje.get(token);
-  if (!s) return null;
-  if (s.wygasa < Date.now()) {
-    sesje.delete(token);
+
+  const kropka = token.lastIndexOf('.');
+  if (kropka < 1) return null;
+  const cialo = token.slice(0, kropka);
+  const dany = token.slice(kropka + 1);
+
+  // Porownanie odporne na pomiar czasu; rozne dlugosci odrzucamy wczesniej,
+  // bo timingSafeEqual rzuca wyjatkiem przy niezgodnych buforach.
+  const oczekiwany = Buffer.from(podpis(cialo));
+  const otrzymany = Buffer.from(dany);
+  if (oczekiwany.length !== otrzymany.length) return null;
+  if (!crypto.timingSafeEqual(oczekiwany, otrzymany)) return null;
+
+  let opis;
+  try {
+    opis = JSON.parse(zB64u(cialo).toString('utf8'));
+  } catch (e) {
     return null;
   }
-  return { ...s, token };
+  if (!opis || !opis.login || !(opis.wygasa > Date.now())) return null;
+
+  // Konto moglo w miedzyczasie zniknac, zmienic role albo zostac uniewaznione
+  // zmiana hasla. Czytamy stan biezacy, nie ten sprzed wydania ciasteczka.
+  const uzytkownik = wczytajUzytkownikow().find((u) => u.login === opis.login);
+  if (!uzytkownik) return null;
+  if (uzytkownik.sesjeOd && opis.wydana < uzytkownik.sesjeOd) return null;
+
+  if (wylogowane().some((w) => w.id === opis.id)) return null;
+
+  // Rola bierze sie z pliku kont, nie z ciasteczka - degradacja admina
+  // dziala natychmiast, bez czekania na wygasniecie sesji.
+  return { login: uzytkownik.login, rola: uzytkownik.rola, token, id: opis.id, wygasa: opis.wygasa };
 }
 
 function parsujCiasteczka(naglowek) {
@@ -161,12 +322,6 @@ function parsujCiasteczka(naglowek) {
   }
   return out;
 }
-
-// Sprzatanie wygaslych sesji co godzine, zeby mapa nie rosla w nieskonczonosc
-setInterval(() => {
-  const teraz = Date.now();
-  for (const [token, s] of sesje) if (s.wygasa < teraz) sesje.delete(token);
-}, 3600_000).unref();
 
 // ─── Ograniczenie prob logowania ──────────────────────────────────────────────
 // Prosty licznik per adres IP. Serwer stoi publicznie, wiec bez tego haslo mozna
@@ -688,6 +843,19 @@ async function cialoJson(req) {
   }
 }
 
+/** Ekran wylogowania w trybie bramy - sesje trzyma ona, nie my. */
+function stronaWylogowaniaZBramy() {
+  return `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
+<title>Wylogowanie</title>
+<style>body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#07080D;color:#E9EDF6;
+display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}
+div{max-width:420px;padding:32px;background:#11131D;border:1px solid #242A3B;border-radius:14px}
+h1{font-size:18px;margin:0 0 12px;color:#FFB000}p{font-size:13px;color:#9DA6BC;line-height:1.6;margin:0}</style>
+</head><body><div><h1>Wyloguj się w bramie</h1>
+<p>Logowaniem zarządza brama uwierzytelniająca, więc sesję kończysz po jej stronie.
+Zamknięcie tej karty nie wystarczy.</p></div></body></html>`;
+}
+
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 async function obsluz(req, res) {
@@ -696,12 +864,23 @@ async function obsluz(req, res) {
 
   // Logowanie
   if (sciezka === '/auth/login' && req.method === 'POST') {
+    // W trybie bramy nasz wlasny ekran logowania jest wylaczony - hasla
+    // sprawdza brama, a przyjmowanie ich takze tutaj tworzyloby druga,
+    // slabsza droge wejscia, omijajaca drugi skladnik.
+    if (KONF.zaufanyNaglowek) return odpowiedzTekst(res, 404, 'Nie znaleziono');
     return obslugaLogowania(req, res);
   }
 
   if (sciezka === '/auth/logout') {
     const s = sesjaZadania(req);
-    if (s) sesje.delete(s.token);
+    // Wylogowanie zapisujemy na dysku, zeby przezylo restart - podpisane
+    // ciasteczko samo w sobie jest wazne az do wygasniecia.
+    // W trybie bramy nie mamy czego uniewazniac: sesje trzyma brama i to u niej
+    // trzeba sie wylogowac, wiec tylko tam odsylamy.
+    if (KONF.zaufanyNaglowek) {
+      return odpowiedzTekst(res, 200, stronaWylogowaniaZBramy(), 'text/html; charset=utf-8');
+    }
+    if (s) zapiszWylogowanie(s.id, s.wygasa);
     res.writeHead(302, {
       Location: '/',
       'Set-Cookie': `cai_auth=${atrybutyCiasteczka()}; Max-Age=0`,
@@ -744,7 +923,9 @@ async function obsluz(req, res) {
       seoProjekt: Boolean(KONF.seoProjekt),
       cookieDomena: Boolean(KONF.cookieDomena),
       uzytkownikow: wczytajUzytkownikow().length,
-      aktywnychSesji: sesje.size,
+      // Sesji nie da sie zliczyc - sa bezstanowe, po stronie przegladarek.
+      // Zamiast tego pokazujemy, ile jest recznych wylogowan w mocy.
+      wylogowanychSesji: wylogowane().length,
     });
   }
 
@@ -949,4 +1130,9 @@ function startOpenSeo() {
 
 if (require.main === module) start();
 
-module.exports = { zahaszuj, hasloPasuje, anthropicNaOpenai, openaiNaAnthropic, ROLE, PLIK_UZYTKOWNIKOW, wczytajUzytkownikow, zapiszUzytkownikow };
+module.exports = {
+  zahaszuj, hasloPasuje, anthropicNaOpenai, openaiNaAnthropic, ROLE,
+  PLIK_UZYTKOWNIKOW, wczytajUzytkownikow, zapiszUzytkownikow,
+  // Sesje - wystawione do testow; produkcyjnie wola je tylko router.
+  utworzSesje, sesjaZadania, zapiszWylogowanie, wylogowane, PLIK_WYLOGOWANYCH,
+};

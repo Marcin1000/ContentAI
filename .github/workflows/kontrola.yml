@@ -43,6 +43,27 @@ jobs:
         run: |
           for plik in serwer/*.js; do node --check "$plik"; done
           node serwer/testy.js
+          # Testy tworzą serwer/dane/ (sekret sesji, konta). Katalog jest
+          # w .gitignore — sprawdzamy, że nic z niego nie jest wersjonowane.
+          if [ -n "$(git ls-files serwer/dane/)" ]; then
+            echo "::error::pliki z serwer/dane/ trafiły do repozytorium"
+            git ls-files serwer/dane/
+            exit 1
+          fi
+
+      # ESLint nad JavaScriptem aplikacji. Aplikacja to jeden plik HTML, więc
+      # skrypty trzeba najpierw wyciąć — numeracja linii zostaje zachowana.
+      # Wąski zestaw reguł: nie styl, tylko klasy błędów, które w pliku z 460
+      # funkcjami w zasięgu globalnym milczą aż do awarii u użytkownika.
+      # Tak wyszedł na jaw klucz i18n zadeklarowany dwa razy z różnymi
+      # tłumaczeniami — poprawka była w źródle i nie działała.
+      - name: JavaScript aplikacji — ESLint
+        run: |
+          npm install --no-save --no-audit --no-fund eslint
+          for wariant in keys proxy owner; do
+            python3 narzedzia/wytnij_skrypty.py "app/web-$wariant.html" "/tmp/web-$wariant.js"
+          done
+          npx eslint /tmp/web-keys.js /tmp/web-proxy.js /tmp/web-owner.js
 
       # Placeholdery w aplikacji ("sk-ant-...", "sk-proj-...") są krótkie,
       # więc wymóg 40+ znaków po prefiksie ich nie łapie. Prawdziwe klucze łapie.

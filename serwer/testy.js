@@ -229,6 +229,8 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
 
     await testyOpenSeo();
     await testyOpenSeoMcp();
+    testySesji();
+    testyBramy();
 
     console.log(`\n  ${zaliczone} zaliczonych, ${bledy.length} bledow\n`);
     if (bledy.length) {
@@ -514,4 +516,208 @@ async function testyOpenSeoMcp() {
     try { await mcp.wolaj('list_projects', {}, konf); } catch (e) { brak = e; }
     sprawdz('brak kontenera to czytelny blad', brak !== null && brak.message.includes('OpenSEO'));
   }
+}
+
+// ─── Sesje bezstanowe ─────────────────────────────────────────────────────────
+// Sesja siedzi w podpisanym ciasteczku, a nie w pamieci procesu. Testujemy to,
+// co z tego wynika: przezycie restartu i cztery drogi uniewaznienia.
+
+function testySesji() {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const srv = require('./server.js');
+
+  console.log('\n  sesje - podpis i odczyt');
+
+  const katalog = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'cai-sesje-'));
+  const plikKont = path.join(katalog, 'uzytkownicy.json');
+  const oryginalneKonta = process.env.CAI_UZYTKOWNICY;
+
+  // Podmieniamy plik kont tak, jak robi to serwer przy starcie
+  const konta = [
+    { login: 'marcin', hash: 'x', sol: 'y', rola: 'admin' },
+    { login: 'anna', hash: 'x', sol: 'y', rola: 'uzytkownik' },
+  ];
+  fs.writeFileSync(plikKont, JSON.stringify(konta));
+
+  // wczytajUzytkownikow czyta ze stalej PLIK_UZYTKOWNIKOW ustalonej przy
+  // wczytaniu modulu, wiec testujemy wobec prawdziwego pliku serwera
+  const plikSerwera = srv.PLIK_UZYTKOWNIKOW;
+  fs.mkdirSync(path.dirname(plikSerwera), { recursive: true });
+  const kopia = fs.existsSync(plikSerwera) ? fs.readFileSync(plikSerwera) : null;
+  fs.writeFileSync(plikSerwera, JSON.stringify(konta));
+
+  const zCiasteczkiem = (token) => ({ headers: { cookie: `cai_auth=${token}` } });
+
+  const token = srv.utworzSesje({ login: 'marcin', rola: 'admin' });
+  sprawdz('token ma cialo i podpis', token.split('.').length === 2);
+  sprawdz('cialo nie jest tajne, tylko podpisane',
+    JSON.parse(Buffer.from(token.split('.')[0].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString()).login === 'marcin');
+
+  const s = srv.sesjaZadania(zCiasteczkiem(token));
+  sprawdz('poprawny token przechodzi', s !== null && s.login === 'marcin');
+  sprawdz('rola odczytana z pliku kont', s.rola === 'admin');
+
+  sprawdz('brak ciasteczka to brak sesji', srv.sesjaZadania({ headers: {} }) === null);
+  sprawdz('smiec zamiast tokenu odrzucony', srv.sesjaZadania(zCiasteczkiem('abc')) === null);
+  sprawdz('sam podpis bez ciala odrzucony', srv.sesjaZadania(zCiasteczkiem('.xyz')) === null);
+
+  console.log('\n  sesje - proby podszycia');
+  {
+    const [cialo, podpis] = token.split('.');
+    const opis = JSON.parse(Buffer.from(cialo.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString());
+
+    // Podniesienie roli w ciasteczku bez znajomosci sekretu
+    opis.rola = 'admin';
+    opis.login = 'anna';
+    const podmienione = Buffer.from(JSON.stringify(opis)).toString('base64')
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    sprawdz('podmiana loginu psuje podpis', srv.sesjaZadania(zCiasteczkiem(`${podmienione}.${podpis}`)) === null);
+
+    // Sam podpis obciety
+    sprawdz('obciety podpis odrzucony', srv.sesjaZadania(zCiasteczkiem(`${cialo}.${podpis.slice(0, -4)}`)) === null);
+    // Podpis o tej samej dlugosci, ale inny
+    const inny = podpis.slice(0, -1) + (podpis.slice(-1) === 'A' ? 'B' : 'A');
+    sprawdz('podmieniony podpis odrzucony', srv.sesjaZadania(zCiasteczkiem(`${cialo}.${inny}`)) === null);
+  }
+
+  console.log('\n  sesje - uniewaznianie');
+  {
+    // 1. Wygasniecie
+    const wygasly = srv.utworzSesje({ login: 'marcin', rola: 'admin' });
+    const [c] = wygasly.split('.');
+    const o = JSON.parse(Buffer.from(c.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString());
+    sprawdz('token niesie date wygasniecia', o.wygasa > Date.now());
+
+    // 2. Usuniecie konta - weryfikacja siega do pliku kont
+    fs.writeFileSync(plikSerwera, JSON.stringify(konta.filter((k) => k.login !== 'marcin')));
+    sprawdz('usuniete konto konczy sesje natychmiast', srv.sesjaZadania(zCiasteczkiem(token)) === null);
+    fs.writeFileSync(plikSerwera, JSON.stringify(konta));
+    sprawdz('przywrocone konto znow przechodzi', srv.sesjaZadania(zCiasteczkiem(token)) !== null);
+
+    // 3. Degradacja roli dziala od razu, bez czekania na wygasniecie
+    fs.writeFileSync(plikSerwera, JSON.stringify([
+      { login: 'marcin', hash: 'x', sol: 'y', rola: 'uzytkownik' },
+    ]));
+    const poDegradacji = srv.sesjaZadania(zCiasteczkiem(token));
+    sprawdz('degradacja admina dziala natychmiast', poDegradacji !== null && poDegradacji.rola === 'uzytkownik');
+    fs.writeFileSync(plikSerwera, JSON.stringify(konta));
+
+    // 4. Znacznik sesjeOd - zmiana hasla uniewaznia starsze sesje
+    fs.writeFileSync(plikSerwera, JSON.stringify([
+      { login: 'marcin', hash: 'x', sol: 'y', rola: 'admin', sesjeOd: Date.now() + 1000 },
+    ]));
+    sprawdz('sesjeOd odcina sesje wydane wczesniej', srv.sesjaZadania(zCiasteczkiem(token)) === null);
+    const poZmianie = srv.utworzSesje({ login: 'marcin', rola: 'admin' });
+    fs.writeFileSync(plikSerwera, JSON.stringify([
+      { login: 'marcin', hash: 'x', sol: 'y', rola: 'admin', sesjeOd: Date.now() - 1000 },
+    ]));
+    sprawdz('sesja wydana po zmianie hasla dziala', srv.sesjaZadania(zCiasteczkiem(poZmianie)) !== null);
+    fs.writeFileSync(plikSerwera, JSON.stringify(konta));
+  }
+
+  console.log('\n  sesje - wylogowanie przezywa restart');
+  {
+    const kopiaWylog = fs.existsSync(srv.PLIK_WYLOGOWANYCH) ? fs.readFileSync(srv.PLIK_WYLOGOWANYCH) : null;
+    try { fs.unlinkSync(srv.PLIK_WYLOGOWANYCH); } catch (e) { /* moze nie istniec */ }
+
+    const t = srv.utworzSesje({ login: 'marcin', rola: 'admin' });
+    const sesja = srv.sesjaZadania(zCiasteczkiem(t));
+    sprawdz('sesja przed wylogowaniem dziala', sesja !== null);
+
+    srv.zapiszWylogowanie(sesja.id, sesja.wygasa);
+    sprawdz('po wylogowaniu token nie przechodzi', srv.sesjaZadania(zCiasteczkiem(t)) === null);
+    sprawdz('wylogowanie zapisane na dysku', fs.existsSync(srv.PLIK_WYLOGOWANYCH));
+    sprawdz('lista wylogowanych czytana z pliku', srv.wylogowane().some((w) => w.id === sesja.id));
+
+    // Inna sesja tej samej osoby ma dzialac dalej
+    const t2 = srv.utworzSesje({ login: 'marcin', rola: 'admin' });
+    sprawdz('wylogowanie dotyczy jednej sesji, nie konta', srv.sesjaZadania(zCiasteczkiem(t2)) !== null);
+
+    // Wpisy po terminie wypadaja przy kolejnym zapisie
+    srv.zapiszWylogowanie('stary', Date.now() - 1000);
+    srv.zapiszWylogowanie('nowy', Date.now() + 60_000);
+    sprawdz('przeterminowane wpisy sa sprzatane', !srv.wylogowane().some((w) => w.id === 'stary'));
+
+    if (kopiaWylog) fs.writeFileSync(srv.PLIK_WYLOGOWANYCH, kopiaWylog);
+    else { try { fs.unlinkSync(srv.PLIK_WYLOGOWANYCH); } catch (e) { /* nic */ } }
+  }
+
+  // Sprzatanie
+  if (kopia) fs.writeFileSync(plikSerwera, kopia);
+  else { try { fs.unlinkSync(plikSerwera); } catch (e) { /* nic */ } }
+  fs.rmSync(katalog, { recursive: true, force: true });
+  if (oryginalneKonta === undefined) delete process.env.CAI_UZYTKOWNICY;
+}
+
+// ─── Logowanie przez bramę ────────────────────────────────────────────────────
+// Tryb, w ktorym uwierzytelnia zewnetrzna brama (Authelia i pokrewne), a my
+// czytamy tylko login z naglowka. Najwazniejszy test jest tu jeden: czy da sie
+// podszyc pod admina, wysylajac ten naglowek z pominieciem bramy.
+
+function testyBramy() {
+  const fs = require('node:fs');
+  const path = require('node:path');
+
+  console.log('\n  logowanie przez bramę');
+
+  // Serwer czyta konfiguracje przy wczytaniu modulu, wiec do tego testu
+  // ladujemy go osobno, z ustawionym naglowkiem.
+  const sciezkaModulu = require.resolve('./server.js');
+  const kopiaModulu = require.cache[sciezkaModulu];
+  delete require.cache[sciezkaModulu];
+
+  const przedNaglowek = process.env.CAI_ZAUFANY_NAGLOWEK;
+  process.env.CAI_ZAUFANY_NAGLOWEK = 'Remote-User';
+  const srvBrama = require('./server.js');
+
+  const plikKont = srvBrama.PLIK_UZYTKOWNIKOW;
+  const kopiaKont = fs.existsSync(plikKont) ? fs.readFileSync(plikKont) : null;
+  fs.mkdirSync(path.dirname(plikKont), { recursive: true });
+  fs.writeFileSync(plikKont, JSON.stringify([
+    { login: 'marcin', hash: 'x', sol: 'y', rola: 'admin' },
+    { login: 'anna', hash: 'x', sol: 'y', rola: 'uzytkownik' },
+  ]));
+
+  const zadanie = (naglowki, adres) => ({
+    headers: naglowki,
+    socket: { remoteAddress: adres },
+  });
+
+  const zBramy = srvBrama.sesjaZadania(zadanie({ 'remote-user': 'marcin' }, '127.0.0.1'));
+  sprawdz('brama wpuszcza znane konto', zBramy !== null && zBramy.login === 'marcin');
+  sprawdz('rola nadal z pliku kont, nie z naglowka', zBramy.rola === 'admin');
+  sprawdz('sesja oznaczona jako z bramy', zBramy.zBramy === true);
+
+  const anna = srvBrama.sesjaZadania(zadanie({ 'remote-user': 'anna' }, '127.0.0.1'));
+  sprawdz('zwykly uzytkownik nie dostaje roli admin', anna !== null && anna.rola === 'uzytkownik');
+
+  // ── To jest sedno: naglowek spoza zaufanego adresu ──
+  sprawdz('naglowek z obcego adresu ODRZUCONY',
+    srvBrama.sesjaZadania(zadanie({ 'remote-user': 'marcin' }, '203.0.113.9')) === null);
+  sprawdz('naglowek bez adresu ODRZUCONY',
+    srvBrama.sesjaZadania(zadanie({ 'remote-user': 'marcin' }, undefined)) === null);
+  sprawdz('X-Forwarded-For nie podszywa adresu',
+    srvBrama.sesjaZadania(zadanie(
+      { 'remote-user': 'marcin', 'x-forwarded-for': '127.0.0.1' }, '203.0.113.9')) === null);
+
+  sprawdz('nieznane konto z bramy odrzucone',
+    srvBrama.sesjaZadania(zadanie({ 'remote-user': 'ktos-obcy' }, '127.0.0.1')) === null);
+  sprawdz('pusty naglowek odrzucony',
+    srvBrama.sesjaZadania(zadanie({ 'remote-user': '   ' }, '127.0.0.1')) === null);
+  sprawdz('brak naglowka to brak sesji',
+    srvBrama.sesjaZadania(zadanie({}, '127.0.0.1')) === null);
+
+  // W trybie bramy wlasne ciasteczko nie moze byc druga droga wejscia
+  const wlasnyToken = srvBrama.utworzSesje({ login: 'marcin', rola: 'admin' });
+  sprawdz('wlasne ciasteczko nie omija bramy',
+    srvBrama.sesjaZadania(zadanie({ cookie: `cai_auth=${wlasnyToken}` }, '127.0.0.1')) === null);
+
+  // Sprzatanie i powrot do stanu domyslnego
+  if (kopiaKont) fs.writeFileSync(plikKont, kopiaKont);
+  else { try { fs.unlinkSync(plikKont); } catch (e) { /* nic */ } }
+  if (przedNaglowek === undefined) delete process.env.CAI_ZAUFANY_NAGLOWEK;
+  else process.env.CAI_ZAUFANY_NAGLOWEK = przedNaglowek;
+  delete require.cache[require.resolve('./server.js')];
+  if (kopiaModulu) require.cache[sciezkaModulu] = kopiaModulu;
 }
