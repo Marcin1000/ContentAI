@@ -15,8 +15,19 @@ EnvironmentFile=/etc/contentai/srodowisko
 Restart=always
 RestartSec=5
 
+# Wlasne konto systemowe, zalozone przy instalacji:
+#   sudo useradd --system --home-dir /srv/contentai --shell /usr/sbin/nologin contentai
+#   sudo chown -R contentai:contentai /srv/contentai/serwer/dane
+#
+# Swiadomie NIE uzywamy DynamicUser=yes. Systemd nadaje wtedy uslugze zmienny
+# UID i nie przejmuje na wlasnosc katalogu z ReadWritePaths - proces nie moglby
+# zapisac ani sekretu sesji, ani licznikow pakietow. Serwer to przezywa po cichu
+# (ostrzezenie w logu), wiec objawem byloby wylogowywanie po kazdym restarcie
+# i limity, ktore nic nie licza. Stale konto usuwa cala te klase problemow.
+User=contentai
+Group=contentai
+
 # Ograniczenia: usluga nie potrzebuje uprawnien roota ani dostepu do reszty systemu
-DynamicUser=yes
 NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
@@ -24,7 +35,7 @@ ProtectHome=yes
 ProtectKernelTunables=yes
 ProtectControlGroups=yes
 RestrictSUIDSGID=yes
-# Jedyny katalog do zapisu: konta uzytkownikow
+# Jedyny katalog do zapisu: konta, sekret sesji, baza wiedzy, liczniki pakietow
 ReadWritePaths=/srv/contentai/serwer/dane
 
 StandardOutput=journal
