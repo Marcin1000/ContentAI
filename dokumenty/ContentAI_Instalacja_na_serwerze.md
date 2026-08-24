@@ -132,6 +132,39 @@ cd /srv/contentai
 
 Powinieneś zobaczyć postęp pobierania i na końcu `Resolving deltas: 100%`.
 
+**Sprawdź, czy kod faktycznie jest na miejscu, zanim pójdziesz dalej:**
+
+```bash
+test -f /srv/contentai/serwer/uzytkownicy.js \
+  && echo "OK — kod pobrany" \
+  || echo "STOP — klonowanie się nie udało, nie wykonuj kolejnych kroków"
+```
+
+> ### ⚠️ Dlaczego to sprawdzenie tu jest
+>
+> Gdy klonowanie się nie uda — brak sieci, zapora, literówka w adresie — **kolejny krok
+> i tak utworzy katalog** (`mkdir -p` tworzy całą ścieżkę). Wygląda wtedy, jakby wszystko
+> szło zgodnie z planem, a błąd wyjdzie dopiero w kroku 6 jako
+> `Cannot find module '/srv/contentai/serwer/uzytkownicy.js'` — komunikat, który nie mówi
+> nic o prawdziwej przyczynie.
+>
+> **Gdy zobaczysz `STOP`**, ustal najpierw, co zawiodło:
+>
+> ```bash
+> git --version                            # czy git w ogóle jest
+> curl -sI https://github.com | head -1    # czy serwer widzi GitHuba
+> ```
+>
+> Potem posprzątaj i spróbuj ponownie. **Zajrzyj do katalogu przed skasowaniem** — usuwaj
+> tylko wtedy, gdy nie ma tam nic poza pustym `serwer/dane`:
+>
+> ```bash
+> ls -la /srv/contentai /srv/contentai/serwer 2>/dev/null
+> rm -rf /srv/contentai
+> git clone https://github.com/Marcin1000/ContentAI.git /srv/contentai
+> test -f /srv/contentai/serwer/uzytkownicy.js && echo "OK — kod pobrany"
+> ```
+
 > **Nie ma tu żadnego „instalowania zależności".** Serwer Content AI korzysta wyłącznie
 > z tego, co Node ma wbudowane — nie ma `npm install`, nie ma czego budować. Gotowa
 > aplikacja (`app/web-proxy.html`) leży już w pobranym kodzie.
@@ -519,6 +552,7 @@ journalctl -u contentai -n 50 --no-pager
 | W logu `[sesje] nie udalo sie zapisac sekretu` | Usługa nie może pisać w `serwer/dane` | `chown -R contentai:contentai /srv/contentai/serwer/dane` i restart |
 | Po restarcie usługi wyrzuca do logowania | To samo — to jest widoczny objaw powyższego | Jak wyżej |
 | Limity pakietów nic nie liczą | To samo | Jak wyżej |
+| `Cannot find module '/srv/contentai/serwer/uzytkownicy.js'` | Klonowanie się nie udało, a `mkdir -p` utworzyło katalog mimo to | Sprawdzenie i naprawa w [kroku 4](#4-pobranie-content-ai) |
 | W logu `nie znaleziono ... web-proxy.html` | Niepełny klon repozytorium | `cd /srv/contentai && git checkout app/` |
 | Strona nie otwiera się w ogóle | DNS jeszcze się nie rozszedł albo zapora | Sprawdź `ping contentai.twojadomena.pl`; sprawdź `ufw status` |
 | Ostrzeżenie o certyfikacie | Caddy jeszcze go nie pobrał | Poczekaj 3 minuty; `journalctl -u caddy -n 30 --no-pager` |
