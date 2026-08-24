@@ -66,6 +66,38 @@ Wszystko jako `root`. Objaśnienia każdego polecenia — w pełnej instrukcji.
 # Kod — Cosmos siedzi w /opt/cosmos, Content AI kładziemy obok, w /srv/contentai
 git clone https://github.com/Marcin1000/ContentAI.git /srv/contentai
 
+# SPRAWDŹ, czy kod się pobrał — zanim pójdziesz dalej
+test -f /srv/contentai/serwer/uzytkownicy.js \
+  && echo "OK — kod pobrany" \
+  || echo "STOP — klonowanie się nie udało, nie wykonuj kolejnych poleceń"
+```
+
+> ### ⚠️ Nie pomijaj tego sprawdzenia
+>
+> Gdy klonowanie się nie uda — brak sieci, zapora, literówka w adresie — kolejne
+> polecenie (`mkdir -p`) **i tak utworzy katalog** `serwer/dane`. Wygląda wtedy, jakby
+> wszystko szło zgodnie z planem, a błąd zobaczysz dopiero trzy kroki dalej jako
+> `Cannot find module '/srv/contentai/serwer/uzytkownicy.js'` — komunikat, który
+> nie mówi nic o prawdziwej przyczynie.
+>
+> **Gdy zobaczysz `STOP`** — najpierw ustal, dlaczego klonowanie padło:
+>
+> ```bash
+> git --version                       # czy git w ogóle jest
+> curl -sI https://github.com | head -1   # czy serwer widzi GitHuba
+> ```
+>
+> Potem wyczyść to, co zostało, i spróbuj ponownie. **Zajrzyj do katalogu przed
+> skasowaniem** — usuwaj tylko wtedy, gdy nie ma tam nic poza pustym `serwer/dane`:
+>
+> ```bash
+> ls -la /srv/contentai /srv/contentai/serwer 2>/dev/null
+> rm -rf /srv/contentai
+> git clone https://github.com/Marcin1000/ContentAI.git /srv/contentai
+> test -f /srv/contentai/serwer/uzytkownicy.js && echo "OK — kod pobrany"
+> ```
+
+```bash
 # Własne konto systemowe usługi i katalog na dane
 useradd --system --home-dir /srv/contentai --shell /usr/sbin/nologin contentai
 mkdir -p /srv/contentai/serwer/dane
