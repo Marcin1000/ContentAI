@@ -10,6 +10,10 @@ Czas: około godziny, z czego większość to czekanie.
 > Wiersze zaczynające się od `#` to komentarze — możesz je kopiować razem z resztą,
 > nic nie robią. Wszędzie, gdzie widzisz `twojadomena.pl`, wpisujesz swoją domenę.
 
+> **Masz już na tym serwerze Cosmosa?** Połowa kroków jest wtedy zbędna, a dochodzi
+> kilka pułapek specyficznych dla dwóch aplikacji na jednej maszynie. Krótsza wersja
+> dla tego przypadku: **`dokumenty/ContentAI_obok_Cosmosa.md`**.
+
 ---
 
 ## Spis treści
