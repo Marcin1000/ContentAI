@@ -609,6 +609,7 @@ tar czf ~/contentai-kopia-$(date +%F).tar.gz /srv/contentai/serwer/dane /etc/con
 
 ---
 
-**Dokumenty pokrewne:** `dokumenty/ContentAI_AdminGuide.md` (codzienna obsługa),
+**Dokumenty pokrewne:** `dokumenty/ContentAI_Domena_Cloudflare.md` (domena za Cloudflare,
+strona produktowa obok aplikacji), `dokumenty/ContentAI_AdminGuide.md` (codzienna obsługa),
 `serwer/README.md` (pełny opis serwera i wszystkich ustawień), `openseo/README.md`,
 `brama/README.md`.

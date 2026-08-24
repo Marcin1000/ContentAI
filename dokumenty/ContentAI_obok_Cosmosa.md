@@ -127,14 +127,27 @@ Najprostszy przypadek. **Nie nadpisuj pliku Caddy — dopisz do niego.**
 nano /etc/caddy/Caddyfile
 ```
 
-Plik ma już wpis Cosmosa. Dopisz **pod nim** drugi blok, nie ruszając pierwszego:
+Plik ma już wpis Cosmosa. Dopisz **pod nim** kolejne bloki, nie ruszając pierwszego.
+
+Content AI to **dwa adresy**, nie jeden: strona produktowa (zwykłe pliki, żadnej aplikacji)
+i sama aplikacja za logowaniem. Na własnej domenie wygląda to tak:
 
 ```
+# ── Cosmos: to, co już masz ──────────────────────────────────────────────────
 cosmos.twojadomena.pl {
     reverse_proxy 127.0.0.1:3000
 }
 
-contentai.twojadomena.pl {
+# ── Content AI: strona produktowa ────────────────────────────────────────────
+# Same pliki z katalogu showcase - nie zajmuje żadnego portu.
+content-ai.net, www.content-ai.net {
+    encode zstd gzip
+    root * /srv/contentai/showcase
+    file_server
+}
+
+# ── Content AI: aplikacja ────────────────────────────────────────────────────
+app.content-ai.net {
     encode zstd gzip
     reverse_proxy 127.0.0.1:3100
 }
@@ -144,8 +157,14 @@ contentai.twojadomena.pl {
 systemctl reload caddy
 ```
 
-W panelu domeny dodaj rekord `A` dla `contentai` na to samo IP. Certyfikat Caddy pobierze sam
-przy pierwszym wejściu.
+Rekordy DNS, tryb SSL i ustawienia po stronie Cloudflare — w tym dwie pułapki, z których
+każda kończy się błędem nic nie tłumaczącym — opisuje osobno
+**`dokumenty/ContentAI_Domena_Cloudflare.md`**.
+
+> **Jeśli Cosmos też stoi za Cloudflare**, dotyczy go ta sama uwaga o zrywaniu połączenia
+> po 100 sekundach — ale w mniejszym stopniu. Cosmos strumieniuje odpowiedź (SSE), więc
+> pierwsze bajty lecą od razu i limit się nie wyczerpuje. Content AI czeka na cały gotowy
+> artykuł, dlatego jego poddomena **musi** mieć w Cloudflare szarą chmurkę.
 
 > ### ⚠️ Największa pułapka tej konfiguracji
 >
@@ -175,10 +194,16 @@ apt update && apt install -y caddy
 nano /etc/caddy/Caddyfile
 ```
 
-Zawartość:
+Zawartość — strona produktowa i aplikacja, Cosmosa nie ruszamy:
 
 ```
-contentai.twojadomena.pl {
+content-ai.net, www.content-ai.net {
+    encode zstd gzip
+    root * /srv/contentai/showcase
+    file_server
+}
+
+app.content-ai.net {
     encode zstd gzip
     reverse_proxy 127.0.0.1:3100
 }
@@ -287,14 +312,15 @@ Po instalacji sprawdź **obie** aplikacje — nie tylko nową.
 | # | Co | Ma się stać |
 |---|---|---|
 | 1 | Otwórz adres Cosmosa | Ekran logowania Cosmosa, wchodzisz jak zawsze |
-| 2 | Otwórz adres Content AI | Ekran logowania Content AI |
-| 3 | Zaloguj się do Content AI | Wchodzisz; w prawym górnym rogu odznaka pakietu |
-| 4 | Wygeneruj artykuł | Tekst się pojawia (sprawdza klucz Anthropic) |
-| 5 | `systemctl restart contentai`, odśwież Content AI | **Nadal zalogowany** |
-| 6 | Odśwież Cosmosa | **Nadal zalogowany** — restart Content AI go nie dotknął |
-| 7 | `systemctl status cosmos contentai` | Obie `active (running)` |
+| 2 | Otwórz `content-ai.net` | Strona produktowa, bez pytania o hasło |
+| 3 | Kliknij na niej **Zaloguj się** | Przechodzisz na `app.content-ai.net`, ekran logowania Content AI |
+| 4 | Zaloguj się | Wchodzisz; przy pierwszym wejściu wita Cię kreator konfiguracji |
+| 5 | Wygeneruj artykuł | Tekst się pojawia (sprawdza klucz Anthropic) |
+| 6 | `systemctl restart contentai`, odśwież Content AI | **Nadal zalogowany** |
+| 7 | Odśwież Cosmosa | **Nadal zalogowany** — restart Content AI go nie dotknął |
+| 8 | `systemctl status cosmos contentai` | Obie `active (running)` |
 
-Punkt 5 sprawdza, czy katalog `serwer/dane` należy do właściwego użytkownika. Jeśli
+Punkt 6 sprawdza, czy katalog `serwer/dane` należy do właściwego użytkownika. Jeśli
 wyrzuca do logowania:
 
 ```bash
@@ -389,10 +415,12 @@ sudo -u contentai node serwer/uzytkownicy.js plan anna standard
 | Port | 3000 | 3100 |
 | Użytkownik systemowy | `root` | `contentai` |
 
-Adresy obu aplikacji: `/etc/caddy/Caddyfile` (jeden plik, dwa bloki).
+Adresy wszystkich trzech rzeczy — Cosmos, strona produktowa, aplikacja — leżą
+w jednym pliku `/etc/caddy/Caddyfile`, każda jako osobny blok.
 
 ---
 
-**Dokumenty pokrewne:** `dokumenty/ContentAI_Instalacja_na_serwerze.md` (pełna instrukcja
+**Dokumenty pokrewne:** `dokumenty/ContentAI_Domena_Cloudflare.md` (domena za Cloudflare),
+`dokumenty/ContentAI_Instalacja_na_serwerze.md` (pełna instrukcja
 od zera, z tabelą problemów), `dokumenty/ContentAI_AdminGuide.md` (codzienna obsługa),
 `brama/README.md` (2FA i jedno logowanie), `openseo/README.md` (OpenSEO obok).

@@ -1432,6 +1432,10 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
           <span>📈</span>
           <div><div style="font-weight:600;font-size:13px" data-i18n="openseo-menu-title">OpenSEO</div><div style="font-size:11px;color:var(--text3)" data-i18n="openseo-menu-sub">pozycje, backlinki, audyty</div></div>
         </div>
+        <div class="settings-item" onclick="otworzStart();closeSettingsMenu()">
+          <span>🧭</span>
+          <div><div style="font-weight:600;font-size:13px" data-i18n="start-menu-title">Konfiguracja konta</div><div style="font-size:11px;color:var(--text3)" data-i18n="start-menu-sub">klucze API i pierwsze kroki</div></div>
+        </div>
         <div style="height:1px;background:var(--border);margin:4px 0"></div>
         <div class="settings-item" onclick="openWpModal();closeSettingsMenu()">
           <span id="cms-menu-icon">🌐</span>
@@ -3013,6 +3017,25 @@ var I18N = {
     'pakiet-funkcja-title':'Ta funkcja nie wchodzi w Twój pakiet',
     'pakiet-wywolania':'Wywołania modelu',
     'pakiet-wywolania-opis':'Jeden artykuł to kilka wywołań: brief, treść, korekta, przeróbki.',
+    'start-menu-title':'Konfiguracja konta','start-menu-sub':'klucze API i pierwsze kroki',
+    'start-dalej':'Dalej','start-wstecz':'Wstecz','start-pomin':'Pomiń kreator',
+    'start-zaczynamy':'Zaczynamy','start-sztuk':'szt.','start-twoj-pakiet':'Twój pakiet',
+    'start-1-tytul':'Witaj w Content AI',
+    'start-1-opis':'Zanim napiszesz pierwszy artykuł, przejdźmy przez trzy krótkie ekrany. Zajmie to minutę, a wszystko można zmienić później w ustawieniach.',
+    'start-2-tytul':'Klucze API — tylko jeśli chcesz',
+    'start-2-opis':'Domyślnie korzystasz z kluczy serwera i nie musisz tu nic wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej — wtedy generowanie idzie na Twój rachunek, a nie na nasz.',
+    'start-2-opis-pakiet':'W Twoim pakiecie generowanie idzie z kluczy serwera — nie musisz nic wpisywać. Jeśli mimo to masz własne klucze, możesz ich użyć: koszt przejdzie wtedy na Twoje konto u dostawcy.',
+    'start-2-gdzie':'Klucze zapisują się wyłącznie w tej przeglądarce i nigdy nie trafiają na nasz serwer do zapisu — lecą tylko jako nagłówek pojedynczego żądania, prosto do dostawcy. Na innym urządzeniu trzeba je wpisać ponownie.',
+    'start-2-anthropic':'Anthropic — treść','start-2-openai':'OpenAI — grafiki, lektor, transkrypcja',
+    'start-2-eleven':'ElevenLabs — lepszy lektor (opcjonalnie)',
+    'start-2-zly':'To nie wygląda na klucz API. Anthropic zaczyna się od „sk-ant-”, OpenAI od „sk-”. Zostaw pole puste, jeśli nie masz własnego klucza.',
+    'start-3-tytul':'Twoja marka',
+    'start-3-opis':'Brand Voice to opis tego, jak ma brzmieć Twoja treść: ton, słownictwo, czego unikać. Bez niego artykuły będą poprawne, ale bezosobowe. Możesz to ustawić teraz albo wrócić do tego później.',
+    'start-3-otworz':'Otwórz ustawienia Brand Voice',
+    'start-3-potem':'Kreator zostaje otwarty — po zapisaniu Brand Voice wróć tutaj i kliknij „Dalej”.',
+    'start-4-tytul':'Wszystko gotowe',
+    'start-4-opis':'Wpisz temat, dodaj słowa kluczowe i kliknij generowanie. Licznik pakietu masz zawsze w prawym górnym rogu — kliknięcie pokazuje, ile Ci zostało.',
+    'start-4-lista':'Gdzie szukać reszty: ikona ⚙️ w pasku górnym to baza wiedzy, integracja z CMS, Brand Voice i widoczność w AI. Nic z tego nie jest potrzebne do pierwszego artykułu.',
     'history-select':'Wybierz artykuł z listy',
     // ── Tooltips ──
     'title-brief-tooltip':'Wygeneruj brief przed artykułem',
@@ -3444,6 +3467,25 @@ var I18N = {
     'pakiet-funkcja-title':'This feature is not part of your plan',
     'pakiet-wywolania':'Model calls',
     'pakiet-wywolania-opis':'One article takes several calls: brief, content, review, rewrites.',
+    'start-menu-title':'Account setup','start-menu-sub':'API keys and first steps',
+    'start-dalej':'Next','start-wstecz':'Back','start-pomin':'Skip setup',
+    'start-zaczynamy':'Let\'s start','start-sztuk':'pcs','start-twoj-pakiet':'Your plan',
+    'start-1-tytul':'Welcome to Content AI',
+    'start-1-opis':'Before you write your first article, let\'s go through three short screens. It takes a minute, and everything can be changed later in settings.',
+    'start-2-tytul':'API keys — only if you want to',
+    'start-2-opis':'By default you use the server\'s keys and there is nothing to fill in here. If you have your own accounts with the providers, enter the keys below — generating then goes on your bill, not ours.',
+    'start-2-opis-pakiet':'On your plan, generating runs on the server\'s keys — there is nothing to fill in. If you do have your own keys, you can still use them: the cost then moves to your provider account.',
+    'start-2-gdzie':'Keys are stored only in this browser and are never saved on our server — they travel as a header on a single request, straight to the provider. On another device you will need to enter them again.',
+    'start-2-anthropic':'Anthropic — content','start-2-openai':'OpenAI — images, voice-over, transcription',
+    'start-2-eleven':'ElevenLabs — better voice-over (optional)',
+    'start-2-zly':'That does not look like an API key. Anthropic keys start with "sk-ant-", OpenAI with "sk-". Leave the field empty if you do not have your own key.',
+    'start-3-tytul':'Your brand',
+    'start-3-opis':'Brand Voice describes how your content should sound: tone, vocabulary, what to avoid. Without it articles will be correct but impersonal. You can set it now or come back to it later.',
+    'start-3-otworz':'Open Brand Voice settings',
+    'start-3-potem':'The setup stays open — once Brand Voice is saved, come back here and click "Next".',
+    'start-4-tytul':'All set',
+    'start-4-opis':'Enter a topic, add keywords and hit generate. Your plan counter is always in the top right corner — click it to see what is left.',
+    'start-4-lista':'Where to find the rest: the ⚙️ icon in the top bar holds the knowledge base, CMS integration, Brand Voice and AI visibility. None of it is needed for a first article.',
     'history-select':'Select an article from the list',
     // ── Tooltips ──
     'title-brief-tooltip':'Generate brief before article',
@@ -3667,7 +3709,11 @@ window.OPENAI_IMG_ENDPOINT_OVERRIDE = 'https://twoj-worker.workers.dev/api/image
 window.OPENAI_TTS_ENDPOINT_OVERRIDE = 'https://twoj-worker.workers.dev/api/tts';
 window.OPENAI_STT_ENDPOINT_OVERRIDE = 'https://twoj-worker.workers.dev/api/transcribe';
 window.ELEVEN_TTS_ENDPOINT_OVERRIDE = 'https://twoj-worker.workers.dev/api/eleven-tts';
-const API_KEY = ''; // wersja proxy - klucz po stronie workera
+// Wersja proxy: domyslnie klucz jest po stronie serwera i tutaj zostaje pusty.
+// Uzytkownik z pakietem, ktory na to pozwala, moze podstawic wlasny - wtedy
+// leci naglowkiem i serwer uzywa jego zamiast swojego. Pusta wartosc serwer
+// ignoruje, wiec brak klucza uzytkownika nie zmienia niczego.
+let API_KEY = localStorage.getItem('cai_klucz_anthropic') || '';
 // ─── API ENDPOINT ────────────────────────────────────────────────────────────
 // DIRECT:  'https://api.anthropic.com/v1/messages'  (domyślne, klucz w pliku)
 // PROXY:   ustaw window.API_ENDPOINT_OVERRIDE przed załadowaniem skryptu
@@ -3675,8 +3721,9 @@ const API_ENDPOINT = window.API_ENDPOINT_OVERRIDE || 'https://api.anthropic.com/
 
 // ─── OPENAI (grafiki) ─────────────────────────────────────────────────────────
 // PROXY: jesli window.OPENAI_IMG_ENDPOINT_OVERRIDE jest ustawiony, klucz nie jest potrzebny
-const OPENAI_API_KEY = ''; // wersja proxy - klucz po stronie workera
-const ELEVEN_API_KEY = ''; // wersja proxy - klucz po stronie workera
+// Jak wyzej: puste = klucz serwera, wpisany przez uzytkownika = jego wlasny.
+let OPENAI_API_KEY = localStorage.getItem('cai_klucz_openai') || '';
+let ELEVEN_API_KEY = localStorage.getItem('cai_klucz_eleven') || '';
 const OPENAI_IMG_ENDPOINT = window.OPENAI_IMG_ENDPOINT_OVERRIDE || 'https://api.openai.com/v1/images/generations';
 
 // ─── AZURE AI FOUNDRY (opcjonalna integracja firmowa) ────────────────────────
@@ -11058,13 +11105,50 @@ async function kbAudioTranscribeAndOpen(file) {
     try { return new URL(url, location.href).pathname; } catch(e){ return String(url).split('?')[0]; }
   }
 
+  // Klucze OpenAI i ElevenLabs uzytkownika. Anthropic dokleja sie sam, bo
+  // wszystkie dwadziescia kilka wywolan modelu i tak wysyla naglowek
+  // 'x-api-key': API_KEY - wystarczylo, ze API_KEY czyta z localStorage.
+  // Grafiki i audio w trybie proxy celowo nie wysylaja zadnej autoryzacji,
+  // wiec ich naglowki dokladamy tutaj, w jednym miejscu.
+  var KLUCZ_NAGLOWKA = {
+    '/api/images': ['x-openai-key', function(){ return OPENAI_API_KEY; }],
+    '/api/tts': ['x-openai-key', function(){ return OPENAI_API_KEY; }],
+    '/api/transcribe': ['x-openai-key', function(){ return OPENAI_API_KEY; }],
+    '/api/eleven-tts': ['x-eleven-key', function(){ return ELEVEN_API_KEY; }],
+  };
+
+  /** Dokleja klucz uzytkownika, nie ruszajac obiektu podanego przez wolajacego. */
+  function zKluczem(sciezka, opcje){
+    var wpis = KLUCZ_NAGLOWKA[sciezka];
+    if (!wpis) return opcje;
+    var klucz = wpis[1]();
+    if (!klucz) return opcje;                 // brak wlasnego = leci klucz serwera
+    var nowe = Object.assign({}, opcje || {});
+    // Headers albo zwykly obiekt - w tej aplikacji zawsze to drugie, ale
+    // kopiowanie przez wpisy dziala w obu przypadkach.
+    var naglowki = {};
+    var stare = nowe.headers;
+    if (stare && typeof stare.forEach === 'function' && !Array.isArray(stare)) {
+      stare.forEach(function(w, n){ naglowki[n] = w; });
+    } else if (stare) {
+      naglowki = Object.assign({}, stare);
+    }
+    naglowki[wpis[0]] = klucz;
+    nowe.headers = naglowki;
+    return nowe;
+  }
+
   // Jeden punkt przechwytu zamiast poprawki w kazdej z ponad dwudziestu funkcji
   // wolajacych model: przez fetch przechodzi kazde platne zapytanie, wiec i
   // odswiezenie licznika, i ekran wyczerpanego pakietu maja tu jedno miejsce.
-  window.fetch = function(zasob){
-    var wynik = oryginalnyFetch.apply(null, arguments);
-    if (!PLATNE[sciezkaZadania(zasob)]) return wynik;
-    return wynik.then(function(odp){
+  window.fetch = function(zasob, opcje){
+    var sciezka = sciezkaZadania(zasob);
+    if (!PLATNE[sciezka]) return oryginalnyFetch.apply(null, arguments);
+    // Klucz doklejamy tylko do wywolan z adresem tekstowym. Przy obiekcie
+    // Request drugi argument zastapilby JEGO naglowki, gubiac Content-Type -
+    // aplikacja tak nie wola, ale lepiej, zeby nie dalo sie tego zepsuc.
+    var gotowe = (typeof zasob === 'string') ? zKluczem(sciezka, opcje) : opcje;
+    return oryginalnyFetch(zasob, gotowe).then(function(odp){
       if (odp.status === 402){
         odp.clone().json()
           .then(function(d){ window.pokazLimitPakietu(d); })
@@ -11077,6 +11161,196 @@ async function kbAudioTranscribeAndOpen(file) {
   };
 
   document.addEventListener('DOMContentLoaded', odswiez);
+})();
+</script>
+
+<!-- KREATOR PIERWSZEGO URUCHOMIENIA (wariant proxy - tylko tam sa konta) -->
+<div id="start-modal" style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);max-width:560px;width:100%;max-height:92vh;overflow:auto;padding:24px">
+    <div id="start-kropki" style="display:flex;gap:6px;margin-bottom:18px"></div>
+    <div id="start-tresc"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:22px">
+      <button id="start-pomin" onclick="startPomin()" style="padding:9px 14px;border:none;background:none;color:var(--text3);font-size:12px;cursor:pointer;text-decoration:underline" data-i18n="start-pomin">Pomiń kreator</button>
+      <div style="display:flex;gap:8px">
+        <button id="start-wstecz" onclick="startWstecz()" style="padding:10px 16px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer" data-i18n="start-wstecz">Wstecz</button>
+        <button id="start-dalej" onclick="startDalej()" style="padding:10px 18px;border:none;border-radius:var(--radius);background:var(--accent,#d97706);color:#fff;font-weight:600;font-size:13px;cursor:pointer" data-i18n="start-dalej">Dalej</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  // Stan kreatora trzymamy tam, gdzie trzymamy klucze - w tej przegladarce.
+  // To nie jest niedoróbka, tylko konsekwencja: klucze uzytkownika nie ida na
+  // serwer, wiec na nowym urzadzeniu i tak trzeba je wpisac jeszcze raz.
+  // Kreator ma sie wtedy pokazac ponownie, bo naprawde jest co skonfigurowac.
+  var PAMIEC = 'cai_start_ukonczony';
+  var krok = 0;
+  var kroki = ['powitanie', 'klucze', 'marka', 'koniec'];
+
+  function el(id){ return document.getElementById(id); }
+  function tekst(klucz, zapas){ try { return _t(klucz) || zapas; } catch(e){ return zapas; } }
+  function bezpieczny(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(z){
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[z];
+    });
+  }
+  function zapiszKlucz(nazwa, wartosc){
+    try {
+      if (wartosc) localStorage.setItem(nazwa, wartosc);
+      else localStorage.removeItem(nazwa);
+    } catch(e){ /* prywatne okno albo zablokowane dane witryny */ }
+  }
+
+  function polePola(id, etykieta, podpowiedz, wartosc){
+    return '<label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin:0 0 4px">'
+      + etykieta + '</label>'
+      + '<input id="' + id + '" type="password" autocomplete="off" spellcheck="false" placeholder="' + bezpieczny(podpowiedz) + '"'
+      + ' value="' + bezpieczny(wartosc || '') + '"'
+      + ' style="width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:14px">';
+  }
+
+  function naglowek(tytul, opis){
+    return '<div style="font-weight:700;font-size:18px;color:var(--text);margin-bottom:6px">' + tytul + '</div>'
+      + '<div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px">' + opis + '</div>';
+  }
+
+  function rysujKropki(){
+    el('start-kropki').innerHTML = kroki.map(function(_, i){
+      var aktywna = i <= krok;
+      return '<div style="height:3px;flex:1;border-radius:2px;background:'
+        + (aktywna ? 'var(--accent,#d97706)' : 'var(--border)') + '"></div>';
+    }).join('');
+  }
+
+  function rysuj(){
+    rysujKropki();
+    var cel = el('start-tresc');
+    var s = window.pakietStanStart || null;
+
+    if (kroki[krok] === 'powitanie'){
+      var nazwaPlanu = s ? (currentLang === 'en' && s.nazwaEn ? s.nazwaEn : s.nazwa) : '';
+      var art = s && s.uzycie && s.uzycie.artykul;
+      var ile = !art ? '' : (art.limit === null
+        ? tekst('pakiet-bez-limitu','bez limitu')
+        : art.limit + ' ' + tekst('start-sztuk','szt.'));
+      cel.innerHTML = naglowek(
+          tekst('start-1-tytul','Witaj w Content AI'),
+          tekst('start-1-opis','Zanim napiszesz pierwszy artykuł, przejdźmy przez trzy krótkie ekrany. Zajmie to minutę, a wszystko można zmienić później w ustawieniach.'))
+        + (s
+            ? '<div style="border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;background:var(--surface2)">'
+              + '<div style="font-size:12px;color:var(--text3);margin-bottom:4px">' + tekst('start-twoj-pakiet','Twój pakiet') + '</div>'
+              + '<div style="font-size:15px;font-weight:700;color:var(--text)">' + bezpieczny(nazwaPlanu) + '</div>'
+              + (ile ? '<div style="font-size:12px;color:var(--text2);margin-top:6px">'
+                  + tekst('pakiet-artykul','Artykuły') + ': ' + bezpieczny(ile) + '</div>' : '')
+              + '</div>'
+            : '');
+    }
+
+    else if (kroki[krok] === 'klucze'){
+      var wolno = !s || !s.funkcje || s.funkcje.wlasnyKlucz;
+      cel.innerHTML = naglowek(
+          tekst('start-2-tytul','Klucze API — tylko jeśli chcesz'),
+          wolno
+            ? tekst('start-2-opis','Domyślnie korzystasz z kluczy serwera i nie musisz tu nic wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej — wtedy generowanie idzie na Twój rachunek, a nie na nasz.')
+            : tekst('start-2-opis-pakiet','W Twoim pakiecie generowanie idzie z kluczy serwera — nie musisz nic wpisywać. Jeśli mimo to masz własne klucze, możesz ich użyć: koszt przejdzie wtedy na Twoje konto u dostawcy.'))
+        + '<div style="font-size:12px;color:var(--text2);background:var(--surface2);border-left:3px solid var(--accent,#d97706);padding:10px 12px;border-radius:0 var(--radius) var(--radius) 0;margin-bottom:18px;line-height:1.55">'
+          + tekst('start-2-gdzie','Klucze zapisują się wyłącznie w tej przeglądarce i nigdy nie trafiają na nasz serwer do zapisu — lecą tylko jako nagłówek pojedynczego żądania, prosto do dostawcy. Na innym urządzeniu trzeba je wpisać ponownie.')
+          + '</div>'
+        + polePola('start-k-anthropic', tekst('start-2-anthropic','Anthropic — treść'), 'sk-ant-...', localStorage.getItem('cai_klucz_anthropic'))
+        + polePola('start-k-openai', tekst('start-2-openai','OpenAI — grafiki, lektor, transkrypcja'), 'sk-proj-...', localStorage.getItem('cai_klucz_openai'))
+        + polePola('start-k-eleven', tekst('start-2-eleven','ElevenLabs — lepszy lektor (opcjonalnie)'), '...', localStorage.getItem('cai_klucz_eleven'))
+        + '<div id="start-k-blad" style="display:none;font-size:12px;color:#e06c6c;margin-top:-6px"></div>';
+    }
+
+    else if (kroki[krok] === 'marka'){
+      cel.innerHTML = naglowek(
+          tekst('start-3-tytul','Twoja marka'),
+          tekst('start-3-opis','Brand Voice to opis tego, jak ma brzmieć Twoja treść: ton, słownictwo, czego unikać. Bez niego artykuły będą poprawne, ale bezosobowe. Możesz to ustawić teraz albo wrócić do tego później.'))
+        + '<button onclick="openBvModal()" style="width:100%;padding:12px;border:1px solid var(--accent,#d97706);border-radius:var(--radius);background:none;color:var(--accent,#d97706);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px">'
+          + tekst('start-3-otworz','Otwórz ustawienia Brand Voice') + '</button>'
+        + '<div style="font-size:12px;color:var(--text3);line-height:1.55">'
+          + tekst('start-3-potem','Kreator zostaje otwarty — po zapisaniu Brand Voice wróć tutaj i kliknij „Dalej”.') + '</div>';
+    }
+
+    else {
+      cel.innerHTML = naglowek(
+          tekst('start-4-tytul','Wszystko gotowe'),
+          tekst('start-4-opis','Wpisz temat, dodaj słowa kluczowe i kliknij generowanie. Licznik pakietu masz zawsze w prawym górnym rogu — kliknięcie pokazuje, ile Ci zostało.'))
+        + '<div style="font-size:12px;color:var(--text2);line-height:1.7">'
+          + tekst('start-4-lista','Gdzie szukać reszty: ikona ⚙️ w pasku górnym to baza wiedzy, integracja z CMS, Brand Voice i widoczność w AI. Nic z tego nie jest potrzebne do pierwszego artykułu.')
+          + '</div>';
+    }
+
+    el('start-wstecz').style.visibility = krok === 0 ? 'hidden' : 'visible';
+    el('start-dalej').textContent = (krok === kroki.length - 1)
+      ? tekst('start-zaczynamy','Zaczynamy') : tekst('start-dalej','Dalej');
+    el('start-pomin').style.display = (krok === kroki.length - 1) ? 'none' : '';
+  }
+
+  /** Format, nie prawdziwość - sprawdzenie klucza u dostawcy kosztowałoby wywołanie. */
+  function zlyFormat(wartosc, prefiks){
+    return Boolean(wartosc) && prefiks && wartosc.indexOf(prefiks) !== 0;
+  }
+
+  function zapiszKrokKluczy(){
+    var a = (el('start-k-anthropic').value || '').trim();
+    var o = (el('start-k-openai').value || '').trim();
+    var e = (el('start-k-eleven').value || '').trim();
+    if (zlyFormat(a, 'sk-ant-') || zlyFormat(o, 'sk-')){
+      var blad = el('start-k-blad');
+      blad.textContent = tekst('start-2-zly','To nie wygląda na klucz API. Anthropic zaczyna się od „sk-ant-”, OpenAI od „sk-”. Zostaw pole puste, jeśli nie masz własnego klucza.');
+      blad.style.display = 'block';
+      return false;
+    }
+    zapiszKlucz('cai_klucz_anthropic', a);
+    zapiszKlucz('cai_klucz_openai', o);
+    zapiszKlucz('cai_klucz_eleven', e);
+    // Zmienne w pamieci, zeby nie trzeba bylo przeladowywac strony.
+    API_KEY = a; OPENAI_API_KEY = o; ELEVEN_API_KEY = e;
+    return true;
+  }
+
+  function zamknij(){
+    el('start-modal').style.display = 'none';
+    try { localStorage.setItem(PAMIEC, '1'); } catch(e){}
+  }
+
+  window.startDalej = function(){
+    if (kroki[krok] === 'klucze' && !zapiszKrokKluczy()) return;
+    if (krok === kroki.length - 1) return zamknij();
+    krok++;
+    rysuj();
+  };
+
+  window.startWstecz = function(){
+    if (krok === 0) return;
+    krok--;
+    rysuj();
+  };
+
+  window.startPomin = function(){ zamknij(); };
+
+  /** Otwarcie z menu - zawsze od pierwszego ekranu. */
+  window.otworzStart = function(){
+    krok = 0;
+    el('start-modal').style.display = 'flex';
+    rysuj();
+  };
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var byl = null;
+    try { byl = localStorage.getItem(PAMIEC); } catch(e){ byl = '1'; }
+    if (byl) return;
+    // Pakiet przydaje sie na pierwszym ekranie, ale kreator ma sie pokazac
+    // takze wtedy, gdy serwer o nim nie odpowie.
+    var pokaz = function(){ el('start-modal').style.display = 'flex'; rysuj(); };
+    if (typeof window.odswiezPakiet === 'function'){
+      window.odswiezPakiet().then(function(d){ window.pakietStanStart = d || null; pokaz(); });
+    } else {
+      pokaz();
+    }
+  });
 })();
 </script>
 <!-- ============ Content AI - reskin (Faza 1 fix + Faza 2 + Faza 3 splash), append-only ============ -->

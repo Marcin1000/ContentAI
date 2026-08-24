@@ -114,6 +114,36 @@ nie Twoje. Serwer rozpoznaje to automatycznie, nic nie trzeba konfigurować.
 Stan kluczy sprawdzisz jako admin pod `/api/status` — pokazuje wyłącznie, czy klucz jest
 ustawiony, nigdy jego treść.
 
+### Gdzie użytkownik wpisuje swój klucz
+
+W aplikacji: ⚙️ → **Konfiguracja konta**. To ten sam kreator, który sam otwiera się przy
+pierwszym wejściu na konto.
+
+Klucze użytkownika **zapisują się wyłącznie w jego przeglądarce** i nigdy nie trafiają na
+Twój serwer do zapisu — lecą tylko jako nagłówek pojedynczego żądania, prosto do dostawcy.
+To świadoma decyzja: cudzy klucz API to cudze pieniądze, a serwer, który go nie przechowuje,
+nie może go wyciec.
+
+Konsekwencja, o której warto uprzedzić użytkownika: **na innym urządzeniu trzeba wpisać
+klucz ponownie**. Dlatego kreator pokazuje się tam po raz drugi — naprawdę jest co ustawić.
+
+Pusty klucz po stronie użytkownika oznacza „użyj klucza serwera", więc nikt nie musi nic
+robić, żeby aplikacja działała.
+
+---
+
+## Kreator pierwszego uruchomienia
+
+Przy pierwszym wejściu na konto użytkownik dostaje cztery ekrany: powitanie z jego
+pakietem, klucze API (opcjonalne), Brand Voice i podsumowanie. Można go pominąć w każdej
+chwili i wrócić przez ⚙️ → **Konfiguracja konta**.
+
+Kreator nie pyta o nic, bez czego aplikacja nie zadziała — wszystkie kroki są opcjonalne.
+Jego zadaniem jest pokazać, gdzie co jest, a nie wymusić konfigurację.
+
+Stan „kreator ukończony" leży w przeglądarce użytkownika, obok kluczy — nie w bazie kont.
+Nie ma więc czego resetować po Twojej stronie ani czym się to psuje.
+
 ---
 
 ## Przełączenie na modele open source
