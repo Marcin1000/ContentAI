@@ -24,6 +24,7 @@ po znaczeniu oraz bramą przed OpenSEO. Klucze nie trafiają do przeglądarek.
 |---|---|
 | **`dokumenty/ContentAI_Instalacja_na_serwerze.md`** | instalacja krok po kroku, od pustego VPS-a; pisana bez zakładania znajomości Linuksa |
 | **`dokumenty/ContentAI_obok_Cosmosa.md`** | to samo, gdy na serwerze działa już Cosmos — co pominąć i czego pilnować |
+| **`dokumenty/ContentAI_Domena_Cloudflare.md`** | domena za Cloudflare: strona produktowa na domenie głównej, aplikacja na poddomenie `app` |
 | **`serwer/README.md`** | pełny opis serwera: wszystkie ustawienia, endpointy, decyzje |
 | **`dokumenty/ContentAI_AdminGuide.md`** | codzienna obsługa: konta, pakiety, klucze |
 

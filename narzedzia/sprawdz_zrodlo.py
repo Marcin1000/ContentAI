@@ -137,9 +137,24 @@ KONTROLE = [
      "window.API_ENDPOINT_OVERRIDE", None, ("proxy",)),
     # niema celuje w pelna deklaracje z komentarzem: sama nazwa placeholdera wystepuje
     # legalnie w komunikatach i18n, w porownaniach isDemo i w bloku <code> ekranu "brak klucza"
+    # Proxy czyta klucz z localStorage (pusty = klucz serwera). W pliku nadal nie
+    # ma zadnego klucza - i nie moze byc.
     ("W/proxy", "proxy nie trzyma kluczy w pliku",
-     "const API_KEY = ''; // wersja proxy - klucz po stronie workera",
+     "let API_KEY = localStorage.getItem('cai_klucz_anthropic') || '';",
      "const API_KEY = 'WSTAW_TUTAJ_NOWY_KLUCZ_API'; //", ("proxy",)),
+
+    # ── kreator pierwszego uruchomienia (tylko wariant proxy) ──
+    ("K/kreator", "kreator pierwszego uruchomienia",
+     'id="start-modal"', None, ("proxy",)),
+    ("K/menu", "kreator da sie otworzyc ponownie z menu",
+     'onclick="otworzStart();closeSettingsMenu()"', None, ("proxy",)),
+    ("K/klucze", "klucz uzytkownika doklejany w jednym miejscu",
+     "function zKluczem(sciezka, opcje){", None, ("proxy",)),
+    # Klucze uzytkownika maja zostac w przegladarce. Gdyby ktos kiedys dopisal
+    # ich wysylke na serwer, ta kontrola tego nie zlapie - ale zlapie
+    # najprostsza pomylke: zapis klucza pod stara nazwa wariantu keys.
+    ("K/klucze", "kreator nie miesza nazw z wariantem keys",
+     None, "cai_key_anthropic", ("proxy",)),
 
     # ── baza wiedzy na serwerze (tylko wariant proxy) ──
     ("B/menu", "pozycja Baza wiedzy w menu ustawien",
@@ -195,7 +210,7 @@ KONTROLE = [
     ("U/odznaka", "odznaka pakietu w pasku gornym",
      'id="pakiet-badge"', None, ("proxy",)),
     ("U/przechwyt", "jeden punkt przechwytu platnych wywolan",
-     "if (!PLATNE[sciezkaZadania(zasob)]) return wynik;", None, ("proxy",)),
+     "if (!PLATNE[sciezka]) return oryginalnyFetch.apply(null, arguments);", None, ("proxy",)),
     ("U/402", "ekran wyczerpanego pakietu po HTTP 402",
      "window.pokazLimitPakietu", None, ("proxy",)),
     ("U/artykul", "tylko generowanie tresci zglasza sie jako artykul",

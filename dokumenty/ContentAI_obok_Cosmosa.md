@@ -393,6 +393,7 @@ Adresy obu aplikacji: `/etc/caddy/Caddyfile` (jeden plik, dwa bloki).
 
 ---
 
-**Dokumenty pokrewne:** `dokumenty/ContentAI_Instalacja_na_serwerze.md` (pełna instrukcja
+**Dokumenty pokrewne:** `dokumenty/ContentAI_Domena_Cloudflare.md` (domena za Cloudflare),
+`dokumenty/ContentAI_Instalacja_na_serwerze.md` (pełna instrukcja
 od zera, z tabelą problemów), `dokumenty/ContentAI_AdminGuide.md` (codzienna obsługa),
 `brama/README.md` (2FA i jedno logowanie), `openseo/README.md` (OpenSEO obok).
