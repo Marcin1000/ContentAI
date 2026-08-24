@@ -143,6 +143,24 @@ KONTROLE = [
      "let API_KEY = localStorage.getItem('cai_klucz_anthropic') || '';",
      "const API_KEY = 'WSTAW_TUTAJ_NOWY_KLUCZ_API'; //", ("proxy",)),
 
+    # ── podpowiedzi tematow (wszystkie warianty - to zwykle wywolanie modelu) ──
+    ("T/przycisk", "przycisk podpowiedzi przy polu tematu",
+     'onclick="otworzTematy()"', None, None),
+    ("T/okno", "okno podpowiedzi tematow",
+     'id="tematy-modal"', None, None),
+    ("T/wstawianie", "propozycja trafia do pola tematu",
+     "function uzyjTematu(i) {", None, None),
+    # Podpowiadanie tematow to wywolanie pomocnicze. Gdyby kiedys zaczelo sie
+    # zglaszac jako artykul, zjadaloby uzytkownikowi sztuke z pakietu za sama
+    # liste pomyslow - dlatego naglowek ma sie tu NIE pojawic.
+    ("T/licznik", "podpowiadanie tematow nie liczy sie jako artykul",
+     None, "'x-cai-czynnosc': 'artykul',\n        'anthropic-version': '2023-06-01',\n        'anthropic-dangerous-direct-browser-access': 'true'\n      },\n      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1600",
+     None),
+    ("T/i18n", "klucze i18n podpowiedzi w obu jezykach",
+     "'tematy-generuj':'Zaproponuj 10 tematów'", None, None),
+    ("T/i18n", "klucze i18n podpowiedzi po angielsku",
+     "'tematy-generuj':'Suggest 10 topics'", None, None),
+
     # ── kreator pierwszego uruchomienia (tylko wariant proxy) ──
     ("K/kreator", "kreator pierwszego uruchomienia",
      'id="start-modal"', None, ("proxy",)),

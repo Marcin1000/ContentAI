@@ -1653,7 +1653,10 @@ document.addEventListener('DOMContentLoaded', function () {
           <div class="field">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
               <label class="field-label" data-i18n="label-topic">Temat artykułu / strony</label>
-              <button class="btn-secondary" onclick="openTemplates()" style="padding:3px 10px;font-size:11px;gap:4px" data-i18n="btn-templates"><span>📋</span> Szablony</button>
+              <div style="display:flex;gap:6px">
+                <button class="btn-secondary" onclick="otworzTematy()" style="padding:3px 10px;font-size:11px;gap:4px" data-i18n="btn-tematy"><span>💡</span> Podpowiedz tematy</button>
+                <button class="btn-secondary" onclick="openTemplates()" style="padding:3px 10px;font-size:11px;gap:4px" data-i18n="btn-templates"><span>📋</span> Szablony</button>
+              </div>
             </div>
             <div style="display:flex;gap:6px;align-items:center">
               <input type="text" id="topic" placeholder="np. temat artykułu lub strony" data-i18n="ph-topic" style="flex:1;min-width:0" />
@@ -2140,6 +2143,24 @@ document.addEventListener('DOMContentLoaded', function () {
         <span data-i18n="btn-add-page-txt">Dodaj stronę</span>
       </button>
     </div>
+  </div>
+</div>
+
+<!-- PODPOWIEDZI TEMATOW -->
+<div class="overlay" id="tematy-modal" onclick="if(event.target===this)zamknijTematy()">
+  <div class="modal" style="width:620px">
+    <div class="modal-head">
+      <h3 data-i18n="tematy-title">💡 Podpowiedz tematy</h3>
+      <button class="modal-close" onclick="zamknijTematy()">×</button>
+    </div>
+    <p data-i18n="tematy-desc">Opisz swoimi słowami, czego potrzebujesz: kto ma to czytać, co sprzedajesz, co chcesz osiągnąć. Dostaniesz dziesięć propozycji tematów — każdą można jednym kliknięciem wstawić do pola tematu.</p>
+    <textarea id="tematy-zapotrzebowanie" rows="4" data-i18n-ph="tematy-ph" placeholder="np. Prowadzę sklep z ekologicznymi kosmetykami. Chcę przyciągnąć kobiety 30-45 lat szukających naturalnej pielęgnacji i pokazać, że znam się na składach." style="width:100%;resize:vertical"></textarea>
+    <label id="tematy-baza-wrap" style="display:none;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-top:10px;cursor:pointer">
+      <input type="checkbox" id="tematy-baza" style="width:auto;margin:0">
+      <span data-i18n="tematy-baza">Weź pod uwagę zaznaczone dokumenty z bazy wiedzy</span>
+    </label>
+    <button id="tematy-btn" class="btn-generate" style="margin-top:14px" onclick="generujTematy()" data-i18n="tematy-generuj">Zaproponuj 10 tematów</button>
+    <div id="tematy-wynik" style="margin-top:18px"></div>
   </div>
 </div>
 
@@ -2798,6 +2819,15 @@ var I18N = {
     'voice-no-key':'Brak klucza OpenAI - ustaw OPENAI_API_KEY lub przełącz na silnik przeglądarki.','voice-unsupported':'Ta przeglądarka nie wspiera tej funkcji głosowej.','voice-mic-denied':'Brak dostępu do mikrofonu.','voice-listening':'Słucham...','voice-tts-fail':'Nie udało się odtworzyć audio.',
     'label-topic':'Temat artykułu / strony','ph-topic':'np. temat artykułu lub strony',
     'btn-templates':'📋 Szablony','label-ctype':'Typ treści','label-length':'Długość',
+    'btn-tematy':'💡 Podpowiedz tematy',
+    'tematy-title':'💡 Podpowiedz tematy',
+    'tematy-desc':'Opisz swoimi słowami, czego potrzebujesz: kto ma to czytać, co sprzedajesz, co chcesz osiągnąć. Dostaniesz dziesięć propozycji tematów — każdą można jednym kliknięciem wstawić do pola tematu.',
+    'tematy-ph':'np. Prowadzę sklep z ekologicznymi kosmetykami. Chcę przyciągnąć kobiety 30-45 lat szukających naturalnej pielęgnacji i pokazać, że znam się na składach.',
+    'tematy-baza':'Weź pod uwagę zaznaczone dokumenty z bazy wiedzy',
+    'tematy-generuj':'Zaproponuj 10 tematów','tematy-mysle':'Szukam tematów...',
+    'tematy-uzyj':'Użyj','tematy-kliknij':'Kliknij „Użyj”, żeby wstawić temat do formularza.',
+    'tematy-pusto':'Model nie zwrócił żadnej propozycji. Spróbuj opisać potrzebę konkretniej.',
+    'tematy-demo-temat':'Przykładowy temat','tematy-demo-dlaczego':'Tryb demonstracyjny — wpisz klucz API, żeby dostać prawdziwe propozycje.',
     'ph-length-custom':'np. 1200','label-kw':'Słowa kluczowe','ph-kw':'Wpisz frazę i naciśnij Enter...',
     'label-tone':'Ton','label-lang-out':'Język','label-extra':'Dodatkowe wytyczne',
     'ph-extra':'np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem...',
@@ -3264,6 +3294,15 @@ var I18N = {
     'voice-no-key':'Missing OpenAI key - set OPENAI_API_KEY or switch to the browser engine.','voice-unsupported':'This browser does not support this voice feature.','voice-mic-denied':'Microphone access denied.','voice-listening':'Listening...','voice-tts-fail':'Could not play audio.',
     'label-topic':'Article / page topic','ph-topic':'e.g. article or page topic',
     'btn-templates':'📋 Templates','label-ctype':'Content type','label-length':'Length',
+    'btn-tematy':'💡 Suggest topics',
+    'tematy-title':'💡 Suggest topics',
+    'tematy-desc':'Describe in your own words what you need: who should read it, what you sell, what you want to achieve. You will get ten topic suggestions — each can be dropped into the topic field with one click.',
+    'tematy-ph':'e.g. I run a shop with organic cosmetics. I want to reach women aged 30-45 looking for natural skincare and show that I know my ingredients.',
+    'tematy-baza':'Take the selected knowledge base documents into account',
+    'tematy-generuj':'Suggest 10 topics','tematy-mysle':'Looking for topics...',
+    'tematy-uzyj':'Use','tematy-kliknij':'Click "Use" to drop a topic into the form.',
+    'tematy-pusto':'The model returned no suggestions. Try describing the need more concretely.',
+    'tematy-demo-temat':'Sample topic','tematy-demo-dlaczego':'Demo mode — enter an API key to get real suggestions.',
     'ph-length-custom':'e.g. 1200','label-kw':'Keywords','ph-kw':'Type a phrase and press Enter...',
     'label-tone':'Tone','label-lang-out':'Language','label-extra':'Additional guidelines',
     'ph-extra':'e.g. Focus on SME segment, include market comparison...',
@@ -6943,6 +6982,125 @@ async function publishToDrupal(title, content, excerpt, status, resEl) {
     const err = await r.json().catch(()=>({}));
     const msg = err?.errors?.[0]?.detail || err?.message || r.status;
     resEl.innerHTML = `<span style="color:var(--red)">✗ Drupal ${r.status}: ${msg}</span>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ── PODPOWIEDZI TEMATOW ──────────────────────────────────────────────────
+// Od opisu zapotrzebowania do dziesieciu tematow, z ktorych kazdy jednym
+// klikniecem trafia do pola tematu. To wywolanie POMOCNICZE - nie zglasza sie
+// jako artykul, wiec nie zjada sztuki z pakietu (patrz serwer/plany.js).
+// ═══════════════════════════════════════════════════════════════════════
+
+let propozycjeTematow = [];
+
+function otworzTematy() {
+  document.getElementById('tematy-modal').classList.add('open');
+  // Checkbox bazy wiedzy pokazujemy tylko, gdy jest co brac - inaczej
+  // proponowalibysmy opcje, ktora niczego nie zmienia.
+  var zaznaczone = docs.filter(function(d){ return d.selected; }).length;
+  var wrap = document.getElementById('tematy-baza-wrap');
+  wrap.style.display = zaznaczone ? 'flex' : 'none';
+  if (zaznaczone) document.getElementById('tematy-baza').checked = true;
+  document.getElementById('tematy-zapotrzebowanie').focus();
+}
+
+function zamknijTematy() {
+  document.getElementById('tematy-modal').classList.remove('open');
+}
+
+/** Wstawia temat do formularza i zamyka okno - to jest cel calej funkcji. */
+function uzyjTematu(i) {
+  var t = propozycjeTematow[i];
+  if (!t) return;
+  var pole = document.getElementById('topic');
+  pole.value = t.temat || '';
+  zamknijTematy();
+  pole.focus();
+  // Krotki blysk, zeby bylo widac, ze cos sie stalo w polu poza ekranem uwagi.
+  pole.style.transition = 'box-shadow .2s';
+  pole.style.boxShadow = '0 0 0 3px rgba(217,119,6,.35)';
+  setTimeout(function(){ pole.style.boxShadow = ''; }, 700);
+  pole.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function rysujPropozycje() {
+  var cel = document.getElementById('tematy-wynik');
+  if (!propozycjeTematow.length) { cel.innerHTML = ''; return; }
+  cel.innerHTML = '<div style="font-size:12px;color:var(--text3);margin-bottom:10px">'
+    + _t('tematy-kliknij') + '</div>'
+    + propozycjeTematow.map(function(t, i) {
+        return '<div style="display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border)">'
+          + '<span style="font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums;padding-top:2px;min-width:18px">'
+          + (i + 1) + '.</span>'
+          + '<div style="flex:1;min-width:0">'
+          + '<div style="font-size:13.5px;font-weight:600;color:var(--text);line-height:1.4">' + escapeHtml(t.temat || '') + '</div>'
+          + (t.dlaczego ? '<div style="font-size:12px;color:var(--text2);margin-top:3px;line-height:1.5">' + escapeHtml(t.dlaczego) + '</div>' : '')
+          + '</div>'
+          + '<button class="btn-secondary" style="padding:5px 12px;font-size:11px;flex-shrink:0" onclick="uzyjTematu(' + i + ')">'
+          + _t('tematy-uzyj') + '</button>'
+          + '</div>';
+      }).join('');
+}
+
+async function generujTematy() {
+  var opis = document.getElementById('tematy-zapotrzebowanie').value.trim();
+  var cel = document.getElementById('tematy-wynik');
+  if (!opis) { document.getElementById('tematy-zapotrzebowanie').focus(); return; }
+
+  var btn = document.getElementById('tematy-btn');
+  var etykieta = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = _t('tematy-mysle');
+  cel.innerHTML = '<div class="seo-loading">' + _t('tematy-mysle') + '</div>';
+  propozycjeTematow = [];
+
+  var lang = document.getElementById('lang').value;
+  var jezyk = ({ 'Polski':'Polish','English':'English','Deutsch':'German','Čeština':'Czech' })[lang] || 'Polish';
+
+  var wiedza = '';
+  if (document.getElementById('tematy-baza').checked) {
+    wiedza = docs.filter(function(d){ return d.selected; })
+      .map(function(d){ return d.content; }).join('\n').substring(0, 3000);
+  }
+
+  var isDemo = API_KEY === 'WSTAW_TUTAJ_KLUCZ_API' || API_KEY === 'WSTAW_TUTAJ_NOWY_KLUCZ_API';
+  if (isDemo) {
+    propozycjeTematow = Array.from({ length: 10 }, function(_, i) {
+      return { temat: _t('tematy-demo-temat') + ' ' + (i + 1), dlaczego: _t('tematy-demo-dlaczego') };
+    });
+    btn.disabled = false; btn.textContent = etykieta;
+    rysujPropozycje();
+    return;
+  }
+
+  try {
+    var res = await apiFetch({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6', max_tokens: 1600, temperature: 0.7,
+        system: 'You are a content strategist. From the described business need, propose EXACTLY 10 article topics. '
+          + 'Each topic must be a concrete, specific title someone would actually search for or click - not a generic category. '
+          + 'Vary the search intent across the set: informational, comparison, how-to, decision-stage. '
+          + 'Do not repeat the same angle twice. '
+          + 'Respond ONLY with valid JSON, no markdown: {"tematy":[{"temat":"the title","dlaczego":"one short sentence on who searches for this and why it is worth writing"}]}. '
+          + 'All text MUST be in ' + jezyk + '.',
+        messages: [{ role: 'user', content: 'Business need:\n' + opis + (wiedza ? '\n\nKnowledge base excerpts:\n' + wiedza : '') }]
+      })
+    });
+    var d = await res.json();
+    if (d.error) throw new Error(d.error.message || _t('err-api-generic'));
+    var raw = (d.content || []).map(function(b){ return b.text || ''; }).join('').replace(/```json|```/g, '').trim();
+    var parsed = JSON.parse(raw);
+    propozycjeTematow = (parsed.tematy || []).filter(function(t){ return t && t.temat; });
+    if (!propozycjeTematow.length) throw new Error(_t('tematy-pusto'));
+    rysujPropozycje();
+  } catch (e) {
+    cel.innerHTML = '<div class="seo-loading" style="color:var(--red)">' + _t('msg-err-prefix') + escapeHtml(e.message) + '</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = etykieta;
   }
 }
 
