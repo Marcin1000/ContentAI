@@ -4,7 +4,8 @@ Generator treści pod SEO, AIO, AEO i GEO — artykuły, grafiki i audio z jedne
 Aplikacja jednoplikowa (HTML + JS, bez budowania), pakowana do wersji instalowalnych
 na Windows, macOS, Androida i iOS.
 
-**Wersja:** 2.9.0 · **Status:** wdrożenie serwerowe z kontami, bazą wiedzy (RAG) i integracją z OpenSEO
+**Wersja:** 2.10.0 · **Status:** wdrożenie serwerowe z kontami, pakietami, bazą wiedzy (RAG)
+i integracją z OpenSEO
 
 > Aplikacja powstała wcześniej w repozytorium `Marcin1000/Bear` (obok Cosmosa) i została
 > stąd wydzielona do własnego repo. Historia tamtych commitów jest zachowana.
@@ -27,6 +28,7 @@ po znaczeniu oraz bramą przed OpenSEO. Klucze nie trafiają do przeglądarek.
 | **`dokumenty/ContentAI_Domena_Cloudflare.md`** | domena za Cloudflare: strona produktowa na domenie głównej, aplikacja na poddomenie `app` |
 | **`serwer/README.md`** | pełny opis serwera: wszystkie ustawienia, endpointy, decyzje |
 | **`dokumenty/ContentAI_AdminGuide.md`** | codzienna obsługa: konta, pakiety, klucze |
+| **`dokumenty/ContentAI_Audyt_2026-08.md`** | audyt przed wdrożeniem: co sprawdzone, czym i z jakim wynikiem |
 
 Pozostałe warianty: `app/web-proxy.html` (klucze po stronie serwera lub Cloudflare Workera),
 `app/web-owner.html` (klucze wpisane w pliku).
@@ -44,12 +46,15 @@ Pozostałe warianty: `app/web-proxy.html` (klucze po stronie serwera lub Cloudfl
 | **Zero obcych serwerów** | biblioteki i krój pisma hostowane razem z aplikacją |
 | **Sesje przeżywają restart** | podpisane ciasteczka — aktualizacja nie wylogowuje zespołu |
 | **2FA i SSO opcjonalnie** | brama uwierzytelniająca przed całością, patrz `brama/` |
+| **Pakiety i limity** | darmowy / standard / premium jako tabela danych; licznik widoczny w aplikacji |
+| **Kreator pierwszego uruchomienia** | przy pierwszym wejściu prowadzi przez klucze API i Brand Voice; wszystkie kroki opcjonalne |
 
 ---
 
 ## Jak to działa
 
-Cała aplikacja to **jeden plik HTML** (~666 KB, ~10,5 tys. linii, 9 bloków `<script>`).
+Cała aplikacja to **jeden plik HTML** (~664 KB w wariancie `keys`, ~11,9 tys. linii źródła,
+9 bloków `<script>`).
 Nie ma bundlera ani kroku kompilacji — plik otwiera się bezpośrednio w przeglądarce
 albo jest opakowywany w Electron / Capacitor.
 
@@ -110,11 +115,12 @@ niedomknięty `@@IF`, `@@ELSE`/`@@ENDIF` bez `@@IF`, podwójny `@@ELSE` i niezna
 a po złożeniu kontroluje bilans `<style>`/`<script>` i to, że żadna dyrektywa nie została
 w wyniku.
 
-W źródle jest **22 takich bloków**. Dziesięć pierwotnych dotyczy sposobu podawania kluczy:
+W źródle jest **25 takich bloków**. Dziesięć pierwotnych dotyczy sposobu podawania kluczy:
 pozycja „Klucze API" w menu ustawień, klucze i18n PL i EN, komunikat „brak klucza" (PL i EN),
 deklaracje `API_KEY`, `OPENAI_API_KEY`/`ELEVEN_API_KEY`, `OWNER_MODE` oraz modal kluczy
 z jego skryptem. Pozostałe to funkcje, które mają sens wyłącznie przy własnym serwerze
-(`@@IF proxy`): baza wiedzy, wejście do OpenSEO, synchronizacja motywu i okno fraz z OpenSEO.
+(`@@IF proxy`): baza wiedzy, wejście do OpenSEO, synchronizacja motywu, okno fraz z OpenSEO,
+licznik pakietu, kreator pierwszego uruchomienia i nagłówek zgłaszający artykuł do licznika.
 
 ---
 
