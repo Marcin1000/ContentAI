@@ -18,8 +18,14 @@ budować ani instalować; panel „Klucze API" otworzy się sam.
 
 **Na serwerze, dla zespołu** — to główna ścieżka. `serwer/` zawiera serwer Node (zero
 zależności npm) z logowaniem, kontami i rolami, proxy do API, bazą wiedzy z wyszukiwaniem
-po znaczeniu oraz bramą przed OpenSEO. Klucze nie trafiają do przeglądarek. Instrukcja
-wdrożenia: **`serwer/README.md`**, obsługa kont: **`dokumenty/ContentAI_AdminGuide.md`**.
+po znaczeniu oraz bramą przed OpenSEO. Klucze nie trafiają do przeglądarek.
+
+| Dokument | Do czego |
+|---|---|
+| **`dokumenty/ContentAI_Instalacja_na_serwerze.md`** | instalacja krok po kroku, od pustego VPS-a; pisana bez zakładania znajomości Linuksa |
+| **`dokumenty/ContentAI_obok_Cosmosa.md`** | to samo, gdy na serwerze działa już Cosmos — co pominąć i czego pilnować |
+| **`serwer/README.md`** | pełny opis serwera: wszystkie ustawienia, endpointy, decyzje |
+| **`dokumenty/ContentAI_AdminGuide.md`** | codzienna obsługa: konta, pakiety, klucze |
 
 Pozostałe warianty: `app/web-proxy.html` (klucze po stronie serwera lub Cloudflare Workera),
 `app/web-owner.html` (klucze wpisane w pliku).
@@ -144,7 +150,7 @@ contentai/
   narzedzia/
     sprawdz_zrodlo.py  kontrola źródła: poprawki F1–F17, reskin, warianty, funkcje serwerowe
     INSTRUKCJA_...md   co robi każda z tych zmian i gdzie jej szukać
-  dokumenty/         AdminGuide (obowiązujący) + ARCHIWUM_* (dokumentacja v27) + ocena
+  dokumenty/         instalacja (od zera i obok Cosmosa), AdminGuide, ARCHIWUM_* (v27), ocena
   prezentacje/       PL/ i EN/ — deck produktowy, onboarding, security
     zrodlo/            generator decku security (PL i EN z jednego skryptu)
 ```

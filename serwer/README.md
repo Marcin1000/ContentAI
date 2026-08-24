@@ -319,17 +319,22 @@ własnego GPU, więc na VPS bez karty nie mają sensu.
 
 ## Uruchomienie na serwerze (Ubuntu)
 
+Pełna instrukcja krok po kroku, od pustego VPS-a do działającej strony:
+**`dokumenty/ContentAI_Instalacja_na_serwerze.md`**. Poniżej skrót dla kogoś, kto zna Linuksa.
+
 ```bash
-# 1. Kod i Node
-sudo apt update && sudo apt install -y git nodejs npm
+# 1. Kod i Node (wymagany Node >= 18 - sprawdź `node -v` po instalacji)
+sudo apt update && sudo apt install -y git nodejs
 sudo git clone https://github.com/Marcin1000/ContentAI.git /srv/contentai
+
+# 2. Konto systemowe usługi i katalog na dane
+sudo useradd --system --home-dir /srv/contentai --shell /usr/sbin/nologin contentai
+sudo mkdir -p /srv/contentai/serwer/dane
+sudo chown -R contentai:contentai /srv/contentai/serwer/dane
+
+# 3. Pierwsze konto administratora - jako użytkownik usługi, nie root
 cd /srv/contentai
-
-# 2. Zbuduj warianty aplikacji (serwer potrzebuje app/web-proxy.html)
-python3 pakowanie/warianty.py --wszystkie -o app
-
-# 3. Pierwsze konto administratora
-node serwer/uzytkownicy.js dodaj marcin admin
+sudo -u contentai node serwer/uzytkownicy.js dodaj marcin admin
 
 # 4. Klucze i konfiguracja
 sudo mkdir -p /etc/contentai
@@ -342,6 +347,10 @@ EOF
 sudo chmod 600 /etc/contentai/srodowisko
 ```
 
+Warianty aplikacji leżą w repo gotowe — po świeżym klonie nie ma czego budować.
+`python3 pakowanie/warianty.py --wszystkie -o app` uruchamiasz dopiero po zmianie
+w `app/contentai.src.html`.
+
 ### Usługa systemd
 
 ```bash
@@ -350,6 +359,12 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now contentai
 sudo systemctl status contentai
 ```
+
+Usługa chodzi na stałym koncie `contentai` i zapisuje wyłącznie do
+`serwer/dane/`. **Nie zamieniaj tego na `DynamicUser=yes`**: systemd nadaje wtedy
+zmienny UID i nie przejmuje na własność katalogu z `ReadWritePaths`, więc proces
+nie zapisze ani sekretu sesji, ani liczników pakietów. Serwer przeżywa to po cichu —
+objawem byłoby wylogowywanie po każdym restarcie i limity, które nic nie liczą.
 
 ### Caddy — HTTPS
 
@@ -366,7 +381,6 @@ już serwer, a dwa ekrany logowania pod rząd tylko męczą.
 
 ```bash
 cd /srv/contentai && sudo git pull
-sudo python3 pakowanie/warianty.py --wszystkie -o app
 sudo systemctl restart contentai
 ```
 
