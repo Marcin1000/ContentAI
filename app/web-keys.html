@@ -187,7 +187,7 @@
   --border2: #C2CAD8;
   --text: #0D1320;
   --text2: #475064;
-  --text3: #8892A6;
+  --text3: #616A7E;
   --accent: var(--yellow);
   --accent2: #1FA8C7;       /* cyan techniczny */
   --glow: rgba(31,168,199,0.28);
@@ -215,7 +215,7 @@ body.dark-mode {
   --border2: #353D54;
   --text: #E9EDF6;
   --text2: #9DA6BC;
-  --text3: #5C6479;
+  --text3: #868FAB;
   --accent: var(--yellow);
   --accent2: #46D5F2;       /* cyan świecący */
   --glow: rgba(70,213,242,0.34);
@@ -691,7 +691,7 @@ body.dark-mode select option { background: var(--surface); color: var(--text); }
 @keyframes mIn { from { transform: scale(0.95) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
 .modal-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
 .modal-head h3 { font-size: 16px; font-weight: 600; }
-.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text3); line-height: 1; padding: 0; }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text3); line-height: 1; padding: 2px 8px; margin: -2px -8px; }
 .modal p { font-size: 13px; color: var(--text2); margin-bottom: 14px; line-height: 1.6; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 
@@ -8855,7 +8855,7 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#ctx-menu')) closeContextMenu();
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeContextMenu(); closeLinkDialog(); closeNoSourceModal(); closePremiumModal(); closeTitlesModal(); closeGapPanel(); closeSerpPanel(); if(seoOpen){seoOpen=false;document.getElementById('seo-panel')?.classList.remove('show');} if(aioOpen){aioOpen=false;document.getElementById('aio-panel')?.classList.remove('show');} if(aeoOpen){aeoOpen=false;document.getElementById('aeo-panel')?.classList.remove('show');} if(geoOpen){geoOpen=false;document.getElementById('geo-panel')?.classList.remove('show');} closeBriefPanel(); if(linksOpen) toggleLinksPanel(); closeImgPanelSmart(); closeBvModal(); closeLlmsModal(); closeVisModal(); closeRepModal(); closeTrkModal(); closeTextModal(); closeUrlModal(); if(!bulkRunning) closeBulkModal(); closeImproveModal(); closeWpModal(); closeTplModal(); closeWpPublishModal(); closeSettingsMenu(); const fi=document.getElementById('fog-panel'); if(fi) fi.style.display='none'; }
+  if (e.key === 'Escape') { closeContextMenu(); closeLinkDialog(); closeNoSourceModal(); closePremiumModal(); closeTitlesModal(); closeGapPanel(); closeSerpPanel(); if(seoOpen){seoOpen=false;document.getElementById('seo-panel')?.classList.remove('show');} if(aioOpen){aioOpen=false;document.getElementById('aio-panel')?.classList.remove('show');} if(aeoOpen){aeoOpen=false;document.getElementById('aeo-panel')?.classList.remove('show');} if(geoOpen){geoOpen=false;document.getElementById('geo-panel')?.classList.remove('show');} closeBriefPanel(); if(linksOpen) toggleLinksPanel(); closeImgPanelSmart(); closeBvModal(); closeLlmsModal(); closeVisModal(); closeRepModal(); closeTrkModal(); closeTextModal(); closeUrlModal(); if(!bulkRunning) closeBulkModal(); closeImproveModal(); closeWpModal(); closeTplModal(); closeWpPublishModal(); closeSettingsMenu(); zamknijTematy(); if(typeof zamknijPakiet==='function') zamknijPakiet(); if(typeof startPomin==='function' && document.getElementById('start-modal')?.style.display==='flex') startPomin(); const fi=document.getElementById('fog-panel'); if(fi) fi.style.display='none'; }
 });
 // ═══════════════════════════════════════════════════════════════════════
 // ── MOBILE DETECTION & INIT ─────────────────────────────────────────────

@@ -69,6 +69,15 @@ jobs:
           done
           npx eslint .eslint-tmp/keys.js .eslint-tmp/proxy.js .eslint-tmp/owner.js
 
+      # Dwie kontrole, które łapią klasy błędów milczące aż do spotkania
+      # z użytkownikiem: brak klucza tłumaczenia (t() po cichu schodzi na polski,
+      # więc angielski interfejs pokazuje polskie zdanie) i przycisk wołający
+      # nieistniejącą funkcję (w interfejsie po prostu nic się nie dzieje).
+      - name: Aplikacja — tłumaczenia i uchwyty zdarzeń
+        run: |
+          python3 narzedzia/audyt_i18n.py
+          python3 narzedzia/audyt_uchwyty.py
+
       # Placeholdery w aplikacji ("sk-ant-...", "sk-proj-...") są krótkie,
       # więc wymóg 40+ znaków po prefiksie ich nie łapie. Prawdziwe klucze łapie.
       - name: Brak prawdziwych kluczy API
