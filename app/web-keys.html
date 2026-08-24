@@ -1590,16 +1590,16 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
         <!-- FORM -->
         <div class="form-col">
           <div class="field">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-              <label class="field-label" data-i18n="label-topic">Temat artykułu / strony</label>
-              <div style="display:flex;gap:6px">
-                <button class="btn-secondary" onclick="otworzTematy()" style="padding:3px 10px;font-size:11px;gap:4px" data-i18n="btn-tematy"><span>💡</span> Podpowiedz tematy</button>
-                <button class="btn-secondary" onclick="openTemplates()" style="padding:3px 10px;font-size:11px;gap:4px" data-i18n="btn-templates"><span>📋</span> Szablony</button>
-              </div>
-            </div>
+            <label class="field-label" style="display:block;margin-bottom:5px" data-i18n="label-topic">Temat artykułu / strony</label>
             <div style="display:flex;gap:6px;align-items:center">
-              <input type="text" id="topic" placeholder="np. temat artykułu lub strony" data-i18n="ph-topic" style="flex:1;min-width:0" />
+              <input type="text" id="topic" autocomplete="off" placeholder="np. temat artykułu lub strony" data-i18n="ph-topic" style="flex:1;min-width:0" />
               <button type="button" class="mic-btn" onclick="dictate('topic', this)" data-i18n-title="voice-dictate-title" title="Dyktuj">🎙</button>
+            </div>
+            <!-- Pomoce pod polem, nie w wierszu etykiety: w waskiej kolumnie
+                 dwa przyciski z tekstem nie miescily sie obok etykiety i zawijaly. -->
+            <div style="display:flex;gap:6px;margin-top:7px">
+              <button class="btn-secondary" onclick="otworzTematy()" style="padding:5px 10px;font-size:11px;gap:4px;white-space:nowrap" data-i18n="btn-tematy"><span>💡</span> Podpowiedz tematy</button>
+              <button class="btn-secondary" onclick="openTemplates()" style="padding:5px 10px;font-size:11px;gap:4px;white-space:nowrap" data-i18n="btn-templates"><span>📋</span> Szablony</button>
             </div>
           </div>
 
@@ -1644,7 +1644,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
           <div class="field">
             <label class="field-label" data-i18n="label-kw">Słowa kluczowe</label>
             <div style="display:flex;gap:6px;align-items:center">
-              <input type="text" id="kw-input" placeholder="Wpisz frazę i naciśnij Enter..." data-i18n="ph-kw" onkeydown="addKw(event)" onkeyup="addKwMobile(event)" style="flex:1;min-width:0" />
+              <input type="text" id="kw-input" autocomplete="off" placeholder="Wpisz frazę i naciśnij Enter..." data-i18n="ph-kw" onkeydown="addKw(event)" onkeyup="addKwMobile(event)" style="flex:1;min-width:0" />
               <button type="button" class="mic-btn" onclick="dictate('kw-input', this)" data-i18n-title="voice-dictate-title" title="Dyktuj">🎙</button>
               <button onclick="addKwBtn()" title="Dodaj frazę" data-i18n-title="title-kw-add" style="flex-shrink:0;height:38px;width:38px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">+</button>
             </div>
@@ -2299,7 +2299,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
       <p style="font-size:12px;color:var(--text3);margin-bottom:14px" data-i18n="wp-hint">Użyj Application Password (WP 5.6+): Użytkownicy → Twój profil → Hasła aplikacji.</p>
       <div class="field" style="margin-bottom:10px"><label class="field-label">Adres WordPress (np. https://twojafirma.pl)</label><input type="text" id="wp-url" placeholder="https://twoja-strona.pl" /></div>
       <div class="field" style="margin-bottom:10px"><label class="field-label" data-i18n="wp-login">Login (nazwa użytkownika)</label><input type="text" id="wp-user" placeholder="admin" /></div>
-      <div class="field" style="margin-bottom:14px"><label class="field-label">Application Password</label><input type="password" id="wp-pass" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx" /></div>
+      <div class="field" style="margin-bottom:14px"><label class="field-label">Application Password</label><input type="password" autocomplete="new-password" id="wp-pass" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx" /></div>
     </div>
 
     <!-- Drupal fields -->
@@ -2307,7 +2307,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
       <p style="font-size:12px;color:var(--text3);margin-bottom:14px" data-i18n="cms-drupal-hint-short">Wymagany moduł <strong>Basic Auth</strong> (wbudowany w Drupal 8/9/10). Włącz w: Extend → Basic Authentication.</p>
       <div class="field" style="margin-bottom:10px"><label class="field-label" data-i18n="cms-drupal-url-label">Adres Drupala (np. https://twojafirma.pl)</label><input type="text" id="drupal-url" placeholder="https://twoja-strona.pl" /></div>
       <div class="field" style="margin-bottom:10px"><label class="field-label" data-i18n="wp-login">Login (nazwa użytkownika)</label><input type="text" id="drupal-user" placeholder="admin" /></div>
-      <div class="field" style="margin-bottom:10px"><label class="field-label" data-i18n="wp-password">Hasło</label><input type="password" id="drupal-pass" placeholder="hasło do konta Drupal" data-i18n-ph="wp-pass-ph" /></div>
+      <div class="field" style="margin-bottom:10px"><label class="field-label" data-i18n="wp-password">Hasło</label><input type="password" autocomplete="new-password" id="drupal-pass" placeholder="hasło do konta Drupal" data-i18n-ph="wp-pass-ph" /></div>
       <div class="row2" style="margin-bottom:14px">
         <div class="field"><label class="field-label" data-i18n="wp-ctype-mn">Typ treści (machine name)</label><input type="text" id="drupal-ctype" placeholder="article" /></div>
         <div class="field"><label class="field-label" data-i18n="cms-format-label">Format tekstu</label>
@@ -2763,6 +2763,7 @@ var I18N = {
     'tematy-generuj':'Zaproponuj 10 tematów','tematy-mysle':'Szukam tematów...',
     'tematy-uzyj':'Użyj','tematy-kliknij':'Kliknij „Użyj”, żeby wstawić temat do formularza.',
     'tematy-pusto':'Model nie zwrócił żadnej propozycji. Spróbuj opisać potrzebę konkretniej.',
+    'tematy-kopiuj':'Kopiuj listę','tematy-skopiowano':'Skopiowano',
     'tematy-demo-temat':'Przykładowy temat','tematy-demo-dlaczego':'Tryb demonstracyjny — wpisz klucz API, żeby dostać prawdziwe propozycje.',
     'ph-length-custom':'np. 1200','label-kw':'Słowa kluczowe','ph-kw':'Wpisz frazę i naciśnij Enter...',
     'label-tone':'Ton','label-lang-out':'Język','label-extra':'Dodatkowe wytyczne',
@@ -3173,6 +3174,7 @@ var I18N = {
     'tematy-generuj':'Suggest 10 topics','tematy-mysle':'Looking for topics...',
     'tematy-uzyj':'Use','tematy-kliknij':'Click "Use" to drop a topic into the form.',
     'tematy-pusto':'The model returned no suggestions. Try describing the need more concretely.',
+    'tematy-kopiuj':'Copy list','tematy-skopiowano':'Copied',
     'tematy-demo-temat':'Sample topic','tematy-demo-dlaczego':'Demo mode — enter an API key to get real suggestions.',
     'ph-length-custom':'e.g. 1200','label-kw':'Keywords','ph-kw':'Type a phrase and press Enter...',
     'label-tone':'Tone','label-lang-out':'Language','label-extra':'Additional guidelines',
@@ -6754,8 +6756,34 @@ async function publishToDrupal(title, content, excerpt, status, resEl) {
 
 let propozycjeTematow = [];
 
+// Propozycje przezywaja zamkniecie okna i przeladowanie strony. Wczesniej
+// znikaly bezpowrotnie - a czlowiek zamyka okno, zeby na spokojnie przejrzec
+// temat, i wraca po resztę.
+var PAMIEC_TEMATOW = 'cai_tematy_ostatnie';
+
+function zapiszPropozycje(opis) {
+  try {
+    localStorage.setItem(PAMIEC_TEMATOW, JSON.stringify({ opis: opis, tematy: propozycjeTematow }));
+  } catch(e) { /* prywatne okno albo brak miejsca - trudno */ }
+}
+
+function wczytajPropozycje() {
+  try {
+    var z = JSON.parse(localStorage.getItem(PAMIEC_TEMATOW) || 'null');
+    if (!z || !Array.isArray(z.tematy)) return null;
+    return z;
+  } catch(e) { return null; }
+}
+
 function otworzTematy() {
   document.getElementById('tematy-modal').classList.add('open');
+  var zapisane = wczytajPropozycje();
+  if (zapisane && zapisane.tematy.length && !propozycjeTematow.length) {
+    propozycjeTematow = zapisane.tematy;
+    var pole = document.getElementById('tematy-zapotrzebowanie');
+    if (!pole.value.trim()) pole.value = zapisane.opis || '';
+  }
+  if (propozycjeTematow.length) rysujPropozycje();
   // Checkbox bazy wiedzy pokazujemy tylko, gdy jest co brac - inaczej
   // proponowalibysmy opcje, ktora niczego nie zmienia.
   var zaznaczone = docs.filter(function(d){ return d.selected; }).length;
@@ -6787,8 +6815,10 @@ function uzyjTematu(i) {
 function rysujPropozycje() {
   var cel = document.getElementById('tematy-wynik');
   if (!propozycjeTematow.length) { cel.innerHTML = ''; return; }
-  cel.innerHTML = '<div style="font-size:12px;color:var(--text3);margin-bottom:10px">'
-    + _t('tematy-kliknij') + '</div>'
+  cel.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px">'
+    + '<span style="font-size:12px;color:var(--text3)">' + _t('tematy-kliknij') + '</span>'
+    + '<button class="btn-secondary" style="padding:4px 10px;font-size:11px;flex-shrink:0" onclick="kopiujTematy(this)">'
+    + _t('tematy-kopiuj') + '</button></div>'
     + propozycjeTematow.map(function(t, i) {
         return '<div style="display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border)">'
           + '<span style="font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums;padding-top:2px;min-width:18px">'
@@ -6801,6 +6831,29 @@ function rysujPropozycje() {
           + _t('tematy-uzyj') + '</button>'
           + '</div>';
       }).join('');
+}
+
+/** Cala lista do schowka, jako zwykly tekst - do wklejenia gdziekolwiek. */
+function kopiujTematy(btn) {
+  var tekst = propozycjeTematow
+    .map(function(t, i){ return (i + 1) + '. ' + (t.temat || '') + (t.dlaczego ? '\n   ' + t.dlaczego : ''); })
+    .join('\n');
+  var etykieta = btn.textContent;
+  var udalo = function(){ btn.textContent = _t('tematy-skopiowano'); setTimeout(function(){ btn.textContent = etykieta; }, 1600); };
+  try {
+    navigator.clipboard.writeText(tekst).then(udalo).catch(function(){ schowekAwaryjnie(tekst, udalo); });
+  } catch(e) { schowekAwaryjnie(tekst, udalo); }
+}
+
+/** Gdy przegladarka nie da clipboard API (stary Safari, brak HTTPS). */
+function schowekAwaryjnie(tekst, udalo) {
+  var pom = document.createElement('textarea');
+  pom.value = tekst;
+  pom.style.cssText = 'position:fixed;left:-9999px;top:0';
+  document.body.appendChild(pom);
+  pom.select();
+  try { document.execCommand('copy'); udalo(); } catch(e) { /* nic wiecej nie zrobimy */ }
+  document.body.removeChild(pom);
 }
 
 async function generujTematy() {
@@ -6855,6 +6908,7 @@ async function generujTematy() {
     var parsed = JSON.parse(raw);
     propozycjeTematow = (parsed.tematy || []).filter(function(t){ return t && t.temat; });
     if (!propozycjeTematow.length) throw new Error(_t('tematy-pusto'));
+    zapiszPropozycje(opis);
     rysujPropozycje();
   } catch (e) {
     cel.innerHTML = '<div class="seo-loading" style="color:var(--red)">' + _t('msg-err-prefix') + escapeHtml(e.message) + '</div>';
@@ -10539,11 +10593,11 @@ async function kbAudioTranscribeAndOpen(file) {
     </div>
     <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5" data-i18n="keys-modal-desc">Klucze zapisują się tylko lokalnie na tym urządzeniu (localStorage tej aplikacji). Nie są nigdzie wysyłane poza wywołania do API danego dostawcy.</div>
     <label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px" data-i18n="keys-anthropic-label">Anthropic <span style="color:var(--text3);font-weight:400">(treść, wymagany)</span></label>
-    <input id="key-in-anthropic" type="password" autocomplete="off" placeholder="sk-ant-..." style="width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:14px">
+    <input id="key-in-anthropic" type="password" autocomplete="new-password" placeholder="sk-ant-..." style="width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:14px">
     <label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px" data-i18n="keys-openai-label">OpenAI <span style="color:var(--text3);font-weight:400">(grafiki, audio, transkrypcja)</span></label>
-    <input id="key-in-openai" type="password" autocomplete="off" placeholder="sk-proj-..." style="width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:14px">
+    <input id="key-in-openai" type="password" autocomplete="new-password" placeholder="sk-proj-..." style="width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:14px">
     <label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px" data-i18n="keys-eleven-label">ElevenLabs <span style="color:var(--text3);font-weight:400">(głos premium, opcjonalny)</span></label>
-    <input id="key-in-eleven" type="password" autocomplete="off" placeholder="..." style="width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:18px">
+    <input id="key-in-eleven" type="password" autocomplete="new-password" placeholder="..." style="width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:18px">
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button onclick="saveKeys()" style="flex:1;min-width:120px;padding:10px;border:none;border-radius:var(--radius);background:var(--accent,#d97706);color:#fff;font-weight:600;font-size:13px;cursor:pointer" data-i18n="keys-save">Zapisz</button>
       <button onclick="closeKeysModal()" style="padding:10px 16px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer" data-i18n="keys-cancel">Anuluj</button>
