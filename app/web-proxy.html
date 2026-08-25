@@ -199,9 +199,9 @@
   --shadow: 0 1px 3px rgba(13,19,32,0.06), 0 8px 28px rgba(13,19,32,0.07);
 }
 
-/* ═══ CONTENT AI · paleta "Deep Space" (ciemny, domyślny — widok bohaterski) ═══ */
+/* ═══ CONTENT AI · paleta "Deep Space" (ciemny, domyślny - widok bohaterski) ═══ */
 body.dark-mode {
-  --yellow: #FFB000;        /* bursztyn na czerni — readout */
+  --yellow: #FFB000;        /* bursztyn na czerni - readout */
   --yellow-dark: #E09400;
   --yellow-light: #2A2100;
   --yellow-mid: #FFCB4D;
@@ -511,7 +511,7 @@ body.dark-mode .btn-premium.active {
   background: #3A2E00; color: #FFB000; border-color: #FFB000;
 }
 
-/* Historia — filtry tagów */
+/* Historia - filtry tagów */
 .htag-filter {
   font-size: 10px; padding: 2px 8px; border-radius: 10px;
   background: var(--surface2); border: 1px solid var(--border);
@@ -520,7 +520,7 @@ body.dark-mode .btn-premium.active {
 .htag-filter.active { background: var(--yellow-light); border-color: var(--yellow-dark); color: #7A6000; font-weight: 600; }
 body.dark-mode .htag-filter.active { background: #2A2200; border-color: #7A6000; color: #F0E88A; }
 
-/* KD — wskaźniki gęstości */
+/* KD - wskaźniki gęstości */
 .kd-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
 .kd-kw  { flex: 1; color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kd-pct { font-weight: 700; min-width: 36px; text-align: right; }
@@ -553,7 +553,7 @@ body.dark-mode .kd-bar-wrap { background: var(--border); }
 /* Print frame */
 #print-frame { display: none; }
 
-/* SERP + Gap — tagi */
+/* SERP + Gap - tagi */
 .serp-tag {
   font-size: 11px; padding: 2px 9px; border-radius: 10px;
   background: var(--surface); border: 1px solid var(--border); color: var(--text3);
@@ -569,7 +569,7 @@ body.dark-mode .kd-bar-wrap { background: var(--border); }
 .gap-miss-text { flex: 1; color: var(--text); line-height: 1.45; }
 .gap-miss-item:has(.gap-miss-check:not(:checked)) .gap-miss-text { color: var(--text3); text-decoration: line-through; }
 
-/* Gap delta — postęp po poprawie */
+/* Gap delta - postęp po poprawie */
 .gap-delta-bar { display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; margin-bottom:10px; }
 .gap-delta-score { font-size:22px; font-weight:700; white-space:nowrap; }
 .gap-delta-arrow { font-size:18px; color:var(--text3); }
@@ -865,7 +865,12 @@ body.is-mobile .row2 { grid-template-columns: 1fr; }
 body.is-mobile .tabs { display: none; }
 body.is-mobile .topbar { padding: 0 12px; height: 52px; }
 body.is-mobile .topbar-badge { display: none; }
-body.is-mobile .topbar-app { font-size: 13px; white-space: nowrap; }
+/* Na telefonie pasek gorny nie miescil sie w 360 px - przelacznik jezyka
+   wychodzil poza ekran. Znak graficzny wystarczy za nazwe (adres w pasku
+   przegladarki i tak ja powtarza), a w odznace zostaje sam licznik. */
+body.is-mobile .topbar-app { display: none; }
+body.is-mobile .pakiet-nazwa { display: none; }
+body.is-mobile #pakiet-badge { padding: 5px 9px; }
 body.is-mobile body.is-mobile .topbar-logo { gap: 10px; }
 body.is-mobile .topbar-divider { height: 22px; }
 body.is-mobile .dm-icon { display: none; }
@@ -1074,7 +1079,7 @@ body.is-mobile .link-dialog .link-backdrop { display:block; }
 body.dark .mic-btn.mic-active{background:#3b1416}
 
 /* ══════════════════════════════════════════════════════════════════════════
-   CONTENT AI · DEEP SPACE / MISSION CONTROL — warstwa wizualna premium
+   CONTENT AI · DEEP SPACE / MISSION CONTROL - warstwa wizualna premium
    Dopisane na koniec arkusza: wdraza czysty motyw kosmiczny (bez brandingu firmowego).
    ══════════════════════════════════════════════════════════════════════════ */
 
@@ -1270,7 +1275,7 @@ body.dark-mode ::selection { background: rgba(70,213,242,0.32); color:#EAFBFF; }
   .overlay.open { animation: caBd .2s ease; }
   .overlay.open .modal { animation: caModal .3s cubic-bezier(.2,.7,.2,1); }
   .settings-menu.open { animation: caPanel .2s ease; }
-  /* panel grafik (fixed, sterowany inline display) — wejście przez transition opacity */
+  /* panel grafik (fixed, sterowany inline display) - wejście przez transition opacity */
   #img-panel { transition: opacity .28s ease; }
 }
 
@@ -1509,7 +1514,6 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
       <input type="file" id="kb-audio-file" accept="audio/*,video/mp4,.m4a,.mp3,.wav,.webm,.ogg" onchange="kbAudioFromFile(this)" style="display:none" />
       <div style="height:1px;background:var(--border);margin:12px 0 10px"></div>
       <button class="btn-text-add" onclick="otworzBazeSerwera();closeMobileSidebar()" data-i18n="sidebar-baza-serwer">☁️ Baza na serwerze</button>
-      <div style="font-size:11px;color:var(--text3);line-height:1.45;padding:0 2px 2px" data-i18n="sidebar-baza-serwer-hint">Prywatna i wspólna, dostępna z każdego urządzenia. Powyższe pliki zostają w tej przeglądarce.</div>
     </div>
     <div class="sidebar-stats">
       <div class="sstat"><div class="sstat-val" id="s-docs-m">0</div><div class="sstat-lbl">Dokumenty</div></div>
@@ -1585,7 +1589,6 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
       <button class="btn-text-add" onclick="otworzBazeSerwera()">
         <span data-i18n="sidebar-baza-serwer">☁️ Baza na serwerze</span>
       </button>
-      <div style="font-size:11px;color:var(--text3);line-height:1.45;padding:0 2px 2px" data-i18n="sidebar-baza-serwer-hint">Prywatna i wspólna, dostępna z każdego urządzenia. Powyższe pliki zostają w tej przeglądarce.</div>
     </div>
 
     <div class="sidebar-stats">
@@ -1616,9 +1619,11 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
             </div>
             <!-- Pomoce pod polem, nie w wierszu etykiety: w waskiej kolumnie
                  dwa przyciski z tekstem nie miescily sie obok etykiety i zawijaly. -->
+            <!-- Oba przyciski dziela szerokosc pola tematu: rowna krawedz z prawej
+                 wyglada spokojniej niz dwa przyciski roznej dlugosci. -->
             <div style="display:flex;gap:6px;margin-top:7px">
-              <button class="btn-secondary" onclick="otworzTematy()" style="padding:5px 10px;font-size:11px;gap:4px;white-space:nowrap" data-i18n="btn-tematy"><span>💡</span> Podpowiedz tematy</button>
-              <button class="btn-secondary" onclick="openTemplates()" style="padding:5px 10px;font-size:11px;gap:4px;white-space:nowrap" data-i18n="btn-templates"><span>📋</span> Szablony</button>
+              <button class="btn-secondary" onclick="otworzTematy()" style="flex:1 1 0;min-width:0;justify-content:center;padding:7px 10px;font-size:11px;gap:4px;white-space:nowrap" data-i18n="btn-tematy" data-i18n-title="btn-tematy-title" title="Podpowiedz tematy na podstawie zapotrzebowania"><span>💡</span> Propozycje</button>
+              <button class="btn-secondary" onclick="openTemplates()" style="flex:1 1 0;min-width:0;justify-content:center;padding:7px 10px;font-size:11px;gap:4px;white-space:nowrap" data-i18n="btn-templates" data-i18n-title="btn-templates-title" title="Gotowe szablony formularza"><span>📋</span> Szablony</button>
             </div>
           </div>
 
@@ -2109,7 +2114,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
       <h3 data-i18n="tematy-title">💡 Podpowiedz tematy</h3>
       <button class="modal-close" onclick="zamknijTematy()">×</button>
     </div>
-    <p data-i18n="tematy-desc">Opisz swoimi słowami, czego potrzebujesz: kto ma to czytać, co sprzedajesz, co chcesz osiągnąć. Dostaniesz dziesięć propozycji tematów — każdą można jednym kliknięciem wstawić do pola tematu.</p>
+    <p data-i18n="tematy-desc">Opisz swoimi słowami, czego potrzebujesz: kto ma to czytać, co sprzedajesz, co chcesz osiągnąć. Dostaniesz dziesięć propozycji tematów - każdą można jednym kliknięciem wstawić do pola tematu.</p>
     <textarea id="tematy-zapotrzebowanie" rows="4" data-i18n-ph="tematy-ph" placeholder="np. Prowadzę sklep z ekologicznymi kosmetykami. Chcę przyciągnąć kobiety 30-45 lat szukających naturalnej pielęgnacji i pokazać, że znam się na składach." style="width:100%;resize:vertical"></textarea>
     <label id="tematy-baza-wrap" style="display:none;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-top:10px;cursor:pointer">
       <input type="checkbox" id="tematy-baza" style="width:auto;margin:0">
@@ -2587,7 +2592,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
     <button class="btn-secondary" style="flex:1;padding:8px;font-size:13px;justify-content:center" onclick="closeLinkDialog()" data-i18n="btn-cancel">Anuluj</button>
   </div>
 </div>
-<!-- IMG DIALOG (placeholder — keeps JS reference safe) -->
+<!-- IMG DIALOG (placeholder - keeps JS reference safe) -->
 <div class="img-dialog" id="img-dialog"></div>
 <!-- TEXT MODAL -->
 <div class="overlay" id="text-modal" onclick="if(event.target===this)closeTextModal()">
@@ -2616,7 +2621,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════════
-     GRAFIKA — panel generatora grafik
+     GRAFIKA - panel generatora grafik
 ════════════════════════════════════════════════════════════════════════ -->
 <div id="img-panel" style="display:none;position:fixed;top:56px;right:0;bottom:0;left:0;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;z-index:100;padding:24px">
   <div style="max-width:1100px;margin:0 auto">
@@ -2729,7 +2734,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
   </div>
 </div>
 <script>
-// ─── PWA SHORTCUTS — obsłuż parametry URL ────────────────────────────────
+// ─── PWA SHORTCUTS - obsłuż parametry URL ────────────────────────────────
 (function handlePWAShortcuts() {
   var urlParams = new URLSearchParams(window.location.search);
   var tab = urlParams.get('tab');
@@ -2775,16 +2780,17 @@ var I18N = {
     'voice-no-key':'Brak klucza OpenAI - ustaw OPENAI_API_KEY lub przełącz na silnik przeglądarki.','voice-unsupported':'Ta przeglądarka nie wspiera tej funkcji głosowej.','voice-mic-denied':'Brak dostępu do mikrofonu.','voice-listening':'Słucham...','voice-tts-fail':'Nie udało się odtworzyć audio.',
     'label-topic':'Temat artykułu / strony','ph-topic':'np. temat artykułu lub strony',
     'btn-templates':'📋 Szablony','label-ctype':'Typ treści','label-length':'Długość',
-    'btn-tematy':'💡 Podpowiedz tematy',
+    'btn-tematy':'💡 Propozycje','btn-tematy-title':'Podpowiedz tematy na podstawie zapotrzebowania',
+    'btn-templates-title':'Gotowe szablony formularza',
     'tematy-title':'💡 Podpowiedz tematy',
-    'tematy-desc':'Opisz swoimi słowami, czego potrzebujesz: kto ma to czytać, co sprzedajesz, co chcesz osiągnąć. Dostaniesz dziesięć propozycji tematów — każdą można jednym kliknięciem wstawić do pola tematu.',
+    'tematy-desc':'Opisz swoimi słowami, czego potrzebujesz: kto ma to czytać, co sprzedajesz, co chcesz osiągnąć. Dostaniesz dziesięć propozycji tematów - każdą można jednym kliknięciem wstawić do pola tematu.',
     'tematy-ph':'np. Prowadzę sklep z ekologicznymi kosmetykami. Chcę przyciągnąć kobiety 30-45 lat szukających naturalnej pielęgnacji i pokazać, że znam się na składach.',
     'tematy-baza':'Weź pod uwagę zaznaczone dokumenty z bazy wiedzy',
     'tematy-generuj':'Zaproponuj 10 tematów','tematy-mysle':'Szukam tematów...',
     'tematy-uzyj':'Użyj','tematy-kliknij':'Kliknij „Użyj”, żeby wstawić temat do formularza.',
     'tematy-pusto':'Model nie zwrócił żadnej propozycji. Spróbuj opisać potrzebę konkretniej.',
     'tematy-kopiuj':'Kopiuj listę','tematy-skopiowano':'Skopiowano',
-    'tematy-demo-temat':'Przykładowy temat','tematy-demo-dlaczego':'Tryb demonstracyjny — wpisz klucz API, żeby dostać prawdziwe propozycje.',
+    'tematy-demo-temat':'Przykładowy temat','tematy-demo-dlaczego':'Tryb demonstracyjny - wpisz klucz API, żeby dostać prawdziwe propozycje.',
     'ph-length-custom':'np. 1200','label-kw':'Słowa kluczowe','ph-kw':'Wpisz frazę i naciśnij Enter...',
     'label-tone':'Ton','label-lang-out':'Język','label-extra':'Dodatkowe wytyczne',
     'ph-extra':'np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem...',
@@ -3022,8 +3028,7 @@ var I18N = {
     'history-empty':'Brak historii - wygeneruj pierwszą treść.',
     'bazas-menu-title':'Baza wiedzy','bazas-menu-sub':'prywatna i wspólna, na serwerze',
     'sidebar-baza-serwer':'☁️ Baza na serwerze',
-    'sidebar-baza-serwer-hint':'Prywatna i wspólna, dostępna z każdego urządzenia. Powyższe pliki zostają w tej przeglądarce.',
-    'bazas-title':'📚 Baza wiedzy','bazas-desc':'Dokumenty leżą na serwerze, więc masz je na każdym urządzeniu. Przy generowaniu dobierane są tylko fragmenty pasujące do tematu.',
+    'bazas-title':'📚 Baza wiedzy','bazas-desc':'Dokumenty leżą na serwerze, więc masz je na każdym urządzeniu, a przy generowaniu dobierane są tylko fragmenty pasujące do tematu. Pliki wgrywane w panelu bocznym to co innego: zostają w tej przeglądarce.',
     'bazas-prywatna':'Prywatna (tylko Ty)','bazas-wspolna':'Wspólna (cały zespół)',
     'bazas-nazwa':'Nazwa dokumentu','bazas-tresc':'Treść','bazas-dodaj':'Dodaj',
     'bazas-pusto':'Brak dokumentów. Dodaj pierwszy poniżej.','bazas-usun':'Usuń',
@@ -3031,7 +3036,7 @@ var I18N = {
     'bazas-blad':'Nie udało się połączyć z serwerem.','bazas-dodaje':'Dodaję...',
     'openseo-menu-title':'OpenSEO','openseo-menu-sub':'pozycje, backlinki, audyty',
     'seo-frazy-title':'Frazy sprawdzone w OpenSEO',
-    'seo-title':'📈 Frazy z OpenSEO','seo-desc':'Frazy zapisane i otagowane w OpenSEO. Odczyt nie kosztuje kredytów — dane pochodzą z bazy OpenSEO, nie z nowego zapytania.',
+    'seo-title':'📈 Frazy z OpenSEO','seo-desc':'Frazy zapisane i otagowane w OpenSEO. Odczyt nie kosztuje kredytów - dane pochodzą z bazy OpenSEO, nie z nowego zapytania.',
     'seo-projekt':'Projekt','seo-tag':'Tag (wszystkie)','seo-szukaj':'Szukaj frazy',
     'seo-dodaj':'Dodaj zaznaczone','seo-oddaj':'Oddaj frazy tego artykułu do OpenSEO',
     'seo-oddaj-hint':'Zapisuje bieżące frazy z tagiem content-ai, żeby dało się śledzić ich pozycje.',
@@ -3048,14 +3053,14 @@ var I18N = {
     'pakiet-dokumenty':'Dokumenty w bazie wiedzy',
     'pakiet-bez-limitu':'bez limitu','pakiet-zostalo':'zostało',
     'pakiet-okres-miesiac':'Liczniki odnawiają się pierwszego dnia miesiąca.',
-    'pakiet-okres-zawsze':'To pula jednorazowa — nie odnawia się.',
+    'pakiet-okres-zawsze':'To pula jednorazowa - nie odnawia się.',
     'pakiet-funkcje':'Funkcje w tym pakiecie',
     'pakiet-fn-bazaWiedzy':'Baza wiedzy','pakiet-fn-serp':'Analiza SERP',
     'pakiet-fn-openseo':'Dane z OpenSEO','pakiet-fn-cms':'Publikacja do CMS',
     'pakiet-fn-wlasnyKlucz':'Własny klucz API',
     'pakiet-limit-title':'Limit pakietu wyczerpany',
     'pakiet-limit-odnawialny':'Licznik odnowi się pierwszego dnia przyszłego miesiąca.',
-    'pakiet-limit-zawsze':'Ta pula się nie odnawia — żeby generować dalej, potrzebny jest wyższy pakiet.',
+    'pakiet-limit-zawsze':'Ta pula się nie odnawia - żeby generować dalej, potrzebny jest wyższy pakiet.',
     'pakiet-limit-zuzyto':'Zużyto',
     'pakiet-funkcja-title':'Ta funkcja nie wchodzi w Twój pakiet',
     'pakiet-wywolania':'Wywołania modelu','pakiet-wywolanie':'Wywołania modelu',
@@ -3065,19 +3070,19 @@ var I18N = {
     'start-zaczynamy':'Zaczynamy','start-sztuk':'szt.','start-twoj-pakiet':'Twój pakiet',
     'start-1-tytul':'Witaj w Content AI',
     'start-1-opis':'Zanim napiszesz pierwszy artykuł, przejdźmy przez trzy krótkie ekrany. Zajmie to minutę, a wszystko można zmienić później w ustawieniach.',
-    'start-2-tytul':'Klucze API — tylko jeśli chcesz',
-    'start-2-opis':'Domyślnie korzystasz z kluczy serwera i nie musisz tu nic wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej — wtedy generowanie idzie na Twój rachunek, a nie na nasz.',
-    'start-2-opis-pakiet':'W Twoim pakiecie generowanie idzie z kluczy serwera — nie musisz nic wpisywać. Jeśli mimo to masz własne klucze, możesz ich użyć: koszt przejdzie wtedy na Twoje konto u dostawcy.',
-    'start-2-gdzie':'Klucze zapisują się wyłącznie w tej przeglądarce i nigdy nie trafiają na nasz serwer do zapisu — lecą tylko jako nagłówek pojedynczego żądania, prosto do dostawcy. Na innym urządzeniu trzeba je wpisać ponownie.',
-    'start-2-anthropic':'Anthropic — treść','start-2-openai':'OpenAI — grafiki, lektor, transkrypcja',
-    'start-2-eleven':'ElevenLabs — lepszy lektor (opcjonalnie)',
+    'start-2-tytul':'Klucze API - tylko jeśli chcesz',
+    'start-2-opis':'Domyślnie korzystasz z kluczy serwera i nie musisz tu nic wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej - wtedy generowanie idzie na Twój rachunek, a nie na nasz.',
+    'start-2-opis-pakiet':'W Twoim pakiecie generowanie idzie z kluczy serwera - nie musisz nic wpisywać. Jeśli mimo to masz własne klucze, możesz ich użyć: koszt przejdzie wtedy na Twoje konto u dostawcy.',
+    'start-2-gdzie':'Klucze zapisują się wyłącznie w tej przeglądarce i nigdy nie trafiają na nasz serwer do zapisu - lecą tylko jako nagłówek pojedynczego żądania, prosto do dostawcy. Na innym urządzeniu trzeba je wpisać ponownie.',
+    'start-2-anthropic':'Anthropic - treść','start-2-openai':'OpenAI - grafiki, lektor, transkrypcja',
+    'start-2-eleven':'ElevenLabs - lepszy lektor (opcjonalnie)',
     'start-2-zly':'To nie wygląda na klucz API. Anthropic zaczyna się od „sk-ant-”, OpenAI od „sk-”. Zostaw pole puste, jeśli nie masz własnego klucza.',
     'start-3-tytul':'Twoja marka',
     'start-3-opis':'Brand Voice to opis tego, jak ma brzmieć Twoja treść: ton, słownictwo, czego unikać. Bez niego artykuły będą poprawne, ale bezosobowe. Możesz to ustawić teraz albo wrócić do tego później.',
     'start-3-otworz':'Otwórz ustawienia Brand Voice',
-    'start-3-potem':'Kreator zostaje otwarty — po zapisaniu Brand Voice wróć tutaj i kliknij „Dalej”.',
+    'start-3-potem':'Kreator zostaje otwarty - po zapisaniu Brand Voice wróć tutaj i kliknij „Dalej”.',
     'start-4-tytul':'Wszystko gotowe',
-    'start-4-opis':'Wpisz temat, dodaj słowa kluczowe i kliknij generowanie. Licznik pakietu masz zawsze w prawym górnym rogu — kliknięcie pokazuje, ile Ci zostało.',
+    'start-4-opis':'Wpisz temat, dodaj słowa kluczowe i kliknij generowanie. Licznik pakietu masz zawsze w prawym górnym rogu - kliknięcie pokazuje, ile Ci zostało.',
     'start-4-lista':'Gdzie szukać reszty: ikona ⚙️ w pasku górnym to baza wiedzy, integracja z CMS, Brand Voice i widoczność w AI. Nic z tego nie jest potrzebne do pierwszego artykułu.',
     'history-select':'Wybierz artykuł z listy',
     // ── Tooltips ──
@@ -3236,16 +3241,17 @@ var I18N = {
     'voice-no-key':'Missing OpenAI key - set OPENAI_API_KEY or switch to the browser engine.','voice-unsupported':'This browser does not support this voice feature.','voice-mic-denied':'Microphone access denied.','voice-listening':'Listening...','voice-tts-fail':'Could not play audio.',
     'label-topic':'Article / page topic','ph-topic':'e.g. article or page topic',
     'btn-templates':'📋 Templates','label-ctype':'Content type','label-length':'Length',
-    'btn-tematy':'💡 Suggest topics',
+    'btn-tematy':'💡 Suggestions','btn-tematy-title':'Suggest topics from your business need',
+    'btn-templates-title':'Ready-made form templates',
     'tematy-title':'💡 Suggest topics',
-    'tematy-desc':'Describe in your own words what you need: who should read it, what you sell, what you want to achieve. You will get ten topic suggestions — each can be dropped into the topic field with one click.',
+    'tematy-desc':'Describe in your own words what you need: who should read it, what you sell, what you want to achieve. You will get ten topic suggestions - each can be dropped into the topic field with one click.',
     'tematy-ph':'e.g. I run a shop with organic cosmetics. I want to reach women aged 30-45 looking for natural skincare and show that I know my ingredients.',
     'tematy-baza':'Take the selected knowledge base documents into account',
     'tematy-generuj':'Suggest 10 topics','tematy-mysle':'Looking for topics...',
     'tematy-uzyj':'Use','tematy-kliknij':'Click "Use" to drop a topic into the form.',
     'tematy-pusto':'The model returned no suggestions. Try describing the need more concretely.',
     'tematy-kopiuj':'Copy list','tematy-skopiowano':'Copied',
-    'tematy-demo-temat':'Sample topic','tematy-demo-dlaczego':'Demo mode — enter an API key to get real suggestions.',
+    'tematy-demo-temat':'Sample topic','tematy-demo-dlaczego':'Demo mode - enter an API key to get real suggestions.',
     'ph-length-custom':'e.g. 1200','label-kw':'Keywords','ph-kw':'Type a phrase and press Enter...',
     'label-tone':'Tone','label-lang-out':'Language','label-extra':'Additional guidelines',
     'ph-extra':'e.g. Focus on SME segment, include market comparison...',
@@ -3484,8 +3490,7 @@ var I18N = {
     'history-no-filter':'No results for the selected filter.',
     'bazas-menu-title':'Knowledge base','bazas-menu-sub':'private and shared, on the server',
     'sidebar-baza-serwer':'☁️ Server knowledge base',
-    'sidebar-baza-serwer-hint':'Private and shared, available on every device. The files above stay in this browser.',
-    'bazas-title':'📚 Knowledge base','bazas-desc':'Documents live on the server, so you have them on every device. Only passages matching the topic are used when generating.',
+    'bazas-title':'📚 Knowledge base','bazas-desc':'Documents live on the server, so you have them on every device, and only passages matching the topic are used when generating. Files uploaded in the side panel are a different thing: they stay in this browser.',
     'bazas-prywatna':'Private (only you)','bazas-wspolna':'Shared (whole team)',
     'bazas-nazwa':'Document name','bazas-tresc':'Content','bazas-dodaj':'Add',
     'bazas-pusto':'No documents yet. Add the first one below.','bazas-usun':'Remove',
@@ -3493,7 +3498,7 @@ var I18N = {
     'bazas-blad':'Could not reach the server.','bazas-dodaje':'Adding...',
     'openseo-menu-title':'OpenSEO','openseo-menu-sub':'rankings, backlinks, audits',
     'seo-frazy-title':'Keywords vetted in OpenSEO',
-    'seo-title':'📈 Keywords from OpenSEO','seo-desc':'Keywords saved and tagged in OpenSEO. Reading them costs no credits — the data comes from OpenSEO\'s database, not from a new query.',
+    'seo-title':'📈 Keywords from OpenSEO','seo-desc':'Keywords saved and tagged in OpenSEO. Reading them costs no credits - the data comes from OpenSEO\'s database, not from a new query.',
     'seo-projekt':'Project','seo-tag':'Tag (all)','seo-szukaj':'Search keyword',
     'seo-dodaj':'Add selected','seo-oddaj':'Send this article\'s keywords to OpenSEO',
     'seo-oddaj-hint':'Saves the current keywords with the content-ai tag so their rankings can be tracked.',
@@ -3510,14 +3515,14 @@ var I18N = {
     'pakiet-dokumenty':'Documents in the knowledge base',
     'pakiet-bez-limitu':'unlimited','pakiet-zostalo':'left',
     'pakiet-okres-miesiac':'Counters reset on the first day of each month.',
-    'pakiet-okres-zawsze':'This is a one-off allowance — it does not reset.',
+    'pakiet-okres-zawsze':'This is a one-off allowance - it does not reset.',
     'pakiet-funkcje':'Features in this plan',
     'pakiet-fn-bazaWiedzy':'Knowledge base','pakiet-fn-serp':'SERP analysis',
     'pakiet-fn-openseo':'OpenSEO data','pakiet-fn-cms':'Publishing to CMS',
     'pakiet-fn-wlasnyKlucz':'Own API key',
     'pakiet-limit-title':'Plan limit reached',
     'pakiet-limit-odnawialny':'The counter resets on the first day of next month.',
-    'pakiet-limit-zawsze':'This allowance does not reset — generating more needs a higher plan.',
+    'pakiet-limit-zawsze':'This allowance does not reset - generating more needs a higher plan.',
     'pakiet-limit-zuzyto':'Used',
     'pakiet-funkcja-title':'This feature is not part of your plan',
     'pakiet-wywolania':'Model calls','pakiet-wywolanie':'Model calls',
@@ -3527,19 +3532,19 @@ var I18N = {
     'start-zaczynamy':'Let\'s start','start-sztuk':'pcs','start-twoj-pakiet':'Your plan',
     'start-1-tytul':'Welcome to Content AI',
     'start-1-opis':'Before you write your first article, let\'s go through three short screens. It takes a minute, and everything can be changed later in settings.',
-    'start-2-tytul':'API keys — only if you want to',
-    'start-2-opis':'By default you use the server\'s keys and there is nothing to fill in here. If you have your own accounts with the providers, enter the keys below — generating then goes on your bill, not ours.',
-    'start-2-opis-pakiet':'On your plan, generating runs on the server\'s keys — there is nothing to fill in. If you do have your own keys, you can still use them: the cost then moves to your provider account.',
-    'start-2-gdzie':'Keys are stored only in this browser and are never saved on our server — they travel as a header on a single request, straight to the provider. On another device you will need to enter them again.',
-    'start-2-anthropic':'Anthropic — content','start-2-openai':'OpenAI — images, voice-over, transcription',
-    'start-2-eleven':'ElevenLabs — better voice-over (optional)',
+    'start-2-tytul':'API keys - only if you want to',
+    'start-2-opis':'By default you use the server\'s keys and there is nothing to fill in here. If you have your own accounts with the providers, enter the keys below - generating then goes on your bill, not ours.',
+    'start-2-opis-pakiet':'On your plan, generating runs on the server\'s keys - there is nothing to fill in. If you do have your own keys, you can still use them: the cost then moves to your provider account.',
+    'start-2-gdzie':'Keys are stored only in this browser and are never saved on our server - they travel as a header on a single request, straight to the provider. On another device you will need to enter them again.',
+    'start-2-anthropic':'Anthropic - content','start-2-openai':'OpenAI - images, voice-over, transcription',
+    'start-2-eleven':'ElevenLabs - better voice-over (optional)',
     'start-2-zly':'That does not look like an API key. Anthropic keys start with "sk-ant-", OpenAI with "sk-". Leave the field empty if you do not have your own key.',
     'start-3-tytul':'Your brand',
     'start-3-opis':'Brand Voice describes how your content should sound: tone, vocabulary, what to avoid. Without it articles will be correct but impersonal. You can set it now or come back to it later.',
     'start-3-otworz':'Open Brand Voice settings',
-    'start-3-potem':'The setup stays open — once Brand Voice is saved, come back here and click "Next".',
+    'start-3-potem':'The setup stays open - once Brand Voice is saved, come back here and click "Next".',
     'start-4-tytul':'All set',
-    'start-4-opis':'Enter a topic, add keywords and hit generate. Your plan counter is always in the top right corner — click it to see what is left.',
+    'start-4-opis':'Enter a topic, add keywords and hit generate. Your plan counter is always in the top right corner - click it to see what is left.',
     'start-4-lista':'Where to find the rest: the ⚙️ icon in the top bar holds the knowledge base, CMS integration, Brand Voice and AI visibility. None of it is needed for a first article.',
     'history-select':'Select an article from the list',
     // ── Tooltips ──
@@ -3678,7 +3683,7 @@ function applyLang(lang) {
   document.documentElement.lang = lang;
   const T = I18N[lang] || I18N.pl;
 
-  // 1. Elementy z data-i18n — textContent lub placeholder
+  // 1. Elementy z data-i18n - textContent lub placeholder
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     const val = T[key]; if (!val) return;
@@ -3705,7 +3710,7 @@ function applyLang(lang) {
     const val = T[key]; if (val) el.setAttribute('aria-label', val);
   });
 
-  // 2. Selecty — zachowaj wybrany indeks
+  // 2. Selecty - zachowaj wybrany indeks
   [
     { id:'ctype',  keys:['opt-hybrid','opt-seo','opt-aio','opt-faq','opt-landing','opt-blog','opt-product','opt-directional','opt-press'] },
     { id:'dir-country', keys:['dir-de','dir-cz','dir-sk','dir-nl','dir-fr'] },
@@ -3856,11 +3861,11 @@ let keywords = [];
 let history = [];
 let genCount = 0;
 let currentText = '';
-let premiumMode = false;       // tryb Jakość Premium — samokorekcja po generowaniu
+let premiumMode = false;       // tryb Jakość Premium - samokorekcja po generowaniu
 let serpData    = null;        // dane SERP z ostatniego fetchSerpContext
 let gapOpen     = false;       // panel luk semantycznych otwarty
-let gapCache    = null;        // { snapshot, result } — cache wyników analizy luk
-let gapBaseline = null;        // { score, missing[], present[] } — wynik pierwszej analizy
+let gapCache    = null;        // { snapshot, result } - cache wyników analizy luk
+let gapBaseline = null;        // { score, missing[], present[] } - wynik pierwszej analizy
 let gapSelectedTopics = [];   // tematy wybrane przez użytkownika do poprawy
 let gapImproveCount = 0;      // licznik poprawek (do numerowania wersji)
 let gapPreviousTopics = [];   // tematy z poprzednich poprawek (zachowane przez Reset)
@@ -3932,7 +3937,7 @@ async function apiFetch(options, maxRetries = 3) {
           const conv = { content: [{ type: 'text', text }], usage: { input_tokens: inp, output_tokens: out } };
           return new Response(JSON.stringify(conv), { status: 200, headers: { 'Content-Type': 'application/json' } });
         }
-        // błąd lub nieoczekiwany format — zwróć status oryginalny, pusty content
+        // błąd lub nieoczekiwany format - zwróć status oryginalny, pusty content
         return new Response(JSON.stringify({ content: [], error: data }), { status: res.status, headers: { 'Content-Type': 'application/json' } });
       }
       // Śledź koszt tokenów z udanych wywołań (Anthropic / Azure Claude)
@@ -3947,8 +3952,8 @@ async function apiFetch(options, maxRetries = 3) {
         }).catch(() => {});
       }
       return res;
-    }           // OK lub inny błąd — zwróć
-    if (attempt === maxRetries) return res;        // wyczerpano próby — zwróć 429
+    }           // OK lub inny błąd - zwróć
+    if (attempt === maxRetries) return res;        // wyczerpano próby - zwróć 429
 
     // Odliczanie przed kolejną próbą
     const waitSec = WAIT_STEPS[attempt] || 60;
@@ -4441,13 +4446,13 @@ function closePremiumModal() {
 }
 
 function premiumProceed() {
-  // Użytkownik potwierdził premium — zamknij modal i generuj
+  // Użytkownik potwierdził premium - zamknij modal i generuj
   closePremiumModal();
   generate(true);  // true = pomiń ponowny check modalu
 }
 
 function premiumSkip() {
-  // Użytkownik wybrał normalny tryb — wyłącz premium i generuj
+  // Użytkownik wybrał normalny tryb - wyłącz premium i generuj
   premiumMode = false;
   const btn = document.getElementById('premium-btn');
   btn.classList.remove('active');
@@ -4500,7 +4505,7 @@ async function runPostGenerationPremium() {
   document.getElementById('out-badge').className = 'badge ready';
 }
 
-// ── Właściwa logika samokorekcji — wywołana z generate() i runPostGenerationPremium()
+// ── Właściwa logika samokorekcji - wywołana z generate() i runPostGenerationPremium()
 async function doPremiumCorrection(originalHtml, articleText, topic, kwText, ctype) {
   const isHybrid = ctype === 'Hybryda SEO + AIO';
   const isAio    = ctype === 'Treść AIO';
@@ -4530,7 +4535,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
   } catch(e) {}
 
   if (!evalResult || evalResult.score >= 82 || !evalResult.issues?.length) {
-    // Artykuł już jest dobry — nie poprawiaj
+    // Artykuł już jest dobry - nie poprawiaj
     return originalHtml;
   }
 
@@ -4582,7 +4587,7 @@ async function generate(skipPremiumModal = false) {
     return false;
   }
 
-  // ── Jeśli premium aktywne i nie pominięto modalu — pokaż ostrzeżenie
+  // ── Jeśli premium aktywne i nie pominięto modalu - pokaż ostrzeżenie
   if (premiumMode && !skipPremiumModal) {
     document.getElementById('premium-modal').classList.add('open');
     return false;
@@ -4675,7 +4680,7 @@ async function generate(skipPremiumModal = false) {
     if (urls.length)   kbContext += `## STRONY WWW\n${urls.map(d => `### ${d.name}\n${d.content}`).join('\n\n---\n\n')}\n\n`;
     if (texts.length)  kbContext += `## TEKST RĘCZNY\n${texts.map(d => `### ${d.name}\n${d.content}`).join('\n\n---\n\n')}\n\n`;
 
-    // SERP analysis — zapytanie: pierwsza fraza kluczowa lub temat artykułu (nigdy 'brak')
+    // SERP analysis - zapytanie: pierwsza fraza kluczowa lub temat artykułu (nigdy 'brak')
     const kwText   = keywords.length ? keywords.join(', ') : 'brak';
     const serpQuery = keywords.length ? keywords[0] : topic;   // główna fraza lub temat
     const serpContext = await fetchSerpContext(topic, serpQuery);
@@ -5058,7 +5063,7 @@ ${html}`;
 
   showArticleStats(html);
 
-  // SERP panel — pokaż dane jeśli były pobrane
+  // SERP panel - pokaż dane jeśli były pobrane
   if (serpData) renderSerpPanel();
 
   // Reset gap panelu (nowy artykuł = nowa analiza od zera)
@@ -5128,7 +5133,7 @@ function renderHistory() {
       <div class="h-item-topic">${escapeHtml(h.topic)}</div>
       <div class="h-item-meta">${escapeHtml(h.type)} · ~${h.words} ${_t('hist-words-suffix')} · ${h.time}</div>
     </div>`).join('');
-  // Nie auto-ładuj artykułu przy zmianie filtra — użytkownik klika sam
+  // Nie auto-ładuj artykułu przy zmianie filtra - użytkownik klika sam
 }
 
 function previewHistory(i) {
@@ -5166,7 +5171,7 @@ function previewHistory(i) {
     gapSelectedTopics = [];
     gapImproveCount = 0;
     gapPreviousTopics = [];
-    // Reset wersji — historia ma tylko jedną wersję artykułu
+    // Reset wersji - historia ma tylko jedną wersję artykułu
     versions = [];
     activeVersion = -1;
     document.getElementById('versions-bar').classList.remove('show');
@@ -5211,7 +5216,7 @@ function previewHistory(i) {
   gapSelectedTopics = [];
   gapImproveCount = 0;
   gapPreviousTopics = [];
-  // Reset wersji — historia ma tylko jedną wersję artykułu
+  // Reset wersji - historia ma tylko jedną wersję artykułu
   versions = [];
   activeVersion = -1;
   document.getElementById('versions-bar').classList.remove('show');
@@ -5887,7 +5892,7 @@ async function runGapAnalysis() {
     const snap   = getArticleSnapshot();
 
     if (gapBaseline && gapSelectedTopics.length) {
-      // Po poprawce — pokaż delta z autorytatywnymi selectedTopics
+      // Po poprawce - pokaż delta z autorytatywnymi selectedTopics
       gapCache = { snapshot: snap, result: parsed, baseline: gapBaseline,
                    selected: gapSelectedTopics, isDelta: true };
       renderGapDelta(gapBaseline, parsed, gapSelectedTopics);
@@ -5897,7 +5902,7 @@ async function runGapAnalysis() {
                    selected: [], isDelta: true };
       renderGapDelta(gapBaseline, parsed, []);
     } else {
-      // Pierwsza analiza — zapisz baseline
+      // Pierwsza analiza - zapisz baseline
       gapBaseline = { score: parsed.score,
                       missing: [...(parsed.missing||[])],
                       present: [...(parsed.present||[])] };
@@ -5941,7 +5946,7 @@ async function improveFromGaps() {
   // status generowania sekcji tylko na gorze (przycisk); bez dolnego wskaznika i skoku na dol
 
   // Wyciągnij i usuń sekcję "Kluczowe wnioski" z oryginalnego HTML
-  // — musi zawsze być na końcu, przed meta-box
+  // - musi zawsze być na końcu, przed meta-box
   const kwRegex = /(<h2[^>]*>\s*(?:Kluczowe wnioski|Key takeaways|Wichtigste Erkenntnisse|Klíčové poznatky)\s*<\/h2>[\s\S]*?)(?=<h2[^>]*>|<div[^>]*class="meta-box|$)/i;
   const kwMatch = originalHtml.match(kwRegex);
   const originalKw = kwMatch ? kwMatch[1].trimEnd() : null;
@@ -6533,7 +6538,7 @@ function switchMobileTab(name) {
     // Ukryj layout i history
     document.querySelector('.layout') && (document.querySelector('.layout').style.display = 'none');
     document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
-    // Widok grafiki to pełnoekranowa nakładka — nie podświetlamy dolnej nawigacji
+    // Widok grafiki to pełnoekranowa nakładka - nie podświetlamy dolnej nawigacji
     document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
     return;
   }
@@ -7436,7 +7441,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try{ if(localStorage.getItem('cai_kb_collapsed')!=='0') document.body.classList.add('kb-collapsed'); }catch(e){}
   document.getElementById('bulk-topics')?.addEventListener('input', updateBulkCount);
   imgInit();
-  // Zawsze zastosuj język (także PL) — ujednolica statyczne teksty HTML z I18N
+  // Zawsze zastosuj język (także PL) - ujednolica statyczne teksty HTML z I18N
   applyLang(currentLang);
 });
 
@@ -8995,7 +9000,7 @@ function showContextMenu(x, y) {
   // Save current selection
   const sel = window.getSelection();
   if (sel && sel.rangeCount) ctxSavedRange = sel.getRangeAt(0).cloneRange();
-  // Position — keep inside viewport
+  // Position - keep inside viewport
   const vw = window.innerWidth, vh = window.innerHeight;
   menu.style.left = Math.min(x + 2, vw - 195) + 'px';
   menu.style.top = Math.min(y + 2, vh - 160) + 'px';
@@ -9118,7 +9123,7 @@ function triggerAndroidFilePicker() {
 // ─── MODUŁ GENERATORA GRAFIK ───────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// Natywne formaty OpenAI GPT Image — maksymalna jakość bez skalowania
+// Natywne formaty OpenAI GPT Image - maksymalna jakość bez skalowania
 const IMG_FORMATS = [
   { group:'img-format-graphic', items:[
     {labelKey:'img-format-horiz', shortKey:'img-fmt-short-horiz',  label:'1536×1024 Poziomy (bannery, email)',  w:1536,h:1024,api:'1536x1024'},
@@ -9208,7 +9213,7 @@ function toggleImgPanel() {
 }
 
 function imgGetOpenAIKey() {
-  // Tryb proxy: klucz jest na serwerze — zwróc 'proxy' jako sygnał
+  // Tryb proxy: klucz jest na serwerze - zwróc 'proxy' jako sygnał
   if (window.OPENAI_IMG_ENDPOINT_OVERRIDE) return 'proxy';
   // Azure OpenAI: użyj klucza Azure
   if (USE_AZURE && AZURE_OPENAI_IMG_URL && !AZURE_OPENAI_IMG_URL.startsWith('WSTAW')) {
@@ -9233,7 +9238,7 @@ async function imgLoadReferenceFile(input) {
 
   let dataUrl = await readAsB64(file);
 
-  // Jeśli za duże — skompresuj przez canvas
+  // Jeśli za duże - skompresuj przez canvas
   if (file.size > maxBytes) {
     const img = new Image();
     img.src = dataUrl;
@@ -9523,7 +9528,7 @@ async function generateImage() {
   document.getElementById('img-gen-btn').disabled = false;
 }
 
-// Konwertuje base64 na Blob bez skalowania — natywna jakość OpenAI
+// Konwertuje base64 na Blob bez skalowania - natywna jakość OpenAI
 async function imgResizeB64(b64, targetW, targetH) {
   return new Promise(resolve => {
     const byteStr = atob(b64);
@@ -10737,12 +10742,14 @@ async function kbAudioTranscribeAndOpen(file) {
     <div id="bazas-lista" style="margin-bottom:18px"></div>
 
     <div style="border-top:1px solid var(--border);padding-top:16px">
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <select id="bazas-zakres" style="padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px">
+      <!-- flex-wrap i min-width:0 - bez nich select o wlasnej szerokosci
+           wypychal pole nazwy poza okno i strona przewijala sie w poziomie. -->
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <select id="bazas-zakres" style="flex:1 1 160px;min-width:0;max-width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px">
           <option value="prywatna" data-i18n="bazas-prywatna">Prywatna (tylko Ty)</option>
           <option value="wspolna" id="bazas-opt-wspolna" data-i18n="bazas-wspolna">Wspólna (cały zespół)</option>
         </select>
-        <input id="bazas-nazwa" data-i18n-placeholder="bazas-nazwa" placeholder="Nazwa dokumentu" style="flex:1;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px">
+        <input id="bazas-nazwa" data-i18n-placeholder="bazas-nazwa" placeholder="Nazwa dokumentu" style="flex:1 1 160px;min-width:0;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px">
       </div>
       <textarea id="bazas-tresc" rows="5" data-i18n-placeholder="bazas-tresc" placeholder="Treść" style="width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:12px;resize:vertical"></textarea>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -10934,7 +10941,7 @@ async function kbAudioTranscribeAndOpen(file) {
       <div style="font-weight:700;font-size:16px;color:var(--text)" data-i18n="seo-title">📈 Frazy z OpenSEO</div>
       <button onclick="zamknijFrazySeo()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1">✕</button>
     </div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5" data-i18n="seo-desc">Frazy zapisane i otagowane w OpenSEO. Odczyt nie kosztuje kredytów — dane pochodzą z bazy OpenSEO, nie z nowego zapytania.</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5" data-i18n="seo-desc">Frazy zapisane i otagowane w OpenSEO. Odczyt nie kosztuje kredytów - dane pochodzą z bazy OpenSEO, nie z nowego zapytania.</div>
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <select id="seo-projekt" onchange="odswiezFrazySeo()" style="flex:1;min-width:150px"></select>
@@ -11220,7 +11227,9 @@ async function kbAudioTranscribeAndOpen(file) {
     if (!b || !stan) return;
     var a = stan.uzycie && stan.uzycie.artykul;
     var licznik = (!a || a.limit === null) ? '∞' : (a.zuzyte + '/' + a.limit);
-    b.textContent = poJezyku('nazwa') + ' · ' + licznik;
+    // Nazwa w osobnym elemencie - na telefonie chowa ja CSS, zostaje licznik.
+    b.innerHTML = '<span class="pakiet-nazwa">' + bezpieczny(poJezyku('nazwa')) + ' · </span>'
+      + bezpieczny(licznik);
     b.style.display = 'flex';
     // Ostatnia sztuka ma byc widoczna, zanim uzytkownik w nia wejdzie.
     var malo = a && a.limit !== null && a.zostalo <= 1;
@@ -11476,16 +11485,16 @@ async function kbAudioTranscribeAndOpen(file) {
     else if (kroki[krok] === 'klucze'){
       var wolno = !s || !s.funkcje || s.funkcje.wlasnyKlucz;
       cel.innerHTML = naglowek(
-          tekst('start-2-tytul','Klucze API — tylko jeśli chcesz'),
+          tekst('start-2-tytul','Klucze API - tylko jeśli chcesz'),
           wolno
-            ? tekst('start-2-opis','Domyślnie korzystasz z kluczy serwera i nie musisz tu nic wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej — wtedy generowanie idzie na Twój rachunek, a nie na nasz.')
-            : tekst('start-2-opis-pakiet','W Twoim pakiecie generowanie idzie z kluczy serwera — nie musisz nic wpisywać. Jeśli mimo to masz własne klucze, możesz ich użyć: koszt przejdzie wtedy na Twoje konto u dostawcy.'))
+            ? tekst('start-2-opis','Domyślnie korzystasz z kluczy serwera i nie musisz tu nic wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej - wtedy generowanie idzie na Twój rachunek, a nie na nasz.')
+            : tekst('start-2-opis-pakiet','W Twoim pakiecie generowanie idzie z kluczy serwera - nie musisz nic wpisywać. Jeśli mimo to masz własne klucze, możesz ich użyć: koszt przejdzie wtedy na Twoje konto u dostawcy.'))
         + '<div style="font-size:12px;color:var(--text2);background:var(--surface2);border-left:3px solid var(--accent,#d97706);padding:10px 12px;border-radius:0 var(--radius) var(--radius) 0;margin-bottom:18px;line-height:1.55">'
-          + tekst('start-2-gdzie','Klucze zapisują się wyłącznie w tej przeglądarce i nigdy nie trafiają na nasz serwer do zapisu — lecą tylko jako nagłówek pojedynczego żądania, prosto do dostawcy. Na innym urządzeniu trzeba je wpisać ponownie.')
+          + tekst('start-2-gdzie','Klucze zapisują się wyłącznie w tej przeglądarce i nigdy nie trafiają na nasz serwer do zapisu - lecą tylko jako nagłówek pojedynczego żądania, prosto do dostawcy. Na innym urządzeniu trzeba je wpisać ponownie.')
           + '</div>'
-        + polePola('start-k-anthropic', tekst('start-2-anthropic','Anthropic — treść'), 'sk-ant-...', localStorage.getItem('cai_klucz_anthropic'))
-        + polePola('start-k-openai', tekst('start-2-openai','OpenAI — grafiki, lektor, transkrypcja'), 'sk-proj-...', localStorage.getItem('cai_klucz_openai'))
-        + polePola('start-k-eleven', tekst('start-2-eleven','ElevenLabs — lepszy lektor (opcjonalnie)'), '...', localStorage.getItem('cai_klucz_eleven'))
+        + polePola('start-k-anthropic', tekst('start-2-anthropic','Anthropic - treść'), 'sk-ant-...', localStorage.getItem('cai_klucz_anthropic'))
+        + polePola('start-k-openai', tekst('start-2-openai','OpenAI - grafiki, lektor, transkrypcja'), 'sk-proj-...', localStorage.getItem('cai_klucz_openai'))
+        + polePola('start-k-eleven', tekst('start-2-eleven','ElevenLabs - lepszy lektor (opcjonalnie)'), '...', localStorage.getItem('cai_klucz_eleven'))
         + '<div id="start-k-blad" style="display:none;font-size:12px;color:#e06c6c;margin-top:-6px"></div>';
     }
 
@@ -11496,13 +11505,13 @@ async function kbAudioTranscribeAndOpen(file) {
         + '<button onclick="openBvModal()" style="width:100%;padding:12px;border:1px solid var(--accent,#d97706);border-radius:var(--radius);background:none;color:var(--accent,#d97706);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px">'
           + tekst('start-3-otworz','Otwórz ustawienia Brand Voice') + '</button>'
         + '<div style="font-size:12px;color:var(--text3);line-height:1.55">'
-          + tekst('start-3-potem','Kreator zostaje otwarty — po zapisaniu Brand Voice wróć tutaj i kliknij „Dalej”.') + '</div>';
+          + tekst('start-3-potem','Kreator zostaje otwarty - po zapisaniu Brand Voice wróć tutaj i kliknij „Dalej”.') + '</div>';
     }
 
     else {
       cel.innerHTML = naglowek(
           tekst('start-4-tytul','Wszystko gotowe'),
-          tekst('start-4-opis','Wpisz temat, dodaj słowa kluczowe i kliknij generowanie. Licznik pakietu masz zawsze w prawym górnym rogu — kliknięcie pokazuje, ile Ci zostało.'))
+          tekst('start-4-opis','Wpisz temat, dodaj słowa kluczowe i kliknij generowanie. Licznik pakietu masz zawsze w prawym górnym rogu - kliknięcie pokazuje, ile Ci zostało.'))
         + '<div style="font-size:12px;color:var(--text2);line-height:1.7">'
           + tekst('start-4-lista','Gdzie szukać reszty: ikona ⚙️ w pasku górnym to baza wiedzy, integracja z CMS, Brand Voice i widoczność w AI. Nic z tego nie jest potrzebne do pierwszego artykułu.')
           + '</div>';
