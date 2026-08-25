@@ -160,9 +160,3 @@ git show e281ec2:narzedzia/apply_faza.py
 
 Zawierają dokładne pary „string przed → string po" dla każdej poprawki, przydatne przy
 analizie, skąd wziął się dany fragment kodu.
-
-**Jedna rzecz nie ma dziś odpowiednika:** `apply_faza.py` miał przełącznik `SPLASH='dhl'`,
-który przemalowywał splash i reskin na branding DHL (żółte tło `#FFCC00`, logo DHL `#D40511`,
-czerwony pasek ładowania, bez cząsteczek). W repo jest wyłącznie wersja odbrandowana.
-Gdyby wariant brandowany był znów potrzebny, trzeba go świadomie odtworzyć - to decyzja
-o umieszczeniu cudzego znaku towarowego w repozytorium, nie zwykła zmiana techniczna.

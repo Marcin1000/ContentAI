@@ -221,13 +221,7 @@ różni się jedną linią komentarza. Ta różnica jest zamierzona - `keys` z p
 wersję komentarza niż ta, którą generował bieżący `apply_faza.py`, więc ujednolicono do wersji
 zgodnej z narzędziem.
 
-### 2. Wariant brandowany nie ma odpowiednika
-
-`apply_faza.py` miał przełącznik `SPLASH='dhl'`, przemalowujący splash i reskin na branding DHL.
-W repo jest wyłącznie wersja odbrandowana. Odtworzenie wariantu brandowanego to świadoma decyzja
-o umieszczeniu cudzego znaku towarowego w repozytorium, nie zwykła zmiana techniczna.
-
-### 3. Zasoby natywne pochodzą ze starszej paczki
+### 2. Zasoby natywne pochodzą ze starszej paczki
 
 `ContentAI_komplet_reskin.zip` miał nowszy kod aplikacji, ale **zgubił** ikony natywne
 i część instrukcji. Przy przenoszeniu odtworzono ze starszego `ContentAI_pakowanie.zip`:
@@ -238,9 +232,9 @@ i część instrukcji. Przy przenoszeniu odtworzono ze starszego `ContentAI_pako
 - sekcję **„Krok 2b"** w `INSTRUKCJA_Android.md` - obejście dla Windows ARM, gdzie
   `npx @capacitor/assets` wywala się na kompilacji `sharp` (błąd MSB8020)
 
-Ikony są odbrandowane (bursztynowa gwiazda na `#07080D`), zgodne z logo z showcase.
+Ikony to bursztynowa gwiazda na `#07080D`, zgodna z logo ze strony produktowej.
 
-### 4. Aplikacja nie wysyła żądań poza wywołaniami API
+### 3. Aplikacja nie wysyła żądań poza wywołaniami API
 
 Biblioteki i krój pisma są hostowane razem z aplikacją - poza wywołaniami do Anthropic,
 OpenAI i ElevenLabs (albo do Twojego serwera, w wariancie proxy) nie leci nic. Dzięki temu
