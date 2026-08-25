@@ -1,4 +1,4 @@
-# Content AI — audyt przed wdrożeniem, sierpień 2026
+# Content AI - audyt przed wdrożeniem, sierpień 2026
 
 Audyt wykonany przed postawieniem aplikacji na serwerze produkcyjnym, po serii zmian:
 pakiety i limity, licznik w interfejsie, kreator pierwszego uruchomienia, klucze
@@ -21,7 +21,7 @@ Zakres: funkcjonalność, spójność źródła, UX/UI, dostępność, dokumenta
 | Bezpieczeństwo | ✅ bez zmian względem poprzedniego audytu |
 
 **Znaleziono 7 usterek, naprawiono 7.** Żadna nie była krytyczna, ale trzy z nich są
-tego rodzaju, że nie zgłaszają się same — działałyby po cichu źle.
+tego rodzaju, że nie zgłaszają się same - działałyby po cichu źle.
 
 ---
 
@@ -52,14 +52,14 @@ tylko cichą degradację.
 **Klasa:** cicha degradacja i18n. **Waga:** drobna, ale widoczna dla płacącego użytkownika.
 
 Klucz tłumaczenia składany jest w kodzie: `'pakiet-' + czynnosc`. Dla sufitu wywołań serwer
-przysyła `czynnosc: 'wywolanie'`, a klucza `pakiet-wywolanie` nie było — istniał tylko
+przysyła `czynnosc: 'wywolanie'`, a klucza `pakiet-wywolanie` nie było - istniał tylko
 `pakiet-wywolania` (liczba mnoga, używana w liście zużycia).
 
-Skutkiem był ekran limitu z surowym, małą literą napisanym słowem „wywolanie" — w obu
+Skutkiem był ekran limitu z surowym, małą literą napisanym słowem „wywolanie" - w obu
 językach. Nie wywala niczego, więc nie zgłosiłoby się samo.
 
 **Naprawione:** klucz dodany w obu słownikach. Automatyczna kontrola i18n wypisuje teraz
-prefiksy składane w kodzie (`pakiet-`, `pakiet-fn-`) do ręcznego przejrzenia — bo tej
+prefiksy składane w kodzie (`pakiet-`, `pakiet-fn-`) do ręcznego przejrzenia - bo tej
 klasy błędu nie da się wykryć samym parsowaniem.
 
 ### 2. Escape nie zamykał trzech nowych okien
@@ -67,8 +67,8 @@ klasy błędu nie da się wykryć samym parsowaniem.
 **Klasa:** regresja spójności. **Waga:** drobna.
 
 Obsługa klawisza Escape to jedna długa linia wymieniająca każdą funkcję zamykającą
-z osobna. Trzy okna dodane w ostatnich zmianach — podpowiedzi tematów, okno pakietu
-i kreator — nie zostały do niej dopisane. Reszta aplikacji zamyka się Escape'em,
+z osobna. Trzy okna dodane w ostatnich zmianach - podpowiedzi tematów, okno pakietu
+i kreator - nie zostały do niej dopisane. Reszta aplikacji zamyka się Escape'em,
 więc niespójność byłaby odczuwalna.
 
 **Naprawione:** wszystkie trzy dopisane, dwa ostatnie z osłoną `typeof`, bo istnieją
@@ -76,18 +76,18 @@ tylko w wariancie `proxy`.
 
 > **To miejsce będzie się psuć dalej.** Każde nowe okno wymaga ręcznego dopisania do tej
 > listy i nic o tym nie przypomina. Przy następnej większej zmianie w tym obszarze warto
-> zamienić to na wspólny mechanizm — np. atrybut `data-zamykalne` i jedną pętlę.
+> zamienić to na wspólny mechanizm - np. atrybut `data-zamykalne` i jedną pętlę.
 
 ### 3. Tekst pomocniczy poniżej progu czytelności WCAG
 
-**Klasa:** dostępność. **Waga:** średnia — dotyczyła **każdej etykiety pola** w aplikacji.
+**Klasa:** dostępność. **Waga:** średnia - dotyczyła **każdej etykiety pola** w aplikacji.
 
 Zmienna `--text3` daje kolor wszystkim etykietom, podpowiedziom i opisom. Zmierzony
-kontrast wynosił **3,13:1** przy wymaganych 4,5:1 dla tekstu poniżej 18,66 px — a etykiety
+kontrast wynosił **3,13:1** przy wymaganych 4,5:1 dla tekstu poniżej 18,66 px - a etykiety
 pól mają 11 px. Dotyczyło to obu motywów.
 
 Pierwsza poprawka była **niewystarczająca**: dobrałem wartość względem bieli, a realne tło
-strony to `#EEF1F6`, co dawało 4,45:1 — wciąż pod progiem. Wykrył to dopiero powtórny
+strony to `#EEF1F6`, co dawało 4,45:1 - wciąż pod progiem. Wykrył to dopiero powtórny
 pomiar.
 
 **Naprawione:** `--text3` to teraz `#616A7E` (jasny) i `#868FAB` (ciemny). Ten sam odcień,
@@ -104,10 +104,10 @@ tylko tyle ciemniejszy i jaśniejszy, żeby przejść próg. Pomiar po poprawce:
 
 `.modal-close` miał 21 px szerokości przy 24 px wymaganych przez WCAG 2.5.8 (poziom AA).
 
-**Naprawione:** dodany `padding: 2px 8px` z kompensującym ujemnym marginesem — obszar
+**Naprawione:** dodany `padding: 2px 8px` z kompensującym ujemnym marginesem - obszar
 kliknięcia rośnie, układ nie drgnął.
 
-### 5–7. Dokumentacja rozjechana z kodem
+### 5-7. Dokumentacja rozjechana z kodem
 
 | Co | Było | Jest |
 |---|---|---|
@@ -121,7 +121,7 @@ kliknięcia rośnie, układ nie drgnął.
 
 **Cele dotykowe w pasku górnym.** Odznaka pakietu ma 28 px wysokości, tyle samo co
 przełącznik języka obok. To spełnia minimum WCAG 2.5.8 (24 px), ale jest poniżej
-zalecanych przez Apple 44 px. Świadomie zostawione — podniesienie tylko odznaki
+zalecanych przez Apple 44 px. Świadomie zostawione - podniesienie tylko odznaki
 rozjechałoby ją z sąsiadem, a przebudowa całego paska to zmiana projektowa, nie poprawka
 audytowa.
 
@@ -129,7 +129,7 @@ audytowa.
 z gradientu (`background-image`), którego mój pomiar nie widzi i schodzi na tło rodzica,
 a plakietka „SYSTEM READY" jest dekoracyjna i oznaczona `aria-hidden`.
 
-**Wykrywanie motywu w moim narzędziu było początkowo błędne** — aplikacja oznacza tryb
+**Wykrywanie motywu w moim narzędziu było początkowo błędne** - aplikacja oznacza tryb
 ciemny klasą `dark-mode` na `<body>`, a nie `dark`, przez co pierwsze przebiegi zamieniły
 motywy miejscami. Wynik merytoryczny się nie zmienił (obie wartości były pod progiem),
 ale to przypomnienie, żeby nie ufać jednemu przebiegowi narzędzia napisanego ad hoc.
@@ -138,7 +138,7 @@ ale to przypomnienie, żeby nie ufać jednemu przebiegowi narzędzia napisanego 
 
 ## Czego nadal nie ma
 
-Poniższe **nie są usterkami** — to świadomie odłożony zakres:
+Poniższe **nie są usterkami** - to świadomie odłożony zakres:
 
 | Brak | Konsekwencja | Kiedy potrzebne |
 |---|---|---|
@@ -146,7 +146,7 @@ Poniższe **nie są usterkami** — to świadomie odłożony zakres:
 | Płatności | pakiet nadaje admin | przed sprzedażą |
 | Reset hasła przez e-mail | hasło zmienia admin | przy pierwszym użytkowniku spoza zespołu |
 | 2FA we własnym logowaniu | drugi składnik daje dopiero brama | przy publicznym wystawieniu |
-| Regulamin i polityka prywatności | — | przed sprzedażą |
+| Regulamin i polityka prywatności | - | przed sprzedażą |
 
 ---
 
@@ -155,7 +155,7 @@ Poniższe **nie są usterkami** — to świadomie odłożony zakres:
 **Do testów na własnym serwerze: gotowe.** Wszystko, co miało działać, działa i jest
 sprawdzone na uruchomionej aplikacji, nie tylko przeczytane w kodzie.
 
-**Do sprzedaży: brakuje warstwy handlowej** — rejestracji, płatności i dokumentów
+**Do sprzedaży: brakuje warstwy handlowej** - rejestracji, płatności i dokumentów
 prawnych. To nie jest kwestia jakości kodu, tylko niezbudowanego jeszcze zakresu.
 
 Największym ryzykiem technicznym pozostaje **jeden plik HTML o 11,9 tys. linii**. Nie

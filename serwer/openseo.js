@@ -220,7 +220,7 @@ code{font-family:'IBM Plex Mono',monospace;color:#46D5F2}</style></head><body>
 <div><h1>OpenSEO nie odpowiada</h1>
 <p>Kontener nie działa albo jeszcze wstaje. Sprawdź na serwerze:<br>
 <code>sudo docker compose -f /srv/openseo/compose.yaml ps</code><br><br>
-Content AI działa niezależnie — panel treści jest sprawny.</p></div></body></html>`;
+Content AI działa niezależnie - panel treści jest sprawny.</p></div></body></html>`;
 }
 
 // ─── Wpiecie ──────────────────────────────────────────────────────────────────
