@@ -1,13 +1,13 @@
-# Content AI — instalacja na serwerze, krok po kroku
+# Content AI - instalacja na serwerze, krok po kroku
 
 Instrukcja od zera: pusty serwer → działająca strona pod Twoim adresem, z logowaniem
-i kontami. Pisana tak, żeby dało się ją wykonać bez znajomości Linuksa — każde polecenie
+i kontami. Pisana tak, żeby dało się ją wykonać bez znajomości Linuksa - każde polecenie
 jest do skopiowania, a pod nim jest napisane, **co powinieneś zobaczyć**.
 
 Czas: około godziny, z czego większość to czekanie.
 
 > **Jak czytać.** Wszystko w ramkach kopiujesz do okna terminala i naciskasz Enter.
-> Wiersze zaczynające się od `#` to komentarze — możesz je kopiować razem z resztą,
+> Wiersze zaczynające się od `#` to komentarze - możesz je kopiować razem z resztą,
 > nic nie robią. Wszędzie, gdzie widzisz `twojadomena.pl`, wpisujesz swoją domenę.
 
 > **Masz już na tym serwerze Cosmosa?** Połowa kroków jest wtedy zbędna, a dochodzi
@@ -29,7 +29,7 @@ Czas: około godziny, z czego większość to czekanie.
 9. [Sprawdzenie na serwerze](#9-sprawdzenie-na-serwerze)
 10. [Domena i HTTPS](#10-domena-i-https)
 11. [Pierwsze logowanie](#11-pierwsze-logowanie)
-12. [Lista kontrolna — czy wszystko działa](#12-lista-kontrolna--czy-wszystko-działa)
+12. [Lista kontrolna - czy wszystko działa](#12-lista-kontrolna--czy-wszystko-działa)
 13. [Dodawanie ludzi i pakietów](#13-dodawanie-ludzi-i-pakietów)
 14. [Codzienna obsługa](#14-codzienna-obsługa)
 15. [Kiedy coś nie działa](#15-kiedy-coś-nie-działa)
@@ -43,14 +43,14 @@ Potrzebujesz trzech rzeczy:
 
 | Co | Skąd | Uwagi |
 |---|---|---|
-| **Serwer VPS** | np. Hetzner, OVH, Mikr.us, DigitalOcean | Ubuntu 24.04 LTS, minimum 1 vCPU i 1 GB RAM. Content AI prawie nic nie liczy sam — cała praca dzieje się w API. |
+| **Serwer VPS** | np. Hetzner, OVH, Mikr.us, DigitalOcean | Ubuntu 24.04 LTS, minimum 1 vCPU i 1 GB RAM. Content AI prawie nic nie liczy sam - cała praca dzieje się w API. |
 | **Domena** | dowolny rejestrator | Wystarczy jedna poddomena, np. `contentai.twojadomena.pl`. |
-| **Klucze API** | console.anthropic.com, platform.openai.com | Anthropic — treść (obowiązkowy). OpenAI — grafiki, lektor, transkrypcja (opcjonalny). |
+| **Klucze API** | console.anthropic.com, platform.openai.com | Anthropic - treść (obowiązkowy). OpenAI - grafiki, lektor, transkrypcja (opcjonalny). |
 
 > ### ⚠️ Najpierw wymień klucze API
 >
-> Jeśli Twoje klucze były kiedykolwiek w pliku, który trafił poza Twój komputer — do chmury,
-> do rozmowy, do maila — **wygeneruj nowe i unieważnij stare**, zanim postawisz to na serwerze.
+> Jeśli Twoje klucze były kiedykolwiek w pliku, który trafił poza Twój komputer - do chmury,
+> do rozmowy, do maila - **wygeneruj nowe i unieważnij stare**, zanim postawisz to na serwerze.
 > Klucz to karta płatnicza: kto go ma, generuje na Twój rachunek.
 >
 > - Anthropic: console.anthropic.com → *API Keys* → usuń stary, *Create Key*
@@ -67,7 +67,7 @@ W panelu swojego rejestratora domeny dodaj rekord:
 |---|---|---|
 | `A` | `contentai` | adres IP Twojego serwera |
 
-Zmiana rozchodzi się po świecie od kilku minut do kilku godzin — dlatego robisz to
+Zmiana rozchodzi się po świecie od kilku minut do kilku godzin - dlatego robisz to
 na początku, żeby w kroku 10 było już gotowe.
 
 ---
@@ -80,11 +80,11 @@ Na swoim komputerze otwórz **PowerShell** (Windows) albo **Terminal** (Mac/Linu
 ssh root@ADRES_IP_TWOJEGO_SERWERA
 ```
 
-Przy pierwszym połączeniu zapyta o odcisk klucza — wpisz `yes`. Potem podaj hasło,
-które dostałeś od dostawcy VPS-a. Hasło **nie wyświetla się podczas wpisywania** — to
+Przy pierwszym połączeniu zapyta o odcisk klucza - wpisz `yes`. Potem podaj hasło,
+które dostałeś od dostawcy VPS-a. Hasło **nie wyświetla się podczas wpisywania** - to
 normalne, pisz i naciśnij Enter.
 
-Gdy zobaczysz coś w stylu `root@twoj-serwer:~#` — jesteś w środku. Wszystkie kolejne
+Gdy zobaczysz coś w stylu `root@twoj-serwer:~#` - jesteś w środku. Wszystkie kolejne
 polecenia wykonujesz tutaj.
 
 Zacznij od aktualizacji systemu:
@@ -93,7 +93,7 @@ Zacznij od aktualizacji systemu:
 apt update && apt upgrade -y
 ```
 
-To potrwa minutę–dwie. Jeśli pojawi się niebieski ekran z pytaniem o restart usług,
+To potrwa minutę-dwie. Jeśli pojawi się niebieski ekran z pytaniem o restart usług,
 zaznacz `<Ok>` i naciśnij Enter.
 
 ---
@@ -136,16 +136,16 @@ Powinieneś zobaczyć postęp pobierania i na końcu `Resolving deltas: 100%`.
 
 ```bash
 test -f /srv/contentai/serwer/uzytkownicy.js \
-  && echo "OK — kod pobrany" \
-  || echo "STOP — klonowanie się nie udało, nie wykonuj kolejnych kroków"
+  && echo "OK - kod pobrany" \
+  || echo "STOP - klonowanie się nie udało, nie wykonuj kolejnych kroków"
 ```
 
 > ### ⚠️ Dlaczego to sprawdzenie tu jest
 >
-> Gdy klonowanie się nie uda — brak sieci, zapora, literówka w adresie — **kolejny krok
+> Gdy klonowanie się nie uda - brak sieci, zapora, literówka w adresie - **kolejny krok
 > i tak utworzy katalog** (`mkdir -p` tworzy całą ścieżkę). Wygląda wtedy, jakby wszystko
 > szło zgodnie z planem, a błąd wyjdzie dopiero w kroku 6 jako
-> `Cannot find module '/srv/contentai/serwer/uzytkownicy.js'` — komunikat, który nie mówi
+> `Cannot find module '/srv/contentai/serwer/uzytkownicy.js'` - komunikat, który nie mówi
 > nic o prawdziwej przyczynie.
 >
 > **Gdy zobaczysz `STOP`**, ustal najpierw, co zawiodło:
@@ -155,18 +155,18 @@ test -f /srv/contentai/serwer/uzytkownicy.js \
 > curl -sI https://github.com | head -1    # czy serwer widzi GitHuba
 > ```
 >
-> Potem posprzątaj i spróbuj ponownie. **Zajrzyj do katalogu przed skasowaniem** — usuwaj
+> Potem posprzątaj i spróbuj ponownie. **Zajrzyj do katalogu przed skasowaniem** - usuwaj
 > tylko wtedy, gdy nie ma tam nic poza pustym `serwer/dane`:
 >
 > ```bash
 > ls -la /srv/contentai /srv/contentai/serwer 2>/dev/null
 > rm -rf /srv/contentai
 > git clone https://github.com/Marcin1000/ContentAI.git /srv/contentai
-> test -f /srv/contentai/serwer/uzytkownicy.js && echo "OK — kod pobrany"
+> test -f /srv/contentai/serwer/uzytkownicy.js && echo "OK - kod pobrany"
 > ```
 
 > **Nie ma tu żadnego „instalowania zależności".** Serwer Content AI korzysta wyłącznie
-> z tego, co Node ma wbudowane — nie ma `npm install`, nie ma czego budować. Gotowa
+> z tego, co Node ma wbudowane - nie ma `npm install`, nie ma czego budować. Gotowa
 > aplikacja (`app/web-proxy.html`) leży już w pobranym kodzie.
 
 ---
@@ -182,9 +182,9 @@ mkdir -p /srv/contentai/serwer/dane
 chown -R contentai:contentai /srv/contentai/serwer/dane
 ```
 
-Polecenia nic nie wypisują — brak komunikatu oznacza sukces.
+Polecenia nic nie wypisują - brak komunikatu oznacza sukces.
 
-> **Dlaczego to jest ważne — i co się dzieje, gdy się o tym zapomni.** W katalogu
+> **Dlaczego to jest ważne - i co się dzieje, gdy się o tym zapomni.** W katalogu
 > `serwer/dane` lądują konta, sekret podpisujący sesje, baza wiedzy i liczniki pakietów.
 > Sprawdziłem oba możliwe błędy:
 >
@@ -207,7 +207,7 @@ sudo -u contentai node serwer/uzytkownicy.js dodaj marcin admin
 ```
 
 Zamiast `marcin` wpisz login, jakiego chcesz używać. Program poprosi o hasło **dwa razy**
-(za drugim razem dla potwierdzenia). Hasło nie wyświetla się podczas pisania — pisz spokojnie
+(za drugim razem dla potwierdzenia). Hasło nie wyświetla się podczas pisania - pisz spokojnie
 i naciśnij Enter.
 
 Wymagane minimum to **10 znaków**. Użyj czegoś, czego nie masz nigdzie indziej.
@@ -228,7 +228,7 @@ Zobaczysz swój login z rolą `admin`.
 
 ## 7. Klucze API
 
-Klucze trzymasz w osobnym pliku, poza katalogiem z kodem — żeby nigdy nie trafiły
+Klucze trzymasz w osobnym pliku, poza katalogiem z kodem - żeby nigdy nie trafiły
 przypadkiem do repozytorium.
 
 ```bash
@@ -256,7 +256,7 @@ chmod 600 /etc/contentai/srodowisko
 
 ### Co jeszcze można tu wpisać
 
-Wszystkie ustawienia są opcjonalne — bez nich działają wartości domyślne.
+Wszystkie ustawienia są opcjonalne - bez nich działają wartości domyślne.
 
 | Wiersz | Do czego |
 |---|---|
@@ -288,7 +288,7 @@ Active: active (running)
 
 Wyjdź z podglądu klawiszem **q**.
 
-Jeśli widzisz `failed` — przejdź od razu do [kroku 15](#15-kiedy-coś-nie-działa), tam jest
+Jeśli widzisz `failed` - przejdź od razu do [kroku 15](#15-kiedy-coś-nie-działa), tam jest
 tabela z przyczynami.
 
 ---
@@ -317,7 +317,7 @@ Content AI: http://127.0.0.1:3100
   kont: 1, cookie Secure: TAK
 ```
 
-> Port `3100` jest widoczny **tylko z wnętrza serwera** — z internetu nikt się do niego nie
+> Port `3100` jest widoczny **tylko z wnętrza serwera** - z internetu nikt się do niego nie
 > dostanie. Ruch z zewnątrz wpuści dopiero Caddy w następnym kroku, po HTTPS. Tak ma być.
 
 ---
@@ -369,7 +369,7 @@ ufw allow 443/tcp
 ufw --force enable
 ```
 
-> **Nie dopisuj do Caddy żadnego `basicauth`.** Logowanie obsługuje już Content AI —
+> **Nie dopisuj do Caddy żadnego `basicauth`.** Logowanie obsługuje już Content AI -
 > dwa ekrany logowania pod rząd tylko męczą, a niczego nie dokładają.
 
 ---
@@ -386,12 +386,12 @@ Powinieneś zobaczyć ciemny ekran logowania z napisem **CONTENT AI** i kłódk�
 
 Zaloguj się loginem i hasłem z kroku 6.
 
-**Jeśli przeglądarka pokazuje ostrzeżenie o certyfikacie** — poczekaj 2–3 minuty i odśwież.
+**Jeśli przeglądarka pokazuje ostrzeżenie o certyfikacie** - poczekaj 2-3 minuty i odśwież.
 Caddy pobiera certyfikat przy pierwszym wejściu, a DNS musi zdążyć się rozejść.
 
 ---
 
-## 12. Lista kontrolna — czy wszystko działa
+## 12. Lista kontrolna - czy wszystko działa
 
 Przejdź to raz, po kolei. Każdy punkt sprawdza inną warstwę.
 
@@ -406,7 +406,7 @@ Przejdź to raz, po kolei. Każdy punkt sprawdza inną warstwę.
 | 7 | Przełącz język na EN i z powrotem | Interfejs tłumaczy się w całości |
 
 Punkt 6 jest najważniejszy z całej listy. Jeśli po restarcie usługi **wyrzuca Cię do
-logowania**, wróć do [kroku 5](#5-konto-systemowe-usługi) — usługa nie może zapisywać
+logowania**, wróć do [kroku 5](#5-konto-systemowe-usługi) - usługa nie może zapisywać
 w `serwer/dane`.
 
 Sprawdź to od strony serwera:
@@ -438,7 +438,7 @@ cd /srv/contentai
 sudo -u contentai node serwer/uzytkownicy.js dodaj anna
 ```
 
-Bez dopisku `admin` konto dostaje zwykłą rolę. Program poprosi o hasło — przekaż je
+Bez dopisku `admin` konto dostaje zwykłą rolę. Program poprosi o hasło - przekaż je
 tej osobie bezpiecznym kanałem i poproś o zmianę.
 
 ### Nadanie pakietu
@@ -452,16 +452,16 @@ Do wyboru: `darmowy`, `standard`, `premium`. Konto bez nadanego pakietu dostaje 
 | | Darmowy | Standard | Premium |
 |---|---|---|---|
 | Artykuły | 3, bez odnawiania | 50/mies. | bez limitu |
-| Grafiki | — | 50/mies. | bez limitu |
-| Audio, transkrypcja | — | 20/mies. | bez limitu |
+| Grafiki | - | 50/mies. | bez limitu |
+| Audio, transkrypcja | - | 20/mies. | bez limitu |
 | Dokumenty w bazie wiedzy | 3 | 50 | bez limitu |
-| Analiza SERP | — | tak | tak |
-| Dane z OpenSEO | — | — | tak |
+| Analiza SERP | - | tak | tak |
+| Dane z OpenSEO | - | - | tak |
 
-**Ty jako admin zawsze działasz jak premium**, niezależnie od wpisu — żebyś nie mógł
+**Ty jako admin zawsze działasz jak premium**, niezależnie od wpisu - żebyś nie mógł
 sobie zablokować własnego narzędzia.
 
-Limity zmienia się w pliku `serwer/plany.js` — to zwykła tabelka, zmiana „3 artykuły"
+Limity zmienia się w pliku `serwer/plany.js` - to zwykła tabelka, zmiana „3 artykuły"
 na „5" to poprawienie jednej liczby i `systemctl restart contentai`.
 
 ### Pozostałe polecenia
@@ -473,14 +473,14 @@ sudo -u contentai node serwer/uzytkownicy.js rola anna admin
 sudo -u contentai node serwer/uzytkownicy.js usun anna      # odebranie dostępu
 ```
 
-Zmiana hasła, roli albo usunięcie konta **działa natychmiast** — nie trzeba restartować
+Zmiana hasła, roli albo usunięcie konta **działa natychmiast** - nie trzeba restartować
 usługi, a osoba zostaje wylogowana ze wszystkich urządzeń.
 
 Ostatniego admina nie da się usunąć ani zdegradować.
 
 ### Wyzerowanie komuś licznika
 
-Liczniki to zwykłe pliki — jeden na konto:
+Liczniki to zwykłe pliki - jeden na konto:
 
 ```bash
 rm /srv/contentai/serwer/dane/uzycie/anna.json
@@ -513,7 +513,7 @@ git pull
 systemctl restart contentai
 ```
 
-Aktualizacja **nikogo nie wylogowuje** — sesje przeżywają restart.
+Aktualizacja **nikogo nie wylogowuje** - sesje przeżywają restart.
 
 ### Kopia zapasowa
 
@@ -531,14 +531,14 @@ Pobierz plik na swój komputer (ze swojego komputera, nie z serwera):
 scp root@ADRES_IP:~/contentai-kopia-*.tar.gz .
 ```
 
-Rób to raz w tygodniu. W `serwer/dane` są konta, baza wiedzy i liczniki — kodu nie
+Rób to raz w tygodniu. W `serwer/dane` są konta, baza wiedzy i liczniki - kodu nie
 musisz kopiować, jest na GitHubie.
 
 ---
 
 ## 15. Kiedy coś nie działa
 
-Zanim zaczniesz zgadywać, **przeczytaj log** — zwykle jest tam napisane wprost, co jest nie tak:
+Zanim zaczniesz zgadywać, **przeczytaj log** - zwykle jest tam napisane wprost, co jest nie tak:
 
 ```bash
 journalctl -u contentai -n 50 --no-pager
@@ -550,7 +550,7 @@ journalctl -u contentai -n 50 --no-pager
 | W logu `BLAD: brak kont`, a konto **na pewno** założyłeś | Plik z kontami należy do `root`, więc usługa go nie przeczyta | `chown -R contentai:contentai /srv/contentai/serwer/dane` i `systemctl restart contentai` |
 | W logu `BLAD: brak kont`, konta faktycznie nie ma | Nie wykonałeś kroku 6 | Wróć do [kroku 6](#6-twoje-konto-administratora) |
 | W logu `[sesje] nie udalo sie zapisac sekretu` | Usługa nie może pisać w `serwer/dane` | `chown -R contentai:contentai /srv/contentai/serwer/dane` i restart |
-| Po restarcie usługi wyrzuca do logowania | To samo — to jest widoczny objaw powyższego | Jak wyżej |
+| Po restarcie usługi wyrzuca do logowania | To samo - to jest widoczny objaw powyższego | Jak wyżej |
 | Limity pakietów nic nie liczą | To samo | Jak wyżej |
 | `Cannot find module '/srv/contentai/serwer/uzytkownicy.js'` | Klonowanie się nie udało, a `mkdir -p` utworzyło katalog mimo to | Sprawdzenie i naprawa w [kroku 4](#4-pobranie-content-ai) |
 | W logu `nie znaleziono ... web-proxy.html` | Niepełny klon repozytorium | `cd /srv/contentai && git checkout app/` |
@@ -558,7 +558,7 @@ journalctl -u contentai -n 50 --no-pager
 | Ostrzeżenie o certyfikacie | Caddy jeszcze go nie pobrał | Poczekaj 3 minuty; `journalctl -u caddy -n 30 --no-pager` |
 | „Nieznany błąd API" przy generowaniu | Zły klucz albo brak środków u dostawcy | Sprawdź klucz w `/etc/contentai/srodowisko` i saldo na koncie Anthropic/OpenAI |
 | Nie możesz się zalogować, hasło na pewno dobre | 8 nieudanych prób → blokada na 15 minut | Odczekaj 15 minut albo zrestartuj usługę |
-| Zapomniałeś hasła | — | `sudo -u contentai node serwer/uzytkownicy.js haslo TWOJ_LOGIN` |
+| Zapomniałeś hasła | - | `sudo -u contentai node serwer/uzytkownicy.js haslo TWOJ_LOGIN` |
 
 Gdy nic z powyższego nie pasuje, do zgłoszenia problemu dołącz wynik:
 
@@ -572,7 +572,7 @@ node -v
 
 ## 16. Dodatki opcjonalne
 
-Wszystkie są **niepotrzebne do działania** — Content AI jest kompletny po kroku 12.
+Wszystkie są **niepotrzebne do działania** - Content AI jest kompletny po kroku 12.
 Dokładasz je wtedy, kiedy ich potrzebujesz.
 
 ### Realne dane z Google zamiast szacowanych
@@ -588,7 +588,7 @@ DATAFORSEO_HASLO=...
 
 i `systemctl restart contentai`. Płatne za zapytanie.
 
-### OpenSEO — pozycje, backlinki, audyty
+### OpenSEO - pozycje, backlinki, audyty
 
 Osobna aplikacja w kontenerze Dockera, wpięta za to samo logowanie i w tę samą paletę
 kolorów. Frazy krążą między nią a Content AI w obie strony.
@@ -598,7 +598,7 @@ Instrukcja: **`openseo/README.md`** w pobranym kodzie.
 ### Logowanie dwuskładnikowe (2FA)
 
 Własne logowanie Content AI nie ma drugiego składnika. Daje go brama uwierzytelniająca
-(Authelia) postawiona przed całością — obsługuje kody z telefonu, klucze sprzętowe
+(Authelia) postawiona przed całością - obsługuje kody z telefonu, klucze sprzętowe
 i passkeys, i obejmuje przy okazji wszystkie Twoje aplikacje naraz.
 
 Gotowe pliki konfiguracyjne i instrukcja: **`brama/README.md`**.
@@ -606,7 +606,7 @@ Gotowe pliki konfiguracyjne i instrukcja: **`brama/README.md`**.
 ### Modele open source zamiast Anthropic
 
 `CAI_DOSTAWCA=nvidia` plus `NVIDIA_KEY=...` kieruje generowanie treści do NVIDIA NIM.
-Aplikacja nie wymaga żadnej zmiany — serwer tłumaczy formaty w locie. Grafiki i audio
+Aplikacja nie wymaga żadnej zmiany - serwer tłumaczy formaty w locie. Grafiki i audio
 nadal idą do OpenAI.
 
 ---

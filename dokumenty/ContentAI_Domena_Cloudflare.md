@@ -1,7 +1,7 @@
-# Domena content-ai.net na Cloudflare — strona produktowa i aplikacja
+# Domena content-ai.net na Cloudflare - strona produktowa i aplikacja
 
 Ustawienie domeny tak, żeby pod `content-ai.net` stała strona produktowa, a pod
-`app.content-ai.net` — aplikacja z logowaniem. Zakłada, że Content AI jest już
+`app.content-ai.net` - aplikacja z logowaniem. Zakłada, że Content AI jest już
 zainstalowany według `dokumenty/ContentAI_Instalacja_na_serwerze.md`.
 
 Czas: 20 minut plus czekanie na certyfikat.
@@ -15,7 +15,7 @@ Czas: 20 minut plus czekanie na certyfikat.
 | Co tam stoi | strona produktowa (`showcase/index.html`) | aplikacja |
 | Kto ma wejść | każdy, bez logowania | tylko osoby z kontem |
 | Cloudflare | **proxy włączone** (pomarańczowa chmurka) | **proxy wyłączone** (szara chmurka) |
-| Po co tak | Cloudflare cache'uje statyczną stronę i serwuje ją ze swoich serwerów — Twój VPS prawie się nie rusza | patrz ostrzeżenie o limicie 100 sekund niżej |
+| Po co tak | Cloudflare cache'uje statyczną stronę i serwuje ją ze swoich serwerów - Twój VPS prawie się nie rusza | patrz ostrzeżenie o limicie 100 sekund niżej |
 
 Rozdzielenie daje jeszcze jedno: ciasteczko sesji siedzi wyłącznie na `app`, więc strona
 produktowa nie ustawia niczego w przeglądarce odwiedzającego i jest w pełni cache'owalna.
@@ -37,7 +37,7 @@ Klikając w chmurkę przy rekordzie, przełączasz ją między pomarańczową a 
 > ### ⚠️ Dlaczego `app` musi być szary
 >
 > Cloudflare w planie darmowym **zrywa połączenie po 100 sekundach** i pokazuje
-> błąd **524**. Generowanie długiego artykułu potrafi trwać dłużej — i wtedy
+> błąd **524**. Generowanie długiego artykułu potrafi trwać dłużej - i wtedy
 > użytkownik zobaczy błąd Cloudflare zamiast gotowego tekstu, mimo że serwer
 > pracuje dalej i klucz API zostaje obciążony.
 >
@@ -45,7 +45,7 @@ Klikając w chmurkę przy rekordzie, przełączasz ją między pomarańczową a 
 > serwera". Nie ma wtedy żadnego limitu czasu, a HTTPS i tak zapewnia Caddy.
 >
 > **Cena tego rozwiązania:** przy szarej chmurce publiczny adres IP Twojego serwera
-> jest widoczny — Cloudflare go nie ukrywa. Dla aplikacji za logowaniem to
+> jest widoczny - Cloudflare go nie ukrywa. Dla aplikacji za logowaniem to
 > akceptowalne; ochronę przed zalewem żądań ma wtedy zapewnić zapora serwera.
 
 ---
@@ -59,9 +59,9 @@ Ustaw **Full (strict)**.
 | Tryb | Co robi | Wynik |
 |---|---|---|
 | Off | brak HTTPS | odpada |
-| Flexible | Cloudflare łączy się z serwerem po HTTP | **pętla przekierowań** — Caddy przekierowuje na HTTPS, Cloudflare wraca po HTTP, i tak w kółko |
+| Flexible | Cloudflare łączy się z serwerem po HTTP | **pętla przekierowań** - Caddy przekierowuje na HTTPS, Cloudflare wraca po HTTP, i tak w kółko |
 | Full | HTTPS do serwera, ale bez sprawdzania certyfikatu | działa, ale nie sprawdza, z kim rozmawia |
-| **Full (strict)** | HTTPS do serwera z weryfikacją certyfikatu | **to ustaw** — Caddy ma prawdziwy certyfikat Let's Encrypt, więc weryfikacja przechodzi |
+| **Full (strict)** | HTTPS do serwera z weryfikacją certyfikatu | **to ustaw** - Caddy ma prawdziwy certyfikat Let's Encrypt, więc weryfikacja przechodzi |
 
 **Flexible to najczęstszy błąd** przy stawianiu strony za Cloudflare. Jeśli po
 uruchomieniu strona wpada w nieskończone przekierowanie, sprawdź w pierwszej
@@ -69,13 +69,13 @@ kolejności to ustawienie.
 
 ---
 
-## 3. Caddy — dwa bloki w jednym pliku
+## 3. Caddy - dwa bloki w jednym pliku
 
 ```bash
 nano /etc/caddy/Caddyfile
 ```
 
-Zawartość (podmień nic — domena jest już wpisana):
+Zawartość (podmień nic - domena jest już wpisana):
 
 ```
 # ── Strona produktowa ────────────────────────────────────────────────────────
@@ -131,7 +131,7 @@ W przeglądarce:
 | 1 | `https://content-ai.net` | Strona produktowa, kłódka przy adresie |
 | 2 | Kliknij **Zaloguj się** w prawym górnym rogu | Przechodzisz na `app.content-ai.net`, widzisz ekran logowania |
 | 3 | Zaloguj się | Wchodzisz do aplikacji; przy pierwszym wejściu wita Cię kreator konfiguracji |
-| 4 | Wygeneruj artykuł | Tekst się pojawia — bez błędu 524 nawet przy długim tekście |
+| 4 | Wygeneruj artykuł | Tekst się pojawia - bez błędu 524 nawet przy długim tekście |
 | 5 | `https://www.content-ai.net` | To samo co punkt 1 |
 
 ---
@@ -144,11 +144,11 @@ Strona to zwykły plik w repozytorium, więc aktualizuje się razem z resztą:
 cd /srv/contentai && git pull
 ```
 
-Caddy poda nową wersję od razu — nie trzeba go restartować. Cloudflare może jeszcze
+Caddy poda nową wersję od razu - nie trzeba go restartować. Cloudflare może jeszcze
 przez chwilę serwować starą wersję z cache; żeby to wymusić natychmiast, w panelu:
 **Caching → Configuration → Purge Everything**.
 
-> Adres aplikacji jest w stronie produktowej **w jednym miejscu** — stała
+> Adres aplikacji jest w stronie produktowej **w jednym miejscu** - stała
 > `ADRES_APLIKACJI` w skrypcie na końcu `showcase/index.html`. Zmieniając domenę,
 > poprawiasz tylko ją.
 
@@ -170,15 +170,15 @@ przez chwilę serwować starą wersję z cache; żeby to wymusić natychmiast, w
 
 ## Co dalej
 
-**Konta dla użytkowników.** Zakładasz je poleceniem — patrz
+**Konta dla użytkowników.** Zakładasz je poleceniem - patrz
 `dokumenty/ContentAI_AdminGuide.md`. Osoba dostaje login i hasło, przy pierwszym
 wejściu prowadzi ją kreator konfiguracji.
 
-**Dwuskładnikowe logowanie.** Brama Authelia przed `app.content-ai.net` — patrz
+**Dwuskładnikowe logowanie.** Brama Authelia przed `app.content-ai.net` - patrz
 `brama/README.md`. Strona produktowa zostaje wtedy otwarta dla wszystkich, bramkowana
 jest tylko aplikacja.
 
-**Samodzielna rejestracja i płatności.** Tego jeszcze nie ma — konta nadaje admin.
+**Samodzielna rejestracja i płatności.** Tego jeszcze nie ma - konta nadaje admin.
 To świadomy krok pierwszy: limity pakietów działają i można je testować, zanim
 wejdzie bramka płatnicza.
 

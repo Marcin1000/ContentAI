@@ -1,7 +1,7 @@
 # Content AI - zmiany F1-F17 i reskin: co to jest i jak tego pilnować
 
 Ten dokument opisuje zmiany, które kiedyś nanoszono na aplikację skryptami. **Dziś wszystkie
-są już wtopione w `app/contentai.src.html`** — nie ma ich czym „nanosić", są częścią kodu.
+są już wtopione w `app/contentai.src.html`** - nie ma ich czym „nanosić", są częścią kodu.
 
 Dokument służy teraz do dwóch rzeczy:
 1. wyjaśnia, co każda zmiana robi i gdzie jej szukać, gdy trzeba coś zmodyfikować;
@@ -20,7 +20,7 @@ python3 warianty.py --wszystkie -o ../app   # przebuduj warianty w app/
 python3 zbuduj_web.py                # payload web/ dla opakowań
 ```
 
-Jeśli zmiana ma dotyczyć tylko części wariantów, otocz ją dyrektywą — komentarz HTML
+Jeśli zmiana ma dotyczyć tylko części wariantów, otocz ją dyrektywą - komentarz HTML
 w treści strony, komentarz JS wewnątrz `<script>`:
 
 ```html
@@ -47,20 +47,20 @@ poprawce, i często fragment sprzed poprawki, który **nie może** wrócić. Dzi
 zarówno wycięcie zmiany, jak i cofnięcie jej do stanu pierwotnego. Kod wyjścia 1 przy
 jakiejkolwiek niezgodności.
 
-Kontrole mają prefiksy — po nich widać, czego dotyczy zgłoszenie:
+Kontrole mają prefiksy - po nich widać, czego dotyczy zgłoszenie:
 
 | Prefiks | Czego pilnuje |
 |---|---|
-| `F1`–`F17` | poprawki bazowe (tabela niżej) |
+| `F1`-`F17` | poprawki bazowe (tabela niżej) |
 | `R/*` | warstwa reskinu |
-| `W/*` | różnice między wariantami; `W/blokada*` — że nie wróci blokada urządzenia |
+| `W/*` | różnice między wariantami; `W/blokada*` - że nie wróci blokada urządzenia |
 | `D/*` | każda deklaracja klucza występuje **dokładnie raz** (potrójna = martwe UI) |
 | `S/*` | pliki `app/web-*.html` zgadzają się ze źródłem |
 | `B/*` | baza wiedzy na serwerze |
 | `O/*` | brama OpenSEO i synchronizacja motywu |
 | `I/*` | okno fraz z OpenSEO w formularzu |
 | `Z/*` | zero zależności od obcych serwerów (biblioteki i krój z własnego hosta) |
-| `A/*` | dostępność — atrybut `lang` idzie za językiem interfejsu |
+| `A/*` | dostępność - atrybut `lang` idzie za językiem interfejsu |
 
 Poza tym warto przejść ręcznie:
 
@@ -81,7 +81,7 @@ Poza tym warto przejść ręcznie:
 | F3 | Wykrycie języka przeglądarki przy pierwszym uruchomieniu | `var currentLang = localStorage.getItem('cai_lang')` |
 | F4 | Panel Klucze API: pozycja w menu, klucze z `localStorage`, modal z i18n, komunikat „brak klucza" | tylko wariant `keys`; `openKeysModal`, `id="keys-modal"` |
 | F5 | Nazwa sekcji „Kluczowe wnioski" w języku artykułu | `const kwName = ({ 'Polish':'Kluczowe wnioski'` |
-| F6 | Prompt SERP: język **poza** schematem JSON — naprawia parsowanie i przywraca przycisk SERP | `_serpLang`, `fetchSerpContext` |
+| F6 | Prompt SERP: język **poza** schematem JSON - naprawia parsowanie i przywraca przycisk SERP | `_serpLang`, `fetchSerpContext` |
 | F7 | Spinner pokazuje pierwszy krok natychmiast; zaszyty polski komunikat premium → `_t()` | `_tickStep`, `msg-spin-premium-eval` |
 | F8 | Przeróbki w języku treści zamiast „Napisz po polsku" | `_rpLang`, `runRepurpose` |
 | F9 | Auto-poprawka SEO/AIO trzyma język; usunięty mylący prefiks „Premium:" | `improvePrompt`, `LANGUAGE: Write the improved article` |
@@ -119,17 +119,17 @@ ale ta pułapka wraca przy każdym skrypcie, który wstrzykuje coś „po `<body
 
 Warianty różnią się w 22 miejscach, wszystkie oznaczone dyrektywami w źródle.
 
-**Sposób podawania kluczy** — dziesięć pierwotnych bloków:
+**Sposób podawania kluczy** - dziesięć pierwotnych bloków:
 
-- pozycja „Klucze API" w menu ustawień — tylko `keys`
-- klucze i18n panelu, słownik PL i EN — tylko `keys`
-- komunikat „brak klucza" (PL i EN) — `keys` kieruje do panelu, `owner`/`proxy` do edycji pliku
-- deklaracja `API_KEY` — `keys` z `localStorage`, `owner` z placeholderem, `proxy` puste + adresy workera
-- deklaracje `OPENAI_API_KEY` i `ELEVEN_API_KEY` — jak wyżej
-- `OWNER_MODE` — `true` tylko w `owner`
-- modal Kluczy API wraz ze skryptem — tylko `keys`
+- pozycja „Klucze API" w menu ustawień - tylko `keys`
+- klucze i18n panelu, słownik PL i EN - tylko `keys`
+- komunikat „brak klucza" (PL i EN) - `keys` kieruje do panelu, `owner`/`proxy` do edycji pliku
+- deklaracja `API_KEY` - `keys` z `localStorage`, `owner` z placeholderem, `proxy` puste + adresy workera
+- deklaracje `OPENAI_API_KEY` i `ELEVEN_API_KEY` - jak wyżej
+- `OWNER_MODE` - `true` tylko w `owner`
+- modal Kluczy API wraz ze skryptem - tylko `keys`
 
-**Funkcje wymagające własnego serwera** — wyłącznie `@@IF proxy`, bo bez serwera nie mają
+**Funkcje wymagające własnego serwera** - wyłącznie `@@IF proxy`, bo bez serwera nie mają
 z czym rozmawiać:
 
 - pozycja „Baza wiedzy" w menu i okno bazy (prywatna + wspólna, na serwerze)
@@ -146,12 +146,12 @@ z czym rozmawiać:
 Były tu dwa skrypty: `rebuild_all.py` (nanosił F1-F17 i budował trzy warianty)
 i `apply_faza.py` (nanosił reskin). Usunięto je, bo:
 
-- ich zadanie jest wykonane — wszystkie zmiany są w źródle;
+- ich zadanie jest wykonane - wszystkie zmiany są w źródle;
 - nie dało się ich uruchomić: odwoływały się do ścieżek `/home/claude/...` i do czytelnych
   plików DEV (`ContentAI.html`, `ContentAI_owner.html`), których nie było w przekazanych paczkach;
 - budowanie wariantów przejął `pakowanie/warianty.py`, który działa na jednym źródle.
 
-Oba pliki zostają w historii gita — w pierwszym commicie tego repozytorium:
+Oba pliki zostają w historii gita - w pierwszym commicie tego repozytorium:
 
 ```bash
 git show e281ec2:narzedzia/rebuild_all.py
@@ -164,5 +164,5 @@ analizie, skąd wziął się dany fragment kodu.
 **Jedna rzecz nie ma dziś odpowiednika:** `apply_faza.py` miał przełącznik `SPLASH='dhl'`,
 który przemalowywał splash i reskin na branding DHL (żółte tło `#FFCC00`, logo DHL `#D40511`,
 czerwony pasek ładowania, bez cząsteczek). W repo jest wyłącznie wersja odbrandowana.
-Gdyby wariant brandowany był znów potrzebny, trzeba go świadomie odtworzyć — to decyzja
+Gdyby wariant brandowany był znów potrzebny, trzeba go świadomie odtworzyć - to decyzja
 o umieszczeniu cudzego znaku towarowego w repozytorium, nie zwykła zmiana techniczna.

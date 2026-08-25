@@ -39,12 +39,12 @@ jobs:
 
       # Serwer nie ma zależności npm, więc wystarczy kontrola składni i testy.
       # Pętla po katalogu, żeby nowy moduł nie wypadł z kontroli przez przeoczenie.
-      - name: Serwer — składnia i testy
+      - name: Serwer - składnia i testy
         run: |
           for plik in serwer/*.js; do node --check "$plik"; done
           node serwer/testy.js
           # Testy tworzą serwer/dane/ (sekret sesji, konta). Katalog jest
-          # w .gitignore — sprawdzamy, że nic z niego nie jest wersjonowane.
+          # w .gitignore - sprawdzamy, że nic z niego nie jest wersjonowane.
           if [ -n "$(git ls-files serwer/dane/)" ]; then
             echo "::error::pliki z serwer/dane/ trafiły do repozytorium"
             git ls-files serwer/dane/
@@ -52,12 +52,12 @@ jobs:
           fi
 
       # ESLint nad JavaScriptem aplikacji. Aplikacja to jeden plik HTML, więc
-      # skrypty trzeba najpierw wyciąć — numeracja linii zostaje zachowana.
+      # skrypty trzeba najpierw wyciąć - numeracja linii zostaje zachowana.
       # Wąski zestaw reguł: nie styl, tylko klasy błędów, które w pliku z 460
       # funkcjami w zasięgu globalnym milczą aż do awarii u użytkownika.
       # Tak wyszedł na jaw klucz i18n zadeklarowany dwa razy z różnymi
-      # tłumaczeniami — poprawka była w źródle i nie działała.
-      - name: JavaScript aplikacji — ESLint
+      # tłumaczeniami - poprawka była w źródle i nie działała.
+      - name: JavaScript aplikacji - ESLint
         run: |
           npm install --no-save --no-audit --no-fund eslint
           # Wycięte skrypty muszą leżeć WEWNĄTRZ repozytorium: ESLint 9 pomija
@@ -73,10 +73,16 @@ jobs:
       # z użytkownikiem: brak klucza tłumaczenia (t() po cichu schodzi na polski,
       # więc angielski interfejs pokazuje polskie zdanie) i przycisk wołający
       # nieistniejącą funkcję (w interfejsie po prostu nic się nie dzieje).
-      - name: Aplikacja — tłumaczenia i uchwyty zdarzeń
+      - name: Aplikacja - tłumaczenia i uchwyty zdarzeń
         run: |
           python3 narzedzia/audyt_i18n.py
           python3 narzedzia/audyt_uchwyty.py
+
+      # Aplikacja usuwa dlugie myslniki z generowanych artykulow po polsku.
+      # Ta kontrola rozciaga te sama regule na interfejs, strone produktowa
+      # i dokumentacje, zeby nie wracaly przy kolejnych zmianach.
+      - name: Teksty - bez dlugich myslnikow
+        run: python3 narzedzia/audyt_myslniki.py
 
       # Placeholdery w aplikacji ("sk-ant-...", "sk-proj-...") są krótkie,
       # więc wymóg 40+ znaków po prefiksie ich nie łapie. Prawdziwe klucze łapie.

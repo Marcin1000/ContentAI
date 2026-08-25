@@ -1,5 +1,5 @@
 /**
- * Content AI — Cloudflare Worker Proxy
+ * Content AI - Cloudflare Worker Proxy
  *
  * Wdrożenie:
  * 1. Zaloguj się na dash.cloudflare.com
@@ -17,9 +17,9 @@
  *   POST /api/images → proxy do OpenAI API   (generowanie grafik)
  */
 
-// Dozwolone originy — dodaj domeny z których korzystają Twoi klienci.
+// Dozwolone originy - dodaj domeny z których korzystają Twoi klienci.
 //
-// Uwaga: nagłówek Origin jest wiarygodny tylko w przeglądarce — klient inny niż
+// Uwaga: nagłówek Origin jest wiarygodny tylko w przeglądarce - klient inny niż
 // przeglądarka może wpisać dowolną wartość. To filtr odsiewający obce strony WWW,
 // a nie mechanizm uwierzytelniania. Klucze i tak chroni to, że nigdy nie opuszczają workera.
 
@@ -30,10 +30,10 @@ const ALLOWED_ORIGINS = [
   'http://localhost',        // lokalny podglad (python3 -m http.server)
 ];
 
-// Dopasowanie po prefiksie — schematy aplikacji natywnych, gdzie host bywa pusty lub zmienny
+// Dopasowanie po prefiksie - schematy aplikacji natywnych, gdzie host bywa pusty lub zmienny
 const ALLOWED_ORIGIN_PREFIXES = [
   'file://',                 // lokalne pliki HTML
-  'app://',                  // Electron (Windows/macOS) — payload serwowany jako app://./index.html
+  'app://',                  // Electron (Windows/macOS) - payload serwowany jako app://./index.html
   'capacitor://',            // Capacitor iOS (domyslnie capacitor://localhost)
   'ionic://',                // starsze wersje Capacitora/Ionica na iOS
   'http://localhost:',       // lokalny podglad na dowolnym porcie

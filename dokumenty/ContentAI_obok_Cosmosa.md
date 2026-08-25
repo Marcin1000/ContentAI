@@ -1,15 +1,15 @@
 # Content AI na serwerze, na którym działa już Cosmos
 
 Wersja dla sytuacji, w której masz **jeden VPS z Cosmosem** i chcesz na nim postawić obok
-Content AI. Obie aplikacje działają niezależnie — nie współdzielą kodu, danych ani logowania.
+Content AI. Obie aplikacje działają niezależnie - nie współdzielą kodu, danych ani logowania.
 Dzielą tylko maszynę.
 
 > **To jest dokument uzupełniający.** Pełny opis każdego kroku, z wyjaśnieniami i tabelą
 > problemów, jest w **`dokumenty/ContentAI_Instalacja_na_serwerze.md`**. Tutaj jest tylko to,
-> co wygląda inaczej, bo Cosmos już tam siedzi — plus lista pułapek, w które łatwo wdepnąć,
+> co wygląda inaczej, bo Cosmos już tam siedzi - plus lista pułapek, w które łatwo wdepnąć,
 > gdy na jednym serwerze stoją dwie aplikacje.
 
-Czas: 20–30 minut.
+Czas: 20-30 minut.
 
 ---
 
@@ -22,8 +22,8 @@ Stawiając Cosmosa, zrobiłeś już połowę roboty:
 | Serwer VPS z Ubuntu | ✅ gotowe | Ten sam |
 | Node.js ≥ 18 | ✅ gotowe | Cosmos wymaga tego samego; sprawdź `node -v` |
 | Git | ✅ gotowe | Zainstalowany razem z Node |
-| Caddy i HTTPS | ⚠️ zależy | Gotowe, jeśli Cosmos chodzi na domenie. Jeśli tylko na Tailscale — patrz krok 4 |
-| Klucze API | ⚠️ do sprawdzenia | Możesz użyć tych samych, ale **nazwy zmiennych są inne** — patrz krok 5 |
+| Caddy i HTTPS | ⚠️ zależy | Gotowe, jeśli Cosmos chodzi na domenie. Jeśli tylko na Tailscale - patrz krok 4 |
+| Klucze API | ⚠️ do sprawdzenia | Możesz użyć tych samych, ale **nazwy zmiennych są inne** - patrz krok 5 |
 
 Zostaje: pobranie kodu, konto usługi, konto admina, plik z kluczami, usługa systemd i adres.
 
@@ -33,13 +33,13 @@ Zostaje: pobranie kodu, konto usługi, konto admina, plik z kluczami, usługa sy
 
 Zaloguj się na serwer i wykonaj trzy sprawdzenia.
 
-**Miejsce na dysku** — Content AI zajmuje około 16 MB:
+**Miejsce na dysku** - Content AI zajmuje około 16 MB:
 
 ```bash
 df -h /
 ```
 
-**Pamięć** — Content AI to proces bez zależności, zjada kilkadziesiąt megabajtów:
+**Pamięć** - Content AI to proces bez zależności, zjada kilkadziesiąt megabajtów:
 
 ```bash
 free -h
@@ -60,27 +60,27 @@ w kroku 3 wpiszesz inny port, np. `3200`, i pamiętasz o tym w kroku 4.
 
 ## 3. Instalacja
 
-Wszystko jako `root`. Objaśnienia każdego polecenia — w pełnej instrukcji.
+Wszystko jako `root`. Objaśnienia każdego polecenia - w pełnej instrukcji.
 
 ```bash
-# Kod — Cosmos siedzi w /opt/cosmos, Content AI kładziemy obok, w /srv/contentai
+# Kod - Cosmos siedzi w /opt/cosmos, Content AI kładziemy obok, w /srv/contentai
 git clone https://github.com/Marcin1000/ContentAI.git /srv/contentai
 
-# SPRAWDŹ, czy kod się pobrał — zanim pójdziesz dalej
+# SPRAWDŹ, czy kod się pobrał - zanim pójdziesz dalej
 test -f /srv/contentai/serwer/uzytkownicy.js \
-  && echo "OK — kod pobrany" \
-  || echo "STOP — klonowanie się nie udało, nie wykonuj kolejnych poleceń"
+  && echo "OK - kod pobrany" \
+  || echo "STOP - klonowanie się nie udało, nie wykonuj kolejnych poleceń"
 ```
 
 > ### ⚠️ Nie pomijaj tego sprawdzenia
 >
-> Gdy klonowanie się nie uda — brak sieci, zapora, literówka w adresie — kolejne
+> Gdy klonowanie się nie uda - brak sieci, zapora, literówka w adresie - kolejne
 > polecenie (`mkdir -p`) **i tak utworzy katalog** `serwer/dane`. Wygląda wtedy, jakby
 > wszystko szło zgodnie z planem, a błąd zobaczysz dopiero trzy kroki dalej jako
-> `Cannot find module '/srv/contentai/serwer/uzytkownicy.js'` — komunikat, który
+> `Cannot find module '/srv/contentai/serwer/uzytkownicy.js'` - komunikat, który
 > nie mówi nic o prawdziwej przyczynie.
 >
-> **Gdy zobaczysz `STOP`** — najpierw ustal, dlaczego klonowanie padło:
+> **Gdy zobaczysz `STOP`** - najpierw ustal, dlaczego klonowanie padło:
 >
 > ```bash
 > git --version                       # czy git w ogóle jest
@@ -88,13 +88,13 @@ test -f /srv/contentai/serwer/uzytkownicy.js \
 > ```
 >
 > Potem wyczyść to, co zostało, i spróbuj ponownie. **Zajrzyj do katalogu przed
-> skasowaniem** — usuwaj tylko wtedy, gdy nie ma tam nic poza pustym `serwer/dane`:
+> skasowaniem** - usuwaj tylko wtedy, gdy nie ma tam nic poza pustym `serwer/dane`:
 >
 > ```bash
 > ls -la /srv/contentai /srv/contentai/serwer 2>/dev/null
 > rm -rf /srv/contentai
 > git clone https://github.com/Marcin1000/ContentAI.git /srv/contentai
-> test -f /srv/contentai/serwer/uzytkownicy.js && echo "OK — kod pobrany"
+> test -f /srv/contentai/serwer/uzytkownicy.js && echo "OK - kod pobrany"
 > ```
 
 ```bash
@@ -107,7 +107,7 @@ chown -R contentai:contentai /srv/contentai/serwer/dane
 cd /srv/contentai
 sudo -u contentai node serwer/uzytkownicy.js dodaj marcin admin
 
-# Klucze i ustawienia — osobny plik, nie ten od Cosmosa
+# Klucze i ustawienia - osobny plik, nie ten od Cosmosa
 mkdir -p /etc/contentai
 nano /etc/contentai/srodowisko
 ```
@@ -138,7 +138,7 @@ systemctl status contentai
 
 Szukasz `Active: active (running)`. Wyjście z podglądu: **q**.
 
-Sprawdź, że odpowiada — i że Cosmos dalej odpowiada:
+Sprawdź, że odpowiada - i że Cosmos dalej odpowiada:
 
 ```bash
 curl -s -o /dev/null -w "Content AI: %{http_code}\n" http://127.0.0.1:3100/
@@ -149,11 +149,11 @@ Oba mają zwrócić `200`.
 
 ---
 
-## 4. Adres — trzy sytuacje
+## 4. Adres - trzy sytuacje
 
 ### A. Cosmos już chodzi na domenie przez Caddy
 
-Najprostszy przypadek. **Nie nadpisuj pliku Caddy — dopisz do niego.**
+Najprostszy przypadek. **Nie nadpisuj pliku Caddy - dopisz do niego.**
 
 ```bash
 nano /etc/caddy/Caddyfile
@@ -189,20 +189,20 @@ app.content-ai.net {
 systemctl reload caddy
 ```
 
-Rekordy DNS, tryb SSL i ustawienia po stronie Cloudflare — w tym dwie pułapki, z których
-każda kończy się błędem nic nie tłumaczącym — opisuje osobno
+Rekordy DNS, tryb SSL i ustawienia po stronie Cloudflare - w tym dwie pułapki, z których
+każda kończy się błędem nic nie tłumaczącym - opisuje osobno
 **`dokumenty/ContentAI_Domena_Cloudflare.md`**.
 
 > **Jeśli Cosmos też stoi za Cloudflare**, dotyczy go ta sama uwaga o zrywaniu połączenia
-> po 100 sekundach — ale w mniejszym stopniu. Cosmos strumieniuje odpowiedź (SSE), więc
+> po 100 sekundach - ale w mniejszym stopniu. Cosmos strumieniuje odpowiedź (SSE), więc
 > pierwsze bajty lecą od razu i limit się nie wyczerpuje. Content AI czeka na cały gotowy
 > artykuł, dlatego jego poddomena **musi** mieć w Cloudflare szarą chmurkę.
 
 > ### ⚠️ Największa pułapka tej konfiguracji
 >
 > Instrukcja Cosmosa ustawia Caddy poleceniem `echo '...' | sudo tee /etc/caddy/Caddyfile`.
-> **`tee` nadpisuje cały plik.** Jeśli kiedykolwiek wykonasz je ponownie — przy
-> przenosinach, po awarii, wracając do tamtej instrukcji — wpis Content AI zniknie
+> **`tee` nadpisuje cały plik.** Jeśli kiedykolwiek wykonasz je ponownie - przy
+> przenosinach, po awarii, wracając do tamtej instrukcji - wpis Content AI zniknie
 > bez śladu, a aplikacja przestanie być dostępna z internetu, mimo że usługa będzie
 > działać poprawnie.
 >
@@ -214,7 +214,7 @@ każda kończy się błędem nic nie tłumaczącym — opisuje osobno
 ### B. Cosmos chodzi tylko przez Tailscale, a Content AI ma być publiczny
 
 To realny scenariusz, jeśli Cosmos jest Twoim narzędziem prywatnym, a Content AI ma
-obsługiwać klientów. Zainstaluj Caddy i skonfiguruj **tylko** Content AI — Cosmos zostaje
+obsługiwać klientów. Zainstaluj Caddy i skonfiguruj **tylko** Content AI - Cosmos zostaje
 tam, gdzie był:
 
 ```bash
@@ -226,7 +226,7 @@ apt update && apt install -y caddy
 nano /etc/caddy/Caddyfile
 ```
 
-Zawartość — strona produktowa i aplikacja, Cosmosa nie ruszamy:
+Zawartość - strona produktowa i aplikacja, Cosmosa nie ruszamy:
 
 ```
 content-ai.net, www.content-ai.net {
@@ -246,7 +246,7 @@ systemctl reload caddy
 ufw allow 80/tcp && ufw allow 443/tcp
 ```
 
-Cosmos pozostaje niewidoczny z internetu — Caddy go nie dotyka, a port 3000 nadal słucha
+Cosmos pozostaje niewidoczny z internetu - Caddy go nie dotyka, a port 3000 nadal słucha
 tylko lokalnie i w tailnecie.
 
 ### C. Oba tylko przez Tailscale (testy prywatne)
@@ -283,11 +283,11 @@ To najczęstsze źródło „przecież wpisałem klucz, a nie działa".
 | NVIDIA | `NVIDIA_API_KEY` | `NVIDIA_KEY` |
 | ElevenLabs | `ELEVENLABS_API_KEY` | `ELEVEN_KEY` |
 
-Skopiowanie linii z jednego pliku do drugiego **nie zgłosi błędu** — zmienna po prostu
+Skopiowanie linii z jednego pliku do drugiego **nie zgłosi błędu** - zmienna po prostu
 zostanie zignorowana, a aplikacja zachowa się, jakby klucza nie było.
 
 **Ten sam klucz może stać w obu plikach** i tak jest normalnie. Zużycie sumuje się na
-jednym rachunku u dostawcy — to jedyny skutek uboczny.
+jednym rachunku u dostawcy - to jedyny skutek uboczny.
 
 ### Dwa osobne logowania
 
@@ -298,10 +298,10 @@ jednym rachunku u dostawcy — to jedyny skutek uboczny.
 | Gdzie konta | w `.env` | `serwer/dane/uzytkownicy.json` |
 
 Nazwy ciasteczek są różne, więc **aplikacje nie mieszają sobie sesji**, nawet na
-poddomenach jednej domeny. Zalogowanie do jednej nie loguje do drugiej — i odwrotnie,
+poddomenach jednej domeny. Zalogowanie do jednej nie loguje do drugiej - i odwrotnie,
 wylogowanie z jednej nie rusza drugiej.
 
-Chcesz jedno logowanie do wszystkiego — patrz krok 8.
+Chcesz jedno logowanie do wszystkiego - patrz krok 8.
 
 ### Porty
 
@@ -314,15 +314,15 @@ Chcesz jedno logowanie do wszystkiego — patrz krok 8.
 | 9091 | Authelia | tylko przy bramie 2FA |
 
 Żaden się nie pokrywa. Zmieniając `PORT` w `/etc/contentai/srodowisko`, pamiętaj o
-poprawieniu adresu w Caddy — inaczej dostaniesz `502 Bad Gateway`.
+poprawieniu adresu w Caddy - inaczej dostaniesz `502 Bad Gateway`.
 
-### Aplikacje działają na różnych kontach systemowych — tak ma być
+### Aplikacje działają na różnych kontach systemowych - tak ma być
 
 Cosmos w instrukcji chodzi jako `root`. Content AI chodzi jako własny użytkownik
 `contentai` i może pisać **wyłącznie** do `/srv/contentai/serwer/dane`.
 
 **Nie ujednolicaj tego.** Uruchomienie Content AI jako `root` nic nie ułatwi, a zdejmie
-zabezpieczenie. W drugą stronę: nie próbuj przełączać Cosmosa na użytkownika `contentai` —
+zabezpieczenie. W drugą stronę: nie próbuj przełączać Cosmosa na użytkownika `contentai` -
 Cosmos zapisuje w innych miejscach i po prostu przestanie działać.
 
 ### Restart jednej usługi nie rusza drugiej
@@ -333,13 +333,13 @@ systemctl restart cosmos        # Content AI działa dalej
 ```
 
 To dwa niezależne procesy. Jedyna rzecz, która potrafi położyć oba naraz, to restart
-całego serwera — po nim obie wstaną same.
+całego serwera - po nim obie wstaną same.
 
 ---
 
 ## 6. Lista kontrolna
 
-Po instalacji sprawdź **obie** aplikacje — nie tylko nową.
+Po instalacji sprawdź **obie** aplikacje - nie tylko nową.
 
 | # | Co | Ma się stać |
 |---|---|---|
@@ -349,7 +349,7 @@ Po instalacji sprawdź **obie** aplikacje — nie tylko nową.
 | 4 | Zaloguj się | Wchodzisz; przy pierwszym wejściu wita Cię kreator konfiguracji |
 | 5 | Wygeneruj artykuł | Tekst się pojawia (sprawdza klucz Anthropic) |
 | 6 | `systemctl restart contentai`, odśwież Content AI | **Nadal zalogowany** |
-| 7 | Odśwież Cosmosa | **Nadal zalogowany** — restart Content AI go nie dotknął |
+| 7 | Odśwież Cosmosa | **Nadal zalogowany** - restart Content AI go nie dotknął |
 | 8 | `systemctl status cosmos contentai` | Obie `active (running)` |
 
 Punkt 6 sprawdza, czy katalog `serwer/dane` należy do właściwego użytkownika. Jeśli
@@ -381,7 +381,7 @@ cd /srv/contentai && git pull && systemctl restart contentai
 cd /opt/cosmos    && git pull && systemctl restart cosmos
 ```
 
-Aktualizacja Content AI nikogo nie wylogowuje — sesje przeżywają restart.
+Aktualizacja Content AI nikogo nie wylogowuje - sesje przeżywają restart.
 
 ### Kopia zapasowa obu aplikacji
 
@@ -400,7 +400,7 @@ Ze swojego komputera:
 scp root@ADRES_IP:~/kopia-*.tar.gz .
 ```
 
-To wszystkie dane obu aplikacji plus konfiguracja adresów. Kodu nie kopiujesz — jest
+To wszystkie dane obu aplikacji plus konfiguracja adresów. Kodu nie kopiujesz - jest
 na GitHubie.
 
 ---
@@ -408,8 +408,8 @@ na GitHubie.
 ## 8. Opcjonalnie: jedno logowanie i 2FA na wszystko
 
 Brama uwierzytelniająca (Authelia) postawiona przed całością obejmuje **obie aplikacje
-naraz** — jedno konto, drugi składnik, klucze sprzętowe i passkeys. Gotowy wzór Caddyfile
-w `brama/Caddyfile.przyklad` ma już przygotowany (zakomentowany) wpis dla Cosmosa —
+naraz** - jedno konto, drugi składnik, klucze sprzętowe i passkeys. Gotowy wzór Caddyfile
+w `brama/Caddyfile.przyklad` ma już przygotowany (zakomentowany) wpis dla Cosmosa -
 wystarczy odkomentować i wpisać jego port.
 
 Wtedy Cosmos i Content AI przestają pytać o własne hasła, a robi to brama.
@@ -447,7 +447,7 @@ sudo -u contentai node serwer/uzytkownicy.js plan anna standard
 | Port | 3000 | 3100 |
 | Użytkownik systemowy | `root` | `contentai` |
 
-Adresy wszystkich trzech rzeczy — Cosmos, strona produktowa, aplikacja — leżą
+Adresy wszystkich trzech rzeczy - Cosmos, strona produktowa, aplikacja - leżą
 w jednym pliku `/etc/caddy/Caddyfile`, każda jako osobny blok.
 
 ---
