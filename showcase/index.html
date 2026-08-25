@@ -77,6 +77,10 @@
   .step-n{font-family:var(--mono);font-size:12px;color:var(--amber);letter-spacing:0.1em;margin-bottom:auto}
   .step h3{font-family:var(--display);font-weight:600;font-size:1.35rem;margin:26px 0 12px;letter-spacing:-0.01em}
   .step p{color:var(--muted);font-size:0.98rem;line-height:1.55;max-width:40ch}
+  /* Siedem elementow w siatce dwu- i trzykolumnowej zostawialoby dziure
+     w ostatnim wierszu. Karta na pelna szerokosc czyta sie jak decyzja,
+     a nie jak brakujaca kratka. */
+  .step-wide{grid-column:1 / -1}
   .step::after{content:"";position:absolute;left:30px;bottom:0;width:0;height:2px;background:linear-gradient(90deg,var(--amber),var(--cyan));transition:width .5s cubic-bezier(.2,.7,.2,1)}
   .step:hover::after{width:56px}
 
@@ -123,6 +127,7 @@
   /* Wdrozenie zespolowe */
   .team{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
   .tcard{border:1px solid var(--glass-brd);border-radius:16px;background:rgba(9,11,16,0.62);backdrop-filter:blur(12px);padding:22px;display:flex;flex-direction:column;gap:10px}
+  .tcard-wide{grid-column:1 / -1}
   .tcard-ico{font-family:var(--mono);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--cyan)}
   .tcard h3{font-size:16px;font-weight:600;color:var(--text);letter-spacing:-0.01em}
   .tcard p{font-size:14px;color:var(--muted);line-height:1.6}
@@ -252,17 +257,18 @@
     <div class="sec-head">
       <div>
         <div class="sec-kicker reveal" data-i18n="k-pipe">Pipeline</div>
-        <h2 class="sec-title reveal" data-i18n="pipe-title">Sześć kroków od bazy wiedzy do gotowej publikacji.</h2>
+        <h2 class="sec-title reveal" data-i18n="pipe-title">Siedem kroków od pomysłu do gotowej publikacji.</h2>
       </div>
       <p class="sec-note reveal" data-i18n="pipe-note">Każdy krok pracuje w języku wybranym przy generowaniu.</p>
     </div>
     <div class="steps">
-      <div class="step reveal"><div class="step-n">01</div><h3 data-i18n="s1t">Baza wiedzy</h3><p data-i18n="s1p">Wgrywasz dokumenty i dane firmy. Model pisze z Twojego kontekstu, a nie z domysłów.</p></div>
-      <div class="step reveal"><div class="step-n">02</div><h3 data-i18n="s2t">Analiza SERP</h3><p data-i18n="s2p">Sprawdza, co realnie rankuje w Google dla Twojej frazy, i wykorzystuje to jako kontekst.</p></div>
-      <div class="step reveal"><div class="step-n">03</div><h3 data-i18n="s3t">Generacja</h3><p data-i18n="s3p">Tworzy artykuł w trybie SEO, AIO, AEO lub hybrydowym, w wybranym języku i tonie.</p></div>
-      <div class="step reveal"><div class="step-n">04</div><h3 data-i18n="s4t">Ocena jakości</h3><p data-i18n="s4p">Punktuje SEO i AIO, wskazuje braki i automatycznie poprawia strukturę tekstu.</p></div>
-      <div class="step reveal"><div class="step-n">05</div><h3 data-i18n="s5t">Przeróbki</h3><p data-i18n="s5p">Zamienia artykuł na post LinkedIn, e-mail, sekcję FAQ lub landing, w tym samym języku.</p></div>
-      <div class="step reveal"><div class="step-n">06</div><h3 data-i18n="s6t">Eksport</h3><p data-i18n="s6p">Pobierasz .docx, .pdf lub audio. Kopiujesz JSON-LD pod wyniki wyszukiwania.</p></div>
+      <div class="step step-wide reveal"><div class="step-n">01</div><h3 data-i18n="s0t">Podpowiedzi tematów</h3><p data-i18n="s0p">Nie wiesz, o czym pisać? Opisujesz, kogo chcesz przyciągnąć i co sprzedajesz. Dostajesz dziesięć tematów, każdy z jednym zdaniem o tym, kto go szuka i po co. Kliknięcie wstawia wybrany do formularza.</p></div>
+      <div class="step reveal"><div class="step-n">02</div><h3 data-i18n="s1t">Baza wiedzy</h3><p data-i18n="s1p">Wgrywasz dokumenty i dane firmy. Model pisze z Twojego kontekstu, a nie z domysłów.</p></div>
+      <div class="step reveal"><div class="step-n">03</div><h3 data-i18n="s2t">Analiza SERP</h3><p data-i18n="s2p">Sprawdza, co realnie rankuje w Google dla Twojej frazy, i wykorzystuje to jako kontekst.</p></div>
+      <div class="step reveal"><div class="step-n">04</div><h3 data-i18n="s3t">Generacja</h3><p data-i18n="s3p">Tworzy artykuł w trybie SEO, AIO, AEO lub hybrydowym, w wybranym języku i tonie.</p></div>
+      <div class="step reveal"><div class="step-n">05</div><h3 data-i18n="s4t">Ocena jakości</h3><p data-i18n="s4p">Punktuje SEO i AIO, wskazuje braki i automatycznie poprawia strukturę tekstu.</p></div>
+      <div class="step reveal"><div class="step-n">06</div><h3 data-i18n="s5t">Przeróbki</h3><p data-i18n="s5p">Zamienia artykuł na post LinkedIn, e-mail, sekcję FAQ lub landing, w tym samym języku.</p></div>
+      <div class="step reveal"><div class="step-n">07</div><h3 data-i18n="s6t">Eksport</h3><p data-i18n="s6p">Pobierasz .docx, .pdf lub audio. Kopiujesz JSON-LD pod wyniki wyszukiwania.</p></div>
     </div>
   </section>
 
@@ -399,6 +405,11 @@
         <h3 data-i18n="t6t">Zero obcych serwerów</h3>
         <p data-i18n="t6p">Biblioteki i krój pisma idą z Twojego hosta. Aplikacja działa w zamkniętej sieci firmowej i nikt z zewnątrz nie podmieni kodu, który się w niej wykonuje.</p>
       </div>
+      <div class="tcard tcard-wide reveal">
+        <div class="tcard-ico">07</div>
+        <h3 data-i18n="t7t">Własny klucz, własny rachunek</h3>
+        <p data-i18n="t7p">Domyślnie generowanie idzie z kluczy serwera i nikt nie musi nic ustawiać. Kto woli płacić dostawcy bezpośrednio, wpisuje własny klucz w aplikacji: zostaje on w jego przeglądarce i nigdy nie trafia na serwer do zapisu.</p>
+      </div>
     </div>
     <div class="tnote reveal">
       <span data-i18n="tn1">Serwer bez zależności npm</span>
@@ -440,8 +451,9 @@
       "hero-lede":"Generuje artykuły SEO, AIO, AEO i GEO na bazie Twojej wiedzy i realnych wyników wyszukiwania. Ocenia jakość, poprawia strukturę i eksportuje jednym kliknięciem.",
       "hero-cta1":"Zaloguj się do aplikacji","hero-cta2":"Jak to działa",
       "ro1":"SEO <b>88</b>/100","ro2":"AIO <b>gotowe</b>","ro3":"FOG <b>30.1</b>","ro4":"KD <b>2.78%</b>","ro5":"<b>862</b> słowa","ro6":"Meta <b>159 zn.</b>",
-      "pipe-title":"Sześć kroków od bazy wiedzy do gotowej publikacji.",
+      "pipe-title":"Siedem kroków od pomysłu do gotowej publikacji.",
       "pipe-note":"Każdy krok pracuje w języku wybranym przy generowaniu.",
+      "s0t":"Podpowiedzi tematów","s0p":"Nie wiesz, o czym pisać? Opisujesz, kogo chcesz przyciągnąć i co sprzedajesz. Dostajesz dziesięć tematów, każdy z jednym zdaniem o tym, kto go szuka i po co. Kliknięcie wstawia wybrany do formularza.",
       "s1t":"Baza wiedzy","s1p":"Wgrywasz dokumenty i dane firmy. Model pisze z Twojego kontekstu, a nie z domysłów.",
       "s2t":"Analiza SERP","s2p":"Sprawdza, co realnie rankuje w Google dla Twojej frazy, i wykorzystuje to jako kontekst.",
       "s3t":"Generacja","s3p":"Tworzy artykuł w trybie SEO, AIO, AEO lub hybrydowym, w wybranym języku i tonie.",
@@ -472,6 +484,7 @@
       "t3t":"SEO i treść w jednym systemie","t3p":"Analityka SEO stoi obok generatora, za tym samym logowaniem. Sprawdzone frazy wchodzą do artykułu jednym kliknięciem i wracają, żeby śledzić pozycje.",
       "t4t":"Wybór modelu należy do Ciebie","t4p":"Komercyjny albo open source - serwer tłumaczy format, więc przełączenie nie wymaga zmiany w aplikacji.",
       "t5t":"Realne dane, nie szacunki","t5p":"Analiza SERP może brać wyniki prosto z API zamiast pytać model. To, co widzisz, jest zmierzone.",
+      "t7t":"Własny klucz, własny rachunek","t7p":"Domyślnie generowanie idzie z kluczy serwera i nikt nie musi nic ustawiać. Kto woli płacić dostawcy bezpośrednio, wpisuje własny klucz w aplikacji: zostaje on w jego przeglądarce i nigdy nie trafia na serwer do zapisu.",
       "t6t":"Zero obcych serwerów","t6p":"Biblioteki i krój pisma idą z Twojego hosta. Aplikacja działa w zamkniętej sieci firmowej i nikt z zewnątrz nie podmieni kodu, który się w niej wykonuje.",
       "tn1":"Serwer bez zależności npm","tn2":"Hasła haszowane <b>scryptem</b>","tn3":"Klucze API <b>nigdy</b> w przeglądarce",
       "k-pipe":"Pipeline","k-analiza":"Analiza","k-moduly":"Moduły","k-luki":"Luki","k-zespol":"Zespół"
@@ -483,8 +496,9 @@
       "hero-lede":"It generates SEO, AIO, AEO and GEO articles from your own knowledge and real search results. It scores quality, fixes structure and exports in one click.",
       "hero-cta1":"Log in to the app","hero-cta2":"How it works",
       "ro1":"SEO <b>88</b>/100","ro2":"AIO <b>ready</b>","ro3":"FOG <b>30.1</b>","ro4":"KD <b>2.78%</b>","ro5":"<b>862</b> words","ro6":"Meta <b>159 chars</b>",
-      "pipe-title":"Six steps from knowledge base to ready to publish.",
+      "pipe-title":"Seven steps from an idea to ready to publish.",
       "pipe-note":"Every step works in the language chosen at generation.",
+      "s0t":"Topic suggestions","s0p":"Not sure what to write about? You describe who you want to reach and what you sell. You get ten topics, each with one sentence on who searches for it and why. A click drops the chosen one into the form.",
       "s1t":"Knowledge base","s1p":"You upload your documents and company data. The model writes from your context, not from guesses.",
       "s2t":"SERP analysis","s2p":"It checks what actually ranks in Google for your keyword and uses it as context.",
       "s3t":"Generation","s3p":"It writes the article in SEO, AIO, AEO or hybrid mode, in the chosen language and tone.",
@@ -515,6 +529,7 @@
       "t3t":"SEO and content in one system","t3p":"SEO analytics sits next to the generator, behind the same login. Vetted keywords go into the article in one click and come back so their rankings can be tracked.",
       "t4t":"The model choice is yours","t4p":"Commercial or open source - the server translates the format, so switching needs no change in the app.",
       "t5t":"Measured data, not estimates","t5p":"SERP analysis can pull results straight from an API instead of asking the model. What you see was measured.",
+      "t7t":"Your own key, your own bill","t7p":"By default generating runs on the server keys and nobody has to set anything up. Anyone who prefers to pay the provider directly enters their own key in the app: it stays in their browser and is never stored on the server.",
       "t6t":"No third-party servers","t6p":"Libraries and the typeface come from your own host. The app works on a closed corporate network and nobody outside can swap the code running inside it.",
       "tn1":"Server with zero npm dependencies","tn2":"Passwords hashed with <b>scrypt</b>","tn3":"API keys <b>never</b> in the browser",
       "k-pipe":"Pipeline","k-analiza":"Analysis","k-moduly":"Modules","k-luki":"Gaps","k-zespol":"Team"
