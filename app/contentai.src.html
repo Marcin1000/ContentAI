@@ -886,9 +886,17 @@ body.is-mobile .tabs { display: none; }
 body.is-mobile .topbar { padding: 0 12px; height: 52px; }
 body.is-mobile .topbar-badge { display: none; }
 /* Na telefonie pasek gorny nie miescil sie w 360 px - przelacznik jezyka
-   wychodzil poza ekran. Znak graficzny wystarczy za nazwe (adres w pasku
-   przegladarki i tak ja powtarza), a w odznace zostaje sam licznik. */
-body.is-mobile .topbar-app { display: none; }
+   wychodzil poza ekran. W odznace pakietu zostal sam licznik, a ikona motywu
+   zniknela, wiec na nazwe miejsce wrocilo: sam znak graficzny wygladal pusto.
+   Mniejszy stopien i ciasniejsze odstepy, zeby zostal zapas na dluzszy
+   licznik (np. "12/50") i na najwezsze telefony. */
+body.is-mobile .topbar-app { font-size: 12px; letter-spacing: 0.12em; }
+/* Ponizej 340 px nazwa juz sie nie miesci: najdluzszy realny licznik to
+   "749/750" (sufit wywolan w Standardzie), a wtedy pasek wychodzil o 15 px
+   poza ekran. Na takich telefonach zostaje sam znak graficzny. */
+@media (max-width: 340px) {
+  body.is-mobile .topbar-app { display: none; }
+}
 body.is-mobile .pakiet-nazwa { display: none; }
 body.is-mobile #pakiet-badge { padding: 5px 9px; }
 body.is-mobile body.is-mobile .topbar-logo { gap: 10px; }
