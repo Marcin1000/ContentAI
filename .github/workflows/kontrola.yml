@@ -78,6 +78,12 @@ jobs:
           python3 narzedzia/audyt_i18n.py
           python3 narzedzia/audyt_uchwyty.py
 
+      # Strona produktowa ma własne dwa słowniki wpisane wprost w plik i tę
+      # samą cichą usterkę: brak klucza nie wywala niczego, tylko angielska
+      # wersja pokazuje polskie zdanie.
+      - name: Strona produktowa - tłumaczenia
+        run: python3 narzedzia/audyt_showcase.py
+
       # Aplikacja usuwa dlugie myslniki z generowanych artykulow po polsku.
       # Ta kontrola rozciaga te sama regule na interfejs, strone produktowa
       # i dokumentacje, zeby nie wracaly przy kolejnych zmianach.
