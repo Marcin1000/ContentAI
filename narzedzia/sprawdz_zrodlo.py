@@ -98,9 +98,16 @@ KONTROLE = [
      "// status generowania sekcji tylko na gorze (przycisk)",
      "_genInd.scrollIntoView({ behavior: 'smooth', block: 'center' });", None),
 
-    ("F12", "dropdown przerobek nad sidebarem i otwierany w prawo",
-     "left:0;right:auto;background:var(--surface);border:1px solid var(--border);"
-     "border-radius:var(--radius);box-shadow:var(--shadow);z-index:9000", None, None),
+    # Przerobki nie maja juz wlasnego dropdownu - sa pozycjami w menu "Tworz".
+    # Gwarancje z F12 (nad sidebarem, otwierany tak, zeby nie wyjsc poza ekran)
+    # przenosza sie na wspolne menu grup.
+    ("F12/kierunek", "menu grup otwiera sie w lewo, nie poza ekran",
+     "position:absolute;top:calc(100% + 4px);right:0;left:auto;background:var(--surface);",
+     None, None),
+    ("F12/warstwa", "menu grup nad sidebarem",
+     "box-shadow:var(--shadow);\n  z-index:9000;min-width:210px;", None, None),
+    ("F12/bezmenu", "przerobki bez wlasnego dropdownu",
+     None, '<div class="repurpose-wrap" id="repurpose-wrap"', None),
 
     ("F13", "panel Luk semantycznych scrolluje przy dlugiej liscie",
      "max-height:65vh;overflow-y:auto", None, None),

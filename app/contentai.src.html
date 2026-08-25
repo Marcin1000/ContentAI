@@ -914,24 +914,19 @@ body.is-mobile .settings-menu { right: -10px; min-width: 200px; }
 body.is-mobile .brief-panel { position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));top:auto;transform:none;width:100%;border-radius:var(--radius-lg) var(--radius-lg) 0 0;max-height:72vh;box-shadow:0 -4px 24px rgba(0,0,0,0.15); }
 body.is-mobile .repurpose-panel { position:fixed;inset:0;z-index:500; }
 body.is-mobile .repurpose-out { min-height:200px;max-height:68vh; }
-/* Mobile repurpose menu - bottom sheet */
-body.is-mobile .repurpose-menu {
-  position: fixed;
-  left: 0; right: 0; bottom: 0; top: auto;
-  width: 100%;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  border: none;
-  border-top: 1px solid var(--border);
-  padding: 8px 0 76px;
-  z-index: 450;
-  min-width: 0;
-  box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
-  max-height: 70vh;
-  overflow-y: auto;
-}
 body.is-mobile .repurpose-item { padding: 14px 20px; font-size: 15px; }
-body.is-mobile .repurpose-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:449; }
-body.is-mobile .repurpose-backdrop.show { display:block; }
+/* Na telefonie menu grupy wysuwa sie od dolu jak arkusz - dymek przy prawej
+   krawedzi ekranu i tak by sie nie zmiescil. */
+/* Dolne wypelnienie musi przepuscic pasek nawigacji telefonu - przy 14 px
+   ostatnia pozycja arkusza chowala sie za nim i nie dalo sie w nia trafic. */
+body.is-mobile .grupa-menu { position:fixed;left:0;right:0;bottom:0;top:auto;
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;min-width:0;z-index:450;
+  max-height:70vh;overflow-y:auto;
+  padding:8px 0 calc(76px + env(safe-area-inset-bottom, 0px)); }
+body.is-mobile .grupa-menu .btn-secondary { padding:14px 20px;font-size:15px; }
+body.is-mobile .grupa-menu .repurpose-item { padding:14px 20px;font-size:15px; }
+body.is-mobile .grupa-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:449; }
+body.is-mobile .grupa-backdrop.show { display:block; }
 body.is-mobile .jsonld-box { padding:12px 14px; }
 /* Form action buttons mobile - wrap */
 body.is-mobile [style*="display:flex;gap:8px;margin-top"] { flex-wrap:wrap; }
@@ -960,11 +955,15 @@ body.is-mobile .output-col { overflow-x: hidden; overflow-y: visible; min-height
 body.is-mobile .output-scroll { overflow-x: hidden; flex: none; }
 body.is-mobile .article { word-break: break-word; overflow-wrap: break-word; max-width: 100%; box-sizing: border-box; padding: 18px; }
 
-/* FIX: Output bar na mobile - scroll poziomy + mniejsze przyciski */
-body.is-mobile .output-bar { overflow-x: auto; flex-wrap: nowrap; padding: 8px 12px; gap: 6px; -webkit-overflow-scrolling: touch; }
+/* Output bar na telefonie. Przy osiemnastu przyciskach jedynym wyjsciem byl
+   scroll poziomy - nic wiecej sie nie miescilo. Piec kontrolek zawija sie
+   w dwa rzedy i mieszczą sie w calosci, wiec scroll juz nie jest potrzebny:
+   nic nie chowa sie poza krawedzia. Tytul wyniku bierze wlasny wiersz, zeby
+   przyciski zaczynaly sie od lewej. */
+body.is-mobile .output-bar { overflow-x: visible; flex-wrap: wrap; padding: 8px 12px; gap: 6px; }
 body.is-mobile .output-bar::-webkit-scrollbar { display: none; }
 body.is-mobile .output-bar .btn-secondary { white-space: nowrap; font-size: 11px; padding: 5px 10px; flex-shrink: 0; }
-body.is-mobile .output-bar .output-bar-left { flex-shrink: 0; }
+body.is-mobile .output-bar .output-bar-left { flex: 1 0 100%; }
 body.is-mobile .output-bar .badge { font-size: 10px; padding: 2px 8px; }
 
 /* Cele dotykowe: na telefonie te przyciski mialy 26-31 px wysokosci, czyli
@@ -1013,9 +1012,24 @@ body.is-mobile .h-item { padding: 14px 16px; }
 .bv-badge.inactive { background:var(--surface2);color:var(--text3);border-color:var(--border); }
 .bv-preview { background:var(--surface2);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.6;font-style:italic;margin-top:10px; }
 /* ── REPURPOSING ─────────────── */
-.repurpose-wrap { position:relative;display:inline-flex; }
-.repurpose-menu { position:absolute;top:calc(100% + 4px);left:0;right:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);z-index:9000;min-width:175px;display:none; }
-.repurpose-menu.open { display:block; }
+/* Grupy w pasku wyniku. Osiemnascie przyciskow zawijalo sie na trzy rzedy;
+   szesc kontrolek miesci sie w jednym i tyle samo widac na telefonie. */
+.grupa-wrap { position:relative;display:inline-flex; }
+#grupa-wiecej-wrap { order:1; }
+/* Menu rozwija sie w LEWO od przycisku (right:0), nie w prawo. Pasek jest
+   dosuniety do prawej krawedzi panelu, wiec menu otwierane w prawo wychodzilo
+   poza okno - najbardziej skrajna grupa "Pobierz" siegala 60 px za ekran. */
+.grupa-menu { position:absolute;top:calc(100% + 4px);right:0;left:auto;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);
+  z-index:9000;min-width:210px;display:none;padding:4px 0;overflow:hidden; }
+.grupa-menu.open { display:block; }
+/* Przyciski w srodku maja wygladac jak wiersze menu, nie jak pigulki.
+   Inline display ustawia im aplikacja, wiec tu go nie ruszamy. */
+.grupa-menu .btn-secondary { width:100%;justify-content:flex-start;border:0;border-radius:0;
+  background:none;padding:9px 14px;font-size:13px;box-shadow:none; }
+.grupa-menu .btn-secondary:hover { background:var(--surface2); }
+.grupa-sep { height:1px;background:var(--border);margin:4px 0; }
+.grupa-backdrop { display:none; }
 .repurpose-item { display:flex;align-items:center;gap:9px;padding:9px 14px;cursor:pointer;font-size:13px;color:var(--text);transition:background .1s; }
 .repurpose-item:hover { background:var(--surface2); }
 .repurpose-panel { position:absolute;inset:0;background:var(--surface);z-index:150;display:none;flex-direction:column; }
@@ -1827,33 +1841,66 @@ document.addEventListener('DOMContentLoaded', function () {
               <span class="badge" id="out-badge" data-i18n="badge-ready">gotowy do generowania</span>
             </div>
             <button class="btn-secondary" id="edit-btn" style="display:none" onclick="toggleEdit()" data-i18n="btn-edit">✏️ Edytuj</button>
-            <button class="btn-secondary" id="aio-btn" style="display:none" onclick="toggleAioPanel()" data-i18n="btn-aio">🤖 Oceń AIO</button>
-            <button class="btn-secondary" id="aeo-btn" style="display:none" onclick="toggleAeoPanel()" data-i18n="btn-aeo">⚡ Oceń AEO</button>
-            <button class="btn-secondary" id="geo-btn" style="display:none" onclick="toggleGeoPanel()" data-i18n="btn-geo">🎯 GEO Score</button>
-            <button class="btn-secondary" id="seo-btn" style="display:none" onclick="toggleSeoPanel()" data-i18n="btn-seo">📊 Oceń SEO</button>
-            <button class="btn-secondary" id="img-btn" style="display:none" onclick="openImgPanelSmart()" title="Generuj grafikę dopasowaną do artykułu" data-i18n-title="title-img-generate" data-i18n="btn-img-out">🎨 Grafika</button>
-            <button class="btn-secondary" id="titles-btn" style="display:none" onclick="openTitlesPanel()" data-i18n="btn-titles">💡 Tytuły</button>
-            <div class="repurpose-wrap" id="repurpose-wrap" style="display:none">
-              <button class="btn-secondary" onclick="toggleRepurposeMenu()" data-i18n="btn-repurpose">🔄 Przeróbki ▾</button>
-              <div class="repurpose-backdrop" id="repurpose-backdrop" onclick="toggleRepurposeMenu()"></div>
-              <div class="repurpose-menu" id="repurpose-menu">
-                <div class="repurpose-item" onclick="runRepurpose('linkedin')" data-i18n="rp-linkedin">💼 Post LinkedIn</div>
-                <div class="repurpose-item" onclick="runRepurpose('facebook')" data-i18n="rp-facebook">👥 Post Facebook</div>
-                <div class="repurpose-item" onclick="runRepurpose('email')" data-i18n="rp-email">📧 Email newsletter</div>
-                <div class="repurpose-item" onclick="runRepurpose('faq')" data-i18n="rp-faq">❓ Strona FAQ</div>
-                <div class="repurpose-item" onclick="runRepurpose('landing')" data-i18n="rp-landing">🎯 Landing page intro</div>
+
+            <!-- Przyciski nie zmienily ani id, ani onclick, ani kluczy i18n -
+                 zmienilo sie wylacznie to, gdzie stoja. Cala rozproszona logika
+                 pokazywania ich dziala dalej bez poprawek, a widocznosc samych
+                 przyciskow grupujacych liczy sie z zawartosci (patrz
+                 odswiezGrupyPaska). -->
+            <div class="grupa-wrap" id="grupa-ocen-wrap" style="display:none">
+              <button class="btn-secondary" onclick="przelaczGrupe('ocen')" data-i18n="grupa-ocen">📊 Oceń ▾</button>
+              <div class="grupa-backdrop" onclick="przelaczGrupe('ocen')"></div>
+              <div class="grupa-menu" id="grupa-ocen-menu">
+                <button class="btn-secondary" id="seo-btn" style="display:none" onclick="toggleSeoPanel()" data-i18n="btn-seo">📊 Oceń SEO</button>
+                <button class="btn-secondary" id="aio-btn" style="display:none" onclick="toggleAioPanel()" data-i18n="btn-aio">🤖 Oceń AIO</button>
+                <button class="btn-secondary" id="aeo-btn" style="display:none" onclick="toggleAeoPanel()" data-i18n="btn-aeo">⚡ Oceń AEO</button>
+                <button class="btn-secondary" id="geo-btn" style="display:none" onclick="toggleGeoPanel()" data-i18n="btn-geo">🎯 GEO Score</button>
+                <button class="btn-secondary" id="serp-toggle-btn" style="display:none" onclick="toggleSerpPanel()" data-i18n="btn-serp">📊 SERP</button>
+                <button class="btn-secondary" id="gap-btn" style="display:none" onclick="toggleGapPanel()" data-i18n="btn-gap">🧩 Luki</button>
               </div>
             </div>
-            <button class="btn-secondary" id="wp-pub-btn" style="display:none" onclick="openWpPublish()" data-i18n="btn-wp-pub">🌐 Publikuj WP</button>
-            <button class="btn-secondary" id="links-btn" style="display:none" onclick="toggleLinksPanel()" data-i18n="btn-links">🔗 Linki</button>
-            <button class="btn-secondary" id="serp-toggle-btn" style="display:none" onclick="toggleSerpPanel()" data-i18n="btn-serp">📊 SERP</button>
-            <button class="btn-secondary" id="gap-btn" style="display:none" onclick="toggleGapPanel()" data-i18n="btn-gap">🧩 Luki</button>
-            <button class="btn-secondary" id="jsonld-btn" style="display:none" onclick="toggleJsonLd()" data-i18n="btn-jsonld">{ } JSON-LD</button>
-            <button class="btn-secondary" id="premium-fix-btn" style="display:none" onclick="runPostGenerationPremium()" title="Uruchom samokorekcję Premium na istniejącym artykule" data-i18n-title="title-premium-fix-tooltip" data-i18n="btn-premium-fix">⭐ Popraw premium</button>
+
+            <div class="grupa-wrap" id="grupa-tworz-wrap" style="display:none">
+              <button class="btn-secondary" onclick="przelaczGrupe('tworz')" data-i18n="grupa-tworz">🎨 Twórz ▾</button>
+              <div class="grupa-backdrop" onclick="przelaczGrupe('tworz')"></div>
+              <div class="grupa-menu" id="grupa-tworz-menu">
+                <button class="btn-secondary" id="img-btn" style="display:none" onclick="openImgPanelSmart()" title="Generuj grafikę dopasowaną do artykułu" data-i18n-title="title-img-generate" data-i18n="btn-img-out">🎨 Grafika</button>
+                <button class="btn-secondary" id="titles-btn" style="display:none" onclick="openTitlesPanel()" data-i18n="btn-titles">💡 Tytuły</button>
+                <!-- Przerobki byly osobnym menu. Menu w menu to o jedno klikniecie
+                     za duzo, wiec ich pozycje stoja tu wprost, za kreska.
+                     Zostaly w #repurpose-wrap, zeby istniejaca logika pokazywania
+                     i chowania (trzy miejsca w kodzie) dzialala bez poprawek -
+                     inaczej pozycje byly zawsze widoczne i grupa "Tworz" swiecila
+                     jeszcze przed wygenerowaniem artykulu. -->
+                <div id="repurpose-wrap" style="display:none">
+                  <div class="grupa-sep"></div>
+                  <div class="repurpose-item" onclick="runRepurpose('linkedin')" data-i18n="rp-linkedin">💼 Post LinkedIn</div>
+                  <div class="repurpose-item" onclick="runRepurpose('facebook')" data-i18n="rp-facebook">👥 Post Facebook</div>
+                  <div class="repurpose-item" onclick="runRepurpose('email')" data-i18n="rp-email">📧 Email newsletter</div>
+                  <div class="repurpose-item" onclick="runRepurpose('faq')" data-i18n="rp-faq">❓ Strona FAQ</div>
+                  <div class="repurpose-item" onclick="runRepurpose('landing')" data-i18n="rp-landing">🎯 Landing page intro</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grupa-wrap" id="grupa-wiecej-wrap" style="display:none">
+              <button class="btn-secondary" onclick="przelaczGrupe('wiecej')" data-i18n="grupa-wiecej">⋯ Więcej ▾</button>
+              <div class="grupa-backdrop" onclick="przelaczGrupe('wiecej')"></div>
+              <div class="grupa-menu" id="grupa-wiecej-menu">
+                <button class="btn-secondary" id="premium-fix-btn" style="display:none" onclick="runPostGenerationPremium()" title="Uruchom samokorekcję Premium na istniejącym artykule" data-i18n-title="title-premium-fix-tooltip" data-i18n="btn-premium-fix">⭐ Popraw premium</button>
+                <button class="btn-secondary" id="links-btn" style="display:none" onclick="toggleLinksPanel()" data-i18n="btn-links">🔗 Linki</button>
+                <button class="btn-secondary" id="jsonld-btn" style="display:none" onclick="toggleJsonLd()" data-i18n="btn-jsonld">{ } JSON-LD</button>
+                <button class="btn-secondary" id="wp-pub-btn" style="display:none" onclick="openWpPublish()" data-i18n="btn-wp-pub">🌐 Publikuj WP</button>
+              </div>
+            </div>
             <button class="btn-secondary" id="copy-btn" style="display:none" onclick="copyOut()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               <span data-i18n="btn-copy">Kopiuj</span>
             </button>
+            <div class="grupa-wrap" id="grupa-pobierz-wrap" style="display:none">
+              <button class="btn-secondary" onclick="przelaczGrupe('pobierz')" data-i18n="grupa-pobierz">⬇️ Pobierz ▾</button>
+              <div class="grupa-backdrop" onclick="przelaczGrupe('pobierz')"></div>
+              <div class="grupa-menu" id="grupa-pobierz-menu">
             <button class="btn-secondary" id="dl-btn" style="display:none" onclick="dlTxt()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               .txt
@@ -1867,6 +1914,8 @@ document.addEventListener('DOMContentLoaded', function () {
               .pdf
             </button>
             <button class="btn-secondary" id="tts-btn" style="display:none" onclick="speakArticle(this)" data-i18n-title="tts-read" title="Przeczytaj">🔊 <span data-i18n="tts-read">Przeczytaj</span></button>
+              </div>
+            </div>
           </div>
 
           <!-- Brief overlay backdrop -->
@@ -2868,7 +2917,9 @@ var I18N = {
     'btn-generate':'Generuj treść','btn-premium':'⭐ Jakość premium','btn-premium-active':'⭐ Jakość premium (aktywna)',
     'out-title':'Wynik','badge-ready':'gotowy do generowania','badge-done':'gotowe ✓',
     'btn-edit':'✏️ Edytuj','btn-aio':'🤖 Oceń AIO','btn-seo':'📊 Oceń SEO',
-    'btn-img-out':'🎨 Grafika','btn-titles':'💡 Tytuły','btn-repurpose':'🔄 Przeróbki ▾',
+    'btn-img-out':'🎨 Grafika','btn-titles':'💡 Tytuły',
+    'grupa-ocen':'📊 Oceń ▾','grupa-tworz':'🎨 Twórz ▾','grupa-pobierz':'⬇️ Pobierz ▾',
+    'grupa-wiecej':'⋯ Więcej ▾',
     'btn-wp-pub':'🌐 Publikuj WP','btn-links':'🔗 Linki','btn-serp':'📊 SERP','btn-gap':'🧩 Luki',
     'btn-jsonld':'{ } JSON-LD','btn-premium-fix':'⭐ Popraw premium','btn-copy':'Kopiuj',
     'rp-linkedin':'💼 Post LinkedIn','rp-facebook':'👥 Post Facebook','rp-email':'📧 Email newsletter',
@@ -3346,7 +3397,9 @@ var I18N = {
     'btn-generate':'Generate content','btn-premium':'⭐ Premium quality','btn-premium-active':'⭐ Premium quality (active)',
     'out-title':'Result','badge-ready':'ready to generate','badge-done':'done ✓',
     'btn-edit':'✏️ Edit','btn-aio':'🤖 Assess AIO','btn-seo':'📊 Assess SEO',
-    'btn-img-out':'🎨 Image','btn-titles':'💡 Titles','btn-repurpose':'🔄 Repurpose ▾',
+    'btn-img-out':'🎨 Image','btn-titles':'💡 Titles',
+    'grupa-ocen':'📊 Assess ▾','grupa-tworz':'🎨 Create ▾','grupa-pobierz':'⬇️ Download ▾',
+    'grupa-wiecej':'⋯ More ▾',
     'btn-wp-pub':'🌐 Publish WP','btn-links':'🔗 Links','btn-serp':'📊 SERP','btn-gap':'🧩 Gaps',
     'btn-jsonld':'{ } JSON-LD','btn-premium-fix':'⭐ Premium fix','btn-copy':'Copy',
     'rp-linkedin':'💼 LinkedIn post','rp-facebook':'👥 Facebook post','rp-email':'📧 Email newsletter',
@@ -5177,7 +5230,9 @@ ${html}`;
   if (serpData) document.getElementById('serp-toggle-btn').style.display = 'flex';
   { const eb = document.getElementById('edit-btn'); if(eb){ eb.style.display='flex'; eb.innerHTML=_t('btn-edit'); } }
   document.getElementById('seo-btn').style.display = 'flex'; document.getElementById('aio-btn').style.display = 'flex'; document.getElementById('aeo-btn').style.display = 'flex'; document.getElementById('geo-btn').style.display = 'flex';
-  document.getElementById('repurpose-wrap').style.display = 'inline-flex';
+  // 'block', nie 'inline-flex': przerobki to teraz pion pozycji w menu "Tworz",
+  // a nie osobny przycisk w pasku.
+  document.getElementById('repurpose-wrap').style.display = 'block';
   if (wpSettings.url || drupalSettings.url) document.getElementById('wp-pub-btn').style.display = 'flex';
   document.getElementById('jsonld-btn').style.display = 'flex'; document.getElementById('jsonld-code').textContent = '';
 
@@ -7125,9 +7180,11 @@ async function generujTematy() {
   if (!opis) { document.getElementById('tematy-zapotrzebowanie').focus(); return; }
 
   var btn = document.getElementById('tematy-btn');
-  var etykieta = btn.textContent;
+  // Przycisk tylko gasnie. Wczesniej podmienial swoja etykiete na ten sam
+  // komunikat, ktory stoi nizej w polu wyniku - to samo zdanie dwa razy pod
+  // soba wygladalo jak usterka.
   btn.disabled = true;
-  btn.textContent = _t('tematy-mysle');
+  btn.style.opacity = '0.55';
   cel.innerHTML = '<div class="seo-loading">' + _t('tematy-mysle') + '</div>';
   propozycjeTematow = [];
 
@@ -7145,7 +7202,7 @@ async function generujTematy() {
     propozycjeTematow = Array.from({ length: 10 }, function(_, i) {
       return { temat: _t('tematy-demo-temat') + ' ' + (i + 1), dlaczego: _t('tematy-demo-dlaczego') };
     });
-    btn.disabled = false; btn.textContent = etykieta;
+    btn.disabled = false; btn.style.opacity = '';
     rysujPropozycje();
     return;
   }
@@ -7177,7 +7234,7 @@ async function generujTematy() {
     cel.innerHTML = '<div class="seo-loading" style="color:var(--red)">' + _t('msg-err-prefix') + escapeHtml(e.message) + '</div>';
   } finally {
     btn.disabled = false;
-    btn.textContent = etykieta;
+    btn.style.opacity = '';
   }
 }
 
@@ -7375,18 +7432,60 @@ function saveBrandVoice(profile) {
 // ═══════════════════════════════════════════════════════════════════════
 // ── CONTENT REPURPOSING ──────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════
-function toggleRepurposeMenu() {
-  const menu = document.getElementById('repurpose-menu');
-  const backdrop = document.getElementById('repurpose-backdrop');
-  const isOpen = menu.classList.toggle('open');
-  if (backdrop) backdrop.classList.toggle('show', isOpen);
+// ── Grupy w pasku wyniku ─────────────────────────────────────────────────────
+const GRUPY_PASKA = ['ocen', 'tworz', 'pobierz', 'wiecej'];
+
+function przelaczGrupe(nazwa) {
+  const menu = document.getElementById('grupa-' + nazwa + '-menu');
+  if (!menu) return;
+  const otwarte = !menu.classList.contains('open');
+  zamknijGrupyPaska();
+  if (!otwarte) return;
+  menu.classList.add('open');
+  const tlo = menu.parentElement.querySelector('.grupa-backdrop');
+  if (tlo) tlo.classList.add('show');
 }
 
+function zamknijGrupyPaska() {
+  GRUPY_PASKA.forEach(function(n) {
+    document.getElementById('grupa-' + n + '-menu')?.classList.remove('open');
+  });
+  document.querySelectorAll('.grupa-backdrop').forEach(function(t) { t.classList.remove('show'); });
+}
+
+/**
+ * Przycisk grupy pokazuje sie wtedy i tylko wtedy, gdy cos w niej widac.
+ * Widocznosc czytamy z inline style, bo to jego ustawia aplikacja w kilkunastu
+ * miejscach - zamkniete menu i tak zeruje offsetParent, wiec pomiar ukladu
+ * dalby tu falszywa odpowiedz.
+ */
+function odswiezGrupyPaska() {
+  GRUPY_PASKA.forEach(function(n) {
+    const menu = document.getElementById('grupa-' + n + '-menu');
+    const wrap = document.getElementById('grupa-' + n + '-wrap');
+    if (!menu || !wrap) return;
+    const cos = [...menu.children].some(function(e) {
+      return e.style.display !== 'none' && !e.classList.contains('grupa-sep');
+    });
+    wrap.style.display = cos ? 'inline-flex' : 'none';
+  });
+}
+
+(function pilnujGrupPaska() {
+  const pasek = document.querySelector('.output-bar');
+  if (!pasek || typeof MutationObserver !== 'function') return;
+  // Zamiast dopisywac wywolanie do kazdego z kilkunastu miejsc ustawiajacych
+  // display, obserwujemy sam pasek. Nowy przycisk w grupie zadziala sam.
+  new MutationObserver(odswiezGrupyPaska).observe(pasek, {
+    attributes: true, attributeFilter: ['style'], subtree: true,
+  });
+  odswiezGrupyPaska();
+})();
+
+// Przerobki nie maja juz wlasnego menu - sa pozycjami w menu "Tworz".
+// Zamykanie ich obsluguje zamknijGrupyPaska(), razem z reszta grup.
 document.addEventListener('click', e => {
-  if (!e.target.closest('.repurpose-wrap')) {
-    document.getElementById('repurpose-menu')?.classList.remove('open');
-    document.getElementById('repurpose-backdrop')?.classList.remove('show');
-  }
+  if (!e.target.closest('.grupa-wrap')) zamknijGrupyPaska();
 });
 
 function closeRepurposePanel() {
@@ -7394,8 +7493,7 @@ function closeRepurposePanel() {
 }
 
 async function runRepurpose(format) {
-  document.getElementById('repurpose-menu').classList.remove('open');
-  document.getElementById('repurpose-backdrop')?.classList.remove('show');
+  zamknijGrupyPaska();
   const titles = {
     linkedin: _t('rp-linkedin'),
     facebook: _t('rp-facebook'),
@@ -9177,7 +9275,7 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#ctx-menu')) closeContextMenu();
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeContextMenu(); closeLinkDialog(); closeNoSourceModal(); closePremiumModal(); closeTitlesModal(); closeGapPanel(); closeSerpPanel(); if(seoOpen){seoOpen=false;document.getElementById('seo-panel')?.classList.remove('show');} if(aioOpen){aioOpen=false;document.getElementById('aio-panel')?.classList.remove('show');} if(aeoOpen){aeoOpen=false;document.getElementById('aeo-panel')?.classList.remove('show');} if(geoOpen){geoOpen=false;document.getElementById('geo-panel')?.classList.remove('show');} closeBriefPanel(); if(linksOpen) toggleLinksPanel(); closeImgPanelSmart(); closeBvModal(); closeLlmsModal(); closeVisModal(); closeRepModal(); closeTrkModal(); closeTextModal(); closeUrlModal(); if(!bulkRunning) closeBulkModal(); closeImproveModal(); closeWpModal(); closeTplModal(); closeWpPublishModal(); closeSettingsMenu(); zamknijTematy(); if(typeof zamknijPakiet==='function') zamknijPakiet(); if(typeof startPomin==='function' && document.getElementById('start-modal')?.style.display==='flex') startPomin(); const fi=document.getElementById('fog-panel'); if(fi) fi.style.display='none'; }
+  if (e.key === 'Escape') { closeContextMenu(); closeLinkDialog(); closeNoSourceModal(); closePremiumModal(); closeTitlesModal(); closeGapPanel(); closeSerpPanel(); if(seoOpen){seoOpen=false;document.getElementById('seo-panel')?.classList.remove('show');} if(aioOpen){aioOpen=false;document.getElementById('aio-panel')?.classList.remove('show');} if(aeoOpen){aeoOpen=false;document.getElementById('aeo-panel')?.classList.remove('show');} if(geoOpen){geoOpen=false;document.getElementById('geo-panel')?.classList.remove('show');} closeBriefPanel(); if(linksOpen) toggleLinksPanel(); closeImgPanelSmart(); closeBvModal(); closeLlmsModal(); closeVisModal(); closeRepModal(); closeTrkModal(); closeTextModal(); closeUrlModal(); if(!bulkRunning) closeBulkModal(); closeImproveModal(); closeWpModal(); closeTplModal(); closeWpPublishModal(); closeSettingsMenu(); zamknijTematy(); zamknijGrupyPaska(); if(typeof zamknijPakiet==='function') zamknijPakiet(); if(typeof startPomin==='function' && document.getElementById('start-modal')?.style.display==='flex') startPomin(); const fi=document.getElementById('fog-panel'); if(fi) fi.style.display='none'; }
 });
 // ═══════════════════════════════════════════════════════════════════════
 // ── MOBILE DETECTION & INIT ─────────────────────────────────────────────
