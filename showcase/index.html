@@ -79,8 +79,15 @@
   .step p{color:var(--muted);font-size:0.98rem;line-height:1.55;max-width:40ch}
   /* Siedem elementow w siatce dwu- i trzykolumnowej zostawialoby dziure
      w ostatnim wierszu. Karta na pelna szerokosc czyta sie jak decyzja,
-     a nie jak brakujaca kratka. */
-  .step-wide{grid-column:1 / -1}
+     a nie jak brakujaca kratka.
+     Numer i tytul po lewej, opis po prawej: akapit ma 40ch, wiec w karcie
+     szerokiej na 1140 px tekst stal scisniety przy lewej krawedzi, a dwie
+     trzecie karty swiecily pustka. */
+  .step-wide{grid-column:1 / -1;display:grid;
+    grid-template-columns:minmax(0,0.85fr) minmax(0,1fr);column-gap:56px;align-items:center}
+  .step-wide .step-n{grid-column:1;grid-row:1;margin-bottom:0}
+  .step-wide h3{grid-column:1;grid-row:2;margin:16px 0 0}
+  .step-wide p{grid-column:2;grid-row:1 / span 2;max-width:56ch;font-size:1.05rem}
   .step::after{content:"";position:absolute;left:30px;bottom:0;width:0;height:2px;background:linear-gradient(90deg,var(--amber),var(--cyan));transition:width .5s cubic-bezier(.2,.7,.2,1)}
   .step:hover::after{width:56px}
 
@@ -127,7 +134,11 @@
   /* Wdrozenie zespolowe */
   .team{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
   .tcard{border:1px solid var(--glass-brd);border-radius:16px;background:rgba(9,11,16,0.62);backdrop-filter:blur(12px);padding:22px;display:flex;flex-direction:column;gap:10px}
-  .tcard-wide{grid-column:1 / -1}
+  .tcard-wide{grid-column:1 / -1;display:grid;gap:0;
+    grid-template-columns:minmax(0,0.8fr) minmax(0,1fr);column-gap:48px;align-items:center}
+  .tcard-wide .tcard-ico{grid-column:1;grid-row:1}
+  .tcard-wide h3{grid-column:1;grid-row:2;margin-top:10px;font-size:20px}
+  .tcard-wide p{grid-column:2;grid-row:1 / span 2;max-width:58ch}
   .tcard-ico{font-family:var(--mono);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--cyan)}
   .tcard h3{font-size:16px;font-weight:600;color:var(--text);letter-spacing:-0.01em}
   .tcard p{font-size:14px;color:var(--muted);line-height:1.6}
@@ -201,6 +212,16 @@
     .readout .sep{display:none}
     .panels,.modules{grid-template-columns:1fr}
     .team{grid-template-columns:1fr}
+    .step-wide,.tcard-wide{grid-template-columns:1fr;column-gap:0}
+    .step-wide .step-n,.step-wide h3,.step-wide p,
+    .tcard-wide .tcard-ico,.tcard-wide h3,.tcard-wide p{grid-column:1}
+    .step-wide .step-n{grid-row:1}
+    .step-wide h3{grid-row:2;margin:26px 0 12px}
+    .step-wide p{grid-row:3;max-width:40ch;font-size:0.98rem}
+    .tcard-wide{gap:10px}
+    .tcard-wide .tcard-ico{grid-row:1}
+    .tcard-wide h3{grid-row:2;margin-top:0;font-size:16px}
+    .tcard-wide p{grid-row:3;max-width:none}
     h1{font-size:clamp(2.2rem,9vw,3.2rem)}
   }
   @media (prefers-reduced-motion:reduce){
@@ -238,7 +259,7 @@
   <section class="hero">
     <div class="eyebrow reveal" data-i18n="hero-eyebrow">Content AI // silnik treści</div>
     <h1 class="reveal" data-i18n="hero-h1">Treść gotowa pod <span class="grad">Google i modele AI</span>.</h1>
-    <p class="lede reveal" data-i18n="hero-lede">Generuje artykuły SEO, AIO, AEO i GEO na bazie Twojej wiedzy i realnych wyników wyszukiwania. Ocenia jakość, poprawia strukturę i eksportuje jednym kliknięciem.</p>
+    <p class="lede reveal" data-i18n="hero-lede">Opisujesz, o czym ma być tekst. Content AI sprawdza, co rankuje w Google, pisze artykuł z Twojej bazy wiedzy, ocenia go i poprawia. Na Twoim kluczu API, więc płacisz tylko dostawcy modelu.</p>
     <div class="hero-actions reveal">
       <a class="btn btn-primary" data-app-link href="#cta" data-i18n="hero-cta1">Zaloguj się do aplikacji</a>
       <a class="btn btn-ghost" href="#pipeline" data-i18n="hero-cta2">Jak to działa</a>
@@ -369,58 +390,58 @@
   <section class="block" id="zespol">
     <div class="sec-head">
       <div>
-        <div class="sec-kicker reveal" data-i18n="k-zespol">Zespół</div>
-        <h2 class="sec-title reveal" data-i18n="team-title">Na Twoim serwerze, pod jednym logowaniem.</h2>
+        <div class="sec-kicker reveal" data-i18n="k-zespol">Twoje konto</div>
+        <h2 class="sec-title reveal" data-i18n="team-title">Twój klucz, Twój rachunek, zero marży na wierzchu.</h2>
       </div>
-      <p class="sec-note reveal" data-i18n="team-note">Konta zamiast rozdawania plików. Klucze API zostają po Twojej stronie.</p>
+      <p class="sec-note reveal" data-i18n="team-note">Płacisz dostawcy modelu bezpośrednio, tyle ile zużyjesz.</p>
     </div>
     <div class="team">
-      <div class="tcard reveal">
+      <div class="tcard tcard-wide reveal">
         <div class="tcard-ico">01</div>
-        <h3 data-i18n="t1t">Konta i role</h3>
-        <p data-i18n="t1p">Każdy loguje się swoim hasłem. Dostęp odbierasz jednym poleceniem, bez wymiany kluczy u pozostałych.</p>
+        <h3 data-i18n="t7t">Własny klucz, własny rachunek</h3>
+        <p data-i18n="t7p">Wpisujesz swój klucz i płacisz dostawcy modelu bezpośrednio, tyle ile zużyjesz. Klucz zostaje w Twojej przeglądarce i nigdy nie jest zapisywany na serwerze. Bez marży na tokenach i bez limitu, którego sam nie ustawiłeś.</p>
       </div>
       <div class="tcard reveal">
         <div class="tcard-ico">02</div>
+        <h3 data-i18n="t1t">Konta i role</h3>
+        <p data-i18n="t1p">Każdy w zespole ma własne konto i własne hasło. Historia, baza wiedzy i ustawienia są osobne dla każdego.</p>
+      </div>
+      <div class="tcard reveal">
+        <div class="tcard-ico">03</div>
         <h3 data-i18n="t2t">Baza wiedzy, która rozumie temat</h3>
         <p data-i18n="t2p">Dokumenty leżą na serwerze - prywatne i wspólne. Do promptu trafiają tylko fragmenty pasujące do tematu, nie cała baza.</p>
       </div>
       <div class="tcard reveal">
-        <div class="tcard-ico">03</div>
+        <div class="tcard-ico">04</div>
         <h3 data-i18n="t3t">SEO i treść w jednym systemie</h3>
         <p data-i18n="t3p">Analityka SEO stoi obok generatora, za tym samym logowaniem. Sprawdzone frazy wchodzą do artykułu jednym kliknięciem i wracają, żeby śledzić pozycje.</p>
       </div>
       <div class="tcard reveal">
-        <div class="tcard-ico">04</div>
+        <div class="tcard-ico">05</div>
         <h3 data-i18n="t4t">Wybór modelu należy do Ciebie</h3>
         <p data-i18n="t4p">Komercyjny albo open source - serwer tłumaczy format, więc przełączenie nie wymaga zmiany w aplikacji.</p>
       </div>
       <div class="tcard reveal">
-        <div class="tcard-ico">05</div>
+        <div class="tcard-ico">06</div>
         <h3 data-i18n="t5t">Realne dane, nie szacunki</h3>
         <p data-i18n="t5p">Analiza SERP może brać wyniki prosto z API zamiast pytać model. To, co widzisz, jest zmierzone.</p>
       </div>
       <div class="tcard reveal">
-        <div class="tcard-ico">06</div>
-        <h3 data-i18n="t6t">Zero obcych serwerów</h3>
-        <p data-i18n="t6p">Biblioteki i krój pisma idą z Twojego hosta. Aplikacja działa w zamkniętej sieci firmowej i nikt z zewnątrz nie podmieni kodu, który się w niej wykonuje.</p>
-      </div>
-      <div class="tcard tcard-wide reveal">
         <div class="tcard-ico">07</div>
-        <h3 data-i18n="t7t">Własny klucz, własny rachunek</h3>
-        <p data-i18n="t7p">Domyślnie generowanie idzie z kluczy serwera i nikt nie musi nic ustawiać. Kto woli płacić dostawcy bezpośrednio, wpisuje własny klucz w aplikacji: zostaje on w jego przeglądarce i nigdy nie trafia na serwer do zapisu.</p>
+        <h3 data-i18n="t6t">Bez cudzych bibliotek w środku</h3>
+        <p data-i18n="t6p">Serwer nie ma ani jednej zależności npm, a aplikacja to jeden plik, który nic nie dociąga z zewnątrz. Mniej miejsc, w których coś może się zepsuć albo zostać podmienione.</p>
       </div>
     </div>
     <div class="tnote reveal">
       <span data-i18n="tn1">Serwer bez zależności npm</span>
       <span data-i18n="tn2">Hasła haszowane <b>scryptem</b></span>
-      <span data-i18n="tn3">Klucze API <b>nigdy</b> w przeglądarce</span>
+      <span data-i18n="tn3">Klucz zostaje <b>w Twojej przeglądarce</b></span>
     </div>
   </section>
 
   <section class="cta-final" id="cta">
     <h2 class="reveal" data-i18n="cta-h2">Napisz raz. Rankuj wszędzie.</h2>
-    <p class="reveal" data-i18n="cta-p">Od bazy wiedzy do gotowego artykułu, posta i pliku, w jednym narzędziu, w Twoim języku.</p>
+    <p class="reveal" data-i18n="cta-p">Od pomysłu do gotowego artykułu, posta i pliku. Na własnym kluczu API - płacisz dostawcy modelu, nie pośrednikowi.</p>
     <div class="hero-actions reveal">
       <a class="btn btn-primary" data-app-link href="#top" data-i18n="cta-btn1">Zaloguj się do aplikacji</a>
       <a class="btn btn-ghost" href="#pipeline" data-i18n="cta-btn2">Zobacz pipeline</a>
@@ -448,7 +469,7 @@
       "cta-nav":"Zaloguj się",
       "hero-eyebrow":"Content AI // silnik treści",
       "hero-h1":"Treść gotowa pod <span class=\"grad\">Google i modele AI</span>.",
-      "hero-lede":"Generuje artykuły SEO, AIO, AEO i GEO na bazie Twojej wiedzy i realnych wyników wyszukiwania. Ocenia jakość, poprawia strukturę i eksportuje jednym kliknięciem.",
+      "hero-lede":"Opisujesz, o czym ma być tekst. Content AI sprawdza, co rankuje w Google, pisze artykuł z Twojej bazy wiedzy, ocenia go i poprawia. Na Twoim kluczu API, więc płacisz tylko dostawcy modelu.",
       "hero-cta1":"Zaloguj się do aplikacji","hero-cta2":"Jak to działa",
       "ro1":"SEO <b>88</b>/100","ro2":"AIO <b>gotowe</b>","ro3":"FOG <b>30.1</b>","ro4":"KD <b>2.78%</b>","ro5":"<b>862</b> słowa","ro6":"Meta <b>159 zn.</b>",
       "pipe-title":"Siedem kroków od pomysłu do gotowej publikacji.",
@@ -462,11 +483,9 @@
       "s6t":"Eksport","s6p":"Pobierasz .docx, .pdf lub audio. Kopiujesz JSON-LD pod wyniki wyszukiwania.",
       "band-kicker":"Optymalizacja","band-h2":"Jedna treść, cztery silniki odpowiedzi.",
       "band-p":"SEO pod klasyczne wyniki Google. AIO i AEO pod odpowiedzi generowane przez AI. GEO pod cytowania w modelach. Content AI pisze raz i optymalizuje pod wszystkie naraz.",
-      "chip-hybrid":"Hybryda","score-lab":"/ 100 pkt SEO",
-      "score-li1":"Słowa kluczowe w H1, H2 i treści","score-li2":"Struktura nagłówków logiczna i pełna",
-      "score-li3":"Meta description zwięzła, z frazą","score-li4":"Wskazane braki poprawione automatycznie",
+      "chip-hybrid":"Hybryda",
       "cta-h2":"Napisz raz. Rankuj wszędzie.",
-      "cta-p":"Od bazy wiedzy do gotowego artykułu, posta i pliku, w jednym narzędziu, w Twoim języku.",
+      "cta-p":"Od pomysłu do gotowego artykułu, posta i pliku. Na własnym kluczu API - płacisz dostawcy modelu, nie pośrednikowi.",
       "cta-btn1":"Zaloguj się do aplikacji","cta-btn2":"Zobacz pipeline",
       "an-title":"Panele oceny w czasie rzeczywistym.","an-note":"SEO, AIO, AEO i GEO, każdy z własnym wynikiem.",
       "an-seo1":"Słowa kluczowe w H1, H2 i treści","an-seo2":"Struktura nagłówków logiczna i pełna","an-seo3":"Meta description zwięzła, z frazą","an-seo4":"Brak nazwy marki w 2 sekcjach",
@@ -477,23 +496,23 @@
       "mod-gfx-prompt":"z tematu artykułu → ilustracja","mod-audio-label":"artykuł na głos",
       "gap-title":"Analiza luk semantycznych.","gap-note":"Pokazuje, czego brakuje względem tego, co rankuje.",
       "gap-panel":"Braki do uzupełnienia","gap1":"Koszty wdrożenia i model rozliczeń","gap2":"Porównanie z konkurencją","gap3":"Wymagania techniczne i integracje","gap4":"Najczęstsze pytania (FAQ)","gap-cta":"Uzupełnij luki jednym kliknięciem",
-      "team-title":"Na Twoim serwerze, pod jednym logowaniem.",
-      "team-note":"Konta zamiast rozdawania plików. Klucze API zostają po Twojej stronie.",
-      "t1t":"Konta i role","t1p":"Każdy loguje się swoim hasłem. Dostęp odbierasz jednym poleceniem, bez wymiany kluczy u pozostałych.",
+      "team-title":"Twój klucz, Twój rachunek, zero marży na wierzchu.",
+      "team-note":"Płacisz dostawcy modelu bezpośrednio, tyle ile zużyjesz.",
+      "t1t":"Konta i role","t1p":"Każdy w zespole ma własne konto i własne hasło. Historia, baza wiedzy i ustawienia są osobne dla każdego.",
       "t2t":"Baza wiedzy, która rozumie temat","t2p":"Dokumenty leżą na serwerze - prywatne i wspólne. Do promptu trafiają tylko fragmenty pasujące do tematu, nie cała baza.",
       "t3t":"SEO i treść w jednym systemie","t3p":"Analityka SEO stoi obok generatora, za tym samym logowaniem. Sprawdzone frazy wchodzą do artykułu jednym kliknięciem i wracają, żeby śledzić pozycje.",
       "t4t":"Wybór modelu należy do Ciebie","t4p":"Komercyjny albo open source - serwer tłumaczy format, więc przełączenie nie wymaga zmiany w aplikacji.",
       "t5t":"Realne dane, nie szacunki","t5p":"Analiza SERP może brać wyniki prosto z API zamiast pytać model. To, co widzisz, jest zmierzone.",
-      "t7t":"Własny klucz, własny rachunek","t7p":"Domyślnie generowanie idzie z kluczy serwera i nikt nie musi nic ustawiać. Kto woli płacić dostawcy bezpośrednio, wpisuje własny klucz w aplikacji: zostaje on w jego przeglądarce i nigdy nie trafia na serwer do zapisu.",
-      "t6t":"Zero obcych serwerów","t6p":"Biblioteki i krój pisma idą z Twojego hosta. Aplikacja działa w zamkniętej sieci firmowej i nikt z zewnątrz nie podmieni kodu, który się w niej wykonuje.",
-      "tn1":"Serwer bez zależności npm","tn2":"Hasła haszowane <b>scryptem</b>","tn3":"Klucze API <b>nigdy</b> w przeglądarce",
-      "k-pipe":"Pipeline","k-analiza":"Analiza","k-moduly":"Moduły","k-luki":"Luki","k-zespol":"Zespół"
+      "t7t":"Własny klucz, własny rachunek","t7p":"Wpisujesz swój klucz i płacisz dostawcy modelu bezpośrednio, tyle ile zużyjesz. Klucz zostaje w Twojej przeglądarce i nigdy nie jest zapisywany na serwerze. Bez marży na tokenach i bez limitu, którego sam nie ustawiłeś.",
+      "t6t":"Bez cudzych bibliotek w środku","t6p":"Serwer nie ma ani jednej zależności npm, a aplikacja to jeden plik, który nic nie dociąga z zewnątrz. Mniej miejsc, w których coś może się zepsuć albo zostać podmienione.",
+      "tn1":"Serwer bez zależności npm","tn2":"Hasła haszowane <b>scryptem</b>","tn3":"Klucz zostaje <b>w Twojej przeglądarce</b>",
+      "k-pipe":"Pipeline","k-analiza":"Analiza","k-moduly":"Moduły","k-luki":"Luki","k-zespol":"Twoje konto"
     },
     en:{
       "cta-nav":"Log in",
       "hero-eyebrow":"Content AI // content engine",
       "hero-h1":"Content ready for <span class=\"grad\">Google and AI models</span>.",
-      "hero-lede":"It generates SEO, AIO, AEO and GEO articles from your own knowledge and real search results. It scores quality, fixes structure and exports in one click.",
+      "hero-lede":"You describe what the text should be about. Content AI checks what ranks in Google, writes the article from your knowledge base, scores it and fixes it. On your own API key, so you only pay the model provider.",
       "hero-cta1":"Log in to the app","hero-cta2":"How it works",
       "ro1":"SEO <b>88</b>/100","ro2":"AIO <b>ready</b>","ro3":"FOG <b>30.1</b>","ro4":"KD <b>2.78%</b>","ro5":"<b>862</b> words","ro6":"Meta <b>159 chars</b>",
       "pipe-title":"Seven steps from an idea to ready to publish.",
@@ -507,11 +526,9 @@
       "s6t":"Export","s6p":"You download .docx, .pdf or audio. You copy JSON-LD for search results.",
       "band-kicker":"Optimization","band-h2":"One piece of content, four answer engines.",
       "band-p":"SEO for classic Google results. AIO and AEO for AI generated answers. GEO for citations in models. Content AI writes once and optimizes for all at once.",
-      "chip-hybrid":"Hybrid","score-lab":"/ 100 SEO pts",
-      "score-li1":"Keywords in H1, H2 and body","score-li2":"Heading structure logical and complete",
-      "score-li3":"Meta description concise, with keyword","score-li4":"Flagged gaps fixed automatically",
+      "chip-hybrid":"Hybrid",
       "cta-h2":"Write once. Rank everywhere.",
-      "cta-p":"From knowledge base to finished article, post and file, in one tool, in your language.",
+      "cta-p":"From an idea to a finished article, post and file. On your own API key - you pay the model provider, not a middleman.",
       "cta-btn1":"Log in to the app","cta-btn2":"See the pipeline",
       "an-title":"Real time scoring panels.","an-note":"SEO, AIO, AEO and GEO, each with its own score.",
       "an-seo1":"Keywords in H1, H2 and body","an-seo2":"Heading structure logical and complete","an-seo3":"Meta description concise, with keyword","an-seo4":"Brand name missing in 2 sections",
@@ -522,17 +539,17 @@
       "mod-gfx-prompt":"from the article topic → illustration","mod-audio-label":"article as audio",
       "gap-title":"Semantic gap analysis.","gap-note":"Shows what is missing versus what ranks.",
       "gap-panel":"Gaps to fill","gap1":"Implementation cost and pricing model","gap2":"Comparison with competitors","gap3":"Technical requirements and integrations","gap4":"Frequently asked questions (FAQ)","gap-cta":"Fill the gaps in one click",
-      "team-title":"On your server, behind a single login.",
-      "team-note":"Accounts instead of handing out files. API keys stay on your side.",
-      "t1t":"Accounts and roles","t1p":"Everyone signs in with their own password. You revoke access with one command, without rotating keys for everyone else.",
+      "team-title":"Your key, your bill, no markup on top.",
+      "team-note":"You pay the model provider directly, for exactly what you use.",
+      "t1t":"Accounts and roles","t1p":"Everyone on the team gets their own account and password. History, knowledge base and settings stay separate for each person.",
       "t2t":"A knowledge base that understands the topic","t2p":"Documents live on the server - private and shared. Only the passages matching the topic reach the prompt, not the whole base.",
       "t3t":"SEO and content in one system","t3p":"SEO analytics sits next to the generator, behind the same login. Vetted keywords go into the article in one click and come back so their rankings can be tracked.",
       "t4t":"The model choice is yours","t4p":"Commercial or open source - the server translates the format, so switching needs no change in the app.",
       "t5t":"Measured data, not estimates","t5p":"SERP analysis can pull results straight from an API instead of asking the model. What you see was measured.",
-      "t7t":"Your own key, your own bill","t7p":"By default generating runs on the server keys and nobody has to set anything up. Anyone who prefers to pay the provider directly enters their own key in the app: it stays in their browser and is never stored on the server.",
-      "t6t":"No third-party servers","t6p":"Libraries and the typeface come from your own host. The app works on a closed corporate network and nobody outside can swap the code running inside it.",
-      "tn1":"Server with zero npm dependencies","tn2":"Passwords hashed with <b>scrypt</b>","tn3":"API keys <b>never</b> in the browser",
-      "k-pipe":"Pipeline","k-analiza":"Analysis","k-moduly":"Modules","k-luki":"Gaps","k-zespol":"Team"
+      "t7t":"Your own key, your own bill","t7p":"You enter your own key and pay the model provider directly, for exactly what you use. The key stays in your browser and is never stored on the server. No markup on tokens and no limit you did not set yourself.",
+      "t6t":"No third-party libraries inside","t6p":"The server has zero npm dependencies and the app is a single file that pulls nothing from outside. Fewer places where something can break or be swapped.",
+      "tn1":"Server with zero npm dependencies","tn2":"Passwords hashed with <b>scrypt</b>","tn3":"Your key stays <b>in your browser</b>",
+      "k-pipe":"Pipeline","k-analiza":"Analysis","k-moduly":"Modules","k-luki":"Gaps","k-zespol":"Your account"
     }
   };
   function stored(){ try{ return localStorage.getItem("cai_showcase_lang"); }catch(e){ return null; } }
