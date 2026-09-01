@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ancient Fences: ContentAI</title>
+<style>
+:root{--ground:#0F1216;--surface:#171C22;--surface2:#1E242B;--line:#2B333B;--ink:#E7E1D4;--dim:#A7A69C;--muted:#83877F;--gold:#E0A45C;--inst:#8FC3D2}
+@media (prefers-color-scheme:light){:root{--ground:#E3E2DC;--surface:#EDEBE4;--surface2:#F3F1EB;--line:#CFCCC1;--ink:#1A1E22;--dim:#4A4F53;--muted:#6B6F68;--gold:#8F5B18;--inst:#2E6B7C}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:68rem;margin:0 auto;padding:0 clamp(1rem,4vw,2.5rem)}
+header{border-bottom:1px solid var(--line);padding:3rem 0 2rem}
+h1{font:300 clamp(2rem,5vw,3.2rem)/1.05 ui-serif,Georgia,serif;letter-spacing:-.02em;margin:0}
+.sub{color:var(--dim);margin:.7rem 0 0}
+.mono,code,.num{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.mono{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:2.5rem 0}
+.stat{background:var(--surface);padding:1.1rem 1.2rem;display:flex;flex-direction:column;gap:.3rem}
+.stat b{font:400 2rem/1 ui-monospace,monospace;color:var(--gold);font-variant-numeric:tabular-nums}
+.stat span{font-size:.78rem;color:var(--dim);line-height:1.35}
+h2{font:300 1.6rem/1.1 ui-serif,Georgia,serif;margin:2.5rem 0 1rem}
+.scroll{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:46rem;font-size:.88rem}
+th,td{text-align:left;padding:.8rem 1rem;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{font-family:ui-monospace,monospace;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:400;background:var(--surface2);white-space:nowrap}
+td p{margin:.35rem 0 0;color:var(--dim);font-size:.82rem}
+td.num{white-space:nowrap;color:var(--dim);font-variant-numeric:tabular-nums;font-size:.8rem}
+code{font-size:.82rem;color:var(--ink)}
+.v{font-family:ui-monospace,monospace;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.v-remove{color:var(--gold)}
+.v-review{color:var(--inst)}
+footer{border-top:1px solid var(--line);margin-top:3rem;padding:2rem 0 4rem;color:var(--muted);font-size:.85rem}
+footer strong{color:var(--ink)}
+footer p{max-width:62ch}
+</style></head><body>
+<header><div class="wrap">
+  <p class="mono">Ancient Fences · 2026-08-25</p>
+  <h1>ContentAI</h1>
+  <p class="sub">Code that exists because of an external problem, and whether that problem is still there.</p>
+</div></header>
+<main class="wrap">
+  <div class="stats">
+    <div class="stat"><b>18</b><span>fences standing</span></div>
+    <div class="stat"><b>0</b><span>written because of someone else's bug</span></div>
+    <div class="stat"><b>2</b><span>external issues to check</span></div>
+    <div class="stat"><b>0</b><span>untouched for 3+ years</span></div>
+    <div class="stat"><b>0</b><span>years, the oldest one</span></div>
+  </div>
+  <h2>Check these first</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Untouched</th><th>Where</th><th>Reason given</th><th>State</th></tr></thead>
+    <tbody><tr>
+      <td class="num">0.0 yr</td>
+      <td><code>app\pwa\lib\html-docx.js:20</code><p>If `Buffer.TYPED_ARRAY_SUPPORT`: * === true Use Uint8Array implementation (fastest) * === false Use Object implementation (most co</p></td>
+      <td class="num">bugzilla:695438</td>
+      <td><span class="v">not checked</span></td>
+    </tr>
+<tr>
+      <td class="num">0.0 yr</td>
+      <td><code>app\pwa\lib\html-docx.js:11185</code><p>Gets the &quot;length&quot; property value of `object`. * * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/sho</p></td>
+      <td class="num">webkit:142792</td>
+      <td><span class="v">not checked</span></td>
+    </tr>
+<tr>
+      <td class="num">0.0 yr</td>
+      <td><code>app\pwa\lib\html-docx.js:11517</code><p>Gets the &quot;length&quot; property value of `object`. * * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/sho</p></td>
+      <td class="num">webkit:142792</td>
+      <td><span class="v">not checked</span></td>
+    </tr>
+<tr>
+      <td class="num">0.0 yr</td>
+      <td><code>app\pwa\lib\html-docx.js:11873</code><p>Gets the &quot;length&quot; property value of `object`. * * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/sho</p></td>
+      <td class="num">webkit:142792</td>
+      <td><span class="v">not checked</span></td>
+    </tr>
+<tr>
+      <td class="num">0.0 yr</td>
+      <td><code>app\pwa\lib\html-docx.js:12603</code><p>Gets the &quot;length&quot; property value of `object`. * * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/sho</p></td>
+      <td class="num">webkit:142792</td>
+      <td><span class="v">not checked</span></td>
+    </tr></tbody>
+  </table></div>
+</main>
+<footer><div class="wrap">
+  <p><strong>This is one repository and one kind of risk.</strong> The same blindness applies to everything else nobody re-checks: what was already paid for, which parts only one person understands, whether this codebase could be handed to another team at all. That is what Ancient Code measures.</p>
+  <p style="margin-top:1rem">Generated by <strong>Ancient Fences</strong>. Open source, MIT.</p>
+</div></footer>
+</body></html>
