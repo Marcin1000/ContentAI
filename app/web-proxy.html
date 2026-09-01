@@ -3252,6 +3252,7 @@ var I18N = {
     'ctx-bold':'Pogrub','ctx-italic':'Pochyl',
     'link-dialog-label':'🔗 Dodaj link',
     'err-api-generic':'Błąd API',
+    'err-json-modelu':'Model zwrócił odpowiedź w uszkodzonym formacie. Spróbuj jeszcze raz.',
     'wp-published':'opublikowano',
     'wp-draft':'zapisano jako szkic',
     'wp-default-title':'Artykuł',
@@ -3722,6 +3723,7 @@ var I18N = {
     'img-spin-init':'Analyzing article...',
     'text-modal-desc-full':'Paste any company content - offers, FAQs, service descriptions, product data, policies. AI will use this content during generation.',
     'err-api-generic':'API error',
+    'err-json-modelu':'The model returned a malformed response. Please try again.',
     'gap-btn-select':'✍️ Select topics to improve',
     'hist-default-name':'Article',
     'img-net-err-short':'network error',
@@ -4034,6 +4036,60 @@ const ICONS = { pdf:'📄', xlsx:'📊', xls:'📊', docx:'📝', doc:'📝', pp
 function getIcon(name) { const ext = name.split('.').pop().toLowerCase(); return ICONS[ext] || ICONS.default; }
 // Escapowanie do bezpiecznego wstawiania danych użytkownika/AI do innerHTML
 function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+
+// ── Odczyt JSON-a z odpowiedzi modelu ────────────────────────────────────────
+// Model prosimy o czysty JSON, ale potrafi wstawic w tekst NIEZASLONIETY
+// cudzyslow - najczesciej wtedy, gdy cytuje nazwe wprost z bazy wiedzy.
+// JSON.parse wywalal sie wtedy z surowym komunikatem ("Expected ',' or '}'
+// after property value..."), ktory trafial wprost na ekran uzytkownika.
+//
+// Skaner ponizej rozstrzyga to tak, jak rozstrzyga czlowiek: cudzyslow konczy
+// wartosc tylko wtedy, gdy zaraz po nim stoi znak, ktory w JSON-ie moze po
+// wartosci wystapic. W kazdym innym miejscu to cudzyslow w srodku zdania.
+//
+// Czego to NIE naprawi: cytatu zakonczonego przecinkiem (["tekst "cytat",
+// dalej"]) - tam nie da sie odgadnac, gdzie konczy sie wartosc - ani
+// odpowiedzi urwanej w polowie ciagu. W obu razach leci zrozumialy blad.
+function zaslonCudzyslowyWJson(tekst) {
+  var wynik = '';
+  var wCiagu = false;
+  for (var i = 0; i < tekst.length; i++) {
+    var z = tekst[i];
+    if (!wCiagu) {
+      wynik += z;
+      if (z === '"') wCiagu = true;
+      continue;
+    }
+    if (z === '\\') { wynik += z + (tekst[i + 1] || ''); i++; continue; }
+    if (z !== '"') { wynik += z; continue; }
+    var j = i + 1;
+    while (j < tekst.length && /\s/.test(tekst[j])) j++;
+    var nastepny = tekst[j];
+    if (nastepny === undefined || nastepny === ',' || nastepny === '}'
+        || nastepny === ']' || nastepny === ':') {
+      wynik += z;
+      wCiagu = false;
+    } else {
+      wynik += '\\"';
+    }
+  }
+  return wynik;
+}
+
+function parsujJsonModelu(tekst) {
+  var t = String(tekst == null ? '' : tekst).replace(/```json/gi, '').replace(/```/g, '').trim();
+  // Model czasem dopisuje zdanie przed albo po JSON-ie.
+  var pierwsza = t.search(/[{[]/);
+  if (pierwsza > 0) t = t.slice(pierwsza);
+  var ostatnia = Math.max(t.lastIndexOf('}'), t.lastIndexOf(']'));
+  if (ostatnia >= 0 && ostatnia < t.length - 1) t = t.slice(0, ostatnia + 1);
+
+  try { return JSON.parse(t); } catch (e) { /* probujemy naprawic nizej */ }
+  try { return JSON.parse(zaslonCudzyslowyWJson(t)); } catch (e) {
+    // Surowy komunikat parsera nic uzytkownikowi nie mowi.
+    throw new Error(_t('err-json-modelu'));
+  }
+}
 
 // Android-safe file trigger
 function triggerFileInput(id) {
@@ -4592,7 +4648,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
       })
     });
     const evalData = await evalRes.json();
-    evalResult = JSON.parse((evalData.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim());
+    evalResult = parsujJsonModelu((evalData.content||[]).map(b=>b.text||'').join(''));
   } catch(e) {}
 
   if (!evalResult || evalResult.score >= 82 || !evalResult.issues?.length) {
@@ -4934,7 +4990,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
           })
         });
         const d = await r.json();
-        seoResult = JSON.parse((d.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim());
+        seoResult = parsujJsonModelu((d.content||[]).map(b=>b.text||'').join(''));
       } catch(e) {}
     }
 
@@ -4952,7 +5008,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
           })
         });
         const d = await r.json();
-        aioResult = JSON.parse((d.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim());
+        aioResult = parsujJsonModelu((d.content||[]).map(b=>b.text||'').join(''));
       } catch(e) {}
     }
 
@@ -5530,7 +5586,7 @@ async function openTitlesPanel() {
     });
     const data = await res.json();
     const raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
-    const titles = JSON.parse(raw);
+    const titles = parsujJsonModelu(raw);
     _titlesCache = Array.isArray(titles) ? titles : [];
     document.getElementById('titles-loading').style.display = 'none';
     listEl.style.display = 'flex';
@@ -5630,7 +5686,7 @@ async function fetchSerpContext(topic, kwText) {
     const data = await res.json();
     const rawText = (data.content||[]).map(b => b.type === 'text' ? b.text : '').filter(Boolean).join('');
     try {
-      const parsed = JSON.parse(rawText.replace(/```json|```/g, '').trim());
+      const parsed = parsujJsonModelu(rawText);
       serpData = {
         context:  parsed.context  || '',
         topics:   Array.isArray(parsed.topics)  ? parsed.topics.slice(0,8)  : [],
@@ -5946,7 +6002,7 @@ async function runGapAnalysis() {
     });
     const data   = await res.json();
     const raw    = (data.content || []).map(b => b.text || '').join('').replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(raw);
+    const parsed = parsujJsonModelu(raw);
     // Zastąp niedeterministyczny score Claude wyliczeniem z liczby tematów
     const _totalTopics = (parsed.present?.length || 0) + (parsed.missing?.length || 0);
     if (_totalTopics > 0) {
@@ -6333,7 +6389,7 @@ async function toggleSeoPanel(forceRefresh = false) {
     });
     const data = await res.json();
     const raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
-    const result = JSON.parse(raw);
+    const result = parsujJsonModelu(raw);
     seoCache = { articleHash: currentHash, result };
     showSeoResult(result);
     updateSeoHeader(false);
@@ -6420,7 +6476,7 @@ The 6 criteria to evaluate (give one item per criterion):
     });
     const data = await res.json();
     const raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
-    const result = JSON.parse(raw);
+    const result = parsujJsonModelu(raw);
     aioCache = { articleHash: currentHashAio, result };
     showAioResult(result);
     updateAioHeader(false);
@@ -7113,7 +7169,7 @@ async function generujTematy() {
     var d = await res.json();
     if (d.error) throw new Error(d.error.message || _t('err-api-generic'));
     var raw = (d.content || []).map(function(b){ return b.text || ''; }).join('').replace(/```json|```/g, '').trim();
-    var parsed = JSON.parse(raw);
+    var parsed = parsujJsonModelu(raw);
     propozycjeTematow = (parsed.tematy || []).filter(function(t){ return t && t.temat; });
     if (!propozycjeTematow.length) throw new Error(_t('tematy-pusto'));
     zapiszPropozycje(opis);
@@ -7169,7 +7225,7 @@ async function openBriefPanel() {
     });
     const d = await res.json();
     const raw = (d.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
-    showBrief(JSON.parse(raw));
+    showBrief(parsujJsonModelu(raw));
   } catch(e) {
     document.getElementById('brief-content').innerHTML = `<div class="seo-loading" style="color:var(--red)">${_t('msg-err-prefix')}${e.message}</div>`;
   }
@@ -7302,7 +7358,7 @@ async function analyzeBrandVoice() {
     });
     const d = await res.json();
     const raw = (d.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
-    saveBrandVoice(JSON.parse(raw));
+    saveBrandVoice(parsujJsonModelu(raw));
   } catch(e) {
     document.getElementById('bv-loading').innerHTML = `<span style="color:var(--red)">${_t('msg-err-prefix')}${e.message}</span>`;
   }
@@ -8071,10 +8127,9 @@ function saveVisConfig() {
 function _visEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m])); }
 
 function _visExtractJson(text) {
-  let t = (text || '').replace(/```json/gi, '').replace(/```/g, '').trim();
-  const a = t.indexOf('{'); const b = t.lastIndexOf('}');
-  if (a < 0 || b < 0) return null;
-  try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { return null; }
+  // Tu brak wyniku jest dopuszczalny (pojedyncze zapytanie z listy), wiec
+  // zamiast bledu zwracamy null - ale przez ten sam naprawiacz.
+  try { return parsujJsonModelu(text); } catch (e) { return null; }
 }
 
 async function visQuery(query, brand, competitors) {

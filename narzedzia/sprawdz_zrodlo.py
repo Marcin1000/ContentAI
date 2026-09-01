@@ -109,6 +109,15 @@ KONTROLE = [
     ("F12/bezmenu", "przerobki bez wlasnego dropdownu",
      None, '<div class="repurpose-wrap" id="repurpose-wrap"', None),
 
+    # Model potrafi wstawic w tekst niezaslonięty cudzyslow (cytujac nazwe
+    # z bazy wiedzy) - goly JSON.parse wywalal sie wtedy surowym komunikatem
+    # parsera na ekranie uzytkownika. Kazde nowe miejsce czytajace JSON
+    # z modelu ma isc przez parsujJsonModelu.
+    ("F18/naprawa", "odporny odczyt JSON-a z modelu",
+     "function parsujJsonModelu(", None, None),
+    ("F18/bezgolego", "zaden odczyt nie idzie golym JSON.parse",
+     None, "JSON.parse(raw)", None),
+
     ("F13", "panel Luk semantycznych scrolluje przy dlugiej liscie",
      "max-height:65vh;overflow-y:auto", None, None),
 
