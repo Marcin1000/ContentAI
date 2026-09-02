@@ -4192,6 +4192,21 @@ function zaslonCudzyslowyWJson(tekst) {
   return wynik;
 }
 
+// Model nie zna dzisiejszej daty - jego wiedza konczy sie wczesniej, wiec
+// gdy w tytule ma stanac rok, wpisuje ten, ktory pamieta. Stad "w 2025 roku"
+// w propozycjach wystawionych w 2026, mimo ze zaden dokument w bazie o 2025
+// nie mowil. Date bierzemy z przegladarki przy KAZDYM wywolaniu, a nie ze
+// stalej w kodzie - inaczej zestarzalaby sie razem z plikiem.
+function blokDaty() {
+  var teraz = new Date();
+  var rok = teraz.getFullYear();
+  return '\n\nTODAY IS ' + teraz.toISOString().slice(0, 10) + '. The current year is '
+    + rok + '. Treat this as the present moment. '
+    + 'Never write a year other than ' + rok + ' unless the source material explicitly '
+    + 'states a different one. If a year belongs in a title, heading or sentence, '
+    + 'use ' + rok + ' - never a year you remember from training.';
+}
+
 function parsujJsonModelu(tekst) {
   var t = String(tekst == null ? '' : tekst).replace(/```json/gi, '').replace(/```/g, '').trim();
   // Model czasem dopisuje zdanie przed albo po JSON-ie.
@@ -5010,6 +5025,8 @@ ${(ctype !== 'FAQ page' && !isPress) ? `- MANDATORY: End the article, immediatel
     if (aeoOn || isDirectional) systemPrompt += '\n\n' + aeoRulesBlock();
     if (isDirectional) systemPrompt += directionalBlock();
     if (isPress) systemPrompt += pressBlock(pressDate);
+    // Rok w tytule albo w zdaniu ma byc biezacy, nie ten, ktory model pamieta.
+    systemPrompt += blokDaty();
     systemPrompt += lineGuardrailBlock(getLlmsConfig());
     if (typeof isPodcastType === 'function' && isPodcastType(ctype)) systemPrompt += podcastPromptBlock();
     else if (typeof isNewsletterAudioType === 'function' && isNewsletterAudioType(ctype)) systemPrompt += newsletterPromptBlock();
@@ -5700,7 +5717,7 @@ async function openTitlesPanel() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 600,
-        system: `You are an SEO title specialist. Generate exactly 5 H1 title variants in ${outLang} (write all titles in ${outLang} regardless of the language of the topic). Each title: under 65 chars, contains the main keyword naturally, targets a different search intent (informational, commercial, how-to, listicle, definition). Respond ONLY with a JSON array of 5 strings, no markdown.`,
+        system: `You are an SEO title specialist. Generate exactly 5 H1 title variants in ${outLang} (write all titles in ${outLang} regardless of the language of the topic). Each title: under 65 chars, contains the main keyword naturally, targets a different search intent (informational, commercial, how-to, listicle, definition). Respond ONLY with a JSON array of 5 strings, no markdown.${blokDaty()}`,
         messages: [{ role: 'user', content: `Topic: ${topic}\nMain keyword: ${kwText}\nContent type: ${ctype}\nOutput language: ${outLang}\n\nGenerate 5 H1 title variants in ${outLang}.` }]
       })
     });
@@ -7282,7 +7299,7 @@ async function generujTematy() {
           + 'Vary the search intent across the set: informational, comparison, how-to, decision-stage. '
           + 'Do not repeat the same angle twice. '
           + 'Respond ONLY with valid JSON, no markdown: {"tematy":[{"temat":"the title","dlaczego":"one short sentence on who searches for this and why it is worth writing"}]}. '
-          + 'All text MUST be in ' + jezyk + '.',
+          + 'All text MUST be in ' + jezyk + '.' + blokDaty(),
         messages: [{ role: 'user', content: 'Business need:\n' + opis + (wiedza ? '\n\nKnowledge base excerpts:\n' + wiedza : '') }]
       })
     });
@@ -7339,7 +7356,7 @@ async function openBriefPanel() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 600, temperature: 0,
-        system: 'You are a content strategist. Analyze the topic and knowledge base and respond ONLY with valid JSON no markdown: {"keywords":["4-6 phrases"],"h2":["5-7 headings"],"gap":"one sentence about content gap","words":"recommended word count range"}. All text MUST be in ' + (currentLang === 'en' ? 'English' : 'Polish') + '.',
+        system: 'You are a content strategist. Analyze the topic and knowledge base and respond ONLY with valid JSON no markdown: {"keywords":["4-6 phrases"],"h2":["5-7 headings"],"gap":"one sentence about content gap","words":"recommended word count range"}. All text MUST be in ' + (currentLang === 'en' ? 'English' : 'Polish') + '.' + blokDaty(),
         messages: [{ role: 'user', content: `Topic: ${topic}\n\nKnowledge base:\n${kbText}` }]
       })
     });

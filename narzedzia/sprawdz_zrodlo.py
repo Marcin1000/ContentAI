@@ -118,6 +118,14 @@ KONTROLE = [
     ("F18/bezgolego", "zaden odczyt nie idzie golym JSON.parse",
      None, "JSON.parse(raw)", None),
 
+    # Model nie zna dzisiejszej daty i w tytulach wpisywal rok, ktory pamieta
+    # z treningu ("w 2025 roku" w propozycjach wystawionych w 2026). Date musi
+    # dostac z przegladarki przy kazdym wywolaniu.
+    ("F19/blok", "prompty dostaja biezaca date",
+     "function blokDaty() {", None, None),
+    ("F19/zegar", "data z zegara, nie ze stalej w kodzie",
+     "var rok = teraz.getFullYear();", None, None),
+
     ("F13", "panel Luk semantycznych scrolluje przy dlugiej liscie",
      "max-height:65vh;overflow-y:auto", None, None),
 
