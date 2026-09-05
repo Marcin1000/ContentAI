@@ -84,6 +84,12 @@ jobs:
       - name: Strona produktowa - tłumaczenia
         run: python3 narzedzia/audyt_showcase.py
 
+      # README to wizytówka publicznego repozytorium. Zepsuty odnośnik nie
+      # wywala niczego, tylko prowadzi donikąd, a złamany obrazek zostawia
+      # pustą ramkę - widać to dopiero na GitHubie.
+      - name: README - odnośniki i obrazki
+        run: python3 narzedzia/audyt_readme.py
+
       # Aplikacja usuwa dlugie myslniki z generowanych artykulow po polsku.
       # Ta kontrola rozciaga te sama regule na interfejs, strone produktowa
       # i dokumentacje, zeby nie wracaly przy kolejnych zmianach.

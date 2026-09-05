@@ -1,280 +1,186 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/obrazy/banner-dark.png">
+  <img alt="Content AI - AI content production for search and answer engines" src="docs/obrazy/banner-light.png">
+</picture>
+
 # Content AI
 
-Generator treści pod SEO, AIO, AEO i GEO - artykuły, grafiki i audio z jednego okna.
-Aplikacja jednoplikowa (HTML + JS, bez budowania), pakowana do wersji instalowalnych
-na Windows, macOS, Androida i iOS.
+**AI-powered content production platform for SEO, AEO, AIO and GEO.**
+Create articles, visuals and audio from one workspace, grounded in your own knowledge base
+and real search results, on the AI provider of your choice.
 
-**Wersja:** 2.10.0 · **Status:** wdrożenie serwerowe z kontami, pakietami, bazą wiedzy (RAG)
-i integracją z OpenSEO
+**Live:** [content-ai.net](https://content-ai.net) · **App:** [app.content-ai.net](https://app.content-ai.net)
 
-> Aplikacja powstała wcześniej w repozytorium `Marcin1000/Bear` (obok Cosmosa) i została
-> stąd wydzielona do własnego repo. Historia tamtych commitów jest zachowana.
+**Use cases:** content creation · SEO research · AI visibility · brand voice · knowledge bases
+
+[![Checks](https://github.com/Marcin1000/ContentAI/actions/workflows/kontrola.yml/badge.svg)](https://github.com/Marcin1000/ContentAI/actions/workflows/kontrola.yml)
+![Status](https://img.shields.io/badge/status-live%20in%20production-F6A623)
+![Server dependencies](https://img.shields.io/badge/server%20dependencies-zero-35E0D0)
 
 ---
 
-## Jak uruchomić
+## Why it exists
 
-**Na własnym komputerze** - otwórz w przeglądarce `app/web-keys.html`. Nic nie trzeba
-budować ani instalować; panel „Klucze API" otworzy się sam.
+Search stopped being one destination. The same article now has to satisfy a classic Google
+result, an AI Overview, an answer engine and a model deciding what to cite. Writing four
+versions of it is not a plan.
 
-**Na serwerze, dla zespołu** - to główna ścieżka. `serwer/` zawiera serwer Node (zero
-zależności npm) z logowaniem, kontami i rolami, proxy do API, bazą wiedzy z wyszukiwaniem
-po znaczeniu oraz bramą przed OpenSEO. Klucze nie trafiają do przeglądarek.
+At the same time, general-purpose AI writing tools have two problems that show up the moment
+you use them for real work:
 
-| Dokument | Do czego |
-|---|---|
-| **`dokumenty/ContentAI_Instalacja_na_serwerze.md`** | instalacja krok po kroku, od pustego VPS-a; pisana bez zakładania znajomości Linuksa |
-| **`dokumenty/ContentAI_obok_Cosmosa.md`** | to samo, gdy na serwerze działa już Cosmos - co pominąć i czego pilnować |
-| **`dokumenty/ContentAI_Domena_Cloudflare.md`** | domena za Cloudflare: strona produktowa na domenie głównej, aplikacja na poddomenie `app` |
-| **`serwer/README.md`** | pełny opis serwera: wszystkie ustawienia, endpointy, decyzje |
-| **`dokumenty/ContentAI_AdminGuide.md`** | codzienna obsługa: konta, pakiety, klucze |
-| **`dokumenty/ContentAI_Audyt_2026-08.md`** | audyt przed wdrożeniem: co sprawdzone, czym i z jakim wynikiem |
+**They do not know your business.** Prices, product names, what you actually sell. The output
+reads well and says nothing you could publish without rewriting it.
 
-Pozostałe warianty: `app/web-proxy.html` (klucze po stronie serwera lub Cloudflare Workera),
-`app/web-owner.html` (klucze wpisane w pliku).
+**They are opaque about cost and data.** Your documents go somewhere, your bill is somebody
+else's line item, and swapping the model underneath is not your decision.
 
-### Co dokłada wdrożenie serwerowe
+Content AI answers all three: one piece of content optimised for every answer surface, written
+from a knowledge base you control, running on a server and an API key that belong to you.
+
+---
+
+## Product capabilities
 
 | | |
 |---|---|
-| **Konta i role** | logowanie loginem i hasłem, `admin` / `uzytkownik`; odebranie dostępu jednym poleceniem |
-| **Klucze po stronie serwera** | nie trafiają do przeglądarki; użytkownik może podstawić własny |
-| **Baza wiedzy (RAG)** | prywatna i wspólna, na serwerze; do promptu idą tylko fragmenty pasujące do tematu |
-| **Modele open source** | `CAI_DOSTAWCA=nvidia` - serwer tłumaczy format, aplikacja nie wymaga zmian |
-| **Realne dane SERP** | `CAI_SERP=dataforseo` albo `openseo` zamiast szacowania przez model |
-| **OpenSEO za tym samym logowaniem** | brama: jedno konto, ta sama paleta, wymiana fraz w obie strony |
-| **Zero obcych serwerów** | biblioteki i krój pisma hostowane razem z aplikacją |
-| **Sesje przeżywają restart** | podpisane ciasteczka - aktualizacja nie wylogowuje zespołu |
-| **2FA i SSO opcjonalnie** | brama uwierzytelniająca przed całością, patrz `brama/` |
-| **Pakiety i limity** | darmowy / standard / premium jako tabela danych; licznik widoczny w aplikacji |
-| **Kreator pierwszego uruchomienia** | przy pierwszym wejściu prowadzi przez klucze API i Brand Voice; wszystkie kroki opcjonalne |
+| **Four answer surfaces from one draft** | SEO for classic results, AIO for AI Overviews, AEO for answer engines, GEO for citations in models. Written once, optimised for all of them. |
+| **Knowledge base with retrieval (RAG)** | Upload documents, links and transcripts. Only the passages that match the topic reach the prompt, not the whole base. Private and shared collections. |
+| **Real search data, not guesses** | SERP analysis can pull live results from an API instead of asking the model what it remembers. Semantic gap analysis shows what the ranking pages cover and the draft does not. |
+| **Scoring that leads to an edit** | Every draft is scored on SEO, AIO, AEO and GEO, with concrete findings and a one-click fix rather than a number on its own. |
+| **Visuals and audio in the same window** | Brand-styled images from the article topic, narration and transcription, without leaving the workspace. |
+| **Repurposing and export** | LinkedIn post, newsletter, FAQ section, landing intro. Export to DOCX, PDF, audio or JSON-LD, or publish straight to WordPress. |
 
 ---
 
-## Jak to działa
+## Screenshots
 
-Cała aplikacja to **jeden plik HTML** (~664 KB w wariancie `keys`, ~11,9 tys. linii źródła,
-9 bloków `<script>`).
-Nie ma bundlera ani kroku kompilacji - plik otwiera się bezpośrednio w przeglądarce
-albo jest opakowywany w Electron / Capacitor.
+**One workspace: sources, brief, draft and every follow-up action.**
 
-Modele: `claude-sonnet-4-6` (treść), `claude-haiku-4-5` (zadania pomocnicze),
-`gpt-image-1` (grafiki), `gpt-4o-mini-tts` i ElevenLabs (audio), `gpt-4o-transcribe`
-(transkrypcja). Biblioteki do plików (mammoth, pdf.js, pdfmake, xlsx, html-docx-js) oraz krój
-IBM Plex leżą **w repozytorium**, w `app/pwa/lib/` i `app/pwa/fonty/` - aplikacja nie pobiera
-niczego z obcych serwerów.
+![Content AI workspace with a finished draft](docs/obrazy/screen-workspace.png)
 
-### Jedno źródło, trzy warianty
+**Scoring is attached to the draft, not to a separate report.**
 
-Źródłem prawdy jest **`app/contentai.src.html`** - jeden plik, z którego budowane są trzy
-warianty różniące się wyłącznie sposobem podawania kluczy API:
+![SEO scoring panel with findings](docs/obrazy/screen-scoring.png)
 
-| Wariant | Klucze API | Do czego |
-|---------|-----------|----------|
-| `keys` | wpisywane w UI, `localStorage` | **domyślny** - pokazy, spotkania, bezpieczny do rozdania |
-| `proxy` | po stronie serwera (albo Cloudflare Workera) | **wdrożenie zespołowe** - logowanie, baza wiedzy, OpenSEO |
-| `owner` | wpisane w pliku | jedno zaufane urządzenie wewnętrzne |
+**Eighteen post-generation actions grouped into four menus, so the toolbar stays one row on
+desktop and stops scrolling sideways on a phone.**
 
-Gotowe warianty **leżą w repo** i są od razu do otwarcia. Po każdej zmianie w źródle
-trzeba je przebudować:
+![Grouped action menu above the result](docs/obrazy/screen-toolbar.png)
+
+**Describe the business need, get ten topics with the search intent behind each one.**
+
+![Topic suggestions generated from a described business need](docs/obrazy/screen-topics.png)
+
+---
+
+## Architecture
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/obrazy/architecture-dark.png">
+  <img alt="Content AI architecture: user, workspace, server layer, AI providers" src="docs/obrazy/architecture-light.png">
+</picture>
+
+The workspace is a single HTML file with no build step. The server is Node with **zero npm
+dependencies**, which keeps the supply chain of a system holding API keys and customer
+documents down to what is actually written in this repository.
+
+The provider layer matters more than it looks. The application speaks one request shape; the
+server translates it for whatever is behind it, so switching from a commercial model to an
+open-source endpoint is a configuration change, not a rewrite.
+
+---
+
+## AI reliability
+
+A language model is a component that fails in ways a function does not. It returns almost-valid
+JSON, it does not know today's date, and it degrades quietly rather than throwing. Most of the
+engineering here is about that.
+
+| Problem | What the system does |
+|---|---|
+| **Malformed JSON** | Models emit unescaped quotes when they quote a phrase from your documents, which breaks `JSON.parse` mid-response. A repair pass resolves the ambiguity the way a reader would, and reports a readable error for the cases it genuinely cannot decide. |
+| **Stale world model** | The model's knowledge ends before today, so it writes the year it remembers. Every prompt receives the current date, read from the clock at call time rather than frozen into the code. |
+| **Silent i18n degradation** | A missing translation key does not crash; it shows a Polish sentence in the English interface. A machine check compares every used key against both dictionaries and fails the build. |
+| **Dead controls** | A button calling a function that no longer exists does nothing at all, with no error. Every `onclick` handler in every built variant is verified to resolve. |
+| **Regression in a 12,000-line file** | Each fix is pinned by a signature of the code after it and the code before it, so both a deletion and a revert are caught. |
+| **Provider lock-in** | One request shape, several back ends, translated server-side. |
+| **Key custody** | Keys stay on the server and never reach the browser, or the user supplies their own key which stays in their browser and is never written to the server. |
+
+Every check above runs in CI and exits non-zero on failure. Each was verified to fail on an
+injected fault, because a check that reports problems and still exits zero is worse than no
+check at all.
 
 ```bash
-cd pakowanie
-python3 warianty.py --wszystkie -o ../app     # przebuduj wszystkie trzy
+python3 narzedzia/sprawdz_zrodlo.py    # build all variants, verify every fix is present
+python3 narzedzia/audyt_i18n.py        # translation keys, both dictionaries
+python3 narzedzia/audyt_uchwyty.py     # every event handler resolves
+node serwer/testy.js                   # server logic, 214 tests
 ```
-
-Poprawkę nanosisz raz, w `app/contentai.src.html`. Że warianty w repo nie rozjechały się
-ze źródłem, pilnuje `narzedzia/sprawdz_zrodlo.py`.
-
-> **Nie otwieraj `contentai.src.html` w przeglądarce.** To źródło, w którym leżą obok siebie
-> wszystkie trzy warianty - `API_KEY` jest w nim zadeklarowany trzy razy, przez co cały główny
-> skrypt nie wykonuje się (martwe zakładki, motyw i przyciski). Plik pokaże w takiej sytuacji
-> ostrzeżenie zamiast udawać działającą aplikację.
-
-`app/worker.js` to Cloudflare Worker dla wariantu PROXY (proxy do Anthropic, OpenAI, ElevenLabs).
-
-W repo **nie ma żadnych prawdziwych kluczy** - źródło zawiera wyłącznie placeholdery
-`WSTAW_TUTAJ_KLUCZ_*`. Wypełniaj je lokalnie i nie commituj wyniku.
-
-### Dyrektywy warunkowe
-
-Fragmenty specyficzne dla wariantu są w źródle otoczone dyrektywami - w HTML jako komentarz
-HTML, wewnątrz `<script>` jako komentarz JS:
-
-```html
-<!--@@IF keys-->        //@@IF owner,proxy
-  ...tylko dla keys       ...dla owner i proxy
-<!--@@ELSE-->           //@@ELSE
-  ...dla pozostałych      ...dla keys
-<!--@@ENDIF-->          //@@ENDIF
-```
-
-`@@IF` przyjmuje listę wariantów po przecinku. Zagnieżdżanie jest celowo niedozwolone -
-płaska struktura daje się sprawdzić wzrokiem. Preprocesor (`pakowanie/warianty.py`) odrzuca
-niedomknięty `@@IF`, `@@ELSE`/`@@ENDIF` bez `@@IF`, podwójny `@@ELSE` i nieznany wariant,
-a po złożeniu kontroluje bilans `<style>`/`<script>` i to, że żadna dyrektywa nie została
-w wyniku.
-
-W źródle jest **25 takich bloków**. Dziesięć pierwotnych dotyczy sposobu podawania kluczy:
-pozycja „Klucze API" w menu ustawień, klucze i18n PL i EN, komunikat „brak klucza" (PL i EN),
-deklaracje `API_KEY`, `OPENAI_API_KEY`/`ELEVEN_API_KEY`, `OWNER_MODE` oraz modal kluczy
-z jego skryptem. Pozostałe to funkcje, które mają sens wyłącznie przy własnym serwerze
-(`@@IF proxy`): baza wiedzy, wejście do OpenSEO, synchronizacja motywu, okno fraz z OpenSEO,
-licznik pakietu, kreator pierwszego uruchomienia i nagłówek zgłaszający artykuł do licznika.
 
 ---
 
-## Struktura
+## Product status
 
-```
-contentai/
-  app/
-    contentai.src.html ŹRÓDŁO - jeden plik z dyrektywami; NIE otwierać w przeglądarce
-    web-keys.html      gotowa aplikacja do otwarcia (wariant keys)
-    web-proxy.html     gotowa aplikacja (wariant proxy)
-    web-owner.html     gotowa aplikacja (wariant owner)
-    worker.js          Cloudflare Worker dla wariantu proxy (alternatywa dla serwera)
-    openseo-motyw.css  paleta Content AI doklejana do stron OpenSEO
-    pwa/               manifest.json + ikony
-  showcase/          landing page produktu (osobna strona, nie część aplikacji)
-  pakowanie/         opakowania instalacyjne
-    warianty.py        preprocesor: źródło -> wybrany wariant
-    zbuduj_web.py      buduje payload web/ z wybranego wariantu
-    electron/          Windows (.exe) i macOS (.dmg)
-    capacitor/         Android (APK) i iOS (Xcode) + ikony natywne i splashe
-  serwer/            serwer Node: logowanie, role, proxy, baza wiedzy (zero zależności npm)
-    server.js          aplikacja serwerowa i router
-    uzytkownicy.js     zarządzanie kontami z linii poleceń
-    baza.js            baza wiedzy z wyszukiwaniem po znaczeniu (RAG)
-    serp.js            dane SERP z DataForSEO
-    openseo.js         brama przed OpenSEO: wspólne logowanie i paleta
-    openseo-mcp.js     klient MCP - frazy i dane z OpenSEO
-    testy.js           testy (uruchamiane w CI)
-    contentai.service  jednostka systemd
-  openseo/          wdrożenie OpenSEO obok Content AI + zależności między nimi
-  brama/            opcjonalna brama uwierzytelniająca (2FA, passkeys, SSO)
-  .github/workflows/ CI: kontrola źródła, testy serwera, skan prawdziwych kluczy
-  narzedzia/
-    sprawdz_zrodlo.py  kontrola źródła: poprawki F1-F17, reskin, warianty, funkcje serwerowe
-    INSTRUKCJA_...md   co robi każda z tych zmian i gdzie jej szukać
-  dokumenty/         instalacja (od zera i obok Cosmosa), AdminGuide, ARCHIWUM_* (v27), ocena
-  prezentacje/       PL/ i EN/ - deck produktowy, onboarding, security
-    zrodlo/            generator decku security (PL i EN z jednego skryptu)
-```
+**Live product · deployed server architecture · active development.**
 
-Katalogi `web/` w `pakowanie/electron` i `pakowanie/capacitor` są **generowane**
-przez `zbuduj_web.py` i celowo nie są wersjonowane (patrz `.gitignore`).
+Running in production behind a domain, with accounts, roles, usage plans, a server-side
+knowledge base and an authentication gateway. Development is continuous; the repository
+reflects what is deployed.
+
+Not built yet, and deliberately so: self-service registration, payments and password reset
+by email. Those are commercial scope, not engineering debt.
 
 ---
 
-## Budowanie
+## Getting started
 
-`zbuduj_web.py` buduje wariant prosto z `app/contentai.src.html` - nie trzeba nic generować wcześniej.
+**Try it locally.** Open `app/web-keys.html` in a browser. Nothing to build or install; the
+API keys panel opens by itself.
+
+**Deploy for a team.** `serwer/` holds the Node server with accounts, roles, an API proxy, the
+knowledge base and usage plans.
 
 ```bash
-cd pakowanie
-
-# wariant KEYS (domyślny, bez workera)
-python3 zbuduj_web.py
-
-# wariant PROXY (wymaga wdrożonego workera)
-python3 zbuduj_web.py --wariant proxy --worker-url https://moj-worker.example.workers.dev
-
-# payload trafia do web/ - skopiuj do wybranego opakowania
-cp -r web electron/web     # Windows / macOS
-cp -r web capacitor/web    # Android / iOS
+git clone https://github.com/Marcin1000/ContentAI.git /srv/contentai
+cd /srv/contentai
+sudo -u contentai node serwer/uzytkownicy.js dodaj <login> admin
 ```
 
-Dalej: `pakowanie/README_PAKOWANIE.md` (pełna instrukcja),
-`pakowanie/electron/INSTRUKCJA_Windows.md`, `pakowanie/capacitor/INSTRUKCJA_Android.md`,
-`pakowanie/capacitor/INSTRUKCJA_iOS.md`.
-
-Service Worker jest celowo pomijany w payloadzie, żeby uniknąć zastanego cache
-w aplikacji natywnej.
+Full step-by-step installation, Cloudflare setup and day-to-day administration are in
+[`dokumenty/`](dokumenty/).
 
 ---
 
-## Stan zastany - co trzeba wiedzieć przed dalszą pracą
+## Documentation
 
-### 1. Poprawki F1-F17 i reskin są wtopione w źródło
+| Document | What it covers |
+|---|---|
+| [`dokumenty/ContentAI_Dokumentacja_techniczna.md`](dokumenty/ContentAI_Dokumentacja_techniczna.md) | Full technical reference: build system, conditional directives, variants, repository layout |
+| [`serwer/README.md`](serwer/README.md) | Server: every setting, endpoint and design decision |
+| [`dokumenty/ContentAI_Instalacja_na_serwerze.md`](dokumenty/ContentAI_Instalacja_na_serwerze.md) | Installation from an empty VPS, written without assuming Linux experience |
+| [`dokumenty/ContentAI_Domena_Cloudflare.md`](dokumenty/ContentAI_Domena_Cloudflare.md) | Domain behind Cloudflare: product page and app subdomain |
+| [`dokumenty/ContentAI_AdminGuide.md`](dokumenty/ContentAI_AdminGuide.md) | Day-to-day operation: accounts, plans, keys |
+| [`dokumenty/ContentAI_Audyt_2026-08.md`](dokumenty/ContentAI_Audyt_2026-08.md) | Pre-deployment audit: what was checked, with what, and the result |
 
-Nie ma etapu „patchowania" - te zmiany są częścią `app/contentai.src.html`. Pilnuje ich
-`narzedzia/sprawdz_zrodlo.py`: buduje wszystkie trzy warianty i sprawdza, czy w każdym
-widać ślad po każdej zmianie. Poza F1-F17 i reskinem kontroluje też, że każda deklaracja
-klucza występuje dokładnie raz (`D/*`), że warianty w repo zgadzają się ze źródłem (`S/*`)
-oraz że funkcje serwerowe są na miejscu: baza wiedzy (`B/*`), OpenSEO (`O/*`) i okno fraz
-(`I/*`). Zna sygnaturę „po poprawce" i „sprzed poprawki", więc wyłapuje
-zarówno wycięcie zmiany, jak i cofnięcie jej. Kod wyjścia 1 przy niezgodności, więc nadaje
-się do CI.
+The application interface ships in English and Polish. The technical documentation is written
+in Polish.
+
+---
+
+## Repository notes
+
+The application is built from a single source file, `app/contentai.src.html`, into three
+variants that differ only in how API keys are supplied:
+
+| Variant | Keys | For |
+|---|---|---|
+| `keys` | entered in the UI, `localStorage` | demos and evaluation |
+| `proxy` | server-side, or the user's own | team deployment |
+| `owner` | in the file | one trusted internal device |
 
 ```bash
-cd narzedzia && python3 sprawdz_zrodlo.py --cicho
+cd pakowanie && python3 warianty.py --wszystkie -o ../app
 ```
 
-Poprzednie skrypty (`rebuild_all.py`, `apply_faza.py`) usunięto - nie dało się ich uruchomić
-(ścieżki `/home/claude/...`, brak plików DEV), a ich zadanie jest wykonane. Zostają w historii
-gita, szczegóły w `narzedzia/INSTRUKCJA_naniesienia_zmian.md`.
-
-Jedno źródło powstało przez złożenie trzech wariantów z powrotem w komplet, z weryfikacją
-przez porównanie bajtowe: warianty `owner` i `proxy` odtwarzają się **co do bajtu**, a `keys`
-różni się jedną linią komentarza. Ta różnica jest zamierzona - `keys` z paczki miał starszą
-wersję komentarza niż ta, którą generował bieżący `apply_faza.py`, więc ujednolicono do wersji
-zgodnej z narzędziem.
-
-### 2. Zasoby natywne pochodzą ze starszej paczki
-
-`ContentAI_komplet_reskin.zip` miał nowszy kod aplikacji, ale **zgubił** ikony natywne
-i część instrukcji. Przy przenoszeniu odtworzono ze starszego `ContentAI_pakowanie.zip`:
-
-- `capacitor/android-res/` - ikony launchera (legacy + round + adaptive) w 5 gęstościach
-- `capacitor/ios-res/` - `AppIcon-1024.png`
-- `capacitor/resources/` - `icon.png`, `splash.png`, `splash-dark.png`
-- sekcję **„Krok 2b"** w `INSTRUKCJA_Android.md` - obejście dla Windows ARM, gdzie
-  `npx @capacitor/assets` wywala się na kompilacji `sharp` (błąd MSB8020)
-
-Ikony to bursztynowa gwiazda na `#07080D`, zgodna z logo ze strony produktowej.
-
-### 3. Aplikacja nie wysyła żądań poza wywołaniami API
-
-Biblioteki i krój pisma są hostowane razem z aplikacją - poza wywołaniami do Anthropic,
-OpenAI i ElevenLabs (albo do Twojego serwera, w wariancie proxy) nie leci nic. Dzięki temu
-działa w zamkniętej sieci firmowej i nikt z zewnątrz nie może podmienić kodu, który się
-w niej wykonuje.
-
-Pełnego trybu offline nadal nie ma i mieć nie może - generowanie treści wymaga API modelu.
-Nie ma też service workera: aplikacja to jeden plik aktualizowany przez `git pull` i restart
-usługi, więc cache oznaczałby użytkowników pracujących na starej wersji.
-
-Ścieżki do bibliotek są względne (`pwa/lib/…`), więc działają tak samo przy otwarciu pliku
-z dysku, z serwera i w paczce natywnej. `zbuduj_web.py` kopiuje oba katalogi do payloadu.
-
----
-
-## Zakres zmian F1-F17 + reskin
-
-Pełna tabela z kotwicami w kodzie: `narzedzia/INSTRUKCJA_naniesienia_zmian.md`.
-
-W skrócie - **poprawki bazowe:** i18n historii, wykrywanie języka przeglądarki przy pierwszym
-starcie, panel Klucze API, sekcja wniosków w języku treści, prompt SERP z językiem poza schematem
-JSON (naprawia parsowanie), spinner pierwszego kroku, przeróbki i auto-poprawka w języku treści,
-usunięcie reguły CSS psującej panele oceny, uzupełnianie luk bez skoku na dół artykułu, dropdown
-przeróbek nad sidebarem, scroll panelu Luk, spinner sekcji, eksport PDF, empty-state jako SVG.
-
-**Reskin:** splash raz na sesję (pomijalny tapnięciem, respektuje reduced-motion), przejścia
-zakładek i wejścia pól, odliczanie wyników oceny, paski postępu treści i grafiki, ujednolicona
-pozycja paneli oceny, poprawki mobile.
-
-Obecność każdej z tych zmian sprawdza `narzedzia/sprawdz_zrodlo.py`.
-
----
-
-## Checklista weryfikacyjna po zmianach
-
-Automatycznie - `cd narzedzia && python3 sprawdz_zrodlo.py` (buduje trzy warianty, sprawdza
-obecność wszystkich poprawek oraz bilans `<style>`/`<script>`). Ręcznie:
-
-- Aplikacja wstaje w ciemnym motywie, splash pokazuje się raz na sesję
-- Panele SEO / AIO / AEO / GEO otwierają się w tym samym miejscu
-- Uzupełnianie luk nie przewija na dół artykułu
-- Przeróbki, auto-poprawka i sekcja wniosków wychodzą w języku treści
-- Analiza SERP zwraca dane i pokazuje przycisk SERP
+There are **no real API keys in this repository** and there never should be. The source contains
+only `WSTAW_TUTAJ_KLUCZ_*` placeholders, and CI scans every commit for provider key patterns.
