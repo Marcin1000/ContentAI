@@ -1,0 +1,60 @@
+Content AI
+Copyright (c) 2026 Marcin Przybylski. All rights reserved.
+
+PROPRIETARY SOFTWARE - SOURCE AVAILABLE, NOT OPEN SOURCE
+
+This repository is published so that the work can be read, reviewed and
+evaluated. Publication does not grant a licence to use it.
+
+No permission is granted to use, copy, modify, merge, publish, distribute,
+sublicense or sell this software or any substantial part of it, whether for
+commercial or non-commercial purposes, except:
+
+  1. Viewing and reading the source code in this repository.
+  2. Any use expressly permitted in a separate written agreement signed by
+     the copyright holder.
+
+Running a hosted instance of Content AI provided by the copyright holder is
+governed by the terms of that service, not by this file.
+
+For licensing enquiries, contact the copyright holder.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+--------------------------------------------------------------------------
+THIRD-PARTY COMPONENTS
+--------------------------------------------------------------------------
+
+The terms above cover the work of the copyright holder only. This repository
+also bundles components created by others, which remain under their own
+licences and are NOT covered by the notice above:
+
+  app/pwa/lib/
+    pdf.min.js, pdf.worker.min.js   PDF.js, Mozilla
+                                    Apache License 2.0, per the notice in the
+                                    files themselves
+    pdfmake.min.js, vfs_fonts.js    pdfmake
+                                    MIT, per the notice in the file itself
+    mammoth.browser.min.js          mammoth.js
+    xlsx.full.min.js                SheetJS
+    html-docx.js                    html-docx-js
+
+  app/pwa/fonty/                    IBM Plex Sans and IBM Plex Mono, IBM
+
+  showcase/index.html               loads three.js, GSAP and Lenis from a CDN
+
+Nothing in this file limits, overrides or reduces the rights granted by those
+licences, and nothing here should be read as claiming ownership of them.
+
+NOTE FOR ANY COMMERCIAL DISTRIBUTION: the minified files listed above without
+a named licence do not carry their licence header in the bundled copy. Most
+open-source licences require that notice to be preserved when the code is
+redistributed. Before Content AI is distributed as a product, each of those
+components should be checked against its upstream licence and the required
+notices restored or the component replaced.
