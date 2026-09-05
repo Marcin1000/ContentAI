@@ -62,8 +62,7 @@ from a knowledge base you control, running on a server and an API key that belon
 
 ![SEO scoring panel with findings](docs/obrazy/screen-scoring.png)
 
-**Eighteen post-generation actions grouped into four menus, so the toolbar stays one row on
-desktop and stops scrolling sideways on a phone.**
+**Eighteen post-generation actions grouped into four menus.**
 
 ![Grouped action menu above the result](docs/obrazy/screen-toolbar.png)
 
@@ -119,19 +118,6 @@ node serwer/testy.js                   # server logic, 214 tests
 
 ---
 
-## Product status
-
-**Live product · deployed server architecture · active development.**
-
-Running in production behind a domain, with accounts, roles, usage plans, a server-side
-knowledge base and an authentication gateway. Development is continuous; the repository
-reflects what is deployed.
-
-Not built yet, and deliberately so: self-service registration, payments and password reset
-by email. Those are commercial scope, not engineering debt.
-
----
-
 ## Getting started
 
 **Try it locally.** Open `app/web-keys.html` in a browser. Nothing to build or install; the
@@ -184,3 +170,11 @@ cd pakowanie && python3 warianty.py --wszystkie -o ../app
 
 There are **no real API keys in this repository** and there never should be. The source contains
 only `WSTAW_TUTAJ_KLUCZ_*` placeholders, and CI scans every commit for provider key patterns.
+
+---
+
+## License
+
+Content AI is **proprietary software, published source-available**. The code can be read and
+reviewed here; it is not licensed for use, modification or redistribution. Bundled third-party
+components remain under their own licences. See [`LICENSE`](LICENSE).
