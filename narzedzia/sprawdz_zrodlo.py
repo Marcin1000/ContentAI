@@ -271,6 +271,45 @@ KONTROLE = [
      "<strong>${escapeHtml(s.name)}</strong>",
      "<strong>${s.name}</strong>", None),
 
+    # -- trzecia runda: co pokazalo uruchomienie na prawdziwym materiale --
+
+    # Kontekst SERP to streszczenie stron konkurencji, a regula pokrycia faktow
+    # mowila "w bazie wiedzy LUB w wynikach wyszukiwania" - czyli sama go
+    # autoryzowala. Stad w artykule wziete znikad "notowania PKN Orlen" i "EU
+    # weekly oil bulletin", mimo wylaczonego uzupelniania z internetu.
+    ("F34/serp", "SERP nie jest zrodlem faktow",
+     "SERP CONTEXT IS NOT A SOURCE",
+     "MUST appear in the knowledge base or in the search results provided", None),
+    ("F34/etykieta", "blok SERP opisany w promptcie jako nie-zrodlo",
+     "SERP CONTEXT - NOT A SOURCE OF FACTS", None, None),
+
+    # Slowo trudne = 3+ sylaby to kryterium angielskie. W polszczyznie
+    # trzysylabowe sa "oplata" i "uslugi", wiec prog zielony byl nieosiagalny:
+    # artykul o srednim zdaniu 12,4 slowa dostawal 21,6 i swiecil na czerwono.
+    ("F35/fogpl", "slowo trudne liczone od czterech sylab",
+     "(w.match(/[aąeęioóuy]/gi) || []).length >= 4).length",
+     "(w.match(/[aąeęioóuy]/gi) || []).length >= 3).length", None),
+    ("F35/skala", "opis skali FOG mowi o polskiej wersji",
+     "'fog-title':'Indeks mglistości (wersja dla polszczyzny)'", None, None),
+
+    # Fraza kluczowa wstawiona doslownie zlamala zdanie ("doplata paliwowa
+    # kurier dolicza"), a fraza z rokiem wymusila twierdzenie o 2026 bez
+    # pokrycia w zrodle.
+    ("F36/frazy", "frazy kluczowe odmieniane, nie wklejane",
+     "function blokFraz() {", None, None),
+    ("F36/wpiete", "blok fraz doklejany do promptu",
+     "blokKotwic() + blokFraz()", None, None),
+    ("F36/liczenie", "zakaz liczenia rzeczy dla samej cyfry",
+     "Never COUNT something just to have a digit", None, None),
+
+    # Drobiazgi z tego samego uruchomienia.
+    ("F37/lamanie", "cytat lamany dopiero gdy slowo sie nie miesci",
+     "overflow-wrap:anywhere", "word-break:break-all", None),
+    ("F37/meta", "dlugosc meta poza zakresem sygnalizowana kolorem",
+     "metaEl2.style.color", None, None),
+    ("F37/kolejnosc", "kontrola faktow pierwsza w menu Ocen",
+     'id="fakty-btn" style="display:none" onclick="przelaczPanelFaktow()" data-i18n="btn-fakty">🔍 Kontrola faktów</button>\n                <div class="grupa-sep"></div>\n                <button class="btn-secondary" id="seo-btn"', None, None),
+
     # ── warstwa reskinu ──
     ("R/splash", "splash raz na sesje",
      'id="cin-splash"', None, None),

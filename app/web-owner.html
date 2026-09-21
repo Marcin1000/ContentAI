@@ -1794,17 +1794,17 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
               <button class="btn-secondary" onclick="przelaczGrupe('ocen')" data-i18n="grupa-ocen">📊 Oceń ▾</button>
               <div class="grupa-backdrop" onclick="przelaczGrupe('ocen')"></div>
               <div class="grupa-menu" id="grupa-ocen-menu">
+                <!-- Pierwsza pozycja w menu, bo jako jedyna odpowiada na pytanie
+                     "czy to nadaje sie do publikacji". Reszta to oceny punktowe.
+                     Na koncu listy bylo to za glęboko schowane. -->
+                <button class="btn-secondary" id="fakty-btn" style="display:none" onclick="przelaczPanelFaktow()" data-i18n="btn-fakty">🔍 Kontrola faktów</button>
+                <div class="grupa-sep"></div>
                 <button class="btn-secondary" id="seo-btn" style="display:none" onclick="toggleSeoPanel()" data-i18n="btn-seo">📊 Oceń SEO</button>
                 <button class="btn-secondary" id="aio-btn" style="display:none" onclick="toggleAioPanel()" data-i18n="btn-aio">🤖 Oceń AIO</button>
                 <button class="btn-secondary" id="aeo-btn" style="display:none" onclick="toggleAeoPanel()" data-i18n="btn-aeo">⚡ Oceń AEO</button>
                 <button class="btn-secondary" id="geo-btn" style="display:none" onclick="toggleGeoPanel()" data-i18n="btn-geo">🎯 GEO Score</button>
                 <button class="btn-secondary" id="serp-toggle-btn" style="display:none" onclick="toggleSerpPanel()" data-i18n="btn-serp">📊 SERP</button>
                 <button class="btn-secondary" id="gap-btn" style="display:none" onclick="toggleGapPanel()" data-i18n="btn-gap">🧩 Luki</button>
-                <!-- Agencja: "generuje fajnie, ale ktos to musi potem sprawdzic
-                     i zweryfikowac merytorycznie". Ten przycisk robi pierwsze
-                     przejscie za czlowieka: zestawia kazda liczbe i kazde
-                     twierdzenie artykulu z tym, co naprawde jest w zrodlach. -->
-                <button class="btn-secondary" id="fakty-btn" style="display:none" onclick="przelaczPanelFaktow()" data-i18n="btn-fakty">🔍 Kontrola faktów</button>
               </div>
             </div>
 
@@ -2947,9 +2947,9 @@ var I18N = {
     'settings-cms-title':'Integracja CMS','settings-cms-sub':'WordPress / Drupal',
     'settings-bv-title':'Brand Voice','settings-bv-inactive':'Nieaktywny',
     'out-placeholder':'Wpisz temat i kliknij \u201eGeneruj treść\u201d','out-placeholder-sub':'AI przeanalizuje bazę wiedzy i stworzy treść',
-    'fog-title':'Indeks czytelności FOG','fog-easy':'● poniżej 12: tekst przystępny, łatwy w odbiorze',
-    'fog-medium':'● 12-16: tekst złożony, wymaga skupienia','fog-hard':'● powyżej 16: tekst akademicki / bardzo trudny',
-    'fog-goal':'Cel dla treści SEO: poniżej 12',
+    'fog-title':'Indeks mglistości (wersja dla polszczyzny)','fog-easy':'● poniżej 12: tekst przystępny, łatwy w odbiorze',
+    'fog-medium':'● 12-15: tekst złożony, wymaga skupienia','fog-hard':'● powyżej 15: tekst specjalistyczny / bardzo trudny',
+    'fog-goal':'Cel dla treści SEO: poniżej 12. Za słowo trudne liczymy takie o czterech sylabach i więcej, bo w polszczyźnie trzysylabowe są słowa najzwyklejsze ("opłata", "usługi").',
     'gap-title-topics':'Tematy w top wynikach','gap-title-phrases':'Frazy kluczowe',
     'gap-coverage':'Pokrycie SERP','gap-new-covered':'Nowo pokryte',
     'gap-all-topics':'Wszystkie tematy SERP','gap-missing':'Brakujące tematy','gap-covered':'Pokryte tematy',
@@ -3391,9 +3391,9 @@ var I18N = {
     'settings-cms-title':'CMS Integration','settings-cms-sub':'WordPress / Drupal',
     'settings-bv-title':'Brand Voice','settings-bv-inactive':'Inactive',
     'out-placeholder':'Enter a topic and click \u201cGenerate content\u201d','out-placeholder-sub':'AI will analyze the knowledge base and create content',
-    'fog-title':'FOG Readability Index','fog-easy':'● below 12: clear text, easy to read',
-    'fog-medium':'● 12-16: complex text, requires focus','fog-hard':'● above 16: academic / very difficult',
-    'fog-goal':'SEO content target: below 12',
+    'fog-title':'Fog index (Polish variant)','fog-easy':'● below 12: clear text, easy to read',
+    'fog-medium':'● 12-15: complex text, requires focus','fog-hard':'● above 15: specialist / very difficult',
+    'fog-goal':'SEO content target: below 12. A hard word is one of four syllables or more, because in Polish three-syllable words are the most ordinary ones ("opłata", "usługi").',
     'gap-title-topics':'Topics in top results','gap-title-phrases':'Key phrases',
     'gap-coverage':'SERP coverage','gap-new-covered':'Newly covered',
     'gap-all-topics':'All SERP topics','gap-missing':'Missing topics','gap-covered':'Covered topics',
@@ -4114,9 +4114,15 @@ function blokDaty() {
 // przebija fakty.
 function blokFaktow() {
   return '\n\nGROUNDING - THIS SECTION OVERRIDES EVERY FORMATTING RULE IN THIS PROMPT.\n'
-    + '- Every number, price, rate, percentage, date, deadline, weight, dimension and '
-    + 'delivery time MUST appear in the knowledge base or in the search results provided. '
+    + '- The KNOWLEDGE BASE is the only source of facts. Every number, price, rate, '
+    + 'percentage, date, deadline, weight, dimension and delivery time MUST appear there. '
     + 'Never calculate, estimate, round, extrapolate or recall one from memory.\n'
+    + '- SERP CONTEXT IS NOT A SOURCE. It summarises what competing pages happen to '
+    + 'discuss. It tells you which QUESTIONS to cover; it never tells you what is TRUE. '
+    + 'Never take from it a figure, a date, a percentage, the name of an institution, '
+    + 'an index, a publication, a methodology or a rule. If the SERP context says the '
+    + 'topic involves some mechanism and the knowledge base does not confirm it, write '
+    + 'about the question without asserting the mechanism.\n'
     + '- If a figure is missing, write the sentence without it. A sentence with no number '
     + 'is correct. An invented number is a defect that makes the whole article unusable.\n'
     + '- Never invent a unit of measurement or a pricing model. Do not write a price per '
@@ -4279,6 +4285,34 @@ function blokTonu(ton) {
     + 'If the same paragraph would fit another tone unchanged, rewrite it.';
 }
 
+// FRAZY KLUCZOWE. Dwa przypadki z artykulu testowego pokazaly, ze fraza
+// potrafi zepsuc tekst dokladnie tak samo jak przymus liczby:
+//
+//   "Wynik to dopłata paliwowa kurier dolicza do zlecenia."
+// Fraza "doplata paliwowa kurier" wstawiona doslownie, zdanie przestalo byc
+// po polsku. Agencja chwalila wczesniej poprawnosc jezykowa, wiec to regres
+// w miejscu, ktore dzialalo.
+//
+//   naglowek "sprawdz aktualny wskaznik oplaty paliwowej 2026"
+// Fraza zawiera rok. Model musi jej uzyc, wiec twierdzi cos o 2026, choc
+// w zrodle roku nie ma - i kontrola faktow slusznie to zglasza. Fraza kluczowa
+// z liczba sama w sobie wymusza twierdzenie bez pokrycia.
+function blokFraz() {
+  return '\n\nKEYWORDS - A PHRASE TO WORK IN, NEVER A FACT TO ASSERT:\n'
+    + '- Inflect keywords to fit the grammar of the sentence. In Polish that means '
+    + 'declining them by case and number. A keyword pasted in its dictionary form, '
+    + 'breaking the sentence, is a worse outcome than a keyword that does not appear.\n'
+    + '- If a phrase cannot be worked into a correct sentence, put it in a heading or '
+    + 'a question instead, or leave it out. Never bend grammar around it.\n'
+    + '- A KEYWORD IS NOT EVIDENCE. If a phrase contains a year, a figure, a version or '
+    + 'a place that the knowledge base does not confirm, you may use the phrase as the '
+    + 'wording of a question ("how to check the current rate") but you may NOT assert '
+    + 'what it implies. A phrase naming a year does not license you to state anything '
+    + 'about that year.\n'
+    + '- Never repeat a keyword in a way a person would not say out loud. Natural '
+    + 'sentence first, keyword second.';
+}
+
 // Kotwice: agencja zglosila monotonie stylu, a linkowanie jest tego czescia.
 // Piec razy "dowiedz sie wiecej" w jednym tekscie czyta sie tak samo zle jak
 // piec akapitow tej samej dlugosci, a dodatkowo nic nie mowi wyszukiwarce.
@@ -4323,7 +4357,7 @@ function usunPowtorzoneLinki(html) {
 function blokRzetelnosci(opcje) {
   return blokFaktow() + blokZakresu() + blokSpojnosci()
     + blokOdbiorcy(opcje.odbiorca) + blokKonfliktu()
-    + blokRytmu() + blokStruktury() + blokKotwic() + blokTonu(opcje.ton);
+    + blokRytmu() + blokStruktury() + blokKotwic() + blokFraz() + blokTonu(opcje.ton);
 }
 
 function parsujJsonModelu(tekst) {
@@ -5118,7 +5152,7 @@ FORMATTING:
 ✗ Do NOT use the "-" character as a separator or dash within sentences (e.g. "produkt - dla klientów" or "usługa - dostępna"). Use full sentences and conjunctions instead (np. "oraz", "który", "gdzie", "i", "a"). Hyphens in compound words are allowed (e.g. "e-commerce", "24/7").
 
 MANDATORY CLOSING SECTION - always include at the very end, immediately before the meta description:
-Add an H2 titled "${kwName}" followed by a SINGLE <ul> with 4-6 <li> bullets. Each bullet states one concrete takeaway from the article. Include a number ONLY when that number appears in the sources; a bullet without a figure is correct and preferred over a bullet with an invented one. CRITICAL STRUCTURE: this section contains ONLY the H2 and the single <ul>. Do NOT put any <p> paragraph inside this section, between the bullets, or after it. Nothing may appear after this section except the meta description block.
+Add an H2 titled "${kwName}" followed by a SINGLE <ul> with 4-6 <li> bullets. Each bullet states one concrete takeaway from the article. Include a number ONLY when that number appears in the sources; a bullet without a figure is correct and preferred over a bullet with an invented one. Never COUNT something just to have a digit in the bullet ("uses 2 data sources", "offers 3 options") - nobody writes that way, and a count you derived yourself is not a fact from the sources. CRITICAL STRUCTURE: this section contains ONLY the H2 and the single <ul>. Do NOT put any <p> paragraph inside this section, between the bullets, or after it. Nothing may appear after this section except the meta description block.
 
 CONTENT QUALITY RULES (applied to every paragraph):
 ✗ ANTI-FLUFF: Cut any sentence that only restates the previous one or praises without saying anything ("rosnaca popularnosc", "dynamiczny rozwoj", "nowoczesne rozwiazanie"). Replace it with something the sources actually say, or delete it. Do NOT rescue such a sentence by attaching a number to it.
@@ -5875,7 +5909,7 @@ function pokazWynikFaktow(uwagi, tylkoLinki) {
       return '<div style="border-left:3px solid var(--border);padding:6px 0 6px 10px;margin-bottom:8px">'
         + '<div style="font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text3)">'
         + (IKONY_UWAG[rodzaj] || '•') + ' ' + escapeHtml(_t('fakty-rodzaj-' + rodzaj) || rodzaj) + '</div>'
-        + '<div style="margin:3px 0;font-style:italic;color:var(--text2);word-break:break-all">"' + escapeHtml(String(u.cytat || '')) + '"</div>'
+        + '<div style="margin:3px 0;font-style:italic;color:var(--text2);overflow-wrap:anywhere">"' + escapeHtml(String(u.cytat || '')) + '"</div>'
         + '<div>' + escapeHtml(String(u.powod || '') || _t('fakty-powod-' + rodzaj) || '') + '</div>'
         + '</div>';
     }).join('') + stopka;
@@ -5917,7 +5951,15 @@ function showArticleStats(html) {
     const plaski = words >= 800 && h3count === 0;
     h3El.style.color = plaski ? '#B45309' : '';
   }
-  document.getElementById('stat-meta').textContent = metaLen || '-';
+  const metaEl2 = document.getElementById('stat-meta');
+  metaEl2.textContent = metaLen || '-';
+  // Wymagamy 150-160 znakow, ale nic tego nie sygnalizowalo: 147 wygladalo
+  // tak samo jak 154. Google i tak utnie za dlugi opis, a za krotki marnuje
+  // miejsce w wyniku wyszukiwania.
+  metaEl2.style.color = !metaLen ? ''
+    : (metaLen >= 150 && metaLen <= 160) ? (document.body.classList.contains('dark-mode') ? '#4ADE80' : '#16A34A')
+    : (metaLen >= 140 && metaLen <= 170) ? '#B45309'
+    : 'var(--red)';
 
   // Wskaznik zamglenia liczymy z samej prozy: akapitow, punktow i komorek
   // tabeli. Naglowki nie sa zdaniami i nie koncza sie kropka, wiec doklejaly
@@ -5929,7 +5971,7 @@ function showArticleStats(html) {
   if (fog !== null) {
     fogEl.textContent = fog;
     const isDark = document.body.classList.contains('dark-mode');
-    fogEl.style.color = fog <= 12 ? (isDark ? '#4ADE80' : '#16A34A') : fog <= 16 ? '#B45309' : 'var(--red)';
+    fogEl.style.color = fog <= 12 ? (isDark ? '#4ADE80' : '#16A34A') : fog <= 15 ? '#B45309' : 'var(--red)';
   }
 
   // Keyword density
@@ -6210,7 +6252,25 @@ function calcFog(text) {
   if (!slowa.length) return null;
 
   const sredniaDlugoscZdania = slowa.length / zdania.length;
-  const trudne = slowa.filter(w => (w.match(/[aąeęioóuy]/gi) || []).length >= 3).length;
+  // PROG SYLAB: 4, nie 3.
+  //
+  // Oryginalny Gunning Fog liczy jako trudne slowa o trzech sylabach i wiecej.
+  // To kryterium angielskie, gdzie trzysylabowe slowo faktycznie jest rzadsze
+  // ("investigation", "particularly"). W polszczyznie trzysylabowe sa "oplata",
+  // "przesylki", "uslugi", "dzieki", "koncowy" - czyli slowa najzwyklejsze.
+  //
+  // Na artykule z testow agencji: 41,7% slow mialo 3+ sylaby, co samo z siebie
+  // wnosilo 16,7 punktu do wyniku. Przy zdaniach srednio 12,4-slowowych, a wiec
+  // krotkich, wskaznik i tak pokazywal 21,6 i swiecil na czerwono. Nawet przy
+  // zdaniach pieciowyrazowych wyszloby 18,7. Prog "zielony ponizej 12" byl dla
+  // polskiego NIEOSIAGALNY - kazdy polski tekst mial byc czerwony na zawsze.
+  // Agencja zglosila za wysoki FOG w kazdej wersji i to byl wlasnie ten efekt.
+  //
+  // Polska adaptacja (FOG-PL) liczy jako trudne slowa czterosylabowe i dluzsze.
+  // Ten sam artykul dostaje wtedy 12,6, co odpowiada jego rzeczywistej
+  // trudnosci, a slowa wpadajace do "trudnych" to faktycznie te ciezsze:
+  // "procentowa", "naliczania", "odzwierciedla".
+  const trudne = slowa.filter(w => (w.match(/[aąeęioóuy]/gi) || []).length >= 4).length;
   const procentTrudnych = (trudne / slowa.length) * 100;
   return Math.round((sredniaDlugoscZdania + procentTrudnych) * 0.4 * 10) / 10;
 }
@@ -6282,11 +6342,11 @@ async function fetchSerpContext(topic, kwText) {
         avgWords: parseInt(parsed.avgWords) || 0,
         avgH2:    parseInt(parsed.avgH2)    || 0,
       };
-      return serpData.context ? `\nSERP CONTEXT (topics covered by top-ranking pages): ${serpData.context}` : '';
+      return serpData.context ? `\nSERP CONTEXT - NOT A SOURCE OF FACTS, only a list of questions that top-ranking pages answer. Use it to decide WHAT TO COVER. Never quote a figure, an institution, an index or a rule from it: ${serpData.context}` : '';
     } catch {
       // fallback: use raw text as context
       serpData = null;
-      return rawText ? `\nSERP CONTEXT: ${rawText.substring(0,500)}` : '';
+      return rawText ? `\nSERP CONTEXT - NOT A SOURCE OF FACTS, only topics to cover: ${rawText.substring(0,500)}` : '';
     }
   } catch(e) { serpData = null; return ''; }
 }
