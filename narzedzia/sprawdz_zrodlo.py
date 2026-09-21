@@ -384,8 +384,26 @@ KONTROLE = [
     # wszystko, co model przejrzal, jakby kazda z tych stron cos potwierdzala.
     ("F43/cytowane", "w bibliografii tylko strony, na ktore model sie powolal",
      "return z.cytowan > 0;", None, None),
-    ("F43/konkurenci", "wykluczenia obejmuja realnych przewoznikow, nie zgadywanych",
-     "'dpd.com', 'fedex.com', 'ups.com', 'tnt.com', 'dbschenker.com'", None, None),
+    # Lista wykluczen byla najpierw zgadywana, potem branzowa (kurierska),
+    # a to produkt dla dowolnej marki. Ustawia sie ja w oknie Marka, a kod
+    # startuje z pusta - wdrozenie dla nowej firmy nie ma sie zaczynac od
+    # wykluczania cudzych konkurentow.
+    ("F43/konkurenci", "wykluczenia z okna marki, nie z kodu",
+     "const wykluczone = domenyZPola(cfg.blockedDomains);",
+     "'dpd.com', 'fedex.com', 'ups.com', 'tnt.com', 'dbschenker.com'", None),
+    ("F43/pole", "pole domen wykluczonych w oknie marki",
+     'id="llms-blocked"', None, None),
+    ("F43/czyszczenie", "adres z www i sciezka sprowadzany do samej domeny",
+     "function domenyZPola(tekst) {", None, None),
+    ("F43/hosty", "domeny marki tez z okna, nie tylko z kodu",
+     "cfg && cfg.domains\n    ? domenyZPola(cfg.domains)", None, None),
+    ("F43/nazwa", "skonfigurowana nazwa marki trafia do regul",
+     "The brand is called exactly", None, None),
+
+    # Regula rozroznienia linii miala wpisane wprost linie jednego klienta.
+    ("F43/linie", "nazwy linii biznesowych z konfiguracji, nie z kodu",
+     "They are separate offers, not synonyms.",
+     "attribute it to the eCommerce line, never to Express", None),
     ("F43/bezcytowania", "zakaz cytowania konkurencji jako zrodla",
      "never let one appear in the list", None, None),
 
@@ -404,6 +422,30 @@ KONTROLE = [
      "rodzaj: 'link-niesprawdzony'", None, None),
     ("F45/opis", "powod podany po polsku, nie tresc wyjatku",
      "'fakty-powod-link-niesprawdzony':", None, None),
+
+    # -- audyt calosci: zaszlosci po jednym kliencie i sciezki bez regul --
+
+    # Kolory eksportu, konkurenci i zapytania startowe byly wpisane w kod pod
+    # jedna firme. Produkt ma obslugiwac dowolna marke.
+    ("F46/kolory", "PDF w kolorach z konfiguracji marki",
+     "function kolorMarki(ktory) {", "const BRAND_COLORS = {", None),
+    ("F46/widocznosc", "badanie widocznosci startuje puste, bez cudzej branzy",
+     "competitors: '',",
+     "'InPost, DPD, Poczta Polska, UPS, GLS, FedEx, Orlen Paczka, Allegro'", None),
+
+    # Korekta premium, poprawa po ocenie i przerobki dostaja sam artykul,
+    # bez bazy wiedzy. Uwaga "za malo konkretow" konczyla sie dopisaniem
+    # konkretow z niczego.
+    ("F47/przepisywanie", "sciezki przepisujace nie wprowadzaja nowych faktow",
+     "function blokPrzepisywania() {", None, None),
+    ("F47/premium", "korekta premium z regula przepisywania",
+     "const editorSysPelny = editorSys + blokPrzepisywania();", None, None),
+    ("F47/przerobki", "przerobki na inne formaty z regula przepisywania",
+     "system: blokPrzepisywania() + `", None, None),
+
+    # Nazwa uzytkownika z obcej instalacji WordPressa szla prosto do innerHTML.
+    ("F48/wordpress", "nazwa z obcego WordPressa z ucieczka znakow",
+     "zalogowano jako: ${escapeHtml(String(d.name || ''))}", None, ("proxy", "keys", "owner")),
 
     # ── warstwa reskinu ──
     ("R/splash", "splash raz na sesje",
