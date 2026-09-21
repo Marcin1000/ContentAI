@@ -1752,7 +1752,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 
           <label class="toggle-row" for="use-web">
             <div class="toggle-info">
-              <span class="toggle-label" data-i18n="toggle-web">Szukaj w sieci tego, czego nie ma w bazie wiedzy</span>
+              <span class="toggle-label" data-i18n="toggle-web">Szukaj w sieci i podawaj źródła</span>
               <span class="toggle-hint" data-i18n="toggle-web-hint">Gdy baza nie zawiera info o danym aspekcie, AI sięgnie po wiedzę ogólną. Dane firmowe zawsze mają pierwszeństwo.</span>
             </div>
             <div class="toggle-wrap">
@@ -2899,8 +2899,8 @@ var I18N = {
     'ph-length-custom':'np. 1200','label-kw':'Słowa kluczowe','ph-kw':'Wpisz frazę i naciśnij Enter...',
     'label-tone':'Ton','label-lang-out':'Język','label-extra':'Dodatkowe wytyczne',
     'ph-extra':'np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem...',
-    'toggle-web':'Szukaj w sieci tego, czego nie ma w bazie wiedzy',
-    'toggle-web-hint':'WŁĄCZONE: gdy w bazie brakuje informacji, AI wyszuka ją w sieci i poda źródła pod artykułem. Wydłuża generowanie o ok. 30 sek. WYŁĄCZONE: artykuł pomija to, czego nie ma w Twoich dokumentach. Dane o Twojej firmie zawsze tylko z bazy wiedzy.',
+    'toggle-web':'Szukaj w sieci i podawaj źródła',
+    'toggle-web-hint':'Czego brakuje w bazie, AI poszuka w sieci i wymieni źródła pod artykułem. Dane o Twojej firmie zawsze tylko z bazy. Wydłuża generowanie o ok. 30 sek.',
     'toggle-serp':'Analiza SERP przed generowaniem',
     'toggle-serp-hint':'Przed wygenerowaniem AI sprawdza co rankuje w Google dla Twojego słowa kluczowego i wykorzystuje te dane jako dodatkowy kontekst. Wydłuża generowanie o ok. 15 sek.',
     'toggle-aeo':'Tryb AEO (treść pod cytowania AI)','toggle-aeo-hint':'Wymusza format pod silniki odpowiedzi: definicja 25-50 słów na start, liczby w intro, 5-7 pytań FAQ, krótkie listy, nagłówki jako pytania.',
@@ -2942,12 +2942,14 @@ var I18N = {
     'fakty-rodzaj-link-obcy':'Adres spoza źródeł',
     'fakty-rodzaj-link-sciezka':'Znana domena, nieznana podstrona',
     'fakty-rodzaj-link-martwy':'Adres nie odpowiada',
+    'fakty-rodzaj-link-niesprawdzony':'Nie udało się sprawdzić',
     'fakty-rodzaj-link-kotwica':'Kotwica nic nie mówi',
     'fakty-rodzaj-link-powtorka':'Ta sama kotwica po raz drugi',
     'fakty-rodzaj-link-pusty':'Link bez tekstu',
     'fakty-powod-link-obcy':'Tego adresu nie ma w zaznaczonych źródłach. Sprawdź, czy istnieje, zanim opublikujesz.',
     'fakty-powod-link-sciezka':'Domena jest znana ze źródeł, ale tej podstrony w nich nie ma. Najczęściej znaczy to, że ścieżka została dopisana.',
     'fakty-powod-link-martwy':'Serwer nie zwrócił strony pod tym adresem.',
+    'fakty-powod-link-niesprawdzony':'Strona nie odpowiedziała w wyznaczonym czasie. Duże witryny często blokują automaty, więc to nie znaczy, że adres jest zły. Otwórz go ręcznie przed publikacją.',
     'fakty-powod-link-kotwica':'Klikalne słowa powinny mówić, co jest po drugiej stronie.',
     'fakty-powod-link-powtorka':'Dwa odnośniki z tym samym tekstem czyta się jak pomyłkę.',
     'fakty-powod-link-pusty':'Odnośnik nie ma widocznego tekstu.',
@@ -3404,8 +3406,8 @@ var I18N = {
     'ph-length-custom':'e.g. 1200','label-kw':'Keywords','ph-kw':'Type a phrase and press Enter...',
     'label-tone':'Tone','label-lang-out':'Language','label-extra':'Additional guidelines',
     'ph-extra':'e.g. Focus on SME segment, include market comparison...',
-    'toggle-web':'Search the web for what your sources do not cover',
-    'toggle-web-hint':'ON: when the knowledge base is silent, the AI searches the web and lists the sources under the article. Adds about 30 sec. OFF: the article skips what your documents do not cover. Anything about your company always comes from the knowledge base only.',
+    'toggle-web':'Search the web and cite sources',
+    'toggle-web-hint':'What the knowledge base lacks, the AI looks up online and lists the sources under the article. Anything about your company still comes from the knowledge base only. Adds about 30 sec.',
     'toggle-serp':'SERP analysis before generating',
     'toggle-serp-hint':'Before generating, AI checks what ranks in Google for your keyword and uses this as additional context. Adds ~15 sec.',
     'toggle-aeo':'AEO mode (content for AI citations)','toggle-aeo-hint':'Forces answer-engine format: 25-50 word definition up front, numbers in intro, 5-7 FAQ questions, short lists, headings as questions.',
@@ -3447,12 +3449,14 @@ var I18N = {
     'fakty-rodzaj-link-obcy':'Address not in the sources',
     'fakty-rodzaj-link-sciezka':'Known domain, unknown page',
     'fakty-rodzaj-link-martwy':'Address does not respond',
+    'fakty-rodzaj-link-niesprawdzony':'Could not be checked',
     'fakty-rodzaj-link-kotwica':'Anchor says nothing',
     'fakty-rodzaj-link-powtorka':'Same anchor text twice',
     'fakty-rodzaj-link-pusty':'Link without text',
     'fakty-powod-link-obcy':'This address is not in the selected sources. Check that it exists before publishing.',
     'fakty-powod-link-sciezka':'The domain is known from the sources, but this page is not. Usually it means the path was made up.',
     'fakty-powod-link-martwy':'The server returned no page at this address.',
+    'fakty-powod-link-niesprawdzony':'The page did not answer in time. Large sites often block automated requests, so this does not mean the address is wrong. Open it yourself before publishing.',
     'fakty-powod-link-kotwica':'The clickable words should say what is on the other side.',
     'fakty-powod-link-powtorka':'Two links with identical text read like a mistake.',
     'fakty-powod-link-pusty':'The link has no visible text.',
@@ -4077,8 +4081,18 @@ const BRAND = {
   // koncu porownywarki konkurencji. Regula w promptcie tego zabrania, ale
   // twardsza gwarancja jest nie pokazac modelowi tych stron w ogole.
   // Wpisuj same domeny, bez https:// i bez www.
-  blockedDomains: ['furgonetka.pl', 'sendit.pl', 'apaczka.pl', 'epaka.pl',
-                   'paczkawruchu.pl', 'szybkapaczka.pl', 'tanie-nadanie.pl'],
+  // Lista jest branzowa i trzeba ja dopasowac do wlasnego rynku. Ponizsza
+  // powstala z bibliografii pierwszego artykulu wygenerowanego z wyszukiwaniem:
+  // znalazlo sie w niej dwudziestu przewoznikow i porownywarek naraz.
+  blockedDomains: [
+    // konkurencyjni przewoznicy
+    'dpd.com', 'fedex.com', 'ups.com', 'tnt.com', 'dbschenker.com',
+    'gls-group.com', 'inpost.pl', 'poczta-polska.pl', 'geis.pl', 'raben-group.com',
+    // posrednicy i porownywarki
+    'furgonetka.pl', 'sendit.pl', 'apaczka.pl', 'epaka.pl', 'globkurier.pl',
+    'allekurier.pl', 'kurierem.pl', 'kurjerzy.pl', 'kuriero.pl', 'przesylarka.pl',
+    'kuriernet.pl', 'premiumcargo.pl', 'tanie-nadanie.pl', 'paczkawruchu.pl',
+  ],
   // ── Kolory uzywane w generatorze grafik ──
   colors:  { primary:'#FFB000', secondary:'#1FA8C7', dark:'#1A1916', light:'#FFFFFF' }
 };
@@ -4344,7 +4358,19 @@ function blokFaktow(uzupelnia) {
 // niemieckim prawie pocztowym. Fakt byl prawdziwy, zakres zmyslony - i to
 // jest grozniejsze od zwyklej halucynacji, bo wyglada na poparte zrodlem.
 function blokZakresu() {
-  return '\n\nSCOPE OF EVERY SOURCE FACT:\n'
+  return '\n\nONE BRAND, ONE NAME, ONE COMPANY:\n'
+    + '- Use the brand name exactly as the KNOWLEDGE BASE writes it, everywhere in '
+    + 'the article. Never use a former, shortened or alternative name you found '
+    + 'elsewhere, even if pages on the web still use it. A renamed company is the same '
+    + 'company under one current name.\n'
+    + '- A group can contain several companies (parcel, express, freight, e-commerce). '
+    + 'They have different rules, different rates and different formulas. Never attribute '
+    + 'one company\'s rule to another, never place two of their figures side by side as '
+    + 'if they described the same service, and never let two names for the same service '
+    + 'appear in one article.\n'
+    + '- If sources disagree about the brand, the knowledge base wins. It is the brand '
+    + 'speaking about itself; everything else is someone writing about it.\n'
+    + '\nSCOPE OF EVERY SOURCE FACT:\n'
     + '- Use a fact only within the scope the source states. If a source describes '
     + 'shipments TO a country, you may not write about transit THROUGH it. If it '
     + 'describes one product, you may not extend the claim to the whole range. If it '
@@ -4409,7 +4435,11 @@ function blokKonfliktu() {
     + '- You may acknowledge that other options exist, in one neutral sentence, without '
     + 'naming one as the winner.\n'
     + '- Every recommendation, call to action and "how to start" must point to what the '
-    + 'knowledge base offers.';
+    + 'knowledge base offers.\n'
+    + '- Never cite a direct competitor as a source, and never let one appear in the list '
+    + 'of sources under the article. For a general concept prefer a neutral authority: a '
+    + 'regulator, a statistical office, an industry body, or the brand\'s own site. '
+    + 'A competitor page describes THEIR terms, which are not evidence about this brand.';
 }
 
 // UWAGA 6: "Teksty sa mocno monotonne (...) rowne akapity, zdania podobnej
@@ -5385,7 +5415,7 @@ CONTENT QUALITY RULES (applied to every paragraph):
 ✓ SALIENCE: Mention the main brand/product by exact name at least once in every H2 section (not just in the headline).
 ✓ BLUF: The first paragraph answers the question asked in the title, in two or three sentences. Open with a figure ONLY if the sources contain one that answers it; otherwise open with the substantive answer in words. Never open with a vague introduction.
 ✓ FANOUT: For each main topic, cover the query space the sources let you cover: what it is, how it works, who it is for, parameters, how to start. Skip an angle the sources do not support instead of filling it in.
-✓ TABLES: Each table must contain ONE homogeneous dataset. Never mix different categories in one table. Every cell must come from the sources. Leave a column out rather than inventing its values, and do not add rows to make the table look full.
+✓ TABLES: Each table must contain ONE homogeneous dataset. Never mix different categories in one table. Every cell must come from the sources. Leave a column out rather than inventing its values, and do not add rows to make the table look full. A table of periods, tiers or rates needs EVERY row in the sources: if you can document January, August and September but not the months between, you do not have a table, you have three data points - write them as sentences and say which periods they cover.
 ✓ LINKS: Link a given address AT MOST ONCE in the whole article, at its first meaningful mention. Never link the same URL a second time, and never link a brand name just because it appears again.${bvInstruction}${userWatermark}`
       : `You are an SEO and content writer. Write content based on the knowledge base provided by the user.
 STRICT RULES:
@@ -5404,7 +5434,7 @@ ${(ctype !== 'FAQ page' && !isPress) ? `- MANDATORY: End the article, immediatel
 - ANTI-FLUFF: Cut sentences that only restate the previous one or praise without content ("rosnąca popularność", "dynamiczny rozwój"). Delete them; do not repair them by adding a number.
 - ANTI-GENERIC: Use exact brand/product names, never generic "branża" when referring to a specific company.
 - SALIENCE: Mention the main brand by exact name at least once per H2 section.
-- TABLES: One dataset per table. Every cell comes from the sources. Omit a column rather than inventing its values.
+- TABLES: One dataset per table. Every cell comes from the sources. Omit a column rather than inventing its values. A table of periods or rates needs every row documented; a gap-toothed series of months means you are assembling data, not reporting it.
 - LINKS: Link a given address at most once in the whole article, at its first meaningful mention.
 - FORMATTING: Do NOT use the "-" character as a separator or dash within sentences (e.g. "produkt - dla klientów"). Use full sentences and conjunctions instead (np. "oraz", "który", "gdzie"). Hyphens in compound words are allowed (e.g. "e-commerce").${bvInstruction}${userWatermark}`;
 
@@ -5972,7 +6002,9 @@ function zrodlaZOdpowiedzi(dane) {
     }
   }
   return Object.keys(mapa).map(function (k) { return mapa[k]; })
-    .sort(function (a, b) { return b.cytowan - a.cytowan; });
+    .filter(function (z) { return z.cytowan > 0; })
+    .sort(function (a, b) { return b.cytowan - a.cytowan; })
+    .slice(0, 12);
 }
 
 // Lista zrodel doklejana do artykulu przed blokiem meta description, zeby
@@ -6103,10 +6135,21 @@ async function sprawdzCzyLinkiZyja(linki) {
     });
     if (!odp.ok) return [];
     const dane = await odp.json();
-    return (dane.odnosniki || []).filter(function (o) { return !o.dziala; })
+    return (dane.odnosniki || [])
+      .filter(function (o) { return o.stan !== 'dziala'; })
       .map(function (o) {
-        return { rodzaj: 'link-martwy', cytat: o.adres,
-                 powod: o.status ? 'HTTP ' + o.status : (o.blad || '') };
+        if (o.stan === 'martwy') {
+          return { rodzaj: 'link-martwy', cytat: o.adres, powod: 'HTTP ' + o.status };
+        }
+        // Przekroczony czas, blad sieci albo odrzucony adres. Duze witryny za
+        // CDN-em potrafia nie odpowiadac na zapytania automatow, wiec to nie
+        // dowodzi, ze strona nie istnieje - dowodzi, ze nie sprawdzilismy.
+        return { rodzaj: 'link-niesprawdzony', cytat: o.adres, powod: '' };
+      })
+      // Niesprawdzone na koniec: to przypomnienie, nie zarzut.
+      .sort(function (a, b) {
+        return (a.rodzaj === 'link-niesprawdzony' ? 1 : 0)
+             - (b.rodzaj === 'link-niesprawdzony' ? 1 : 0);
       });
   } catch (e) {
     // Brak serwera albo brak sieci nie jest wynikiem kontroli - milczymy.
@@ -6266,7 +6309,7 @@ async function uruchomKontroleFaktow(wymus) {
 
 const IKONY_UWAG = {
   liczba: '🔢', zakres: '↔️', sprzecznosc: '⚠️', konflikt: '🏳️',
-  'link-obcy': '🔗', 'link-sciezka': '🔗', 'link-martwy': '💀',
+  'link-obcy': '🔗', 'link-sciezka': '🔗', 'link-martwy': '💀', 'link-niesprawdzony': '❔',
   'link-kotwica': '✍️', 'link-powtorka': '✍️', 'link-pusty': '✍️',
 };
 

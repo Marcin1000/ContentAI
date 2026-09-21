@@ -320,10 +320,10 @@ KONTROLE = [
     # prawdziwe i nie dalo sie z tego wywnioskowac, czy chce sie to wlaczyc.
     # Nazwa opisuje skutek dla artykulu, zastrzezenia sa w podpowiedzi.
     ("F38/etykieta", "przelacznik nazwany skutkiem, nie mechanizmem",
-     "'toggle-web':'Szukaj w sieci tego, czego nie ma w bazie wiedzy'",
+     "'toggle-web':'Szukaj w sieci i podawaj źródła'",
      "'toggle-web':'Uzupełnij luki wiedzą z internetu'", None),
-    ("F38/podpowiedz", "podpowiedz rozpisuje oba stany przelacznika",
-     "WŁĄCZONE: gdy w bazie brakuje informacji", None, None),
+    ("F38/podpowiedz", "podpowiedz mowi o zrodlach i o danych firmy",
+     "Dane o Twojej firmie zawsze tylko z bazy.", None, None),
     ("F38/czas", "podpowiedz uprzedza o dluzszym generowaniu",
      "Wydłuża generowanie o ok. 30 sek.", None, None),
 
@@ -376,6 +376,34 @@ KONTROLE = [
     # marki zamieniało dzialajacy odnosnik na martwy, gdy marka www nie uzywa.
     ("F42/www", "www doklejane tylko gdy adres marki sam go uzywa",
      "if (_bh.length && _zWww) {", "if (_bh.length) {", None),
+
+    # -- szosta runda: co pokazalo pierwsze uruchomienie z wyszukiwaniem --
+
+    # Bibliografia pierwszego artykulu z sieci miala 21 pozycji, w tym FedEx,
+    # UPS, TNT, DPD, DB Schenker i kilkanascie porownywarek. Wymienialismy
+    # wszystko, co model przejrzal, jakby kazda z tych stron cos potwierdzala.
+    ("F43/cytowane", "w bibliografii tylko strony, na ktore model sie powolal",
+     "return z.cytowan > 0;", None, None),
+    ("F43/konkurenci", "wykluczenia obejmuja realnych przewoznikow, nie zgadywanych",
+     "'dpd.com', 'fedex.com', 'ups.com', 'tnt.com', 'dbschenker.com'", None, None),
+    ("F43/bezcytowania", "zakaz cytowania konkurencji jako zrodla",
+     "never let one appear in the list", None, None),
+
+    # Model uzyl naraz czterech nazw z jednej grupy i przypisal dwie rozne
+    # formuly obliczania tej samej oplaty dwom nazwom tej samej spolki, bo
+    # jedna z nich jest historyczna.
+    ("F44/marka", "jedna marka, jedna nazwa, jedna spolka",
+     "ONE BRAND, ONE NAME, ONE COMPANY", None, None),
+    ("F44/tabela", "tabela okresow wymaga kazdego wiersza ze zrodla",
+     "you do not have a table, you have three data points", None, None),
+
+    # Przekroczony czas na stronie DHL-a byl zglaszany jako "adres nie
+    # odpowiada", z angielskim komunikatem wyjatku w polskim interfejsie.
+    # Kontrola, ktora sie nie odbyla, nie jest wynikiem kontroli.
+    ("F45/niesprawdzony", "przekroczony czas to nie martwy adres",
+     "rodzaj: 'link-niesprawdzony'", None, None),
+    ("F45/opis", "powod podany po polsku, nie tresc wyjatku",
+     "'fakty-powod-link-niesprawdzony':", None, None),
 
     # ── warstwa reskinu ──
     ("R/splash", "splash raz na sesje",
