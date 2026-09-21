@@ -2294,6 +2294,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
       <div style="font-size:11px;color:var(--text3);margin-top:4px" data-i18n="llms-h-blocked">Przy włączonym wyszukiwaniu AI w ogóle nie zobaczy tych stron. Wpisz konkurentów i porównywarki, żeby nie trafili do źródeł pod artykułem. Same domeny, bez https i bez www. Maksymalnie 64.</div>
       <div id="llms-blocked-licznik" style="font-size:11px;color:var(--text3);margin-top:4px"></div>
     </div>
+    <div id="llms-stan-zapisu" style="font-size:11px;color:var(--text3);margin-top:4px"></div>
     <div class="modal-footer">
       <button class="btn-generate" style="width:auto;padding:9px 22px" onclick="generateLlms()" data-i18n="llms-generate">Generuj pliki</button>
     </div>
@@ -2985,6 +2986,9 @@ var I18N = {
     'llms-h-blocked':'Przy włączonym wyszukiwaniu AI w ogóle nie zobaczy tych stron. Wpisz konkurentów i porównywarki, żeby nie trafili do źródeł pod artykułem. Same domeny, bez https i bez www. Maksymalnie 64.',
     'ph-llms-blocked':'konkurent.pl',
     'llms-blocked-count':'Przyjęte ({n}):',
+    'llms-zapis-serwer':'Zapisane na serwerze. Obowiązuje wszystkich użytkowników.',
+    'llms-tylko-odczyt':'Konfigurację marki ustawia administrator - pola są tylko do odczytu.',
+    'llms-zapis-lokalny':'Zapisane tylko na tym urządzeniu. Konfigurację dla całego zespołu ustawia administrator.',
     'llms-generate':'Generuj pliki','llms-out-basic':'llms.txt','llms-out-full':'llms-full.txt','llms-copy':'Kopiuj','llms-download':'Pobierz','llms-hint-urls':'URL-e pobrane z bazy wiedzy: {n}',
     'settings-vis-title':'Widoczność AI','settings-vis-sub':'obecność marki w odpowiedziach AI',
     'vis-title':'🔎 Widoczność marki w AI','vis-desc':'Sprawdza czy marka pojawia się w odpowiedziach AI na zapytania zakupowe. Uruchamia każdy prompt przez Claude z wyszukiwaniem w sieci i raportuje obecność, pozycję, konkurentów i źródła. To migawka na żądanie z jednego modelu (Claude), nie ciągły monitoring wielu modeli. Każdy prompt zużywa zapytanie web search (płatne).',
@@ -3499,6 +3503,9 @@ var I18N = {
     'llms-h-blocked':'With web search on, the AI will not see these sites at all. List competitors and comparison sites so they never end up in the sources under your article. Bare domains, no https, no www. Up to 64.',
     'ph-llms-blocked':'competitor.com',
     'llms-blocked-count':'Accepted ({n}):',
+    'llms-zapis-serwer':'Saved on the server. Applies to every user.',
+    'llms-tylko-odczyt':'An administrator sets the brand configuration - these fields are read-only.',
+    'llms-zapis-lokalny':'Saved on this device only. An administrator sets the configuration for the whole team.',
     'llms-generate':'Generate files','llms-out-basic':'llms.txt','llms-out-full':'llms-full.txt','llms-copy':'Copy','llms-download':'Download','llms-hint-urls':'URLs harvested from knowledge base: {n}',
     'settings-vis-title':'AI visibility','settings-vis-sub':'brand presence in AI answers',
     'vis-title':'🔎 Brand visibility in AI','vis-desc':'Checks whether the brand appears in AI answers to buyer queries. Runs each prompt through Claude with web search and reports presence, position, competitors and sources. This is an on-demand snapshot from a single model (Claude), not continuous multi-model monitoring. Each prompt consumes a web search request (billed).',
@@ -8780,6 +8787,10 @@ document.addEventListener('DOMContentLoaded', () => {
   imgInit();
   // Zawsze zastosuj język (także PL) - ujednolica statyczne teksty HTML z I18N
   applyLang(currentLang);
+  // Konfiguracja marki z serwera. Swiadomie bez await - nie blokuje startu,
+  // a do pierwszej generacji tekstu i tak zdazy. Gdyby nie zdazyla, zostaje
+  // kopia w localStorage z poprzedniego otwarcia.
+  wczytajMarkeZSerwera();
 });
 
 async function startBulkGenerate() {
@@ -9064,12 +9075,95 @@ function domenyZPola(tekst) {
     .slice(0, 64);   // gorny limit narzedzia wyszukiwania
 }
 
+// Konfiguracja marki pobrana z serwera przy starcie. null = jeszcze nie
+// pobrano albo nie ma serwera (warianty keys i owner) - wtedy zostaje
+// localStorage, dokladnie jak dotad.
+let markaZSerwera = null;
+
 function getLlmsConfig() {
+  // Serwer jest zrodlem prawdy: konfiguracja jest jedna dla calego wdrozenia,
+  // wiec nowa osoba w zespole nie zaczyna od pustej i nie generuje tekstow
+  // bez regul o marce.
+  if (markaZSerwera) return Object.assign({}, LLMS_DEFAULTS, markaZSerwera);
   try {
     const s = JSON.parse(localStorage.getItem('cai-llms') || 'null');
     if (s) return Object.assign({}, LLMS_DEFAULTS, s);
   } catch (e) {}
   return Object.assign({}, LLMS_DEFAULTS);
+}
+
+// Czy zalogowany moze zmieniac konfiguracje marki. Konfiguracja jest jedna dla
+// calego wdrozenia, wiec pisze ja wylacznie administrator - reszta widzi te
+// sama i tylko ja czyta.
+let markaAdmin = false;
+
+// Pobranie przy starcie. Cisza przy bledzie jest celowa: brak sieci albo
+// starszy serwer bez tego endpointu nie moze wywrocic uruchomienia aplikacji,
+// a localStorage nadal dziala.
+// Pusty obiekt z serwera znaczy "jeszcze nie skonfigurowano", a nie
+// "skonfigurowano na nic" - wtedy zostaje to, co ma uzytkownik u siebie.
+function markaUstawiona(m) {
+  return Boolean(m) && Object.keys(m).some(function (k) { return String(m[k] || '').trim(); });
+}
+
+async function wczytajMarkeZSerwera() {
+  try {
+    const odp = await fetch('/api/marka');
+    if (!odp.ok) return;
+    const dane = await odp.json();
+    const m = dane && dane.marka;
+    if (markaUstawiona(m)) {
+      markaZSerwera = m;
+      // Kopia lokalna, zeby aplikacja miala konfiguracje takze wtedy, gdy
+      // serwer chwilowo nie odpowie przy nastepnym otwarciu.
+      try { localStorage.setItem('cai-llms', JSON.stringify(m)); } catch (e) {}
+    }
+  } catch (e) { /* brak serwera - zostaje localStorage */ }
+  try {
+    const ja = await (await fetch('/auth/me')).json();
+    markaAdmin = ja && ja.rola === 'admin';
+  } catch (e) { markaAdmin = false; }
+}
+
+// Zapis na serwer. Zwraca true, gdy sie udalo - wywolujacy pokazuje wtedy
+// inny komunikat niz przy zapisie tylko na tym urzadzeniu.
+async function zapiszMarkeNaSerwerze(konf) {
+  try {
+    const odp = await fetch('/api/marka', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(konf),
+    });
+    if (!odp.ok) return false;
+    const dane = await odp.json();
+    // Ten sam warunek co przy odczycie - inaczej administrator, ktory
+    // wyczyscil pola, przestawalby widziec wlasna kopie lokalna, a zespol
+    // przy nastepnym otwarciu nadal widzialby swoja.
+    markaZSerwera = markaUstawiona(dane && dane.marka) ? dane.marka : null;
+    return true;
+  } catch (e) { return false; }
+}
+
+// Pola sa edytowalne tylko wtedy, gdy zapis ma sens. Gdy konfiguracja przyszla
+// z serwera, a uzytkownik nie jest administratorem, jego zmiany i tak nie
+// weszlyby do promptow (serwer wygrywa) - wiec zamiast milczaco je gubic,
+// blokujemy pola i mowimy, kto to ustawia.
+const POLA_MARKI = ['llms-name', 'llms-legal', 'llms-url', 'llms-desc',
+                    'llms-services', 'llms-lines', 'llms-domains', 'llms-blocked'];
+
+function ustawTrybEdycjiMarki() {
+  const tylkoOdczyt = Boolean(markaZSerwera) && !markaAdmin;
+  POLA_MARKI.forEach(function (id) {
+    const pole = document.getElementById(id);
+    if (!pole) return;
+    pole.readOnly = tylkoOdczyt;
+    pole.style.opacity = tylkoOdczyt ? '0.7' : '';
+  });
+  const info = document.getElementById('llms-stan-zapisu');
+  if (info) {
+    info.textContent = tylkoOdczyt ? _t('llms-tylko-odczyt') : '';
+    info.style.color = 'var(--text3)';
+  }
 }
 
 function openLlmsModal() {
@@ -9086,6 +9180,7 @@ function openLlmsModal() {
   document.getElementById('llms-out-basic-ta').value = '';
   document.getElementById('llms-out-full-ta').value = '';
   document.getElementById('llms-urls-hint').textContent = '';
+  ustawTrybEdycjiMarki();
   document.getElementById('llms-modal').classList.add('open');
 }
 
@@ -9104,6 +9199,19 @@ function saveLlmsConfig() {
   };
   localStorage.setItem('cai-llms', JSON.stringify(c));
   odswiezLicznikDomen();
+  // Administrator zapisuje dla calego zespolu. Gdy konfiguracja juz jest na
+  // serwerze, a piszacy nie jest administratorem, nie wysylamy zadania, ktore
+  // i tak wroci z 403 - pola sa wtedy zablokowane i widac, kto to ustawia.
+  if (markaZSerwera && !markaAdmin) {
+    ustawTrybEdycjiMarki();
+  } else {
+    zapiszMarkeNaSerwerze(c).then(function (naSerwerze) {
+      const info = document.getElementById('llms-stan-zapisu');
+      if (!info) return;
+      info.textContent = _t(naSerwerze ? 'llms-zapis-serwer' : 'llms-zapis-lokalny');
+      info.style.color = naSerwerze ? '#16A34A' : 'var(--text3)';
+    });
+  }
   return c;
 }
 

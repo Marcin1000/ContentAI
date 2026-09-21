@@ -27,6 +27,7 @@ Serwer odtwarza kontrakt `app/worker.js`, więc **aplikacja działa bez żadnych
 | `POST /api/transcribe` | transkrypcja |
 | `POST /api/eleven-tts` | synteza ElevenLabs |
 | `GET /api/status` | stan serwera - **tylko rola admin** |
+| `GET /api/marka` | konfiguracja marki; zapis `POST` **tylko rola admin** |
 | `POST /auth/login`, `GET /auth/logout`, `GET /auth/me` | logowanie |
 
 Wszystko poza logowaniem wymaga aktywnej sesji.
@@ -197,8 +198,30 @@ wyszukiwania.
 Nazwa marki trafia do reguł generowania: bez niej instrukcja „użyj nazwy z bazy wiedzy"
 nie ma kotwicy, bo model nie wie, która z nazw w dokumentach jest tą właściwą.
 
-Konfiguracja jest zapisywana w `localStorage` przeglądarki, więc jest per urządzenie.
-Wartości początkowe biorą się ze stałej `BRAND` w `app/contentai.src.html`.
+#### Gdzie to leży
+
+Konfiguracja jest **jedna dla całego wdrożenia**: zapisuje ją administrator, czyta każdy
+zalogowany. Wcześniej siedziała w `localStorage` przeglądarki, więc każdy użytkownik
+i każde urządzenie miały własną kopię, a nowa osoba w zespole zaczynała od pustej
+i generowała teksty bez żadnych reguł o marce.
+
+| Trasa | Kto |
+|---|---|
+| `GET /api/marka` | każdy zalogowany |
+| `POST /api/marka` | **tylko rola admin**; pozostali dostają 403 |
+
+Plik: `serwer/dane/marka.json` (albo `CAI_MARKA`), uprawnienia `600`. Serwer przyjmuje
+wyłącznie osiem znanych pól i przycina je do limitu długości - konfiguracja trafia prosto
+do promptów, więc nie może być workiem na dowolne klucze.
+
+W aplikacji widać to tak: gdy konfiguracja przyszła z serwera, a zalogowany nie jest
+administratorem, pola są tylko do odczytu i pod nimi stoi zdanie, kto je ustawia. Bez tego
+zmiany dałoby się wpisać, ale nie weszłyby do promptów - wygrywa wersja z serwera.
+
+Kopia trafia też do `localStorage`, żeby aplikacja miała konfigurację, gdy serwer chwilowo
+nie odpowie. Warianty `keys` i `owner` nie mają serwera i działają wyłącznie na
+`localStorage`, dokładnie jak dotąd. Wartości początkowe biorą się ze stałej `BRAND`
+w `app/contentai.src.html`.
 
 ### Sprawdzanie odnośników z artykułu
 

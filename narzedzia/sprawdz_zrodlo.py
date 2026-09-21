@@ -447,6 +447,24 @@ KONTROLE = [
     ("F48/wordpress", "nazwa z obcego WordPressa z ucieczka znakow",
      "zalogowano jako: ${escapeHtml(String(d.name || ''))}", None, ("proxy", "keys", "owner")),
 
+    # -- konfiguracja marki na serwerze --
+    # Tozsamosc marki siedziala w localStorage, wiec kazdy uzytkownik i kazde
+    # urzadzenie mialy wlasna kopie, a nowa osoba w zespole zaczynala od pustej
+    # i generowala teksty bez regul o marce.
+    ("F49/serwer", "konfiguracja marki z serwera ma pierwszenstwo nad przegladarka",
+     "if (markaZSerwera) return Object.assign({}, LLMS_DEFAULTS, markaZSerwera);",
+     "function getLlmsConfig() {\n  try {", None),
+    ("F49/pobranie", "pobranie konfiguracji marki z serwera",
+     "async function wczytajMarkeZSerwera() {", None, ("proxy",)),
+    ("F49/start", "pobranie wpiete w start aplikacji",
+     "\n  wczytajMarkeZSerwera();\n", None, ("proxy",)),
+    ("F49/administrator", "pola marki tylko do odczytu, gdy pisze administrator",
+     "const tylkoOdczyt = Boolean(markaZSerwera) && !markaAdmin;", None, ("proxy",)),
+    # Warianty keys i owner nie maja serwera. Wywolanie jego endpointu konczy
+    # sie tam bledem w konsoli przy kazdym uruchomieniu.
+    ("F49/bezserwera", "warianty bez serwera nie wolaja jego endpointow",
+     None, "wczytajMarkeZSerwera", ("keys", "owner")),
+
     # ── warstwa reskinu ──
     ("R/splash", "splash raz na sesje",
      'id="cin-splash"', None, None),

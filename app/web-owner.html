@@ -2271,6 +2271,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
       <div style="font-size:11px;color:var(--text3);margin-top:4px" data-i18n="llms-h-blocked">Przy włączonym wyszukiwaniu AI w ogóle nie zobaczy tych stron. Wpisz konkurentów i porównywarki, żeby nie trafili do źródeł pod artykułem. Same domeny, bez https i bez www. Maksymalnie 64.</div>
       <div id="llms-blocked-licznik" style="font-size:11px;color:var(--text3);margin-top:4px"></div>
     </div>
+    <div id="llms-stan-zapisu" style="font-size:11px;color:var(--text3);margin-top:4px"></div>
     <div class="modal-footer">
       <button class="btn-generate" style="width:auto;padding:9px 22px" onclick="generateLlms()" data-i18n="llms-generate">Generuj pliki</button>
     </div>
@@ -2962,6 +2963,9 @@ var I18N = {
     'llms-h-blocked':'Przy włączonym wyszukiwaniu AI w ogóle nie zobaczy tych stron. Wpisz konkurentów i porównywarki, żeby nie trafili do źródeł pod artykułem. Same domeny, bez https i bez www. Maksymalnie 64.',
     'ph-llms-blocked':'konkurent.pl',
     'llms-blocked-count':'Przyjęte ({n}):',
+    'llms-zapis-serwer':'Zapisane na serwerze. Obowiązuje wszystkich użytkowników.',
+    'llms-tylko-odczyt':'Konfigurację marki ustawia administrator - pola są tylko do odczytu.',
+    'llms-zapis-lokalny':'Zapisane tylko na tym urządzeniu. Konfigurację dla całego zespołu ustawia administrator.',
     'llms-generate':'Generuj pliki','llms-out-basic':'llms.txt','llms-out-full':'llms-full.txt','llms-copy':'Kopiuj','llms-download':'Pobierz','llms-hint-urls':'URL-e pobrane z bazy wiedzy: {n}',
     'settings-vis-title':'Widoczność AI','settings-vis-sub':'obecność marki w odpowiedziach AI',
     'vis-title':'🔎 Widoczność marki w AI','vis-desc':'Sprawdza czy marka pojawia się w odpowiedziach AI na zapytania zakupowe. Uruchamia każdy prompt przez Claude z wyszukiwaniem w sieci i raportuje obecność, pozycję, konkurentów i źródła. To migawka na żądanie z jednego modelu (Claude), nie ciągły monitoring wielu modeli. Każdy prompt zużywa zapytanie web search (płatne).',
@@ -3418,6 +3422,9 @@ var I18N = {
     'llms-h-blocked':'With web search on, the AI will not see these sites at all. List competitors and comparison sites so they never end up in the sources under your article. Bare domains, no https, no www. Up to 64.',
     'ph-llms-blocked':'competitor.com',
     'llms-blocked-count':'Accepted ({n}):',
+    'llms-zapis-serwer':'Saved on the server. Applies to every user.',
+    'llms-tylko-odczyt':'An administrator sets the brand configuration - these fields are read-only.',
+    'llms-zapis-lokalny':'Saved on this device only. An administrator sets the configuration for the whole team.',
     'llms-generate':'Generate files','llms-out-basic':'llms.txt','llms-out-full':'llms-full.txt','llms-copy':'Copy','llms-download':'Download','llms-hint-urls':'URLs harvested from knowledge base: {n}',
     'settings-vis-title':'AI visibility','settings-vis-sub':'brand presence in AI answers',
     'vis-title':'🔎 Brand visibility in AI','vis-desc':'Checks whether the brand appears in AI answers to buyer queries. Runs each prompt through Claude with web search and reports presence, position, competitors and sources. This is an on-demand snapshot from a single model (Claude), not continuous multi-model monitoring. Each prompt consumes a web search request (billed).',
@@ -8884,13 +8891,23 @@ function domenyZPola(tekst) {
     .slice(0, 64);   // gorny limit narzedzia wyszukiwania
 }
 
+// Konfiguracja marki pobrana z serwera przy starcie. null = jeszcze nie
+// pobrano albo nie ma serwera (warianty keys i owner) - wtedy zostaje
+// localStorage, dokladnie jak dotad.
+let markaZSerwera = null;
+
 function getLlmsConfig() {
+  // Serwer jest zrodlem prawdy: konfiguracja jest jedna dla calego wdrozenia,
+  // wiec nowa osoba w zespole nie zaczyna od pustej i nie generuje tekstow
+  // bez regul o marce.
+  if (markaZSerwera) return Object.assign({}, LLMS_DEFAULTS, markaZSerwera);
   try {
     const s = JSON.parse(localStorage.getItem('cai-llms') || 'null');
     if (s) return Object.assign({}, LLMS_DEFAULTS, s);
   } catch (e) {}
   return Object.assign({}, LLMS_DEFAULTS);
 }
+
 
 function openLlmsModal() {
   const c = getLlmsConfig();
