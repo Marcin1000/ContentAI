@@ -315,11 +315,17 @@ KONTROLE = [
     # Przelacznik nazywal sie "uzupelnij luki wiedza z internetu", a nie dotyka
     # internetu: zmienia trzy zdania w promptcie i pozwala modelowi siegnac do
     # pamieci z treningu. Uzytkownik wylaczajac go sadzil, ze odcina siec.
-    ("F38/etykieta", "przelacznik nazwany tym, czym jest",
-     "'toggle-web':'Uzupełnij luki wiedzą ogólną modelu'",
+    # Etykieta ma mowic, CO SIE STANIE po wlaczeniu. "Wiedza z internetu"
+    # bylo nieprawda, ale dawalo jakis obraz; "wiedza ogolna modelu" bylo
+    # prawdziwe i nie dalo sie z tego wywnioskowac, czy chce sie to wlaczyc.
+    # Nazwa opisuje skutek dla artykulu, zastrzezenia sa w podpowiedzi.
+    ("F38/etykieta", "przelacznik nazwany skutkiem, nie mechanizmem",
+     "'toggle-web':'Pisz też o tym, czego nie ma w bazie wiedzy'",
      "'toggle-web':'Uzupełnij luki wiedzą z internetu'", None),
-    ("F38/podpowiedz", "podpowiedz mowi wprost, ze to nie internet",
-     "Model NIE wchodzi do internetu", None, None),
+    ("F38/podpowiedz", "podpowiedz rozpisuje oba stany przelacznika",
+     "WŁĄCZONE: gdy w bazie brakuje informacji", None, None),
+    ("F38/niesiec", "podpowiedz prostuje, ze to nie internet",
+     "z własnej wiedzy, nie z internetu", None, None),
 
     # Bezwarunkowe "baza wiedzy jest jedynym zrodlem faktow" stalo w
     # sprzecznosci z galezia promptu mowiaca "mozesz uzupelnic wiedza ogolna".
