@@ -161,7 +161,7 @@ KONTROLE = [
     # Prompt wymagal liczby w pierwszym akapicie, w kazdym akapicie i w kazdym
     # punkcie podsumowania - model dopisywal je, zeby spelnic warunek.
     ("F21/fakty", "blok o pokryciu liczb w zrodlach",
-     "function blokFaktow() {", None, None),
+     "function blokFaktow(uzupelnia) {", "function blokFaktow() {", None),
     ("F21/bezprzymusu", "pierwszy akapit nie musi zawierac liczby",
      None, "The first paragraph MUST include a key number", None),
     ("F21/bezpunktow", "punkty podsumowania nie musza zawierac liczby",
@@ -309,6 +309,33 @@ KONTROLE = [
      "metaEl2.style.color", None, None),
     ("F37/kolejnosc", "kontrola faktow pierwsza w menu Ocen",
      'id="fakty-btn" style="display:none" onclick="przelaczPanelFaktow()" data-i18n="btn-fakty">🔍 Kontrola faktów</button>\n                <div class="grupa-sep"></div>\n                <button class="btn-secondary" id="seo-btn"', None, None),
+
+    # -- czwarta runda: przelacznik uzupelniania wiedza ogolna --
+
+    # Przelacznik nazywal sie "uzupelnij luki wiedza z internetu", a nie dotyka
+    # internetu: zmienia trzy zdania w promptcie i pozwala modelowi siegnac do
+    # pamieci z treningu. Uzytkownik wylaczajac go sadzil, ze odcina siec.
+    ("F38/etykieta", "przelacznik nazwany tym, czym jest",
+     "'toggle-web':'Uzupełnij luki wiedzą ogólną modelu'",
+     "'toggle-web':'Uzupełnij luki wiedzą z internetu'", None),
+    ("F38/podpowiedz", "podpowiedz mowi wprost, ze to nie internet",
+     "Model NIE wchodzi do internetu", None, None),
+
+    # Bezwarunkowe "baza wiedzy jest jedynym zrodlem faktow" stalo w
+    # sprzecznosci z galezia promptu mowiaca "mozesz uzupelnic wiedza ogolna".
+    ("F38/tryb", "reguly pokrycia zalezne od trybu uzupelniania",
+     "blokFaktow(opcje.uzupelnia)", None, None),
+    ("F38/tlumaczy", "wiedza ogolna tlumaczy, nie dostarcza danych",
+     "General knowledge may EXPLAIN, never SUPPLY", None, None),
+    ("F38/luki", "uzupelnianie luk zawsze tylko ze zrodel",
+     "blokFaktow(false)", None, None),
+
+    # Kontrola faktow musi wiedziec, w jakim trybie powstal tekst - inaczej
+    # nazywa dozwolone uzupelnienie tak samo jak naciagniecie zrodla.
+    ("F39/kontrola", "kontrola faktow zna tryb generowania",
+     "trybUzupelniania = useWeb;", None, None),
+    ("F39/nota", "nota w panelu o pochodzeniu zdan spoza zrodel",
+     "'fakty-tryb-uzupelniania':", None, None),
 
     # ── warstwa reskinu ──
     ("R/splash", "splash raz na sesje",

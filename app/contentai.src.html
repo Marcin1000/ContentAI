@@ -1803,7 +1803,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
           <label class="toggle-row" for="use-web">
             <div class="toggle-info">
-              <span class="toggle-label" data-i18n="toggle-web">Uzupełnij luki wiedzą z internetu</span>
+              <span class="toggle-label" data-i18n="toggle-web">Uzupełnij luki wiedzą ogólną modelu</span>
               <span class="toggle-hint" data-i18n="toggle-web-hint">Gdy baza nie zawiera info o danym aspekcie, AI sięgnie po wiedzę ogólną. Dane firmowe zawsze mają pierwszeństwo.</span>
             </div>
             <div class="toggle-wrap">
@@ -2950,8 +2950,8 @@ var I18N = {
     'ph-length-custom':'np. 1200','label-kw':'Słowa kluczowe','ph-kw':'Wpisz frazę i naciśnij Enter...',
     'label-tone':'Ton','label-lang-out':'Język','label-extra':'Dodatkowe wytyczne',
     'ph-extra':'np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem...',
-    'toggle-web':'Uzupełnij luki wiedzą z internetu',
-    'toggle-web-hint':'Gdy baza nie zawiera info o danym aspekcie, AI sięgnie po wiedzę ogólną. Dane firmowe zawsze mają pierwszeństwo.',
+    'toggle-web':'Uzupełnij luki wiedzą ogólną modelu',
+    'toggle-web-hint':'Model NIE wchodzi do internetu. Sięga do wiedzy z treningu, która nie ma daty ani źródła, więc może tłumaczyć ogólne pojęcia, ale nie dostarcza liczb, dat ani nazw instytucji. Dane o Twojej firmie zawsze wyłącznie z bazy wiedzy.',
     'toggle-serp':'Analiza SERP przed generowaniem',
     'toggle-serp-hint':'Przed wygenerowaniem AI sprawdza co rankuje w Google dla Twojego słowa kluczowego i wykorzystuje te dane jako dodatkowy kontekst. Wydłuża generowanie o ok. 15 sek.',
     'toggle-aeo':'Tryb AEO (treść pod cytowania AI)','toggle-aeo-hint':'Wymusza format pod silniki odpowiedzi: definicja 25-50 słów na start, liczby w intro, 5-7 pytań FAQ, krótkie listy, nagłówki jako pytania.',
@@ -2987,6 +2987,7 @@ var I18N = {
     'fakty-rodzaj-sprzecznosc':'Sprzeczność wewnątrz artykułu',
     'fakty-rodzaj-konflikt':'Polecenie konkurencji',
     'fakty-linki-czysto':'Odnośniki bez zastrzeżeń.',
+    'fakty-tryb-uzupelniania':'Tekst powstał z włączonym uzupełnianiem wiedzą ogólną modelu, więc część zdań nie pochodzi z Twoich dokumentów. To nie jest wiedza z internetu ani dane sprawdzone: model odtwarza ją z pamięci, bez daty i bez źródła. Wszystko, co dotyczy Twojej firmy, liczb i przepisów, zweryfikuj przed publikacją.',
     'fakty-rodzaj-link-obcy':'Adres spoza źródeł',
     'fakty-rodzaj-link-sciezka':'Znana domena, nieznana podstrona',
     'fakty-rodzaj-link-martwy':'Adres nie odpowiada',
@@ -3469,8 +3470,8 @@ var I18N = {
     'ph-length-custom':'e.g. 1200','label-kw':'Keywords','ph-kw':'Type a phrase and press Enter...',
     'label-tone':'Tone','label-lang-out':'Language','label-extra':'Additional guidelines',
     'ph-extra':'e.g. Focus on SME segment, include market comparison...',
-    'toggle-web':'Fill gaps with knowledge from the internet',
-    'toggle-web-hint':'When the knowledge base lacks info on a topic, AI will use general knowledge. Company data always takes priority.',
+    'toggle-web':'Fill gaps with the model general knowledge',
+    'toggle-web-hint':'The model does NOT browse the internet. It draws on training knowledge, which has no date and no source, so it may explain general concepts but never supplies figures, dates or names of institutions. Anything about your company comes from the knowledge base only.',
     'toggle-serp':'SERP analysis before generating',
     'toggle-serp-hint':'Before generating, AI checks what ranks in Google for your keyword and uses this as additional context. Adds ~15 sec.',
     'toggle-aeo':'AEO mode (content for AI citations)','toggle-aeo-hint':'Forces answer-engine format: 25-50 word definition up front, numbers in intro, 5-7 FAQ questions, short lists, headings as questions.',
@@ -3506,6 +3507,7 @@ var I18N = {
     'fakty-rodzaj-sprzecznosc':'Contradiction inside the article',
     'fakty-rodzaj-konflikt':'Recommends a competitor',
     'fakty-linki-czysto':'No findings on links.',
+    'fakty-tryb-uzupelniania':'This text was written with the model general knowledge enabled, so some sentences do not come from your documents. That is not web knowledge and not verified data: the model recalls it from memory, with no date and no source. Verify everything about your company, figures and regulations before publishing.',
     'fakty-rodzaj-link-obcy':'Address not in the sources',
     'fakty-rodzaj-link-sciezka':'Known domain, unknown page',
     'fakty-rodzaj-link-martwy':'Address does not respond',
@@ -4379,10 +4381,14 @@ function blokDaty() {
 // spelnic warunek. Stad "kilkanascie zlotych za kilogram" - jednostka, ktorej
 // firmy kurierskie nie uzywaja. Forma przestaje byc obowiazkiem, ktory
 // przebija fakty.
-function blokFaktow() {
-  return '\n\nGROUNDING - THIS SECTION OVERRIDES EVERY FORMATTING RULE IN THIS PROMPT.\n'
-    + '- The KNOWLEDGE BASE is the only source of facts. Every number, price, rate, '
-    + 'percentage, date, deadline, weight, dimension and delivery time MUST appear there. '
+// uzupelnia = stan przelacznika "uzupelnij luki wiedza ogolna". Blok MUSI byc
+// od niego zalezny: przy wlaczonym uzupelnianiu bezwarunkowe "baza wiedzy jest
+// jedynym zrodlem faktow" stalo w sprzecznosci z galezia promptu mowiaca
+// "mozesz uzupelnic wiedza ogolna", a model dostawal dwie sprzeczne instrukcje.
+function blokFaktow(uzupelnia) {
+  const wspolne = '\n\nGROUNDING - THIS SECTION OVERRIDES EVERY FORMATTING RULE IN THIS PROMPT.\n'
+    + '- Every number, price, rate, percentage, date, deadline, weight, dimension and '
+    + 'delivery time MUST come from the KNOWLEDGE BASE. '
     + 'Never calculate, estimate, round, extrapolate or recall one from memory.\n'
     + '- SERP CONTEXT IS NOT A SOURCE. It summarises what competing pages happen to '
     + 'discuss. It tells you which QUESTIONS to cover; it never tells you what is TRUE. '
@@ -4401,6 +4407,29 @@ function blokFaktow() {
     + 'it out. Do not fill a table, a list or a comparison with placeholder values.\n'
     + '- Attribute what you can: when a source names its own data, say where the figure '
     + 'comes from. Never attribute a figure to a source that does not contain it.';
+
+  if (!uzupelnia) {
+    return wspolne
+      + '\n- The knowledge base is the ONLY source of anything you write. Do not add a '
+      + 'fact, a mechanism, a definition or an example that is not there. Where it is '
+      + 'silent, the article is silent too.';
+  }
+  // Uzupelnianie wlaczone: wiedza ogolna moze TLUMACZYC, nigdy nie DOSTARCZAC
+  // twardych danych. Model nie wchodzi przy tym do internetu - siega do pamieci
+  // z treningu, ktora nie ma daty ani zrodla, wiec liczby z niej sa
+  // niesprawdzalne i nie moga trafic do tekstu.
+  return wspolne
+    + '\n- General knowledge may EXPLAIN, never SUPPLY. You may define a general '
+    + 'industry concept or describe how something commonly works. You may NOT take '
+    + 'from general knowledge: any figure, price, rate, percentage or date; the name of '
+    + 'an institution, index, register, bulletin or publication; a methodology; a legal, '
+    + 'tax or customs rule; or anything at all about the brand that owns the knowledge '
+    + 'base. Those come from the knowledge base or they do not appear.\n'
+    + '- You are NOT browsing. You are recalling, and your recollection has no date and '
+    + 'no source. Treat every specific claim from it as unverified, which means it does '
+    + 'not go into the article.\n'
+    + '- When you explain something from general knowledge, keep it general. Do not dress '
+    + 'it up with invented specifics to make it sound sourced.';
 }
 
 // UWAGA 2: "nadinterpretowanie zrodel". Zrodlo mowilo o przesylkach DO Niemiec,
@@ -4622,7 +4651,7 @@ function usunPowtorzoneLinki(html) {
 // Jeden punkt wejscia - zeby nie dalo sie doloczyc czesci regul i zapomniec
 // o reszcie przy nastepnej zmianie w generate().
 function blokRzetelnosci(opcje) {
-  return blokFaktow() + blokZakresu() + blokSpojnosci()
+  return blokFaktow(opcje.uzupelnia) + blokZakresu() + blokSpojnosci()
     + blokOdbiorcy(opcje.odbiorca) + blokKonfliktu()
     + blokRytmu() + blokStruktury() + blokKotwic() + blokFraz() + blokTonu(opcje.ton);
 }
@@ -5484,7 +5513,11 @@ ${(ctype !== 'FAQ page' && !isPress) ? `- MANDATORY: End the article, immediatel
     systemPrompt += blokDaty();
     // Reguly z audytu agencji. Doklejane na koncu, zeby przebijaly wczesniejsze
     // wymagania formy: gdy zrodlo nie ma liczby, brak liczby wygrywa z szablonem.
-    systemPrompt += blokRzetelnosci({ ton: tonKanoniczny(), odbiorca: odbiorcaTekstu() });
+    systemPrompt += blokRzetelnosci({ ton: tonKanoniczny(), odbiorca: odbiorcaTekstu(), uzupelnia: useWeb });
+    // Kontrola faktow musi wiedziec, w jakim trybie powstal tekst: przy
+    // wlaczonym uzupelnianiu czesc twierdzen spoza bazy jest dozwolona
+    // i nazywa sie inaczej niz zwykle naciagniecie zrodla.
+    trybUzupelniania = useWeb;
     systemPrompt += lineGuardrailBlock(getLlmsConfig());
     if (typeof isPodcastType === 'function' && isPodcastType(ctype)) systemPrompt += podcastPromptBlock();
     else if (typeof isNewsletterAudioType === 'function' && isNewsletterAudioType(ctype)) systemPrompt += newsletterPromptBlock();
@@ -6052,6 +6085,7 @@ async function sprawdzCzyLinkiZyja(linki) {
 // Ten przebieg robi pierwsze przejscie maszynowo: zestawia gotowy artykul
 // ze zrodlami i wypisuje, co nie ma pokrycia. Niczego nie poprawia sam.
 
+let trybUzupelniania = false;   // czy tekst powstal z wiedza ogolna modelu
 let faktyWynik = null;          // ostatni wynik, zeby nie liczyc dwa razy
 let faktySygnatura = '';        // dla jakiego artykulu policzony
 
@@ -6126,6 +6160,16 @@ async function uruchomKontroleFaktow(wymus) {
     + 'paragraph and a table giving different values for the same thing).\n'
     + '  "konflikt"  - the article recommends a competitor, a comparison site, an '
     + 'aggregator or a marketplace over what the sources offer.\n'
+    + (trybUzupelniania
+        ? 'MODE: the article was written with "fill gaps with general knowledge" ON, so '
+          + 'general explanations of industry concepts are allowed and are NOT findings. '
+          + 'What is still a finding: any figure, date, price, percentage, institution, '
+          + 'index, publication, methodology, legal rule, or any statement about the brand '
+          + 'itself that is not in the sources. Report those under "liczba" or "zakres" '
+          + 'as usual - the author needs to know they came from the model, not from the '
+          + 'documents.\n'
+        : 'MODE: the article was written from the knowledge base ONLY, so anything not '
+          + 'traceable to the sources is a finding.\n')
     + 'Judge ONLY against the supplied sources. General knowledge is not evidence. '
     + 'Common-knowledge statements with no figures are not findings. If everything checks '
     + 'out, return an empty list - an empty list is a valid and expected answer.\n'
@@ -6190,9 +6234,16 @@ function pokazWynikFaktow(uwagi, tylkoLinki) {
   document.getElementById('fakty-loading').style.display = 'none';
   odswiez.style.display = 'inline-block';
 
-  const stopka = tylkoLinki
+  let stopka = tylkoLinki
     ? '<div style="color:var(--text3);margin-top:8px">' + escapeHtml(_t('fakty-brak-zrodel')) + '</div>'
     : '';
+  // Przy wlaczonym uzupelnianiu lista bywa dluzsza i to nie znaczy, ze tekst
+  // jest gorszy - znaczy, ze czesc zdan pochodzi z pamieci modelu, a nie
+  // z dokumentow. Autor musi wiedziec, ktora to sytuacja.
+  if (!tylkoLinki && trybUzupelniania) {
+    stopka += '<div style="color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
+      + escapeHtml(_t('fakty-tryb-uzupelniania')) + '</div>';
+  }
 
   if (!uwagi.length) {
     wynikEl.innerHTML = '<div style="color:#16A34A;font-weight:600">'
@@ -7046,7 +7097,7 @@ async function improveFromGaps() {
         // same zrodla i te same reguly co glowne generowanie, a luke bez
         // pokrycia ma pominac zamiast wypelnic.
         system: `You are an SEO editor. Write ALL new content in ${outLang} (regardless of the language of the topic or keywords). Write ONLY the new HTML sections requested, then (if instructed) an updated summary section. No markdown fences, no preamble, no repetition of existing content.`
-          + blokFaktow() + blokZakresu() + blokKonfliktu() + blokRytmu() + blokTonu(tonKanoniczny())
+          + blokFaktow(false) + blokZakresu() + blokKonfliktu() + blokRytmu() + blokTonu(tonKanoniczny())
           + '\n\nA GAP IS NOT A LICENCE TO INVENT. These topics come from search results, '
           + 'not from the sources. Write a section only for a topic the sources below '
           + 'actually cover. For every other topic write exactly one line:\n'
