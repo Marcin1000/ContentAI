@@ -477,6 +477,19 @@ KONTROLE = [
      "function formaZrodel(n) {", None, None),
     ("F51/bezosobowo", "stan sieci opisany bezosobowo, nie jak zachowanie osoby",
      "_t('siec-bez-wyszukiwania')", "'siec-nie-szukal'", None),
+
+    # Ta sama wada co przy stanie sieci, w sasiednich napisach: tekst ustawiony
+    # w kodzie nie ma data-i18n, wiec applyLang go nie tlumaczy. ustawTekst
+    # nadaje atrybut razem z trescia, wiec element tlumaczy sie dalej sam.
+    ("F51/ustawtekst", "napis z kodu dostaje data-i18n, wiec tlumaczy sie sam",
+     "function ustawTekst(el, klucz) {", None, None),
+    ("F51/premium", "przycisk premium tlumaczy sie po przelaczeniu jezyka",
+     "ustawTekst(btn, 'btn-premium-active');",
+     "btn.textContent = _t('btn-premium-active');", None),
+    ("F51/marka", "stan zapisu konfiguracji marki tlumaczy sie po zmianie jezyka",
+     "ustawTekst(info, tylkoOdczyt ? 'llms-tylko-odczyt' : '');", None, ("proxy",)),
+    ("F51/fakty", "wynik kontroli faktow skladany na nowo po zmianie jezyka",
+     "if (typeof przerysujWynikFaktow === 'function') przerysujWynikFaktow();", None, None),
     ("F50/historia", "wskaznik sieci nie opisuje artykulu z historii",
      "    trybUzupelniania = false;\n    pokazStanSieci(null, 0);", None, None),
 

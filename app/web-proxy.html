@@ -3930,6 +3930,16 @@ var I18N = {
   }
 };
 
+// Napis ustawiany w kodzie nie ma data-i18n, wiec applyLang go nie tlumaczy
+// i po zmianie jezyka zostaje w poprzednim. Ta funkcja ustawia tekst RAZEM
+// z atrybutem, dzieki czemu element tlumaczy sie dalej sam.
+function ustawTekst(el, klucz) {
+  if (!el) return;
+  if (!klucz) { el.removeAttribute('data-i18n'); el.textContent = ''; return; }
+  el.setAttribute('data-i18n', klucz);
+  el.textContent = _t(klucz);
+}
+
 function _t(key) { return (I18N[currentLang] || I18N.pl)[key] || (I18N.pl)[key] || key; }
 
 function applyLang(lang) {
@@ -4010,6 +4020,7 @@ function applyLang(lang) {
   // data-i18n i tlumaczyla sie sama, a wartosc obok zostawala w poprzednim
   // jezyku - w angielskim interfejsie stalo "Web: nie szukal".
   try { if (typeof przerysujStanSieci === 'function') przerysujStanSieci(); } catch(e) {}
+  try { if (typeof przerysujWynikFaktow === 'function') przerysujWynikFaktow(); } catch(e) {}
   // Odznaka pakietu niesie nazwe planu, wiec zmiana jezyka musi ja przerysowac.
   try { if (typeof window.przerysujPakiet === 'function') window.przerysujPakiet(); } catch(e) {}
   try {
@@ -5186,10 +5197,10 @@ function togglePremium() {
   premiumMode = !premiumMode;
   if (premiumMode) {
     btn.classList.add('active');
-    btn.textContent = _t('btn-premium-active');
+    ustawTekst(btn, 'btn-premium-active');
   } else {
     btn.classList.remove('active');
-    btn.textContent = _t('btn-premium');
+    ustawTekst(btn, 'btn-premium');
   }
 }
 
@@ -5208,7 +5219,7 @@ function premiumSkip() {
   premiumMode = false;
   const btn = document.getElementById('premium-btn');
   btn.classList.remove('active');
-  btn.textContent = _t('btn-premium');
+  ustawTekst(btn, 'btn-premium');
   closePremiumModal();
   generate(true);
 }
@@ -5789,7 +5800,7 @@ ${html}`;
     premiumMode = false;
     const pb = document.getElementById('premium-btn');
     pb.classList.remove('active');
-    pb.textContent = _t('btn-premium');
+    ustawTekst(pb, 'btn-premium');
   }
 
   document.getElementById('spinner').style.display = 'none';
@@ -6336,6 +6347,18 @@ let zrodlaSieciowe = [];        // adresy, z ktorych model skorzystal
 let stanSieci = null;           // ile zapytan i przypisow; null = bez sieci
 let faktyWynik = null;          // ostatni wynik, zeby nie liczyc dwa razy
 let faktySygnatura = '';        // dla jakiego artykulu policzony
+let faktyTylkoLinki = false;    // czy wynik powstal bez zrodel do zestawienia
+
+// Wynik kontroli to zlozony HTML skladany z wielu kluczy, wiec nie da sie go
+// oznaczyc jednym data-i18n. Przy zmianie jezyka skladamy go po prostu jeszcze
+// raz z tych samych danych - modelu nie pytamy ponownie.
+function przerysujWynikFaktow() {
+  if (!faktyWynik) return;
+  const ladowanie = document.getElementById('fakty-loading');
+  // Kontrola w toku ma wlasny komunikat etapu - nie nadpisujemy go wynikiem.
+  if (ladowanie && ladowanie.style.display === 'block') return;
+  pokazWynikFaktow(faktyWynik, faktyTylkoLinki);
+}
 // Numer biezacego przebiegu. Kontrola ma dwa zapytania idace rownolegle,
 // a uzytkownik moze w trakcie kliknac "Sprawdz ponownie" - bez tego wynik
 // starszego przebiegu nadpisalby nowszy.
@@ -6421,6 +6444,7 @@ async function uruchomKontroleFaktow(wymus) {
     if (moj !== faktyPrzebieg) return;
     faktyWynik = uwagiLinkow;
     faktySygnatura = sygnatura;
+    faktyTylkoLinki = true;
     pokazWynikFaktow(uwagiLinkow, true);
     return;
   }
@@ -6502,6 +6526,7 @@ async function uruchomKontroleFaktow(wymus) {
     // modelu sa oceną.
     faktyWynik = uwagiLinkow.concat(Array.isArray(odczyt.uwagi) ? odczyt.uwagi : []);
     faktySygnatura = sygnatura;
+    faktyTylkoLinki = false;
     pokazWynikFaktow(faktyWynik);
   } catch (e) {
     // Nawet gdy model nie odpowiedzial, kontrola odnosnikow ma swoj wynik.
@@ -9322,7 +9347,7 @@ function ustawTrybEdycjiMarki() {
   });
   const info = document.getElementById('llms-stan-zapisu');
   if (info) {
-    info.textContent = tylkoOdczyt ? _t('llms-tylko-odczyt') : '';
+    ustawTekst(info, tylkoOdczyt ? 'llms-tylko-odczyt' : '');
     info.style.color = 'var(--text3)';
   }
 }
@@ -9369,7 +9394,7 @@ function saveLlmsConfig() {
     zapiszMarkeNaSerwerze(c).then(function (naSerwerze) {
       const info = document.getElementById('llms-stan-zapisu');
       if (!info) return;
-      info.textContent = _t(naSerwerze ? 'llms-zapis-serwer' : 'llms-zapis-lokalny');
+      ustawTekst(info, naSerwerze ? 'llms-zapis-serwer' : 'llms-zapis-lokalny');
       info.style.color = naSerwerze ? '#16A34A' : 'var(--text3)';
     });
   }
