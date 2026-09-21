@@ -31,6 +31,7 @@ const openseo = require('./openseo.js');
 const openseoMcp = require('./openseo-mcp.js');
 const plany = require('./plany.js');
 const strona = require('./strona.js');
+const marka = require('./marka.js');
 
 const KATALOG = __dirname;
 const APP = path.join(KATALOG, '..', 'app');
@@ -88,6 +89,7 @@ const KONF = {
   katalogBazy: process.env.CAI_BAZA || path.join(KATALOG, 'dane', 'baza'),
   // Liczniki uzycia pakietow - jeden plik JSON na konto.
   katalogUzycia: process.env.CAI_UZYCIE || path.join(KATALOG, 'dane', 'uzycie'),
+  katalogMarki: process.env.CAI_MARKA || path.join(KATALOG, 'dane'),
   wektory: {
     klucz: process.env.NVIDIA_KEY || '',
     url: process.env.CAI_URL_EMBED || 'https://integrate.api.nvidia.com/v1/embeddings',
@@ -957,9 +959,19 @@ async function projektDomyslny(podany, konf) {
 }
 
 /** Cialo zadania jako JSON, z czytelnym bledem zamiast wyjatku. */
-async function cialoJson(req) {
+async function cialoJson(req, limitBajtow) {
+  let surowe;
   try {
-    return JSON.parse((await czytajCialo(req)).toString('utf8'));
+    surowe = await czytajCialo(req, limitBajtow);
+  } catch {
+    // Osobny komunikat: "Niepoprawny JSON" przy zadaniu wiekszym od limitu
+    // wysylaloby szukajacego bledu w zle miejsce.
+    const e = new Error('Cialo zadania za duze');
+    e.status = 413;
+    throw e;
+  }
+  try {
+    return JSON.parse(surowe.toString('utf8'));
   } catch {
     const e = new Error('Niepoprawny JSON');
     e.status = 400;
@@ -1059,6 +1071,29 @@ async function obsluz(req, res) {
       katalog: KONF.katalogUzycia,
       uzytkownik: kontoSesji(sesja),
     }));
+  }
+
+  // ─── Konfiguracja marki ────────────────────────────────────────────────────
+  // Jedna dla calego wdrozenia: czytaja wszyscy, pisze administrator.
+  // Wczesniej siedziala w localStorage przegladarki, wiec kazdy uzytkownik
+  // mial wlasna kopie, a nowa osoba w zespole zaczynala od pustej.
+  if (sciezka === '/api/marka' && req.method === 'GET') {
+    return odpowiedzJson(res, 200, { marka: marka.wczytaj(KONF.katalogMarki) });
+  }
+
+  if (sciezka === '/api/marka' && req.method === 'POST') {
+    if (sesja.rola !== 'admin') {
+      return odpowiedzJson(res, 403, { error: 'Konfiguracje marki zmienia administrator' });
+    }
+    let dane;
+    try {
+      // Po oczyszczeniu konfiguracja ma najwyzej okolo 18 kB - 64 kB to zapas
+      // na formatowanie JSON-a, nie zaproszenie do wysylania czegokolwiek.
+      dane = await cialoJson(req, 64 * 1024);
+    } catch (e) {
+      return odpowiedzJson(res, e.status || 400, { error: e.message });
+    }
+    return odpowiedzJson(res, 200, { marka: marka.zapisz(KONF.katalogMarki, dane) });
   }
 
   // ─── Pobranie strony WWW do bazy wiedzy ────────────────────────────────────
