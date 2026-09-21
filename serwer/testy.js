@@ -1036,5 +1036,35 @@ async function testyStrony() {
 
     const pusty = await strona.sprawdzOdnosniki([], async () => odp(200));
     sprawdz('pusta lista nie wywala', Array.isArray(pusty) && pusty.length === 0);
+
+    // Duze witryny za CDN-em potrafia nie odpowiadac na HEAD wcale: zapytanie
+    // wisi az do przekroczenia czasu. Wczesniej konczylo sie to zgloszeniem
+    // "adres nie odpowiada" na dzialajacej stronie DHL-a, z angielskim
+    // komunikatem wyjatku wyswietlonym w polskim interfejsie.
+    const proby = [];
+    const poWyjatku = await strona.sprawdzOdnosniki(['https://example.com/cdn'],
+      async (adres, opcje) => {
+        proby.push(opcje.method);
+        if (opcje.method === 'HEAD') throw new Error('The operation was aborted due to timeout');
+        return odp(200);
+      });
+    sprawdz('wyjatek przy HEAD powoduje ponowienie metoda GET',
+      proby.join(',') === 'HEAD,GET');
+    sprawdz('strona odpowiadajaca na GET jest uznana za dzialajaca',
+      poWyjatku[0].stan === 'dziala' && poWyjatku[0].dziala === true);
+
+    const obie = await strona.sprawdzOdnosniki(['https://example.com/gluchy'],
+      async () => { throw new Error('The operation was aborted due to timeout'); });
+    sprawdz('gdy obie metody zawioda, stan to "nieznany", nie "martwy"',
+      obie[0].stan === 'nieznany');
+    sprawdz('nieznany nie jest mylony z bledem HTTP', obie[0].status === 0);
+
+    const czterysta = await strona.sprawdzOdnosniki(['https://example.com/nie-ma'],
+      async () => odp(404));
+    sprawdz('404 zostaje oznaczone jako martwy', czterysta[0].stan === 'martwy');
+
+    const wewnetrzny = await strona.sprawdzOdnosniki(['http://127.0.0.1/x'],
+      async () => odp(200));
+    sprawdz('adres wewnetrzny ma stan "odrzucony"', wewnetrzny[0].stan === 'odrzucony');
   }
 }

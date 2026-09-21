@@ -46,7 +46,7 @@ from a knowledge base you control, running on a server and an API key that belon
 | **Four answer surfaces from one draft** | SEO for classic results, AIO for AI Overviews, AEO for answer engines, GEO for citations in models. Written once, optimised for all of them. |
 | **Knowledge base with retrieval (RAG)** | Upload documents, links and transcripts. Only the passages that match the topic reach the prompt, not the whole base. Private and shared collections. |
 | **Real search data, not guesses** | SERP analysis can pull live results from an API instead of asking the model what it remembers. Semantic gap analysis shows what the ranking pages cover and the draft does not. |
-| **Web research with citations** | When the knowledge base does not cover something the article needs, the model searches the web and every claim it takes from a result carries the page it came from. The sources are listed under the article and travel with it into DOCX, PDF and WordPress. Competitor domains can be excluded from the search outright. |
+| **Web research with citations** | When the knowledge base does not cover something the article needs, the model searches the web and every claim it takes from a result carries the page it came from. Only pages the article actually cites are listed underneath, and they travel with it into DOCX, PDF and WordPress. Competitor domains are excluded from the search outright. |
 | **Scoring that leads to an edit** | Every draft is scored on SEO, AIO, AEO and GEO, with concrete findings and a one-click fix rather than a number on its own. |
 | **Fact check against your sources** | One pass lists every figure, claim, link or recommendation in the draft that the selected documents do not support, quoting the exact fragment. Numbers that are not in the sources, claims stretched beyond what a source says, values that contradict each other inside the article, recommendations pointing at a competitor, and addresses that are invented, dead or repeated. |
 | **Visuals and audio in the same window** | Brand-styled images from the article topic, narration and transcription, without leaving the workspace. |
@@ -119,7 +119,7 @@ check at all.
 python3 narzedzia/sprawdz_zrodlo.py    # build all variants, verify every fix is present
 python3 narzedzia/audyt_i18n.py        # translation keys, both dictionaries
 python3 narzedzia/audyt_uchwyty.py     # every event handler resolves
-node serwer/testy.js                   # server logic, 243 tests
+node serwer/testy.js                   # server logic, 249 tests
 ```
 
 ---

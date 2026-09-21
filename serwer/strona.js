@@ -185,28 +185,61 @@ async function pobierz(adres, fetchImpl = fetch) {
 // ochrona adresu co przy pobieraniu strony.
 async function sprawdzOdnosniki(adresy, fetchImpl = fetch) {
   const wynik = [];
+
+  async function zapytaj(href, metoda) {
+    return fetchImpl(href, {
+      method: metoda, redirect: 'follow',
+      signal: AbortSignal.timeout(CZAS_ODPOWIEDZI),
+      headers: { 'User-Agent': AGENT },
+    });
+  }
+
   for (const adres of adresy.slice(0, 40)) {
+    let u;
     try {
-      const u = await sprawdzAdres(adres);
-      // HEAD jest tansze, ale czesc serwerow go nie obsluguje i odpowiada
-      // 405 albo 501. Wtedy pytamy jeszcze raz metoda GET, zeby nie zglosic
-      // zywego adresu jako martwego.
-      let odp = await fetchImpl(u.href, {
-        method: 'HEAD', redirect: 'follow',
-        signal: AbortSignal.timeout(CZAS_ODPOWIEDZI),
-        headers: { 'User-Agent': AGENT },
-      });
-      if (odp.status === 405 || odp.status === 501 || odp.status === 403) {
-        odp = await fetchImpl(u.href, {
-          method: 'GET', redirect: 'follow',
-          signal: AbortSignal.timeout(CZAS_ODPOWIEDZI),
-          headers: { 'User-Agent': AGENT },
-        });
-      }
-      wynik.push({ adres, status: odp.status, dziala: odp.status < 400 });
+      u = await sprawdzAdres(adres);
     } catch (e) {
-      wynik.push({ adres, status: 0, dziala: false, blad: e.message });
+      wynik.push({ adres, status: 0, stan: 'odrzucony', dziala: false, blad: e.message });
+      continue;
     }
+
+    // HEAD jest tansze, ale duze witryny za CDN-em czesto na nie nie
+    // odpowiadaja: albo oddaja 403/405, albo po prostu wisza az do
+    // przekroczenia czasu. Dlatego po KAZDYM niepowodzeniu HEAD, takze po
+    // wyjatku, pytamy jeszcze raz metoda GET.
+    let odp = null;
+    let blad = null;
+    try {
+      odp = await zapytaj(u.href, 'HEAD');
+    } catch (e) {
+      blad = e;
+    }
+    const wartoPonowic = !odp
+      || odp.status === 403 || odp.status === 405
+      || odp.status === 501 || odp.status === 429;
+    if (wartoPonowic) {
+      try {
+        odp = await zapytaj(u.href, 'GET');
+        blad = null;
+      } catch (e) {
+        blad = e;
+        odp = null;
+      }
+    }
+
+    if (!odp) {
+      // NIE to samo co "adres nie odpowiada". Przekroczony czas albo blad
+      // sieci znaczy, ze kontrola sie nie odbyla - zglaszanie tego jako
+      // martwego odnosnika bylo falszywym alarmem na dzialajacych stronach.
+      wynik.push({ adres, status: 0, stan: 'nieznany', dziala: false,
+                   blad: blad ? blad.message : '' });
+      continue;
+    }
+    wynik.push({
+      adres, status: odp.status,
+      stan: odp.status < 400 ? 'dziala' : 'martwy',
+      dziala: odp.status < 400,
+    });
   }
   return wynik;
 }
