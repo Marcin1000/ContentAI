@@ -639,6 +639,13 @@ body.dark-mode .serp-tag { background: var(--surface2); }
 .meta-label { font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #7A6000; margin-bottom: 5px; }
 .meta-box p { font-size: 13px; color: var(--text); margin: 0; line-height: 1.6; }
 body.dark-mode .meta-box { background: #2A2500; border-color: #7A6000; }
+/* Lista zrodel z wyszukiwania. Wyglada inaczej niz tresc, bo nia nie jest:
+   to aparat naukowy artykulu, ktory ma pojechac razem z nim do DOCX-a i PDF-a. */
+.zrodla-box { margin-top: 28px; padding: 14px 18px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); border-left: 4px solid var(--accent); font-size: 13px; }
+.zrodla-box .zrodla-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 8px; }
+.zrodla-box ul { margin: 0; padding-left: 18px; }
+.zrodla-box li { margin: 4px 0; line-height: 1.45; }
+.zrodla-box a { word-break: break-word; }
 /* Luka, ktorej zrodla nie pokrywaja. Widoczna od razu, zeby nikt nie wzial
    jej za gotowa sekcje i nie opublikowal pustego naglowka. */
 .article-body p[data-brak], #article p[data-brak] { background: var(--yellow-light); border-left: 3px solid var(--yellow-dark); padding: 10px 14px; color: var(--text2); font-style: italic; }
@@ -1722,7 +1729,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 
           <label class="toggle-row" for="use-web">
             <div class="toggle-info">
-              <span class="toggle-label" data-i18n="toggle-web">Pisz też o tym, czego nie ma w bazie wiedzy</span>
+              <span class="toggle-label" data-i18n="toggle-web">Szukaj w sieci tego, czego nie ma w bazie wiedzy</span>
               <span class="toggle-hint" data-i18n="toggle-web-hint">Gdy baza nie zawiera info o danym aspekcie, AI sięgnie po wiedzę ogólną. Dane firmowe zawsze mają pierwszeństwo.</span>
             </div>
             <div class="toggle-wrap">
@@ -2869,8 +2876,8 @@ var I18N = {
     'ph-length-custom':'np. 1200','label-kw':'Słowa kluczowe','ph-kw':'Wpisz frazę i naciśnij Enter...',
     'label-tone':'Ton','label-lang-out':'Język','label-extra':'Dodatkowe wytyczne',
     'ph-extra':'np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem...',
-    'toggle-web':'Pisz też o tym, czego nie ma w bazie wiedzy',
-    'toggle-web-hint':'WŁĄCZONE: gdy w bazie brakuje informacji, AI dopisze wyjaśnienie z własnej wiedzy, nie z internetu. Bez źródła, więc sprawdź przed publikacją. WYŁĄCZONE: artykuł pomija to, czego nie ma w Twoich dokumentach. Liczby i dane o firmie zawsze z bazy.',
+    'toggle-web':'Szukaj w sieci tego, czego nie ma w bazie wiedzy',
+    'toggle-web-hint':'WŁĄCZONE: gdy w bazie brakuje informacji, AI wyszuka ją w sieci i poda źródła pod artykułem. Wydłuża generowanie o ok. 30 sek. WYŁĄCZONE: artykuł pomija to, czego nie ma w Twoich dokumentach. Dane o Twojej firmie zawsze tylko z bazy wiedzy.',
     'toggle-serp':'Analiza SERP przed generowaniem',
     'toggle-serp-hint':'Przed wygenerowaniem AI sprawdza co rankuje w Google dla Twojego słowa kluczowego i wykorzystuje te dane jako dodatkowy kontekst. Wydłuża generowanie o ok. 15 sek.',
     'toggle-aeo':'Tryb AEO (treść pod cytowania AI)','toggle-aeo-hint':'Wymusza format pod silniki odpowiedzi: definicja 25-50 słów na start, liczby w intro, 5-7 pytań FAQ, krótkie listy, nagłówki jako pytania.',
@@ -2906,7 +2913,9 @@ var I18N = {
     'fakty-rodzaj-sprzecznosc':'Sprzeczność wewnątrz artykułu',
     'fakty-rodzaj-konflikt':'Polecenie konkurencji',
     'fakty-linki-czysto':'Odnośniki bez zastrzeżeń.',
-    'fakty-tryb-uzupelniania':'Tekst powstał z włączoną opcją „Pisz też o tym, czego nie ma w bazie wiedzy”, więc część zdań nie pochodzi z Twoich dokumentów. To nie jest wiedza z internetu ani dane sprawdzone: model odtwarza ją z pamięci, bez daty i bez źródła. Wszystko, co dotyczy Twojej firmy, liczb i przepisów, zweryfikuj przed publikacją.',
+    'zrodla-title':'Źródła z sieci',
+    'spin-sub-szukam':'szukam źródeł w sieci i sprawdzam, co da się potwierdzić',
+    'fakty-tryb-uzupelniania':'Tekst powstał z włączonym wyszukiwaniem w sieci, więc część zdań nie pochodzi z Twoich dokumentów, tylko ze stron wymienionych pod artykułem. Poniższe uwagi dotyczą zgodności z Twoimi źródłami: zdanie oparte na stronie zewnętrznej też się tu pojawi, bo trzeba sprawdzić, czy ta strona jest wiarygodna.',
     'fakty-rodzaj-link-obcy':'Adres spoza źródeł',
     'fakty-rodzaj-link-sciezka':'Znana domena, nieznana podstrona',
     'fakty-rodzaj-link-martwy':'Adres nie odpowiada',
@@ -3314,8 +3323,8 @@ var I18N = {
     'ph-length-custom':'e.g. 1200','label-kw':'Keywords','ph-kw':'Type a phrase and press Enter...',
     'label-tone':'Tone','label-lang-out':'Language','label-extra':'Additional guidelines',
     'ph-extra':'e.g. Focus on SME segment, include market comparison...',
-    'toggle-web':'Write about topics your sources do not cover',
-    'toggle-web-hint':'ON: when the knowledge base is silent, the AI adds an explanation from its own knowledge, not from the internet. No source, so check before publishing. OFF: the article skips what your documents do not cover. Figures and company data always come from the knowledge base.',
+    'toggle-web':'Search the web for what your sources do not cover',
+    'toggle-web-hint':'ON: when the knowledge base is silent, the AI searches the web and lists the sources under the article. Adds about 30 sec. OFF: the article skips what your documents do not cover. Anything about your company always comes from the knowledge base only.',
     'toggle-serp':'SERP analysis before generating',
     'toggle-serp-hint':'Before generating, AI checks what ranks in Google for your keyword and uses this as additional context. Adds ~15 sec.',
     'toggle-aeo':'AEO mode (content for AI citations)','toggle-aeo-hint':'Forces answer-engine format: 25-50 word definition up front, numbers in intro, 5-7 FAQ questions, short lists, headings as questions.',
@@ -3351,7 +3360,9 @@ var I18N = {
     'fakty-rodzaj-sprzecznosc':'Contradiction inside the article',
     'fakty-rodzaj-konflikt':'Recommends a competitor',
     'fakty-linki-czysto':'No findings on links.',
-    'fakty-tryb-uzupelniania':'This text was written with “write about topics your sources do not cover” enabled, so some sentences do not come from your documents. That is not web knowledge and not verified data: the model recalls it from memory, with no date and no source. Verify everything about your company, figures and regulations before publishing.',
+    'zrodla-title':'Sources from the web',
+    'spin-sub-szukam':'searching the web and checking what can be confirmed',
+    'fakty-tryb-uzupelniania':'This text was written with web search enabled, so some sentences come from the pages listed under the article rather than from your documents. The findings below are about agreement with YOUR sources: a sentence backed by an external page will still appear here, because someone has to judge whether that page is trustworthy.',
     'fakty-rodzaj-link-obcy':'Address not in the sources',
     'fakty-rodzaj-link-sciezka':'Known domain, unknown page',
     'fakty-rodzaj-link-martwy':'Address does not respond',
@@ -3910,6 +3921,13 @@ const BRAND = {
   streetAddress: '', postalCode: '', addressLocality: '', addressCountry: 'PL',
   sameAs:  [],                                      // profile spol.: ['https://linkedin.com/company/...']
   domains: [],                                      // domeny marki, np. ['twojafirma.pl'] (wykrywanie w AI; puste = z siteUrl)
+  // ── Domeny wykluczone z wyszukiwania w sieci ──
+  // Agencja SEO zglosila, ze artykul zbudowany na danych marki polecal na
+  // koncu porownywarki konkurencji. Regula w promptcie tego zabrania, ale
+  // twardsza gwarancja jest nie pokazac modelowi tych stron w ogole.
+  // Wpisuj same domeny, bez https:// i bez www.
+  blockedDomains: ['furgonetka.pl', 'sendit.pl', 'apaczka.pl', 'epaka.pl',
+                   'paczkawruchu.pl', 'szybkapaczka.pl', 'tanie-nadanie.pl'],
   // ── Kolory uzywane w generatorze grafik ──
   colors:  { primary:'#FFB000', secondary:'#1FA8C7', dark:'#1A1916', light:'#FFFFFF' }
 };
@@ -4147,22 +4165,27 @@ function blokFaktow(uzupelnia) {
       + 'fact, a mechanism, a definition or an example that is not there. Where it is '
       + 'silent, the article is silent too.';
   }
-  // Uzupelnianie wlaczone: wiedza ogolna moze TLUMACZYC, nigdy nie DOSTARCZAC
-  // twardych danych. Model nie wchodzi przy tym do internetu - siega do pamieci
-  // z treningu, ktora nie ma daty ani zrodla, wiec liczby z niej sa
-  // niesprawdzalne i nie moga trafic do tekstu.
+  // Uzupelnianie wlaczone: model ma narzedzie wyszukiwania i realnie szuka
+  // w sieci. Przypisy sa po stronie API zawsze wlaczone, wiec wolno mu wyjsc
+  // poza baze wiedzy pod jednym warunkiem - ze poda, skad wzial. Pamiec
+  // z treningu nadal nie jest zrodlem: ona jedyna nie ma ani daty, ani adresu.
   return wspolne
-    + '\n- General knowledge may EXPLAIN, never SUPPLY. You may define a general '
-    + 'industry concept or describe how something commonly works. You may NOT take '
-    + 'from general knowledge: any figure, price, rate, percentage or date; the name of '
-    + 'an institution, index, register, bulletin or publication; a methodology; a legal, '
-    + 'tax or customs rule; or anything at all about the brand that owns the knowledge '
-    + 'base. Those come from the knowledge base or they do not appear.\n'
-    + '- You are NOT browsing. You are recalling, and your recollection has no date and '
-    + 'no source. Treat every specific claim from it as unverified, which means it does '
-    + 'not go into the article.\n'
-    + '- When you explain something from general knowledge, keep it general. Do not dress '
-    + 'it up with invented specifics to make it sound sourced.';
+    + '\n- You have a web search tool. When the knowledge base does not cover '
+    + 'something the article needs, SEARCH for it. Do not answer from memory.\n'
+    + '- A fact taken from a search result must be traceable to that result. Prefer '
+    + 'primary sources: the organisation that publishes the data, a regulator, an '
+    + 'official register. A figure you cannot tie to a specific page does not go in.\n'
+    + '- YOUR OWN MEMORY IS STILL NOT A SOURCE. It has no date and no address, so it '
+    + 'cannot be checked. It may define a general industry concept in plain words. It '
+    + 'may NOT supply a figure, price, rate, percentage or date; the name of an '
+    + 'institution, index, register, bulletin or publication; a methodology; a legal, '
+    + 'tax or customs rule; or anything about the brand that owns the knowledge base.\n'
+    + '- Three outcomes, in this order: the knowledge base has it, or a search finds it, '
+    + 'or the article does not claim it. There is no fourth.\n'
+    + '- Anything about the brand itself stays knowledge-base only, even when a search '
+    + 'result mentions the brand. A third-party page is not the brand speaking.\n'
+    + '- Say when a fact is external and current: "wedlug X (data)" reads as honest '
+    + 'reporting, not as the brand claiming it.';
 }
 
 // UWAGA 2: "nadinterpretowanie zrodel". Zrodlo mowilo o przesylkach DO Niemiec,
@@ -5248,40 +5271,61 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
     document.getElementById('spin-label').textContent = isHybrid ? _t('spin-generating-seo-aio') : _t('spin-generating');
     document.getElementById('spin-sub').textContent = isHybrid ? _t('spin-sub-hybrid2') : _t('spin-sub-model');
 
-    const res = await apiFetch({
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(getMaxTokens()), system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
-    });
-    const data = await res.json();
+    const naglowkiArtykulu = {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    };
+    const cialoArtykulu = {
+      model: MODEL_TRESCI,
+      max_tokens: zRezerwa(getMaxTokens()),
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }],
+    };
+    // Wlaczony przelacznik = realne wyszukiwanie w sieci, nie samo pozwolenie
+    // na siegniecie do pamieci modelu. Przypisy przy tekscie sa wtedy zawsze
+    // wlaczone po stronie API, wiec kazde zdanie spoza bazy wiedzy da sie
+    // sprawdzic pod konkretnym adresem.
+    if (useWeb) {
+      cialoArtykulu.tools = [narzedzieWyszukiwania()];
+      document.getElementById('spin-sub').textContent = _t('spin-sub-szukam');
+    }
+    const data = useWeb
+      ? await wywolajZWyszukiwaniem(cialoArtykulu, naglowkiArtykulu)
+      : await (await apiFetch({ method: 'POST', headers: naglowkiArtykulu,
+          body: JSON.stringify(cialoArtykulu) })).json();
     if (data.error) {
       const msg = data.error.message || '';
       const type = data.error.type || '';
-      if (res.status === 429 || type === 'rate_limit_error' || msg.includes('rate limit')) {
+      if (type === 'rate_limit_error' || msg.includes('rate limit')) {
         throw new Error(_t('err-rate-limit'));
       }
-      if (res.status === 500 || msg.toLowerCase().includes('internal server error')) {
+      if (type === 'api_error' || msg.toLowerCase().includes('internal server error')) {
         throw new Error(_t('err-server-500'));
       }
-      if (res.status === 529 || msg.toLowerCase().includes('overloaded')) {
+      if (type === 'overloaded_error' || msg.toLowerCase().includes('overloaded')) {
         throw new Error(_t('err-overloaded'));
       }
       throw new Error(msg || _t('err-api-generic'));
     }
     html = (data.content || []).map(b => b.text || '').join('');
+    // Adresy, z ktorych model skorzystal. Zbieramy je tutaj, bo dalej tresc
+    // przechodzi jeszcze przez korekte premium i bloki wynikow zniknelyby.
+    zrodlaSieciowe = useWeb ? zrodlaZOdpowiedzi(data) : [];
     html = html.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
     if (lang === 'Polski') { html = html.replace(/[—–]/g, '-'); }
     // Wszystkie linki w nowej zakładce
     html = html.replace(/<a\s+href=/gi, '<a target="_blank" rel="noopener" href=').replace(/target="_blank"\s+target="_blank"/gi, 'target="_blank"');
-    // Popraw linki marki bez www (dodaje www. do bocznych domen z BRAND)
+    // Ujednolic linki marki z zapisem, ktorego marka faktycznie uzywa.
+    // WCZESNIEJ: bezwarunkowe doklejanie "www." do kazdej domeny z BRAND.
+    // Dla marki, ktorej kanoniczny adres nie ma www, zamieniało to dzialajacy
+    // odnosnik ze zrodla na taki, ktory nigdzie nie prowadzi. Ten sam blad co
+    // w regule promptu, tylko zapisany w kodzie.
     try {
       var _bh = brandHosts();
-      if (_bh.length) {
+      var _zWww = /^https?:\/\/www\./i.test(BRAND.siteUrl || '');
+      if (_bh.length && _zWww) {
         var _bre = new RegExp('href="https?:\\/\\/(' + _bh.map(function(d){ return d.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }).join('|') + ')', 'gi');
         html = html.replace(_bre, function(m, domain){ return m.replace(domain, 'www.' + domain); });
       }
@@ -5474,7 +5518,7 @@ ${html}`;
   }
 
   const art = document.getElementById('article');
-  art.innerHTML = usunPowtorzoneLinki(html);
+  art.innerHTML = dolaczZrodla(usunPowtorzoneLinki(html), zrodlaSieciowe);
   art.style.display = 'block';
   art.contentEditable = 'false';
   editMode = false;
@@ -5673,6 +5717,115 @@ function previewHistory(i) {
   document.getElementById('versions-bar').querySelectorAll('.ver-btn').forEach(el => el.remove());
 }
 
+// ─── WYSZUKIWANIE W SIECI ────────────────────────────────────────────────────
+// Przelacznik "Pisz tez o tym, czego nie ma w bazie wiedzy" przez cala historie
+// aplikacji nie dotykal internetu: zmienial trzy zdania w promptcie i pozwalal
+// modelowi siegnac do pamieci z treningu. Mial dzialac tak, jak brzmi.
+//
+// Teraz dziala: przy wlaczonym przelaczniku model dostaje narzedzie web_search,
+// realnie szuka w sieci i KAZDY fragment oparty na wyniku wraca z przypisem
+// (adres, tytul, data strony, cytowany urywek). Dzieki temu wyjscie poza baze
+// wiedzy przestaje byc niesprawdzalne: albo zdanie jest w Twoim dokumencie,
+// albo ma link do strony, z ktorej pochodzi.
+const LIMIT_WYSZUKIWAN = 5;
+
+// Wariant podstawowy narzedzia, nie nowszy z filtrowaniem wynikow. Nowszy
+// wymaga wykonywania kodu po stronie dostawcy i nie jest dostepny na Azure
+// Foundry ani na Google Cloud, a aplikacja wspiera oba.
+function narzedzieWyszukiwania() {
+  const narzedzie = { type: 'web_search_20250305', name: 'web_search', max_uses: LIMIT_WYSZUKIWAN };
+  const wykluczone = (BRAND.blockedDomains || []).filter(Boolean);
+  // Regula w promptcie zabrania polecania konkurencji, ale twardsza gwarancja
+  // jest nie pokazac modelowi tych stron w ogole.
+  if (wykluczone.length) narzedzie.blocked_domains = wykluczone;
+  return narzedzie;
+}
+
+// Przy dluzszym szukaniu API przerywa ture i oddaje stop_reason "pause_turn".
+// Trzeba wtedy odeslac odpowiedz BEZ ZMIAN, zeby model ja dokonczyl. Bez tego
+// artykul urwalby sie w polowie zdania, a wygladaloby to jak zwykly blad modelu.
+async function wywolajZWyszukiwaniem(cialo, naglowki, maxRund = 4) {
+  let wiadomosci = (cialo.messages || []).slice();
+  let ostatnia = null;
+  const bloki = [];
+
+  for (let runda = 0; runda < maxRund; runda++) {
+    const res = await apiFetch({
+      method: 'POST', headers: naglowki,
+      body: JSON.stringify(Object.assign({}, cialo, { messages: wiadomosci })),
+    });
+    const dane = await res.json();
+    if (!dane || dane.error) return dane || { error: { message: 'brak odpowiedzi' } };
+
+    for (const b of (dane.content || [])) bloki.push(b);
+    ostatnia = dane;
+    if (dane.stop_reason !== 'pause_turn') break;
+
+    // Bloki wracaja w niezmienionej postaci - wyniki wyszukiwania niosa
+    // zaszyfrowana tresc, ktora API odczytuje w kolejnej turze. Zmiana
+    // czegokolwiek w nich konczy sie bledem 400.
+    wiadomosci = wiadomosci.concat([{ role: 'assistant', content: dane.content }]);
+  }
+
+  return Object.assign({}, ostatnia, { content: bloki });
+}
+
+// Adresy, z ktorych model faktycznie skorzystal. Bierzemy je z dwoch miejsc:
+// z wynikow wyszukiwania (co zostalo znalezione) i z przypisow przy tekscie
+// (co zostalo naprawde uzyte). Te drugie sa wazniejsze, wiec ida na gore listy.
+function zrodlaZOdpowiedzi(dane) {
+  const mapa = Object.create(null);
+  function dodaj(url, tytul, data) {
+    if (!url) return null;
+    if (!mapa[url]) mapa[url] = { url: url, tytul: tytul || '', data: data || '', cytowan: 0 };
+    if (!mapa[url].tytul && tytul) mapa[url].tytul = tytul;
+    if (!mapa[url].data && data) mapa[url].data = data;
+    return mapa[url];
+  }
+  for (const blok of (dane && dane.content) || []) {
+    if (blok.type === 'web_search_tool_result' && Array.isArray(blok.content)) {
+      for (const w of blok.content) {
+        if (w && w.type === 'web_search_result') dodaj(w.url, w.title, w.page_age);
+      }
+    }
+    for (const c of (blok.citations || [])) {
+      if (c && c.url) {
+        const wpis = dodaj(c.url, c.title, '');
+        if (wpis) wpis.cytowan += 1;
+      }
+    }
+  }
+  return Object.keys(mapa).map(function (k) { return mapa[k]; })
+    .sort(function (a, b) { return b.cytowan - a.cytowan; });
+}
+
+// Lista zrodel doklejana do artykulu przed blokiem meta description, zeby
+// pojechala razem z tekstem do DOCX-a, PDF-a i WordPressa. Klasa zrodla-box
+// wypada ze statystyk tak samo jak meta-box: to aparat naukowy, nie tresc.
+function blokZrodel(zrodla) {
+  if (!zrodla || !zrodla.length) return '';
+  const pozycje = zrodla.map(function (z) {
+    const nazwa = z.tytul || z.url;
+    const data = z.data ? ' <span style="color:var(--text3)">(' + escapeHtml(z.data) + ')</span>' : '';
+    return '<li><a href="' + escapeHtml(z.url) + '" target="_blank" rel="noopener">'
+      + escapeHtml(nazwa) + '</a>' + data + '</li>';
+  }).join('');
+  return '<div class="zrodla-box"><div class="zrodla-label">' + escapeHtml(_t('zrodla-title'))
+    + '</div><ul>' + pozycje + '</ul></div>';
+}
+
+// Wstawiamy przed meta description, bo ono ma zostac na samym koncu.
+function dolaczZrodla(html, zrodla) {
+  const blok = blokZrodel(zrodla);
+  if (!blok) return html;
+  const pojemnik = document.createElement('div');
+  pojemnik.innerHTML = html;
+  const meta = pojemnik.querySelector('.meta-box');
+  if (meta) meta.insertAdjacentHTML('beforebegin', blok);
+  else pojemnik.insertAdjacentHTML('beforeend', blok);
+  return pojemnik.innerHTML;
+}
+
 // ─── KONTROLA ODNOSNIKOW ─────────────────────────────────────────────────────
 // Agencja pytala o linkowanie tylko przy powtorzeniach, ale ta sama logika co
 // przy liczbach dotyczy adresow: zmyslony adres wyglada dokladnie jak wziety
@@ -5694,7 +5847,9 @@ function kluczAdresu(adres) {
 function odnosnikiArtykulu() {
   const art = document.getElementById('article');
   if (!art) return [];
-  return Array.from(art.querySelectorAll('a[href]')).map(function (a) {
+  return Array.from(art.querySelectorAll('a[href]')).filter(function (a) {
+    return !a.closest('.zrodla-box');
+  }).map(function (a) {
     return { adres: a.getAttribute('href'), kotwica: (a.textContent || '').trim() };
   }).filter(function (l) { return /^https?:\/\//i.test(l.adres); });
 }
@@ -5703,6 +5858,10 @@ function odnosnikiArtykulu() {
 // zrodlach - i jako pole url dokumentu, i jako adres w jego tresci.
 function adresyZeZrodel() {
   const zbior = Object.create(null);
+  // Strony znalezione przez model w trakcie pisania sa zrodlami tego artykulu
+  // na rowni z dokumentami - inaczej kontrola zglaszalaby wlasna bibliografie
+  // jako adresy nieznanego pochodzenia.
+  zrodlaSieciowe.forEach(function (z) { zbior[kluczAdresu(z.url)] = true; });
   getSelectedDocs().forEach(function (d) {
     if (d.url) zbior[kluczAdresu(d.url)] = true;
     const znalezione = String(d.content || '').match(/https?:\/\/[^\s"'<>)\]]+/g) || [];
@@ -5787,7 +5946,8 @@ async function sprawdzCzyLinkiZyja(linki) {
 // Ten przebieg robi pierwsze przejscie maszynowo: zestawia gotowy artykul
 // ze zrodlami i wypisuje, co nie ma pokrycia. Niczego nie poprawia sam.
 
-let trybUzupelniania = false;   // czy tekst powstal z wiedza ogolna modelu
+let trybUzupelniania = false;   // czy przy pisaniu bylo wyszukiwanie w sieci
+let zrodlaSieciowe = [];        // adresy, z ktorych model skorzystal
 let faktyWynik = null;          // ostatni wynik, zeby nie liczyc dwa razy
 let faktySygnatura = '';        // dla jakiego artykulu policzony
 
@@ -5860,13 +6020,15 @@ async function uruchomKontroleFaktow(wymus) {
     + '  "konflikt"  - the article recommends a competitor, a comparison site, an '
     + 'aggregator or a marketplace over what the sources offer.\n'
     + (trybUzupelniania
-        ? 'MODE: the article was written with "fill gaps with general knowledge" ON, so '
-          + 'general explanations of industry concepts are allowed and are NOT findings. '
-          + 'What is still a finding: any figure, date, price, percentage, institution, '
-          + 'index, publication, methodology, legal rule, or any statement about the brand '
-          + 'itself that is not in the sources. Report those under "liczba" or "zakres" '
-          + 'as usual - the author needs to know they came from the model, not from the '
-          + 'documents.\n'
+        ? 'MODE: the article was written with WEB SEARCH enabled. The pages it drew on are '
+          + 'listed below under WEB SOURCES. A claim traceable to one of those pages is '
+          + 'expected and is NOT a finding on its own - say so only if the page looks '
+          + 'unsuitable as evidence for that kind of claim.\n'
+          + 'These ARE still findings: a figure, date, institution, index, publication, '
+          + 'methodology or legal rule that appears in neither the knowledge base nor the '
+          + 'web sources; and ANY statement about the brand that owns the knowledge base '
+          + 'which is not in the knowledge base, even if some external page repeats it. '
+          + 'A third party is not the brand speaking.\n'
         : 'MODE: the article was written from the knowledge base ONLY, so anything not '
           + 'traceable to the sources is a finding.\n')
     + 'Judge ONLY against the supplied sources. General knowledge is not evidence. '
@@ -5895,6 +6057,12 @@ async function uruchomKontroleFaktow(wymus) {
         system: system,
         messages: [{ role: 'user', content:
           'SOURCES:\n' + zrodla.slice(0, 120000)
+          + (zrodlaSieciowe.length
+              ? '\n\n---\n\nWEB SOURCES the article was allowed to draw on:\n'
+                + zrodlaSieciowe.map(function (z) {
+                    return '- ' + z.url + (z.tytul ? ' (' + z.tytul + ')' : '');
+                  }).join('\n')
+              : '')
           + '\n\n---\n\nARTICLE:\n' + tekstArtykulu.slice(0, 40000) }]
       })
     });
@@ -5974,6 +6142,10 @@ function tekstProzy(korzen) {
   const kopia = korzen.cloneNode(true);
   const meta = kopia.querySelector('.meta-box');
   if (meta) meta.remove();
+  // Lista zrodel to aparat naukowy, nie proza: tytuly stron zawyzalyby
+  // dlugosc slow, a adresy rozwalaly liczenie zdan.
+  const zrodla = kopia.querySelector('.zrodla-box');
+  if (zrodla) zrodla.remove();
   const bloki = kopia.querySelectorAll('p, li, td');
   if (!bloki.length) return kopia.innerText || kopia.textContent || '';
   return Array.from(bloki).map(function (el) {
@@ -5984,6 +6156,10 @@ function tekstProzy(korzen) {
 function showArticleStats(html) {
   const tmp = document.createElement('div');
   tmp.innerHTML = html;
+  // Bibliografia nie jest trescia artykulu - nie wlicza sie do liczby slow
+  // ani do czasu czytania, tak samo jak meta description.
+  const _zr = tmp.querySelector('.zrodla-box');
+  if (_zr) _zr.remove();
   const text = tmp.innerText || tmp.textContent || '';
   const words = text.split(/\s+/).filter(Boolean).length;
   const readMin = Math.max(1, Math.ceil(words / 200));
