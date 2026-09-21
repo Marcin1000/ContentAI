@@ -206,7 +206,7 @@ KONTROLE = [
     ("F27/linki", "powtorzone odnosniki usuwane maszynowo",
      "function usunPowtorzoneLinki(html) {", None, None),
     ("F27/uzycie", "artykul przechodzi przez odchudzanie linkow",
-     "art.innerHTML = usunPowtorzoneLinki(html);",
+     "art.innerHTML = dolaczZrodla(usunPowtorzoneLinki(html), zrodlaSieciowe);",
      "\n  art.innerHTML = html;\n  art.style.display = 'block';", None),
 
     # Wszystkie bloki doklejane jednym wywolaniem - zeby nie dalo sie dodac
@@ -320,19 +320,19 @@ KONTROLE = [
     # prawdziwe i nie dalo sie z tego wywnioskowac, czy chce sie to wlaczyc.
     # Nazwa opisuje skutek dla artykulu, zastrzezenia sa w podpowiedzi.
     ("F38/etykieta", "przelacznik nazwany skutkiem, nie mechanizmem",
-     "'toggle-web':'Pisz też o tym, czego nie ma w bazie wiedzy'",
+     "'toggle-web':'Szukaj w sieci tego, czego nie ma w bazie wiedzy'",
      "'toggle-web':'Uzupełnij luki wiedzą z internetu'", None),
     ("F38/podpowiedz", "podpowiedz rozpisuje oba stany przelacznika",
      "WŁĄCZONE: gdy w bazie brakuje informacji", None, None),
-    ("F38/niesiec", "podpowiedz prostuje, ze to nie internet",
-     "z własnej wiedzy, nie z internetu", None, None),
+    ("F38/czas", "podpowiedz uprzedza o dluzszym generowaniu",
+     "Wydłuża generowanie o ok. 30 sek.", None, None),
 
     # Bezwarunkowe "baza wiedzy jest jedynym zrodlem faktow" stalo w
     # sprzecznosci z galezia promptu mowiaca "mozesz uzupelnic wiedza ogolna".
     ("F38/tryb", "reguly pokrycia zalezne od trybu uzupelniania",
      "blokFaktow(opcje.uzupelnia)", None, None),
-    ("F38/tlumaczy", "wiedza ogolna tlumaczy, nie dostarcza danych",
-     "General knowledge may EXPLAIN, never SUPPLY", None, None),
+    ("F38/pamiec", "pamiec modelu nie jest zrodlem takze przy wyszukiwaniu",
+     "YOUR OWN MEMORY IS STILL NOT A SOURCE", None, None),
     ("F38/luki", "uzupelnianie luk zawsze tylko ze zrodel",
      "blokFaktow(false)", None, None),
 
@@ -342,6 +342,40 @@ KONTROLE = [
      "trybUzupelniania = useWeb;", None, None),
     ("F39/nota", "nota w panelu o pochodzeniu zdan spoza zrodel",
      "'fakty-tryb-uzupelniania':", None, None),
+
+    # -- piata runda: przelacznik naprawde otwiera siec --
+
+    # Przez cala historie aplikacji przelacznik "uzupelnij luki" nie dotykal
+    # internetu. Teraz daje modelowi narzedzie wyszukiwania, a przypisy sa po
+    # stronie API zawsze wlaczone, wiec kazde zdanie spoza bazy wiedzy ma adres.
+    ("F40/narzedzie", "wyszukiwanie w sieci jako narzedzie modelu",
+     "function narzedzieWyszukiwania() {", None, None),
+    ("F40/wariant", "podstawowy wariant narzedzia, dostepny takze na Azure i GCP",
+     "type: 'web_search_20250305', name: 'web_search'", None, None),
+    ("F40/wpiete", "artykul dostaje narzedzie przy wlaczonym przelaczniku",
+     "cialoArtykulu.tools = [narzedzieWyszukiwania()]", None, None),
+    ("F40/blokada", "domeny konkurencji wykluczone z wyszukiwania",
+     "blockedDomains: [", None, None),
+
+    # Przy dluzszym szukaniu API przerywa ture. Bez odeslania odpowiedzi
+    # artykul urywalby sie w polowie zdania i wygladalo to jak blad modelu.
+    ("F40/pauza", "przerwana tura jest dokanczana, nie urywana",
+     "if (dane.stop_reason !== 'pause_turn') break;", None, None),
+
+    # Adresy, z ktorych model skorzystal, jada razem z tekstem do DOCX-a i PDF-a.
+    ("F41/zrodla", "zbieranie adresow z wynikow i z przypisow",
+     "function zrodlaZOdpowiedzi(dane) {", None, None),
+    ("F41/lista", "lista zrodel doklejana przed meta description",
+     "function dolaczZrodla(html, zrodla) {", None, None),
+    ("F41/bezstatystyk", "bibliografia nie wchodzi do statystyk tekstu",
+     "const zrodla = kopia.querySelector('.zrodla-box');", None, None),
+    ("F41/kontrola", "adresy z sieci sa dla kontroli zrodlami, nie obcymi",
+     "zrodlaSieciowe.forEach(function (z) { zbior[kluczAdresu(z.url)] = true; });", None, None),
+
+    # Kodowy blizniak reguly "zawsze z www": doklejanie www. do kazdej domeny
+    # marki zamieniało dzialajacy odnosnik na martwy, gdy marka www nie uzywa.
+    ("F42/www", "www doklejane tylko gdy adres marki sam go uzywa",
+     "if (_bh.length && _zWww) {", "if (_bh.length) {", None),
 
     # ── warstwa reskinu ──
     ("R/splash", "splash raz na sesje",
