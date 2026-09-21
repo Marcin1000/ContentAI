@@ -466,8 +466,17 @@ KONTROLE = [
     # albo przelacznik byl wylaczony - trzy rozne przebiegi, jeden obraz.
     ("F50/licznik", "liczba zapytan do sieci i przypisow policzona",
      "function statystykiWyszukiwania(dane) {", None, None),
-    ("F50/wskaznik", "przebieg wyszukiwania widoczny w pasku statystyk",
-     "pokazStanSieci(stanSieci, zrodlaSieciowe.length);", None, None),
+    ("F50/wskaznik", "przebieg wyszukiwania widoczny po wygenerowaniu",
+     "zrodlaSieciowe);\n  pokazStanSieci(stanSieci, zrodlaSieciowe.length);", None, None),
+
+    # Wartosc jest ustawiana programowo, wiec nie ma data-i18n i applyLang
+    # jej nie rusza: w angielskim interfejsie stalo "Web: nie szukal".
+    ("F51/jezyk", "stan sieci przerysowany przy zmianie jezyka",
+     "if (typeof przerysujStanSieci === 'function') przerysujStanSieci();", None, None),
+    ("F51/odmiana", "rzeczownik odmieniony po liczebniku",
+     "function formaZrodel(n) {", None, None),
+    ("F51/bezosobowo", "stan sieci opisany bezosobowo, nie jak zachowanie osoby",
+     "_t('siec-bez-wyszukiwania')", "'siec-nie-szukal'", None),
     ("F50/historia", "wskaznik sieci nie opisuje artykulu z historii",
      "    trybUzupelniania = false;\n    pokazStanSieci(null, 0);", None, None),
 
