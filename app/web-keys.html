@@ -2902,12 +2902,13 @@ var I18N = {
     'label-tone':'Ton','label-lang-out':'Język','label-extra':'Dodatkowe wytyczne',
     'ph-extra':'np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem...',
     'astat-siec':'Sieć:',
-    'siec-zrodla':'{n} źródeł',
-    'siec-zrodla-opis':'Model wykonał {q} zapytań do sieci. Strony, na które się powołał, są wymienione pod artykułem.',
-    'siec-bez-zrodel':'0 źródeł',
-    'siec-bez-zrodel-opis':'Model wykonał {q} zapytań do sieci, ale żadnego zdania na wynikach nie oparł - cały tekst pochodzi z bazy wiedzy. To nie jest błąd.',
-    'siec-nie-szukal':'nie szukał',
-    'siec-nie-szukal-opis':'Model nie wyszedł do sieci: uznał, że baza wiedzy pokrywa temat. Szuka tylko tam, gdzie baza milczy.',
+    'siec-forma-1':'źródło',
+    'siec-forma-24':'źródła',
+    'siec-forma-5':'źródeł',
+    'siec-zrodla-opis':'Zapytań do sieci: {q}. Strony, na które powołuje się tekst, są wymienione pod artykułem.',
+    'siec-bez-zrodel-opis':'Zapytań do sieci: {q}. Żadne zdanie nie zostało oparte na wynikach, całość pochodzi z bazy wiedzy. To nie jest błąd.',
+    'siec-bez-wyszukiwania':'bez wyszukiwania',
+    'siec-bez-wyszukiwania-opis':'Bez zapytań do sieci: baza wiedzy pokryła temat. Wyszukiwanie uruchamia się tylko tam, gdzie baza milczy.',
     'toggle-web':'Szukaj w sieci i podawaj źródła',
     'toggle-web-hint':'Czego brakuje w bazie, AI poszuka w sieci i wymieni źródła pod artykułem. Dane o Twojej firmie zawsze tylko z bazy. Wydłuża generowanie o ok. 30 sek.',
     'toggle-serp':'Analiza SERP przed generowaniem',
@@ -3379,12 +3380,13 @@ var I18N = {
     'label-tone':'Tone','label-lang-out':'Language','label-extra':'Additional guidelines',
     'ph-extra':'e.g. Focus on SME segment, include market comparison...',
     'astat-siec':'Web:',
-    'siec-zrodla':'{n} sources',
-    'siec-zrodla-opis':'The model ran {q} web searches. The pages it drew on are listed under the article.',
-    'siec-bez-zrodel':'0 sources',
-    'siec-bez-zrodel-opis':'The model ran {q} web searches but based no sentence on the results - the whole text comes from the knowledge base. This is not an error.',
-    'siec-nie-szukal':'did not search',
-    'siec-nie-szukal-opis':'The model did not go online: it judged the knowledge base to cover the topic. It searches only where the base is silent.',
+    'siec-forma-1':'source',
+    'siec-forma-24':'sources',
+    'siec-forma-5':'sources',
+    'siec-zrodla-opis':'Web searches: {q}. The pages the text draws on are listed under the article.',
+    'siec-bez-zrodel-opis':'Web searches: {q}. No sentence was based on the results, the whole text comes from the knowledge base. This is not an error.',
+    'siec-bez-wyszukiwania':'no search',
+    'siec-bez-wyszukiwania-opis':'No web searches: the knowledge base covered the topic. Search runs only where the base is silent.',
     'toggle-web':'Search the web and cite sources',
     'toggle-web-hint':'What the knowledge base lacks, the AI looks up online and lists the sources under the article. Anything about your company still comes from the knowledge base only. Adds about 30 sec.',
     'toggle-serp':'SERP analysis before generating',
@@ -3888,6 +3890,10 @@ function applyLang(lang) {
   try { if (typeof renderHistoryFilters === 'function') renderHistoryFilters(); } catch(e) {}
   // Podpisy generatora grafik (ustawiane dynamicznie, bez data-i18n) - przetlumacz na biezacy jezyk
   try { if (typeof imgRenderHistory === 'function') imgRenderHistory(); } catch(e) {}
+  // Stan wyszukiwania w sieci tez jest ustawiany programowo. Etykieta ma
+  // data-i18n i tlumaczyla sie sama, a wartosc obok zostawala w poprzednim
+  // jezyku - w angielskim interfejsie stalo "Web: nie szukal".
+  try { if (typeof przerysujStanSieci === 'function') przerysujStanSieci(); } catch(e) {}
   try {
     const rl = document.getElementById('img-result-label');
     const rw = document.getElementById('img-result-wrap');
@@ -5964,8 +5970,29 @@ function statystykiWyszukiwania(dane) {
   return { szukan: szukan, cytowan: cytowan };
 }
 
+// Odmiana rzeczownika po liczebniku. Po polsku "1 zrodel" i "3 zrodlo"
+// wygladaja jak usterka, a ten napis stoi w pasku przy kazdym artykule.
+// Klucze wolane literalnie, zeby audyt tlumaczen je widzial.
+// Wywolywane przy zmianie jezyka. Osobna funkcja, bo applyLang stoi
+// w pliku wyzej niz zmienne, ktore opisuja ostatni przebieg.
+function przerysujStanSieci() {
+  pokazStanSieci(stanSieci, zrodlaSieciowe.length);
+}
+
+function formaZrodel(n) {
+  if (n === 1) return _t('siec-forma-1');
+  const jednosci = n % 10;
+  const setki = n % 100;
+  if (jednosci >= 2 && jednosci <= 4 && (setki < 12 || setki > 14)) return _t('siec-forma-24');
+  return _t('siec-forma-5');
+}
+
 // Opis przebiegu do paska statystyk. null = przelacznik byl wylaczony,
 // wiec nie ma o czym mowic.
+//
+// Brzmienie jest bezosobowe. "Nie szukal" opisuje model jak osobe, a to
+// w pasku obok liczby slow i wskaznika FOG czyta sie obco - tam wszystko
+// inne jest pomiarem, nie relacja z czyjegos zachowania.
 function pokazStanSieci(stan, zrodel) {
   const wrap = document.getElementById('stat-siec-wrap');
   const sep = document.getElementById('stat-siec-sep');
@@ -5976,19 +6003,20 @@ function pokazStanSieci(stan, zrodel) {
   wrap.style.display = '';
   sep.style.display = '';
   if (zrodel > 0) {
-    val.textContent = _t('siec-zrodla').replace('{n}', String(zrodel));
+    val.textContent = zrodel + ' ' + formaZrodel(zrodel);
     val.style.color = '';
     wrap.title = _t('siec-zrodla-opis').replace('{q}', String(stan.szukan));
   } else if (stan.szukan > 0) {
-    // Szukal, ale zadnego zdania na tym nie oparl. To nie jest awaria -
-    // to znaczy, ze baza wiedzy wystarczyla. Ale trzeba to powiedziec.
-    val.textContent = _t('siec-bez-zrodel');
+    // Zapytania byly, ale zadne zdanie nie oparlo sie na wynikach. To nie
+    // jest awaria - to znaczy, ze baza wiedzy wystarczyla. Ale trzeba to
+    // powiedziec, bo inaczej wyglada jak wylaczony przelacznik.
+    val.textContent = '0 ' + formaZrodel(0);
     val.style.color = '#B45309';
     wrap.title = _t('siec-bez-zrodel-opis').replace('{q}', String(stan.szukan));
   } else {
-    val.textContent = _t('siec-nie-szukal');
+    val.textContent = _t('siec-bez-wyszukiwania');
     val.style.color = '#B45309';
-    wrap.title = _t('siec-nie-szukal-opis');
+    wrap.title = _t('siec-bez-wyszukiwania-opis');
   }
 }
 
