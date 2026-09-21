@@ -140,6 +140,99 @@ KONTROLE = [
      '<div class="placeholder-box"><svg viewBox="0 0 32 32"',
      '<div class="placeholder-box">✦</div>', None),
 
+    # ── poprawki po audycie agencji SEO (wrzesien 2026) ──
+    # Agencja testowala aplikacje na artykule o wysylce paczek i przyslala
+    # liste tego, co nie dziala. Kazda pozycja ponizej pilnuje jednej uwagi.
+    # Para "jest"/"niema" lapie zarowno skasowanie poprawki, jak i cofniecie
+    # kodu do stanu sprzed niej.
+
+    # "Nie dziala dodawanie linkow do bazy wiedzy - za kazdym razem fiasko".
+    # Aplikacja kazala modelowi "odwiedzic adres" przez wyszukiwarke, ktora
+    # nie pobiera stron. Teraz jest narzedzie do pobierania.
+    ("F20/pobieranie", "strona pobierana narzedziem web_fetch, nie wyszukiwarka",
+     "type: 'web_fetch_20250910'",
+     "Visit this URL and extract ALL text content from the page", None),
+    ("F20/zwyniku", "tekst czytany z bloku wyniku, nie z prozy modelu",
+     "block.type !== 'web_fetch_tool_result'", None, None),
+    ("F20/serwer", "wariant proxy pyta najpierw wlasny serwer",
+     "await fetch('/api/strona', {", None, ("proxy",)),
+
+    # "Narzedzie wymysla dane, jak czegos nie znajdzie w materiale zrodlowym".
+    # Prompt wymagal liczby w pierwszym akapicie, w kazdym akapicie i w kazdym
+    # punkcie podsumowania - model dopisywal je, zeby spelnic warunek.
+    ("F21/fakty", "blok o pokryciu liczb w zrodlach",
+     "function blokFaktow() {", None, None),
+    ("F21/bezprzymusu", "pierwszy akapit nie musi zawierac liczby",
+     None, "The first paragraph MUST include a key number", None),
+    ("F21/bezpunktow", "punkty podsumowania nie musza zawierac liczby",
+     None, "Each bullet MUST contain at least one specific number", None),
+
+    # "Nadinterpretowanie zrodel": prawo pocztowe Niemiec w tekscie o Wloszech.
+    ("F21/zakres", "blok o zakresie faktu ze zrodla",
+     "function blokZakresu() {", None, None),
+    # "Tresc jest niespojna w obrebie jednego artykulu" (akapit kontra tabela).
+    ("F21/spojnosc", "blok o spojnosci liczb w artykule",
+     "function blokSpojnosci() {", None, None),
+
+    # "Intencja tekstu jest zle zinterpretowana" - zrodlo B2B, zapytanie B2C.
+    ("F22/odbiorca", "pole wyboru odbiorcy",
+     'id="audience"', None, None),
+    ("F22/blok", "blok o odbiorcy niezaleznym od zrodla",
+     "function blokOdbiorcy(odbiorca) {", None, None),
+
+    # "Tresc troche sie klóci z biznesem" - artykul polecal porownywarki.
+    ("F23/konflikt", "blok o konflikcie interesu",
+     "function blokKonfliktu() {", None, None),
+
+    # "Pole wyboru ton obiecuje duzo, ale nie dowozi" - szlo jedno slowo.
+    ("F24/ton", "kazdy ton ma wlasne parametry, nie sama nazwe",
+     "var OPISY_TONU = {", None, None),
+    ("F24/jezyk", "ton rozpoznawany po pozycji, nie po tekscie opcji",
+     "function tonKanoniczny() {", None, None),
+
+    # "Teksty sa mocno monotonne", "wszystkie pokazuja zbyt duzy FOG".
+    ("F25/rytm", "blok o rytmie zdan i wskazniku FOG",
+     "function blokRytmu() {", None, None),
+    ("F25/akapity", "akapity nie maja stalej dlugosci",
+     None, "keep paragraphs to 3-5 sentences", None),
+
+    # "Zadna z wersji nie schodzi do H3".
+    ("F26/h3", "blok o glebokosci naglowkow",
+     "function blokStruktury() {", None, None),
+    ("F26/licznik", "liczba H3 widoczna w statystykach",
+     'id="stat-h3"', None, None),
+
+    # "Linkowanie powtarza link z bazy wiedzy wielokrotnie".
+    ("F27/linki", "powtorzone odnosniki usuwane maszynowo",
+     "function usunPowtorzoneLinki(html) {", None, None),
+    ("F27/uzycie", "artykul przechodzi przez odchudzanie linkow",
+     "art.innerHTML = usunPowtorzoneLinki(html);",
+     "\n  art.innerHTML = html;\n  art.style.display = 'block';", None),
+
+    # Wszystkie bloki doklejane jednym wywolaniem - zeby nie dalo sie dodac
+    # polowy regul i zapomniec o reszcie.
+    ("F27/wpiete", "reguly doklejane do promptu artykulu",
+     "systemPrompt += blokRzetelnosci({", None, None),
+
+    # Pierwsze przejscie weryfikacji za czlowieka.
+    ("F28/faktycheck", "przebieg kontroli faktow",
+     "async function uruchomKontroleFaktow(wymus) {", None, None),
+    ("F28/przycisk", "kontrola faktow w menu Ocen",
+     'id="fakty-btn"', None, None),
+
+    # Model byl wpisany na sztywno w ponad dwudziestu miejscach.
+    ("F29/stala", "jedna stala modelu tresci",
+     "const MODEL_TRESCI     = 'claude-opus-5';", None, None),
+    ("F29/bezliteralu", "zaden endpoint nie ma modelu wpisanego na sztywno",
+     None, "model: 'claude-sonnet-4-6'", None),
+    ("F29/bezTemperatury", "brak pola temperature (rodzina 5 odrzuca je bledem)",
+     None, "temperature:", None),
+    ("F29/rezerwa", "zapas tokenow na rozumowanie przy pisaniu",
+     "function zRezerwa(tokeny) {", None, None),
+    ("F29/cennik", "koszt liczony wedlug modelu z odpowiedzi",
+     "function kosztOdpowiedzi(dane) {",
+     "sessionCost += (inp * 0.000003) + (out * 0.000015);\n            updateCostDisplay();", None),
+
     # ── warstwa reskinu ──
     ("R/splash", "splash raz na sesje",
      'id="cin-splash"', None, None),

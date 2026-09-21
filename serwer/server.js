@@ -30,6 +30,7 @@ const baza = require('./baza.js');
 const openseo = require('./openseo.js');
 const openseoMcp = require('./openseo-mcp.js');
 const plany = require('./plany.js');
+const strona = require('./strona.js');
 
 const KATALOG = __dirname;
 const APP = path.join(KATALOG, '..', 'app');
@@ -1032,6 +1033,24 @@ async function obsluz(req, res) {
       katalog: KONF.katalogUzycia,
       uzytkownik: kontoSesji(sesja),
     }));
+  }
+
+  // ─── Pobranie strony WWW do bazy wiedzy ────────────────────────────────────
+  // Zwyklym zadaniem HTTP, bez modelu. Nie liczy sie do pakietu, bo nie
+  // kosztuje ani jednego tokenu.
+  if (sciezka === '/api/strona' && req.method === 'POST') {
+    let dane;
+    try {
+      dane = await cialoJson(req);
+    } catch (e) {
+      return odpowiedzJson(res, e.status || 400, { error: e.message });
+    }
+    try {
+      return odpowiedzJson(res, 200, await strona.pobierz(String(dane.adres || '')));
+    } catch (e) {
+      // 502, bo blad jest po stronie pobieranej witryny, nie zadania.
+      return odpowiedzJson(res, 502, { error: e.message || 'Nie udalo sie pobrac strony' });
+    }
   }
 
   // ─── Baza wiedzy ───────────────────────────────────────────────────────────

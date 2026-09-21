@@ -156,6 +156,27 @@ która ścieżka zadziałała.
 **Baza wiedzy**. Lista łączy oba zakresy, 🌐 to wspólny, 🔒 prywatny; wybór zakresu przy
 dodawaniu pokazuje się wyłącznie adminowi.
 
+### Pobieranie stron do bazy wiedzy
+
+`POST /api/strona` z ciałem `{ "adres": "https://..." }` zwraca `{ adres, tytul, tekst, slowa }`.
+
+Powstało po audycie agencji SEO, która zgłosiła, że dodawanie linków nie działa w ogóle.
+Nie działało, bo aplikacja nie pobierała strony: prosiła model, żeby „wszedł na adres"
+narzędziem `web_search`. To narzędzie szuka w internecie, a nie pobiera wskazanego
+dokumentu, więc w odpowiedzi przychodziło streszczenie wyników wyszukiwania albo zdanie
+„nie mogę odwiedzić tej strony".
+
+Teraz serwer pobiera stronę zwykłym żądaniem HTTP, bez modelu i bez tokenów, i zwraca
+sam tekst: bez skryptów, stylów, menu i stopki, z zachowanymi poziomami nagłówków.
+Aplikacja woła ten endpoint jako pierwszy; gdy serwera nie ma (warianty `keys` i `owner`)
+albo strona odmówi, schodzi na narzędzie `web_fetch` modelu.
+
+**Adres jest sprawdzany przy każdym skoku przekierowania.** Bez tego endpoint byłby
+okienkiem do sieci wewnętrznej: wystarczyłoby podać `http://169.254.169.254/`, żeby
+metadane maszyny trafiły do bazy wiedzy. Odrzucane są pętla zwrotna, zakresy prywatne,
+link-local, CGNAT i wszystko, czego nie da się rozpoznać jako adres publiczny. Limity:
+4 MB odpowiedzi, 400 tys. znaków tekstu, 5 przekierowań, 20 sekund.
+
 Przy generowaniu aplikacja woła `/api/baza/szukaj` i wstawia zwrócony blok do promptu -
 bez zaznaczania czegokolwiek przez użytkownika. Dawna baza w `localStorage` działa dalej
 i dokłada się do tego samego promptu, więc aktualizacja nie zabiera nikomu jego dokumentów.
