@@ -1087,6 +1087,41 @@ async function testyStrony() {
     const wewnetrzny = await strona.sprawdzOdnosniki(['http://127.0.0.1/x'],
       async () => odp(200));
     sprawdz('adres wewnetrzny ma stan "odrzucony"', wewnetrzny[0].stan === 'odrzucony');
+
+    // Adresy szly po kolei, wiec czasy sie sumowaly: przy kilku witrynach,
+    // ktore nie odpowiadaja na HEAD, panel kontroli faktow stal pusty
+    // minutami. Teraz ida rownolegle - i wynik musi zostac w kolejnosci
+    // wejscia, bo wywolujacy zestawia go z wlasna lista.
+    const dziesiec = Array.from({ length: 10 }, (_, i) => 'https://example.com/' + i);
+    let naraz = 0;
+    let szczyt = 0;
+    const start = Date.now();
+    const rowno = await strona.sprawdzOdnosniki(dziesiec, async (adres) => {
+      naraz += 1;
+      szczyt = Math.max(szczyt, naraz);
+      await new Promise((r) => setTimeout(r, 60));
+      naraz -= 1;
+      return odp(200);
+    });
+    const trwalo = Date.now() - start;
+    sprawdz('kolejnosc wyniku odpowiada kolejnosci wejscia',
+      rowno.length === 10 && rowno.every((w, i) => w.adres === dziesiec[i]));
+    sprawdz('adresy sprawdzane sa rownolegle, nie po kolei', szczyt > 1);
+    sprawdz('rownoleglosc jest ograniczona, nie zalewa witryny', szczyt <= 6);
+    // Po kolei bylo by 10 x 60 ms = 600 ms; przy szesciu naraz okolo 120 ms.
+    sprawdz('dziesiec adresow po 60 ms schodzi ponizej 400 ms', trwalo < 400);
+
+    const pustaLista = await strona.sprawdzOdnosniki([], async () => odp(200));
+    sprawdz('pusta lista nie zawiesza sie na robotnikach',
+      Array.isArray(pustaLista) && pustaLista.length === 0);
+
+    // Limit czasu przy sprawdzaniu odnosnika musi byc wlasny. Brany z
+    // pobierania stron (20 s) kazal czekac minutami, a tu interesuje nas
+    // sam kod odpowiedzi, nie tresc.
+    const zrodloStrony = require('node:fs').readFileSync(require('node:path').join(__dirname, 'strona.js'), 'utf8');
+    sprawdz('sprawdzanie odnosnikow ma wlasny, krotszy limit czasu',
+      /const CZAS_ODNOSNIKA = \d+;/.test(zrodloStrony)
+      && zrodloStrony.includes('AbortSignal.timeout(CZAS_ODNOSNIKA)'));
   }
 }
 

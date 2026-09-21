@@ -447,6 +447,30 @@ KONTROLE = [
     ("F48/wordpress", "nazwa z obcego WordPressa z ucieczka znakow",
      "zalogowano jako: ${escapeHtml(String(d.name || ''))}", None, ("proxy", "keys", "owner")),
 
+    # -- panel kontroli faktow milczal, a wyszukiwanie w sieci bylo nieme --
+    # Spinner wlaczal sie DOPIERO po sprawdzeniu odnosnikow, a to potrafi
+    # trwac dziesiatki sekund. Panel byl przez ten czas otwarty i pusty,
+    # wiec wygladal na zepsuty. Zmierzone: 6034 ms do pierwszego znaku.
+    ("F50/spinner", "stan kontroli faktow widoczny przed zapytaniami",
+     "etapFaktow('fakty-etap-linki');",
+     "  wynikEl.innerHTML = '';\n  ladowanie.style.display = 'block';\n  odswiez.style.display = 'none';",
+     None),
+    ("F50/rownolegle", "odnosniki i tresc sprawdzane rownolegle, nie po kolei",
+     "const obietnicaLinkow = (async function () {", None, None),
+    ("F50/bez-tekstu", "brak artykulu nazwany, nie cicha ucieczka z funkcji",
+     "escapeHtml(_t('fakty-brak-tekstu'))", None, None),
+    ("F50/przebieg", "starszy przebieg kontroli nie nadpisuje nowszego",
+     "const moj = ++faktyPrzebieg;", None, None),
+
+    # "Raz generuje zrodla, raz nie": model nie szukal, szukal i nic nie wzial,
+    # albo przelacznik byl wylaczony - trzy rozne przebiegi, jeden obraz.
+    ("F50/licznik", "liczba zapytan do sieci i przypisow policzona",
+     "function statystykiWyszukiwania(dane) {", None, None),
+    ("F50/wskaznik", "przebieg wyszukiwania widoczny w pasku statystyk",
+     "pokazStanSieci(stanSieci, zrodlaSieciowe.length);", None, None),
+    ("F50/historia", "wskaznik sieci nie opisuje artykulu z historii",
+     "    trybUzupelniania = false;\n    pokazStanSieci(null, 0);", None, None),
+
     # -- konfiguracja marki na serwerze --
     # Tozsamosc marki siedziala w localStorage, wiec kazdy uzytkownik i kazde
     # urzadzenie mialy wlasna kopie, a nowa osoba w zespole zaczynala od pustej
