@@ -2025,6 +2025,12 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
             <div class="astat-sep">·</div>
             <div class="astat" id="stat-kd-wrap" title="Gęstość głównego słowa kluczowego na 100 słów. Optymalna: 0.5-2.5%" data-i18n-title="kd-tooltip" style="cursor:pointer" onclick="toggleKdPanel()"><span>KD:</span><span class="astat-val" id="stat-kd">-</span><span>%</span></div>
+            <!-- Przelacznik "Szukaj w sieci" byl niemy. Gdy model nie szukal
+                 albo szukal i niczego na tym nie oparl, wygladalo to tak samo
+                 jak wylaczony przelacznik: po prostu brak zrodel pod tekstem.
+                 Trzy rozne przebiegi, jeden obraz. Teraz widac ktory. -->
+            <div class="astat-sep" id="stat-siec-sep" style="display:none">·</div>
+            <div class="astat" id="stat-siec-wrap" style="display:none"><span data-i18n="astat-siec">Sieć:</span><span class="astat-val" id="stat-siec">-</span></div>
           </div>
           <!-- Panel FOG -->
           <div id="fog-panel" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;font-size:12px;margin:0 0 4px;line-height:1.6">
@@ -2971,6 +2977,13 @@ var I18N = {
     'ph-length-custom':'np. 1200','label-kw':'Słowa kluczowe','ph-kw':'Wpisz frazę i naciśnij Enter...',
     'label-tone':'Ton','label-lang-out':'Język','label-extra':'Dodatkowe wytyczne',
     'ph-extra':'np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem...',
+    'astat-siec':'Sieć:',
+    'siec-zrodla':'{n} źródeł',
+    'siec-zrodla-opis':'Model wykonał {q} zapytań do sieci. Strony, na które się powołał, są wymienione pod artykułem.',
+    'siec-bez-zrodel':'0 źródeł',
+    'siec-bez-zrodel-opis':'Model wykonał {q} zapytań do sieci, ale żadnego zdania na wynikach nie oparł - cały tekst pochodzi z bazy wiedzy. To nie jest błąd.',
+    'siec-nie-szukal':'nie szukał',
+    'siec-nie-szukal-opis':'Model nie wyszedł do sieci: uznał, że baza wiedzy pokrywa temat. Szuka tylko tam, gdzie baza milczy.',
     'toggle-web':'Szukaj w sieci i podawaj źródła',
     'toggle-web-hint':'Czego brakuje w bazie, AI poszuka w sieci i wymieni źródła pod artykułem. Dane o Twojej firmie zawsze tylko z bazy. Wydłuża generowanie o ok. 30 sek.',
     'toggle-serp':'Analiza SERP przed generowaniem',
@@ -2996,6 +3009,8 @@ var I18N = {
     'btn-fakty':'🔍 Kontrola faktów',
     'gap-brak-pokrycia':'Brak pokrycia w zaznaczonych źródłach. Dodaj materiał na ten temat albo usuń tę sekcję.',
     'fakty-title':'🔍 Kontrola faktów',
+    'fakty-etap-linki':'⏳ Sprawdzam odnośniki w artykule...',
+    'fakty-brak-tekstu':'Najpierw wygeneruj artykuł - nie ma czego sprawdzać.',
     'fakty-refresh':'🔄 Sprawdź ponownie',
     'fakty-loading':'⏳ Zestawiam artykuł ze źródłami...',
     'fakty-brak-zrodel':'Nie ma z czym porównać: zaznacz źródła w bazie wiedzy i sprawdź ponownie.',
@@ -3505,6 +3520,13 @@ var I18N = {
     'ph-length-custom':'e.g. 1200','label-kw':'Keywords','ph-kw':'Type a phrase and press Enter...',
     'label-tone':'Tone','label-lang-out':'Language','label-extra':'Additional guidelines',
     'ph-extra':'e.g. Focus on SME segment, include market comparison...',
+    'astat-siec':'Web:',
+    'siec-zrodla':'{n} sources',
+    'siec-zrodla-opis':'The model ran {q} web searches. The pages it drew on are listed under the article.',
+    'siec-bez-zrodel':'0 sources',
+    'siec-bez-zrodel-opis':'The model ran {q} web searches but based no sentence on the results - the whole text comes from the knowledge base. This is not an error.',
+    'siec-nie-szukal':'did not search',
+    'siec-nie-szukal-opis':'The model did not go online: it judged the knowledge base to cover the topic. It searches only where the base is silent.',
     'toggle-web':'Search the web and cite sources',
     'toggle-web-hint':'What the knowledge base lacks, the AI looks up online and lists the sources under the article. Anything about your company still comes from the knowledge base only. Adds about 30 sec.',
     'toggle-serp':'SERP analysis before generating',
@@ -3530,6 +3552,8 @@ var I18N = {
     'btn-fakty':'🔍 Fact check',
     'gap-brak-pokrycia':'Not covered by the selected sources. Add material on this topic or remove this section.',
     'fakty-title':'🔍 Fact check',
+    'fakty-etap-linki':'⏳ Checking the links in the article...',
+    'fakty-brak-tekstu':'Generate an article first - there is nothing to check.',
     'fakty-refresh':'🔄 Check again',
     'fakty-loading':'⏳ Comparing the article with the sources...',
     'fakty-brak-zrodel':'Nothing to compare against: select sources in the knowledge base and check again.',
@@ -5698,6 +5722,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
     // Adresy, z ktorych model skorzystal. Zbieramy je tutaj, bo dalej tresc
     // przechodzi jeszcze przez korekte premium i bloki wynikow zniknelyby.
     zrodlaSieciowe = useWeb ? zrodlaZOdpowiedzi(data) : [];
+    stanSieci = useWeb ? statystykiWyszukiwania(data) : null;
     html = html.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
     if (lang === 'Polski') { html = html.replace(/[—–]/g, '-'); }
     // Wszystkie linki w nowej zakładce
@@ -5904,6 +5929,7 @@ ${html}`;
 
   const art = document.getElementById('article');
   art.innerHTML = dolaczZrodla(usunPowtorzoneLinki(html), zrodlaSieciowe);
+  pokazStanSieci(stanSieci, zrodlaSieciowe.length);
   art.style.display = 'block';
   art.contentEditable = 'false';
   editMode = false;
@@ -6042,6 +6068,16 @@ function previewHistory(i) {
     linksOpen = false;
     const lp = document.getElementById('links-panel');
     if (lp) lp.style.display = 'none';
+    // Artykul z historii nie niesie informacji o tym, czy przy pisaniu bylo
+    // wyszukiwanie w sieci. Wskaznik z poprzedniego przebiegu opisywalby
+    // wtedy nie ten tekst, co trzeba - wiec go chowamy.
+    zrodlaSieciowe = [];
+    stanSieci = null;
+    trybUzupelniania = false;
+    pokazStanSieci(null, 0);
+    // Wynik kontroli faktow tez dotyczyl poprzedniego artykulu.
+    faktyWynik = null;
+    faktySygnatura = '';
     gapOpen = false;
     const gp = document.getElementById('gap-panel');
     if (gp) gp.style.display = 'none';
@@ -6187,6 +6223,48 @@ function zrodlaZOdpowiedzi(dane) {
     .filter(function (z) { return z.cytowan > 0; })
     .sort(function (a, b) { return b.cytowan - a.cytowan; })
     .slice(0, 12);
+}
+
+// Ile razy model faktycznie poszedl do sieci i ile stron zacytowal.
+// Bez tego "brak zrodel" znaczy naraz trzy rzeczy: nie szukal, szukal
+// i nic nie wzial, albo przelacznik byl wylaczony. Uzytkownik zglosil to
+// jako "raz generuje zrodla, raz nie" - bo z zewnatrz wyglada identycznie.
+function statystykiWyszukiwania(dane) {
+  let szukan = 0;
+  let cytowan = 0;
+  for (const blok of (dane && dane.content) || []) {
+    if (blok.type === 'server_tool_use' && blok.name === 'web_search') szukan += 1;
+    cytowan += ((blok.citations || []).filter(function (c) { return c && c.url; })).length;
+  }
+  return { szukan: szukan, cytowan: cytowan };
+}
+
+// Opis przebiegu do paska statystyk. null = przelacznik byl wylaczony,
+// wiec nie ma o czym mowic.
+function pokazStanSieci(stan, zrodel) {
+  const wrap = document.getElementById('stat-siec-wrap');
+  const sep = document.getElementById('stat-siec-sep');
+  const val = document.getElementById('stat-siec');
+  if (!wrap || !sep || !val) return;
+  if (!stan) { wrap.style.display = 'none'; sep.style.display = 'none'; return; }
+
+  wrap.style.display = '';
+  sep.style.display = '';
+  if (zrodel > 0) {
+    val.textContent = _t('siec-zrodla').replace('{n}', String(zrodel));
+    val.style.color = '';
+    wrap.title = _t('siec-zrodla-opis').replace('{q}', String(stan.szukan));
+  } else if (stan.szukan > 0) {
+    // Szukal, ale zadnego zdania na tym nie oparl. To nie jest awaria -
+    // to znaczy, ze baza wiedzy wystarczyla. Ale trzeba to powiedziec.
+    val.textContent = _t('siec-bez-zrodel');
+    val.style.color = '#B45309';
+    wrap.title = _t('siec-bez-zrodel-opis').replace('{q}', String(stan.szukan));
+  } else {
+    val.textContent = _t('siec-nie-szukal');
+    val.style.color = '#B45309';
+    wrap.title = _t('siec-nie-szukal-opis');
+  }
 }
 
 // Lista zrodel doklejana do artykulu przed blokiem meta description, zeby
@@ -6349,8 +6427,21 @@ async function sprawdzCzyLinkiZyja(linki) {
 
 let trybUzupelniania = false;   // czy przy pisaniu bylo wyszukiwanie w sieci
 let zrodlaSieciowe = [];        // adresy, z ktorych model skorzystal
+let stanSieci = null;           // ile zapytan i przypisow; null = bez sieci
 let faktyWynik = null;          // ostatni wynik, zeby nie liczyc dwa razy
 let faktySygnatura = '';        // dla jakiego artykulu policzony
+// Numer biezacego przebiegu. Kontrola ma dwa zapytania idace rownolegle,
+// a uzytkownik moze w trakcie kliknac "Sprawdz ponownie" - bez tego wynik
+// starszego przebiegu nadpisalby nowszy.
+let faktyPrzebieg = 0;
+
+/** Komunikat w miejscu spinnera. Jedno miejsce, zeby nie rozjechac stanow. */
+function etapFaktow(klucz) {
+  const ladowanie = document.getElementById('fakty-loading');
+  if (!ladowanie) return;
+  ladowanie.textContent = _t(klucz);
+  ladowanie.style.display = 'block';
+}
 
 function zamknijPanelFaktow() {
   document.getElementById('fakty-panel').style.display = 'none';
@@ -6377,7 +6468,16 @@ async function uruchomKontroleFaktow(wymus) {
   const wynikEl = document.getElementById('fakty-wynik');
   const ladowanie = document.getElementById('fakty-loading');
   const odswiez = document.getElementById('fakty-refresh-btn');
-  if (!art || !art.innerHTML.trim()) return;
+
+  // Pusty panel niczego nie tlumaczy. Jesli nie ma czego sprawdzac, trzeba
+  // to napisac, a nie po cichu wyjsc z funkcji.
+  if (!art || !art.innerHTML.trim()) {
+    ladowanie.style.display = 'none';
+    odswiez.style.display = 'none';
+    wynikEl.innerHTML = '<div style="color:var(--text3)">'
+      + escapeHtml(_t('fakty-brak-tekstu')) + '</div>';
+    return;
+  }
 
   const tekstArtykulu = art.innerText || art.textContent || '';
   const sygnatura = String(tekstArtykulu.length) + ':' + tekstArtykulu.slice(0, 120);
@@ -6386,29 +6486,48 @@ async function uruchomKontroleFaktow(wymus) {
     return;
   }
 
-  // Odnosniki sprawdzamy sami, bez modelu: to arytmetyka, nie ocena.
-  // Robimy to przed wszystkim innym, zeby dzialalo takze wtedy, gdy zrodel
-  // nie ma albo gdy zapytanie do modelu polegnie.
-  const badanie = sprawdzLinkiArtykulu();
-  let uwagiLinkow = badanie.uwagi;
-//@@IF proxy
-  uwagiLinkow = uwagiLinkow.concat(await sprawdzCzyLinkiZyja(badanie.linki));
-//@@ENDIF
+  // Stan widoczny PRZED pierwszym zapytaniem. Wczesniej spinner wlaczal sie
+  // dopiero po sprawdzeniu odnosnikow, a to potrafi trwac dziesiatki sekund,
+  // gdy witryna za CDN-em nie odpowiada - przez ten czas panel byl otwarty
+  // i zupelnie pusty, wiec wygladal na zepsuty.
+  const moj = ++faktyPrzebieg;
+  wynikEl.innerHTML = '';
+  odswiez.style.display = 'none';
+  etapFaktow('fakty-etap-linki');
 
+  // Odnosniki sprawdzamy sami, bez modelu: to arytmetyka, nie ocena.
+  const badanie = sprawdzLinkiArtykulu();
   const zrodla = zrodlaDoKontroli();
+
+  // Odnosniki i tresc nie zaleza od siebie, wiec ida rownolegle. Wczesniej
+  // odnosniki blokowaly start zapytania do modelu i czasy sie sumowaly.
+  const obietnicaLinkow = (async function () {
+    var u = badanie.uwagi;
+//@@IF proxy
+    u = u.concat(await sprawdzCzyLinkiZyja(badanie.linki));
+//@@ENDIF
+    return u;
+  })();
+
   if (!zrodla.trim()) {
     // Bez zrodel nie ma z czym zestawiac tresci. Sam model nie wystarczy -
     // ocena "z pamieci" byla by zgadywaniem. Kontrola odnosnikow dziala
     // niezaleznie od tego, wiec jej wynik i tak pokazujemy.
+    const uwagiLinkow = await obietnicaLinkow;
+    if (moj !== faktyPrzebieg) return;
     faktyWynik = uwagiLinkow;
     faktySygnatura = sygnatura;
     pokazWynikFaktow(uwagiLinkow, true);
     return;
   }
 
-  wynikEl.innerHTML = '';
-  ladowanie.style.display = 'block';
-  odswiez.style.display = 'none';
+  // Wynik odnosnikow pokazujemy, gdy tylko przyjdzie - nie czekajac na model.
+  // Przy dlugim sprawdzaniu tresci uzytkownik ma juz wtedy polowe odpowiedzi.
+  obietnicaLinkow.then(function (u) {
+    if (moj !== faktyPrzebieg) return;
+    etapFaktow('fakty-loading');
+    if (u.length) pokazWynikFaktow(u, false, true);
+  });
 
   const jezykUwag = currentLang === 'en' ? 'English' : 'Polish';
   const system = 'You are a fact checker reviewing an article against the sources it was '
@@ -6471,6 +6590,8 @@ async function uruchomKontroleFaktow(wymus) {
       })
     });
     const dane = await res.json();
+    const uwagiLinkow = await obietnicaLinkow;
+    if (moj !== faktyPrzebieg) return;
     if (dane.error) throw new Error(dane.error.message || '');
     const odczyt = parsujJsonModelu((dane.content || []).map(function (b) { return b.text || ''; }).join(''));
     // Uwagi policzone maszynowo ida na poczet listy: sa pewne, a uwagi
@@ -6480,6 +6601,8 @@ async function uruchomKontroleFaktow(wymus) {
     pokazWynikFaktow(faktyWynik);
   } catch (e) {
     // Nawet gdy model nie odpowiedzial, kontrola odnosnikow ma swoj wynik.
+    const uwagiLinkow = await obietnicaLinkow.catch(function () { return badanie.uwagi; });
+    if (moj !== faktyPrzebieg) return;
     faktyWynik = uwagiLinkow;
     faktySygnatura = sygnatura;
     pokazWynikFaktow(uwagiLinkow);
@@ -6487,7 +6610,7 @@ async function uruchomKontroleFaktow(wymus) {
       '<div style="color:var(--red);margin-top:8px">' + escapeHtml(_t('fakty-blad')) + '</div>');
     odswiez.style.display = 'inline-block';
   } finally {
-    ladowanie.style.display = 'none';
+    if (moj === faktyPrzebieg) ladowanie.style.display = 'none';
   }
 }
 
@@ -6499,15 +6622,22 @@ const IKONY_UWAG = {
 
 // tylkoLinki = zrodel nie bylo, wiec tresci nie sprawdzalismy. Trzeba to
 // powiedziec, zeby nikt nie wzial pustej listy za "artykul jest w porzadku".
-function pokazWynikFaktow(uwagi, tylkoLinki) {
+function pokazWynikFaktow(uwagi, tylkoLinki, czesciowe) {
   const wynikEl = document.getElementById('fakty-wynik');
   const odswiez = document.getElementById('fakty-refresh-btn');
-  document.getElementById('fakty-loading').style.display = 'none';
-  odswiez.style.display = 'inline-block';
+  // Przy wyniku czesciowym spinner zostaje: kontrola tresci jeszcze trwa,
+  // a pusta lista nie znaczylaby wtedy "artykul jest w porzadku".
+  if (!czesciowe) {
+    document.getElementById('fakty-loading').style.display = 'none';
+    odswiez.style.display = 'inline-block';
+  }
 
   let stopka = tylkoLinki
     ? '<div style="color:var(--text3);margin-top:8px">' + escapeHtml(_t('fakty-brak-zrodel')) + '</div>'
     : '';
+  // Wynik czesciowy nie ma stopki o trybie - ta odnosi sie do kontroli tresci,
+  // ktora w tym momencie jeszcze nie skonczyla.
+  if (czesciowe) stopka = '';
   // Przy wlaczonym uzupelnianiu lista bywa dluzsza i to nie znaczy, ze tekst
   // jest gorszy - znaczy, ze czesc zdan pochodzi z pamieci modelu, a nie
   // z dokumentow. Autor musi wiedziec, ktora to sytuacja.
@@ -6517,6 +6647,9 @@ function pokazWynikFaktow(uwagi, tylkoLinki) {
   }
 
   if (!uwagi.length) {
+    // Przy wyniku czesciowym nie ma czego pokazac - spinner mowi wiecej niz
+    // "brak uwag" przy kontroli, ktora jeszcze trwa.
+    if (czesciowe) return;
     wynikEl.innerHTML = '<div style="color:#16A34A;font-weight:600">'
       + escapeHtml(tylkoLinki ? _t('fakty-linki-czysto') : _t('fakty-czysto')) + '</div>'
       + (tylkoLinki ? '' : '<div style="color:var(--text3);margin-top:6px">' + escapeHtml(_t('fakty-czysto-opis')) + '</div>')

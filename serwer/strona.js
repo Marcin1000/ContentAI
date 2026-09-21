@@ -18,6 +18,13 @@ const LIMIT_BAJTOW = 4 * 1024 * 1024;   // wiecej niz strona tekstowa potrzebuje
 const LIMIT_ZNAKOW = 400000;            // ~100 tys. tokenow, gorna granica sensu
 const LIMIT_PRZEKIEROWAN = 5;
 const CZAS_ODPOWIEDZI = 20000;
+// Sprawdzenie odnosnika to nie pobranie strony: interesuje nas sam kod
+// odpowiedzi. 20 sekund na adres bylo wziete z pobierania tresci i przy
+// kilku niereagujacych witrynach kazalo uzytkownikowi czekac minutami.
+const CZAS_ODNOSNIKA = 6000;
+// Ile adresow pytamy naraz. Szly po kolei, wiec czasy sie sumowaly: 40 adresow
+// po dwa zapytania z limitem czasu to w najgorszym razie kilkanascie minut.
+const ROWNOLEGLE_ODNOSNIKI = 6;
 
 // Przegladarka, ktora sie nie przedstawia, bywa odrzucana przez CDN-y.
 const AGENT = 'Mozilla/5.0 (compatible; ContentAI/1.0; +https://content-ai.net)';
@@ -184,23 +191,22 @@ async function pobierz(adres, fetchImpl = fetch) {
 // nie pozwala jej czytac odpowiedzi. Serwer moze - i robi to z ta sama
 // ochrona adresu co przy pobieraniu strony.
 async function sprawdzOdnosniki(adresy, fetchImpl = fetch) {
-  const wynik = [];
+  const doSprawdzenia = adresy.slice(0, 40);
 
   async function zapytaj(href, metoda) {
     return fetchImpl(href, {
       method: metoda, redirect: 'follow',
-      signal: AbortSignal.timeout(CZAS_ODPOWIEDZI),
+      signal: AbortSignal.timeout(CZAS_ODNOSNIKA),
       headers: { 'User-Agent': AGENT },
     });
   }
 
-  for (const adres of adresy.slice(0, 40)) {
+  async function jeden(adres) {
     let u;
     try {
       u = await sprawdzAdres(adres);
     } catch (e) {
-      wynik.push({ adres, status: 0, stan: 'odrzucony', dziala: false, blad: e.message });
-      continue;
+      return { adres, status: 0, stan: 'odrzucony', dziala: false, blad: e.message };
     }
 
     // HEAD jest tansze, ale duze witryny za CDN-em czesto na nie nie
@@ -231,16 +237,30 @@ async function sprawdzOdnosniki(adresy, fetchImpl = fetch) {
       // NIE to samo co "adres nie odpowiada". Przekroczony czas albo blad
       // sieci znaczy, ze kontrola sie nie odbyla - zglaszanie tego jako
       // martwego odnosnika bylo falszywym alarmem na dzialajacych stronach.
-      wynik.push({ adres, status: 0, stan: 'nieznany', dziala: false,
-                   blad: blad ? blad.message : '' });
-      continue;
+      return { adres, status: 0, stan: 'nieznany', dziala: false,
+               blad: blad ? blad.message : '' };
     }
-    wynik.push({
+    return {
       adres, status: odp.status,
       stan: odp.status < 400 ? 'dziala' : 'martwy',
       dziala: odp.status < 400,
-    });
+    };
   }
+
+  // Kolejnosc wyniku musi odpowiadac kolejnosci wejscia, bo wywolujacy
+  // zestawia je z wlasna lista. Dlatego kazdy robotnik wpisuje sie pod swoj
+  // indeks, a nie dopisuje na koniec.
+  const wynik = new Array(doSprawdzenia.length);
+  let nastepny = 0;
+  async function robotnik() {
+    for (;;) {
+      const i = nastepny++;
+      if (i >= doSprawdzenia.length) return;
+      wynik[i] = await jeden(doSprawdzenia[i]);
+    }
+  }
+  const ilu = Math.min(ROWNOLEGLE_ODNOSNIKI, doSprawdzenia.length);
+  await Promise.all(Array.from({ length: ilu }, robotnik));
   return wynik;
 }
 

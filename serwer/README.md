@@ -234,6 +234,11 @@ Pyta metodą HEAD, a gdy witryna jej nie obsługuje (405, 501, 403), ponawia met
 przy pobieraniu stron, więc odnośnik do sieci wewnętrznej nie zostanie odpytany. Limit
 40 adresów na żądanie, bez wpływu na pakiet.
 
+Adresy sprawdzane są **po sześć naraz**, z limitem 6 sekund na żądanie. Wcześniej szły
+po kolei z limitem 20 sekund wziętym z pobierania stron: przy kilku witrynach, które nie
+odpowiadają na HEAD, panel kontroli faktów potrafił stać pusty przez minuty. Tu interesuje
+nas sam kod odpowiedzi, nie treść, więc krótszy limit niczego nie traci.
+
 Aplikacja woła to z panelu **Kontrola faktów**. Sam panel liczy jeszcze dwie rzeczy
 lokalnie, bez serwera i bez modelu: czy adres w ogóle występuje w zaznaczonych źródłach
 (osobno rozróżnia obcą domenę od znanej domeny z dopisaną podstroną) i czy teksty kotwic
