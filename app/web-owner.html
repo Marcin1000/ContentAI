@@ -639,6 +639,10 @@ body.dark-mode .serp-tag { background: var(--surface2); }
 .meta-label { font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #7A6000; margin-bottom: 5px; }
 .meta-box p { font-size: 13px; color: var(--text); margin: 0; line-height: 1.6; }
 body.dark-mode .meta-box { background: #2A2500; border-color: #7A6000; }
+/* Luka, ktorej zrodla nie pokrywaja. Widoczna od razu, zeby nikt nie wzial
+   jej za gotowa sekcje i nie opublikowal pustego naglowka. */
+.article-body p[data-brak], #article p[data-brak] { background: var(--yellow-light); border-left: 3px solid var(--yellow-dark); padding: 10px 14px; color: var(--text2); font-style: italic; }
+body.dark-mode #article p[data-brak] { background: #2A2500; border-color: #7A6000; }
 body.dark-mode .meta-label { color: var(--yellow); }
 body.dark-mode .meta-box p { color: #F0E88A; }
 /* Dark mode: selected KB item - readable text */
@@ -1696,6 +1700,18 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
             </div>
           </div>
 
+          <!-- Odbiorca. Agencja zglosila, ze artykul pisany na podstawie strony
+               dla firm mowil do firm, mimo konsumenckiej intencji zapytania.
+               Baza wiedzy ma dawac fakty, a nie decydowac, do kogo mowimy. -->
+          <div class="field">
+            <label class="field-label" data-i18n="label-audience">Odbiorca</label>
+            <select id="audience">
+              <option value="" data-i18n="opt-aud-auto">Dopasuj do tematu</option>
+              <option value="B2C" data-i18n="opt-aud-b2c">Klient indywidualny (B2C)</option>
+              <option value="B2B" data-i18n="opt-aud-b2b">Firma (B2B)</option>
+            </select>
+          </div>
+
           <div class="field">
             <label class="field-label" data-i18n="label-extra">Dodatkowe wytyczne</label>
             <div style="display:flex;gap:6px;align-items:flex-start">
@@ -1784,6 +1800,11 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
                 <button class="btn-secondary" id="geo-btn" style="display:none" onclick="toggleGeoPanel()" data-i18n="btn-geo">🎯 GEO Score</button>
                 <button class="btn-secondary" id="serp-toggle-btn" style="display:none" onclick="toggleSerpPanel()" data-i18n="btn-serp">📊 SERP</button>
                 <button class="btn-secondary" id="gap-btn" style="display:none" onclick="toggleGapPanel()" data-i18n="btn-gap">🧩 Luki</button>
+                <!-- Agencja: "generuje fajnie, ale ktos to musi potem sprawdzic
+                     i zweryfikowac merytorycznie". Ten przycisk robi pierwsze
+                     przejscie za czlowieka: zestawia kazda liczbe i kazde
+                     twierdzenie artykulu z tym, co naprawde jest w zrodlach. -->
+                <button class="btn-secondary" id="fakty-btn" style="display:none" onclick="przelaczPanelFaktow()" data-i18n="btn-fakty">🔍 Kontrola faktów</button>
               </div>
             </div>
 
@@ -1904,6 +1925,9 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
             <div class="astat"><span class="astat-val" id="stat-read">0</span><span data-i18n="stat-read-unit">min czytania</span></div>
             <div class="astat-sep">·</div>
             <div class="astat"><span class="astat-val" id="stat-h2">0</span><span data-i18n="stat-sections-unit">sekcji H2</span></div>
+            <!-- Agencja: "zadna z wersji nie schodzi do H3". Liczba H3 jest
+                 teraz widoczna, wiec brak podzialu nie przechodzi niezauwazony. -->
+            <div class="astat"><span class="astat-val" id="stat-h3">0</span><span data-i18n="stat-sub-unit">podsekcji H3</span></div>
             <div class="astat-sep">·</div>
             <div class="astat"><span>Meta:</span><span class="astat-val" id="stat-meta">-</span><span data-i18n="astat-chars">zn.</span></div>
             <div class="astat-sep">·</div>
@@ -1946,6 +1970,23 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
           </div>
 
           <!-- Panel luk semantycznych ──────────────────────────────────── -->
+          <!-- KONTROLA FAKTOW ------------------------------------------------
+               Odpowiedz na trzy najciezsze uwagi agencji: zmyslone liczby,
+               rozszerzanie zakresu zrodla i sprzecznosci w obrebie artykulu.
+               Panel nie poprawia tekstu sam - pokazuje, co sprawdzic, i cytuje
+               miejsce. Decyzje zostawia czlowiekowi. -->
+          <div id="fakty-panel" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:12px;margin:0 0 0;max-height:65vh;overflow-y:auto">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <span style="font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)" data-i18n="fakty-title">🔍 Kontrola faktów</span>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button id="fakty-refresh-btn" onclick="uruchomKontroleFaktow(true)" style="background:none;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;color:var(--text3);font-size:11px;padding:2px 8px;display:none" data-i18n="fakty-refresh">🔄 Sprawdź ponownie</button>
+                <button onclick="zamknijPanelFaktow()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:0;line-height:1">×</button>
+              </div>
+            </div>
+            <div id="fakty-loading" class="seo-loading" style="display:none" data-i18n="fakty-loading">⏳ Zestawiam artykuł ze źródłami...</div>
+            <div id="fakty-wynik"></div>
+          </div>
+
           <div id="gap-panel" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:12px;margin:0 0 0;max-height:65vh;overflow-y:auto">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
               <span style="font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)" data-i18n="gap-analysis-title">🧩 Analiza luk semantycznych</span>
@@ -2840,6 +2881,8 @@ var I18N = {
     'dir-de':'Niemcy','dir-cz':'Czechy','dir-sk':'Słowacja','dir-nl':'Holandia','dir-fr':'Francja',
     'opt-short':'~400 słów','opt-medium':'~800 słów','opt-long':'~1500 słów','opt-custom':'Własna...',
     'opt-prof':'Profesjonalny','opt-expert':'Ekspercki','opt-friendly':'Przyjazny','opt-neutral':'Neutralny',
+    'label-audience':'Odbiorca',
+    'opt-aud-auto':'Dopasuj do tematu','opt-aud-b2c':'Klient indywidualny (B2C)','opt-aud-b2b':'Firma (B2B)',
     'btn-brief':'Brief','btn-bulk':'Grupowe','btn-improve':'Popraw','btn-img-short':'🎨 Grafika',
     'btn-generate':'Generuj treść','btn-premium':'⭐ Jakość premium','btn-premium-active':'⭐ Jakość premium (aktywna)',
     'out-title':'Wynik','badge-ready':'gotowy do generowania','badge-done':'gotowe ✓',
@@ -2848,6 +2891,33 @@ var I18N = {
     'grupa-ocen':'📊 Oceń ▾','grupa-tworz':'🎨 Twórz ▾','grupa-pobierz':'⬇️ Pobierz ▾',
     'grupa-wiecej':'⋯ Więcej ▾',
     'btn-wp-pub':'🌐 Publikuj WP','btn-links':'🔗 Linki','btn-serp':'📊 SERP','btn-gap':'🧩 Luki',
+    'btn-fakty':'🔍 Kontrola faktów',
+    'gap-brak-pokrycia':'Brak pokrycia w zaznaczonych źródłach. Dodaj materiał na ten temat albo usuń tę sekcję.',
+    'fakty-title':'🔍 Kontrola faktów',
+    'fakty-refresh':'🔄 Sprawdź ponownie',
+    'fakty-loading':'⏳ Zestawiam artykuł ze źródłami...',
+    'fakty-brak-zrodel':'Nie ma z czym porównać: zaznacz źródła w bazie wiedzy i sprawdź ponownie.',
+    'fakty-blad':'Nie udało się przeprowadzić kontroli. Spróbuj ponownie.',
+    'fakty-czysto':'Bez zastrzeżeń.',
+    'fakty-czysto-opis':'Każda liczba i każde twierdzenie ma pokrycie w zaznaczonych źródłach. To kontrola automatyczna, nie zastępuje czytania tekstu przed publikacją.',
+    'fakty-znaleziono':'Do sprawdzenia: {n}. Kolejność od najpoważniejszych.',
+    'fakty-rodzaj-liczba':'Liczba bez pokrycia w źródle',
+    'fakty-rodzaj-zakres':'Twierdzenie szersze niż źródło',
+    'fakty-rodzaj-sprzecznosc':'Sprzeczność wewnątrz artykułu',
+    'fakty-rodzaj-konflikt':'Polecenie konkurencji',
+    'fakty-linki-czysto':'Odnośniki bez zastrzeżeń.',
+    'fakty-rodzaj-link-obcy':'Adres spoza źródeł',
+    'fakty-rodzaj-link-sciezka':'Znana domena, nieznana podstrona',
+    'fakty-rodzaj-link-martwy':'Adres nie odpowiada',
+    'fakty-rodzaj-link-kotwica':'Kotwica nic nie mówi',
+    'fakty-rodzaj-link-powtorka':'Ta sama kotwica po raz drugi',
+    'fakty-rodzaj-link-pusty':'Link bez tekstu',
+    'fakty-powod-link-obcy':'Tego adresu nie ma w zaznaczonych źródłach. Sprawdź, czy istnieje, zanim opublikujesz.',
+    'fakty-powod-link-sciezka':'Domena jest znana ze źródeł, ale tej podstrony w nich nie ma. Najczęściej znaczy to, że ścieżka została dopisana.',
+    'fakty-powod-link-martwy':'Serwer nie zwrócił strony pod tym adresem.',
+    'fakty-powod-link-kotwica':'Klikalne słowa powinny mówić, co jest po drugiej stronie.',
+    'fakty-powod-link-powtorka':'Dwa odnośniki z tym samym tekstem czyta się jak pomyłkę.',
+    'fakty-powod-link-pusty':'Odnośnik nie ma widocznego tekstu.',
     'btn-jsonld':'{ } JSON-LD','btn-premium-fix':'⭐ Popraw premium','btn-copy':'Kopiuj',
     'rp-linkedin':'💼 Post LinkedIn','rp-facebook':'👥 Post Facebook','rp-email':'📧 Email newsletter',
     'rp-faq':'❓ Strona FAQ','rp-landing':'🎯 Landing page intro',
@@ -2987,6 +3057,14 @@ var I18N = {
     'msg-jsonld-empty':'// Brak nagłówków H2 w formie pytań (kończących się "?").\n// Wygeneruj artykuł FAQ lub Hybrydę z pytaniami jako nagłówkami.',
     // Throws
     'err-url-extract':'Nie udało się odczytać treści strony.',
+    'err-url-fetch':'Nie udało się pobrać tej strony.',
+    'err-url-thin':'Strona ma za mało tekstu ({n} słów). Najczęściej znaczy to, że treść dogrywa się skryptem. Użyj "Dodaj tekst ręcznie" i wklej treść skopiowaną ze strony.',
+    'err-fetch-blokada':'Witryna nie pozwala na automatyczne pobieranie.',
+    'err-fetch-niedostepna':'Strona nie odpowiedziała.',
+    'err-fetch-typ':'To nie jest strona tekstowa.',
+    'err-fetch-dlugi':'Adres jest za długi.',
+    'err-fetch-limit':'Za dużo zapytań. Spróbuj za chwilę.',
+    'err-fetch-adres':'Adres jest niepoprawny.',
     'err-rate-limit':'Przekroczono limit zapytań API (30 000 tokenów/minutę). Poczekaj chwilę i spróbuj ponownie. Jeśli problem się powtarza, wyłącz SERP lub Premium które zwiększają liczbę tokenów.',
     'err-server-500':'Serwer Anthropic zwrócił błąd (500). Spróbuj ponownie za chwilę. Jeśli błąd się powtarza, wyłącz SERP lub Premium.',
     'err-overloaded':'API Anthropic jest chwilowo przeciążone. Poczekaj 30 sekund i spróbuj ponownie.',
@@ -3083,6 +3161,7 @@ var I18N = {
     'no-kw-warning':'⚠️ Nie podałeś słowa kluczowego. Jako zapytanie zostanie użyty temat artykułu. Wynik może być mniej trafny.',
     // ── Brakujące PL ──
     'stat-generated':'Wygenerowane','stat-words-unit':'słów','stat-read-unit':'min czytania','stat-sections-unit':'sekcji H2',
+    'stat-sub-unit':'podsekcji H3',
     'ph-history-search':'Szukaj w historii...','title-settings':'Ustawienia CMS i Brand Voice','title-kw-add':'Dodaj frazę',
     'btn-cancel':'Anuluj','btn-save':'Zapisz','btn-add':'✓ Dodaj',
     'btn-add-page':'🔗 Dodaj stronę','btn-add-page-txt':'Dodaj stronę','btn-add-txt':'Dodaj','btn-analyze-style':'Analizuj styl',
@@ -3246,6 +3325,8 @@ var I18N = {
     'dir-de':'Germany','dir-cz':'Czechia','dir-sk':'Slovakia','dir-nl':'Netherlands','dir-fr':'France',
     'opt-short':'~400 words','opt-medium':'~800 words','opt-long':'~1500 words','opt-custom':'Custom...',
     'opt-prof':'Professional','opt-expert':'Expert','opt-friendly':'Friendly','opt-neutral':'Neutral',
+    'label-audience':'Audience',
+    'opt-aud-auto':'Match the topic','opt-aud-b2c':'Individual customer (B2C)','opt-aud-b2b':'Business (B2B)',
     'btn-brief':'Brief','btn-bulk':'Bulk','btn-improve':'Improve','btn-img-short':'🎨 Image',
     'btn-generate':'Generate content','btn-premium':'⭐ Premium quality','btn-premium-active':'⭐ Premium quality (active)',
     'out-title':'Result','badge-ready':'ready to generate','badge-done':'done ✓',
@@ -3254,6 +3335,33 @@ var I18N = {
     'grupa-ocen':'📊 Assess ▾','grupa-tworz':'🎨 Create ▾','grupa-pobierz':'⬇️ Download ▾',
     'grupa-wiecej':'⋯ More ▾',
     'btn-wp-pub':'🌐 Publish WP','btn-links':'🔗 Links','btn-serp':'📊 SERP','btn-gap':'🧩 Gaps',
+    'btn-fakty':'🔍 Fact check',
+    'gap-brak-pokrycia':'Not covered by the selected sources. Add material on this topic or remove this section.',
+    'fakty-title':'🔍 Fact check',
+    'fakty-refresh':'🔄 Check again',
+    'fakty-loading':'⏳ Comparing the article with the sources...',
+    'fakty-brak-zrodel':'Nothing to compare against: select sources in the knowledge base and check again.',
+    'fakty-blad':'The check could not be completed. Try again.',
+    'fakty-czysto':'No findings.',
+    'fakty-czysto-opis':'Every figure and claim is backed by the selected sources. This is an automated check and does not replace reading the text before publication.',
+    'fakty-znaleziono':'To review: {n}. Most serious first.',
+    'fakty-rodzaj-liczba':'Figure not found in the sources',
+    'fakty-rodzaj-zakres':'Claim wider than the source',
+    'fakty-rodzaj-sprzecznosc':'Contradiction inside the article',
+    'fakty-rodzaj-konflikt':'Recommends a competitor',
+    'fakty-linki-czysto':'No findings on links.',
+    'fakty-rodzaj-link-obcy':'Address not in the sources',
+    'fakty-rodzaj-link-sciezka':'Known domain, unknown page',
+    'fakty-rodzaj-link-martwy':'Address does not respond',
+    'fakty-rodzaj-link-kotwica':'Anchor says nothing',
+    'fakty-rodzaj-link-powtorka':'Same anchor text twice',
+    'fakty-rodzaj-link-pusty':'Link without text',
+    'fakty-powod-link-obcy':'This address is not in the selected sources. Check that it exists before publishing.',
+    'fakty-powod-link-sciezka':'The domain is known from the sources, but this page is not. Usually it means the path was made up.',
+    'fakty-powod-link-martwy':'The server returned no page at this address.',
+    'fakty-powod-link-kotwica':'The clickable words should say what is on the other side.',
+    'fakty-powod-link-powtorka':'Two links with identical text read like a mistake.',
+    'fakty-powod-link-pusty':'The link has no visible text.',
     'btn-jsonld':'{ } JSON-LD','btn-premium-fix':'⭐ Premium fix','btn-copy':'Copy',
     'rp-linkedin':'💼 LinkedIn post','rp-facebook':'👥 Facebook post','rp-email':'📧 Email newsletter',
     'rp-faq':'❓ FAQ page','rp-landing':'🎯 Landing page intro',
@@ -3393,6 +3501,14 @@ var I18N = {
     'msg-jsonld-empty':'// No H2 headings in question form (ending with "?").\n// Generate a FAQ article or Hybrid with questions as headings.',
     // Throws
     'err-url-extract':'Failed to read page content.',
+    'err-url-fetch':'Could not fetch this page.',
+    'err-url-thin':'The page has too little text ({n} words). This usually means the content is loaded by a script. Use "Add text manually" and paste the content copied from the page.',
+    'err-fetch-blokada':'The site does not allow automated fetching.',
+    'err-fetch-niedostepna':'The page did not respond.',
+    'err-fetch-typ':'This is not a text page.',
+    'err-fetch-dlugi':'The URL is too long.',
+    'err-fetch-limit':'Too many requests. Try again shortly.',
+    'err-fetch-adres':'The URL is invalid.',
     'err-rate-limit':'API rate limit exceeded (30,000 tokens/minute). Wait a moment and try again. If the issue persists, disable SERP or Premium which increase token usage.',
     'err-server-500':'Anthropic server returned an error (500). Try again shortly. If the error persists, disable SERP or Premium.',
     'err-overloaded':'Anthropic API is temporarily overloaded. Wait 30 seconds and try again.',
@@ -3490,6 +3606,7 @@ var I18N = {
     'no-kw-warning-full':'⚠️ No keyword provided. The article topic will be used as the SERP query. Enter the main keyword phrase for accurate SERP analysis.',
     // ── Missing EN ──
     'stat-generated':'Generated','stat-words-unit':'words','stat-read-unit':'min read','stat-sections-unit':'H2 sections',
+    'stat-sub-unit':'H3 subsections',
     'ph-history-search':'Search history...','title-settings':'CMS & Brand Voice settings','title-kw-add':'Add phrase',
     'btn-cancel':'Cancel','btn-save':'Save','btn-add':'✓ Add',
     'btn-add-page':'🔗 Add page','btn-add-page-txt':'Add page','btn-add-txt':'Add','btn-analyze-style':'Analyze style',
@@ -3640,6 +3757,7 @@ function applyLang(lang) {
     { id:'dir-country', keys:['dir-de','dir-cz','dir-sk','dir-nl','dir-fr'] },
     { id:'length', keys:['opt-short','opt-medium','opt-long','opt-custom'] },
     { id:'tone',   keys:['opt-prof','opt-expert','opt-friendly','opt-neutral'] },
+    { id:'audience', keys:['opt-aud-auto','opt-aud-b2c','opt-aud-b2b'] },
   ].forEach(({ id, keys }) => {
     const sel = document.getElementById(id); if (!sel) return;
     const idx = sel.selectedIndex;
@@ -3697,6 +3815,49 @@ const API_ENDPOINT = window.API_ENDPOINT_OVERRIDE || 'https://api.anthropic.com/
 const OPENAI_API_KEY = 'WSTAW_TUTAJ_KLUCZ_OPENAI'; // ← klucz z platform.openai.com
 const ELEVEN_API_KEY = 'WSTAW_TUTAJ_KLUCZ_ELEVENLABS'; // ← klucz z elevenlabs.io (opcjonalnie, dla silnika ElevenLabs)
 const OPENAI_IMG_ENDPOINT = window.OPENAI_IMG_ENDPOINT_OVERRIDE || 'https://api.openai.com/v1/images/generations';
+
+// ─── MODELE ──────────────────────────────────────────────────────────────────
+// Nazwa modelu byla wpisana na sztywno w ponad dwudziestu miejscach, wiec
+// podniesienie klasy modelu wymagalo przejscia calego pliku. Od teraz sa dwie
+// stale i jedno miejsce do zmiany.
+//
+// MODEL_TRESCI pisze i ocenia artykul. Tam agencja zglaszala braki
+// merytoryczne, wiec idzie na najmocniejszy model.
+// MODEL_POMOCNICZY obsluguje czynnosci, ktore nie decyduja o jakosci tekstu
+// (warianty tytulow, prompt do grafiki, odpytanie SERP).
+const MODEL_TRESCI     = 'claude-opus-5';
+const MODEL_POMOCNICZY = 'claude-sonnet-5';
+
+// UWAGA przy podmianie modelu: modele z rodziny 5 odrzucaja pole `temperature`
+// (HTTP 400) i mysla domyslnie, a tokeny myslenia licza sie do `max_tokens`.
+// Dlatego krotkie wywolania zwracajace JSON maja `thinking: {type:'disabled'}`
+// (patrz BEZ_MYSLENIA), a generowanie artykulu dostaje zapas tokenow.
+const BEZ_MYSLENIA = { type: 'disabled' };
+
+// Dotychczasowe budzety (2500 / 4500 / 7500 tokenow) byly policzone na sam
+// tekst. Model, ktory najpierw rozumuje, zuzylby na to czesc limitu i artykul
+// urwalby sie w polowie zdania. Kazde wywolanie PISZACE dostaje wiec zapas.
+const REZERWA_MYSLENIA = 8000;
+function zRezerwa(tokeny) { return tokeny + REZERWA_MYSLENIA; }
+
+// Cennik w dolarach za milion tokenow: [wejscie, wyjscie]. Sluzy tylko
+// licznikowi kosztu w interfejsie. Wczesniej stawka Sonneta byla wpisana
+// na sztywno w trzech miejscach i po zmianie modelu pokazywalaby nieprawde.
+const CENY_MODELI = {
+  'claude-opus-5':     [5, 25],
+  'claude-sonnet-5':   [2, 10],
+  'claude-sonnet-4-6': [3, 15],
+  'claude-haiku-4-5':  [1, 5],
+};
+function kosztOdpowiedzi(dane) {
+  if (!dane || !dane.usage) return 0;
+  // Model bierzemy z odpowiedzi, nie z zapytania: przy przekierowaniu na
+  // Foundry albo przy zapasowym modelu liczylibysmy wedlug zlej stawki.
+  const cennik = CENY_MODELI[dane.model] || CENY_MODELI['claude-sonnet-5'];
+  const we = dane.usage.input_tokens  || 0;
+  const wy = dane.usage.output_tokens || 0;
+  return (we * cennik[0] + wy * cennik[1]) / 1e6;
+}
 
 // ─── AZURE AI FOUNDRY (opcjonalna integracja firmowa) ────────────────────────
 // Pozwala kierować ruch przez subskrypcję Azure zamiast bezpośrednio do Anthropic/OpenAI.
@@ -3856,9 +4017,7 @@ async function apiFetch(options, maxRetries = 3) {
       if (res.ok || res.status < 500) {
         res.clone().json().then(d => {
           if (d.usage) {
-            const inp = d.usage.input_tokens  || 0;
-            const out = d.usage.output_tokens || 0;
-            sessionCost += (inp * 0.000003) + (out * 0.000015);
+            sessionCost += kosztOdpowiedzi(d);
             updateCostDisplay();
           }
         }).catch(() => {});
@@ -3938,6 +4097,233 @@ function blokDaty() {
     + 'Never write a year other than ' + rok + ' unless the source material explicitly '
     + 'states a different one. If a year belongs in a title, heading or sentence, '
     + 'use ' + rok + ' - never a year you remember from training.';
+}
+
+// ─── RZETELNOSC TRESCI ───────────────────────────────────────────────────────
+// Wszystkie ponizsze bloki powstaly z listy uwag agencji SEO, ktora testowala
+// aplikacje na artykule o wysylce paczek. Kazdy odpowiada jednej uwadze,
+// a komentarz mowi, co dokladnie poszlo nie tak - inaczej za rok nikt nie
+// bedzie wiedzial, po co te zdania tu sa, i ktos je "uprosci".
+
+// UWAGA 1: "Narzedzie wymysla dane, jak czegos nie znajdzie w materiale
+// zrodlowym". Przyczyna nie byla po stronie modelu, tylko promptu: kazal on
+// umiescic liczbe w pierwszym akapicie, w kazdym akapicie i w kazdym punkcie
+// podsumowania. Gdy w bazie wiedzy liczb nie bylo, model je dopisywal, zeby
+// spelnic warunek. Stad "kilkanascie zlotych za kilogram" - jednostka, ktorej
+// firmy kurierskie nie uzywaja. Forma przestaje byc obowiazkiem, ktory
+// przebija fakty.
+function blokFaktow() {
+  return '\n\nGROUNDING - THIS SECTION OVERRIDES EVERY FORMATTING RULE IN THIS PROMPT.\n'
+    + '- Every number, price, rate, percentage, date, deadline, weight, dimension and '
+    + 'delivery time MUST appear in the knowledge base or in the search results provided. '
+    + 'Never calculate, estimate, round, extrapolate or recall one from memory.\n'
+    + '- If a figure is missing, write the sentence without it. A sentence with no number '
+    + 'is correct. An invented number is a defect that makes the whole article unusable.\n'
+    + '- Never invent a unit of measurement or a pricing model. Do not write a price per '
+    + 'kilogram, per item or per month unless the sources price it that way. If the sources '
+    + 'give no prices at all, the article contains no prices.\n'
+    + '- Never write a price range ("80-150"), a "from X" price or an "average" figure '
+    + 'that is not stated in the sources in that exact form.\n'
+    + '- If a section would need figures you do not have, write it qualitatively or leave '
+    + 'it out. Do not fill a table, a list or a comparison with placeholder values.\n'
+    + '- Attribute what you can: when a source names its own data, say where the figure '
+    + 'comes from. Never attribute a figure to a source that does not contain it.';
+}
+
+// UWAGA 2: "nadinterpretowanie zrodel". Zrodlo mowilo o przesylkach DO Niemiec,
+// a artykul o Wloszech rozwinal to w sekcje o tranzycie PRZEZ Niemcy i o
+// niemieckim prawie pocztowym. Fakt byl prawdziwy, zakres zmyslony - i to
+// jest grozniejsze od zwyklej halucynacji, bo wyglada na poparte zrodlem.
+function blokZakresu() {
+  return '\n\nSCOPE OF EVERY SOURCE FACT:\n'
+    + '- Use a fact only within the scope the source states. If a source describes '
+    + 'shipments TO a country, you may not write about transit THROUGH it. If it '
+    + 'describes one product, you may not extend the claim to the whole range. If it '
+    + 'describes business customers, you may not present it as applying to consumers.\n'
+    + '- Never introduce a legal, tax or customs rule that the sources do not state. '
+    + 'Country-specific regulation belongs in the article only when a source names both '
+    + 'that country and that rule.\n'
+    + '- Do not create a section in order to make the structure look complete. A heading '
+    + 'the sources cannot support should not exist. Fewer well-grounded sections beat '
+    + 'more sections padded with guesses.\n'
+    + '- Never bring in a technical term the sources do not use just because it sounds '
+    + 'authoritative.';
+}
+
+// UWAGA 3: "Sama tresc jest niespojna w obrebie jednego artykulu" - akapit
+// podawal 80-150 zl za paczke do 30 kg, a tabela dwa ekrany nizej 120-160 zl
+// za przedzial 20-30 kg. Model pisze sekcje po sekcji i nie wraca do tego,
+// co juz napisal, wiec trzeba go o to poprosic wprost.
+function blokSpojnosci() {
+  return '\n\nINTERNAL CONSISTENCY - check this before you finish:\n'
+    + '- Re-read every figure you wrote. The same thing must carry the same value in the '
+    + 'lead, in the body, in every table and in the summary. Overlapping ranges that '
+    + 'contradict each other are a defect.\n'
+    + '- State each figure in ONE place. Do not repeat the same value in a paragraph and '
+    + 'in a table, where the two can drift apart.\n'
+    + '- The summary at the end may not introduce a fact, a number or a claim that does '
+    + 'not appear in the body.\n'
+    + '- Terms must stay stable: one name for one thing throughout the article.';
+}
+
+// UWAGA 4: "Intencja tekstu jest zle zinterpretowana" - zrodlem byla strona
+// dla firm, wiec artykul mowil do firm, choc zapytanie bylo konsumenckie.
+// Baza wiedzy ma dostarczac faktow, a nie punktu widzenia.
+function blokOdbiorcy(odbiorca) {
+  var kogo = {
+    'B2C': 'a private individual sending or receiving on their own account',
+    'B2B': 'a company buying for its business',
+  }[odbiorca];
+  var wspolne = '\n\nAUDIENCE AND INTENT:\n'
+    + '- The knowledge base supplies FACTS, not point of view. A source written for one '
+    + 'kind of customer does not decide who the article speaks to.\n'
+    + '- Do not copy a source\'s perspective, pricing model, vocabulary or assumed reader. '
+    + 'Translate its facts into the situation of the reader defined below.\n';
+  if (!kogo) {
+    return wspolne + '- Infer the reader from the topic and the phrasing of the request, '
+      + 'not from the kind of pages in the knowledge base. Then stay with that reader '
+      + 'for the whole article.';
+  }
+  return wspolne + '- The reader of this article is ' + kogo + '. Write for that reader '
+    + 'from the first sentence to the last, even when every source is written for someone '
+    + 'else. Examples, vocabulary and recommended next steps must fit this reader.';
+}
+
+// UWAGA 5: "Tresc troche sie klóci z biznesem" - artykul zbudowany na danych
+// jednej marki i linkujacy do niej piec razy polecal na koniec porownywarki
+// konkurencji jako najskuteczniejsza metode.
+function blokKonfliktu() {
+  return '\n\nWHOSE ARTICLE THIS IS:\n'
+    + '- This article is published by the owner of the knowledge base. Never recommend a '
+    + 'competitor, a price-comparison site, an aggregator or a marketplace as the better '
+    + 'or cheapest option, and never present one as the recommended next step.\n'
+    + '- You may acknowledge that other options exist, in one neutral sentence, without '
+    + 'naming one as the winner.\n'
+    + '- Every recommendation, call to action and "how to start" must point to what the '
+    + 'knowledge base offers.';
+}
+
+// UWAGA 6: "Teksty sa mocno monotonne (...) rowne akapity, zdania podobnej
+// dlugosci, brak akcentow" oraz "wszystkie pokazuja zbyt duzy FOG".
+// Wskaznik zamglenia rosnie od dwoch rzeczy naraz: dlugich zdan i dlugich
+// slow. Prosimy wprost o jedno i o drugie.
+function blokRytmu() {
+  return '\n\nRHYTHM AND READABILITY:\n'
+    + '- Vary sentence length deliberately. In every section write at least one sentence '
+    + 'under ten words and at least one over twenty. Never write three sentences of '
+    + 'similar length in a row.\n'
+    + '- Vary paragraph length too: some of two sentences, some of five. A page of equal '
+    + 'blocks reads like a product sheet, not like an article.\n'
+    + '- Prefer a verb to a chain of nouns: "kosztuje" instead of "generuje koszt w '
+    + 'wysokosci", "trwa" instead of "charakteryzuje sie czasem realizacji".\n'
+    + '- Keep the fog index under 12. It rises from long sentences AND long words at the '
+    + 'same time, so shorten both. Split any sentence over 25 words.\n'
+    + '- Do not begin consecutive paragraphs with the same construction.\n'
+    + '- Take a position where the sources allow it. State which option suits which '
+    + 'situation instead of listing options with equal weight.';
+}
+
+// UWAGA 7: "Zadna z wersji tekstu nie ma rozbudowanej struktury naglowkow,
+// nie schodzi do H3 nawet".
+function blokStruktury() {
+  return '\n\nHEADING DEPTH:\n'
+    + '- Any H2 section that covers more than one case, option, step or variant must be '
+    + 'split into H3 subheadings, one per case. H3 headings carry the long-tail phrasing '
+    + 'that H2 headings cannot.\n'
+    + '- An article of 800 words or more with no H3 at all is under-structured. Return it '
+    + 'with H3 sections.\n'
+    + '- Never use an H3 as decoration over a single paragraph: a subheading exists to '
+    + 'separate two things a reader might look for separately.';
+}
+
+// UWAGA "Pole wyboru ton obiecuje duzo, ale nie dowozi" - do promptu szlo
+// jedno slowo ("Tone: profesjonalny"), wiec wszystkie cztery wersje wychodzily
+// prawie identyczne. Kazdy ton dostaje wiec konkretne, sprawdzalne parametry.
+var OPISY_TONU = {
+  'Profesjonalny': 'PROFESSIONAL. Address the reader directly in the second person. '
+    + 'Sentences mostly 12 to 18 words. Plain business vocabulary, no jargon left '
+    + 'unexplained. No exclamation marks, no rhetorical questions in the body. '
+    + 'Confident and calm: state what is true, do not sell it.',
+  'Ekspercki': 'EXPERT. Write as a practitioner who has done this many times. Use precise '
+    + 'domain terms and define each one at first use. Sentences may run longer (15 to 25 '
+    + 'words) where precision needs it, but break them up with short ones. Name conditions, '
+    + 'exceptions and edge cases; this is the tone where "it depends, and here is on what" '
+    + 'belongs. No marketing adjectives at all.',
+  'Przyjazny': 'FRIENDLY. Speak to one person, in the second person singular. Short '
+    + 'sentences, 8 to 14 words, everyday vocabulary instead of official wording. '
+    + 'You may open a section with a question the reader would actually ask. Warm but '
+    + 'never chatty: no filler, no jokes, no exclamation marks.',
+  'Neutralny': 'NEUTRAL. Impersonal and factual, close to reference documentation. '
+    + 'Avoid the second person; describe the thing, not the reader. Sentences 10 to 18 '
+    + 'words. No evaluative adjectives ("najlepszy", "wygodny"), no persuasion. '
+    + 'The reader draws the conclusion from the facts.',
+};
+// Wartosc pola "Ton" to tekst opcji, a applyLang podmienia go na angielski,
+// gdy interfejs jest po angielsku. Klucz do OPISY_TONU bierzemy wiec z pozycji
+// na liscie, zeby ton dzialal tak samo w obu jezykach interfejsu.
+var TONY_KOLEJNOSC = ['Profesjonalny', 'Ekspercki', 'Przyjazny', 'Neutralny'];
+function tonKanoniczny() {
+  var sel = document.getElementById('tone');
+  return (sel && TONY_KOLEJNOSC[sel.selectedIndex]) || 'Profesjonalny';
+}
+function odbiorcaTekstu() {
+  var sel = document.getElementById('audience');
+  return (sel && sel.value) || '';
+}
+
+function blokTonu(ton) {
+  var opis = OPISY_TONU[ton];
+  if (!opis) return '';
+  return '\n\nTONE - this changes the actual wording, not just the label:\n' + opis
+    + '\nThe tone must be recognisable from any single paragraph read on its own. '
+    + 'If the same paragraph would fit another tone unchanged, rewrite it.';
+}
+
+// Kotwice: agencja zglosila monotonie stylu, a linkowanie jest tego czescia.
+// Piec razy "dowiedz sie wiecej" w jednym tekscie czyta sie tak samo zle jak
+// piec akapitow tej samej dlugosci, a dodatkowo nic nie mowi wyszukiwarce.
+function blokKotwic() {
+  return '\n\nLINK TEXT:\n'
+    + '- The clickable words must say what is on the other side. Never use "tutaj", '
+    + '"kliknij tutaj", "dowiedz sie wiecej", "zobacz" or "link" as the anchor.\n'
+    + '- Never repeat the same anchor text twice in one article, even for different '
+    + 'addresses.\n'
+    + '- The anchor is part of a sentence, not a button glued to its end. Link two to '
+    + 'five words that the reader would recognise as the destination.\n'
+    + '- Copy the address exactly as it appears in the sources. Never add or drop www, '
+    + 'never switch http and https, never invent a deeper path. An address you cannot '
+    + 'find in the sources does not go into the article at all.';
+}
+
+// UWAGA 8: "Linkowanie powtarza link z bazy wiedzy wielokrotnie" - w tekscie
+// o wysylce do Wloch ten sam adres byl podlinkowany piec razy. Prompt prosi
+// teraz o jeden link na adres, ale prosba to za malo: to samo robimy
+// maszynowo na gotowym HTML-u, zeby nie zalezalo od dobrej woli modelu.
+// Powtorzone odnosniki nie znikaja - zostaje sam tekst, wiec zdanie
+// czyta sie tak samo, tylko bez drugiego linku do tej samej strony.
+function usunPowtorzoneLinki(html) {
+  if (!html || html.indexOf('<a ') === -1) return html;
+  var pojemnik = document.createElement('div');
+  pojemnik.innerHTML = html;
+  var widziane = Object.create(null);
+  var odnosniki = pojemnik.querySelectorAll('a[href]');
+  for (var i = 0; i < odnosniki.length; i++) {
+    var a = odnosniki[i];
+    // Klucz bez konca ukosnika i bez kotwicy: /cennik i /cennik/ to ta sama strona.
+    var klucz = a.getAttribute('href').split('#')[0].replace(/\/+$/, '').toLowerCase();
+    if (!klucz) continue;
+    if (!widziane[klucz]) { widziane[klucz] = true; continue; }
+    a.replaceWith(document.createTextNode(a.textContent));
+  }
+  return pojemnik.innerHTML;
+}
+
+// Jeden punkt wejscia - zeby nie dalo sie doloczyc czesci regul i zapomniec
+// o reszcie przy nastepnej zmianie w generate().
+function blokRzetelnosci(opcje) {
+  return blokFaktow() + blokZakresu() + blokSpojnosci()
+    + blokOdbiorcy(opcje.odbiorca) + blokKonfliktu()
+    + blokRytmu() + blokStruktury() + blokKotwic() + blokTonu(opcje.ton);
 }
 
 function parsujJsonModelu(tekst) {
@@ -4197,6 +4583,21 @@ function saveText() {
 }
 
 // ─── URL MODAL ────────────────────────────────────────────────────────────────
+// Narzedzie web_fetch nie rzuca wyjatkiem: odpowiada 200 i kodem bledu
+// w bloku wyniku. Bez tlumaczenia uzytkownik widzialby "url_not_allowed"
+// i nie wiedzial, czy problem jest po jego stronie, czy po naszej.
+function opisBleduPobierania(kod) {
+  const klucz = {
+    url_not_allowed:        'err-fetch-blokada',
+    url_not_accessible:     'err-fetch-niedostepna',
+    unsupported_content_type: 'err-fetch-typ',
+    url_too_long:           'err-fetch-dlugi',
+    too_many_requests:      'err-fetch-limit',
+    invalid_tool_input:     'err-fetch-adres',
+  }[kod];
+  return klucz ? _t(klucz) : '';
+}
+
 function openUrlModal() {
   document.getElementById('url-modal').classList.add('open');
   document.getElementById('url-info').style.display = 'none';
@@ -4218,7 +4619,8 @@ async function saveUrl() {
 
   const url = rawUrl.startsWith('http') ? rawUrl : 'https://' + rawUrl;
   const customName = document.getElementById('u-name').value.trim();
-  const displayName = customName || url.replace(/^https?:\/\//, '').replace(/\/$/, '').substring(0, 45);
+  // let, bo gdy serwer odda tytul strony, podstawiamy go zamiast samego adresu.
+  let displayName = customName || url.replace(/^https?:\/\//, '').replace(/\/$/, '').substring(0, 45);
 
   const infoBox = document.getElementById('url-info');
   const fill = document.getElementById('url-fill');
@@ -4238,97 +4640,94 @@ async function saveUrl() {
     return;
   }
 
-  // Tryb produkcyjny - Claude czyta stronę przez web_search tool
+  // Tryb produkcyjny - strona pobierana naprawde, nie streszczana przez model.
+  //
+  // Poprzednia wersja prosila model, zeby "odwiedzil adres", podajac mu
+  // narzedzie web_search. To narzedzie szuka w internecie, a nie pobiera
+  // wskazanej strony, wiec w odpowiedzi przychodzilo streszczenie z wynikow
+  // wyszukiwania albo zdanie "nie moge odwiedzic tej strony". Stad zgloszenie
+  // agencji, ze dodawanie linkow nie dziala.
+  //
+  // Teraz sa dwie drogi, obie pobierajace tresc dokladnie z podanego adresu:
+  //   1. wlasny serwer (wariant proxy) - bez modelu i bez tokenow,
+  //   2. narzedzie web_fetch modelu - gdy serwera nie ma albo odmowil.
+  // W obu przypadkach bierzemy tekst dokumentu, a nie zdania modelu o nim.
   try {
     fill.style.width = '20%';
     status.textContent = _t('msg-connecting');
 
-    const res = await apiFetch({
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 6000,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{
-          role: 'user',
-          content: `Visit this URL and extract ALL text content from the page: ${url}
-
-Extract EVERYTHING: every heading, every paragraph, every list item, every table row, every description, every feature, every price, every specification. Be thorough and complete.
-Do NOT summarize. Do NOT skip sections. Do NOT add commentary.
-Return only the raw extracted text, preserving structure with headings and bullet points.
-If the page has multiple sections, extract ALL of them completely.`
-        }]
-      })
-    });
-
-    fill.style.width = '60%';
-    status.textContent = _t('msg-reading-page');
-
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-
-    // Zbierz tekst ze WSZYSTKICH typów bloków - text i tool_result
     let extracted = '';
-    for (const block of (data.content || [])) {
-      if (block.type === 'text' && block.text) {
-        extracted += block.text + '\n';
-      } else if (block.type === 'tool_result') {
-        // tool_result może zawierać tablicę bloków
-        for (const inner of (block.content || [])) {
-          if (inner.type === 'text' && inner.text) extracted += inner.text + '\n';
+    let bladSerwera = '';
+
+
+    // Droga 2: narzedzie web_fetch. Pobiera wskazany adres po stronie
+    // Anthropic i oddaje CALY tekst dokumentu w bloku wyniku. Adres musi
+    // wystapic w wiadomosci uzytkownika - inaczej narzedzie go odrzuci.
+    if (!extracted) {
+      fill.style.width = '45%';
+      status.textContent = _t('msg-reading-page');
+
+      const res = await apiFetch({
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': API_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: MODEL_POMOCNICZY,
+          // Zapas tokenow zamiast wylaczonego myslenia: przy wywolaniu
+          // z narzedziem model z wylaczonym rozumowaniem potrafi wpisac
+          // wywolanie do zwyklego tekstu zamiast wykonac je naprawde.
+          max_tokens: zRezerwa(2000),
+          // Swiadomie podstawowy wariant narzedzia, nie nowszy z filtrowaniem.
+          // Nowszy pozwala modelowi odsiac czesc pobranej tresci, zanim trafi
+          // ona do kontekstu - a my chcemy calosc strony slowo w slowo,
+          // bo to ma byc zrodlo w bazie wiedzy, a nie wyciag z niego.
+          tools: [{
+            type: 'web_fetch_20250910',
+            name: 'web_fetch',
+            max_uses: 3,
+            max_content_tokens: 60000
+          }],
+          messages: [{
+            role: 'user',
+            content: 'Fetch this page and then reply with the single word OK: ' + url
+          }]
+        })
+      });
+
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message || _t('err-url-extract'));
+
+      // Tekst bierzemy z bloku wyniku narzedzia, a nie z prozy modelu.
+      // Dzieki temu do bazy wiedzy trafia tresc strony slowo w slowo,
+      // a nie jej streszczenie.
+      const bledyNarzedzia = [];
+      for (const block of (data.content || [])) {
+        if (block.type !== 'web_fetch_tool_result') continue;
+        const tresc = block.content;
+        if (!tresc) continue;
+        if (tresc.type === 'web_fetch_tool_result_error') {
+          bledyNarzedzia.push(tresc.error_code || 'unknown');
+          continue;
         }
+        const zrodlo = tresc.content && tresc.content.source;
+        if (zrodlo && zrodlo.type === 'text' && zrodlo.data) extracted += zrodlo.data + '\n';
+      }
+      extracted = extracted.trim();
+
+      if (!extracted) {
+        const powod = bledyNarzedzia.length ? opisBleduPobierania(bledyNarzedzia[0]) : '';
+        throw new Error(_t('err-url-fetch') + (powod ? ' ' + powod : '')
+          + (bladSerwera ? ' (' + bladSerwera + ')' : ''));
       }
     }
-    extracted = extracted.trim();
 
-    // Jeśli model zwrócił za mało - wyślij drugie zapytanie o więcej szczegółów
-    if (extracted.split(/\s+/).filter(Boolean).length < 200) {
-      fill.style.width = '70%';
-      status.textContent = 'Pobieranie dodatkowych danych...';
-      try {
-        const res2 = await apiFetch({
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-          body: JSON.stringify({
-            model: 'claude-haiku-4-5-20251001',
-            max_tokens: 6000,
-            tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-            messages: [{ role: 'user', content: `Search for and return the COMPLETE full text content of every section on this specific page: ${url}. Include product descriptions, specifications, pricing, features, FAQ, and any other text visible on the page. Return ALL text verbatim, nothing omitted.` }]
-          })
-        });
-        const d2 = await res2.json();
-        let extra = '';
-        for (const block of (d2.content || [])) {
-          if (block.type === 'text' && block.text) extra += block.text + '\n';
-        }
-        if (extra.trim().split(/\s+/).filter(Boolean).length > extracted.split(/\s+/).filter(Boolean).length) {
-          extracted = extra.trim();
-        }
-      } catch(e2) { /* drugi pass opcjonalny */ }
-    }
-
-    if (!extracted) throw new Error(_t('err-url-extract'));
-
-    // Sprawdź czy to faktyczna treść strony, a nie komunikat błędu
-    const errorPhrases = ['cannot visit', 'nie mogę', 'unable to access', 'nie można odwiedzić',
-      'komunikat systemowy', 'brak możliwości odwiedzenia', 'nie zostało pomyślnie pobrane',
-      'cannot access', 'jestem w stanie', 'i cannot', 'the url cannot', 'unable to fetch',
-      'nie udało mi się', 'nie mam dostępu'];
-    const extractedLower = extracted.toLowerCase();
     const wordCount = extracted.split(/\s+/).filter(Boolean).length;
-    // Only check error phrases in the FIRST 150 words (beginning of response)
-    // to avoid false positives from page content that naturally contains these words
-    const first150words = extracted.split(/\s+/).slice(0, 150).join(' ').toLowerCase();
-    const isErrorMessage = errorPhrases.some(p => first150words.includes(p));
-
-    if (isErrorMessage || wordCount < 30) {
-      throw new Error(`Strona nie mogła zostać odczytana przez AI (${wordCount} słów). Użyj przycisku "Dodaj tekst ręcznie" i wklej tam treść skopiowaną ze strony.`);
+    if (wordCount < 30) {
+      throw new Error(_t('err-url-thin').replace('{n}', String(wordCount)));
     }
 
     fill.style.width = '100%';
@@ -4506,7 +4905,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
     const evalRes = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 500,
+      body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 500,
         system: evalSys,
         messages: [{ role: 'user', content: `Topic: ${topic}\nKeywords: ${kwText}\n\nArticle:\n${articleText}` }]
       })
@@ -4540,7 +4939,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
     const impRes = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: premiumMaxTokens,
+      body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(premiumMaxTokens),
         system: editorSys,
         messages: [{ role: 'user', content: `Fix ONLY these issues in the article: ${issuesList}\n\nDo NOT change factual content. Keep the same language and tone. IMPORTANT: keep the meta description block (class="meta-box") at the end if present. Keywords: ${kwText}.\nReturn ONLY the improved HTML, no markdown, no preamble.\n\nArticle:\n${originalHtml}` }]
       })
@@ -4594,7 +4993,7 @@ async function generate(skipPremiumModal = false) {
   document.getElementById('premium-fix-btn').style.display = 'none';
   document.getElementById('img-btn').style.display = 'none';
   document.getElementById('copy-btn').style.display = 'none';
-  document.getElementById('dl-btn').style.display = 'none'; document.getElementById('dl-docx-btn').style.display = 'none'; document.getElementById('dl-pdf-btn').style.display = 'none'; document.getElementById('titles-btn').style.display = 'none'; document.getElementById('links-btn').style.display = 'none'; document.getElementById('gap-btn').style.display = 'none'; document.getElementById('serp-toggle-btn').style.display = 'none'; document.getElementById('edit-btn').style.display = 'none'; document.getElementById('seo-btn').style.display = 'none'; document.getElementById('aio-btn').style.display = 'none'; document.getElementById('aeo-btn').style.display = 'none'; document.getElementById('geo-btn').style.display = 'none'; document.getElementById('tts-btn').style.display='none'; if(typeof voiceStop==='function')voiceStop(); var _pa=document.getElementById('pod-audio-btn'); if(_pa)_pa.style.display='none'; var _pd=document.getElementById('pod-dl-btn'); if(_pd)_pd.style.display='none'; var _tk=document.getElementById('trans-tokb-btn'); if(_tk)_tk.style.display='none';
+  document.getElementById('dl-btn').style.display = 'none'; document.getElementById('dl-docx-btn').style.display = 'none'; document.getElementById('dl-pdf-btn').style.display = 'none'; document.getElementById('titles-btn').style.display = 'none'; document.getElementById('links-btn').style.display = 'none'; document.getElementById('gap-btn').style.display = 'none'; { const fb=document.getElementById('fakty-btn'); if(fb)fb.style.display='none'; } document.getElementById('serp-toggle-btn').style.display = 'none'; document.getElementById('edit-btn').style.display = 'none'; document.getElementById('seo-btn').style.display = 'none'; document.getElementById('aio-btn').style.display = 'none'; document.getElementById('aeo-btn').style.display = 'none'; document.getElementById('geo-btn').style.display = 'none'; document.getElementById('tts-btn').style.display='none'; if(typeof voiceStop==='function')voiceStop(); var _pa=document.getElementById('pod-audio-btn'); if(_pa)_pa.style.display='none'; var _pd=document.getElementById('pod-dl-btn'); if(_pd)_pd.style.display='none'; var _tk=document.getElementById('trans-tokb-btn'); if(_tk)_tk.style.display='none';
   document.getElementById('repurpose-wrap').style.display = 'none'; document.getElementById('wp-pub-btn').style.display = 'none'; document.getElementById('jsonld-btn').style.display = 'none';
   document.getElementById('jsonld-box').classList.remove('show');
   document.getElementById('out-badge').textContent = _t('badge-generating');
@@ -4692,7 +5091,7 @@ ${useWeb
 }
 - Write in ${langMap[lang] || 'Polish'}. Tone: ${tone.toLowerCase()}.
 - Return ONLY HTML using: h1, h2, h3, p, ul, ol, li, strong, em, a, table, thead, tbody, tr, th, td. No markdown, no code blocks, no preamble.
-- LINKS: When referencing a URL from the knowledge base, create a real clickable link that opens in new tab: <a href="URL" target="_blank" rel="noopener">link text</a>. Never write URLs as plain text. IMPORTANT: For the brand domains always use the www prefix (e.g. www.example.com) - never link to a bare domain without www.
+- LINKS: When referencing a URL from the knowledge base, create a real clickable link that opens in new tab: <a href="URL" target="_blank" rel="noopener">link text</a>. Never write URLs as plain text. COPY THE ADDRESS CHARACTER FOR CHARACTER from the source: do not add or remove www, do not change http to https, do not shorten a path, do not guess a deeper page. An address you alter is an address that may not exist. Link only to addresses that appear in the sources; never construct one.
 - TABLES: When a table is appropriate or requested, always use proper HTML table with <thead>, <tbody>, <th>, <td> tags with border styling: style="border:1px solid #ccc;padding:8px". Tables must be complete with headers.
 
 SEO REQUIREMENTS (must fulfill ALL):
@@ -4705,7 +5104,7 @@ SEO REQUIREMENTS (must fulfill ALL):
 AIO REQUIREMENTS (must fulfill ALL):
 ✓ First paragraph (2-3 sentences): directly answers the core question - AI Overview will extract this
 ✓ Each H2 section: opens with a self-contained direct answer (1-2 sentences) before expanding
-✓ Short extractable passages: keep paragraphs to 3-5 sentences so AI can cite them independently
+✓ Short extractable passages: keep paragraphs between 2 and 5 sentences, and vary that length from paragraph to paragraph so the text does not read as equal blocks
 ✓ Entity definitions: define any product name, service name, or concept when first mentioned
 ✓ Zero fluff: every sentence adds factual value - remove any sentence that only restates the previous one
 
@@ -4719,16 +5118,16 @@ FORMATTING:
 ✗ Do NOT use the "-" character as a separator or dash within sentences (e.g. "produkt - dla klientów" or "usługa - dostępna"). Use full sentences and conjunctions instead (np. "oraz", "który", "gdzie", "i", "a"). Hyphens in compound words are allowed (e.g. "e-commerce", "24/7").
 
 MANDATORY CLOSING SECTION - always include at the very end, immediately before the meta description:
-Add an H2 titled "${kwName}" followed by a SINGLE <ul> with 4-6 <li> bullets. Each bullet MUST contain at least one specific number, percentage, comparison or date. Format: "[Brand/Product/Action] = [specific metric or fact]". Example: "[Product] handles over 8,000 locations nationwide, covering nearly every major city." CRITICAL STRUCTURE: this section contains ONLY the H2 and the single <ul>. Do NOT put any <p> paragraph inside this section, between the bullets, or after it. Nothing may appear after this section except the meta description block.
+Add an H2 titled "${kwName}" followed by a SINGLE <ul> with 4-6 <li> bullets. Each bullet states one concrete takeaway from the article. Include a number ONLY when that number appears in the sources; a bullet without a figure is correct and preferred over a bullet with an invented one. CRITICAL STRUCTURE: this section contains ONLY the H2 and the single <ul>. Do NOT put any <p> paragraph inside this section, between the bullets, or after it. Nothing may appear after this section except the meta description block.
 
 CONTENT QUALITY RULES (applied to every paragraph):
-✗ ANTI-FLUFF: Remove any sentence that does not contain a specific fact, number, comparison or named product. Never write "rosnaca popularnosc", "dynamiczny rozwój", "nowoczesne rozwiazanie" without a specific number backing it up.
+✗ ANTI-FLUFF: Cut any sentence that only restates the previous one or praises without saying anything ("rosnaca popularnosc", "dynamiczny rozwoj", "nowoczesne rozwiazanie"). Replace it with something the sources actually say, or delete it. Do NOT rescue such a sentence by attaching a number to it.
 ✗ ANTI-GENERIC: Never write a vague category label (e.g. "the industry", "providers") when you mean a specific company. Use the exact brand name every time.
 ✓ SALIENCE: Mention the main brand/product by exact name at least once in every H2 section (not just in the headline).
-✓ BLUF: The very first paragraph MUST contain: one key metric or number, source attribution (if available in KB), and context (year or comparison). Example: "[Brand] delivered 56.4M units in 2024, up 44% versus 2022 (source: [report], 2026)."
-✓ FANOUT: For each main topic, cover the full query space: what it is, how it works, who it is for, technical specs/parameters, cost or how to start.
-✓ TABLES: Each table must contain ONE homogeneous dataset. Never mix different categories in one table. Always include technical columns: max weight, max dimensions, delivery time, price tier where applicable.
-✓ LINKS: When a product or brand name appears in the text and a URL for it exists in the knowledge base, create a clickable link on that name.${bvInstruction}${userWatermark}`
+✓ BLUF: The first paragraph answers the question asked in the title, in two or three sentences. Open with a figure ONLY if the sources contain one that answers it; otherwise open with the substantive answer in words. Never open with a vague introduction.
+✓ FANOUT: For each main topic, cover the query space the sources let you cover: what it is, how it works, who it is for, parameters, how to start. Skip an angle the sources do not support instead of filling it in.
+✓ TABLES: Each table must contain ONE homogeneous dataset. Never mix different categories in one table. Every cell must come from the sources. Leave a column out rather than inventing its values, and do not add rows to make the table look full.
+✓ LINKS: Link a given address AT MOST ONCE in the whole article, at its first meaningful mention. Never link the same URL a second time, and never link a brand name just because it appears again.${bvInstruction}${userWatermark}`
       : `You are an SEO and content writer. Write content based on the knowledge base provided by the user.
 STRICT RULES:
 - ALWAYS prioritize facts, data, and information from the provided knowledge base.
@@ -4739,14 +5138,15 @@ ${useWeb
 }
 - Write in ${langMap[lang] || 'Polish'}. Use a ${tone.toLowerCase()} tone.
 - Return ONLY article HTML using: h1, h2, h3, p, ul, ol, li, strong, em, a, table, thead, tbody, tr, th, td. No markdown, no code blocks, no preamble.
-- LINKS: When referencing a URL from the knowledge base, create a real clickable link that opens in new tab: <a href="URL" target="_blank" rel="noopener">link text</a>. Never write URLs as plain text. IMPORTANT: For the brand domains always use the www prefix (e.g. www.example.com) - never link to a bare domain without www.
+- LINKS: When referencing a URL from the knowledge base, create a real clickable link that opens in new tab: <a href="URL" target="_blank" rel="noopener">link text</a>. Never write URLs as plain text. COPY THE ADDRESS CHARACTER FOR CHARACTER from the source: do not add or remove www, do not change http to https, do not shorten a path, do not guess a deeper page. An address you alter is an address that may not exist. Link only to addresses that appear in the sources; never construct one.
 - TABLES: When a table is appropriate or requested, always use proper HTML table with <thead>, <tbody>, <th>, <td> tags with border styling: style="border:1px solid #ccc;padding:8px". Tables must be complete with headers.
 ${(ctype !== 'FAQ page' && !isPress) ? `- MANDATORY: End the article, immediately before the meta description, with an H2 titled "${kwName}" followed by a SINGLE <ul> of 4-6 <li> bullets, each with at least one specific number, percentage or comparison. This section contains ONLY the H2 and the <ul>: no <p> inside it, between the bullets, or after it. Nothing follows it except the meta description.` : ''}
-- BLUF: The first paragraph MUST include a key number, source and context. Never start with vague introductions.
-- ANTI-FLUFF: Every paragraph must contain at least one specific fact or number. Remove emotional/vague sentences ("rosnąca popularność", "dynamiczny rozwój") without data backing.
+- BLUF: The first paragraph answers the question in the title, in two or three sentences. Lead with a figure only if the sources contain one; otherwise lead with the answer in words. Never start with a vague introduction.
+- ANTI-FLUFF: Cut sentences that only restate the previous one or praise without content ("rosnąca popularność", "dynamiczny rozwój"). Delete them; do not repair them by adding a number.
 - ANTI-GENERIC: Use exact brand/product names, never generic "branża" when referring to a specific company.
 - SALIENCE: Mention the main brand by exact name at least once per H2 section.
-- TABLES: One dataset per table. Include technical specs (weight, dimensions, time, price) as columns where applicable.
+- TABLES: One dataset per table. Every cell comes from the sources. Omit a column rather than inventing its values.
+- LINKS: Link a given address at most once in the whole article, at its first meaningful mention.
 - FORMATTING: Do NOT use the "-" character as a separator or dash within sentences (e.g. "produkt - dla klientów"). Use full sentences and conjunctions instead (np. "oraz", "który", "gdzie"). Hyphens in compound words are allowed (e.g. "e-commerce").${bvInstruction}${userWatermark}`;
 
     const aeoOn = document.getElementById('use-aeo')?.checked;
@@ -4755,6 +5155,9 @@ ${(ctype !== 'FAQ page' && !isPress) ? `- MANDATORY: End the article, immediatel
     if (isPress) systemPrompt += pressBlock(pressDate);
     // Rok w tytule albo w zdaniu ma byc biezacy, nie ten, ktory model pamieta.
     systemPrompt += blokDaty();
+    // Reguly z audytu agencji. Doklejane na koncu, zeby przebijaly wczesniejsze
+    // wymagania formy: gdy zrodlo nie ma liczby, brak liczby wygrywa z szablonem.
+    systemPrompt += blokRzetelnosci({ ton: tonKanoniczny(), odbiorca: odbiorcaTekstu() });
     systemPrompt += lineGuardrailBlock(getLlmsConfig());
     if (typeof isPodcastType === 'function' && isPodcastType(ctype)) systemPrompt += podcastPromptBlock();
     else if (typeof isNewsletterAudioType === 'function' && isNewsletterAudioType(ctype)) systemPrompt += newsletterPromptBlock();
@@ -4786,7 +5189,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: getMaxTokens(), system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+      body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(getMaxTokens()), system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
     });
     const data = await res.json();
     if (data.error) {
@@ -4844,7 +5247,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
         const r = await apiFetch({
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-          body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 400,
+          body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 400,
             system: 'You are a content SEO expert evaluating AI-generated content from a company knowledge base. Evaluate ONLY content-level SEO. Respond ONLY with valid JSON no markdown: {"score":0-100,"issues":["short issue in ' + (currentLang === 'en' ? 'English' : 'Polish') + ' max 50 chars"]}. Max 4 issues. Evaluate: keyword usage in headings and body text, H1/H2 structure, meta description presence, content completeness. CRITICAL: Do NOT penalize for missing data (prices, case studies, competitor comparisons) - the content reflects what is in the knowledge base. Do NOT penalize for: internal links, technical SEO, backlinks, page title. The article is COMPLETE if it has a conclusion paragraph.',
             messages: [{ role: 'user', content: `Topic: ${topic}\nKeywords: ${kwText}\n\nArticle:\n${articleText}` }]
           })
@@ -4862,7 +5265,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
         const r = await apiFetch({
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-          body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 400,
+          body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 400,
             system: 'AIO expert evaluating AI-generated content from a company knowledge base for Google AI Overviews. Respond ONLY with valid JSON no markdown: {"score":0-100,"issues":["short issue in ' + (currentLang === 'en' ? 'English' : 'Polish') + ' max 50 chars"]}. Evaluate: direct answer in first para, extractable self-contained passages, entity/product definitions, topic coverage based on available knowledge, no fluff. Max 4 issues. Do NOT flag missing data (prices, case studies) - the content reflects what the knowledge base contains. Evaluate the article AS IS - do not penalize for absent sections if the article has a clear conclusion.',
             messages: [{ role: 'user', content: `Topic: ${topic}\nKeywords: ${kwText}\n\nArticle:\n${articleText}` }]
           })
@@ -4917,7 +5320,7 @@ ${html}`;
         const improveRes = await apiFetch({
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-          body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: getMaxTokens(), system: editorRole, messages: [{ role: 'user', content: improvePrompt }] })
+          body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(getMaxTokens()), system: editorRole, messages: [{ role: 'user', content: improvePrompt }] })
         });
         const improveData = await improveRes.json();
         if (!improveData.error) {
@@ -4997,14 +5400,14 @@ ${html}`;
     document.getElementById('premium-fix-btn').style.display = 'none';
   document.getElementById('img-btn').style.display = 'none';
   document.getElementById('copy-btn').style.display = 'none';
-    document.getElementById('dl-btn').style.display = 'none'; document.getElementById('dl-docx-btn').style.display = 'none'; document.getElementById('dl-pdf-btn').style.display = 'none'; document.getElementById('titles-btn').style.display = 'none'; document.getElementById('links-btn').style.display = 'none'; document.getElementById('gap-btn').style.display = 'none'; document.getElementById('serp-toggle-btn').style.display = 'none'; document.getElementById('edit-btn').style.display = 'none'; document.getElementById('seo-btn').style.display = 'none'; document.getElementById('aio-btn').style.display = 'none'; document.getElementById('aeo-btn').style.display = 'none'; document.getElementById('geo-btn').style.display = 'none'; document.getElementById('tts-btn').style.display='none'; if(typeof voiceStop==='function')voiceStop(); var _pa=document.getElementById('pod-audio-btn'); if(_pa)_pa.style.display='none'; var _pd=document.getElementById('pod-dl-btn'); if(_pd)_pd.style.display='none'; var _tk=document.getElementById('trans-tokb-btn'); if(_tk)_tk.style.display='none';
+    document.getElementById('dl-btn').style.display = 'none'; document.getElementById('dl-docx-btn').style.display = 'none'; document.getElementById('dl-pdf-btn').style.display = 'none'; document.getElementById('titles-btn').style.display = 'none'; document.getElementById('links-btn').style.display = 'none'; document.getElementById('gap-btn').style.display = 'none'; { const fb=document.getElementById('fakty-btn'); if(fb)fb.style.display='none'; } document.getElementById('serp-toggle-btn').style.display = 'none'; document.getElementById('edit-btn').style.display = 'none'; document.getElementById('seo-btn').style.display = 'none'; document.getElementById('aio-btn').style.display = 'none'; document.getElementById('aeo-btn').style.display = 'none'; document.getElementById('geo-btn').style.display = 'none'; document.getElementById('tts-btn').style.display='none'; if(typeof voiceStop==='function')voiceStop(); var _pa=document.getElementById('pod-audio-btn'); if(_pa)_pa.style.display='none'; var _pd=document.getElementById('pod-dl-btn'); if(_pd)_pd.style.display='none'; var _tk=document.getElementById('trans-tokb-btn'); if(_tk)_tk.style.display='none';
   document.getElementById('repurpose-wrap').style.display = 'none'; document.getElementById('wp-pub-btn').style.display = 'none'; document.getElementById('jsonld-btn').style.display = 'none';
   document.getElementById('jsonld-box').classList.remove('show');
     return false;
   }
 
   const art = document.getElementById('article');
-  art.innerHTML = html;
+  art.innerHTML = usunPowtorzoneLinki(html);
   art.style.display = 'block';
   art.contentEditable = 'false';
   editMode = false;
@@ -5031,6 +5434,7 @@ ${html}`;
   document.getElementById('titles-btn').style.display = 'flex';
   document.getElementById('links-btn').style.display = 'flex';
   document.getElementById('gap-btn').style.display = 'flex';
+  document.getElementById('fakty-btn').style.display = 'flex';
   if (serpData) document.getElementById('serp-toggle-btn').style.display = 'flex';
   { const eb = document.getElementById('edit-btn'); if(eb){ eb.style.display='flex'; eb.innerHTML=_t('btn-edit'); } }
   document.getElementById('seo-btn').style.display = 'flex'; document.getElementById('aio-btn').style.display = 'flex'; document.getElementById('aeo-btn').style.display = 'flex'; document.getElementById('geo-btn').style.display = 'flex';
@@ -5202,7 +5606,296 @@ function previewHistory(i) {
   document.getElementById('versions-bar').querySelectorAll('.ver-btn').forEach(el => el.remove());
 }
 
+// ─── KONTROLA ODNOSNIKOW ─────────────────────────────────────────────────────
+// Agencja pytala o linkowanie tylko przy powtorzeniach, ale ta sama logika co
+// przy liczbach dotyczy adresow: zmyslony adres wyglada dokladnie jak wziety
+// ze zrodla, a prowadzi donikad. Rozni sie tym, ze da sie go sprawdzic
+// maszynowo i bez modelu - wiec sprawdzamy.
+
+const KOTWICE_PUSTE = ['tutaj', 'kliknij tutaj', 'zobacz', 'link', 'wiecej', 'więcej',
+  'dowiedz sie wiecej', 'dowiedz się więcej', 'czytaj dalej', 'sprawdz', 'sprawdź',
+  'here', 'click here', 'read more', 'learn more', 'see more', 'this link'];
+
+// Adres bez konca ukosnika, bez kotwicy i bez www - dwa zapisy tej samej
+// strony maja dac ten sam klucz, inaczej zglaszalibysmy falszywe alarmy.
+function kluczAdresu(adres) {
+  return String(adres || '').trim().toLowerCase()
+    .replace(/^https?:\/\//, '').replace(/^www\./, '')
+    .split('#')[0].replace(/\/+$/, '');
+}
+
+function odnosnikiArtykulu() {
+  const art = document.getElementById('article');
+  if (!art) return [];
+  return Array.from(art.querySelectorAll('a[href]')).map(function (a) {
+    return { adres: a.getAttribute('href'), kotwica: (a.textContent || '').trim() };
+  }).filter(function (l) { return /^https?:\/\//i.test(l.adres); });
+}
+
+// Zbior adresow, ktore wolno linkowac: wszystko, co pada w zaznaczonych
+// zrodlach - i jako pole url dokumentu, i jako adres w jego tresci.
+function adresyZeZrodel() {
+  const zbior = Object.create(null);
+  getSelectedDocs().forEach(function (d) {
+    if (d.url) zbior[kluczAdresu(d.url)] = true;
+    const znalezione = String(d.content || '').match(/https?:\/\/[^\s"'<>)\]]+/g) || [];
+    znalezione.forEach(function (u) { zbior[kluczAdresu(u)] = true; });
+  });
+  return zbior;
+}
+
+function sprawdzLinkiArtykulu() {
+  const linki = odnosnikiArtykulu();
+  const uwagi = [];
+  if (!linki.length) return { linki: linki, uwagi: uwagi };
+
+  const zrodla = adresyZeZrodel();
+  const maZrodla = Object.keys(zrodla).length > 0;
+  const widzianeKotwice = Object.create(null);
+
+  linki.forEach(function (l) {
+    const klucz = kluczAdresu(l.adres);
+
+    // Adres, ktorego nie ma w zadnym zrodle. Sprawdzamy tylko wtedy, gdy
+    // w ogole mamy z czym porownac - inaczej zglaszalibysmy wszystko.
+    if (maZrodla && !zrodla[klucz]) {
+      // Sama domena moze byc znana, a sciezka dopisana przez model. To gorszy
+      // przypadek niz obca domena, bo wyglada wiarygodnie.
+      const domena = klucz.split('/')[0];
+      const znanaDomena = Object.keys(zrodla).some(function (z) { return z.split('/')[0] === domena; });
+      uwagi.push({
+        rodzaj: znanaDomena ? 'link-sciezka' : 'link-obcy',
+        cytat: l.adres, powod: '',
+      });
+    }
+
+    const kot = l.kotwica.toLowerCase().replace(/[.,!?:;]+$/, '');
+    if (!kot) {
+      uwagi.push({ rodzaj: 'link-pusty', cytat: l.adres, powod: '' });
+    } else if (KOTWICE_PUSTE.indexOf(kot) !== -1) {
+      uwagi.push({ rodzaj: 'link-kotwica', cytat: l.kotwica, powod: '' });
+    } else if (widzianeKotwice[kot]) {
+      uwagi.push({ rodzaj: 'link-powtorka', cytat: l.kotwica, powod: '' });
+    }
+    if (kot) widzianeKotwice[kot] = true;
+  });
+
+  return { linki: linki, uwagi: uwagi };
+}
+
+// Czy adres w ogole odpowiada. Tylko wariant proxy - pozostale nie maja
+// serwera, a przegladarka obcej witryny nie sprawdzi.
+async function sprawdzCzyLinkiZyja(linki) {
+  const adresy = [];
+  const widziane = Object.create(null);
+  linki.forEach(function (l) {
+    const k = kluczAdresu(l.adres);
+    if (!widziane[k]) { widziane[k] = true; adresy.push(l.adres); }
+  });
+  if (!adresy.length) return [];
+  try {
+    const odp = await fetch('/api/odnosniki', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adresy: adresy })
+    });
+    if (!odp.ok) return [];
+    const dane = await odp.json();
+    return (dane.odnosniki || []).filter(function (o) { return !o.dziala; })
+      .map(function (o) {
+        return { rodzaj: 'link-martwy', cytat: o.adres,
+                 powod: o.status ? 'HTTP ' + o.status : (o.blad || '') };
+      });
+  } catch (e) {
+    // Brak serwera albo brak sieci nie jest wynikiem kontroli - milczymy.
+    return [];
+  }
+}
+
+// ─── KONTROLA FAKTOW ─────────────────────────────────────────────────────────
+// Agencja SEO podsumowala test zdaniem: "generuje fajnie, ale ktos to musi
+// potem sprawdzic i zweryfikowac merytorycznie". Trzy najciezsze uwagi na
+// liscie - zmyslone ceny, naciagniete przepisy i sprzeczne liczby w jednym
+// tekscie - to dokladnie to, co czlowiek wylapuje przy takim sprawdzaniu.
+// Ten przebieg robi pierwsze przejscie maszynowo: zestawia gotowy artykul
+// ze zrodlami i wypisuje, co nie ma pokrycia. Niczego nie poprawia sam.
+
+let faktyWynik = null;          // ostatni wynik, zeby nie liczyc dwa razy
+let faktySygnatura = '';        // dla jakiego artykulu policzony
+
+function zamknijPanelFaktow() {
+  document.getElementById('fakty-panel').style.display = 'none';
+}
+
+function przelaczPanelFaktow() {
+  const panel = document.getElementById('fakty-panel');
+  if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+  uruchomKontroleFaktow(false);
+}
+
+// Zrodla w tej samej postaci, w jakiej widzial je model piszacy artykul.
+// Gdyby kontrola dostala inny zestaw, zglaszalaby braki tam, gdzie ich nie ma.
+function zrodlaDoKontroli() {
+  const aktywne = getSelectedDocs();
+  return aktywne.map(function (d) {
+    return '### ' + d.name + '\n' + d.content;
+  }).join('\n\n---\n\n');
+}
+
+async function uruchomKontroleFaktow(wymus) {
+  const art = document.getElementById('article');
+  const wynikEl = document.getElementById('fakty-wynik');
+  const ladowanie = document.getElementById('fakty-loading');
+  const odswiez = document.getElementById('fakty-refresh-btn');
+  if (!art || !art.innerHTML.trim()) return;
+
+  const tekstArtykulu = art.innerText || art.textContent || '';
+  const sygnatura = String(tekstArtykulu.length) + ':' + tekstArtykulu.slice(0, 120);
+  if (!wymus && faktyWynik && faktySygnatura === sygnatura) {
+    pokazWynikFaktow(faktyWynik);
+    return;
+  }
+
+  // Odnosniki sprawdzamy sami, bez modelu: to arytmetyka, nie ocena.
+  // Robimy to przed wszystkim innym, zeby dzialalo takze wtedy, gdy zrodel
+  // nie ma albo gdy zapytanie do modelu polegnie.
+  const badanie = sprawdzLinkiArtykulu();
+  let uwagiLinkow = badanie.uwagi;
+
+  const zrodla = zrodlaDoKontroli();
+  if (!zrodla.trim()) {
+    // Bez zrodel nie ma z czym zestawiac tresci. Sam model nie wystarczy -
+    // ocena "z pamieci" byla by zgadywaniem. Kontrola odnosnikow dziala
+    // niezaleznie od tego, wiec jej wynik i tak pokazujemy.
+    faktyWynik = uwagiLinkow;
+    faktySygnatura = sygnatura;
+    pokazWynikFaktow(uwagiLinkow, true);
+    return;
+  }
+
+  wynikEl.innerHTML = '';
+  ladowanie.style.display = 'block';
+  odswiez.style.display = 'none';
+
+  const jezykUwag = currentLang === 'en' ? 'English' : 'Polish';
+  const system = 'You are a fact checker reviewing an article against the sources it was '
+    + 'written from. You are not an editor: do not rewrite anything, do not praise anything.\n'
+    + 'Report ONLY problems, in these four categories:\n'
+    + '  "liczba"    - a number, price, rate, date, deadline, weight or dimension that '
+    + 'does not appear in the sources, or appears there with a different value.\n'
+    + '  "zakres"    - a claim that stretches a source fact beyond what it says: a '
+    + 'different country, a different product, a different kind of customer, a legal or '
+    + 'tax rule the sources never state.\n'
+    + '  "sprzecznosc" - two places in the ARTICLE ITSELF that disagree (for example a '
+    + 'paragraph and a table giving different values for the same thing).\n'
+    + '  "konflikt"  - the article recommends a competitor, a comparison site, an '
+    + 'aggregator or a marketplace over what the sources offer.\n'
+    + 'Judge ONLY against the supplied sources. General knowledge is not evidence. '
+    + 'Common-knowledge statements with no figures are not findings. If everything checks '
+    + 'out, return an empty list - an empty list is a valid and expected answer.\n'
+    + 'Respond ONLY with valid JSON, no markdown, no preamble:\n'
+    + '{"uwagi":[{"rodzaj":"liczba|zakres|sprzecznosc|konflikt","cytat":"the exact '
+    + 'fragment from the article, max 120 characters","powod":"one sentence in '
+    + jezykUwag + ', max 140 characters"}]}\n'
+    + 'Max 12 findings, most serious first.';
+
+  try {
+    const res = await apiFetch({
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: MODEL_TRESCI,
+        // Tu myslenie zostaje wlaczone: zestawienie liczby z artykulu
+        // z tabela w zrodle to dokladnie ta praca, ktora na nim zyskuje.
+        max_tokens: zRezerwa(2000),
+        system: system,
+        messages: [{ role: 'user', content:
+          'SOURCES:\n' + zrodla.slice(0, 120000)
+          + '\n\n---\n\nARTICLE:\n' + tekstArtykulu.slice(0, 40000) }]
+      })
+    });
+    const dane = await res.json();
+    if (dane.error) throw new Error(dane.error.message || '');
+    const odczyt = parsujJsonModelu((dane.content || []).map(function (b) { return b.text || ''; }).join(''));
+    // Uwagi policzone maszynowo ida na poczet listy: sa pewne, a uwagi
+    // modelu sa oceną.
+    faktyWynik = uwagiLinkow.concat(Array.isArray(odczyt.uwagi) ? odczyt.uwagi : []);
+    faktySygnatura = sygnatura;
+    pokazWynikFaktow(faktyWynik);
+  } catch (e) {
+    // Nawet gdy model nie odpowiedzial, kontrola odnosnikow ma swoj wynik.
+    faktyWynik = uwagiLinkow;
+    faktySygnatura = sygnatura;
+    pokazWynikFaktow(uwagiLinkow);
+    wynikEl.insertAdjacentHTML('beforeend',
+      '<div style="color:var(--red);margin-top:8px">' + escapeHtml(_t('fakty-blad')) + '</div>');
+    odswiez.style.display = 'inline-block';
+  } finally {
+    ladowanie.style.display = 'none';
+  }
+}
+
+const IKONY_UWAG = {
+  liczba: '🔢', zakres: '↔️', sprzecznosc: '⚠️', konflikt: '🏳️',
+  'link-obcy': '🔗', 'link-sciezka': '🔗', 'link-martwy': '💀',
+  'link-kotwica': '✍️', 'link-powtorka': '✍️', 'link-pusty': '✍️',
+};
+
+// tylkoLinki = zrodel nie bylo, wiec tresci nie sprawdzalismy. Trzeba to
+// powiedziec, zeby nikt nie wzial pustej listy za "artykul jest w porzadku".
+function pokazWynikFaktow(uwagi, tylkoLinki) {
+  const wynikEl = document.getElementById('fakty-wynik');
+  const odswiez = document.getElementById('fakty-refresh-btn');
+  document.getElementById('fakty-loading').style.display = 'none';
+  odswiez.style.display = 'inline-block';
+
+  const stopka = tylkoLinki
+    ? '<div style="color:var(--text3);margin-top:8px">' + escapeHtml(_t('fakty-brak-zrodel')) + '</div>'
+    : '';
+
+  if (!uwagi.length) {
+    wynikEl.innerHTML = '<div style="color:#16A34A;font-weight:600">'
+      + escapeHtml(tylkoLinki ? _t('fakty-linki-czysto') : _t('fakty-czysto')) + '</div>'
+      + (tylkoLinki ? '' : '<div style="color:var(--text3);margin-top:6px">' + escapeHtml(_t('fakty-czysto-opis')) + '</div>')
+      + stopka;
+    return;
+  }
+
+  wynikEl.innerHTML =
+    '<div style="margin-bottom:8px;color:var(--text2)">'
+    + escapeHtml(_t('fakty-znaleziono').replace('{n}', String(uwagi.length))) + '</div>'
+    + uwagi.map(function (u) {
+      const rodzaj = String(u.rodzaj || '').toLowerCase();
+      return '<div style="border-left:3px solid var(--border);padding:6px 0 6px 10px;margin-bottom:8px">'
+        + '<div style="font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text3)">'
+        + (IKONY_UWAG[rodzaj] || '•') + ' ' + escapeHtml(_t('fakty-rodzaj-' + rodzaj) || rodzaj) + '</div>'
+        + '<div style="margin:3px 0;font-style:italic;color:var(--text2);word-break:break-all">"' + escapeHtml(String(u.cytat || '')) + '"</div>'
+        + '<div>' + escapeHtml(String(u.powod || '') || _t('fakty-powod-' + rodzaj) || '') + '</div>'
+        + '</div>';
+    }).join('') + stopka;
+}
+
 // ─── ARTICLE STATS ────────────────────────────────────────────────────────────
+// Sama proza artykulu, bez naglowkow i bez meta description.
+function tekstProzy(korzen) {
+  // Kopia, nie oryginal: funkcja usuwa meta-box, a wolajacy moze jeszcze
+  // potrzebowac calego drzewa.
+  const kopia = korzen.cloneNode(true);
+  const meta = kopia.querySelector('.meta-box');
+  if (meta) meta.remove();
+  const bloki = kopia.querySelectorAll('p, li, td');
+  if (!bloki.length) return kopia.innerText || kopia.textContent || '';
+  return Array.from(bloki).map(function (el) {
+    return (el.innerText || el.textContent || '').trim();
+  }).filter(Boolean).join('\n');
+}
+
 function showArticleStats(html) {
   const tmp = document.createElement('div');
   tmp.innerHTML = html;
@@ -5210,15 +5903,28 @@ function showArticleStats(html) {
   const words = text.split(/\s+/).filter(Boolean).length;
   const readMin = Math.max(1, Math.ceil(words / 200));
   const h2count = tmp.querySelectorAll('h2').length;
+  const h3count = tmp.querySelectorAll('h3').length;
   const metaEl = tmp.querySelector('.meta-box p');
   const metaLen = metaEl ? metaEl.textContent.trim().length : 0;
   document.getElementById('stat-words').textContent = words;
   document.getElementById('stat-read').textContent = readMin;
   document.getElementById('stat-h2').textContent = h2count;
+  const h3El = document.getElementById('stat-h3');
+  if (h3El) {
+    h3El.textContent = h3count;
+    // Artykul od 800 slow bez ani jednego H3 jest plaski - agencja zglosila
+    // to jako brak struktury. Zolty zapala sie tylko wtedy, nie przy krotkich.
+    const plaski = words >= 800 && h3count === 0;
+    h3El.style.color = plaski ? '#B45309' : '';
+  }
   document.getElementById('stat-meta').textContent = metaLen || '-';
 
-  // FOG readability index
-  const fog = calcFog(text);
+  // Wskaznik zamglenia liczymy z samej prozy: akapitow, punktow i komorek
+  // tabeli. Naglowki nie sa zdaniami i nie koncza sie kropka, wiec doklejaly
+  // sie do zdania nastepujacego po nich i sztucznie podnosily srednia dlugosc
+  // zdania. Przy osmiu naglowkach po kilka slow to juz widoczna roznica.
+  // Meta description tez odpada - to nie jest tresc artykulu.
+  const fog = calcFog(tekstProzy(tmp));
   const fogEl = document.getElementById('stat-fog');
   if (fog !== null) {
     fogEl.textContent = fog;
@@ -5439,7 +6145,7 @@ async function openTitlesPanel() {
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 600,
+      body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 600,
         system: `You are an SEO title specialist. Generate exactly 5 H1 title variants in ${outLang} (write all titles in ${outLang} regardless of the language of the topic). Each title: under 65 chars, contains the main keyword naturally, targets a different search intent (informational, commercial, how-to, listicle, definition). Respond ONLY with a JSON array of 5 strings, no markdown.${blokDaty()}`,
         messages: [{ role: 'user', content: `Topic: ${topic}\nMain keyword: ${kwText}\nContent type: ${ctype}\nOutput language: ${outLang}\n\nGenerate 5 H1 title variants in ${outLang}.` }]
       })
@@ -5473,18 +6179,40 @@ function closeTitlesModal() {
 }
 
 // ─── FEATURE: READABILITY (FOG INDEX) + KEYWORD DENSITY ───────────────────────
+// Wskaznik zamglenia (Gunning Fog) w wersji dla polskiego: slowo "trudne" to
+// takie o trzech sylabach lub wiecej, a w polszczyznie liczba sylab rowna sie
+// praktycznie liczbie samoglosek.
+//
+// BLAD, KTORY TU BYL: zdania krotsze niz 11 znakow wypadaly z listy zdan, ale
+// ich slowa zostawaly w liczniku. Srednia dlugosc zdania liczyla sie wiec jako
+// "wszystkie slowa przez tylko dlugie zdania" i rosla tym bardziej, im wiecej
+// bylo zdan krotkich. Agencja zglosila za wysoki FOG w kazdej wersji tekstu -
+// czesc tego byla bledem pomiaru. Gorzej: licznik karal dokladnie za to, o co
+// teraz prosimy w regulach rytmu, wiec poprawiony tekst dostawalby gorsza note.
 function calcFog(text) {
-  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
-  if (!sentences.length) return null;
-  const words = text.split(/\s+/).filter(Boolean);
-  const avgSentLen = words.length / sentences.length;
-  // Syllable approximation for Polish: count vowel groups
-  const complexWords = words.filter(w => {
-    const vowels = (w.match(/[aąeęioóuy]/gi)||[]).length;
-    return vowels >= 3;
-  }).length;
-  const pctComplex = (complexWords / words.length) * 100;
-  return Math.round((avgSentLen + pctComplex) * 0.4 * 10) / 10;
+  // Skroty z kropka rozbijaly zdanie w srodku ("np.", "m.in."), zanizajac
+  // srednia. Chowamy kropke na czas dzielenia.
+  const SKROTY = /\b(np|tzn|tj|itp|itd|ok|ul|al|godz|nr|str|dr|prof|inz|mln|mld|tys|m\.in|e\.g|i\.e)\./gi;
+  const przygotowany = String(text || '')
+    .replace(SKROTY, (s) => s.replace(/\./g, '\u0001'))
+    .replace(/(\d)[.,](\d)/g, '$1\u0001$2');   // liczby: 1.5 to nie koniec zdania
+
+  const zdania = przygotowany.split(/[.!?]+[\s\n]|[.!?]+$/)
+    .map(s => s.replace(/\u0001/g, '.').trim())
+    .filter(s => /\p{L}/u.test(s));
+  if (!zdania.length) return null;
+
+  // Slowa liczymy z TYCH SAMYCH zdan, ktore sa w mianowniku. Wczesniej
+  // licznik i mianownik pochodzily z dwoch roznych zbiorow.
+  const slowa = zdania.join(' ').split(/\s+/)
+    .map(w => w.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ''))
+    .filter(w => /\p{L}/u.test(w));
+  if (!slowa.length) return null;
+
+  const sredniaDlugoscZdania = slowa.length / zdania.length;
+  const trudne = slowa.filter(w => (w.match(/[aąeęioóuy]/gi) || []).length >= 3).length;
+  const procentTrudnych = (trudne / slowa.length) * 100;
+  return Math.round((sredniaDlugoscZdania + procentTrudnych) * 0.4 * 10) / 10;
 }
 
 function calcKd(text, kwList) {
@@ -5537,7 +6265,7 @@ async function fetchSerpContext(topic, kwText) {
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000,
+      body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 1000,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         system: 'Write the context, topics and phrases in ' + _serpLang + '. Search for top Google results for the given keyword. Analyze top 5-10 results and return ONLY a valid JSON object (no markdown, no preamble): {"context":"2-3 sentence summary of main topics covered by top results","topics":["topic1","topic2",...up to 8 topics],"phrases":["phrase1",...up to 10 key phrases],"avgWords":estimated_average_word_count_as_integer,"avgH2":estimated_average_h2_sections_as_integer}',
         messages: [{ role: 'user', content: `Keyword: ${kwText || topic}\nSearch and analyze top results. Return JSON only.` }]
@@ -5855,7 +6583,7 @@ async function runGapAnalysis() {
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 700,
+      body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 700,
         system: 'You are a semantic SEO expert. Compare an article to SERP topics and return ONLY valid JSON (no markdown): {"score":0-100,"missing":["topic1",...up to 8],"present":["topic1",...up to 8],"msg":"one sentence assessment in ' + (currentLang === 'en' ? 'English' : 'Polish') + '"}. Score 100 = all topics covered. Return ALL relevant SERP topics in either missing or present.',
         messages: [{ role: 'user', content: 'Keyword: ' + kwText + '\nSERP topics (full list): ' + serpTopics + '\n\nArticle:\n' + articleText }]
       })
@@ -5946,12 +6674,27 @@ async function improveFromGaps() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: maxNewTokens,
-        system: `You are an SEO editor. Write ALL new content in ${outLang} (regardless of the language of the topic or keywords). Write ONLY the new HTML sections requested, then (if instructed) an updated summary section. No markdown fences, no preamble, no repetition of existing content.`,
+        model: MODEL_TRESCI,
+        max_tokens: zRezerwa(maxNewTokens),
+        // Ta sciezka dostawala wczesniej temat, frazy i gotowy artykul, ale
+        // ZADNYCH zrodel. Model musial wiec wymyslic tresc nowych sekcji -
+        // luki semantyczne z SERP-a to przeciez tematy, ktorych w artykule
+        // nie ma, a czesto nie ma ich rowniez w bazie wiedzy. Przycisk
+        // "Uzupelnij luki" byl przez to najkrotsza droga do halucynacji
+        // w tekscie, ktory poza tym trzymal sie zrodel. Teraz dostaje te
+        // same zrodla i te same reguly co glowne generowanie, a luke bez
+        // pokrycia ma pominac zamiast wypelnic.
+        system: `You are an SEO editor. Write ALL new content in ${outLang} (regardless of the language of the topic or keywords). Write ONLY the new HTML sections requested, then (if instructed) an updated summary section. No markdown fences, no preamble, no repetition of existing content.`
+          + blokFaktow() + blokZakresu() + blokKonfliktu() + blokRytmu() + blokTonu(tonKanoniczny())
+          + '\n\nA GAP IS NOT A LICENCE TO INVENT. These topics come from search results, '
+          + 'not from the sources. Write a section only for a topic the sources below '
+          + 'actually cover. For every other topic write exactly one line:\n'
+          + '<h2>TOPIC</h2><p data-brak="1">' + _t('gap-brak-pokrycia') + '</p>\n'
+          + 'so the author can see what is missing and decide whether to add a source.',
         messages: [{ role: 'user', content:
           'Article topic: ' + topic + '\nKeywords: ' + kwText +
           '\nOutput language: ' + outLang +
+          '\n\nSOURCES (the only material you may draw facts from):\n' + zrodlaDoKontroli().slice(0, 100000) +
           '\n\nExisting article (context/tone - do NOT repeat):\n' + articlePlainText +
           '\n\nWrite new HTML sections in ' + outLang + ' (each: <h2>Heading</h2><p>...</p><p>...</p>) for:\n' + topicsList +
           (hasKw
@@ -6081,8 +6824,11 @@ function buildLinkSuggestions() {
     <div class="link-sug">
       <span class="link-sug-icon">🔗</span>
       <div>
-        <div class="link-sug-text">${_t('link-suggest-prefix')} <strong>${s.name}</strong>${s.matches.length ? ' ' + _t('link-suggest-at') + ' <em>' + s.matches.join(', ') + '</em>' : ''}</div>
-        <div class="link-sug-url">${s.url}</div>
+        <!-- Nazwa dokumentu bierze sie z tytulu pobranej strony, a wiec
+             z tresci obcej witryny. Bez ucieczki znakow strona mogla by
+             wstrzyknac tu wlasny HTML. -->
+        <div class="link-sug-text">${_t('link-suggest-prefix')} <strong>${escapeHtml(s.name)}</strong>${s.matches.length ? ' ' + _t('link-suggest-at') + ' <em>' + escapeHtml(s.matches.join(', ')) + '</em>' : ''}</div>
+        <div class="link-sug-url">${escapeHtml(s.url)}</div>
       </div>
     </div>`).join('');
 }
@@ -6242,7 +6988,7 @@ async function toggleSeoPanel(forceRefresh = false) {
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 600, temperature: 0,
+      body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 600,
         system: 'You are a content SEO expert evaluating AI-generated content from a company knowledge base. Evaluate ONLY content-level SEO. Respond ONLY with valid JSON, no markdown fences: {"score": 0-100, "items": [{"ok": true/false, "text": "short observation in ' + (currentLang === 'en' ? 'English' : 'Polish') + ', max 60 chars"}]}. Give exactly 5 items covering: 1) keyword usage in H1/H2/body text, 2) heading structure quality, 3) article completeness - has BLUF (number in first paragraph), body sections AND Kluczowe wnioski with metrics, 4) meta description quality, 5) brand SALIENCE - is the main brand/product named specifically (not generic "branża") at least once per H2 section. CRITICAL: Do NOT penalize for: missing prices/case studies/competitor data, internal links, technical SEO, backlinks, page title.',
         messages: [{ role: 'user', content: `Temat: ${topic}\nSłowa kluczowe: ${kwText}\n\nArtykuł:\n${articleText}` }]
       })
@@ -6320,7 +7066,7 @@ async function toggleAioPanel(forceRefresh = false) {
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 600, temperature: 0,
+      body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 600,
         system: `You are an AIO (AI Overview Optimization) expert. Evaluate the article against these 6 AIO criteria and respond ONLY with valid JSON, no markdown fences:
 {"score": 0-100, "items": [{"ok": true/false, "text": "short observation in ${currentLang === 'en' ? 'English' : 'Polish'}, max 60 chars"}]}
 
@@ -7016,7 +7762,7 @@ async function generujTematy() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6', max_tokens: 1600, temperature: 0.7,
+        model: MODEL_TRESCI, max_tokens: zRezerwa(1600),
         system: 'You are a content strategist. From the described business need, propose EXACTLY 10 article topics. '
           + 'Each topic must be a concrete, specific title someone would actually search for or click - not a generic category. '
           + 'Vary the search intent across the set: informational, comparison, how-to, decision-stage. '
@@ -7078,7 +7824,7 @@ async function openBriefPanel() {
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 600, temperature: 0,
+      body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(600),
         system: 'You are a content strategist. Analyze the topic and knowledge base and respond ONLY with valid JSON no markdown: {"keywords":["4-6 phrases"],"h2":["5-7 headings"],"gap":"one sentence about content gap","words":"recommended word count range"}. All text MUST be in ' + (currentLang === 'en' ? 'English' : 'Polish') + '.' + blokDaty(),
         messages: [{ role: 'user', content: `Topic: ${topic}\n\nKnowledge base:\n${kbText}` }]
       })
@@ -7208,7 +7954,7 @@ async function analyzeBrandVoice() {
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 500, temperature: 0,
+      body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 500,
         system: 'You are a brand strategist. Analyze writing samples and respond ONLY in valid JSON no markdown: {"summary":"2-3 sentence style description in ' + (currentLang === 'en' ? 'English' : 'Polish') + '","style":"writing instructions in ' + (currentLang === 'en' ? 'English' : 'Polish') + ' for AI model, max 80 words"}',
         messages: [{ role: 'user', content: `Analyze the writing style of these articles:\n\n${articles.substring(0,5000)}` }]
       })
@@ -7408,7 +8154,7 @@ WAŻNE: Zwróć TYLKO tekst landing page, gotowy do wklejenia.`
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2500,
+      body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(2500),
         system: `You are a professional content repurposing specialist. Follow the instructions exactly. Write the ENTIRE output strictly in ${_rpLang}, regardless of the language of these instructions or the source article. Never truncate your response - always write the complete content as instructed.`,
         messages: [{ role: 'user', content: `${prompts[format]}\n\nARTYKUŁ ŹRÓDŁOWY (temat: ${topic}):\n${articleText}` }]
       })
@@ -8001,8 +8747,8 @@ async function visQuery(query, brand, competitors) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1200,
+      model: MODEL_POMOCNICZY,
+      thinking: BEZ_MYSLENIA, max_tokens: 1200,
       system: sys,
       messages: [{ role: 'user', content: query }],
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }]
@@ -8191,7 +8937,7 @@ async function runNarrative() {
     const r1 = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 700, system: sys1, messages: [{ role: 'user', content: 'Opowiedz o marce: ' + brand }], tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] })
+      body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 700, system: sys1, messages: [{ role: 'user', content: 'Opowiedz o marce: ' + brand }], tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] })
     });
     const d1 = await r1.json().catch(() => null);
     const narrative = (d1 && d1.content ? d1.content.filter(b => b.type === 'text').map(b => b.text).join('\n') : '').trim();
@@ -8203,7 +8949,7 @@ async function runNarrative() {
     const r2 = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 900, system: sys2, messages: [{ role: 'user', content: user2 }] })
+      body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 900, system: sys2, messages: [{ role: 'user', content: user2 }] })
     });
     const d2 = await r2.json().catch(() => null);
     const txt2 = d2 && d2.content ? d2.content.filter(b => b.type === 'text').map(b => b.text).join('\n') : '';
@@ -9380,7 +10126,7 @@ Write the image generation prompt:`;
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY,
                'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 500,
+    body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 500,
       system, messages: [{ role: 'user', content: msgContent }] })
   });
   const data = await res.json();
@@ -9713,7 +10459,7 @@ async function aivQueryAI(q) {
   var res = await apiFetch({
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1500, system: sys, messages: [{ role: 'user', content: q }], tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] })
+    body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 1500, system: sys, messages: [{ role: 'user', content: q }], tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] })
   });
   var d = await res.json().catch(function(){ return null; });
   if (!d || !d.content) throw new Error('no response');
@@ -10401,10 +11147,10 @@ async function audioGenerate(btn){
   var user=(t==='audiobook'?'Convert the following into audiobook narration:\n\n':'Topic or source material:\n\n')+src;
   window._audioBusy=true; var sp=document.getElementById('au-gen-label'); var oldsp=sp?sp.textContent:''; if(sp) sp.textContent=_t('audio-gen-loading'); var gIco=document.getElementById('au-gen-icon'); var oldIco=gIco?gIco.innerHTML:''; if(gIco) gIco.innerHTML='<span class="au-spin"></span>'; btn.disabled=true; btn.classList.add('btn-working');
   try{
-    var res=await apiFetch({ method:'POST', headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}, body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens: getMaxTokens(), temperature: 0.6, system:system, messages:[{role:'user',content:user}] }) });
+    var res=await apiFetch({ method:'POST', headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}, body: JSON.stringify({ model:MODEL_TRESCI, max_tokens: zRezerwa(getMaxTokens()), system:system, messages:[{role:'user',content:user}] }) });
     var data=await res.json();
     if(!res.ok || !data.content){ throw new Error((data&&data.error&&(data.error.message||data.error))||('HTTP '+res.status)); }
-    var scriptCost=0; if(data.usage){ try{ scriptCost=(data.usage.input_tokens*0.000003)+(data.usage.output_tokens*0.000015); sessionCost += scriptCost; updateCostDisplay(); }catch(e){} }
+    var scriptCost=0; if(data.usage){ try{ scriptCost=kosztOdpowiedzi(data); sessionCost += scriptCost; updateCostDisplay(); }catch(e){} }
     var html=(data.content||[]).map(function(c){return c.text||'';}).join('').trim();
     var sc=document.getElementById('au-script'); sc.innerHTML=html||'<p>(brak treści)</p>';
     document.getElementById('au-result-wrap').style.display='block';

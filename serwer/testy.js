@@ -12,6 +12,7 @@
 'use strict';
 
 const { zahaszuj, hasloPasuje, anthropicNaOpenai, openaiNaAnthropic } = require('./server.js');
+const strona = require('./strona.js');
 
 let zaliczone = 0;
 const bledy = [];
@@ -232,6 +233,7 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
     testySesji();
     testyBramy();
     testyPlanow();
+    await testyStrony();
 
     console.log(`\n  ${zaliczone} zaliczonych, ${bledy.length} bledow\n`);
     if (bledy.length) {
@@ -875,4 +877,164 @@ function testyPlanow() {
   }
 
   fs.rmSync(katalog, { recursive: true, force: true });
+}
+
+// ─── Pobieranie strony do bazy wiedzy ─────────────────────────────────────────
+// Agencja SEO zglosila, ze dodawanie linkow nie dziala. Nie dzialalo, bo
+// aplikacja prosila model o "odwiedzenie adresu" przez wyszukiwarke, zamiast
+// pobrac strone. Ponizsze testy pilnuja tego, co teraz robi serwer: pobiera
+// wskazany adres, nie wchodzi do sieci wewnetrznej i oddaje czysty tekst.
+
+async function testyStrony() {
+  console.log('\n  strona - adresy prywatne');
+  {
+    const prywatne = ['127.0.0.1', '10.0.0.5', '172.16.0.1', '172.31.255.255',
+      '192.168.1.1', '169.254.169.254', '100.64.0.1', '0.0.0.0', '::1',
+      'fd00::1', 'fe80::1', '::ffff:127.0.0.1'];
+    sprawdz('adresy wewnetrzne sa odrzucane', prywatne.every(strona.adresPrywatny));
+
+    const publiczne = ['8.8.8.8', '172.32.0.1', '172.15.0.1', '193.19.165.1',
+      '2606:4700::1111'];
+    sprawdz('adresy publiczne przechodza', publiczne.every((a) => !strona.adresPrywatny(a)));
+    sprawdz('smiec traktowany jak prywatny', strona.adresPrywatny('nie-adres'));
+  }
+
+  console.log('\n  strona - kontrola adresu');
+  {
+    const odrzucone = [];
+    for (const zly of ['ftp://example.com/x', 'file:///etc/passwd',
+      'http://localhost/', 'http://127.0.0.1:8080/', 'nie-adres']) {
+      try { await strona.sprawdzAdres(zly); } catch { odrzucone.push(zly); }
+    }
+    sprawdz('schematy inne niz http(s), localhost i petla zwrotna odrzucone',
+      odrzucone.length === 5);
+
+    let publiczny = null;
+    try { publiczny = await strona.sprawdzAdres('https://example.com/a?b=1'); } catch { /* brak DNS */ }
+    sprawdz('adres publiczny przechodzi kontrole',
+      publiczny === null || publiczny.hostname === 'example.com');
+  }
+
+  console.log('\n  strona - HTML na tekst');
+  {
+    const html = `<html><head><title>Cennik &amp; wysy&#322;ka</title>
+      <style>.x{color:red}</style><script>var a=1;</script></head>
+      <body><nav>Menu Kontakt Sklep</nav>
+      <main><h1>Wysy&#322;ka do W&#322;och</h1>
+      <p>Czas dostawy to 3 dni robocze.</p>
+      <h2>Ile to kosztuje</h2><ul><li>Paczka do 5 kg</li><li>Paczka do 30 kg</li></ul>
+      <table><tr><td>Waga</td><td>Cena</td></tr></table></main>
+      <footer>Stopka z prawami autorskimi</footer></body></html>`;
+    const t = strona.naTekst(html);
+    sprawdz('skrypt nie trafia do tekstu', !t.includes('var a=1'));
+    sprawdz('styl nie trafia do tekstu', !t.includes('color:red'));
+    sprawdz('menu nie trafia do tekstu', !t.includes('Menu Kontakt'));
+    sprawdz('stopka nie trafia do tekstu', !t.includes('Stopka z prawami'));
+    sprawdz('tresc glowna zostaje', t.includes('Czas dostawy to 3 dni robocze.'));
+    sprawdz('naglowki zachowuja poziom', t.includes('# Wysyłka do Włoch') && t.includes('## Ile to kosztuje'));
+    sprawdz('lista zachowuje punkty', t.includes('- Paczka do 5 kg'));
+    sprawdz('encje sa odkodowane', t.includes('Włoch') && !t.includes('&#322;'));
+    sprawdz('bez znacznikow HTML', !/<[a-z]/i.test(t));
+  }
+
+  console.log('\n  strona - pobieranie');
+  {
+    // Fałszywy fetch: petla przekierowan i naglowki bez wychodzenia do sieci.
+    function odpowiedz(status, naglowki, tresc) {
+      return {
+        status, ok: status >= 200 && status < 300,
+        headers: { get: (k) => naglowki[k.toLowerCase()] ?? null },
+        arrayBuffer: async () => new TextEncoder().encode(tresc).buffer,
+      };
+    }
+    const tresc = '<html><head><title>Strona</title></head><body><p>'
+      + 'Treść testowa o wysyłce paczek za granicę. '.repeat(10) + '</p></body></html>';
+
+    const wynik = await strona.pobierz('https://example.com/a', async () =>
+      odpowiedz(200, { 'content-type': 'text/html; charset=utf-8' }, tresc));
+    sprawdz('pobranie zwraca tytul', wynik.tytul === 'Strona');
+    sprawdz('pobranie zwraca tekst', wynik.tekst.includes('Treść testowa'));
+    sprawdz('pobranie liczy slowa', wynik.slowa > 30);
+
+    // Przekierowanie na publiczny adres: ma byc przejsciem, nie bledem.
+    let krok = 0;
+    const poPrzekierowaniu = await strona.pobierz('https://example.com/stare', async () => {
+      krok += 1;
+      return krok === 1
+        ? odpowiedz(301, { location: 'https://example.com/nowe' }, '')
+        : odpowiedz(200, { 'content-type': 'text/html' }, tresc);
+    });
+    sprawdz('przekierowanie jest sledzone', poPrzekierowaniu.adres === 'https://example.com/nowe');
+
+    // Najwazniejszy test: przekierowanie do sieci wewnetrznej musi polec
+    // MIMO ze podstawiony fetch chetnie by je obsluzyl.
+    let bladSsrf = null;
+    try {
+      await strona.pobierz('https://example.com/pulapka', async (adres) =>
+        adres.includes('example.com')
+          ? odpowiedz(302, { location: 'http://169.254.169.254/latest/meta-data/' }, '')
+          : odpowiedz(200, { 'content-type': 'text/html' }, tresc));
+    } catch (e) { bladSsrf = e; }
+    sprawdz('przekierowanie do sieci wewnetrznej jest blokowane', bladSsrf !== null);
+
+    let bladTypu = null;
+    try {
+      await strona.pobierz('https://example.com/plik.zip', async () =>
+        odpowiedz(200, { 'content-type': 'application/zip' }, 'PK'));
+    } catch (e) { bladTypu = e; }
+    sprawdz('plik nietekstowy jest odrzucany', bladTypu !== null);
+
+    let bladPusty = null;
+    try {
+      await strona.pobierz('https://example.com/pusta', async () =>
+        odpowiedz(200, { 'content-type': 'text/html' }, '<html><body><p>Za krotko</p></body></html>'));
+    } catch (e) { bladPusty = e; }
+    sprawdz('strona bez tekstu konczy sie czytelnym bledem',
+      bladPusty !== null && /czytelnego tekstu/.test(bladPusty.message));
+
+    let bladHttp = null;
+    try {
+      await strona.pobierz('https://example.com/404', async () => odpowiedz(404, {}, ''));
+    } catch (e) { bladHttp = e; }
+    sprawdz('blad HTTP jest zglaszany', bladHttp !== null && /404/.test(bladHttp.message));
+  }
+
+  console.log('\n  strona - sprawdzanie odnosnikow');
+  {
+    // Artykul moze zawierac adres, ktory model zbudowal sam. Przegladarka go
+    // nie sprawdzi (obca witryna nie pozwala czytac odpowiedzi), wiec robi to
+    // serwer - z ta sama ochrona adresu co przy pobieraniu strony.
+    const pytania = [];
+    function odp(status) {
+      return { status, ok: status >= 200 && status < 300, headers: { get: () => null } };
+    }
+    const wynik = await strona.sprawdzOdnosniki(
+      ['https://example.com/jest', 'https://example.com/nie-ma', 'http://127.0.0.1/wewnetrzny'],
+      async (adres, opcje) => {
+        pytania.push({ adres, metoda: opcje.method });
+        return odp(adres.includes('nie-ma') ? 404 : 200);
+      });
+    sprawdz('kazdy adres dostaje wynik', wynik.length === 3);
+    sprawdz('zywy adres oznaczony jako dzialajacy',
+      wynik[0].dziala === true && wynik[0].status === 200);
+    sprawdz('404 oznaczone jako niedzialajace',
+      wynik[1].dziala === false && wynik[1].status === 404);
+    sprawdz('adres wewnetrzny odrzucony bez zapytania',
+      wynik[2].dziala === false && !pytania.some((z) => z.adres.includes('127.0.0.1')));
+    sprawdz('pytamy metoda HEAD', pytania[0].metoda === 'HEAD');
+
+    // Czesc serwerow nie obsluguje HEAD. Zywy adres nie moze przez to trafic
+    // do raportu jako martwy.
+    const metody = [];
+    const poGet = await strona.sprawdzOdnosniki(['https://example.com/tylko-get'],
+      async (adres, opcje) => {
+        metody.push(opcje.method);
+        return odp(opcje.method === 'HEAD' ? 405 : 200);
+      });
+    sprawdz('odmowa HEAD powoduje ponowienie metoda GET',
+      metody.join(',') === 'HEAD,GET' && poGet[0].dziala === true);
+
+    const pusty = await strona.sprawdzOdnosniki([], async () => odp(200));
+    sprawdz('pusta lista nie wywala', Array.isArray(pusty) && pusty.length === 0);
+  }
 }
