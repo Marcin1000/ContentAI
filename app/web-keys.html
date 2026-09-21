@@ -1477,7 +1477,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
         <div style="height:1px;background:var(--border);margin:4px 0"></div>
         <div class="settings-item" onclick="openLlmsModal();closeSettingsMenu()">
           <span>📄</span>
-          <div><div style="font-weight:600;font-size:13px" data-i18n="settings-llms-title">Pliki dla AI</div><div style="font-size:11px;color:var(--text3)" data-i18n="settings-llms-sub">llms.txt + llms-full.txt</div></div>
+          <div><div style="font-weight:600;font-size:13px" data-i18n="settings-llms-title">Marka</div><div style="font-size:11px;color:var(--text3)" data-i18n="settings-llms-sub">nazwa, domeny, pliki llms.txt</div></div>
         </div>
         <div class="settings-item" onclick="openVisModal();closeSettingsMenu()">
           <span>🔎</span>
@@ -2235,7 +2235,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 <div class="overlay" id="llms-modal" onclick="if(event.target===this)closeLlmsModal()">
   <div class="modal" style="width:640px">
     <div class="modal-head">
-      <h3 data-i18n="llms-title">📄 Pliki dla modeli AI (llms.txt)</h3>
+      <h3 data-i18n="llms-title">🏷️ Marka i pliki dla modeli AI</h3>
       <button class="modal-close" onclick="closeLlmsModal()">×</button>
     </div>
     <p data-i18n="llms-desc">Generuje llms.txt i llms-full.txt na podstawie konfiguracji encji i URL-i z bazy wiedzy. Wgraj pliki w katalogu głównym domeny (np. /llms.txt).</p>
@@ -2262,6 +2262,19 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
     <div class="field" style="margin-bottom:10px">
       <label class="field-label" data-i18n="llms-f-lines">Rozróżnienie linii biznesowych (jedna na linię)</label>
       <textarea id="llms-lines" rows="4"></textarea>
+    </div>
+    <!-- Domeny byly dotad tylko w kodzie, wiec kazda marka wymagala przebudowy
+         pliku. Teraz ustawia sie je tutaj i zapisuja razem z reszta encji. -->
+    <div class="field" style="margin-bottom:10px">
+      <label class="field-label" data-i18n="llms-f-domains">Domeny marki (jedna na linię)</label>
+      <textarea id="llms-domains" rows="2" placeholder="twojafirma.pl" data-i18n-ph="ph-llms-domains"></textarea>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px" data-i18n="llms-h-domains">Po czym rozpoznajemy odnośniki do Twojej strony. Puste = brane z adresu powyżej.</div>
+    </div>
+    <div class="field" style="margin-bottom:10px">
+      <label class="field-label" data-i18n="llms-f-blocked">Domeny wykluczone z wyszukiwania (jedna na linię)</label>
+      <textarea id="llms-blocked" rows="4" placeholder="konkurent.pl" data-i18n-ph="ph-llms-blocked" oninput="odswiezLicznikDomen()"></textarea>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px" data-i18n="llms-h-blocked">Przy włączonym wyszukiwaniu AI w ogóle nie zobaczy tych stron. Wpisz konkurentów i porównywarki, żeby nie trafili do źródeł pod artykułem. Same domeny, bez https i bez www. Maksymalnie 64.</div>
+      <div id="llms-blocked-licznik" style="font-size:11px;color:var(--text3);margin-top:4px"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-generate" style="width:auto;padding:9px 22px" onclick="generateLlms()" data-i18n="llms-generate">Generuj pliki</button>
@@ -2450,7 +2463,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
       <span id="aiv-score" style="font-size:18px;font-weight:700;color:var(--text)">-</span>
     </div>
     <div style="display:flex;gap:6px;margin-bottom:10px">
-      <input type="text" id="aiv-add-input" placeholder="np. najlepszy kurier do e-commerce w Polsce" data-i18n="aiv-add-ph" onkeydown="if(event.key==='Enter')aivAdd()" style="flex:1;min-width:0;padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px" />
+      <input type="text" id="aiv-add-input" placeholder="np. najlepsza firma [branża] w Polsce" data-i18n="aiv-add-ph" onkeydown="if(event.key==='Enter')aivAdd()" style="flex:1;min-width:0;padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px" />
       <button class="btn-secondary" onclick="aivAdd()" data-i18n="aiv-add-btn">Dodaj</button>
     </div>
     <div id="aiv-list" style="max-height:46vh;overflow-y:auto"></div>
@@ -2840,7 +2853,7 @@ var I18N = {
   pl: {
     'settings-aiv-title':'Widoczność w AI','settings-aiv-sub':'tracking AEO / GEO',
     'aiv-modal-title':'📡 Widoczność w AI (AEO/GEO)','aiv-modal-desc':'Sprawdza, czy odpowiedzi AI (Claude z web search) na Twoje zapytania przywołują markę - w treści lub w cytowanych źródłach. Wynik i historia zapisują się lokalnie, więc widać trend w czasie. To przybliżenie jednym silnikiem, nie pomiar wszystkich wyszukiwarek AI.',
-    'aiv-score-label':'Wynik widoczności:','aiv-add-ph':'np. najlepszy kurier do e-commerce w Polsce','aiv-add-btn':'Dodaj','aiv-domains-label':'Domeny marki (do wykrywania w źródłach)','aiv-export':'Eksport CSV',
+    'aiv-score-label':'Wynik widoczności:','aiv-add-ph':'np. najlepsza firma [branża] w Polsce','aiv-add-btn':'Dodaj','aiv-domains-label':'Domeny marki (do wykrywania w źródłach)','aiv-export':'Eksport CSV',
     'aiv-check-all':'Sprawdź wszystkie','aiv-check-one':'Sprawdź','aiv-checking':'Sprawdzam','aiv-status-cited':'Cytowane w źródłach','aiv-status-mentioned':'Wspomniane w treści','aiv-status-none':'Brak',
     'aiv-never':'Nie sprawdzono','aiv-last':'Ostatnio:','aiv-srcword':'zr.','aiv-empty':'Dodaj zapytania, które chcesz monitorować w odpowiedziach AI.','aiv-del-title':'Usuń','aiv-gpt-na':'Tracking nie działa w trybie GPT-only (brak web search).','aiv-no-key':'Brak klucza API Anthropic (lub proxy).',
     'opt-podcast':'Podcast (skrypt + audio)','opt-newsletter-audio':'Newsletter audio','opt-transcription':'Transkrypcja audio',
@@ -2944,9 +2957,16 @@ var I18N = {
     'sidebar-title':'📁 Baza wiedzy - źródła','sidebar-docs':'Dokumenty','sidebar-words':'Słowa',
     'sidebar-gen':'Wygenerowane','sidebar-click':'Kliknij aby wybrać pliki','sidebar-types':'PDF, DOCX, XLSX, PPTX, TXT, CSV',
     'sidebar-link':'🔗 Dodaj link / URL','sidebar-text':'✏️ Dodaj tekst ręcznie','sidebar-deselect':'Odznacz wszystkie',
-    'settings-llms-title':'Pliki dla AI','settings-llms-sub':'llms.txt + llms-full.txt',
-    'llms-title':'📄 Pliki dla modeli AI (llms.txt)','llms-desc':'Generuje llms.txt i llms-full.txt na podstawie konfiguracji encji i URL-i z bazy wiedzy. Wgraj pliki w katalogu głównym domeny (np. /llms.txt).',
+    'settings-llms-title':'Marka','settings-llms-sub':'nazwa, domeny, pliki llms.txt',
+    'llms-title':'🏷️ Marka i pliki dla modeli AI','llms-desc':'Generuje llms.txt i llms-full.txt na podstawie konfiguracji encji i URL-i z bazy wiedzy. Wgraj pliki w katalogu głównym domeny (np. /llms.txt).',
     'llms-f-name':'Nazwa encji','llms-f-legal':'Pełna nazwa prawna','llms-f-url':'Domena bazowa','llms-f-desc':'Opis (1-3 zdania)','llms-f-services':'Kluczowe usługi (jedna na linię)','llms-f-lines':'Rozróżnienie linii biznesowych (jedna na linię)',
+    'llms-f-domains':'Domeny marki (jedna na linię)',
+    'llms-h-domains':'Po czym rozpoznajemy odnośniki do Twojej strony. Puste = brane z adresu powyżej.',
+    'ph-llms-domains':'twojafirma.pl',
+    'llms-f-blocked':'Domeny wykluczone z wyszukiwania (jedna na linię)',
+    'llms-h-blocked':'Przy włączonym wyszukiwaniu AI w ogóle nie zobaczy tych stron. Wpisz konkurentów i porównywarki, żeby nie trafili do źródeł pod artykułem. Same domeny, bez https i bez www. Maksymalnie 64.',
+    'ph-llms-blocked':'konkurent.pl',
+    'llms-blocked-count':'Przyjęte ({n}):',
     'llms-generate':'Generuj pliki','llms-out-basic':'llms.txt','llms-out-full':'llms-full.txt','llms-copy':'Kopiuj','llms-download':'Pobierz','llms-hint-urls':'URL-e pobrane z bazy wiedzy: {n}',
     'settings-vis-title':'Widoczność AI','settings-vis-sub':'obecność marki w odpowiedziach AI',
     'vis-title':'🔎 Widoczność marki w AI','vis-desc':'Sprawdza czy marka pojawia się w odpowiedziach AI na zapytania zakupowe. Uruchamia każdy prompt przez Claude z wyszukiwaniem w sieci i raportuje obecność, pozycję, konkurentów i źródła. To migawka na żądanie z jednego modelu (Claude), nie ciągły monitoring wielu modeli. Każdy prompt zużywa zapytanie web search (płatne).',
@@ -3298,7 +3318,7 @@ var I18N = {
   en: {
     'settings-aiv-title':'AI visibility','settings-aiv-sub':'AEO / GEO tracking',
     'aiv-modal-title':'📡 AI visibility (AEO/GEO)','aiv-modal-desc':'Checks whether AI answers (Claude with web search) to your queries surface the brand - in the text or in cited sources. Results and history are stored locally, so you can see the trend over time. This is a single-engine approximation, not a measurement of every AI search engine.',
-    'aiv-score-label':'Visibility score:','aiv-add-ph':'e.g. best courier for e-commerce in Poland','aiv-add-btn':'Add','aiv-domains-label':'Brand domains (for source detection)','aiv-export':'Export CSV',
+    'aiv-score-label':'Visibility score:','aiv-add-ph':'e.g. best [industry] company in your market','aiv-add-btn':'Add','aiv-domains-label':'Brand domains (for source detection)','aiv-export':'Export CSV',
     'aiv-check-all':'Check all','aiv-check-one':'Check','aiv-checking':'Checking','aiv-status-cited':'Cited in sources','aiv-status-mentioned':'Mentioned in answer','aiv-status-none':'Absent',
     'aiv-never':'Not checked','aiv-last':'Last:','aiv-srcword':'src','aiv-empty':'Add queries you want to monitor in AI answers.','aiv-del-title':'Delete','aiv-gpt-na':'Tracking is unavailable in GPT-only mode (no web search).','aiv-no-key':'Missing Anthropic API key (or proxy).',
     'opt-podcast':'Podcast (script + audio)','opt-newsletter-audio':'Audio newsletter','opt-transcription':'Audio transcription',
@@ -3402,9 +3422,16 @@ var I18N = {
     'sidebar-title':'📁 Knowledge base - sources','sidebar-docs':'Documents','sidebar-words':'Words',
     'sidebar-gen':'Generated','sidebar-click':'Click to select files','sidebar-types':'PDF, DOCX, XLSX, PPTX, TXT, CSV',
     'sidebar-link':'🔗 Add link / URL','sidebar-text':'✏️ Add text manually','sidebar-deselect':'Deselect all',
-    'settings-llms-title':'AI files','settings-llms-sub':'llms.txt + llms-full.txt',
-    'llms-title':'📄 Files for AI models (llms.txt)','llms-desc':'Generates llms.txt and llms-full.txt from the entity config and URLs in the knowledge base. Upload the files to the domain root (e.g. /llms.txt).',
+    'settings-llms-title':'Brand','settings-llms-sub':'name, domains, llms.txt files',
+    'llms-title':'🏷️ Brand and files for AI models','llms-desc':'Generates llms.txt and llms-full.txt from the entity config and URLs in the knowledge base. Upload the files to the domain root (e.g. /llms.txt).',
     'llms-f-name':'Entity name','llms-f-legal':'Full legal name','llms-f-url':'Base domain','llms-f-desc':'Description (1-3 sentences)','llms-f-services':'Key services (one per line)','llms-f-lines':'Business line disambiguation (one per line)',
+    'llms-f-domains':'Brand domains (one per line)',
+    'llms-h-domains':'How we recognise links to your own site. Empty = taken from the address above.',
+    'ph-llms-domains':'yourcompany.com',
+    'llms-f-blocked':'Domains excluded from web search (one per line)',
+    'llms-h-blocked':'With web search on, the AI will not see these sites at all. List competitors and comparison sites so they never end up in the sources under your article. Bare domains, no https, no www. Up to 64.',
+    'ph-llms-blocked':'competitor.com',
+    'llms-blocked-count':'Accepted ({n}):',
     'llms-generate':'Generate files','llms-out-basic':'llms.txt','llms-out-full':'llms-full.txt','llms-copy':'Copy','llms-download':'Download','llms-hint-urls':'URLs harvested from knowledge base: {n}',
     'settings-vis-title':'AI visibility','settings-vis-sub':'brand presence in AI answers',
     'vis-title':'🔎 Brand visibility in AI','vis-desc':'Checks whether the brand appears in AI answers to buyer queries. Runs each prompt through Claude with web search and reports presence, position, competitors and sources. This is an on-demand snapshot from a single model (Claude), not continuous multi-model monitoring. Each prompt consumes a web search request (billed).',
@@ -3953,18 +3980,12 @@ const BRAND = {
   // koncu porownywarki konkurencji. Regula w promptcie tego zabrania, ale
   // twardsza gwarancja jest nie pokazac modelowi tych stron w ogole.
   // Wpisuj same domeny, bez https:// i bez www.
-  // Lista jest branzowa i trzeba ja dopasowac do wlasnego rynku. Ponizsza
-  // powstala z bibliografii pierwszego artykulu wygenerowanego z wyszukiwaniem:
-  // znalazlo sie w niej dwudziestu przewoznikow i porownywarek naraz.
-  blockedDomains: [
-    // konkurencyjni przewoznicy
-    'dpd.com', 'fedex.com', 'ups.com', 'tnt.com', 'dbschenker.com',
-    'gls-group.com', 'inpost.pl', 'poczta-polska.pl', 'geis.pl', 'raben-group.com',
-    // posrednicy i porownywarki
-    'furgonetka.pl', 'sendit.pl', 'apaczka.pl', 'epaka.pl', 'globkurier.pl',
-    'allekurier.pl', 'kurierem.pl', 'kurjerzy.pl', 'kuriero.pl', 'przesylarka.pl',
-    'kuriernet.pl', 'premiumcargo.pl', 'tanie-nadanie.pl', 'paczkawruchu.pl',
-  ],
+  // Domeny wykluczone z wyszukiwania w sieci. Lista jest BRANZOWA: dla kuriera
+  // to inni przewoznicy i porownywarki, dla kancelarii inne kancelarie.
+  // Dlatego ustawia sie ja w aplikacji (menu ustawien, Marka), a tutaj zostaje
+  // pusta - wdrozenie dla nowej firmy nie ma zaczynac od wykluczania cudzych
+  // konkurentow. Przyklad wpisu: 'konkurent.pl'.
+  blockedDomains: [],
   // ── Kolory uzywane w generatorze grafik ──
   colors:  { primary:'#FFB000', secondary:'#1FA8C7', dark:'#1A1916', light:'#FFFFFF' }
 };
@@ -3972,8 +3993,14 @@ const BRAND = {
 const BRAND_SLUG = ((BRAND.name || 'ContentAI').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,'')) || 'ContentAI';
 // Hosty marki (do auto-poprawki linkow i wykrywania) - z BRAND.domains lub z siteUrl
 function brandHosts() {
-  var hs = (BRAND.domains || []).slice();
-  try { var h = new URL(BRAND.siteUrl).hostname.replace(/^www\./,''); if (h && hs.indexOf(h) < 0) hs.push(h); } catch(e) {}
+  // Konfiguracja z okna marki ma pierwszenstwo nad wartoscia wpisana w kodzie,
+  // zeby ta sama aplikacja obsluzyla dowolna marke bez przebudowy pliku.
+  var cfg = (typeof getLlmsConfig === 'function') ? getLlmsConfig() : null;
+  var hs = cfg && cfg.domains
+    ? domenyZPola(cfg.domains)
+    : (BRAND.domains || []).slice();
+  var adres = (cfg && cfg.siteUrl) || BRAND.siteUrl;
+  try { var h = new URL(adres).hostname.replace(/^www\./,''); if (h && hs.indexOf(h) < 0) hs.push(h); } catch(e) {}
   return hs.filter(Boolean);
 }
 
@@ -4156,6 +4183,21 @@ function blokDaty() {
     + 'use ' + rok + ' - never a year you remember from training.';
 }
 
+// Sciezki przepisujace gotowy tekst (korekta premium, poprawa po ocenie,
+// przerobki na inne formaty) nie widza bazy wiedzy - dostaja sam artykul.
+// Dlatego nie wolno im wprowadzac zadnego nowego faktu: wszystko, co mialo
+// byc sprawdzone, zostalo sprawdzone przy pisaniu. Bez tego uwaga w rodzaju
+// "za malo konkretow" konczyla sie dopisaniem konkretow z niczego.
+function blokPrzepisywania() {
+  return '\n\nYOU ARE REWRITING, NOT RESEARCHING.\n'
+    + '- Do not add a single fact that is not already in the text you were given: '
+    + 'no number, price, date, percentage, name, institution or rule.\n'
+    + '- You may reorder, shorten, split, retitle and rephrase. You may not enrich.\n'
+    + '- If an instruction asks for something the text cannot support, apply the part '
+    + 'you can and leave the rest. An unfixed remark is better than an invented fact.\n'
+    + '- Keep every figure exactly as it stands, including its units and its wording.';
+}
+
 // ─── RZETELNOSC TRESCI ───────────────────────────────────────────────────────
 // Wszystkie ponizsze bloki powstaly z listy uwag agencji SEO, ktora testowala
 // aplikacje na artykule o wysylce paczek. Kazdy odpowiada jednej uwadze,
@@ -4230,7 +4272,14 @@ function blokFaktow(uzupelnia) {
 // niemieckim prawie pocztowym. Fakt byl prawdziwy, zakres zmyslony - i to
 // jest grozniejsze od zwyklej halucynacji, bo wyglada na poparte zrodlem.
 function blokZakresu() {
-  return '\n\nONE BRAND, ONE NAME, ONE COMPANY:\n'
+  // Nazwa z konfiguracji marki, jesli ustawiona i nie jest placeholderem.
+  var cfg = (typeof getLlmsConfig === 'function') ? getLlmsConfig() : null;
+  var nazwa = (cfg && cfg.name || '').trim();
+  if (nazwa === 'Twoja Firma' || nazwa === 'Your Company') nazwa = '';
+  var kotwica = nazwa
+    ? '- The brand is called exactly "' + nazwa + '". Use that name and no other.\n'
+    : '';
+  return '\n\nONE BRAND, ONE NAME, ONE COMPANY:\n' + kotwica
     + '- Use the brand name exactly as the KNOWLEDGE BASE writes it, everywhere in '
     + 'the article. Never use a former, shortened or alternative name you found '
     + 'elsewhere, even if pages on the web still use it. A renamed company is the same '
@@ -5072,6 +5121,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
     : isAio
     ? 'You are an AIO editor. Fix only the listed issues. Return ONLY improved HTML, no markdown.'
     : 'You are an SEO editor. Fix only the listed issues. Return ONLY improved HTML, no markdown.';
+  const editorSysPelny = editorSys + blokPrzepisywania();
 
   let improved = null;
   try {
@@ -5079,7 +5129,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(premiumMaxTokens),
-        system: editorSys,
+        system: editorSysPelny,
         messages: [{ role: 'user', content: `Fix ONLY these issues in the article: ${issuesList}\n\nDo NOT change factual content. Keep the same language and tone. IMPORTANT: keep the meta description block (class="meta-box") at the end if present. Keywords: ${kwText}.\nReturn ONLY the improved HTML, no markdown, no preamble.\n\nArticle:\n${originalHtml}` }]
       })
     });
@@ -5484,7 +5534,7 @@ ${html}`;
         const improveRes = await apiFetch({
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-          body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(getMaxTokens()), system: editorRole, messages: [{ role: 'user', content: improvePrompt }] })
+          body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(getMaxTokens()), system: editorRole + blokPrzepisywania(), messages: [{ role: 'user', content: improvePrompt }] })
         });
         const improveData = await improveRes.json();
         if (!improveData.error) {
@@ -5787,7 +5837,10 @@ const LIMIT_WYSZUKIWAN = 5;
 // Foundry ani na Google Cloud, a aplikacja wspiera oba.
 function narzedzieWyszukiwania() {
   const narzedzie = { type: 'web_search_20250305', name: 'web_search', max_uses: LIMIT_WYSZUKIWAN };
-  const wykluczone = (BRAND.blockedDomains || []).filter(Boolean);
+  // Lista jest branzowa: dla kuriera to inni przewoznicy, dla kancelarii inne
+  // kancelarie. Dlatego ustawia sie ja w oknie marki, a nie w kodzie.
+  const cfg = getLlmsConfig();
+  const wykluczone = domenyZPola(cfg.blockedDomains);
   // Regula w promptcie zabrania polecania konkurencji, ale twardsza gwarancja
   // jest nie pokazac modelowi tych stron w ogole.
   if (wykluczone.length) narzedzie.blocked_domains = wykluczone;
@@ -6296,6 +6349,15 @@ function showArticleStats(html) {
 }
 
 // ─── FEATURE: PDF EXPORT ──────────────────────────────────────────────────────
+// Kolory eksportu ida z konfiguracji marki. Wczesniej byly tu wpisane wprost
+// barwy jednego klienta, wiec PDF kazdej innej firmy wychodzil w cudzych.
+function kolorMarki(ktory) {
+  const c = (BRAND.colors || {});
+  if (ktory === 'primary') return c.primary || '#B45309';
+  if (ktory === 'secondary') return c.secondary || c.primary || '#B45309';
+  return c.dark || '#333333';
+}
+
 function dlPdf() {
   const art = document.getElementById('article');
   if (!art || !art.innerHTML.trim()) return;
@@ -6314,7 +6376,7 @@ function dlPdf() {
       else if (tag === 'em' || tag === 'i') parts.push({ text: n.textContent, italics: true });
       else if (tag === 'a') {
         const href = n.getAttribute('href') || '';
-        const obj = { text: n.textContent, color: '#E23244' };
+        const obj = { text: n.textContent, color: kolorMarki('primary') };
         if (href && (href.startsWith('http') || href.startsWith('mailto'))) obj.link = href;
         parts.push(obj);
       }
@@ -6330,7 +6392,7 @@ function dlPdf() {
       tr.querySelectorAll('th,td').forEach(cell => {
         const isHdr = cell.tagName === 'TH';
         cells.push({ text: getInline(cell), bold: isHdr, fontSize: 9,
-          fillColor: isHdr ? '#FFB000' : (rows.length % 2 === 1 ? '#fafafa' : null),
+          fillColor: isHdr ? kolorMarki('secondary') : (rows.length % 2 === 1 ? '#fafafa' : null),
           margin: [4, 3, 4, 3] });
       });
       if (cells.length) rows.push(cells);
@@ -6353,7 +6415,7 @@ function dlPdf() {
         table: { widths: ['*'], body: [[{ text: el.textContent.trim(),
           bold: true, fontSize: 13, color: '#1A1916', border: [false,false,false,true],
           margin: [0, 4, 0, 4] }]] },
-        layout: { hLineColor: (i) => i === 1 ? '#FFB000' : 'white',
+        layout: { hLineColor: (i) => i === 1 ? kolorMarki('secondary') : 'white',
           hLineWidth: (i) => i === 1 ? 2 : 0, vLineWidth: () => 0 },
         margin: [0, 14, 0, 4]
       });
@@ -6384,10 +6446,10 @@ function dlPdf() {
           .trim();
         out.push({
           table: { widths: ['*'], body: [[{ stack: [
-            { text: label, bold: true, color: '#E23244', fontSize: 9, margin: [0,0,0,4] },
+            { text: label, bold: true, color: kolorMarki('primary'), fontSize: 9, margin: [0,0,0,4] },
             { text: body, fontSize: 10.5, lineHeight: 1.5 }
           ], fillColor: '#fff9e6', margin: [10, 8, 10, 8] }]] },
-          layout: { hLineColor: () => '#FFB000', vLineColor: () => '#FFB000',
+          layout: { hLineColor: () => kolorMarki('secondary'), vLineColor: () => kolorMarki('secondary'),
             hLineWidth: () => 1.5, vLineWidth: () => 1.5 },
           margin: [0, 16, 0, 0]
         });
@@ -6423,7 +6485,7 @@ function dlPdf() {
           { text: _lbl, bold: true, color: '#9A6A00', fontSize: 9, margin: [0,0,0,4] },
           { text: _body, fontSize: 10.5, lineHeight: 1.5 }
         ], fillColor: '#fff9e6', margin: [10, 8, 10, 8] }]] },
-          layout: { hLineColor: () => '#FFB000', vLineColor: () => '#FFB000', hLineWidth: () => 1.5, vLineWidth: () => 1.5 },
+          layout: { hLineColor: () => kolorMarki('secondary'), vLineColor: () => kolorMarki('secondary'), hLineWidth: () => 1.5, vLineWidth: () => 1.5 },
           margin: [0, 16, 0, 0] });
       }
     }
@@ -6432,13 +6494,13 @@ function dlPdf() {
       pageMargins: [40, 20, 40, 40],
       header: {
         table: { widths: ['auto', '*'], body: [[
-          { text: (BRAND.name || 'Content AI'), fontSize: 20, bold: true, color: '#E23244',
+          { text: (BRAND.name || 'Content AI'), fontSize: 20, bold: true, color: kolorMarki('primary'),
             border: [false,false,false,false], margin: [40, 12, 0, 12] },
           { text: 'Content AI  ·  ' + (BRAND.name || ''), fontSize: 9, bold: true,
             color: '#1A1916', alignment: 'right',
             border: [false,false,false,false], margin: [0, 16, 40, 12] }
         ]] },
-        layout: { fillColor: () => '#FFB000', hLineWidth: () => 0, vLineWidth: () => 0 }
+        layout: { fillColor: () => kolorMarki('secondary'), hLineWidth: () => 0, vLineWidth: () => 0 }
       },
       footer: (page, pages) => ({ text: page + ' / ' + pages, alignment: 'right',
         fontSize: 8, color: '#999', margin: [0, 0, 40, 10] }),
@@ -7846,7 +7908,7 @@ async function testCmsConnection() {
       const url = document.getElementById('wp-url').value.trim().replace(/\/$/, '');
       const creds = btoa(`${document.getElementById('wp-user').value.trim()}:${document.getElementById('wp-pass').value.trim()}`);
       const r = await fetch(`${url}/wp-json/wp/v2/users/me`, { headers: { 'Authorization': `Basic ${creds}` } });
-      if (r.ok) { const d = await r.json(); res.innerHTML = `<span style="color:#065F46">✓ WordPress - zalogowano jako: ${d.name}</span>`; }
+      if (r.ok) { const d = await r.json(); res.innerHTML = `<span style="color:#065F46">✓ WordPress - zalogowano jako: ${escapeHtml(String(d.name || ''))}</span>`; }
       else res.innerHTML = `<span style="color:var(--red)">${currentLang==='en'?'✗ WP error ':'✗ WP błąd '}${r.status}${currentLang==='en'?' - check Application Password':' - sprawdź Application Password'}</span>`;
     } else {
       const url = document.getElementById('drupal-url').value.trim().replace(/\/$/, '');
@@ -8508,7 +8570,7 @@ WAŻNE: Zwróć TYLKO tekst landing page, gotowy do wklejenia.`
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(2500),
-        system: `You are a professional content repurposing specialist. Follow the instructions exactly. Write the ENTIRE output strictly in ${_rpLang}, regardless of the language of these instructions or the source article. Never truncate your response - always write the complete content as instructed.`,
+        system: blokPrzepisywania() + `\n\nYou are a professional content repurposing specialist. Follow the instructions exactly. Write the ENTIRE output strictly in ${_rpLang}, regardless of the language of these instructions or the source article. Never truncate your response - always write the complete content as instructed.`,
         messages: [{ role: 'user', content: `${prompts[format]}\n\nARTYKUŁ ŹRÓDŁOWY (temat: ${topic}):\n${articleText}` }]
       })
     });
@@ -8815,8 +8877,35 @@ const LLMS_DEFAULTS = {
   siteUrl: BRAND.siteUrl || '',
   description: BRAND.description || '',
   services: BRAND.services || '',
-  lines: BRAND.lines || ''
+  lines: BRAND.lines || '',
+  // Jedna na linie, zeby pole w oknie bylo zwyklym obszarem tekstowym.
+  domains: (BRAND.domains || []).join('\n'),
+  blockedDomains: (BRAND.blockedDomains || []).join('\n')
 };
+
+// Domeny z pola tekstowego na liste, ktora przyjmie API: same nazwy hostow,
+// bez schematu, bez www, bez sciezki. Narzedzie wyszukiwania odrzuca zadanie
+// z niepoprawnym wpisem, wiec czyscimy to tutaj, a nie liczymy na uzytkownika.
+function domenyZPola(tekst) {
+  const widziane = Object.create(null);
+  return String(tekst || '').split(/[\n,;]+/)
+    .map(function (d) {
+      return d.trim().toLowerCase()
+        .replace(/^https?:\/\//, '')
+        .replace(/^www\./, '')
+        .split('/')[0]
+        .split('?')[0]
+        .replace(/[^a-z0-9.-]/g, '');
+    })
+    .filter(function (d) {
+      // Musi wygladac jak domena i wystapic raz.
+      if (!d || d.indexOf('.') < 1 || d.length > 253) return false;
+      if (widziane[d]) return false;
+      widziane[d] = true;
+      return true;
+    })
+    .slice(0, 64);   // gorny limit narzedzia wyszukiwania
+}
 
 function getLlmsConfig() {
   try {
@@ -8834,6 +8923,9 @@ function openLlmsModal() {
   document.getElementById('llms-desc').value = c.description;
   document.getElementById('llms-services').value = c.services;
   document.getElementById('llms-lines').value = c.lines;
+  document.getElementById('llms-domains').value = c.domains || '';
+  document.getElementById('llms-blocked').value = c.blockedDomains || '';
+  odswiezLicznikDomen();
   document.getElementById('llms-out-basic-ta').value = '';
   document.getElementById('llms-out-full-ta').value = '';
   document.getElementById('llms-urls-hint').textContent = '';
@@ -8849,10 +8941,25 @@ function saveLlmsConfig() {
     siteUrl: document.getElementById('llms-url').value.trim(),
     description: document.getElementById('llms-desc').value.trim(),
     services: document.getElementById('llms-services').value,
-    lines: document.getElementById('llms-lines').value
+    lines: document.getElementById('llms-lines').value,
+    domains: document.getElementById('llms-domains').value,
+    blockedDomains: document.getElementById('llms-blocked').value
   };
   localStorage.setItem('cai-llms', JSON.stringify(c));
+  odswiezLicznikDomen();
   return c;
+}
+
+// Ile domen zostanie po oczyszczeniu. Bez tego uzytkownik nie wie, czy wpis
+// "https://www.konkurent.pl/cennik" zostal przyjety, czy odrzucony.
+function odswiezLicznikDomen() {
+  const pole = document.getElementById('llms-blocked');
+  const licznik = document.getElementById('llms-blocked-licznik');
+  if (!pole || !licznik) return;
+  const lista = domenyZPola(pole.value);
+  licznik.textContent = lista.length
+    ? _t('llms-blocked-count').replace('{n}', String(lista.length)) + ' ' + lista.join(', ')
+    : '';
 }
 
 function harvestKbUrls() {
@@ -8946,9 +9053,18 @@ function aeoRulesBlock() {
 function lineGuardrailBlock(cfg) {
   const lines = (cfg.lines || '').split('\n').map(s => s.trim()).filter(Boolean);
   if (!lines.length) return '';
+  // Nazwy linii sa brane z konfiguracji marki. Wczesniej bylo tu wpisane
+  // wprost "eCommerce" i "Express", czyli linie jednego klienta - dla kazdej
+  // innej marki byla to instrukcja o czyms, czego u niej nie ma.
+  const nazwy = lines.map(function (l) { return l.split(':')[0].trim(); }).filter(Boolean);
   return '\n\nBRAND LINE DISAMBIGUATION - mandatory, never conflate these business lines:\n'
     + lines.map(l => '- ' + l).join('\n')
-    + '\nWhen the topic is parcel shipping for online stores, attribute it to the eCommerce line, never to Express. Never present Express pricing or services as if they belonged to the eCommerce line.';
+    + '\nDecide from the topic which line it belongs to, then stay in that line for the whole '
+    + 'article. Never present one line\'s prices, limits, services or terms as if they belonged '
+    + 'to another, and never mix two lines in one table or one comparison.'
+    + (nazwy.length > 1
+        ? ' The lines are: ' + nazwy.join(', ') + '. They are separate offers, not synonyms.'
+        : '');
 }
 
 function _lineKeywords(cfg) {
@@ -9037,18 +9153,14 @@ function onContentTypeChange() {
 // ═══════════════════════════════════════════════════════════════════════
 // ── MODUŁ B: WIDOCZNOŚĆ MARKI W AI (web search runner) ──────────────────
 // ═══════════════════════════════════════════════════════════════════════
+// Puste wartosci poczatkowe. Wczesniej byli tu wpisani konkurenci i zapytania
+// jednej branzy, wiec kazda inna firma dostawala na start gotowy raport o cudzym
+// rynku - i latwo bylo go uruchomic, nie zauwazywszy, ze bada nie to, co trzeba.
 const VIS_DEFAULTS = {
   brand: BRAND.name,
-  competitors: 'InPost, DPD, Poczta Polska, UPS, GLS, FedEx, Orlen Paczka, Allegro',
+  competitors: '',
   iterations: 1,
-  prompts: [
-    'najlepsza firma kurierska dla sklepu internetowego w Polsce',
-    'jak tanio wysłać paczki za granicę ze sklepu internetowego',
-    'najlepszy kurier do wysyłki paczek do Niemiec dla e-commerce',
-    'firma do obsługi zwrotów dla sklepu internetowego w Polsce',
-    'automaty paczkowe dla e-commerce w Polsce',
-    'jak wysłać dużo paczek dziennie ze sklepu internetowego'
-  ].join('\n')
+  prompts: ''
 };
 
 function getVisConfig() {
@@ -9619,7 +9731,7 @@ function dlReportPdf() {
       { stack: [{ text: '' + rep.score, fontSize: 16, bold: true, alignment: 'center' }, { text: (en ? 'Visibility score' : 'Wskaźnik widoczności'), fontSize: 8, color: '#666', alignment: 'center' }], fillColor: '#FFF8E1', margin: [4, 6, 4, 6] },
       { stack: [{ text: rep.pct + '% (' + rep.present + '/' + rep.n + ')', fontSize: 16, bold: true, alignment: 'center' }, { text: (en ? 'Presence' : 'Obecność'), fontSize: 8, color: '#666', alignment: 'center' }], fillColor: '#FFF8E1', margin: [4, 6, 4, 6] },
       { stack: [{ text: (rep.avgPosition == null ? (en ? 'n/a' : 'b.d.') : '#' + rep.avgPosition), fontSize: 16, bold: true, alignment: 'center' }, { text: (en ? 'Avg position' : 'Śr. pozycja'), fontSize: 8, color: '#666', alignment: 'center' }], fillColor: '#FFF8E1', margin: [4, 6, 4, 6] }
-    ]] }, layout: { hLineColor: () => '#FFB000', vLineColor: () => '#FFB000', hLineWidth: () => 0.5, vLineWidth: () => 0.5 }, margin: [0, 0, 0, 10] });
+    ]] }, layout: { hLineColor: () => kolorMarki('secondary'), vLineColor: () => kolorMarki('secondary'), hLineWidth: () => 0.5, vLineWidth: () => 0.5 }, margin: [0, 0, 0, 10] });
     c.push({ text: en ? 'Summary' : 'Podsumowanie', fontSize: 13, bold: true, margin: [0, 4, 0, 4] });
     c.push({ text: rep.summaryText, fontSize: 10, margin: [0, 0, 0, 6] });
     c.push({ text: (en ? 'Visibility score (position-weighted): ' : 'Wskaźnik widoczności (ważony pozycją): ') + rep.score + '/100', fontSize: 11, bold: true, margin: [0, 0, 0, 2] });
@@ -9634,7 +9746,7 @@ function dlReportPdf() {
       if (rep.trend.newlyPresent.length) c.push({ text: (en ? 'Newly present: ' : 'Nowo obecne: ') + rep.trend.newlyPresent.join('; '), fontSize: 9, color: '#2D6A4F', margin: [0, 0, 0, 2] });
       if (rep.trend.newlyAbsent.length) c.push({ text: (en ? 'Newly absent: ' : 'Nowo nieobecne: ') + rep.trend.newlyAbsent.join('; '), fontSize: 9, color: '#E23244', margin: [0, 0, 0, 6] });
     }
-    const hcell = t => ({ text: t, bold: true, color: '#1A1916', fillColor: '#FFB000', fontSize: 9, margin: [2, 3, 2, 3] });
+    const hcell = t => ({ text: t, bold: true, color: kolorMarki('dark'), fillColor: kolorMarki('secondary'), fontSize: 9, margin: [2, 3, 2, 3] });
     const tblLayout = { hLineColor: () => '#ddd', vLineColor: () => '#ddd', hLineWidth: () => 0.5, vLineWidth: () => 0.5 };
     if (rep.topComp.length) {
       c.push({ text: en ? 'Competitors cited by AI' : 'Konkurenci cytowani przez AI', fontSize: 12, bold: true, margin: [0, 8, 0, 4] });
@@ -9662,9 +9774,9 @@ function dlReportPdf() {
     const dd = {
       pageSize: 'A4', pageMargins: [40, 60, 40, 40],
       header: { table: { widths: ['auto', '*'], body: [[
-        { text: (BRAND.name || 'Content AI'), fontSize: 20, bold: true, color: '#E23244', border: [false, false, false, false], margin: [40, 12, 0, 12] },
+        { text: (BRAND.name || 'Content AI'), fontSize: 20, bold: true, color: kolorMarki('primary'), border: [false, false, false, false], margin: [40, 12, 0, 12] },
         { text: 'Content AI  ·  ' + (BRAND.name || ''), fontSize: 9, bold: true, color: '#1A1916', alignment: 'right', border: [false, false, false, false], margin: [0, 16, 40, 12] }
-      ]] }, layout: { fillColor: () => '#FFB000', hLineWidth: () => 0, vLineWidth: () => 0 } },
+      ]] }, layout: { fillColor: () => kolorMarki('secondary'), hLineWidth: () => 0, vLineWidth: () => 0 } },
       footer: (page, pages) => ({ text: page + ' / ' + pages, alignment: 'right', fontSize: 8, color: '#999', margin: [0, 0, 40, 10] }),
       content: content(), defaultStyle: { font: 'Roboto', fontSize: 11, color: '#1A1916' }
     };
@@ -10251,11 +10363,10 @@ const IMG_FORMATS = [
 // Wskazówka do przycinania na docelowy format - patrz imgFormatHint()
 const IMG_FORMAT_TARGETS = {
   '1536x1024': ['570×380','1200×588','600×212','1365×426','690×364','815×430','960×300','1200×600','1141×357'],
-  '1024x1024': ['570×285','570×380 Paczking','960×600'],
+  '1024x1024': ['570×285','570×380','960×600'],
   '1024x1536': ['684×182 push','750×200'],
 };
 
-const BRAND_COLORS = { red:'#E23244', yellow:'#FFB000', dark:'#333333', green:'#006443' };
 
 let imgSelectedFormat = { w:1536, h:1024, label:'1536×1024 Poziomy', shortKey:'img-fmt-short-horiz', api:'1536x1024' };
 let imgHistory = [];

@@ -119,7 +119,7 @@ check at all.
 python3 narzedzia/sprawdz_zrodlo.py    # build all variants, verify every fix is present
 python3 narzedzia/audyt_i18n.py        # translation keys, both dictionaries
 python3 narzedzia/audyt_uchwyty.py     # every event handler resolves
-node serwer/testy.js                   # server logic, 249 tests
+node serwer/testy.js                   # server logic, 254 tests
 ```
 
 ---

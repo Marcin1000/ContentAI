@@ -177,6 +177,29 @@ metadane maszyny trafiły do bazy wiedzy. Odrzucane są pętla zwrotna, zakresy 
 link-local, CGNAT i wszystko, czego nie da się rozpoznać jako adres publiczny. Limity:
 4 MB odpowiedzi, 400 tys. znaków tekstu, 5 przekierowań, 20 sekund.
 
+### Konfiguracja marki
+
+Menu ustawień → **Marka**. Okno trzyma całą tożsamość firmy: nazwę, nazwę prawną,
+domenę, opis, usługi, rozróżnienie linii biznesowych oraz dwie listy domen.
+
+| Pole | Do czego służy |
+|---|---|
+| Domeny marki | rozpoznawanie odnośników do własnej strony; puste = brane z adresu bazowego |
+| Domeny wykluczone z wyszukiwania | AI ich w ogóle nie zobaczy przy włączonym wyszukiwaniu w sieci |
+
+Lista wykluczeń jest **branżowa**: dla kuriera to inni przewoźnicy i porównywarki, dla
+kancelarii inne kancelarie. Dlatego ustawia się ją w aplikacji, a nie w kodzie. Wpisy są
+czyszczone przy zapisie: `https://www.Konkurent.PL/cennik` zostaje zapisane jako
+`konkurent.pl`, duplikaty znikają, a wpis bez kropki jest odrzucany. Licznik pod polem
+pokazuje, co zostało przyjęte. Górny limit to 64 domeny, bo tyle przyjmuje narzędzie
+wyszukiwania.
+
+Nazwa marki trafia do reguł generowania: bez niej instrukcja „użyj nazwy z bazy wiedzy"
+nie ma kotwicy, bo model nie wie, która z nazw w dokumentach jest tą właściwą.
+
+Konfiguracja jest zapisywana w `localStorage` przeglądarki, więc jest per urządzenie.
+Wartości początkowe biorą się ze stałej `BRAND` w `app/contentai.src.html`.
+
 ### Sprawdzanie odnośników z artykułu
 
 `POST /api/odnosniki` z ciałem `{ "adresy": ["https://...", ...] }` zwraca dla każdego

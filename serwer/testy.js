@@ -13,6 +13,7 @@
 
 const { zahaszuj, hasloPasuje, anthropicNaOpenai, openaiNaAnthropic } = require('./server.js');
 const strona = require('./strona.js');
+const { wolnoWyjsc } = require('./server.js');
 
 let zaliczone = 0;
 const bledy = [];
@@ -997,6 +998,25 @@ async function testyStrony() {
       await strona.pobierz('https://example.com/404', async () => odpowiedz(404, {}, ''));
     } catch (e) { bladHttp = e; }
     sprawdz('blad HTTP jest zglaszany', bladHttp !== null && /404/.test(bladHttp.message));
+  }
+
+  console.log('\n  hamulec na wyjscia w swiat');
+  {
+    // Dwa endpointy kaza serwerowi pobrac cudza stronę i nie kosztuja tokenow,
+    // wiec nie licza sie do pakietu. Bez wlasnego hamulca zalogowany uzytkownik
+    // moglby zrobic z serwera narzedzie do odpytywania cudzych witryn w petli.
+    const kto = 'test-' + Date.now();
+    let przeszlo = 0;
+    for (let i = 0; i < 60; i++) if (wolnoWyjsc(kto)) przeszlo += 1;
+    sprawdz('szescdziesiat wyjsc w minucie przechodzi', przeszlo === 60);
+    sprawdz('szescdziesiate pierwsze jest odrzucone', wolnoWyjsc(kto) === false);
+
+    const kto2 = 'test2-' + Date.now();
+    sprawdz('paczka adresow liczy sie po jednym', wolnoWyjsc(kto2, 40) === true);
+    sprawdz('druga paczka przekracza limit', wolnoWyjsc(kto2, 40) === false);
+
+    const kto3 = 'test3-' + Date.now();
+    sprawdz('inny uzytkownik ma wlasny licznik', wolnoWyjsc(kto3) === true);
   }
 
   console.log('\n  strona - sprawdzanie odnosnikow');

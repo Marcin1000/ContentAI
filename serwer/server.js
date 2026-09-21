@@ -349,6 +349,32 @@ function nieudanaProba(ip) {
   proby.set(ip, p);
 }
 
+// ─── Ograniczenie wyjsc w swiat ──────────────────────────────────────────────
+// Dwa endpointy kaza serwerowi pobrac cudza strone: /api/strona i
+// /api/odnosniki. Nie kosztuja tokenow, wiec nie licza sie do pakietu - i to
+// wlasnie jest powod, dla ktorego potrzebuja wlasnego hamulca. Bez niego
+// zalogowany uzytkownik moglby zrobic z serwera narzedzie do odpytywania
+// cudzych witryn w petli, a odpowiadalby za to adres IP tego serwera.
+//
+// Licznik jest w pamieci procesu, tak samo jak sesje: restart go zeruje, co
+// przy tej skali wystarcza i nie wnosi zaleznosci.
+
+const wyjscia = new Map();          // login -> { ile, od }
+const OKNO_WYJSC_MS = 60_000;
+const MAX_WYJSC_NA_MINUTE = 60;
+
+function wolnoWyjsc(login, ile = 1) {
+  const teraz = Date.now();
+  const w = wyjscia.get(login);
+  if (!w || teraz - w.od > OKNO_WYJSC_MS) {
+    wyjscia.set(login, { ile, od: teraz });
+    return ile <= MAX_WYJSC_NA_MINUTE;
+  }
+  if (w.ile + ile > MAX_WYJSC_NA_MINUTE) return false;
+  w.ile += ile;
+  return true;
+}
+
 function adresIp(req) {
   // Za Caddy/nginx prawdziwy adres jest w X-Forwarded-For
   const xff = req.headers['x-forwarded-for'];
@@ -1045,6 +1071,9 @@ async function obsluz(req, res) {
     } catch (e) {
       return odpowiedzJson(res, e.status || 400, { error: e.message });
     }
+    if (!wolnoWyjsc(sesja.login)) {
+      return odpowiedzJson(res, 429, { error: 'Za duzo pobran w krotkim czasie. Sprobuj za chwile.' });
+    }
     try {
       return odpowiedzJson(res, 200, await strona.pobierz(String(dane.adres || '')));
     } catch (e) {
@@ -1064,6 +1093,10 @@ async function obsluz(req, res) {
       return odpowiedzJson(res, e.status || 400, { error: e.message });
     }
     const adresy = Array.isArray(dane.adresy) ? dane.adresy.map(String) : [];
+    // Kazdy adres to osobne wyjscie w swiat, wiec liczy sie osobno.
+    if (!wolnoWyjsc(sesja.login, adresy.length || 1)) {
+      return odpowiedzJson(res, 429, { error: 'Za duzo sprawdzen w krotkim czasie. Sprobuj za chwile.' });
+    }
     return odpowiedzJson(res, 200, { odnosniki: await strona.sprawdzOdnosniki(adresy) });
   }
 
@@ -1302,6 +1335,7 @@ function startOpenSeo() {
 if (require.main === module) start();
 
 module.exports = {
+  wolnoWyjsc,
   zahaszuj, hasloPasuje, anthropicNaOpenai, openaiNaAnthropic, ROLE,
   PLIK_UZYTKOWNIKOW, wczytajUzytkownikow, zapiszUzytkownikow,
   // Sesje - wystawione do testow; produkcyjnie wola je tylko router.
