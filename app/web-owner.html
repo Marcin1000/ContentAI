@@ -1722,7 +1722,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 
           <label class="toggle-row" for="use-web">
             <div class="toggle-info">
-              <span class="toggle-label" data-i18n="toggle-web">Uzupełnij luki wiedzą ogólną modelu</span>
+              <span class="toggle-label" data-i18n="toggle-web">Pisz też o tym, czego nie ma w bazie wiedzy</span>
               <span class="toggle-hint" data-i18n="toggle-web-hint">Gdy baza nie zawiera info o danym aspekcie, AI sięgnie po wiedzę ogólną. Dane firmowe zawsze mają pierwszeństwo.</span>
             </div>
             <div class="toggle-wrap">
@@ -2869,8 +2869,8 @@ var I18N = {
     'ph-length-custom':'np. 1200','label-kw':'Słowa kluczowe','ph-kw':'Wpisz frazę i naciśnij Enter...',
     'label-tone':'Ton','label-lang-out':'Język','label-extra':'Dodatkowe wytyczne',
     'ph-extra':'np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem...',
-    'toggle-web':'Uzupełnij luki wiedzą ogólną modelu',
-    'toggle-web-hint':'Model NIE wchodzi do internetu. Sięga do wiedzy z treningu, która nie ma daty ani źródła, więc może tłumaczyć ogólne pojęcia, ale nie dostarcza liczb, dat ani nazw instytucji. Dane o Twojej firmie zawsze wyłącznie z bazy wiedzy.',
+    'toggle-web':'Pisz też o tym, czego nie ma w bazie wiedzy',
+    'toggle-web-hint':'WŁĄCZONE: gdy w bazie brakuje informacji, AI dopisze wyjaśnienie z własnej wiedzy, nie z internetu. Bez źródła, więc sprawdź przed publikacją. WYŁĄCZONE: artykuł pomija to, czego nie ma w Twoich dokumentach. Liczby i dane o firmie zawsze z bazy.',
     'toggle-serp':'Analiza SERP przed generowaniem',
     'toggle-serp-hint':'Przed wygenerowaniem AI sprawdza co rankuje w Google dla Twojego słowa kluczowego i wykorzystuje te dane jako dodatkowy kontekst. Wydłuża generowanie o ok. 15 sek.',
     'toggle-aeo':'Tryb AEO (treść pod cytowania AI)','toggle-aeo-hint':'Wymusza format pod silniki odpowiedzi: definicja 25-50 słów na start, liczby w intro, 5-7 pytań FAQ, krótkie listy, nagłówki jako pytania.',
@@ -2906,7 +2906,7 @@ var I18N = {
     'fakty-rodzaj-sprzecznosc':'Sprzeczność wewnątrz artykułu',
     'fakty-rodzaj-konflikt':'Polecenie konkurencji',
     'fakty-linki-czysto':'Odnośniki bez zastrzeżeń.',
-    'fakty-tryb-uzupelniania':'Tekst powstał z włączonym uzupełnianiem wiedzą ogólną modelu, więc część zdań nie pochodzi z Twoich dokumentów. To nie jest wiedza z internetu ani dane sprawdzone: model odtwarza ją z pamięci, bez daty i bez źródła. Wszystko, co dotyczy Twojej firmy, liczb i przepisów, zweryfikuj przed publikacją.',
+    'fakty-tryb-uzupelniania':'Tekst powstał z włączoną opcją „Pisz też o tym, czego nie ma w bazie wiedzy”, więc część zdań nie pochodzi z Twoich dokumentów. To nie jest wiedza z internetu ani dane sprawdzone: model odtwarza ją z pamięci, bez daty i bez źródła. Wszystko, co dotyczy Twojej firmy, liczb i przepisów, zweryfikuj przed publikacją.',
     'fakty-rodzaj-link-obcy':'Adres spoza źródeł',
     'fakty-rodzaj-link-sciezka':'Znana domena, nieznana podstrona',
     'fakty-rodzaj-link-martwy':'Adres nie odpowiada',
@@ -3314,8 +3314,8 @@ var I18N = {
     'ph-length-custom':'e.g. 1200','label-kw':'Keywords','ph-kw':'Type a phrase and press Enter...',
     'label-tone':'Tone','label-lang-out':'Language','label-extra':'Additional guidelines',
     'ph-extra':'e.g. Focus on SME segment, include market comparison...',
-    'toggle-web':'Fill gaps with the model general knowledge',
-    'toggle-web-hint':'The model does NOT browse the internet. It draws on training knowledge, which has no date and no source, so it may explain general concepts but never supplies figures, dates or names of institutions. Anything about your company comes from the knowledge base only.',
+    'toggle-web':'Write about topics your sources do not cover',
+    'toggle-web-hint':'ON: when the knowledge base is silent, the AI adds an explanation from its own knowledge, not from the internet. No source, so check before publishing. OFF: the article skips what your documents do not cover. Figures and company data always come from the knowledge base.',
     'toggle-serp':'SERP analysis before generating',
     'toggle-serp-hint':'Before generating, AI checks what ranks in Google for your keyword and uses this as additional context. Adds ~15 sec.',
     'toggle-aeo':'AEO mode (content for AI citations)','toggle-aeo-hint':'Forces answer-engine format: 25-50 word definition up front, numbers in intro, 5-7 FAQ questions, short lists, headings as questions.',
@@ -3351,7 +3351,7 @@ var I18N = {
     'fakty-rodzaj-sprzecznosc':'Contradiction inside the article',
     'fakty-rodzaj-konflikt':'Recommends a competitor',
     'fakty-linki-czysto':'No findings on links.',
-    'fakty-tryb-uzupelniania':'This text was written with the model general knowledge enabled, so some sentences do not come from your documents. That is not web knowledge and not verified data: the model recalls it from memory, with no date and no source. Verify everything about your company, figures and regulations before publishing.',
+    'fakty-tryb-uzupelniania':'This text was written with “write about topics your sources do not cover” enabled, so some sentences do not come from your documents. That is not web knowledge and not verified data: the model recalls it from memory, with no date and no source. Verify everything about your company, figures and regulations before publishing.',
     'fakty-rodzaj-link-obcy':'Address not in the sources',
     'fakty-rodzaj-link-sciezka':'Known domain, unknown page',
     'fakty-rodzaj-link-martwy':'Address does not respond',
