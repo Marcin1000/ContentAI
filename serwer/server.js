@@ -1053,6 +1053,20 @@ async function obsluz(req, res) {
     }
   }
 
+  // ─── Sprawdzenie odnosnikow z gotowego artykulu ────────────────────────────
+  // Przegladarka nie sprawdzi obcego adresu, bo nie wolno jej czytac
+  // odpowiedzi. Serwer moze. Nie liczy sie do pakietu - to samo HTTP.
+  if (sciezka === '/api/odnosniki' && req.method === 'POST') {
+    let dane;
+    try {
+      dane = await cialoJson(req);
+    } catch (e) {
+      return odpowiedzJson(res, e.status || 400, { error: e.message });
+    }
+    const adresy = Array.isArray(dane.adresy) ? dane.adresy.map(String) : [];
+    return odpowiedzJson(res, 200, { odnosniki: await strona.sprawdzOdnosniki(adresy) });
+  }
+
   // ─── Baza wiedzy ───────────────────────────────────────────────────────────
   if (sciezka === '/api/baza' && req.method === 'GET') {
     return odpowiedzJson(res, 200, { dokumenty: baza.lista({ katalog: KONF.katalogBazy, login: sesja.login }) });

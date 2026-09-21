@@ -233,6 +233,44 @@ KONTROLE = [
      "function kosztOdpowiedzi(dane) {",
      "sessionCost += (inp * 0.000003) + (out * 0.000015);\n            updateCostDisplay();", None),
 
+    # ── druga runda po audycie: linki, luki i pomiar ──
+
+    # Adres ze zrodla byl przepisywany pod regule formy ("zawsze z www").
+    # To ta sama choroba co zmyslanie liczb, tylko na adresie: znany fakt
+    # zmieniany po to, zeby pasowal do szablonu.
+    ("F30/adres", "adres kopiowany doslownie ze zrodla",
+     "COPY THE ADDRESS CHARACTER FOR CHARACTER from the source",
+     "always use the www prefix", None),
+    ("F30/kotwice", "kotwice opisowe i niepowtarzalne",
+     "function blokKotwic() {", None, None),
+    ("F30/kontrola", "odnosniki sprawdzane maszynowo",
+     "function sprawdzLinkiArtykulu() {", None, None),
+    ("F30/normalizacja", "dwa zapisy tego samego adresu daja jeden klucz",
+     "function kluczAdresu(adres) {", None, None),
+    ("F30/zyje", "sprawdzenie, czy adres w ogole odpowiada",
+     "async function sprawdzCzyLinkiZyja(linki) {", None, ("proxy",)),
+
+    # Uzupelnianie luk pisalo nowe sekcje, majac temat i frazy, ale zadnych
+    # zrodel - czyli musialo je wymyslic.
+    ("F31/luki", "uzupelnianie luk dostaje zrodla",
+     "SOURCES (the only material you may draw facts from)", None, None),
+    ("F31/bezwymyslania", "luka bez pokrycia oznaczana, nie wypelniana",
+     "A GAP IS NOT A LICENCE TO INVENT", None, None),
+
+    # Wskaznik zamglenia byl liczony z calego tekstu i z niepelnego zbioru
+    # zdan, wiec zawyzal wynik i prawie nie reagowal na skracanie zdan.
+    ("F32/fog", "FOG liczony z tych samych zdan, z ktorych liczy slowa",
+     "const sredniaDlugoscZdania = slowa.length / zdania.length;",
+     "const avgSentLen = words.length / sentences.length;", None),
+    ("F32/proza", "FOG liczony z prozy, bez naglowkow i meta description",
+     "function tekstProzy(korzen) {", None, None),
+
+    # Nazwa dokumentu bierze sie z tytulu pobranej strony, czyli z tresci
+    # obcej witryny.
+    ("F33/ucieczka", "nazwa dokumentu z ucieczka znakow w panelu sugestii",
+     "<strong>${escapeHtml(s.name)}</strong>",
+     "<strong>${s.name}</strong>", None),
+
     # ── warstwa reskinu ──
     ("R/splash", "splash raz na sesje",
      'id="cin-splash"', None, None),

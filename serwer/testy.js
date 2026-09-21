@@ -998,4 +998,43 @@ async function testyStrony() {
     } catch (e) { bladHttp = e; }
     sprawdz('blad HTTP jest zglaszany', bladHttp !== null && /404/.test(bladHttp.message));
   }
+
+  console.log('\n  strona - sprawdzanie odnosnikow');
+  {
+    // Artykul moze zawierac adres, ktory model zbudowal sam. Przegladarka go
+    // nie sprawdzi (obca witryna nie pozwala czytac odpowiedzi), wiec robi to
+    // serwer - z ta sama ochrona adresu co przy pobieraniu strony.
+    const pytania = [];
+    function odp(status) {
+      return { status, ok: status >= 200 && status < 300, headers: { get: () => null } };
+    }
+    const wynik = await strona.sprawdzOdnosniki(
+      ['https://example.com/jest', 'https://example.com/nie-ma', 'http://127.0.0.1/wewnetrzny'],
+      async (adres, opcje) => {
+        pytania.push({ adres, metoda: opcje.method });
+        return odp(adres.includes('nie-ma') ? 404 : 200);
+      });
+    sprawdz('kazdy adres dostaje wynik', wynik.length === 3);
+    sprawdz('zywy adres oznaczony jako dzialajacy',
+      wynik[0].dziala === true && wynik[0].status === 200);
+    sprawdz('404 oznaczone jako niedzialajace',
+      wynik[1].dziala === false && wynik[1].status === 404);
+    sprawdz('adres wewnetrzny odrzucony bez zapytania',
+      wynik[2].dziala === false && !pytania.some((z) => z.adres.includes('127.0.0.1')));
+    sprawdz('pytamy metoda HEAD', pytania[0].metoda === 'HEAD');
+
+    // Czesc serwerow nie obsluguje HEAD. Zywy adres nie moze przez to trafic
+    // do raportu jako martwy.
+    const metody = [];
+    const poGet = await strona.sprawdzOdnosniki(['https://example.com/tylko-get'],
+      async (adres, opcje) => {
+        metody.push(opcje.method);
+        return odp(opcje.method === 'HEAD' ? 405 : 200);
+      });
+    sprawdz('odmowa HEAD powoduje ponowienie metoda GET',
+      metody.join(',') === 'HEAD,GET' && poGet[0].dziala === true);
+
+    const pusty = await strona.sprawdzOdnosniki([], async () => odp(200));
+    sprawdz('pusta lista nie wywala', Array.isArray(pusty) && pusty.length === 0);
+  }
 }

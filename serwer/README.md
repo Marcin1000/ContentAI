@@ -177,6 +177,22 @@ metadane maszyny trafiły do bazy wiedzy. Odrzucane są pętla zwrotna, zakresy 
 link-local, CGNAT i wszystko, czego nie da się rozpoznać jako adres publiczny. Limity:
 4 MB odpowiedzi, 400 tys. znaków tekstu, 5 przekierowań, 20 sekund.
 
+### Sprawdzanie odnośników z artykułu
+
+`POST /api/odnosniki` z ciałem `{ "adresy": ["https://...", ...] }` zwraca dla każdego
+`{ adres, status, dziala }`.
+
+Przeglądarka nie sprawdzi obcego adresu, bo nie wolno jej czytać odpowiedzi. Serwer może.
+Pyta metodą HEAD, a gdy witryna jej nie obsługuje (405, 501, 403), ponawia metodą GET,
+żeby żywy adres nie trafił do raportu jako martwy. Obowiązuje ta sama kontrola adresu co
+przy pobieraniu stron, więc odnośnik do sieci wewnętrznej nie zostanie odpytany. Limit
+40 adresów na żądanie, bez wpływu na pakiet.
+
+Aplikacja woła to z panelu **Kontrola faktów**. Sam panel liczy jeszcze dwie rzeczy
+lokalnie, bez serwera i bez modelu: czy adres w ogóle występuje w zaznaczonych źródłach
+(osobno rozróżnia obcą domenę od znanej domeny z dopisaną podstroną) i czy teksty kotwic
+nie powtarzają się ani nie są puste w rodzaju „kliknij tutaj".
+
 Przy generowaniu aplikacja woła `/api/baza/szukaj` i wstawia zwrócony blok do promptu -
 bez zaznaczania czegokolwiek przez użytkownika. Dawna baza w `localStorage` działa dalej
 i dokłada się do tego samego promptu, więc aktualizacja nie zabiera nikomu jego dokumentów.

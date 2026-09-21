@@ -178,4 +178,37 @@ async function pobierz(adres, fetchImpl = fetch) {
   return { adres: biezacy, tytul: tytulStrony(html), tekst, slowa };
 }
 
-module.exports = { pobierz, naTekst, adresPrywatny, sprawdzAdres };
+// ─── Sprawdzenie, czy odnosnik zyje ──────────────────────────────────────────
+// Artykul moze zawierac adres, ktory model zbudowal sam: wyglada jak ze
+// zrodla, a prowadzi donikad. Przegladarka tego nie sprawdzi, bo obca witryna
+// nie pozwala jej czytac odpowiedzi. Serwer moze - i robi to z ta sama
+// ochrona adresu co przy pobieraniu strony.
+async function sprawdzOdnosniki(adresy, fetchImpl = fetch) {
+  const wynik = [];
+  for (const adres of adresy.slice(0, 40)) {
+    try {
+      const u = await sprawdzAdres(adres);
+      // HEAD jest tansze, ale czesc serwerow go nie obsluguje i odpowiada
+      // 405 albo 501. Wtedy pytamy jeszcze raz metoda GET, zeby nie zglosic
+      // zywego adresu jako martwego.
+      let odp = await fetchImpl(u.href, {
+        method: 'HEAD', redirect: 'follow',
+        signal: AbortSignal.timeout(CZAS_ODPOWIEDZI),
+        headers: { 'User-Agent': AGENT },
+      });
+      if (odp.status === 405 || odp.status === 501 || odp.status === 403) {
+        odp = await fetchImpl(u.href, {
+          method: 'GET', redirect: 'follow',
+          signal: AbortSignal.timeout(CZAS_ODPOWIEDZI),
+          headers: { 'User-Agent': AGENT },
+        });
+      }
+      wynik.push({ adres, status: odp.status, dziala: odp.status < 400 });
+    } catch (e) {
+      wynik.push({ adres, status: 0, dziala: false, blad: e.message });
+    }
+  }
+  return wynik;
+}
+
+module.exports = { pobierz, naTekst, adresPrywatny, sprawdzAdres, sprawdzOdnosniki };

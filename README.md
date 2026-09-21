@@ -47,7 +47,7 @@ from a knowledge base you control, running on a server and an API key that belon
 | **Knowledge base with retrieval (RAG)** | Upload documents, links and transcripts. Only the passages that match the topic reach the prompt, not the whole base. Private and shared collections. |
 | **Real search data, not guesses** | SERP analysis can pull live results from an API instead of asking the model what it remembers. Semantic gap analysis shows what the ranking pages cover and the draft does not. |
 | **Scoring that leads to an edit** | Every draft is scored on SEO, AIO, AEO and GEO, with concrete findings and a one-click fix rather than a number on its own. |
-| **Fact check against your sources** | One pass lists every figure, claim or recommendation in the draft that the selected documents do not support, quoting the exact fragment. It flags four things: numbers that are not in the sources, claims stretched beyond what a source says, values that contradict each other inside the article, and recommendations that point at a competitor. |
+| **Fact check against your sources** | One pass lists every figure, claim, link or recommendation in the draft that the selected documents do not support, quoting the exact fragment. Numbers that are not in the sources, claims stretched beyond what a source says, values that contradict each other inside the article, recommendations pointing at a competitor, and addresses that are invented, dead or repeated. |
 | **Visuals and audio in the same window** | Brand-styled images from the article topic, narration and transcription, without leaving the workspace. |
 | **Repurposing and export** | LinkedIn post, newsletter, FAQ section, landing intro. Export to DOCX, PDF, audio or JSON-LD, or publish straight to WordPress. |
 
@@ -99,6 +99,7 @@ engineering here is about that.
 | Problem | What the system does |
 |---|---|
 | **Invented figures** | A prompt that demands a number in every paragraph gets one, whether or not the sources contain it. Every numeric requirement is conditional on the sources, and a separate fact-check pass compares each figure, claim and recommendation in the draft against the documents it was written from. |
+| **Fabricated links** | An invented address looks exactly like a sourced one and leads nowhere. Addresses are copied from the sources character for character, never rewritten to fit a house rule, and every link in a finished draft is checked twice: against the source set, and against the live web from the server. |
 | **Stretched sources** | A true fact used outside the scope its source states reads as sourced and is not. Scope is pinned to what the source says: one country, one product, one kind of customer, and no legal rule the sources do not state. |
 | **Malformed JSON** | Models emit unescaped quotes when they quote a phrase from your documents, which breaks `JSON.parse` mid-response. A repair pass resolves the ambiguity the way a reader would, and reports a readable error for the cases it genuinely cannot decide. |
 | **Stale world model** | The model's knowledge ends before today, so it writes the year it remembers. Every prompt receives the current date, read from the clock at call time rather than frozen into the code. |
@@ -116,7 +117,7 @@ check at all.
 python3 narzedzia/sprawdz_zrodlo.py    # build all variants, verify every fix is present
 python3 narzedzia/audyt_i18n.py        # translation keys, both dictionaries
 python3 narzedzia/audyt_uchwyty.py     # every event handler resolves
-node serwer/testy.js                   # server logic, 236 tests
+node serwer/testy.js                   # server logic, 243 tests
 ```
 
 ---
