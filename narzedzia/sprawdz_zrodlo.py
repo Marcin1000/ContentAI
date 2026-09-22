@@ -319,8 +319,12 @@ KONTROLE = [
     # bylo nieprawda, ale dawalo jakis obraz; "wiedza ogolna modelu" bylo
     # prawdziwe i nie dalo sie z tego wywnioskowac, czy chce sie to wlaczyc.
     # Nazwa opisuje skutek dla artykulu, zastrzezenia sa w podpowiedzi.
+    # Kotwica celuje w poczatek etykiety, nie w cale zdanie: poprawka
+    # gramatyczna ("podawaj" -> "podaj") gasila kontrole, ktora z gramatyka
+    # nie ma nic wspolnego. Liczy sie, ze etykieta nazywa SKUTEK i ze nie
+    # wrocila do dawnego, mylacego mechanizmu.
     ("F38/etykieta", "przelacznik nazwany skutkiem, nie mechanizmem",
-     "'toggle-web':'Szukaj w sieci i podawaj źródła'",
+     "'toggle-web':'Szukaj w sieci",
      "'toggle-web':'Uzupełnij luki wiedzą z internetu'", None),
     ("F38/podpowiedz", "podpowiedz mowi o zrodlach i o danych firmy",
      "Dane o Twojej firmie zawsze tylko z bazy.", None, None),
