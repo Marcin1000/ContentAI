@@ -20,6 +20,7 @@ Pelny opis kazdej zmiany: INSTRUKCJA_naniesienia_zmian.md
 """
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -313,8 +314,10 @@ KONTROLE = [
      "overflow-wrap:anywhere", "word-break:break-all", None),
     ("F37/meta", "dlugosc meta poza zakresem sygnalizowana kolorem",
      "metaEl2.style.color", None, None),
+    # Sama kolejnosc (fakty -> kreska -> SEO), bez emoji, wciec i atrybutow: ikony,
+    # klasy i uklad paska moga sie zmieniac, kolejnosc pozycji w menu Ocen - nie.
     ("F37/kolejnosc", "kontrola faktow pierwsza w menu Ocen",
-     'id="fakty-btn" style="display:none" onclick="przelaczPanelFaktow()" data-i18n="btn-fakty">🔍 Kontrola faktów</button>\n                <div class="grupa-sep"></div>\n                <button class="btn-secondary" id="seo-btn"', None, None),
+     're:id="fakty-btn"[^\\n]*onclick="przelaczPanelFaktow\\(\\)"[^\\n]*</button>\\s*<div class="grupa-sep"></div>\\s*<button[^>]*id="seo-btn"', None, None),
 
     # -- czwarta runda: przelacznik uzupelniania wiedza ogolna --
 
@@ -749,8 +752,11 @@ def sprawdz(html, wariant, cicho=False):
             continue
         zrobione += 1
 
-        brak = jest is not None and jest not in html
-        wrocilo = niema is not None and niema in html
+        # Wzorzec "re:..." to wyrazenie regularne (kolejnosc elementow niezaleznie od zapisu).
+        def jest_w(wzor):
+            return re.search(wzor[3:], html) is not None if wzor.startswith("re:") else wzor in html
+        brak = jest is not None and not jest_w(jest)
+        wrocilo = niema is not None and jest_w(niema)
 
         if brak or wrocilo:
             powod = "brak sladu poprawki" if brak else "wrocil stan sprzed poprawki"
