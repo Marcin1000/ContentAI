@@ -235,8 +235,10 @@ async function wariantProxy(b) {
   const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 } });
   await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); } catch (e) { /* bez magazynu */ } });
   const bledy = [];
+  // Nasluch od pierwszego zaladowania kazdej strony - blad skladni w skrypcie
+  // wykonanym przed zalogowaniem albo zaraz po nim tez ma oblac test.
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
   let s = await zaloguj(k, 'premium');
-  s.on('pageerror', (e) => bledy.push(e.message));
   const r = await generuj(s, 'Artykul konta premium');
   wynik('proxy: artykul gotowy', /ready/.test(r.odznaka) && r.h2 >= 3, JSON.stringify(r));
   await s.evaluate(() => runRepurpose('linkedin'));
@@ -257,7 +259,6 @@ async function wariantProxy(b) {
   wynik('proxy: wylogowanie wraca do ekranu logowania', !!(await s.$('input[name="login"]')));
   await s.close();
   s = await zaloguj(k, 'standard');
-  s.on('pageerror', (e) => bledy.push(e.message));
   wynik('proxy: inne konto nie widzi historii poprzedniego', await s.evaluate(() => history.length === 0));
   wynik('proxy: inne konto nie widzi bazy prywatnej poprzedniego', await s.evaluate(() => (window._bazaSerwerLiczba || 0) === 0));
   wynik('proxy: bez bledow JavaScript', !bledy.length, bledy.join(' | '));
