@@ -2965,7 +2965,15 @@ function pokazPowiadomienie(tekst, rodzaj, czas) {
 // Wylogowanie konczy sesje na serwerze. Dane w przegladarce zostaja w miejscu
 // tego konta (magazyn), wiec nastepna osoba ich nie zobaczy, a po ponownym
 // zalogowaniu historia jest na swoim miejscu.
-function wyloguj() { window.location.href = '/auth/logout'; }
+function wyloguj() {
+  // POST, nie przejscie pod adres: wylogowania nie da sie wywolac obrazkiem
+  // ani linkiem z obcej strony.
+  const f = document.createElement('form');
+  f.method = 'POST';
+  f.action = '/auth/logout';
+  document.body.appendChild(f);
+  f.submit();
+}
 function powiadomBlad(tekst) { return pokazPowiadomienie(tekst, 'blad'); }
 function czytajJson(klucz, domyslnie) {
   try { var v = magazyn.getItem(klucz); return v ? JSON.parse(v) : domyslnie; }
