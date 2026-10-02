@@ -76,6 +76,11 @@ const KONF = {
   dostawca: (process.env.CAI_DOSTAWCA || 'anthropic').toLowerCase(),
   modelNvidia: process.env.CAI_MODEL_NVIDIA || 'nvidia/llama-3.3-nemotron-super-49b-v1.5',
   urlNvidia: process.env.CAI_URL_NVIDIA || 'https://integrate.api.nvidia.com/v1/chat/completions',
+  // Adresy pozostalych dostawcow. Domyslnie oficjalne API; nadpisanie sluzy
+  // atrapie w testach calej aplikacji i bramom zgodnym z tym samym API.
+  urlAnthropic: process.env.CAI_URL_ANTHROPIC || 'https://api.anthropic.com/v1/messages',
+  urlOpenai: (process.env.CAI_URL_OPENAI || 'https://api.openai.com/v1').replace(/\/+$/, ''),
+  urlEleven: (process.env.CAI_URL_ELEVEN || 'https://api.elevenlabs.io/v1').replace(/\/+$/, ''),
 
   klucze: {
     anthropic: process.env.ANTHROPIC_KEY || '',
@@ -683,7 +688,7 @@ async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
 
   const { klucz } = kluczDoUzycia(req, 'x-api-key', KONF.klucze.anthropic);
   if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak ANTHROPIC_KEY na serwerze' });
-  const odp = await fetch('https://api.anthropic.com/v1/messages', {
+  const odp = await fetch(KONF.urlAnthropic, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -720,7 +725,7 @@ async function proxyTranskrypcja(req, res, sesja) {
   const { klucz } = kluczDoUzycia(req, 'x-openai-key', KONF.klucze.openai);
   if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak OPENAI_KEY na serwerze' });
   const cialo = await czytajCialo(req);
-  const odp = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+  const odp = await fetch(KONF.urlOpenai + '/audio/transcriptions', {
     method: 'POST',
     headers: {
       Authorization: 'Bearer ' + klucz,
@@ -746,7 +751,7 @@ async function proxyEleven(req, res, sesja) {
   const glos = dane.voice_id || '21m00Tcm4TlvDq8ikWAM';
   const format = dane.output_format || 'mp3_44100_128';
   const odp = await fetch(
-    'https://api.elevenlabs.io/v1/text-to-speech/' + encodeURIComponent(glos) + '?output_format=' + encodeURIComponent(format),
+    KONF.urlEleven + '/text-to-speech/' + encodeURIComponent(glos) + '?output_format=' + encodeURIComponent(format),
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'xi-api-key': klucz },
@@ -1241,8 +1246,8 @@ async function obsluz(req, res) {
 
     try {
       if (sciezka === '/api') return await proxyTresc(req, res, sesja, czynnosci);
-      if (sciezka === '/api/images') return await proxyOpenAiJson(req, res, 'https://api.openai.com/v1/images/generations', sesja, 'grafika');
-      if (sciezka === '/api/tts') return await proxyOpenAiJson(req, res, 'https://api.openai.com/v1/audio/speech', sesja, 'audio');
+      if (sciezka === '/api/images') return await proxyOpenAiJson(req, res, KONF.urlOpenai + '/images/generations', sesja, 'grafika');
+      if (sciezka === '/api/tts') return await proxyOpenAiJson(req, res, KONF.urlOpenai + '/audio/speech', sesja, 'audio');
       if (sciezka === '/api/transcribe') return await proxyTranskrypcja(req, res, sesja);
       if (sciezka === '/api/eleven-tts') return await proxyEleven(req, res, sesja);
     } catch (e) {
