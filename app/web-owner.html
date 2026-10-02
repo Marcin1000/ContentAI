@@ -1872,7 +1872,7 @@ body.brief-zwiniety:not(.is-mobile) .form-col { display: none; }
   background: var(--c-panel); border-top: 1px solid var(--c-linia); display: flex; flex-direction: column; gap: var(--s-10, 10px); z-index: 5; }
 .generuj-rzad { display: flex; gap: var(--s-8); align-items: stretch; }
 .generuj-rzad .btn-generate { flex: 1; width: auto; }
-.btn-generate .kbd { margin-left: var(--s-6); background: transparent; color: inherit; opacity: .62; border-color: color-mix(in srgb, currentColor 30%, transparent); }
+.btn-generate .kbd { margin-left: var(--s-6); background: transparent; color: inherit; opacity: .85; border-color: color-mix(in srgb, currentColor 30%, transparent); }
 .btn-generate .gen-trwa { display: none; }
 .btn-generate:disabled .gen-trwa { display: inline-flex; align-items: center; gap: var(--s-6); }
 .btn-generate:disabled .gen-etykieta, .btn-generate:disabled > svg, .btn-generate:disabled .kbd { display: none; }
@@ -2120,6 +2120,58 @@ body.is-mobile .astat { flex: none; }
 @layer widoki {
 body.is-mobile .article-stats { justify-content: flex-start; }
 body.is-mobile:has(#article-stats) .pasek-akcje .pasek-sep { display: none; }
+}
+@layer widoki {
+/* ── ekran startowy (pusty wynik) ─────────────────────────────────────── */
+.placeholder { height: auto; min-height: 100%; display: flex; align-items: flex-start; justify-content: center; padding: var(--s-48) 0 var(--s-32); text-align: left; }
+.start-ekran { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: var(--s-12); animation: wejscie-tresci var(--m-4) var(--e-wejscie); }
+.start-ekran .placeholder-box { margin: 0 0 var(--s-4); }
+.start-tytul { font-family: var(--f-tresc); font-size: var(--t-3xl); font-weight: 600; line-height: 1.2; letter-spacing: -0.015em; color: var(--c-tekst); }
+.start-opis { font-size: var(--t-md); line-height: 1.55; color: var(--c-tekst-2); max-width: 52ch; margin: 0 0 var(--s-12); }
+.start-karty { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-12); }
+.start-karta { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-6); padding: var(--s-16); text-align: left; cursor: pointer;
+  border: 1px solid var(--c-linia-2); border-radius: var(--r-md); background: var(--c-pole); color: var(--c-tekst); font-family: var(--f-ui);
+  transition: border-color var(--m-1) var(--e-std), transform var(--m-2) var(--e-std), background-color var(--m-1) var(--e-std); }
+.start-karta:hover { border-color: var(--c-ramka); transform: translateY(-1px); }
+.start-karta:active { transform: translateY(0); background: var(--c-najazd); }
+.start-karta > .ikona { color: var(--c-akcent-mocny); margin-bottom: var(--s-4); }
+.start-karta b { font-size: var(--t-md); font-weight: var(--g-mocny); }
+.start-karta span { font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
+.start-sekcja { font-size: var(--t-sm); font-weight: var(--g-mocny); color: var(--c-tekst); margin: var(--s-20) 0 var(--s-8); }
+.start-kroki[hidden], .start-ostatnie[hidden] { display: none; }
+.start-kroki ol { list-style: none; display: grid; gap: var(--s-8); }
+.start-kroki li { display: flex; align-items: flex-start; gap: var(--s-10, 10px); font-size: var(--t-sm); line-height: 1.5; color: var(--c-tekst-2); }
+.start-nr { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--c-wcisk); color: var(--c-tekst);
+  font-family: var(--f-mono); font-size: 11px; font-weight: var(--g-mocny); }
+.start-lista { border: 1px solid var(--c-linia-2); border-radius: var(--r-md); overflow: hidden; background: var(--c-pole); }
+.start-poz { display: flex; align-items: center; gap: var(--s-10, 10px); width: 100%; min-height: 44px; padding: var(--s-8) var(--s-12); border: 0; border-top: 1px solid var(--c-linia);
+  background: none; color: var(--c-tekst); font-family: var(--f-ui); font-size: var(--t-sm); text-align: left; cursor: pointer; }
+.start-poz:first-child { border-top: 0; }
+.start-poz:hover { background: var(--c-najazd); }
+.start-poz > .ikona { color: var(--c-tekst-3); }
+.start-poz-temat { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: var(--g-sredni); }
+.start-poz-meta { flex: none; font-family: var(--f-mono); font-size: 11px; color: var(--c-tekst-3); }
+@keyframes wejscie-tresci { from { opacity: 0; transform: translateY(6px); } }
+body.is-mobile .placeholder { padding: var(--s-24) var(--s-4); }
+body.is-mobile .start-karty { grid-template-columns: minmax(0, 1fr); }
+body.is-mobile .start-karta { flex-direction: row; align-items: center; flex-wrap: wrap; column-gap: var(--s-10, 10px); }
+body.is-mobile .start-karta > .ikona { margin: 0; }
+body.is-mobile .start-karta span { flex-basis: 100%; padding-left: 30px; }
+body.is-mobile .start-tytul { font-size: var(--t-2xl); }
+body.is-mobile .start-poz-meta { display: none; }
+
+/* ── generowanie: licznik u gory, szkielet kartki na miejscu tekstu ───── */
+.spinner-wrap { justify-content: flex-start; height: auto; min-height: 100%; padding-top: var(--s-32); gap: var(--s-8); }
+.szkielet-kartka { width: 100%; max-width: calc(var(--tresc-max) + 2 * var(--s-56, 56px) + 2px); margin-top: var(--s-24); padding: var(--s-48) var(--s-56, 56px);
+  border: 1px solid var(--c-linia); border-radius: var(--r-lg); background: var(--c-strona); display: flex; flex-direction: column; gap: var(--s-12); }
+.sz { display: block; height: 12px; border-radius: var(--r-xs); background: linear-gradient(90deg, var(--c-wcisk) 0%, var(--c-najazd) 50%, var(--c-wcisk) 100%) 0 0 / 200% 100%;
+  animation: blysk 1400ms linear infinite; }
+.sz-h1 { height: 26px; width: 82%; } .sz-h1.sz-krotki { width: 54%; } .sz-h2 { height: 18px; width: 48%; margin-top: var(--s-16); }
+.sz-krotki { width: 64%; } .sz-odstep { height: 0; background: none; animation: none; margin: var(--s-8) 0 0; }
+@keyframes blysk { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .sz { animation: none; } .spinner svg path { animation: none; opacity: 1; } }
+body.is-mobile .szkielet-kartka { padding: var(--s-24) var(--s-20); border-radius: var(--r-md); }
+body.is-mobile .spinner-wrap { padding-top: var(--s-16); min-height: 0; }
 }
 </style>
 </head>
@@ -2652,9 +2704,28 @@ body.is-mobile:has(#article-stats) .pasek-akcje .pasek-sep { display: none; }
             <div class="astat" id="stat-siec-wrap" style="display:none"><span data-i18n="astat-siec">Sieć:</span><span class="astat-val" id="stat-siec">-</span></div>
           </div>
             <div class="placeholder" id="placeholder">
+              <div class="start-ekran">
               <div class="placeholder-box"><svg viewBox="0 0 32 32" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M16 1.5 L18.82 12.33 L17.94 13.21 A3.4 3.4 0 0 0 14.06 13.21 L13.18 12.33 Z"/><path d="M30.5 16 L19.67 18.82 L18.79 17.94 A3.4 3.4 0 0 0 18.79 14.06 L19.67 13.18 Z"/><path d="M16 30.5 L13.18 19.67 L14.06 18.79 A3.4 3.4 0 0 0 17.94 18.79 L18.82 19.67 Z"/><path d="M1.5 16 L12.33 13.18 L13.21 14.06 A3.4 3.4 0 0 0 13.21 17.94 L12.33 18.82 Z"/><circle cx="16" cy="16" r="1.6"/></svg></div>
-              <p data-i18n="out-placeholder">Wpisz temat i kliknij „Wygeneruj treść”</p>
-              <p class="tekst-pomoc" data-i18n="out-placeholder-sub">AI przeanalizuje bazę wiedzy i stworzy treść</p>
+              <h2 class="start-tytul" data-i18n="start-ekran-tytul">Co dziś piszemy?</h2>
+              <p class="start-opis" data-i18n="start-ekran-opis">Wpisz temat w briefie albo zacznij od jednego z gotowych punktów startu.</p>
+              <div class="start-karty">
+                <button type="button" class="start-karta" onclick="otworzTematy()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-lightbulb"/></svg><b data-i18n="start-karta-tematy">Podpowiedz tematy</b><span data-i18n="start-karta-tematy-opis">Opisz potrzebę, dostaniesz 10 tematów z intencją</span></button>
+                <button type="button" class="start-karta" onclick="openImproveModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-pen-line"/></svg><b data-i18n="start-karta-popraw">Popraw istniejący</b><span data-i18n="start-karta-popraw-opis">Wklej artykuł i podnieś jego ocenę</span></button>
+                <button type="button" class="start-karta" onclick="openBulkModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-layout-grid"/></svg><b data-i18n="start-karta-grupowe">Generowanie grupowe</b><span data-i18n="start-karta-grupowe-opis">Wiele tematów naraz, jedna kolejka</span></button>
+              </div>
+              <div class="start-kroki" id="start-kroki">
+                <div class="start-sekcja" data-i18n="start-kroki-tytul">Pierwszy tekst w trzech krokach</div>
+                <ol>
+                  <li><span class="start-nr">1</span><span data-i18n="start-krok-1">Dodaj do bazy wiedzy pliki, strony albo notatki o firmie.</span></li>
+                  <li><span class="start-nr">2</span><span data-i18n="start-krok-2">Wpisz temat i słowa kluczowe w briefie.</span></li>
+                  <li><span class="start-nr">3</span><span data-i18n="start-krok-3">Wygeneruj tekst, a potem oceń go: SEO, fakty i luki.</span></li>
+                </ol>
+              </div>
+              <div class="start-ostatnie" id="start-ostatnie" hidden>
+                <div class="start-sekcja" data-i18n="start-ostatnie">Ostatnie</div>
+                <div class="start-lista" id="start-ostatnie-lista"></div>
+              </div>
+              </div>
             </div>
             <div class="spinner-wrap" id="spinner">
               <div class="spinner" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 1.5 L18.82 12.33 L17.94 13.21 A3.4 3.4 0 0 0 14.06 13.21 L13.18 12.33 Z"/><path d="M30.5 16 L19.67 18.82 L18.79 17.94 A3.4 3.4 0 0 0 18.79 14.06 L19.67 13.18 Z"/><path d="M16 30.5 L13.18 19.67 L14.06 18.79 A3.4 3.4 0 0 0 17.94 18.79 L18.82 19.67 Z"/><path d="M1.5 16 L12.33 13.18 L13.21 14.06 A3.4 3.4 0 0 0 13.21 17.94 L12.33 18.82 Z"/><circle cx="16" cy="16" r="1.6"/></svg></div>
@@ -2662,6 +2733,7 @@ body.is-mobile:has(#article-stats) .pasek-akcje .pasek-sep { display: none; }
               <div class="spinner-sub" id="spin-sub" data-i18n="spin-sub-knowledge">skanowanie dokumentów</div>
               <div class="spinner-czas" id="spin-czas" aria-live="off">0:00</div>
               <button type="button" class="btn-secondary spinner-stop" id="spin-stop" onclick="przerwijGenerowanie()" data-i18n="btn-przerwij">Przerwij</button>
+              <div class="szkielet-kartka" aria-hidden="true"><span class="sz sz-h1"></span><span class="sz sz-h1 sz-krotki"></span><span class="sz sz-odstep"></span><span class="sz"></span><span class="sz"></span><span class="sz sz-krotki"></span><span class="sz sz-h2"></span><span class="sz"></span><span class="sz"></span><span class="sz"></span><span class="sz sz-krotki"></span></div>
             </div>
             <div class="article" id="article"></div>
           </div>
@@ -3706,6 +3778,20 @@ var currentLang = magazyn.getItem('cai_lang') || ((navigator.language||'pl').toL
 
 var I18N = {
   pl: {
+    // ekran startowy (E9)
+    'start-ekran-tytul':'Co dziś piszemy?',
+    'start-ekran-opis':'Wpisz temat w briefie albo zacznij od jednego z gotowych punktów startu.',
+    'start-karta-tematy':'Podpowiedz tematy',
+    'start-karta-tematy-opis':'Opisz potrzebę, dostaniesz 10 tematów z intencją',
+    'start-karta-popraw':'Popraw istniejący',
+    'start-karta-popraw-opis':'Wklej artykuł i podnieś jego ocenę',
+    'start-karta-grupowe':'Generowanie grupowe',
+    'start-karta-grupowe-opis':'Wiele tematów naraz, jedna kolejka',
+    'start-kroki-tytul':'Pierwszy tekst w trzech krokach',
+    'start-krok-1':'Dodaj do bazy wiedzy pliki, strony albo notatki o firmie.',
+    'start-krok-2':'Wpisz temat i słowa kluczowe w briefie.',
+    'start-krok-3':'Wygeneruj tekst, a potem oceń go: SEO, fakty i luki.',
+    'start-ostatnie':'Ostatnie',
     // nowy uklad (E4)
     'nav-pisz':'Pisz','widok-wynik':'Wynik','widok-etykieta':'Widok',
     'nav-widocznosc':'Widoczność AI',
@@ -4221,6 +4307,20 @@ var I18N = {
     'img-spin-sub':'Generowanie może potrwać 30-60 sekund',
   },
   en: {
+    // ekran startowy (E9)
+    'start-ekran-tytul':'What are we writing today?',
+    'start-ekran-opis':'Enter a topic in the brief or start from one of the ready-made starting points.',
+    'start-karta-tematy':'Suggest topics',
+    'start-karta-tematy-opis':'Describe the need, get 10 topics with intent',
+    'start-karta-popraw':'Improve existing',
+    'start-karta-popraw-opis':'Paste an article and raise its score',
+    'start-karta-grupowe':'Bulk generation',
+    'start-karta-grupowe-opis':'Many topics at once, one queue',
+    'start-kroki-tytul':'Your first text in three steps',
+    'start-krok-1':'Add files, pages or notes about your company to the knowledge base.',
+    'start-krok-2':'Enter the topic and keywords in the brief.',
+    'start-krok-3':'Generate the text, then review it: SEO, facts and gaps.',
+    'start-ostatnie':'Recent',
     // nowy uklad (E4)
     'nav-pisz':'Write','widok-wynik':'Result','widok-etykieta':'View',
     'nav-widocznosc':'AI visibility',
@@ -9010,7 +9110,20 @@ function podpiszPasek() {
     var tx = (b.textContent || '').trim(); if (tx) b.title = tx;
   });
 }
-function odswiezUklad() { odswiezLiczniki(); odswiezPodsumowanie(); odswiezInspektor(); podpiszPasek(); }
+// Ekran startowy: przy pierwszym wejsciu trzy kroki, potem ostatnie teksty z historii.
+function rysujStartEkran() {
+  var kroki = document.getElementById('start-kroki'), ost = document.getElementById('start-ostatnie'), lista = document.getElementById('start-ostatnie-lista');
+  if (!kroki || !ost || !lista) return;
+  var ma = typeof history !== 'undefined' && history.length > 0;
+  kroki.hidden = ma; ost.hidden = !ma;
+  if (!ma) { lista.innerHTML = ''; return; }
+  lista.innerHTML = history.slice(0, 3).map(function (h, i) {
+    return '<button type="button" class="start-poz" onclick="otworzWGeneratorze(' + i + ')">' + ikona('file-text')
+      + '<span class="start-poz-temat">' + escapeHtml(h.topic || '') + '</span>'
+      + '<span class="start-poz-meta">' + escapeHtml(nazwaTypu(h.type)) + ' · ~' + (h.words || 0) + ' ' + _t('hist-words-suffix') + ' · ' + escapeHtml(h.time || '') + '</span></button>';
+  }).join('');
+}
+function odswiezUklad() { odswiezLiczniki(); odswiezPodsumowanie(); odswiezInspektor(); podpiszPasek(); rysujStartEkran(); }
 (function startUkladu() {
   function start() {
     var obs = new MutationObserver(odswiezInspektor);
@@ -9018,7 +9131,7 @@ function odswiezUklad() { odswiezLiczniki(); odswiezPodsumowanie(); odswiezInspe
       var el = document.getElementById(INSPEKTOR[n].el); if (el) obs.observe(el, { attributes: true, attributeFilter: ['class', 'style'] });
       var b = INSPEKTOR[n].btn && document.getElementById(INSPEKTOR[n].btn); if (b) obs.observe(b, { attributes: true, attributeFilter: ['style'] });
     });
-    var licz = new MutationObserver(odswiezLiczniki);
+    var licz = new MutationObserver(function () { odswiezLiczniki(); rysujStartEkran(); });
     ['kb-list', 'kb-serwer', 'h-list-inner', 's-docs'].forEach(function (id) { var e = document.getElementById(id); if (e) licz.observe(e, { childList: true, subtree: true, characterData: true }); });
     ['tone', 'lang', 'audience', 'use-serp', 'use-aeo'].forEach(function (id) { var e = document.getElementById(id); if (e) e.addEventListener('change', odswiezPodsumowanie); });
     // Ctrl/Cmd + Enter w briefie generuje tekst.
