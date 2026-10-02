@@ -78,6 +78,11 @@ jobs:
           python3 narzedzia/audyt_i18n.py
           python3 narzedzia/audyt_uchwyty.py
 
+      # Zapadka kolorow: twardy hex poza tokenami (cai-tokeny) nie idzie za motywem.
+      # Liczba takich miejsc nie moze rosnac (prog w samym skrypcie).
+      - name: Aplikacja - kolory tylko z tokenow
+        run: python3 narzedzia/audyt_kolory.py
+
       # Strona produktowa powstaje z jednego szablonu i słownika PL/EN
       # (narzedzia/buduj_strone.py). Kontrola zatrzymuje wydanie, gdy pliki
       # strony są nieaktualne, brakuje tekstu w PL lub EN, liczby pakietów

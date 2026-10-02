@@ -269,7 +269,7 @@ async function testyOpenSeo() {
     );
     sprawdz('bez <head> i <body> motyw i tak jest', openseo.wstrzyknij('goly tekst', blok).includes('motyw.css'));
     sprawdz('wersja arkusza trafia do adresu', blok.includes('motyw.css?v=7'));
-    sprawdz('krój pisma ten sam co w Content AI', blok.includes('IBM+Plex+Sans'));
+    sprawdz('krój pisma ten sam co w Content AI, z wlasnego serwera', blok.includes('/__cai/fonty/schibsted-grotesk') && !blok.includes('fonts.googleapis.com'));
 
     sprawdz('HTML rozpoznany', openseo.czyHtml({ 'content-type': 'text/html; charset=utf-8' }));
     sprawdz('JSON to nie HTML', !openseo.czyHtml({ 'content-type': 'application/json' }));
@@ -349,7 +349,10 @@ async function testyOpenSeo() {
     sprawdz('arkusz palety dostepny bez logowania', css.status === 200);
     sprawdz('arkusz to CSS', /text\/css/.test(css.headers.get('content-type') || ''));
     sprawdz('arkusz podmienia zmienne daisyUI', cssTresc.includes('--color-base-100'));
-    sprawdz('arkusz niesie bursztyn Content AI', cssTresc.includes('#ffb000'));
+    sprawdz('arkusz niesie bursztyn Content AI', cssTresc.toLowerCase().includes('#f6a623'));
+    const kroj = await fetch(adres + '/__cai/fonty/schibsted-grotesk-latin-wght-normal.woff2');
+    sprawdz('kroj dla OpenSEO z wlasnego serwera', kroj.status === 200 && /woff2/.test(kroj.headers.get('content-type') || ''));
+    sprawdz('sciezka kroju bez wyjscia z katalogu', (await fetch(adres + '/__cai/fonty/..%2f..%2fserwer%2fserver.js')).status !== 200);
     sprawdz('arkusz nie pyta OpenSEO', doszloDoOpenSeo === 0);
 
     // Po zalogowaniu

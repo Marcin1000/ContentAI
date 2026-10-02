@@ -28,6 +28,8 @@ const net = require('node:net');
 const fs = require('node:fs');
 const path = require('node:path');
 
+const KATALOG_FONTOW = path.join(__dirname, '..', 'app', 'pwa', 'fonty');
+
 // Naglowki, ktore dotycza pojedynczego polaczenia, a nie tresci - nie wolno
 // ich przekazywac dalej (RFC 9110). Transfer-encoding odpada, bo tresc
 // skladamy u siebie na nowo.
@@ -69,10 +71,9 @@ function wstrzyknij(html, blok) {
  */
 function blokMotywu(wersja) {
   return (
-    '\n<link rel="preconnect" href="https://fonts.googleapis.com">' +
-    '\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' +
-    '\n<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700' +
-    '&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">' +
+    // Kroje z wlasnego serwera (te same pliki co w Content AI), nie z Google:
+    // kazde wejscie zglaszaloby adres uzytkownika do obcej firmy.
+    '\n<link rel="preload" href="/__cai/fonty/schibsted-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>' +
     `\n<link rel="stylesheet" href="/__cai/motyw.css?v=${wersja}">` +
     '\n<script>(function(){try{' +
     "var m=(document.cookie.match(/(?:^|; )cai_motyw=([^;]*)/)||[])[1];" +
@@ -212,11 +213,11 @@ function przepuscUpgrade(req, gniazdo, glowa, konf, adresIp) {
 function stronaBledu(konf) {
   return `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
 <title>OpenSEO niedostępne</title>
-<style>body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#07080D;color:#E9EDF6;
+<style>body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#111110;color:#EDEBE6;
 display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}
-div{max-width:420px;padding:32px;background:#11131D;border:1px solid #242A3B;border-radius:14px}
-h1{font-size:18px;margin:0 0 12px;color:#FFB000}p{font-size:13px;color:#9DA6BC;line-height:1.6;margin:0}
-code{font-family:'IBM Plex Mono',monospace;color:#46D5F2}</style></head><body>
+div{max-width:420px;padding:32px;background:#171715;border:1px solid #363632;border-radius:12px}
+h1{font-size:18px;margin:0 0 12px;color:#EDEBE6}p{font-size:14px;color:#B9B6AE;line-height:1.6;margin:0}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;color:#F6A623}</style></head><body>
 <div><h1>OpenSEO nie odpowiada</h1>
 <p>Kontener nie działa albo jeszcze wstaje. Sprawdź na serwerze:<br>
 <code>sudo docker compose -f /srv/openseo/compose.yaml ps</code><br><br>
@@ -268,6 +269,20 @@ function utworz(konf, zaleznosci) {
 
   async function obsluz(req, res) {
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+
+    // Kroje Content AI dla OpenSEO - te same pliki co aplikacja.
+    const kroj = /^\/__cai\/fonty\/([a-z0-9-]+\.woff2)$/.exec(url.pathname);
+    if (kroj) {
+      const plik = path.join(KATALOG_FONTOW, kroj[1]);
+      let dane;
+      try { dane = fs.readFileSync(plik); } catch (e) { return res.writeHead(404).end(); }
+      res.writeHead(200, {
+        'Content-Type': 'font/woff2',
+        'Content-Length': String(dane.length),
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      });
+      return res.end(dane);
+    }
 
     // Arkusz serwujemy sami - w kontenerze OpenSEO go nie ma.
     if (url.pathname === '/__cai/motyw.css') {
