@@ -1,19 +1,24 @@
 {
   "name": "Content AI",
   "short_name": "Content AI",
-  "description": "Generator treści SEO i AIO dla Content AI",
+  "description": "Treści SEO, AIO, AEO i GEO pisane z bazy wiedzy firmy, z kontrolą faktów i oceną przed publikacją.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#F5A300",
-  "theme_color": "#F5A300",
+  "background_color": "#111110",
+  "theme_color": "#111110",
   "lang": "pl",
   "categories": [
     "productivity",
     "business"
   ],
   "icons": [
+    {
+      "src": "/icons/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
@@ -43,7 +48,7 @@
     {
       "name": "Generator treści",
       "short_name": "Generator",
-      "description": "Otwórz generator treści SEO/AIO",
+      "description": "Otwórz generator treści SEO i AIO",
       "url": "/?tab=generator",
       "icons": [
         {
