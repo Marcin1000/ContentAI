@@ -335,7 +335,7 @@ KONTROLE = [
     ("F38/podpowiedz", "podpowiedz mowi o zrodlach i o danych firmy",
      "Dane o Twojej firmie zawsze tylko z bazy.", None, None),
     ("F38/czas", "podpowiedz uprzedza o dluzszym generowaniu",
-     "Wydłuża generowanie o ok. 30 sek.", None, None),
+     "Wydłuża generowanie o ok. 30 s.'", None, None),
 
     # Bezwarunkowe "baza wiedzy jest jedynym zrodlem faktow" stalo w
     # sprzecznosci z galezia promptu mowiaca "mozesz uzupelnic wiedza ogolna".

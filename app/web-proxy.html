@@ -1496,7 +1496,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
   <div class="topbar-right">
     <button id="pakiet-badge" onclick="otworzPakiet()" data-i18n-title="pakiet-badge-title" title="Twój pakiet i zużycie" style="display:none;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text);font-family:inherit;line-height:1;height:28px"></button>
     <div class="settings-wrap" id="settings-wrap">
-      <button class="settings-btn" id="settings-btn" onclick="toggleSettingsMenu()" title="Ustawienia CMS i Brand Voice" aria-label="Ustawienia CMS i Brand Voice" data-i18n-title="title-settings" aria-haspopup="true">⚙️</button>
+      <button class="settings-btn" id="settings-btn" onclick="toggleSettingsMenu()" title="Ustawienia" aria-label="Ustawienia" data-i18n-title="title-settings" data-i18n-label="title-settings" aria-haspopup="true">⚙️</button>
       <div class="settings-menu" id="settings-menu">
         <div class="settings-item" onclick="otworzBazeSerwera();closeSettingsMenu()">
           <span>📚</span>
@@ -1517,7 +1517,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
         </div>
         <div class="settings-item" onclick="openBvModal();closeSettingsMenu()">
           <span id="bv-menu-icon">🎙</span>
-          <div><div style="font-weight:600;font-size:13px" data-i18n="settings-bv-title">Brand Voice</div><div id="bv-menu-sub" style="font-size:11px;color:var(--text3)" data-i18n="settings-bv-inactive">Nieaktywny</div></div>
+          <div><div style="font-weight:600;font-size:13px" data-i18n="settings-bv-title">Głos marki</div><div id="bv-menu-sub" style="font-size:11px;color:var(--text3)" data-i18n="settings-bv-inactive">Nieaktywny</div></div>
         </div>
         <div style="height:1px;background:var(--border);margin:4px 0"></div>
         <div class="settings-item" onclick="openLlmsModal();closeSettingsMenu()">
@@ -1526,24 +1526,24 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
         </div>
         <div class="settings-item" onclick="openVisModal();closeSettingsMenu()">
           <span>🔎</span>
-          <div><div style="font-weight:600;font-size:13px" data-i18n="settings-vis-title">Widoczność AI</div><div style="font-size:11px;color:var(--text3)" data-i18n="settings-vis-sub">obecność marki w odpowiedziach AI</div></div>
+          <div><div style="font-weight:600;font-size:13px" data-i18n="settings-vis-title">Obecność marki w AI</div><div style="font-size:11px;color:var(--text3)" data-i18n="settings-vis-sub">zapytania zakupowe, pozycja, konkurenci</div></div>
         </div>
         <div class="settings-item" onclick="openRepModal();closeSettingsMenu()">
           <span>📊</span>
-          <div><div style="font-weight:600;font-size:13px" data-i18n="settings-rep-title">Raport AI</div><div style="font-size:11px;color:var(--text3)" data-i18n="settings-rep-sub">trend i priorytety</div></div>
+          <div><div style="font-weight:600;font-size:13px" data-i18n="settings-rep-title">Raport widoczności</div><div style="font-size:11px;color:var(--text3)" data-i18n="settings-rep-sub">porównanie pomiarów i priorytety</div></div>
         </div>
         <div class="settings-item" onclick="openTrkModal();closeSettingsMenu()">
           <span>🤖</span>
-          <div><div style="font-weight:600;font-size:13px" data-i18n="settings-trk-title">Tracking AI</div><div style="font-size:11px;color:var(--text3)" data-i18n="settings-trk-sub">robots.txt, UTM, GA4</div></div>
+          <div><div style="font-weight:600;font-size:13px" data-i18n="settings-trk-title">Pomiar ruchu z AI</div><div style="font-size:11px;color:var(--text3)" data-i18n="settings-trk-sub">robots.txt, UTM, GA4</div></div>
         </div>
         <div style="height:1px;background:var(--border);margin:4px 0"></div>
         <div class="settings-item" onclick="openVoiceSettings()">
           <span>🔊</span>
-          <div><div style="font-weight:600;font-size:13px" data-i18n="settings-voice-title">Asystent głosowy</div><div style="font-size:11px;color:var(--text3)" data-i18n="settings-voice-sub">czytanie + dyktowanie</div></div>
+          <div><div style="font-weight:600;font-size:13px" data-i18n="settings-voice-title">Asystent głosowy</div><div style="font-size:11px;color:var(--text3)" data-i18n="settings-voice-sub">czytanie na głos i dyktowanie</div></div>
         </div>
         <div class="settings-item" onclick="aivOpen()">
           <span>📡</span>
-          <div><div style="font-weight:600;font-size:13px" data-i18n="settings-aiv-title">Widoczność w AI</div><div style="font-size:11px;color:var(--text3)" data-i18n="settings-aiv-sub">tracking AEO / GEO</div></div>
+          <div><div style="font-weight:600;font-size:13px" data-i18n="settings-aiv-title">Cytowania w AI</div><div style="font-size:11px;color:var(--text3)" data-i18n="settings-aiv-sub">Twoje zapytania, trend w czasie</div></div>
         </div>
         <div style="height:1px;background:var(--border);margin:4px 0"></div>
         <div class="settings-item" onclick="wyloguj()">
@@ -1576,7 +1576,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 
       <div class="upload-zone" id="upload-zone-mobile" onclick="piiConfirm(function(){triggerFileInput('file-input-mobile');})">
         <div class="upload-zone-icon">⬆️</div>
-        <div class="upload-zone-label" data-i18n="sidebar-click">Kliknij aby wybrać pliki</div>
+        <div class="upload-zone-label" data-i18n="sidebar-click">Kliknij, aby wybrać pliki</div>
         <div class="upload-zone-hint">PDF, DOCX, XLSX, PPTX, TXT, CSV</div>
       </div>
       <div class="upload-progress" id="upload-progress-mobile">
@@ -1591,7 +1591,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
       <button class="btn-text-add" onclick="otworzBazeSerwera();closeMobileSidebar()" data-i18n="sidebar-baza-serwer">☁️ Baza na serwerze</button>
     </div>
     <div class="sidebar-stats">
-      <div class="sstat"><div class="sstat-val" id="s-docs-m">0</div><div class="sstat-lbl">Dokumenty</div></div>
+      <div class="sstat"><div class="sstat-val" id="s-docs-m">0</div><div class="sstat-lbl" data-i18n="sidebar-docs">Dokumenty</div></div>
       <div class="sstat"><div class="sstat-val" id="s-words-m">0</div><div class="sstat-lbl" data-i18n="stat-words">Słowa</div></div>
       <div class="sstat"><div class="sstat-val" id="s-gen-m">0</div><div class="sstat-lbl" data-i18n="stat-generated">Wygenerowane</div></div>
     </div>
@@ -1619,7 +1619,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
   <div class="sidebar">
     <div class="sidebar-head">
       <h2 data-i18n="sidebar-title">📁 Baza wiedzy - źródła</h2>
-      <button class="kb-collapse-btn" onclick="toggleKbPanel()" title="Zwiń panel" data-i18n-title="kb-collapse" aria-label="Zwiń panel bazy wiedzy">‹</button>
+      <button class="kb-collapse-btn" onclick="toggleKbPanel()" title="Zwiń panel" data-i18n-title="kb-collapse" aria-label="Zwiń panel bazy wiedzy" data-i18n-label="kb-collapse-label">‹</button>
     </div>
     <div class="kb-select-bar" id="kb-select-bar">
       <span id="kb-select-label">0 zaznaczonych</span>
@@ -1639,7 +1639,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 
       <div class="upload-zone" id="upload-zone" onclick="piiConfirm(function(){triggerFileInput('file-input');})">
         <div class="upload-zone-icon">⬆️</div>
-        <div class="upload-zone-label" data-i18n="sidebar-click">Kliknij aby wybrać pliki</div>
+        <div class="upload-zone-label" data-i18n="sidebar-click">Kliknij, aby wybrać pliki</div>
         <div class="upload-zone-hint">PDF, DOCX, XLSX, PPTX, TXT, CSV</div>
       </div>
 
@@ -1677,7 +1677,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
   <!-- MAIN -->
   <div class="main">
     <div class="tabs">
-      <button class="kb-tab" id="kb-tab" onclick="toggleKbPanel()" title="Baza wiedzy" data-i18n-title="kb-toggle"><span data-i18n="kb-reopen">Baza wiedzy</span></button>
+      <button class="kb-tab" id="kb-tab" onclick="toggleKbPanel()" title="Pokaż/ukryj bazę wiedzy" data-i18n-title="kb-toggle"><span data-i18n="kb-reopen">Baza wiedzy</span></button>
       <button class="tab active" onclick="switchTab('generator',this)" data-i18n="tab-generator">Generator treści</button>
       <button class="tab" onclick="switchTab('history',this)" data-i18n="tab-history">Historia</button>
     </div>
@@ -1690,7 +1690,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
           <div class="field">
             <label class="field-label" style="display:block;margin-bottom:5px" data-i18n="label-topic">Temat artykułu / strony</label>
             <div style="display:flex;gap:6px;align-items:center">
-              <input type="text" id="topic" autocomplete="off" placeholder="np. temat artykułu lub strony" data-i18n="ph-topic" style="flex:1;min-width:0" />
+              <input type="text" id="topic" autocomplete="off" placeholder="np. Jak wybrać system CRM dla małej firmy" data-i18n="ph-topic" style="flex:1;min-width:0" />
               <button type="button" class="mic-btn" onclick="dictate('topic', this)" data-i18n-title="voice-dictate-title" title="Dyktuj">🎙</button>
             </div>
             <!-- Pomoce pod polem, nie w wierszu etykiety: w waskiej kolumnie
@@ -1698,7 +1698,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
             <!-- Oba przyciski dziela szerokosc pola tematu: rowna krawedz z prawej
                  wyglada spokojniej niz dwa przyciski roznej dlugosci. -->
             <div style="display:flex;gap:6px;margin-top:7px">
-              <button class="btn-secondary" onclick="otworzTematy()" style="flex:1 1 0;min-width:0;justify-content:center;padding:7px 10px;font-size:11px;gap:4px;white-space:nowrap" data-i18n="btn-tematy" data-i18n-title="btn-tematy-title" title="Podpowiedz tematy na podstawie zapotrzebowania"><span>💡</span> Propozycje</button>
+              <button class="btn-secondary" onclick="otworzTematy()" style="flex:1 1 0;min-width:0;justify-content:center;padding:7px 10px;font-size:11px;gap:4px;white-space:nowrap" data-i18n="btn-tematy" data-i18n-title="btn-tematy-title" title="Podpowiedz tematy na podstawie zapotrzebowania"><span>💡</span> Podpowiedz</button>
               <button class="btn-secondary" onclick="openTemplates()" style="flex:1 1 0;min-width:0;justify-content:center;padding:7px 10px;font-size:11px;gap:4px;white-space:nowrap" data-i18n="btn-templates" data-i18n-title="btn-templates-title" title="Gotowe szablony formularza"><span>📋</span> Szablony</button>
             </div>
           </div>
@@ -1710,8 +1710,8 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
                 <option value="Hybryda SEO + AIO" data-i18n="opt-hybrid">Hybryda SEO + AIO</option>
                 <option value="Artykuł SEO" data-i18n="opt-seo">Artykuł SEO</option>
                 <option value="Treść AIO" data-i18n="opt-aio">Treść AIO</option>
-                <option value="FAQ page" data-i18n="opt-faq">FAQ page</option>
-                <option value="Landing page copy" data-i18n="opt-landing">Landing page copy</option>
+                <option value="FAQ page" data-i18n="opt-faq">Strona FAQ</option>
+                <option value="Landing page copy" data-i18n="opt-landing">Tekst strony docelowej (landing page)</option>
                 <option value="Wpis blogowy" data-i18n="opt-blog">Wpis blogowy</option>
                 <option value="Opis produktu/usługi" data-i18n="opt-product">Opis produktu/usługi</option>
                 <option value="Strona kierunkowa (eksport)" data-i18n="opt-directional">Strona kierunkowa (eksport)</option>
@@ -1724,7 +1724,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
                 <option value="~400 słów" data-i18n="opt-short">~400 słów</option>
                 <option value="~800 słów" selected data-i18n="opt-medium">~800 słów</option>
                 <option value="~1500 słów" data-i18n="opt-long">~1500 słów</option>
-                <option value="custom" data-i18n="opt-custom">Własna liczba...</option>
+                <option value="custom" data-i18n="opt-custom">Własna…</option>
               </select>
               <input type="number" id="length-custom" min="100" max="5000" step="50" placeholder="np. 1200" data-i18n="ph-length-custom" style="display:none;margin-top:6px" />
             </div>
@@ -1744,7 +1744,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
           <div class="field">
             <label class="field-label" data-i18n="label-kw">Słowa kluczowe</label>
             <div style="display:flex;gap:6px;align-items:center">
-              <input type="text" id="kw-input" autocomplete="off" placeholder="Wpisz frazę i naciśnij Enter..." data-i18n="ph-kw" onkeydown="addKw(event)" onkeyup="addKwMobile(event)" style="flex:1;min-width:0" />
+              <input type="text" id="kw-input" autocomplete="off" placeholder="Wpisz frazę i naciśnij Enter…" data-i18n="ph-kw" onkeydown="addKw(event)" onkeyup="addKwMobile(event)" style="flex:1;min-width:0" />
               <button type="button" class="mic-btn" onclick="dictate('kw-input', this)" data-i18n-title="voice-dictate-title" title="Dyktuj">🎙</button>
               <button onclick="addKwBtn()" title="Dodaj frazę" data-i18n-title="title-kw-add" style="flex-shrink:0;height:38px;width:38px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">+</button>
               <button type="button" id="seo-frazy-btn" style="display:none;flex-shrink:0;height:38px;width:38px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:17px;cursor:pointer;align-items:center;justify-content:center;line-height:1" onclick="otworzFrazySeo()" data-i18n-title="seo-frazy-title" title="Frazy sprawdzone w OpenSEO">📈</button>
@@ -1788,7 +1788,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
           <div class="field">
             <label class="field-label" data-i18n="label-extra">Dodatkowe wytyczne</label>
             <div style="display:flex;gap:6px;align-items:flex-start">
-              <textarea rows="3" id="extra" placeholder="np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem..." data-i18n="ph-extra" style="flex:1;min-width:0"></textarea>
+              <textarea rows="3" id="extra" placeholder="np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem…" data-i18n="ph-extra" style="flex:1;min-width:0"></textarea>
               <button type="button" class="mic-btn" onclick="dictate('extra', this)" data-i18n-title="voice-dictate-title" title="Dyktuj">🎙</button>
             </div>
           </div>
@@ -1796,7 +1796,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
           <label class="toggle-row" for="use-web">
             <div class="toggle-info">
               <span class="toggle-label" data-i18n="toggle-web">Szukaj w sieci i podaj źródła</span>
-              <span class="toggle-hint" data-i18n="toggle-web-hint">Gdy baza nie zawiera info o danym aspekcie, AI sięgnie po wiedzę ogólną. Dane firmowe zawsze mają pierwszeństwo.</span>
+              <span class="toggle-hint" data-i18n="toggle-web-hint">Czego brakuje w bazie, AI poszuka w sieci i wymieni źródła pod artykułem. Dane o Twojej firmie zawsze tylko z bazy. Wydłuża generowanie o ok. 30 s.</span>
             </div>
             <div class="toggle-wrap">
               <input type="checkbox" id="use-web" />
@@ -1806,7 +1806,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
           <label class="toggle-row" for="use-serp">
             <div class="toggle-info">
               <span class="toggle-label" data-i18n="toggle-serp">Analiza SERP przed generowaniem</span>
-              <span class="toggle-hint" data-i18n="toggle-serp-hint">Przed wygenerowaniem AI sprawdza co rankuje w Google dla Twojego słowa kluczowego i wykorzystuje te dane jako dodatkowy kontekst. Wydłuża generowanie o ok. 15 sek.</span>
+              <span class="toggle-hint" data-i18n="toggle-serp-hint">Przed pisaniem AI sprawdza, co rankuje w Google na Twoje słowo kluczowe, i bierze to pod uwagę. Wydłuża generowanie o ok. 15 s.</span>
             </div>
             <div class="toggle-wrap">
               <input type="checkbox" id="use-serp" onchange="onSerpToggle()" />
@@ -1814,7 +1814,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
             </div>
           </label>
           <div id="serp-kw-warn" style="display:none;font-size:12px;color:#92400E;background:#FEF3C7;border:1px solid #FCD34D;border-radius:var(--radius);padding:7px 12px;margin-top:-2px;line-height:1.45">
-            <span data-i18n="no-kw-warning-full">⚠️ Nie podałeś słowa kluczowego. Jako zapytanie zostanie użyty temat artykułu. Wpisz główną frazę kluczową żeby analiza SERP była trafna.</span>
+            <span data-i18n="no-kw-warning-full">⚠️ Brak słowa kluczowego, więc analiza SERP użyje tematu artykułu. Wpisz główną frazę, żeby wynik był trafniejszy.</span>
           </div>
           <label class="toggle-row" for="use-aeo">
             <div class="toggle-info">
@@ -1829,7 +1829,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 
           <div id="form-actions-row" style="display:flex;gap:6px;margin-top:4px">
             <button class="btn-secondary" onclick="openBriefPanel()" style="flex:1;justify-content:center;text-align:center" title="Wygeneruj brief przed artykułem" data-i18n-title="title-brief-tooltip">Brief</button>
-            <button class="btn-secondary" onclick="openBulkModal()" style="flex:1;justify-content:center;text-align:center" title="Generowanie grupowe - wiele artykułów na raz" data-i18n-title="title-bulk-tooltip" data-i18n="btn-bulk">Grupowe</button>
+            <button class="btn-secondary" onclick="openBulkModal()" style="flex:1;justify-content:center;text-align:center" title="Generowanie grupowe: wiele artykułów naraz" data-i18n-title="title-bulk-tooltip" data-i18n="btn-bulk">Generuj grupowo</button>
             <button class="btn-secondary" onclick="openImproveModal()" style="flex:1;justify-content:center;text-align:center" title="Popraw istniejący artykuł" data-i18n-title="title-improve-art" data-i18n="btn-improve">Popraw</button>
           </div>
 
@@ -1841,10 +1841,10 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
           <div class="form-actions-sticky">
             <button class="btn-generate" onclick="generate()" id="gen-btn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              <span data-i18n="btn-generate">Generuj treść</span>
+              <span data-i18n="btn-generate">Wygeneruj treść</span>
             </button>
             <button class="btn-premium" id="premium-btn" onclick="togglePremium()" title="Tryb głębokiej samokorekcji. Generowanie zajmuje 2 do 3 razy więcej czasu, ale artykuł jest weryfikowany i poprawiany automatycznie." data-i18n-title="title-premium-tooltip">
-              <span data-i18n="btn-premium">⭐ Jakość premium</span>
+              <span data-i18n="btn-premium">⭐ Samokorekta</span>
             </button>
           </div>
         </div>
@@ -1875,7 +1875,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
                 <button class="btn-secondary" id="seo-btn" style="display:none" onclick="toggleSeoPanel()" data-i18n="btn-seo">📊 Oceń SEO</button>
                 <button class="btn-secondary" id="aio-btn" style="display:none" onclick="toggleAioPanel()" data-i18n="btn-aio">🤖 Oceń AIO</button>
                 <button class="btn-secondary" id="aeo-btn" style="display:none" onclick="toggleAeoPanel()" data-i18n="btn-aeo">⚡ Oceń AEO</button>
-                <button class="btn-secondary" id="geo-btn" style="display:none" onclick="toggleGeoPanel()" data-i18n="btn-geo">🎯 GEO Score</button>
+                <button class="btn-secondary" id="geo-btn" style="display:none" onclick="toggleGeoPanel()" data-i18n="btn-geo">🎯 Oceń GEO</button>
                 <button class="btn-secondary" id="serp-toggle-btn" style="display:none" onclick="toggleSerpPanel()" data-i18n="btn-serp">📊 SERP</button>
                 <button class="btn-secondary" id="gap-btn" style="display:none" onclick="toggleGapPanel()" data-i18n="btn-gap">🧩 Luki</button>
               </div>
@@ -1897,9 +1897,9 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
                   <div class="grupa-sep"></div>
                   <div class="repurpose-item" onclick="runRepurpose('linkedin')" data-i18n="rp-linkedin">💼 Post LinkedIn</div>
                   <div class="repurpose-item" onclick="runRepurpose('facebook')" data-i18n="rp-facebook">👥 Post Facebook</div>
-                  <div class="repurpose-item" onclick="runRepurpose('email')" data-i18n="rp-email">📧 Email newsletter</div>
+                  <div class="repurpose-item" onclick="runRepurpose('email')" data-i18n="rp-email">📧 Newsletter e-mail</div>
                   <div class="repurpose-item" onclick="runRepurpose('faq')" data-i18n="rp-faq">❓ Strona FAQ</div>
-                  <div class="repurpose-item" onclick="runRepurpose('landing')" data-i18n="rp-landing">🎯 Landing page intro</div>
+                  <div class="repurpose-item" onclick="runRepurpose('landing')" data-i18n="rp-landing">🎯 Wstęp strony docelowej</div>
                 </div>
               </div>
             </div>
@@ -1908,7 +1908,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
               <button type="button" class="btn-secondary" aria-haspopup="true" aria-expanded="false" aria-controls="grupa-wiecej-menu" onclick="przelaczGrupe('wiecej')" data-i18n="grupa-wiecej">⋯ Więcej ▾</button>
               <div class="grupa-backdrop" onclick="przelaczGrupe('wiecej')"></div>
               <div class="grupa-menu" id="grupa-wiecej-menu">
-                <button class="btn-secondary" id="premium-fix-btn" style="display:none" onclick="runPostGenerationPremium()" title="Uruchom samokorekcję Premium na istniejącym artykule" data-i18n-title="title-premium-fix-tooltip" data-i18n="btn-premium-fix">⭐ Popraw premium</button>
+                <button class="btn-secondary" id="premium-fix-btn" style="display:none" onclick="runPostGenerationPremium()" title="Model oceni gotowy tekst i poprawi go według oceny" data-i18n-title="title-premium-fix-tooltip" data-i18n="btn-premium-fix">⭐ Dopracuj tekst</button>
                 <button class="btn-secondary" id="links-btn" style="display:none" onclick="toggleLinksPanel()" data-i18n="btn-links">🔗 Linki</button>
                 <button class="btn-secondary" id="jsonld-btn" style="display:none" onclick="toggleJsonLd()" data-i18n="btn-jsonld">{ } JSON-LD</button>
                 <button class="btn-secondary" id="wp-pub-btn" style="display:none" onclick="openWpPublish()" data-i18n="btn-wp-pub">🌐 Publikuj WP</button>
@@ -1934,7 +1934,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               .pdf
             </button>
-            <button class="btn-secondary" id="tts-btn" style="display:none" onclick="speakArticle(this)" data-i18n-title="tts-read" title="Przeczytaj">🔊 <span data-i18n="tts-read">Przeczytaj</span></button>
+            <button class="btn-secondary" id="tts-btn" style="display:none" onclick="speakArticle(this)" data-i18n-title="tts-read" title="Posłuchaj">🔊 <span data-i18n="tts-read">Posłuchaj</span></button>
               </div>
             </div>
           </div>
@@ -1951,7 +1951,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
                 <button class="seo-close" onclick="closeBriefPanel()">×</button>
               </div>
             </div>
-            <div style="overflow-y:auto;flex:1" id="brief-content"><div class="seo-loading" data-i18n="msg-loading-brief">⏳ Analizuję temat i bazę wiedzy...</div></div>
+            <div style="overflow-y:auto;flex:1" id="brief-content"><div class="seo-loading" data-i18n="msg-loading-brief">⏳ Analizuję temat i bazę wiedzy…</div></div>
           </div>
 
           <!-- Panel Przeróbek -->
@@ -1962,7 +1962,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
               <button class="btn-secondary" onclick="copyRepurpose()" style="margin-left:auto;font-size:11px" data-i18n="btn-copy">Kopiuj</button>
             </div>
             <div class="repurpose-body">
-              <div id="repurpose-loading" class="seo-loading" data-i18n="rp-loading">⏳ Tworzę przeróbkę...</div>
+              <div id="repurpose-loading" class="seo-loading" data-i18n="rp-loading">⏳ Tworzę przeróbkę…</div>
               <textarea class="repurpose-out" id="repurpose-out" style="display:none"></textarea>
             </div>
           </div>
@@ -2004,7 +2004,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
             <div class="astat-sep">·</div>
             <div class="astat"><span>Meta:</span><span class="astat-val" id="stat-meta">-</span><span data-i18n="astat-chars">zn.</span></div>
             <div class="astat-sep">·</div>
-            <div class="astat" style="cursor:pointer" onclick="toggleFogInfo()" title="Kliknij aby zobaczyć skalę" data-i18n-title="fog-tooltip">
+            <div class="astat" style="cursor:pointer" onclick="toggleFogInfo()" title="Kliknij, aby zobaczyć skalę" data-i18n-title="fog-tooltip">
               <span>FOG:</span><span class="astat-val" id="stat-fog">-</span>
               <span style="font-size:10px;color:var(--text3);margin-left:1px">ℹ</span>
             </div>
@@ -2019,11 +2019,11 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
           </div>
           <!-- Panel FOG -->
           <div id="fog-panel" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;font-size:12px;margin:0 0 4px;line-height:1.6">
-            <div style="font-weight:600;margin-bottom:6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)" data-i18n="fog-title">Indeks czytelności FOG</div>
+            <div style="font-weight:600;margin-bottom:6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)" data-i18n="fog-title">Indeks mglistości (wersja dla polszczyzny)</div>
             <div style="color:#16A34A" data-i18n="fog-easy">● poniżej 12: tekst przystępny, łatwy w odbiorze</div>
-            <div style="color:#B45309" data-i18n="fog-medium">● 12-16: tekst złożony, wymaga skupienia</div>
-            <div style="color:var(--red)" data-i18n="fog-hard">● powyżej 16: tekst akademicki / bardzo trudny</div>
-            <div style="color:var(--text3);margin-top:4px;font-size:10px" data-i18n="fog-goal">Cel dla treści SEO: poniżej 12</div>
+            <div style="color:#B45309" data-i18n="fog-medium">● 12-15: tekst złożony, wymaga skupienia</div>
+            <div style="color:var(--red)" data-i18n="fog-hard">● powyżej 15: tekst specjalistyczny / bardzo trudny</div>
+            <div style="color:var(--text3);margin-top:4px;font-size:10px" data-i18n="fog-goal">Cel dla treści SEO: poniżej 12. Za słowo trudne liczymy takie o czterech sylabach i więcej, bo w polszczyźnie trzysylabowe są słowa najzwyklejsze („opłata”, „usługi”).</div>
           </div>
           <!-- Panel gęstości słów kluczowych -->
           <div id="kd-panel" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;font-size:12px;margin:0 0 4px">
@@ -2062,7 +2062,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
                 <button onclick="zamknijPanelFaktow()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:0;line-height:1">×</button>
               </div>
             </div>
-            <div id="fakty-loading" class="seo-loading" style="display:none" data-i18n="fakty-loading">⏳ Zestawiam artykuł ze źródłami...</div>
+            <div id="fakty-loading" class="seo-loading" style="display:none" data-i18n="fakty-loading">⏳ Zestawiam artykuł ze źródłami…</div>
             <div id="fakty-wynik"></div>
           </div>
 
@@ -2075,7 +2075,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
                 <button onclick="closeGapPanel()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:0;line-height:1">×</button>
               </div>
             </div>
-            <div id="gap-loading" class="seo-loading" style="display:none" data-i18n="gap-loading">⏳ Porównuję artykuł z danymi SERP...</div>
+            <div id="gap-loading" class="seo-loading" style="display:none" data-i18n="gap-loading">⏳ Porównuję artykuł z danymi SERP…</div>
             <!-- Delta po poprawce -->
             <div id="gap-delta" style="display:none">
               <div class="gap-delta-bar">
@@ -2128,7 +2128,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
               <span style="font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)" data-i18n="links-title">🔗 Sugestie linków wewnętrznych</span>
               <button onclick="toggleLinksPanel()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:0">×</button>
             </div>
-            <div id="links-loading" class="seo-loading" style="display:none" data-i18n="links-loading">⏳ Analizuję bazę wiedzy...</div>
+            <div id="links-loading" class="seo-loading" style="display:none" data-i18n="links-loading">⏳ Analizuję bazę wiedzy…</div>
             <div id="links-list"></div>
           </div>
 
@@ -2143,7 +2143,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
               <h4 data-i18n="seo-panel-title">📊 Ocena SEO</h4>
               <button class="seo-close" onclick="toggleSeoPanel()">×</button>
             </div>
-            <div id="seo-content"><div class="seo-loading" data-i18n="seo-analyzing">Analizuję artykuł...</div></div>
+            <div id="seo-content"><div class="seo-loading" data-i18n="seo-analyzing">Analizuję artykuł…</div></div>
           </div>
 
           <!-- Panel AIO -->
@@ -2152,7 +2152,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
               <h4 data-i18n="aio-panel-title">🤖 Ocena AIO</h4>
               <button class="seo-close" onclick="toggleAioPanel()">×</button>
             </div>
-            <div id="aio-content"><div class="seo-loading" data-i18n="aio-analyzing">Analizuję pod kątem AI Overview...</div></div>
+            <div id="aio-content"><div class="seo-loading" data-i18n="aio-analyzing">Analizuję pod kątem AI Overview…</div></div>
           </div>
 
           <!-- Panel AEO -->
@@ -2167,7 +2167,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
           <!-- Panel GEO -->
           <div class="aio-panel" id="geo-panel">
             <div class="aio-panel-head">
-              <h4 data-i18n="geo-panel-title">🎯 GEO Score</h4>
+              <h4 data-i18n="geo-panel-title">🎯 Ocena GEO</h4>
               <button class="seo-close" onclick="toggleGeoPanel()">×</button>
             </div>
             <div id="geo-content"></div>
@@ -2176,12 +2176,12 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
           <div class="output-scroll" id="out-scroll">
             <div class="placeholder" id="placeholder">
               <div class="placeholder-box"><svg viewBox="0 0 32 32" width="24" height="24" style="display:block"><path d="M16 1.5 L18.4 13.6 L30.5 16 L18.4 18.4 L16 30.5 L13.6 18.4 L1.5 16 L13.6 13.6 Z" fill="currentColor"/></svg></div>
-              <p data-i18n="out-placeholder">Wpisz temat i kliknij „Generuj treść"</p>
+              <p data-i18n="out-placeholder">Wpisz temat i kliknij „Wygeneruj treść”</p>
               <p style="font-size:12px" data-i18n="out-placeholder-sub">AI przeanalizuje bazę wiedzy i stworzy treść</p>
             </div>
             <div class="spinner-wrap" id="spinner">
               <div class="spinner"></div>
-              <div class="spinner-label" id="spin-label" data-i18n="spin-knowledge">Analizuję bazę wiedzy...</div>
+              <div class="spinner-label" id="spin-label" data-i18n="spin-knowledge">Analizuję bazę wiedzy…</div>
               <div class="spinner-sub" id="spin-sub" data-i18n="spin-sub-knowledge">skanowanie dokumentów</div>
               <div class="spinner-czas" id="spin-czas" aria-live="off">0:00</div>
               <button type="button" class="btn-secondary spinner-stop" id="spin-stop" onclick="przerwijGenerowanie()" data-i18n="btn-przerwij">Przerwij</button>
@@ -2207,7 +2207,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
       <div style="display:flex;flex:1;overflow:hidden">
         <div class="h-list-col" id="h-list-col">
           <div style="padding:8px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
-            <input type="text" id="hist-filter" placeholder="Szukaj w historii..." data-i18n="ph-history-search" oninput="filterHistory()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:5px 10px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;box-sizing:border-box"/>
+            <input type="text" id="hist-filter" placeholder="Szukaj w historii…" data-i18n="ph-history-search" oninput="filterHistory()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:5px 10px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;box-sizing:border-box"/>
             <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap" id="hist-tag-filters">
               <button type="button" class="htag-filter active" aria-pressed="true" onclick="setHistFilter(this,'all')" data-i18n="hist-filter-all">Wszystkie</button>
               <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Artykuł SEO')">SEO</button>
@@ -2251,7 +2251,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
     <div class="url-info-box" id="url-info" style="display:none">
       <div class="url-info-row">
         <div class="url-progress-bar"><div class="url-progress-fill" id="url-fill"></div></div>
-        <span id="url-status" data-i18n="msg-fetching-page">Pobieram treść strony...</span>
+        <span id="url-status" data-i18n="msg-fetching-page">Pobieram treść strony…</span>
       </div>
     </div>
     <div class="modal-footer">
@@ -2294,7 +2294,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
     <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
       <div class="field-label" style="margin-bottom:8px" data-i18n="tpl-save-section">Lub zapisz obecny formularz jako szablon</div>
       <div style="display:flex;gap:8px">
-        <input type="text" id="tpl-save-name" placeholder="Nazwa szablonu..." data-i18n="tpl-name-ph" style="flex:1" />
+        <input type="text" id="tpl-save-name" placeholder="Nazwa szablonu…" data-i18n="tpl-name-ph" style="flex:1" />
         <button class="btn-generate" style="width:auto;padding:8px 16px" onclick="saveTemplate()" data-i18n="btn-save">Zapisz</button>
       </div>
     </div>
@@ -2492,7 +2492,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 
     <!-- WordPress fields -->
     <div id="cms-wp-fields">
-      <p style="font-size:12px;color:var(--text3);margin-bottom:14px" data-i18n="wp-hint">Użyj Application Password (WP 5.6+): Użytkownicy → Twój profil → Hasła aplikacji.</p>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:14px" data-i18n="wp-hint">Użyj Application Password (WP 5.6+): Użytkownicy → Twój profil → Hasła aplikacji</p>
       <div class="field" style="margin-bottom:10px"><label class="field-label">Adres WordPress (np. https://twojafirma.pl)</label><input type="text" id="wp-url" placeholder="https://twoja-strona.pl" /></div>
       <div class="field" style="margin-bottom:10px"><label class="field-label" data-i18n="wp-login">Login (nazwa użytkownika)</label><input type="text" id="wp-user" placeholder="admin" /></div>
       <div class="field" style="margin-bottom:14px"><label class="field-label">Application Password</label><input type="password" autocomplete="new-password" id="wp-pass" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx" /></div>
@@ -2500,7 +2500,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 
     <!-- Drupal fields -->
     <div id="cms-drupal-fields" style="display:none">
-      <p style="font-size:12px;color:var(--text3);margin-bottom:14px" data-i18n="cms-drupal-hint-short">Wymagany moduł <strong>Basic Auth</strong> (wbudowany w Drupal 8/9/10). Włącz w: Extend → Basic Authentication.</p>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:14px" data-i18n="cms-drupal-hint-short">Wymagany moduł Basic Auth (wbudowany w Drupal 8/9/10). Włącz w: Extend → Basic Authentication.</p>
       <div class="field" style="margin-bottom:10px"><label class="field-label" data-i18n="cms-drupal-url-label">Adres Drupala (np. https://twojafirma.pl)</label><input type="text" id="drupal-url" placeholder="https://twoja-strona.pl" /></div>
       <div class="field" style="margin-bottom:10px"><label class="field-label" data-i18n="wp-login">Login (nazwa użytkownika)</label><input type="text" id="drupal-user" placeholder="admin" /></div>
       <div class="field" style="margin-bottom:10px"><label class="field-label" data-i18n="wp-password">Hasło</label><input type="password" autocomplete="new-password" id="drupal-pass" placeholder="hasło do konta Drupal" data-i18n-ph="wp-pass-ph" /></div>
@@ -2551,7 +2551,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 <div class="overlay" id="voice-modal" onclick="if(event.target===this)closeVoiceSettings()">
   <div class="modal" style="width:480px">
     <div class="modal-head"><h3 data-i18n="voice-modal-title">🔊 Asystent głosowy</h3><button class="modal-close" onclick="closeVoiceSettings()">×</button></div>
-    <p style="font-size:13px;color:var(--text3);margin-top:0" data-i18n="voice-modal-desc">Czytanie wygenerowanych treści na głos oraz dyktowanie do pól. Silnik przeglądarki działa lokalnie i za darmo; OpenAI daje wyższą jakość, ale wysyła tekst/audio do API.</p>
+    <p style="font-size:13px;color:var(--text3);margin-top:0" data-i18n="voice-modal-desc">Czytanie wygenerowanych treści na głos oraz dyktowanie do pól. Silnik przeglądarki działa lokalnie i za darmo. ElevenLabs i OpenAI dają wyższą jakość, ale wysyłają tekst lub audio do API.</p>
     <div style="display:flex;flex-direction:column;gap:14px;margin-top:6px">
       <label style="display:block">
         <span style="font-size:12px;font-weight:600;color:var(--text)" data-i18n="voice-engine">Silnik mowy (czytanie)</span>
@@ -2600,7 +2600,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
           <option value="openai" data-i18n="voice-stt-openai">OpenAI (transkrypcja)</option>
         </select>
       </label>
-      <div style="font-size:11px;color:var(--text3);background:var(--surface2);border-radius:6px;padding:9px 12px;line-height:1.45" data-i18n="voice-disclosure">Głos jest generowany przez AI, nie jest to nagranie człowieka. Dyktowanie i głos OpenAI wysyłają dane do API; silnik przeglądarki dla dyktowania korzysta z usługi dostawcy przeglądarki.</div>
+      <div style="font-size:11px;color:var(--text3);background:var(--surface2);border-radius:6px;padding:9px 12px;line-height:1.45" data-i18n="voice-disclosure">Głos jest generowany przez AI, nie jest to nagranie człowieka. Dyktowanie oraz głosy ElevenLabs i OpenAI wysyłają dane do API. Silnik przeglądarki dla dyktowania korzysta z usługi dostawcy przeglądarki.</div>
       <div style="display:flex;justify-content:flex-end">
         <button class="btn-generate" style="width:auto;padding:9px 22px" onclick="voiceApply()" data-i18n="voice-save">Zapisz</button>
       </div>
@@ -2609,15 +2609,15 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 </div>
 <div class="overlay" id="bv-modal" onclick="if(event.target===this)closeBvModal()">
   <div class="modal" style="width:580px">
-    <div class="modal-head"><h3 data-i18n="bv-modal-full-title">🎙 Brand Voice - profil stylu marki</h3><button class="modal-close" onclick="closeBvModal()">×</button></div>
+    <div class="modal-head"><h3 data-i18n="bv-modal-full-title">🎙 Głos marki (brand voice)</h3><button class="modal-close" onclick="closeBvModal()">×</button></div>
     <p data-i18n="bv-modal-desc-full">Wklej 2-5 istniejących artykułów firmowych (lub innych tekstów). Aplikacja wyekstrahuje profil stylu i zastosuje go do wszystkich przyszłych generowań.</p>
     <div id="bv-active-info" style="display:none;background:var(--surface2);border-radius:6px;padding:12px 14px;margin-bottom:12px">
-      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px" data-i18n="bv-active">Aktywny profil Brand Voice:</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px" data-i18n="bv-active">Aktywny profil głosu marki:</div>
       <div class="bv-preview" id="bv-profile-preview"></div>
       <button onclick="clearBrandVoice()" style="margin-top:8px;background:none;border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;color:var(--red)" data-i18n="bv-delete">🗑 Usuń profil</button>
     </div>
     <div id="bv-input-area">
-      <textarea id="bv-articles" placeholder="Wklej tutaj 2-5 przykładowych artykułów firmowych (jeden po drugim)..." data-i18n="bv-ph" style="width:100%;height:200px;border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:13px;color:var(--text);background:var(--surface);resize:vertical;box-sizing:border-box;font-family:inherit"></textarea>
+      <textarea id="bv-articles" placeholder="Wklej tutaj 2-5 przykładowych artykułów firmowych (jeden po drugim)…" data-i18n="bv-ph" style="width:100%;height:200px;border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:13px;color:var(--text);background:var(--surface);resize:vertical;box-sizing:border-box;font-family:inherit"></textarea>
       <div style="display:flex;justify-content:flex-end;margin-top:10px">
         <button class="btn-generate" style="width:auto;padding:9px 20px" onclick="analyzeBrandVoice()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
@@ -2635,7 +2635,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
     <div class="modal-head"><h3 data-i18n="bulk-modal-title">⚡ Generowanie grupowe</h3><button class="modal-close" onclick="if(!bulkRunning)closeBulkModal()">×</button></div>
     <div id="bulk-input-area">
       <p data-i18n="bulk-modal-desc">Wpisz tematy artykułów - jeden temat w każdej linii. Aplikacja wygeneruje wszystkie po kolei z aktualnymi ustawieniami formularza.</p>
-      <textarea id="bulk-topics" placeholder="Jak działa [produkt]&#10;Ekspansja na rynek [kraj]&#10;[Usługa] - przewodnik&#10;Zwroty w e-commerce" data-i18n="bulk-ph" style="width:100%;height:180px;border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:13px;color:var(--text);background:var(--surface);resize:vertical;box-sizing:border-box;font-family:inherit"></textarea>
+      <textarea id="bulk-topics" placeholder="Jak działa [produkt]&#10;Ekspansja na rynek [kraj]&#10;[Usługa] - przewodnik" data-i18n="bulk-ph" style="width:100%;height:180px;border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:13px;color:var(--text);background:var(--surface);resize:vertical;box-sizing:border-box;font-family:inherit"></textarea>
       <div style="display:flex;flex-direction:column;align-items:stretch;gap:8px;margin-top:12px">
         <span id="bulk-count" style="font-size:12px;color:var(--text3)" data-i18n="bulk-topics-zero">0 tematów</span>
         <button class="btn-generate" style="width:100%;padding:11px;justify-content:center" onclick="startBulkGenerate()">
@@ -2658,7 +2658,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
     <div class="modal-head" style="flex-shrink:0"><h3 data-i18n="improve-title">✍️ Popraw istniejący artykuł</h3><button class="modal-close" onclick="closeImproveModal()">×</button></div>
     <div style="padding:0 20px 14px;overflow-y:auto;flex:1">
       <p data-i18n="improve-modal-desc">Wklej istniejący artykuł ze strony firmy. Aplikacja przepisze go pod kątem SEO+AIO zachowując wszystkie fakty i informacje firmowe.</p>
-      <textarea class="improve-textarea" id="improve-input" placeholder="Wklej tutaj treść artykułu do poprawy..." data-i18n="improve-ph" style="width:100%;height:180px;border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:13px;color:var(--text);background:var(--surface);resize:vertical;box-sizing:border-box;font-family:inherit"></textarea>
+      <textarea class="improve-textarea" id="improve-input" placeholder="Wklej tutaj treść artykułu do poprawy…" data-i18n="improve-ph" style="width:100%;height:180px;border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:13px;color:var(--text);background:var(--surface);resize:vertical;box-sizing:border-box;font-family:inherit"></textarea>
       <div style="display:flex;margin-top:10px">
         <button class="btn-generate" style="width:100%;padding:11px;justify-content:center" onclick="runImprove()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
@@ -2691,8 +2691,8 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
     </div>
     <p id="no-source-msg" data-i18n="no-source-msg">Baza wiedzy jest pusta. Dodaj własne materiały lub wygeneruj treść z wykorzystaniem danych z internetu.</p>
     <div class="modal-footer" style="flex-direction:column;gap:10px;margin-top:16px">
-      <button class="btn-generate" style="width:100%;justify-content:center" onclick="noSourceConfirmWeb()" data-i18n="btn-generate-internet">🌐 Generuj z internetu</button>
-      <button id="no-source-kb-btn" class="btn-secondary" style="width:100%;justify-content:center" onclick="noSourceGoToKB()" data-i18n="err-add-src">📁 Dodaj źródła do bazy</button>
+      <button class="btn-generate" style="width:100%;justify-content:center" onclick="noSourceConfirmWeb()" data-i18n="btn-generate-internet">🌐 Wygeneruj z wyszukiwaniem w sieci</button>
+      <button id="no-source-kb-btn" class="btn-secondary" style="width:100%;justify-content:center" onclick="noSourceGoToKB()" data-i18n="err-add-src">📁 Dodaj źródła do bazy wiedzy</button>
     </div>
   </div>
 </div>
@@ -2704,8 +2704,8 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
       <h3 data-i18n="titles-title">💡 Warianty tytułu (H1)</h3>
       <button class="modal-close" onclick="closeTitlesModal()">×</button>
     </div>
-    <p style="font-size:13px;color:var(--text3);margin-bottom:14px" data-i18n="titles-desc">5 alternatywnych tytułów pod różne intencje wyszukiwania. Kliknij aby skopiować.</p>
-    <div id="titles-loading" class="seo-loading" data-i18n="titles-loading">⏳ Generuję warianty...</div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:14px" data-i18n="titles-desc">5 alternatywnych tytułów pod różne intencje wyszukiwania. Kliknij tytuł, aby go skopiować.</p>
+    <div id="titles-loading" class="seo-loading" data-i18n="titles-loading">⏳ Generuję warianty…</div>
     <div id="titles-list" style="display:none;display:flex;flex-direction:column;gap:8px"></div>
   </div>
 </div>
@@ -2714,14 +2714,14 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 <div class="overlay" id="premium-modal" onclick="if(event.target===this)closePremiumModal()">
   <div class="modal no-source-modal-inner">
     <div class="modal-head">
-      <h3 data-i18n="premium-info">⭐ Tryb Jakość premium</h3>
+      <h3 data-i18n="premium-info">⭐ Tryb samokorekty</h3>
       <button class="modal-close" onclick="closePremiumModal()">×</button>
     </div>
-    <p style="margin-bottom:10px" data-i18n="premium-desc">Tryb Premium uruchamia automatyczną samokorekcję. Artykuł jest najpierw generowany, następnie oceniany pod kątem wymagań SEO i AIO, po czym poprawiany tam gdzie wymaga poprawek.</p>
+    <p style="margin-bottom:10px" data-i18n="premium-desc">Samokorekta: tekst powstaje, potem model go ocenia i poprawia na podstawie oceny. Generowanie trwa 2-3 razy dłużej.</p>
     <p style="font-size:13px;color:var(--text3);margin-bottom:16px">⏱ <span data-i18n="premium-continue-1">Generowanie może zająć </span><strong data-i18n="premium-more-time">2 do 3 razy więcej czasu</strong><span data-i18n="premium-continue-2"> niż zwykle.</span></p>
     <div class="modal-footer" style="flex-direction:column;gap:10px;margin-top:16px">
-      <button class="btn-generate" style="width:100%;justify-content:center" onclick="premiumProceed()" data-i18n="btn-continue-premium">⭐ Kontynuuj w trybie Premium</button>
-      <button class="btn-secondary" style="width:100%;justify-content:center" onclick="premiumSkip()" data-i18n="btn-generate-normal">⚡ Generuj normalnie</button>
+      <button class="btn-generate" style="width:100%;justify-content:center" onclick="premiumProceed()" data-i18n="btn-continue-premium">⭐ Kontynuuj z samokorektą</button>
+      <button class="btn-secondary" style="width:100%;justify-content:center" onclick="premiumSkip()" data-i18n="btn-generate-normal">⚡ Wygeneruj z wiedzy modelu</button>
     </div>
   </div>
 </div>
@@ -2759,7 +2759,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
   </div>
   <input type="url" id="link-url-input" placeholder="https://www.twojafirma.pl/..." onkeydown="if(event.key==='Enter')applyLink();if(event.key==='Escape')closeLinkDialog()" />
   <div style="display:flex;gap:8px;width:100%">
-    <button class="btn-generate" style="flex:1;padding:8px;font-size:13px;justify-content:center" onclick="applyLink()" data-i18n="link-dialog-add">Dodaj</button>
+    <button class="btn-generate" style="flex:1;padding:8px;font-size:13px;justify-content:center" onclick="applyLink()" data-i18n="link-dialog-add">Wstaw link</button>
     <button class="btn-secondary" style="flex:1;padding:8px;font-size:13px;justify-content:center" onclick="closeLinkDialog()" data-i18n="btn-cancel">Anuluj</button>
   </div>
 </div>
@@ -2772,14 +2772,14 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
       <h3 data-i18n="text-modal-title">Dodaj tekst do bazy wiedzy</h3>
       <button class="modal-close" onclick="closeTextModal()">×</button>
     </div>
-    <p data-i18n="text-modal-desc">Wklej dowolną treść firmową - oferty, FAQ, opisy usług, dane o produktach, polityki. AI będzie z niej korzystać przy generowaniu.</p>
+    <p data-i18n="text-modal-desc">Wklej dowolną treść firmową - oferty, FAQ, opisy usług, dane o produktach, polityki, regulaminy.</p>
     <div class="field" style="margin-bottom:10px">
       <label class="field-label" data-i18n="text-doc-name-label">Nazwa dokumentu</label>
-      <input type="text" id="m-name" placeholder="np. Oferta firmy, FAQ zwroty..." data-i18n="text-doc-name-ph" />
+      <input type="text" id="m-name" placeholder="np. Oferta firmy, FAQ zwroty…" data-i18n="text-doc-name-ph" />
     </div>
     <div class="field">
       <label class="field-label" data-i18n="wp-content">Treść</label>
-      <textarea id="m-content" rows="8" placeholder="Wklej treść tutaj..." data-i18n="text-ph"></textarea>
+      <textarea id="m-content" rows="8" placeholder="Wklej treść tutaj…" data-i18n="text-ph"></textarea>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeTextModal()" data-i18n="btn-cancel">Anuluj</button>
@@ -2808,7 +2808,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;display:flex;flex-direction:column;gap:14px">
         <div>
           <label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:5px" data-i18n="img-ctx-label">Kontekst artykułu</label>
-          <textarea id="img-context" placeholder="Wklej temat lub fragment artykułu..." data-i18n="img-ctx-ph" rows="4" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;resize:vertical;font-family:inherit;box-sizing:border-box"></textarea>
+          <textarea id="img-context" placeholder="Wklej temat lub fragment artykułu…" data-i18n="img-ctx-ph" rows="4" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;resize:vertical;font-family:inherit;box-sizing:border-box"></textarea>
           <button onclick="imgLoadFromArticle()" style="margin-top:6px;font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text2);cursor:pointer;width:100%" data-i18n="img-load-art">📄 Wczytaj z aktywnego artykułu</button>
         </div>
         <div>
@@ -2818,7 +2818,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
             <button onclick="document.getElementById('img-ref-file').click()" class="btn-secondary" style="width:100%;justify-content:center;font-size:12px" data-i18n="img-upload-btn">📎 Wgraj grafikę referencyjną</button>
             <input type="file" id="img-ref-file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="imgLoadReferenceFile(this)">
             <div style="display:flex;gap:6px">
-              <input type="text" id="img-ref-url-input" placeholder="lub wklej URL..." data-i18n="img-url-ph" style="flex:1;padding:6px 9px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:12px;outline:none" onkeydown="if(event.key==='Enter')imgLoadReferenceUrl()">
+              <input type="text" id="img-ref-url-input" placeholder="lub wklej URL…" data-i18n="img-url-ph" style="flex:1;padding:6px 9px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-size:12px;outline:none" onkeydown="if(event.key==='Enter')imgLoadReferenceUrl()">
               <button onclick="imgLoadReferenceUrl()" class="btn-secondary" style="padding:6px 12px;white-space:nowrap;font-size:12px" data-i18n="img-url-add">Dodaj</button>
             </div>
           </div>
@@ -2835,11 +2835,11 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
         <div>
           <label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:5px" data-i18n="img-style-section">Styl i branding</label>
           <select id="img-brand" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:12px;background:var(--surface);color:var(--text);outline:none">
-            <option value="brand_color" data-i18n="img-style-yellow">🟡 Kolory marki</option>
+            <option value="brand_color" data-i18n="img-style-yellow">🟡 Bursztyn i turkus</option>
             <option value="studio" data-i18n="img-style-clean">⬜ Studio (białe, czysty kadr)</option>
-            <option value="dark" data-i18n="img-style-dark">⬛ Deep Space (ciemne tło, bursztynowe akcenty)</option>
-            <option value="photo" data-i18n="img-style-photo">📷 Fotorealistyczne (bez brandingu)</option>
-            <option value="illustration" data-i18n="img-style-illust">✏️ Ilustracja / plakat</option>
+            <option value="dark" data-i18n="img-style-dark">⬛ Ciemne tło z bursztynowymi akcentami</option>
+            <option value="photo" data-i18n="img-style-photo">📷 Fotorealistyczny</option>
+            <option value="illustration" data-i18n="img-style-illust">🎨 Ilustracja</option>
             <option value="minimal" data-i18n="img-style-minimal">◽ Minimalistyczne</option>
           </select>
         </div>
@@ -2851,13 +2851,13 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
           <label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:5px" data-i18n="img-quality-section">Jakość</label>
           <select id="img-quality" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:12px;background:var(--surface);color:var(--text);outline:none">
             <option value="low" data-i18n="img-quality-low">Szkic / roboczy</option>
-            <option value="medium" selected data-i18n="img-quality-std">Standard</option>
-            <option value="high" data-i18n="img-quality-premium">Premium</option>
+            <option value="medium" selected data-i18n="img-quality-std">Średnia</option>
+            <option value="high" data-i18n="img-quality-premium">Wysoka</option>
           </select>
         </div>
         <div>
           <label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:5px" data-i18n="img-extra-section">Dodatkowe wytyczne</label>
-          <textarea id="img-extra" placeholder="np. pora dnia, nastrój, kolorystyka..." data-i18n="img-mood-ph" rows="3" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;resize:vertical;font-family:inherit;box-sizing:border-box"></textarea>
+          <textarea id="img-extra" placeholder="np. pora dnia, nastrój, kolorystyka…" data-i18n="img-mood-ph" rows="3" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;resize:vertical;font-family:inherit;box-sizing:border-box"></textarea>
         </div>
         <button id="img-gen-btn" onclick="generateImage()" style="width:100%;padding:12px;background:var(--accent);color:#1A1916;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans', system-ui, sans-serif;letter-spacing:0.01em" data-i18n="img-gen-btn">🎨 Generuj grafikę</button>
         <div id="img-prompt-wrap" style="display:none">
@@ -2869,7 +2869,7 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
       <div>
         <div id="img-spinner" style="display:none;text-align:center;padding:80px 40px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)">
           <div class="spinner" style="width:48px;height:48px;border-width:4px;margin:0 auto 16px"></div>
-          <div id="img-spin-label" style="color:var(--text2);font-size:15px;font-weight:600" data-i18n="img-spin-init">Analizuję artykuł...</div>
+          <div id="img-spin-label" style="color:var(--text2);font-size:15px;font-weight:600" data-i18n="img-spin-init">Analizuję artykuł…</div>
           <div id="img-spin-sub" style="font-size:12px;color:var(--text3);margin-top:6px" data-i18n="img-spin-sub">Generowanie może potrwać 30-60 sekund</div>
         </div>
         <div id="img-empty" style="text-align:center;padding:80px 40px;background:var(--surface);border:2px dashed var(--border);border-radius:var(--radius-lg);color:var(--text3)">
@@ -3029,7 +3029,7 @@ var currentLang = magazyn.getItem('cai_lang') || ((navigator.language||'pl').toL
 
 var I18N = {
   pl: {
-    'settings-aiv-title':'Widoczność w AI','settings-aiv-sub':'tracking AEO / GEO',
+    'settings-aiv-title':'Cytowania w AI','settings-aiv-sub':'Twoje zapytania, trend w czasie',
     'aiv-modal-title':'📡 Widoczność w AI (AEO/GEO)','aiv-modal-desc':'Sprawdza, czy odpowiedzi AI (Claude z web search) na Twoje zapytania przywołują markę - w treści lub w cytowanych źródłach. Wynik i historia zapisują się lokalnie, więc widać trend w czasie. To przybliżenie jednym silnikiem, nie pomiar wszystkich wyszukiwarek AI.',
     'aiv-score-label':'Wynik widoczności:','aiv-add-ph':'np. najlepsza firma [branża] w Polsce','aiv-add-btn':'Dodaj','aiv-domains-label':'Domeny marki (do wykrywania w źródłach)','aiv-export':'Eksport CSV',
     'aiv-check-all':'Sprawdź wszystkie','aiv-check-one':'Sprawdź','aiv-checking':'Sprawdzam','aiv-status-cited':'Cytowane w źródłach','aiv-status-mentioned':'Wspomniane w treści','aiv-status-none':'Brak',
@@ -3038,9 +3038,9 @@ var I18N = {
     'audio-btn':'🎧 Audio','title-audio':'Treści audio','audio-title':'🎧 Treści audio','audio-close':'Zamknij',
     'audio-type':'Rodzaj treści audio','au-podcast':'Podcast (skrypt + audio)','au-newsletter':'Newsletter audio','au-audiobook':'Artykuł → audiobook','au-transcription':'Transkrypcja (audio → tekst)',
     'audio-voices':'Liczba głosów','audio-engine':'Silnik głosu','au-eng-openai':'OpenAI','au-eng-eleven':'ElevenLabs','au-eng-web':'Przeglądarka',
-    'audio-source':'Temat lub treść','audio-source-ph':'Wpisz temat albo wklej gotową treść...','audio-from-article':'Wczytaj artykuł z generatora','audio-file':'Plik audio do transkrypcji',
+    'audio-source':'Temat lub treść','audio-source-ph':'Wpisz temat albo wklej gotową treść…','audio-from-article':'Wczytaj artykuł z generatora','audio-file':'Plik audio do transkrypcji',
     'audio-gen-script':'Generuj skrypt','audio-transcribe':'Transkrybuj','audio-script':'Skrypt (edytowalny)','audio-play':'Odtwórz','audio-dl':'⬇ Pobierz MP3','audio-hist':'Historia audio','audio-dl-docx':'📄 Pobierz .docx',
-    'audio-need-source':'Podaj temat lub wklej treść.','audio-pick-file':'Wybierz plik audio.','audio-transcript-name':'Transkrypcja audio','audio-pick-file-btn':'Wybierz plik','audio-no-file':'Nie wybrano pliku','audio-pause':'Pauza','audio-resume':'Wznów','audio-gen-part':'Generuję, część','audio-gen-loading':'Generuję skrypt...','audio-transcribing':'Transkrybuję...','audio-voices-pick':'Głosy','audio-voice-host':'Prowadzący','audio-voice-guest':'Gość','audio-voice-single':'Głos','audio-g-male':'Męski','audio-g-female':'Żeński','audio-g-neutral':'Neutralny','audio-model':'Model głosu','audio-m-quality':'jakość','audio-m-fast':'szybki','audio-m-expr':'ekspresyjny','audio-m-hd':'HD','kb-pii-note':'Uwaga: przed dodaniem upewnij się, że materiały nie zawierają danych osobowych pracowników ani klientów. Cytaty i odwołania do konkretnych osób z firmy lub spoza niej są dozwolone, jeśli umieszczasz je świadomie.','kb-pii-title':'⚠️ Dane osobowe','kb-pii-ok':'Rozumiem, dodaję','kb-pii-cancel':'Anuluj','audio-lang':'Język audio','sidebar-add-audio':'🎙 Dodaj audio (transkrypcja)','kb-collapse':'Zwiń panel','kb-expand':'Pokaż bazę wiedzy','kb-reopen':'Baza wiedzy','kb-toggle':'Pokaż/ukryj bazę wiedzy',
+    'audio-need-source':'Podaj temat lub wklej treść.','audio-pick-file':'Wybierz plik audio.','audio-transcript-name':'Transkrypcja audio','audio-pick-file-btn':'Wybierz plik','audio-no-file':'Nie wybrano pliku','audio-pause':'Pauza','audio-resume':'Wznów','audio-gen-part':'Generuję, część','audio-gen-loading':'Generuję skrypt…','audio-transcribing':'Transkrybuję…','audio-voices-pick':'Głosy','audio-voice-host':'Prowadzący','audio-voice-guest':'Gość','audio-voice-single':'Głos','audio-g-male':'Męski','audio-g-female':'Żeński','audio-g-neutral':'Neutralny','audio-model':'Model głosu','audio-m-quality':'jakość','audio-m-fast':'szybki','audio-m-expr':'ekspresyjny','audio-m-hd':'HD','kb-pii-note':'Uwaga: przed dodaniem upewnij się, że materiały nie zawierają danych osobowych pracowników ani klientów. Cytaty i odwołania do konkretnych osób z firmy lub spoza niej są dozwolone, jeśli umieszczasz je świadomie.','kb-pii-title':'⚠️ Dane osobowe','kb-pii-ok':'Rozumiem, dodaję','kb-pii-cancel':'Anuluj','audio-lang':'Język audio','sidebar-add-audio':'🎙 Dodaj audio (transkrypcja)','kb-collapse':'Zwiń panel','kb-collapse-label':'Zwiń panel bazy wiedzy','kb-expand':'Pokaż bazę wiedzy','kb-reopen':'Baza wiedzy','kb-toggle':'Pokaż/ukryj bazę wiedzy',
     'label-pod-voices':'Liczba głosów (podcast)','pod-v1':'1 głos (monolog)','pod-v2':'2 głosy (prowadzący + gość)','pod-v3':'3 głosy (prowadzący + 2 gości)','pod-v4':'4 głosy (prowadzący + 3 gości)',
     'pod-listen':'Posłuchaj','pod-dl':'Podcast','pod-need-ai':'Podcast wielogłosowy wymaga silnika OpenAI lub ElevenLabs (nie przeglądarki). Zmień w ustawieniach głosu.',
     'trans-panel-title':'Transkrypcja audio','trans-panel-desc':'Wgraj plik audio lub nagraj. Tekst pojawi się w wyniku, skąd dodasz go do bazy wiedzy.','btn-trans-file':'📁 Wybierz plik','btn-trans-rec':'🎙 Nagraj','btn-trans-run':'Transkrybuj','btn-trans-tokb':'Do bazy wiedzy',
@@ -3048,30 +3048,30 @@ var I18N = {
     'voice-engine-eleven':'ElevenLabs (najlepszy polski)','voice-eleven-voice':'Głos ElevenLabs','voice-eleven-custom':'lub wklej własny voice_id','voice-eleven-custom-opt':'Własny voice_id','voice-eleven-model':'Model ElevenLabs',
     'voice-eleven-m-quality':'Multilingual v2 (jakość)','voice-eleven-m-fast':'Flash v2.5 (szybki, tańszy)','voice-eleven-m-expr':'Eleven v3 (ekspresyjny)',
     'voice-mic-insecure':'Mikrofon wymaga HTTPS. Otwórz aplikację przez intranet/serwer (adres https), nie jako lokalny plik.','voice-no-eleven-key':'Brak klucza ElevenLabs - ustaw klucz lub użyj proxy albo innego silnika.',
-    'tts-read':'Posłuchaj','tts-stop':'Zatrzymaj','tts-generating':'Generuję audio...','tts-dl':'Pobierz MP3','tts-dl-title':'Pobierz audio mp3 (OpenAI)',
-    'settings-voice-title':'Asystent głosowy','settings-voice-sub':'czytanie + dyktowanie',
+    'tts-read':'Posłuchaj','tts-stop':'Zatrzymaj','tts-generating':'Generuję audio…','tts-dl':'Pobierz MP3','tts-dl-title':'Pobierz audio mp3 (OpenAI)',
+    'settings-voice-title':'Asystent głosowy','settings-voice-sub':'czytanie na głos i dyktowanie',
     'voice-modal-title':'🔊 Asystent głosowy','voice-modal-desc':'Czytanie wygenerowanych treści na głos oraz dyktowanie do pól. Silnik przeglądarki działa lokalnie i za darmo. ElevenLabs i OpenAI dają wyższą jakość, ale wysyłają tekst lub audio do API.',
     'voice-engine':'Silnik mowy (czytanie)','voice-engine-web':'Przeglądarka (za darmo, lokalnie)','voice-engine-openai':'OpenAI (wysoka jakość)',
     'voice-oa-voice':'Głos OpenAI','voice-rate':'Tempo','voice-stt':'Dyktowanie (mowa na tekst)','voice-stt-web':'Przeglądarka','voice-stt-openai':'OpenAI (transkrypcja)',
     'voice-disclosure':'Głos jest generowany przez AI, nie jest to nagranie człowieka. Dyktowanie oraz głosy ElevenLabs i OpenAI wysyłają dane do API. Silnik przeglądarki dla dyktowania korzysta z usługi dostawcy przeglądarki.',
     'voice-save':'Zapisz','voice-dictate-title':'Dyktuj',
-    'voice-no-key':'Brak klucza OpenAI - ustaw OPENAI_API_KEY lub przełącz na silnik przeglądarki.','voice-unsupported':'Ta przeglądarka nie wspiera tej funkcji głosowej.','voice-mic-denied':'Brak dostępu do mikrofonu.','voice-listening':'Słucham...','voice-tts-fail':'Nie udało się odtworzyć audio.',
-    'label-topic':'Temat artykułu / strony','ph-topic':'np. temat artykułu lub strony',
+    'voice-no-key':'Brak klucza OpenAI - ustaw OPENAI_API_KEY lub przełącz na silnik przeglądarki.','voice-unsupported':'Ta przeglądarka nie wspiera tej funkcji głosowej.','voice-mic-denied':'Brak dostępu do mikrofonu.','voice-listening':'Słucham…','voice-tts-fail':'Nie udało się odtworzyć audio.',
+    'label-topic':'Temat artykułu / strony','ph-topic':'np. Jak wybrać system CRM dla małej firmy',
     'btn-templates':'📋 Szablony','label-ctype':'Typ treści','label-length':'Długość',
-    'btn-tematy':'💡 Propozycje','btn-tematy-title':'Podpowiedz tematy na podstawie zapotrzebowania',
+    'btn-tematy':'💡 Podpowiedz','btn-tematy-title':'Podpowiedz tematy na podstawie zapotrzebowania',
     'btn-templates-title':'Gotowe szablony formularza',
     'tematy-title':'💡 Podpowiedz tematy',
     'tematy-desc':'Opisz swoimi słowami, czego potrzebujesz: kto ma to czytać, co sprzedajesz, co chcesz osiągnąć. Dostaniesz dziesięć propozycji tematów - każdą można jednym kliknięciem wstawić do pola tematu.',
     'tematy-ph':'np. Prowadzę sklep z ekologicznymi kosmetykami. Chcę przyciągnąć kobiety 30-45 lat szukających naturalnej pielęgnacji i pokazać, że znam się na składach.',
     'tematy-baza':'Weź pod uwagę zaznaczone dokumenty z bazy wiedzy',
-    'tematy-generuj':'Zaproponuj 10 tematów','tematy-mysle':'Szukam tematów...',
+    'tematy-generuj':'Zaproponuj 10 tematów','tematy-mysle':'Szukam tematów…',
     'tematy-uzyj':'Użyj','tematy-kliknij':'Kliknij „Użyj”, żeby wstawić temat do formularza.',
     'tematy-pusto':'Model nie zwrócił żadnej propozycji. Spróbuj opisać potrzebę konkretniej.',
     'tematy-kopiuj':'Kopiuj listę','tematy-skopiowano':'Skopiowano',
     'tematy-demo-temat':'Przykładowy temat','tematy-demo-dlaczego':'Tryb demonstracyjny - wpisz klucz API, żeby dostać prawdziwe propozycje.',
-    'ph-length-custom':'np. 1200','label-kw':'Słowa kluczowe','ph-kw':'Wpisz frazę i naciśnij Enter...',
+    'ph-length-custom':'np. 1200','label-kw':'Słowa kluczowe','ph-kw':'Wpisz frazę i naciśnij Enter…',
     'label-tone':'Ton','label-lang-out':'Język','label-extra':'Dodatkowe wytyczne',
-    'ph-extra':'np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem...',
+    'ph-extra':'np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem…',
     'astat-siec':'Sieć:',
     'siec-forma-1':'źródło',
     'siec-forma-24':'źródła',
@@ -3081,21 +3081,21 @@ var I18N = {
     'siec-bez-wyszukiwania':'bez wyszukiwania',
     'siec-bez-wyszukiwania-opis':'Bez zapytań do sieci: baza wiedzy pokryła temat. Wyszukiwanie uruchamia się tylko tam, gdzie baza milczy.',
     'toggle-web':'Szukaj w sieci i podaj źródła',
-    'toggle-web-hint':'Czego brakuje w bazie, AI poszuka w sieci i wymieni źródła pod artykułem. Dane o Twojej firmie zawsze tylko z bazy. Wydłuża generowanie o ok. 30 sek.',
+    'toggle-web-hint':'Czego brakuje w bazie, AI poszuka w sieci i wymieni źródła pod artykułem. Dane o Twojej firmie zawsze tylko z bazy. Wydłuża generowanie o ok. 30 s.',
     'toggle-serp':'Analiza SERP przed generowaniem',
-    'toggle-serp-hint':'Przed wygenerowaniem AI sprawdza co rankuje w Google dla Twojego słowa kluczowego i wykorzystuje te dane jako dodatkowy kontekst. Wydłuża generowanie o ok. 15 sek.',
+    'toggle-serp-hint':'Przed pisaniem AI sprawdza, co rankuje w Google na Twoje słowo kluczowe, i bierze to pod uwagę. Wydłuża generowanie o ok. 15 s.',
     'toggle-aeo':'Tryb AEO (treść pod cytowania AI)','toggle-aeo-hint':'Wymusza format pod silniki odpowiedzi: definicja 25-50 słów na start, liczby w intro, 5-7 pytań FAQ, krótkie listy, nagłówki jako pytania.',
-    'btn-aeo':'⚡ Oceń AEO','aeo-panel-title':'⚡ Ocena AEO','btn-geo':'🎯 GEO Score','geo-panel-title':'🎯 GEO Score',
+    'btn-aeo':'⚡ Oceń AEO','aeo-panel-title':'⚡ Ocena AEO','btn-geo':'🎯 Oceń GEO','geo-panel-title':'🎯 Ocena GEO',
     'opt-hybrid':'Hybryda SEO + AIO','opt-seo':'Artykuł SEO','opt-aio':'Treść AIO',
-    'opt-faq':'FAQ page','opt-landing':'Landing page copy','opt-blog':'Wpis blogowy','opt-product':'Opis produktu/usługi',
+    'opt-faq':'Strona FAQ','opt-landing':'Tekst strony docelowej (landing page)','opt-blog':'Wpis blogowy','opt-product':'Opis produktu/usługi',
     'opt-directional':'Strona kierunkowa (eksport)','opt-press':'Informacja prasowa','label-dir-country':'Kierunek (kraj docelowy)',
     'dir-de':'Niemcy','dir-cz':'Czechy','dir-sk':'Słowacja','dir-nl':'Holandia','dir-fr':'Francja',
-    'opt-short':'~400 słów','opt-medium':'~800 słów','opt-long':'~1500 słów','opt-custom':'Własna...',
+    'opt-short':'~400 słów','opt-medium':'~800 słów','opt-long':'~1500 słów','opt-custom':'Własna…',
     'opt-prof':'Profesjonalny','opt-expert':'Ekspercki','opt-friendly':'Przyjazny','opt-neutral':'Neutralny',
     'label-audience':'Odbiorca',
     'opt-aud-auto':'Dopasuj do tematu','opt-aud-b2c':'Klient indywidualny (B2C)','opt-aud-b2b':'Firma (B2B)',
-    'btn-brief':'Brief','btn-bulk':'Grupowe','btn-improve':'Popraw','btn-img-short':'🎨 Grafika',
-    'btn-generate':'Generuj treść','btn-premium':'⭐ Jakość premium','btn-premium-active':'⭐ Jakość premium (aktywna)',
+    'btn-brief':'Brief','btn-bulk':'Generuj grupowo','btn-improve':'Popraw','btn-img-short':'🎨 Grafika',
+    'btn-generate':'Wygeneruj treść','btn-premium':'⭐ Samokorekta','btn-premium-active':'⭐ Samokorekta (włączona)',
     'out-title':'Wynik','badge-ready':'gotowy do generowania','badge-done':'gotowe ✓',
     'btn-edit':'✏️ Edytuj','btn-aio':'🤖 Oceń AIO','btn-seo':'📊 Oceń SEO',
     'btn-img-out':'🎨 Grafika','btn-titles':'💡 Tytuły',
@@ -3105,10 +3105,10 @@ var I18N = {
     'btn-fakty':'🔍 Kontrola faktów',
     'gap-brak-pokrycia':'Brak pokrycia w zaznaczonych źródłach. Dodaj materiał na ten temat albo usuń tę sekcję.',
     'fakty-title':'🔍 Kontrola faktów',
-    'fakty-etap-linki':'⏳ Sprawdzam odnośniki w artykule...',
+    'fakty-etap-linki':'⏳ Sprawdzam odnośniki w artykule…',
     'fakty-brak-tekstu':'Najpierw wygeneruj artykuł - nie ma czego sprawdzać.',
     'fakty-refresh':'🔄 Sprawdź ponownie',
-    'fakty-loading':'⏳ Zestawiam artykuł ze źródłami...',
+    'fakty-loading':'⏳ Zestawiam artykuł ze źródłami…',
     'fakty-brak-zrodel':'Nie ma z czym porównać: zaznacz źródła w bazie wiedzy i sprawdź ponownie.',
     'fakty-blad':'Nie udało się przeprowadzić kontroli. Spróbuj ponownie.',
     'fakty-czysto':'Bez zastrzeżeń.',
@@ -3136,14 +3136,14 @@ var I18N = {
     'fakty-powod-link-kotwica':'Klikalne słowa powinny mówić, co jest po drugiej stronie.',
     'fakty-powod-link-powtorka':'Dwa odnośniki z tym samym tekstem czyta się jak pomyłkę.',
     'fakty-powod-link-pusty':'Odnośnik nie ma widocznego tekstu.',
-    'btn-jsonld':'{ } JSON-LD','btn-premium-fix':'⭐ Popraw premium','btn-copy':'Kopiuj',
-    'rp-linkedin':'💼 Post LinkedIn','rp-facebook':'👥 Post Facebook','rp-email':'📧 Email newsletter',
-    'rp-faq':'❓ Strona FAQ','rp-landing':'🎯 Landing page intro',
-    'rp-panel-title':'Przeróbki artykułu','rp-copy':'Kopiuj','rp-loading':'⏳ Tworzę przeróbkę...',
-    'brief-title':'📋 Brief artykułu','brief-use-kw':'✓ Użyj słów kluczowych','brief-loading':'⏳ Analizuję temat i bazę wiedzy...',
+    'btn-jsonld':'{ } JSON-LD','btn-premium-fix':'⭐ Dopracuj tekst','btn-copy':'Kopiuj','btn-copied':'Skopiowano',
+    'rp-linkedin':'💼 Post LinkedIn','rp-facebook':'👥 Post Facebook','rp-email':'📧 Newsletter e-mail',
+    'rp-faq':'❓ Strona FAQ','rp-landing':'🎯 Wstęp strony docelowej',
+    'rp-panel-title':'Przeróbki artykułu','rp-copy':'Kopiuj','rp-loading':'⏳ Tworzę przeróbkę…',
+    'brief-title':'📋 Brief artykułu','brief-use-kw':'✓ Użyj słów kluczowych','brief-loading':'⏳ Analizuję temat i bazę wiedzy…',
     'jsonld-title':'{ } Schematy JSON-LD','jsonld-copy':'Kopiuj kod','jsonld-type-label':'Typ schematu',
     'sidebar-title':'📁 Baza wiedzy - źródła','sidebar-docs':'Dokumenty','sidebar-words':'Słowa',
-    'sidebar-gen':'Wygenerowane','sidebar-click':'Kliknij aby wybrać pliki','sidebar-types':'PDF, DOCX, XLSX, PPTX, TXT, CSV',
+    'sidebar-gen':'Wygenerowane','sidebar-click':'Kliknij, aby wybrać pliki','sidebar-types':'PDF, DOCX, XLSX, PPTX, TXT, CSV',
     'sidebar-link':'🔗 Dodaj link / URL','sidebar-text':'✏️ Dodaj tekst ręcznie','sidebar-deselect':'Odznacz wszystkie',
     'settings-llms-title':'Marka','settings-llms-sub':'nazwa, domeny, pliki llms.txt',
     'llms-title':'🏷️ Marka i pliki dla modeli AI','llms-desc':'Generuje llms.txt i llms-full.txt na podstawie konfiguracji encji i URL-i z bazy wiedzy. Wgraj pliki w katalogu głównym domeny (np. /llms.txt).',
@@ -3159,12 +3159,12 @@ var I18N = {
     'llms-tylko-odczyt':'Konfigurację marki ustawia administrator - pola są tylko do odczytu.',
     'llms-zapis-lokalny':'Zapisane tylko na tym urządzeniu. Konfigurację dla całego zespołu ustawia administrator.',
     'llms-generate':'Generuj pliki','llms-out-basic':'llms.txt','llms-out-full':'llms-full.txt','llms-copy':'Kopiuj','llms-download':'Pobierz','llms-hint-urls':'URL-e pobrane z bazy wiedzy: {n}',
-    'settings-vis-title':'Widoczność AI','settings-vis-sub':'obecność marki w odpowiedziach AI',
+    'settings-vis-title':'Obecność marki w AI','settings-vis-sub':'zapytania zakupowe, pozycja, konkurenci',
     'vis-title':'🔎 Widoczność marki w AI','vis-desc':'Sprawdza czy marka pojawia się w odpowiedziach AI na zapytania zakupowe. Uruchamia każdy prompt przez Claude z wyszukiwaniem w sieci i raportuje obecność, pozycję, konkurentów i źródła. To migawka na żądanie z jednego modelu (Claude), nie ciągły monitoring wielu modeli. Każdy prompt zużywa zapytanie web search (płatne).',
     'vis-f-brand':'Marka do wykrycia','vis-f-comp':'Konkurenci (po przecinku)','vis-f-prompts':'Zapytania kontrolne (jedno na linię)','vis-run':'Sprawdź widoczność',
     'vis-f-iter':'Iteracje na prompt (stabilność)','vis-narr':'📣 Narracja marki',
-    'settings-rep-title':'Raport AI','settings-rep-sub':'trend i priorytety',
-    'settings-trk-title':'Tracking AI','settings-trk-sub':'robots.txt, UTM, GA4',
+    'settings-rep-title':'Raport widoczności','settings-rep-sub':'porównanie pomiarów i priorytety',
+    'settings-trk-title':'Pomiar ruchu z AI','settings-trk-sub':'robots.txt, UTM, GA4',
     'trk-title':'🤖 Tracking ruchu z AI (przygotowanie)','trk-desc':'To nie jest pomiar ruchu. Generuje warunki wstępne: dyrektywy robots.txt dla botów AI, linki z UTM i wskazówkę konfiguracji GA4. Sam pomiar wymaga GA4 i analizy logów po stronie serwera.',
     'trk-robots-h':'1. robots.txt dla botów AI','trk-robots-gen':'Generuj robots.txt','trk-copy':'Kopiuj','trk-download':'Pobierz',
     'trk-utm-h':'2. Generator linku z UTM','trk-utm-base':'Adres docelowy (URL)','trk-utm-source':'Źródło (model AI)','trk-utm-medium':'Medium','trk-utm-campaign':'Kampania (opcjonalnie)','trk-utm-gen':'Zbuduj link',
@@ -3173,62 +3173,62 @@ var I18N = {
     'no-source-msg':'Baza wiedzy jest pusta. Dodaj własne materiały lub wygeneruj treść z wykorzystaniem danych z internetu.',
     'tab-generator':'Generator treści','tab-history':'Historia','nav-base':'Baza','nav-history':'Historia',
     'settings-cms-title':'Integracja CMS','settings-cms-sub':'WordPress / Drupal',
-    'settings-bv-title':'Brand Voice','settings-bv-inactive':'Nieaktywny',
-    'out-placeholder':'Wpisz temat i kliknij \u201eGeneruj treść\u201d','out-placeholder-sub':'AI przeanalizuje bazę wiedzy i stworzy treść',
+    'settings-bv-title':'Głos marki','settings-bv-inactive':'Nieaktywny',
+    'out-placeholder':'Wpisz temat i kliknij „Wygeneruj treść”','out-placeholder-sub':'AI przeanalizuje bazę wiedzy i stworzy treść',
     'fog-title':'Indeks mglistości (wersja dla polszczyzny)','fog-easy':'● poniżej 12: tekst przystępny, łatwy w odbiorze',
     'fog-medium':'● 12-15: tekst złożony, wymaga skupienia','fog-hard':'● powyżej 15: tekst specjalistyczny / bardzo trudny',
-    'fog-goal':'Cel dla treści SEO: poniżej 12. Za słowo trudne liczymy takie o czterech sylabach i więcej, bo w polszczyźnie trzysylabowe są słowa najzwyklejsze ("opłata", "usługi").',
+    'fog-goal':'Cel dla treści SEO: poniżej 12. Za słowo trudne liczymy takie o czterech sylabach i więcej, bo w polszczyźnie trzysylabowe są słowa najzwyklejsze („opłata”, „usługi”).',
     'gap-title-topics':'Tematy w top wynikach','gap-title-phrases':'Frazy kluczowe',
     'gap-coverage':'Pokrycie SERP','gap-new-covered':'Nowo pokryte',
     'gap-all-topics':'Wszystkie tematy SERP','gap-missing':'Brakujące tematy','gap-covered':'Pokryte tematy',
     'gap-improve-btn':'✍\ufe0f Popraw artykuł pod brakujące tematy',
-    'seo-analyzing':'Analizuję artykuł...','aio-analyzing':'Analizuję pod kątem AI Overview...',
+    'seo-analyzing':'Analizuję artykuł…','aio-analyzing':'Analizuję pod kątem AI Overview…',
     'improve-title':'✍\ufe0f Popraw istniejący artykuł','improve-btn':'Popraw artykuł',
-    'spin-knowledge':'Analizuję bazę wiedzy...','spin-sub-knowledge':'skanowanie dokumentów',
-    'spin-context':'Przygotowuję kontekst...','spin-sub-context':'ekstrakcja kluczowych informacji',
-    'spin-generate':'Generuję treść...','spin-seo':'Oceniam SEO...','spin-sub-seo':'sprawdzam strukturę i słowa kluczowe',
-    'spin-aio':'Oceniam AIO...','spin-sub-aio':'sprawdzam kryteria AI Overview',
-    'spin-hybrid':'Oceniam SEO+AIO...','spin-sub-hybrid':'sprawdzam optymalizację pod wyszukiwarki i AI',
-    'spin-quality':'Oceniam jakość...','spin-sub-quality':'głęboka weryfikacja wymagań SEO i AIO',
-    'spin-improve-label':'Poprawiam artykuł...','spin-sub-improve':'samokorekcja na podstawie wyników oceny',
-    'spin-final':'Finalizuję artykuł...','spin-sub-final':'ostateczna weryfikacja',
-    'spin-finalize':'Finalizuję...','spin-sub-finalize':'ostateczna weryfikacja premium',
+    'spin-knowledge':'Analizuję bazę wiedzy…','spin-sub-knowledge':'skanowanie dokumentów',
+    'spin-context':'Przygotowuję kontekst…','spin-sub-context':'ekstrakcja kluczowych informacji',
+    'spin-generate':'Generuję treść…','spin-seo':'Oceniam SEO…','spin-sub-seo':'sprawdzam strukturę i słowa kluczowe',
+    'spin-aio':'Oceniam AIO…','spin-sub-aio':'sprawdzam kryteria AI Overview',
+    'spin-hybrid':'Oceniam SEO+AIO…','spin-sub-hybrid':'sprawdzam optymalizację pod wyszukiwarki i AI',
+    'spin-quality':'Oceniam jakość…','spin-sub-quality':'głęboka weryfikacja wymagań SEO i AIO',
+    'spin-improve-label':'Poprawiam artykuł…','spin-sub-improve':'samokorekcja na podstawie wyników oceny',
+    'spin-final':'Finalizuję artykuł…','spin-sub-final':'ostateczna weryfikacja',
+    'spin-finalize':'Finalizuję…','spin-sub-finalize':'ostatnie sprawdzenie',
     'kd-title':'Gęstość słów kluczowych',
     // Generator grafik
     'img-back':'← Wróć','img-title':'🎨 Generator grafik','img-ctx-label':'Kontekst artykułu',
-    'img-ctx-ph':'Wklej temat lub fragment artykułu...','img-load-article':'📄 Wczytaj z aktywnego artykułu',
+    'img-ctx-ph':'Wklej temat lub fragment artykułu…','img-load-article':'📄 Wczytaj z aktywnego artykułu',
     'img-upload-ref':'📎 Wgraj grafikę referencyjną','img-ref-remove':'✕ Usuń',
     'img-quality':'Jakość','img-generate':'🎨 Generuj grafikę','img-retry':'🔄 Ponów',
-    'img-mood-ph':'np. pora dnia, nastrój, kolorystyka...',
+    'img-mood-ph':'np. pora dnia, nastrój, kolorystyka…',
     // Szablony
     'tpl-title':'📋 Szablony tematów',
     // Tytuły
     'titles-title':'💡 Warianty tytułu (H1)','titles-refresh':'🔄 Odśwież',
     // Bulk / improve / URL / text modals
     'bulk-ph':'Jak działa [produkt]\nEkspansja na rynek [kraj]\n[Usługa] - przewodnik',
-    'improve-ph':'Wklej tutaj treść artykułu do poprawy...',
+    'improve-ph':'Wklej tutaj treść artykułu do poprawy…',
     'url-title':'Dodaj stronę WWW do bazy wiedzy','url-name-label':'Nazwa własna (opcjonalnie)',
     'url-name-ph':'np. Strona główna - oferta',
-    'text-ph':'Wklej treść tutaj...',
+    'text-ph':'Wklej treść tutaj…',
     // WordPress / Drupal
     'wp-test':'🔍 Testuj połączenie','wp-login':'Login (nazwa użytkownika)','wp-password':'Hasło',
     'wp-pass-ph':'hasło do konta Drupal','wp-ctype-mn':'Typ treści (machine name)','wp-content':'Treść',
     // Brand Voice
-    'bv-active':'Aktywny profil Brand Voice:','bv-delete':'🗑 Usuń profil',
-    'bv-ph':'Wklej tutaj 2-5 przykładowych artykułów firmowych (jeden po drugim)...',
+    'bv-active':'Aktywny profil głosu marki:','bv-delete':'🗑 Usuń profil',
+    'bv-ph':'Wklej tutaj 2-5 przykładowych artykułów firmowych (jeden po drugim)…',
     // Errors / dialogs
     'err-no-src':'⚠️ Brak źródeł wiedzy',
-    'err-add-src':'📁 Dodaj źródła do bazy',
+    'err-add-src':'📁 Dodaj źródła do bazy wiedzy',
     // Inne
-    'premium-info':'⭐ Tryb Jakość premium','rp-strong':'Przeróbki artykułu',
+    'premium-info':'⭐ Tryb samokorekty','rp-strong':'Przeróbki artykułu',
     'improve-by-gaps':'✍️ Popraw artykuł pod brakujące tematy',
     // Panele FOG/KD/GAP/SEO/AIO/SERP/Links
     'serp-data-title':'🔍 Dane SERP: top wyniki Google',
     'gap-analysis-title':'🧩 Analiza luk semantycznych',
-    'gap-refresh':'🔄 Odśwież','gap-loading':'⏳ Porównuję artykuł z danymi SERP...',
+    'gap-refresh':'🔄 Odśwież','gap-loading':'⏳ Porównuję artykuł z danymi SERP…',
     'gap-pts':'/ 100 pkt','gap-select-all':'Zaznacz wszystkie','gap-deselect':'Odznacz',
     'gap-no-serp':'Włącz Analizę SERP przed generowaniem, aby korzystać z analizy luk semantycznych.',
-    'links-title':'🔗 Sugestie linków wewnętrznych','links-loading':'⏳ Analizuję bazę wiedzy...',
+    'links-title':'🔗 Sugestie linków wewnętrznych','links-loading':'⏳ Analizuję bazę wiedzy…',
     'versions-label':'Warianty:',
     'seo-panel-title':'📊 Ocena SEO','aio-panel-title':'🤖 Ocena AIO',
     'pts-seo':'/ 100 pkt SEO','pts-aio':'/ 100 pkt AIO',
@@ -3237,45 +3237,45 @@ var I18N = {
     'gap-msg-good':'Dobre pokrycie. Można uzupełnić kilka brakujących tematów.',
     'gap-msg-medium':'Średnie pokrycie. Warto rozszerzyć artykuł o brakujące tematy.',
     'gap-msg-low':'Niskie pokrycie. Artykuł pomija wiele istotnych tematów z top wyników.',
-    'fog-tooltip':'Kliknij aby zobaczyć skalę',
+    'fog-tooltip':'Kliknij, aby zobaczyć skalę',
     'kd-tooltip':'Gęstość głównego słowa kluczowego na 100 słów. Optymalna: 0.5-2.5%',
     // ── Komunikaty dynamiczne ──
     'msg-pdf-load-fail':'Nie udało się załadować biblioteki PDF. Sprawdź połączenie.',
     'msg-docx-error':'Błąd generowania DOCX: ',
     'msg-no-article':'Najpierw wygeneruj artykuł.',
-    'msg-bad-url':'Podaj pełny URL (https://...)',
-    'msg-no-openai-key':'Brak klucza API OpenAI. Uzupełnij stałą OPENAI_API_KEY w pliku HTML.',
+    'msg-bad-url':'Podaj pełny URL (https://…)',
+    'msg-no-openai-key':'Brak klucza OpenAI. Wpisz go w menu ustawień → Klucze API.',
     'msg-no-img-topic':'Wpisz temat artykułu lub wczytaj artykuł przed generowaniem grafiki.',
     'msg-gen-error':'Błąd generowania: ',
     'msg-copy-fail':'Kopiowanie nie powiodło się. Pobierz plik ręcznie.',
     // Status (URL loading)
-    'msg-connecting':'Łączę z Claude API...',
-    'msg-reading-page':'Odczytuję treść strony...',
-    'msg-fetching-page':'Pobieram treść strony...',
+    'msg-connecting':'Łączę z Claude API…',
+    'msg-reading-page':'Odczytuję treść strony…',
+    'msg-fetching-page':'Pobieram treść strony…',
     // Spinner dynamiczne (Premium / SERP / Improve)
-    'msg-spin-premium-eval':'Tryb Premium: oceniam artykuł...',
+    'msg-spin-premium-eval':'Samokorekta: oceniam tekst…',
     'msg-spin-premium-deep':'głęboka weryfikacja, może potrwać dłużej niż zwykle',
-    'msg-spin-premium-eval2':'Premium: oceniam artykuł...',
+    'msg-spin-premium-eval2':'Samokorekta: oceniam tekst…','spin-premium-improving':'Samokorekta: poprawiam (wynik {n}/100)…',
     'msg-spin-premium-fix':'samokorekcja na podstawie wyników oceny',
     'msg-spin-regen-fixes':'regeneruję z uwzględnieniem poprawek',
-    'msg-spin-serp':'Analizuję SERP...',
+    'msg-spin-serp':'Analizuję SERP…',
     'msg-spin-serp-sub':'sprawdzam co rankuje dla słowa kluczowego',
-    'msg-spin-reanalyze':'Analizuję ponownie...',
-    'msg-spin-img':'Generuję grafikę...',
-    'msg-spin-sections':'⏳ Generuję sekcje...',
+    'msg-spin-reanalyze':'Analizuję ponownie…',
+    'msg-spin-img':'Generuję grafikę…',
+    'msg-spin-sections':'⏳ Generuję sekcje…',
     // Badges
-    'badge-error':'błąd','badge-generating':'generowanie...','badge-uciety':'ucięty',
+    'badge-error':'błąd','badge-generating':'generowanie…','badge-premium':'samokorekta…','badge-uciety':'ucięty',
     // Loading
-    'msg-loading-article':'⏳ Analizuję artykuł...',
-    'msg-loading-aio':'⏳ Analizuję pod kątem AI Overview...',
-    'msg-loading-brief':'⏳ Analizuję temat i bazę wiedzy...',
-    'msg-loading-test':'⏳ Testuję...',
-    'msg-loading-publish':'⏳ Publikuję...',
+    'msg-loading-article':'⏳ Analizuję artykuł…',
+    'msg-loading-aio':'⏳ Analizuję pod kątem AI Overview…',
+    'msg-loading-brief':'⏳ Analizuję temat i bazę wiedzy…',
+    'msg-loading-test':'⏳ Testuję…',
+    'msg-loading-publish':'⏳ Publikuję…',
     'msg-loading-docx':'⏳ .docx',
     // Buttons states
     'msg-copied':'✓ Skopiowano','msg-copied-2':'✅ Skopiowano',
     // Empty states
-    'msg-no-urls':'Brak adresów URL w bazie wiedzy. Dodaj linki do stron firmy aby zobaczyć sugestie.',
+    'msg-no-urls':'Brak adresów URL w bazie wiedzy. Dodaj linki do stron firmy, aby zobaczyć sugestie.',
     'msg-no-art-analyze':'Brak artykułu do analizy.',
     'msg-no-change':'Wynik nie zmienił się. Wybrane tematy mogą być niezgodne z charakterem artykułu lub wymagają głębszego omówienia. Pomiń je lub spróbuj ponownie z innymi.',
     // Errors
@@ -3286,40 +3286,40 @@ var I18N = {
     // Throws
     'err-url-extract':'Nie udało się odczytać treści strony.',
     'err-url-fetch':'Nie udało się pobrać tej strony.',
-    'err-url-thin':'Strona ma za mało tekstu ({n} słów). Najczęściej znaczy to, że treść dogrywa się skryptem. Użyj "Dodaj tekst ręcznie" i wklej treść skopiowaną ze strony.',
+    'err-url-thin':'Strona ma za mało tekstu ({n} słów). Najczęściej znaczy to, że treść dogrywa się skryptem. Użyj „Dodaj tekst ręcznie” i wklej treść skopiowaną ze strony.',
     'err-fetch-blokada':'Witryna nie pozwala na automatyczne pobieranie.',
     'err-fetch-niedostepna':'Strona nie odpowiedziała.',
     'err-fetch-typ':'To nie jest strona tekstowa.',
     'err-fetch-dlugi':'Adres jest za długi.',
     'err-fetch-limit':'Za dużo zapytań. Spróbuj za chwilę.',
     'err-fetch-adres':'Adres jest niepoprawny.',
-    'err-rate-limit':'Przekroczono limit zapytań API (30 000 tokenów/minutę). Poczekaj chwilę i spróbuj ponownie. Jeśli problem się powtarza, wyłącz SERP lub Premium które zwiększają liczbę tokenów.',
-    'err-server-500':'Serwer Anthropic zwrócił błąd (500). Spróbuj ponownie za chwilę. Jeśli błąd się powtarza, wyłącz SERP lub Premium.',
-    'err-overloaded':'API Anthropic jest chwilowo przeciążone. Poczekaj 30 sekund i spróbuj ponownie.',
-    'err-empty-response':'Pusta odpowiedź z API',
-    'err-no-image':'Brak obrazu w odpowiedzi API',
+    'err-rate-limit':'Dostawca AI chwilowo ogranicza liczbę zapytań. Spróbuj ponownie za minutę. Jeśli komunikat wraca, wyłącz analizę SERP albo samokorektę: obie zużywają więcej tokenów.',
+    'err-server-500':'Dostawca AI zwrócił błąd serwera (500). Spróbuj ponownie za chwilę. Jeśli błąd wraca, spróbuj bez analizy SERP i samokorekty.',
+    'err-overloaded':'Model AI jest chwilowo przeciążony. Spróbuj ponownie za około 30 sekund.',
+    'err-empty-response':'Model nie zwrócił treści. Spróbuj ponownie.',
+    'err-no-image':'Nie udało się wygenerować grafiki. Spróbuj ponownie albo zmień opis.',
     // Dark mode tooltip
     'dm-title':'Tryb ciemny',
     // ── Image generator (full) ──
-    'img-art-ctx':'KONTEKST ARTYKUŁU','img-art-ctx-lbl':'ARTICLE CONTEXT',
+    'img-art-ctx':'Kontekst artykułu','img-art-ctx-lbl':'Kontekst artykułu',
     'img-load-art':'📄 Wczytaj z aktywnego artykułu',
-    'img-ref-section':'GRAFIKA REFERENCYJNA','img-ref-optional':'(opcjonalnie)',
+    'img-ref-section':'Grafika referencyjna','img-ref-optional':'(opcjonalnie)',
     'img-ref-hint':'Wgraj lub podaj URL grafiki. Aplikacja odwzoruje ją w nowej grafice.',
     'img-upload-btn':'📎 Wgraj grafikę referencyjną',
-    'img-url-ph':'lub wklej URL...','img-url-add':'Dodaj',
-    'img-style-section':'STYL I BRANDING',
+    'img-url-ph':'lub wklej URL…','img-url-add':'Dodaj',
+    'img-style-section':'Styl i branding',
     'img-style-clean':'⬜ Studio (białe, czysty kadr)',
-    'img-style-dark':'⬛ Deep Space (ciemne tło, bursztynowe akcenty)',
-    'img-style-yellow':'🟡 Amber (akcent bursztynowy)',
+    'img-style-dark':'⬛ Ciemne tło z bursztynowymi akcentami',
+    'img-style-yellow':'🟡 Bursztyn i turkus',
     'img-style-photo':'📷 Fotorealistyczny','img-style-illust':'🎨 Ilustracja',
-    'img-format-section':'FORMAT DOCELOWY','img-format-graphic':'FORMAT GRAFIKI',
+    'img-format-section':'Format docelowy','img-format-graphic':'Format grafiki',
     'img-fmt-short-horiz':'1536×1024 Poziomy','img-fmt-short-square':'1024×1024 Kwadrat','img-fmt-short-vert':'1024×1536 Pionowy',
     'serp-phrases':'fraz kluczowych','astat-chars':'zn.','img-history-title':'Poprzednie grafiki sesji',
-    'img-format-horiz':'1536×1024 Poziomy (bannery, email)',
-    'img-format-square':'1024×1024 Kwadrat (social media, App)',
+    'img-format-horiz':'1536×1024 Poziomy (banery, e-mail)',
+    'img-format-square':'1024×1024 Kwadrat (media społecznościowe, aplikacje)',
     'img-format-vert':'1024×1536 Pionowy (mobile, push)',
-    'img-quality-section':'JAKOŚĆ','img-quality-std':'Standard','img-quality-hd':'HD (wolniej, więcej szczegółów)',
-    'img-extra-section':'DODATKOWE WYTYCZNE',
+    'img-quality-section':'Jakość','img-quality-std':'Średnia','img-quality-hd':'HD (wolniej, więcej szczegółów)',
+    'img-extra-section':'Dodatkowe wytyczne',
     'img-gen-btn':'🎨 Generuj grafikę',
     'img-empty-title':'Wygeneruj pierwszą grafikę',
     'img-empty-sub':'Wczytaj artykuł, wybierz styl i format, kliknij Generuj',
@@ -3330,10 +3330,10 @@ var I18N = {
     'sidebar-add-link':'🔗 Dodaj link / URL',
     'sidebar-add-text':'✏️ Dodaj tekst ręcznie',
     // ── Brief panel labels ──
-    'brief-kw-section':'SŁOWA KLUCZOWE (KLIKNIJ ŻEBY DODAĆ)',
-    'brief-h2-section':'SUGEROWANA STRUKTURA H2',
-    'brief-gap-section':'CONTENT GAP',
-    'brief-words-section':'REKOMENDOWANA DŁUGOŚĆ',
+    'brief-kw-section':'Słowa kluczowe (kliknij, aby dodać)',
+    'brief-h2-section':'Sugerowana struktura H2',
+    'brief-gap-section':'Luki w treści',
+    'brief-words-section':'Rekomendowana długość',
     'brief-words-suffix':'słów',
     // ── Bulk modal ──
     'bulk-modal-title':'⚡ Generowanie grupowe',
@@ -3354,12 +3354,12 @@ var I18N = {
     'wp-pass-wp-ph':'hasło aplikacji',
     // ── Brand Voice ──
     'bv-desc':'Wklej 2-5 istniejących artykułów firmowych (lub innych tekstów). Aplikacja wyekstrahuje styl pisania i będzie go używać w generowanych treściach.',
-    'bv-loading':'⏳ Analizuję styl pisania...',
+    'bv-loading':'⏳ Analizuję styl pisania…',
     // ── Titles panel ──
-    'titles-desc':'5 alternatywnych tytułów pod różne intencje wyszukiwania. Kliknij aby skopiować.',
-    'titles-loading':'⏳ Generuję warianty...',
+    'titles-desc':'5 alternatywnych tytułów pod różne intencje wyszukiwania. Kliknij tytuł, aby go skopiować.',
+    'titles-loading':'⏳ Generuję warianty…',
     // ── Premium info ──
-    'premium-desc':'Tryb Premium uruchamia automatyczną samokorekcję. Artykuł jest najpierw generowany, potem oceniany przez AI, a na końcu poprawiany na podstawie wyników oceny. Generowanie trwa 2 do 3 razy więcej czasu.',
+    'premium-desc':'Samokorekta: tekst powstaje, potem model go ocenia i poprawia na podstawie oceny. Generowanie trwa 2-3 razy dłużej.',
     'premium-2-3x':'2 do 3 razy więcej czasu',
     // ── Device error ──
     
@@ -3375,7 +3375,7 @@ var I18N = {
     'bazas-nazwa':'Nazwa dokumentu','bazas-tresc':'Treść','bazas-dodaj':'Dodaj',
     'bazas-pusto':'Brak dokumentów. Dodaj pierwszy poniżej.','bazas-usun':'Usuń',
     'bazas-zamknij':'Zamknij','bazas-tylko-admin':'Do bazy wspólnej dodaje wyłącznie administrator.',
-    'bazas-blad':'Nie udało się połączyć z serwerem.','bazas-dodaje':'Dodaję...',
+    'bazas-blad':'Nie udało się połączyć z serwerem.','bazas-dodaje':'Dodaję…',
     'openseo-menu-title':'OpenSEO','openseo-menu-sub':'pozycje, backlinki, audyty',
     'seo-frazy-title':'Frazy sprawdzone w OpenSEO',
     'seo-title':'📈 Frazy z OpenSEO','seo-desc':'Frazy zapisane i otagowane w OpenSEO. Odczyt nie kosztuje kredytów - dane pochodzą z bazy OpenSEO, nie z nowego zapytania.',
@@ -3384,7 +3384,7 @@ var I18N = {
     'seo-oddaj-hint':'Zapisuje bieżące frazy z tagiem content-ai, żeby dało się śledzić ich pozycje.',
     'seo-pusto':'Brak zapisanych fraz w tym projekcie.','seo-zamknij':'Zamknij',
     'seo-wolumen':'wyszukań/mc','seo-trudnosc':'trudność','seo-brak-danych':'brak danych',
-    'seo-blad':'Nie udało się połączyć z OpenSEO.','seo-laduje':'Wczytuję...',
+    'seo-blad':'Nie udało się połączyć z OpenSEO.','seo-laduje':'Wczytuję…',
     'seo-zapisano':'Zapisano w OpenSEO','seo-nic-nie-zaznaczono':'Najpierw zaznacz frazy.',
     'seo-brak-fraz':'Najpierw dodaj frazy do artykułu.',
     'pakiet-badge-title':'Twój pakiet i zużycie',
@@ -3402,78 +3402,78 @@ var I18N = {
     'pakiet-fn-wlasnyKlucz':'Własny klucz API',
     'pakiet-limit-title':'Limit pakietu wyczerpany',
     'pakiet-limit-odnawialny':'Licznik odnowi się pierwszego dnia przyszłego miesiąca.',
-    'pakiet-limit-zawsze':'Ta pula się nie odnawia - żeby generować dalej, potrzebny jest wyższy pakiet.',
+    'pakiet-limit-zawsze':'Ta pula się nie odnawia. Żeby generować dalej, potrzebny jest wyższy pakiet. Pakiet zmienia administrator konta.',
     'pakiet-limit-zuzyto':'Zużyto',
     'pakiet-funkcja-title':'Ta funkcja nie wchodzi w Twój pakiet',
     'pakiet-wywolania':'Wywołania modelu','pakiet-wywolanie':'Wywołania modelu',
     'pakiet-wywolania-opis':'Jeden artykuł to kilka wywołań: brief, treść, korekta, przeróbki.',
     'start-menu-title':'Konfiguracja konta','start-menu-sub':'klucze API i pierwsze kroki',
     'start-dalej':'Dalej','start-wstecz':'Wstecz','start-pomin':'Pomiń kreator',
-    'start-zaczynamy':'Zaczynamy','start-sztuk':'szt.','start-twoj-pakiet':'Twój pakiet',
+    'start-zaczynamy':'Zacznij pisać','start-sztuk':'szt.','start-twoj-pakiet':'Twój pakiet',
     'start-1-tytul':'Witaj w Content AI',
     'start-1-opis':'Zanim napiszesz pierwszy artykuł, przejdźmy przez trzy krótkie ekrany. Zajmie to minutę, a wszystko można zmienić później w ustawieniach.',
     'start-2-tytul':'Klucze API - tylko jeśli chcesz',
-    'start-2-opis':'Domyślnie korzystasz z kluczy serwera i nie musisz tu nic wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej - wtedy generowanie idzie na Twój rachunek, a nie na nasz.',
-    'start-2-opis-pakiet':'W Twoim pakiecie generowanie idzie z kluczy serwera - nie musisz nic wpisywać. Własne klucze są dostępne od pakietu Standard.',
-    'start-2-gdzie':'Klucze zapisują się wyłącznie w tej przeglądarce i nigdy nie trafiają na nasz serwer do zapisu - lecą tylko jako nagłówek pojedynczego żądania, prosto do dostawcy. Na innym urządzeniu trzeba je wpisać ponownie.',
+    'start-2-opis':'Domyślnie generowanie korzysta z kluczy serwera, więc nic tu nie trzeba wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej: koszt modelu przejdzie wtedy na Twój rachunek u dostawcy. Limity pakietu obowiązują tak samo.',
+    'start-2-opis-pakiet':'W Twoim pakiecie generowanie korzysta z kluczy serwera, więc nic tu nie trzeba wpisywać. Własne klucze są dostępne od pakietu Standard.',
+    'start-2-gdzie':'Klucze zostają tylko w tej przeglądarce. Serwer przekazuje je dostawcy z każdym zapytaniem i niczego nie zapisuje. Na innym urządzeniu trzeba je wpisać ponownie.',
     'start-2-anthropic':'Anthropic - treść','start-2-openai':'OpenAI - grafiki, lektor, transkrypcja',
     'start-2-eleven':'ElevenLabs - lepszy lektor (opcjonalnie)',
     'start-2-zly':'To nie wygląda na klucz API. Anthropic zaczyna się od „sk-ant-”, OpenAI od „sk-”. Zostaw pole puste, jeśli nie masz własnego klucza.',
     'start-3-tytul':'Twoja marka',
-    'start-3-opis':'Brand Voice to opis tego, jak ma brzmieć Twoja treść: ton, słownictwo, czego unikać. Bez niego artykuły będą poprawne, ale bezosobowe. Możesz to ustawić teraz albo wrócić do tego później.',
-    'start-3-otworz':'Otwórz ustawienia Brand Voice',
-    'start-3-potem':'Kreator zostaje otwarty - po zapisaniu Brand Voice wróć tutaj i kliknij „Dalej”.',
+    'start-3-opis':'Głos marki to opis tego, jak ma brzmieć Twoja treść: ton, słownictwo, czego unikać. Bez niego artykuły będą poprawne, ale bezosobowe. Możesz to ustawić teraz albo wrócić do tego później.',
+    'start-3-otworz':'Otwórz ustawienia głosu marki',
+    'start-3-potem':'Kreator zostaje otwarty - po zapisaniu głosu marki wróć tutaj i kliknij „Dalej”.',
     'start-4-tytul':'Wszystko gotowe',
-    'start-4-opis':'Wpisz temat, dodaj słowa kluczowe i kliknij generowanie. Licznik pakietu masz zawsze w prawym górnym rogu - kliknięcie pokazuje, ile Ci zostało.',
-    'start-4-lista':'Gdzie szukać reszty: ikona ⚙️ w pasku górnym to baza wiedzy, integracja z CMS, Brand Voice i widoczność w AI. Nic z tego nie jest potrzebne do pierwszego artykułu.',
+    'start-4-opis':'Wpisz temat, dodaj słowa kluczowe i kliknij „Wygeneruj treść”. Licznik pakietu jest zawsze w prawym górnym rogu: kliknięcie pokazuje, ile zostało.',
+    'start-4-lista':'Gdzie szukać reszty: ikona ⚙️ w pasku górnym to baza wiedzy, integracja z CMS, głos marki i widoczność w AI. Nic z tego nie jest potrzebne do pierwszego artykułu.',
     'history-select':'Wybierz artykuł z listy',
     // ── Tooltips ──
     'title-brief-tooltip':'Wygeneruj brief przed artykułem',
-    'title-bulk-tooltip':'Generowanie grupowe - wiele artykułów na raz',
+    'title-bulk-tooltip':'Generowanie grupowe: wiele artykułów naraz',
     'title-premium-tooltip':'Tryb głębokiej samokorekcji. Generowanie zajmuje 2 do 3 razy więcej czasu, ale artykuł jest weryfikowany i poprawiany automatycznie.',
-    'title-premium-fix-tooltip':'Uruchom samokorekcję Premium na istniejącym artykule',
+    'title-premium-fix-tooltip':'Model oceni gotowy tekst i poprawi go według oceny',
     'title-include-kw':'Uwzględnij w generowaniu',
     'title-remove':'Usuń','title-remove-link':'Usuń link',
     'title-dm':'Przełącz tryb ciemny',
-    'img-quality-low':'Szkic / roboczy','img-quality-premium':'Premium',
+    'img-quality-low':'Szkic / roboczy','img-quality-premium':'Wysoka',
     // ── Misc ──
     'remove-link-btn':'⛓️‍💥 Usuń link',
-    'no-kw-warning-full':'⚠️ Nie podałeś słowa kluczowego. Jako zapytanie zostanie użyty temat artykułu. Wpisz główną frazę kluczową żeby analiza SERP była trafna.',
+    'no-kw-warning-full':'⚠️ Brak słowa kluczowego, więc analiza SERP użyje tematu artykułu. Wpisz główną frazę, żeby wynik był trafniejszy.',
     'img-close-title':'Zamknij',
     'text-modal-desc-full':'Wklej dowolną treść firmową - oferty, FAQ, opisy usług, dane o produktach, polityki. AI będzie używać tej treści podczas generowania.',
     
     'img-prompt-used':'▸ Użyty prompt',
-    'img-spin-init':'Analizuję artykuł...',
-    'no-kw-warning':'⚠️ Nie podałeś słowa kluczowego. Jako zapytanie zostanie użyty temat artykułu. Wynik może być mniej trafny.',
+    'img-spin-init':'Analizuję artykuł…',
+    'no-kw-warning':'⚠️ Brak słowa kluczowego, więc zapytaniem będzie temat artykułu. Wynik może być mniej trafny.',
     // ── Brakujące PL ──
     'stat-generated':'Wygenerowane','stat-words-unit':'słów','stat-read-unit':'min czytania','stat-sections-unit':'sekcji H2',
     'stat-sub-unit':'podsekcji H3',
-    'ph-history-search':'Szukaj w historii...','title-settings':'Ustawienia CMS i Brand Voice','title-kw-add':'Dodaj frazę',
+    'ph-history-search':'Szukaj w historii…','title-settings':'Ustawienia','title-kw-add':'Dodaj frazę',
     'btn-cancel':'Anuluj','btn-save':'Zapisz','btn-add':'✓ Dodaj',
     'btn-add-page':'🔗 Dodaj stronę','btn-add-page-txt':'Dodaj stronę','btn-add-txt':'Dodaj','btn-analyze-style':'Analizuj styl',
-    'btn-continue-premium':'⭐ Kontynuuj w trybie Premium','btn-generate-normal':'⚡ Generuj normalnie',
-    'btn-generate-internet':'🌐 Generuj z internetu','btn-select-sources':'☑️ Wybierz źródła z bazy',
-    'btn-add-sources':'📁 Dodaj źródła do bazy','btn-save-draft':'💾 Zapisz jako szkic',
+    'btn-continue-premium':'⭐ Kontynuuj z samokorektą','btn-generate-normal':'⚡ Wygeneruj z wiedzy modelu',
+    'btn-generate-internet':'🌐 Wygeneruj z wyszukiwaniem w sieci','btn-select-sources':'☑️ Wybierz źródła z bazy',
+    'btn-add-sources':'📁 Dodaj źródła do bazy wiedzy','btn-save-draft':'💾 Zapisz jako szkic',
     'no-src-title-empty':'⚠️ Brak źródeł wiedzy','no-src-title-none':'⚠️ Brak wybranych źródeł',
     'no-src-desc-empty':'Baza wiedzy jest pusta. Dodaj materiały firmowe lub wygeneruj treść z wiedzy ogólnej z internetu.',
     'no-src-desc-none':'Nie wybrano żadnego źródła z bazy wiedzy. Wybierz materiały lub wygeneruj treść z wykorzystaniem danych z internetu.',
     'cms-modal-title':'🌐 Integracja z CMS','cms-drupal-hint-short':'Wymagany moduł Basic Auth (wbudowany w Drupal 8/9/10). Włącz w: Extend → Basic Authentication.',
     'cms-drupal-hint':'Wymagany moduł Basic Auth (wbudowany w Drupal 8/9/10). Włącz w: Extend → Basic Authentication.',
-    'cms-drupal-url-label':'ADRES DRUPALA (NP. HTTPS://TWOJAFIRMA.PL)','cms-format-label':'FORMAT TEKSTU',
-    'cms-url-label':'ADRES URL','cms-url-ph':'https://twoja-strona.pl',
-    'tpl-save-section':'LUB ZAPISZ OBECNY FORMULARZ JAKO SZABLON','tpl-name-ph':'Nazwa szablonu...',
-    'text-modal-title':'Dodaj tekst do bazy wiedzy','text-doc-name-label':'NAZWA DOKUMENTU',
-    'text-doc-name-ph':'np. Oferta firmy, FAQ zwroty...','text-content-label':'CONTENT',
-    'url-label':'ADRES URL',
-    'bv-modal-full-title':'🎙 Brand Voice - profil stylu marki',
+    'cms-drupal-url-label':'Adres Drupala (np. https://twojafirma.pl)','cms-format-label':'Format tekstu',
+    'cms-url-label':'Adres URL','cms-url-ph':'https://twoja-strona.pl',
+    'tpl-save-section':'Lub zapisz obecny formularz jako szablon','tpl-name-ph':'Nazwa szablonu…',
+    'text-modal-title':'Dodaj tekst do bazy wiedzy','text-doc-name-label':'Nazwa dokumentu',
+    'text-doc-name-ph':'np. Oferta firmy, FAQ zwroty…','text-content-label':'Treść',
+    'url-label':'Adres URL',
+    'bv-modal-full-title':'🎙 Głos marki (brand voice)',
     'bv-modal-desc-full':'Wklej 2-5 istniejących artykułów firmowych (lub innych tekstów). Aplikacja wyekstrahuje profil stylu i zastosuje go do wszystkich przyszłych generowań.',
-    'ver-before-premium':'Przed premium','ver-after-premium':'Po samokorekcji premium','ver-serp':'Poprawa SERP',
+    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','ver-serp':'Poprawa SERP',
     'spin-sub-model':'model przetwarza temat i bazę wiedzy','spin-sub-hybrid2':'optymalizuję jednocześnie pod SEO, AIO i czytelnika',
     'link-suggest-prefix':'Rozważ link do','link-suggest-at':'przy słowach:',
     'gap-still-missing':'Nadal brakujące tematy',
-    'editor-done':'Gotowe','kb-words-suffix':'słów','hist-words-suffix':'słów',
+    'editor-done':'Gotowe','kb-words-suffix':'słów','kb-tag-text':'Tekst','kb-tag-file':'Plik','hist-words-suffix':'słów',
     'url-fetch-done':'Gotowe - strona dodana do bazy!',
-    'url-demo-connect':'Łączę ze stroną...','url-demo-fetch':'Pobieram treść...','url-demo-process':'Przetwarzam...','url-demo-done':'Gotowe!',
+    'url-demo-connect':'Łączę ze stroną…','url-demo-fetch':'Pobieram treść…','url-demo-process':'Przetwarzam…','upload-processing':'Przetwarzam: {name}','url-demo-done':'Gotowe!',
     'img-style-minimal':'◽ Minimalistyczne',
     'link-dialog-text':'Tekst linku (opcjonalnie)','link-dialog-add':'Wstaw link','link-dialog-remove':'Usuń link',
     'jsonld-hint-full':'Wklej ten kod w sekcji &lt;head&gt; lub przed &lt;/body&gt; na stronie WP.',
@@ -3484,8 +3484,8 @@ var I18N = {
     'hist-filter-all':'Wszystkie','hist-filter-hybrid':'Hybryda',
     'bulk-gen-all-txt':'Generuj wszystkie','improve-action-txt':'Popraw artykuł',
     // ── Spinner generowania ──
-    'spin-generating-seo-aio':'Generuję treść SEO+AIO...','spin-generating':'Generuję treść...',
-    'spin-sub-premium-long':'tryb premium, generowanie może potrwać dłużej niż zwykle',
+    'spin-generating-seo-aio':'Generuję treść SEO+AIO…','spin-generating':'Generuję treść…',
+    'spin-sub-premium-long':'samokorekta: generowanie potrwa 2-3 razy dłużej',
     // ── Premium statusy ──
     // ── Retry messages ──
     // ── Bulk generation ──
@@ -3503,13 +3503,13 @@ var I18N = {
     'tpl-service-name':'Opis usługi','tpl-service-desc':'Karta produktowa',
     'tpl-own-label':'(własny)',
     // ── Repurpose ──
-    'rp-source-missing':'Brak klucza API. Wstaw klucz w pliku aplikacji aby korzystać z przeróbek.',
+    'rp-source-missing':'Brak klucza API. Wpisz go w menu ustawień → Klucze API, żeby korzystać z przeróbek.',
     // ── WP/Drupal status ──
     'drupal-ok':'✓ Drupal JSON:API - połączenie działa',
     // ── Image generator statusy ──
-    'img-step1':'Krok 1 z 2: analizuję grafikę referencyjną...',
-    'img-err-timeout':'Przekroczono limit 180s na generowanie. OpenAI lub proxy mogą być obciążone. Spróbuj ponownie za chwilę.',
-    'img-err-net':'Błąd sieci: nie udało się połączyć z API. Sprawdź internet, VPN lub status proxy.',
+    'img-step1':'Krok 1 z 2: analizuję grafikę referencyjną…',
+    'img-err-timeout':'Grafika nie powstała w ciągu 3 minut. Dostawca może być przeciążony, spróbuj ponownie za chwilę.',
+    'img-err-net':'Brak połączenia z serwerem grafik. Sprawdź internet albo VPN i spróbuj ponownie.',
     // ── Sidebar empty ──
     'sidebar-empty-title':'Brak źródeł wiedzy.','sidebar-empty-sub':'Wgraj pliki, dodaj link lub wpisz tekst poniżej.',
     // ── Improve modal ──
@@ -3535,7 +3535,7 @@ var I18N = {
     
     'ctx-bold':'Pogrub','ctx-italic':'Pochyl',
     'link-dialog-label':'🔗 Dodaj link',
-    'err-api-generic':'Błąd API',
+    'err-api-generic':'Dostawca AI odrzucił zapytanie.',
     'err-json-modelu':'Model zwrócił odpowiedź w uszkodzonym formacie. Spróbuj jeszcze raz.',
     'wp-published':'opublikowano',
     'wp-draft':'zapisano jako szkic',
@@ -3552,7 +3552,7 @@ var I18N = {
     'msg-no-api-resp':'Brak odpowiedzi z API. Sprawdź klucz API i połączenie.',
     'kb-na-serwerze':'Na serwerze','kb-wspolna':'Baza wspólna zespołu','kb-prywatna':'Twoja baza prywatna','kb-fragm':'fragm.','kb-lokalnie':'Tylko w tej przeglądarce','kb-przenies':'Przenieś na serwer','kb-dodano':'Dodano do bazy wiedzy na serwerze','kb-zostaje-lokalnie':'Dokument zapisano tylko w tej przeglądarce.','kb-przeniesiono':'Przeniesiono na serwer',
     'pakiet-zostalo':'Zostało {n} z {m}','pakiet-zostalo-krotko':'{n} art.','pakiet-od-standard':'Dostępne od pakietu Standard','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f} nie wchodzą w pakiet {p}','pakiet-niedostepne':'niedostępne',
-    'btn-przerwij':'Przerwij','msg-przerwano':'Generowanie przerwane. Formularz jest bez zmian - możesz poprawić brief i spróbować ponownie.','badge-przerwane':'przerwane','spin-ponawiam-za':'Limit API: ponawiam za {s} s','spin-proba':'próba {n} z {m}','spin-ponawiam':'Ponawiam zapytanie...',
+    'btn-przerwij':'Przerwij','msg-przerwano':'Generowanie przerwane. Formularz jest bez zmian - możesz poprawić brief i spróbować ponownie.','badge-przerwane':'przerwane','spin-ponawiam-za':'Limit API: ponawiam za {s} s','spin-proba':'próba {n} z {m}','spin-ponawiam':'Ponawiam zapytanie…',
     'badge-historia':'z historii','hist-otworz':'Otwórz w generatorze',
     'msg-blad-prefiks':'Błąd:','menu-wyloguj':'Wyloguj się','menu-wyloguj-sub':'zakończ sesję na tym urządzeniu',
     'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Część dokumentów z bazy nie przetrwa odświeżenia - przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
@@ -3564,7 +3564,7 @@ var I18N = {
     'img-spin-sub':'Generowanie może potrwać 30-60 sekund',
   },
   en: {
-    'settings-aiv-title':'AI visibility','settings-aiv-sub':'AEO / GEO tracking',
+    'settings-aiv-title':'AI citations','settings-aiv-sub':'your queries, trend over time',
     'aiv-modal-title':'📡 AI visibility (AEO/GEO)','aiv-modal-desc':'Checks whether AI answers (Claude with web search) to your queries surface the brand - in the text or in cited sources. Results and history are stored locally, so you can see the trend over time. This is a single-engine approximation, not a measurement of every AI search engine.',
     'aiv-score-label':'Visibility score:','aiv-add-ph':'e.g. best [industry] company in your market','aiv-add-btn':'Add','aiv-domains-label':'Brand domains (for source detection)','aiv-export':'Export CSV',
     'aiv-check-all':'Check all','aiv-check-one':'Check','aiv-checking':'Checking','aiv-status-cited':'Cited in sources','aiv-status-mentioned':'Mentioned in answer','aiv-status-none':'Absent',
@@ -3573,9 +3573,9 @@ var I18N = {
     'audio-btn':'🎧 Audio','title-audio':'Audio content','audio-title':'🎧 Audio content','audio-close':'Close',
     'audio-type':'Audio content type','au-podcast':'Podcast (script + audio)','au-newsletter':'Audio newsletter','au-audiobook':'Article → audiobook','au-transcription':'Transcription (audio → text)',
     'audio-voices':'Number of voices','audio-engine':'Voice engine','au-eng-openai':'OpenAI','au-eng-eleven':'ElevenLabs','au-eng-web':'Browser',
-    'audio-source':'Topic or content','audio-source-ph':'Type a topic or paste ready content...','audio-from-article':'Load article from generator','audio-file':'Audio file to transcribe',
+    'audio-source':'Topic or content','audio-source-ph':'Type a topic or paste ready content…','audio-from-article':'Load article from generator','audio-file':'Audio file to transcribe',
     'audio-gen-script':'Generate script','audio-transcribe':'Transcribe','audio-script':'Script (editable)','audio-play':'Play','audio-dl':'⬇ Download MP3','audio-hist':'Audio history','audio-dl-docx':'📄 Download .docx',
-    'audio-need-source':'Enter a topic or paste content.','audio-pick-file':'Pick an audio file.','audio-transcript-name':'Audio transcription','audio-pick-file-btn':'Choose file','audio-no-file':'No file selected','audio-pause':'Pause','audio-resume':'Resume','audio-gen-part':'Generating, part','audio-gen-loading':'Generating script...','audio-transcribing':'Transcribing...','audio-voices-pick':'Voices','audio-voice-host':'Host','audio-voice-guest':'Guest','audio-voice-single':'Voice','audio-g-male':'Male','audio-g-female':'Female','audio-g-neutral':'Neutral','audio-model':'Voice model','audio-m-quality':'quality','audio-m-fast':'fast','audio-m-expr':'expressive','audio-m-hd':'HD','kb-pii-note':'Note: before adding, make sure the materials do not contain personal data of employees or clients. Quotes and references to specific people inside or outside the company are allowed when you add them on purpose.','kb-pii-title':'⚠️ Personal data','kb-pii-ok':'Understood, add','kb-pii-cancel':'Cancel','audio-lang':'Audio language','sidebar-add-audio':'🎙 Add audio (transcription)','kb-collapse':'Collapse panel','kb-expand':'Show knowledge base','kb-reopen':'Knowledge base','kb-toggle':'Show/hide knowledge base',
+    'audio-need-source':'Enter a topic or paste content.','audio-pick-file':'Pick an audio file.','audio-transcript-name':'Audio transcription','audio-pick-file-btn':'Choose file','audio-no-file':'No file selected','audio-pause':'Pause','audio-resume':'Resume','audio-gen-part':'Generating, part','audio-gen-loading':'Generating script…','audio-transcribing':'Transcribing…','audio-voices-pick':'Voices','audio-voice-host':'Host','audio-voice-guest':'Guest','audio-voice-single':'Voice','audio-g-male':'Male','audio-g-female':'Female','audio-g-neutral':'Neutral','audio-model':'Voice model','audio-m-quality':'quality','audio-m-fast':'fast','audio-m-expr':'expressive','audio-m-hd':'HD','kb-pii-note':'Note: before adding, make sure the materials do not contain personal data of employees or clients. Quotes and references to specific people inside or outside the company are allowed when you add them on purpose.','kb-pii-title':'⚠️ Personal data','kb-pii-ok':'Understood, add','kb-pii-cancel':'Cancel','audio-lang':'Audio language','sidebar-add-audio':'🎙 Add audio (transcription)','kb-collapse':'Collapse panel','kb-collapse-label':'Collapse the knowledge base panel','kb-expand':'Show knowledge base','kb-reopen':'Knowledge base','kb-toggle':'Show/hide knowledge base',
     'label-pod-voices':'Number of voices (podcast)','pod-v1':'1 voice (monologue)','pod-v2':'2 voices (host + guest)','pod-v3':'3 voices (host + 2 guests)','pod-v4':'4 voices (host + 3 guests)',
     'pod-listen':'Listen','pod-dl':'Podcast','pod-need-ai':'Multi-voice podcast requires the OpenAI or ElevenLabs engine (not the browser). Change it in voice settings.',
     'trans-panel-title':'Audio transcription','trans-panel-desc':'Upload an audio file or record. The text appears in the result, from where you can add it to the knowledge base.','btn-trans-file':'📁 Choose file','btn-trans-rec':'🎙 Record','btn-trans-run':'Transcribe','btn-trans-tokb':'To knowledge base',
@@ -3583,30 +3583,30 @@ var I18N = {
     'voice-engine-eleven':'ElevenLabs (best Polish)','voice-eleven-voice':'ElevenLabs voice','voice-eleven-custom':'or paste a custom voice_id','voice-eleven-custom-opt':'Custom voice_id','voice-eleven-model':'ElevenLabs model',
     'voice-eleven-m-quality':'Multilingual v2 (quality)','voice-eleven-m-fast':'Flash v2.5 (fast, cheaper)','voice-eleven-m-expr':'Eleven v3 (expressive)',
     'voice-mic-insecure':'Microphone requires HTTPS. Open the app via the intranet/server (https address), not as a local file.','voice-no-eleven-key':'Missing ElevenLabs key - set the key or use proxy or another engine.',
-    'tts-read':'Listen','tts-stop':'Stop','tts-generating':'Generating audio...','tts-dl':'Download MP3','tts-dl-title':'Download audio mp3 (OpenAI)',
-    'settings-voice-title':'Voice assistant','settings-voice-sub':'reading + dictation',
+    'tts-read':'Listen','tts-stop':'Stop','tts-generating':'Generating audio…','tts-dl':'Download MP3','tts-dl-title':'Download audio mp3 (OpenAI)',
+    'settings-voice-title':'Voice assistant','settings-voice-sub':'read-aloud and dictation',
     'voice-modal-title':'🔊 Voice assistant','voice-modal-desc':'Read generated content aloud and dictate into fields. The browser engine runs locally and free. ElevenLabs and OpenAI give higher quality but send text or audio to the API.',
     'voice-engine':'Speech engine (reading)','voice-engine-web':'Browser (free, local)','voice-engine-openai':'OpenAI (high quality)',
     'voice-oa-voice':'OpenAI voice','voice-rate':'Speed','voice-stt':'Dictation (speech to text)','voice-stt-web':'Browser','voice-stt-openai':'OpenAI (transcription)',
     'voice-disclosure':'The voice is AI-generated, not a human recording. Dictation and the ElevenLabs and OpenAI voices send data to the API. The browser dictation engine uses your browser vendor service.',
     'voice-save':'Save','voice-dictate-title':'Dictate',
-    'voice-no-key':'Missing OpenAI key - set OPENAI_API_KEY or switch to the browser engine.','voice-unsupported':'This browser does not support this voice feature.','voice-mic-denied':'Microphone access denied.','voice-listening':'Listening...','voice-tts-fail':'Could not play audio.',
-    'label-topic':'Article / page topic','ph-topic':'e.g. article or page topic',
+    'voice-no-key':'Missing OpenAI key - set OPENAI_API_KEY or switch to the browser engine.','voice-unsupported':'This browser does not support this voice feature.','voice-mic-denied':'Microphone access denied.','voice-listening':'Listening…','voice-tts-fail':'Could not play audio.',
+    'label-topic':'Article / page topic','ph-topic':'e.g. How to choose a CRM for a small business',
     'btn-templates':'📋 Templates','label-ctype':'Content type','label-length':'Length',
-    'btn-tematy':'💡 Suggestions','btn-tematy-title':'Suggest topics from your business need',
+    'btn-tematy':'💡 Suggest','btn-tematy-title':'Suggest topics from your business need',
     'btn-templates-title':'Ready-made form templates',
     'tematy-title':'💡 Suggest topics',
     'tematy-desc':'Describe in your own words what you need: who should read it, what you sell, what you want to achieve. You will get ten topic suggestions - each can be dropped into the topic field with one click.',
     'tematy-ph':'e.g. I run a shop with organic cosmetics. I want to reach women aged 30-45 looking for natural skincare and show that I know my ingredients.',
     'tematy-baza':'Take the selected knowledge base documents into account',
-    'tematy-generuj':'Suggest 10 topics','tematy-mysle':'Looking for topics...',
+    'tematy-generuj':'Suggest 10 topics','tematy-mysle':'Looking for topics…',
     'tematy-uzyj':'Use','tematy-kliknij':'Click "Use" to drop a topic into the form.',
     'tematy-pusto':'The model returned no suggestions. Try describing the need more concretely.',
     'tematy-kopiuj':'Copy list','tematy-skopiowano':'Copied',
     'tematy-demo-temat':'Sample topic','tematy-demo-dlaczego':'Demo mode - enter an API key to get real suggestions.',
-    'ph-length-custom':'e.g. 1200','label-kw':'Keywords','ph-kw':'Type a phrase and press Enter...',
+    'ph-length-custom':'e.g. 1200','label-kw':'Keywords','ph-kw':'Type a phrase and press Enter…',
     'label-tone':'Tone','label-lang-out':'Language','label-extra':'Additional guidelines',
-    'ph-extra':'e.g. Focus on SME segment, include market comparison...',
+    'ph-extra':'e.g. Focus on SME segment, include market comparison…',
     'astat-siec':'Web:',
     'siec-forma-1':'source',
     'siec-forma-24':'sources',
@@ -3618,19 +3618,19 @@ var I18N = {
     'toggle-web':'Search the web and cite sources',
     'toggle-web-hint':'What the knowledge base lacks, the AI looks up online and lists the sources under the article. Anything about your company still comes from the knowledge base only. Adds about 30 sec.',
     'toggle-serp':'SERP analysis before generating',
-    'toggle-serp-hint':'Before generating, AI checks what ranks in Google for your keyword and uses this as additional context. Adds ~15 sec.',
+    'toggle-serp-hint':'Before writing, the AI checks what ranks in Google for your keyword and takes it into account. Adds about 15 s.',
     'toggle-aeo':'AEO mode (content for AI citations)','toggle-aeo-hint':'Forces answer-engine format: 25-50 word definition up front, numbers in intro, 5-7 FAQ questions, short lists, headings as questions.',
-    'btn-aeo':'⚡ Assess AEO','aeo-panel-title':'⚡ AEO assessment','btn-geo':'🎯 GEO Score','geo-panel-title':'🎯 GEO Score',
-    'opt-hybrid':'SEO + AIO Hybrid','opt-seo':'SEO Article','opt-aio':'AIO Content',
+    'btn-aeo':'⚡ Assess AEO','aeo-panel-title':'⚡ AEO assessment','btn-geo':'🎯 Assess GEO','geo-panel-title':'🎯 GEO score',
+    'opt-hybrid':'SEO + AIO hybrid','opt-seo':'SEO article','opt-aio':'AIO content',
     'opt-faq':'FAQ page','opt-landing':'Landing page copy','opt-blog':'Blog post','opt-product':'Product / service copy',
-    'opt-directional':'Directional page (export)','opt-press':'Press release','label-dir-country':'Direction (target country)',
+    'opt-directional':'Export market page','opt-press':'Press release','label-dir-country':'Target market (country)',
     'dir-de':'Germany','dir-cz':'Czechia','dir-sk':'Slovakia','dir-nl':'Netherlands','dir-fr':'France',
-    'opt-short':'~400 words','opt-medium':'~800 words','opt-long':'~1500 words','opt-custom':'Custom...',
+    'opt-short':'~400 words','opt-medium':'~800 words','opt-long':'~1500 words','opt-custom':'Custom…',
     'opt-prof':'Professional','opt-expert':'Expert','opt-friendly':'Friendly','opt-neutral':'Neutral',
     'label-audience':'Audience',
     'opt-aud-auto':'Match the topic','opt-aud-b2c':'Individual customer (B2C)','opt-aud-b2b':'Business (B2B)',
-    'btn-brief':'Brief','btn-bulk':'Bulk','btn-improve':'Improve','btn-img-short':'🎨 Image',
-    'btn-generate':'Generate content','btn-premium':'⭐ Premium quality','btn-premium-active':'⭐ Premium quality (active)',
+    'btn-brief':'Brief','btn-bulk':'Bulk generate','btn-improve':'Improve','btn-img-short':'🎨 Image',
+    'btn-generate':'Generate content','btn-premium':'⭐ Self-review','btn-premium-active':'⭐ Self-review (on)',
     'out-title':'Result','badge-ready':'ready to generate','badge-done':'done ✓',
     'btn-edit':'✏️ Edit','btn-aio':'🤖 Assess AIO','btn-seo':'📊 Assess SEO',
     'btn-img-out':'🎨 Image','btn-titles':'💡 Titles',
@@ -3640,10 +3640,10 @@ var I18N = {
     'btn-fakty':'🔍 Fact check',
     'gap-brak-pokrycia':'Not covered by the selected sources. Add material on this topic or remove this section.',
     'fakty-title':'🔍 Fact check',
-    'fakty-etap-linki':'⏳ Checking the links in the article...',
+    'fakty-etap-linki':'⏳ Checking the links in the article…',
     'fakty-brak-tekstu':'Generate an article first - there is nothing to check.',
     'fakty-refresh':'🔄 Check again',
-    'fakty-loading':'⏳ Comparing the article with the sources...',
+    'fakty-loading':'⏳ Comparing the article with the sources…',
     'fakty-brak-zrodel':'Nothing to compare against: select sources in the knowledge base and check again.',
     'fakty-blad':'The check could not be completed. Try again.',
     'fakty-czysto':'No findings.',
@@ -3656,7 +3656,7 @@ var I18N = {
     'fakty-linki-czysto':'No findings on links.',
     'zrodla-title':'Sources from the web',
     'spin-sub-szukam':'searching the web and checking what can be confirmed',
-    'fakty-tryb-uzupelniania':'This text was written with web search enabled, so some sentences come from the pages listed under the article rather than from your documents. The findings below are about agreement with YOUR sources: a sentence backed by an external page will still appear here, because someone has to judge whether that page is trustworthy.',
+    'fakty-tryb-uzupelniania':'This text was written with web search enabled, so some sentences come from the pages listed under the article rather than from your documents. The findings below are about agreement with your own sources: a sentence backed by an external page will still appear here, because someone has to judge whether that page is trustworthy.',
     'fakty-rodzaj-link-obcy':'Address not in the sources',
     'fakty-rodzaj-link-sciezka':'Known domain, unknown page',
     'fakty-rodzaj-link-martwy':'Address does not respond',
@@ -3671,11 +3671,11 @@ var I18N = {
     'fakty-powod-link-kotwica':'The clickable words should say what is on the other side.',
     'fakty-powod-link-powtorka':'Two links with identical text read like a mistake.',
     'fakty-powod-link-pusty':'The link has no visible text.',
-    'btn-jsonld':'{ } JSON-LD','btn-premium-fix':'⭐ Premium fix','btn-copy':'Copy',
+    'btn-jsonld':'{ } JSON-LD','btn-premium-fix':'⭐ Refine the text','btn-copy':'Copy','btn-copied':'Copied',
     'rp-linkedin':'💼 LinkedIn post','rp-facebook':'👥 Facebook post','rp-email':'📧 Email newsletter',
     'rp-faq':'❓ FAQ page','rp-landing':'🎯 Landing page intro',
-    'rp-panel-title':'Content repurpose','rp-copy':'Copy','rp-loading':'⏳ Creating repurpose...',
-    'brief-title':'📋 Article brief','brief-use-kw':'✓ Use keywords','brief-loading':'⏳ Analyzing topic and knowledge base...',
+    'rp-panel-title':'Content repurpose','rp-copy':'Copy','rp-loading':'⏳ Creating repurpose…',
+    'brief-title':'📋 Article brief','brief-use-kw':'✓ Use keywords','brief-loading':'⏳ Analyzing topic and knowledge base…',
     'jsonld-title':'{ } JSON-LD schemas','jsonld-copy':'Copy code','jsonld-type-label':'Schema type',
     'sidebar-title':'📁 Knowledge base - sources','sidebar-docs':'Documents','sidebar-words':'Words',
     'sidebar-gen':'Generated','sidebar-click':'Click to select files','sidebar-types':'PDF, DOCX, XLSX, PPTX, TXT, CSV',
@@ -3694,76 +3694,76 @@ var I18N = {
     'llms-tylko-odczyt':'An administrator sets the brand configuration - these fields are read-only.',
     'llms-zapis-lokalny':'Saved on this device only. An administrator sets the configuration for the whole team.',
     'llms-generate':'Generate files','llms-out-basic':'llms.txt','llms-out-full':'llms-full.txt','llms-copy':'Copy','llms-download':'Download','llms-hint-urls':'URLs harvested from knowledge base: {n}',
-    'settings-vis-title':'AI visibility','settings-vis-sub':'brand presence in AI answers',
+    'settings-vis-title':'Brand presence in AI','settings-vis-sub':'buyer queries, position, competitors',
     'vis-title':'🔎 Brand visibility in AI','vis-desc':'Checks whether the brand appears in AI answers to buyer queries. Runs each prompt through Claude with web search and reports presence, position, competitors and sources. This is an on-demand snapshot from a single model (Claude), not continuous multi-model monitoring. Each prompt consumes a web search request (billed).',
     'vis-f-brand':'Brand to detect','vis-f-comp':'Competitors (comma separated)','vis-f-prompts':'Control queries (one per line)','vis-run':'Check visibility',
     'vis-f-iter':'Iterations per prompt (stability)','vis-narr':'📣 Brand narrative',
-    'settings-rep-title':'AI report','settings-rep-sub':'trend and priorities',
-    'settings-trk-title':'AI tracking','settings-trk-sub':'robots.txt, UTM, GA4',
+    'settings-rep-title':'Visibility report','settings-rep-sub':'measurement comparison and priorities',
+    'settings-trk-title':'AI traffic setup','settings-trk-sub':'robots.txt, UTM, GA4',
     'trk-title':'🤖 AI traffic tracking (preparation)','trk-desc':'This does not measure traffic. It generates preconditions: robots.txt directives for AI bots, UTM links and a GA4 setup hint. Actual measurement requires GA4 and server-side log analysis.',
     'trk-robots-h':'1. robots.txt for AI bots','trk-robots-gen':'Generate robots.txt','trk-copy':'Copy','trk-download':'Download',
     'trk-utm-h':'2. UTM link builder','trk-utm-base':'Target address (URL)','trk-utm-source':'Source (AI model)','trk-utm-medium':'Medium','trk-utm-campaign':'Campaign (optional)','trk-utm-gen':'Build link',
     'trk-ga4-h':'3. GA4 hint','trk-ga4-note':'In GA4 create a channel group or segment for AI traffic: match the Source or Referring host dimension with the regex chatgpt|openai|perplexity|gemini|copilot|claude. This detects AI referrals when they keep a referrer. The UTM links above provide attribution even when the referrer is empty.',
     'rep-title':'📊 AI visibility report','rep-desc':'Trend and priorities based on saved visibility snapshots. Compares the latest measurement with the previous one and flags queries to improve.','rep-copy':'Copy','rep-docx':'.docx','rep-pdf':'.pdf',
     'no-source-msg':'Knowledge base is empty. Add your own materials or generate content using internet data.',
-    'tab-generator':'Content generator','tab-history':'History','nav-base':'Base','nav-history':'History',
-    'settings-cms-title':'CMS Integration','settings-cms-sub':'WordPress / Drupal',
-    'settings-bv-title':'Brand Voice','settings-bv-inactive':'Inactive',
-    'out-placeholder':'Enter a topic and click \u201cGenerate content\u201d','out-placeholder-sub':'AI will analyze the knowledge base and create content',
+    'tab-generator':'Content generator','tab-history':'History','nav-base':'Sources','nav-history':'History',
+    'settings-cms-title':'CMS integration','settings-cms-sub':'WordPress / Drupal',
+    'settings-bv-title':'Brand voice','settings-bv-inactive':'Inactive',
+    'out-placeholder':'Enter a topic and click “Generate content”','out-placeholder-sub':'AI will analyze the knowledge base and create content',
     'fog-title':'Fog index (Polish variant)','fog-easy':'● below 12: clear text, easy to read',
     'fog-medium':'● 12-15: complex text, requires focus','fog-hard':'● above 15: specialist / very difficult',
-    'fog-goal':'SEO content target: below 12. A hard word is one of four syllables or more, because in Polish three-syllable words are the most ordinary ones ("opłata", "usługi").',
+    'fog-goal':'SEO content target: below 12. A hard word is one of four syllables or more, because in Polish three-syllable words are the most ordinary ones (“opłata”, “usługi”).',
     'gap-title-topics':'Topics in top results','gap-title-phrases':'Key phrases',
     'gap-coverage':'SERP coverage','gap-new-covered':'Newly covered',
     'gap-all-topics':'All SERP topics','gap-missing':'Missing topics','gap-covered':'Covered topics',
     'gap-improve-btn':'✍\ufe0f Improve article for missing topics',
-    'seo-analyzing':'Analyzing article...','aio-analyzing':'Analyzing for AI Overview...',
+    'seo-analyzing':'Analyzing article…','aio-analyzing':'Analyzing for AI Overview…',
     'improve-title':'✍\ufe0f Improve existing article','improve-btn':'Improve article',
-    'spin-knowledge':'Analyzing knowledge base...','spin-sub-knowledge':'scanning documents',
-    'spin-context':'Preparing context...','spin-sub-context':'extracting key information',
-    'spin-generate':'Generating content...','spin-seo':'Assessing SEO...','spin-sub-seo':'checking structure and keywords',
-    'spin-aio':'Assessing AIO...','spin-sub-aio':'checking AI Overview criteria',
-    'spin-hybrid':'Assessing SEO+AIO...','spin-sub-hybrid':'checking optimization for search engines and AI',
-    'spin-quality':'Assessing quality...','spin-sub-quality':'deep verification of SEO and AIO requirements',
-    'spin-improve-label':'Improving article...','spin-sub-improve':'self-correction based on assessment results',
-    'spin-final':'Finalizing article...','spin-sub-final':'final verification',
-    'spin-finalize':'Finalizing...','spin-sub-finalize':'final premium verification',
+    'spin-knowledge':'Analyzing knowledge base…','spin-sub-knowledge':'scanning documents',
+    'spin-context':'Preparing context…','spin-sub-context':'extracting key information',
+    'spin-generate':'Generating content…','spin-seo':'Assessing SEO…','spin-sub-seo':'checking structure and keywords',
+    'spin-aio':'Assessing AIO…','spin-sub-aio':'checking AI Overview criteria',
+    'spin-hybrid':'Assessing SEO+AIO…','spin-sub-hybrid':'checking optimization for search engines and AI',
+    'spin-quality':'Assessing quality…','spin-sub-quality':'deep verification of SEO and AIO requirements',
+    'spin-improve-label':'Improving article…','spin-sub-improve':'self-correction based on assessment results',
+    'spin-final':'Finalizing article…','spin-sub-final':'final verification',
+    'spin-finalize':'Finalizing…','spin-sub-finalize':'final check',
     'kd-title':'Keyword density',
     // Generator grafik
     'img-back':'← Back','img-title':'🎨 Image generator','img-ctx-label':'Article context',
-    'img-ctx-ph':'Paste topic or article fragment...','img-load-article':'📄 Load from active article',
+    'img-ctx-ph':'Paste topic or article fragment…','img-load-article':'📄 Load from active article',
     'img-upload-ref':'📎 Upload reference image','img-ref-remove':'✕ Remove',
     'img-quality':'Quality','img-generate':'🎨 Generate image','img-retry':'🔄 Retry',
-    'img-mood-ph':'e.g. time of day, mood, color palette...',
+    'img-mood-ph':'e.g. time of day, mood, color palette…',
     // Templates
     'tpl-title':'📋 Topic templates',
     // Titles
     'titles-title':'💡 Title variants (H1)','titles-refresh':'🔄 Refresh',
     // Bulk / improve / URL / text modals
     'bulk-ph':'How [product] works\nExpansion to [country]\n[Service] - guide',
-    'improve-ph':'Paste the article content to improve here...',
+    'improve-ph':'Paste the article content to improve here…',
     'url-title':'Add a webpage to knowledge base','url-name-label':'Custom name (optional)',
     'url-name-ph':'e.g. homepage - offer',
-    'text-ph':'Paste content here...',
+    'text-ph':'Paste content here…',
     // WordPress / Drupal
     'wp-test':'🔍 Test connection','wp-login':'Login (username)','wp-password':'Password',
     'wp-pass-ph':'password for Drupal account','wp-ctype-mn':'Content type (machine name)','wp-content':'Content',
     // Brand Voice
-    'bv-active':'Active Brand Voice profile:','bv-delete':'🗑 Delete profile',
-    'bv-ph':'Paste 2-5 sample company articles here (one after another)...',
+    'bv-active':'Active brand voice profile:','bv-delete':'🗑 Delete profile',
+    'bv-ph':'Paste 2-5 sample company articles here (one after another)…',
     // Errors / dialogs
     'err-no-src':'⚠️ No knowledge sources',
-    'err-add-src':'📁 Add sources to base',
+    'err-add-src':'📁 Add sources to the knowledge base',
     // Other
-    'premium-info':'⭐ Premium Quality mode','rp-strong':'Article repurpose',
+    'premium-info':'⭐ Self-review mode','rp-strong':'Article repurpose',
     'improve-by-gaps':'✍️ Improve article for missing topics',
     // Panels FOG/KD/GAP/SEO/AIO/SERP/Links
     'serp-data-title':'🔍 SERP data: top Google results',
     'gap-analysis-title':'🧩 Semantic gap analysis',
-    'gap-refresh':'🔄 Refresh','gap-loading':'⏳ Comparing article with SERP data...',
+    'gap-refresh':'🔄 Refresh','gap-loading':'⏳ Comparing article with SERP data…',
     'gap-pts':'/ 100 pts','gap-select-all':'Select all','gap-deselect':'Deselect',
     'gap-no-serp':'Enable SERP analysis before generating to use semantic gap analysis.',
-    'links-title':'🔗 Internal link suggestions','links-loading':'⏳ Analyzing knowledge base...',
+    'links-title':'🔗 Internal link suggestions','links-loading':'⏳ Analyzing knowledge base…',
     'versions-label':'Variants:',
     'seo-panel-title':'📊 SEO Score','aio-panel-title':'🤖 AIO Score',
     'pts-seo':'/ 100 SEO pts','pts-aio':'/ 100 AIO pts',
@@ -3778,39 +3778,39 @@ var I18N = {
     'msg-pdf-load-fail':'Failed to load PDF library. Check your connection.',
     'msg-docx-error':'DOCX generation error: ',
     'msg-no-article':'Generate an article first.',
-    'msg-bad-url':'Provide a full URL (https://...)',
-    'msg-no-openai-key':'Missing OpenAI API key. Fill in the OPENAI_API_KEY constant in the HTML file.',
+    'msg-bad-url':'Provide a full URL (https://…)',
+    'msg-no-openai-key':'Missing OpenAI key. Enter it in the settings menu → API keys.',
     'msg-no-img-topic':'Enter an article topic or load an article before generating an image.',
     'msg-gen-error':'Generation error: ',
     'msg-copy-fail':'Copying failed. Download the file manually.',
     // Status
-    'msg-connecting':'Connecting to Claude API...',
-    'msg-reading-page':'Reading page content...',
-    'msg-fetching-page':'Fetching page content...',
+    'msg-connecting':'Connecting to Claude API…',
+    'msg-reading-page':'Reading page content…',
+    'msg-fetching-page':'Fetching page content…',
     // Spinner dynamic
-    'msg-spin-premium-eval':'Premium mode: assessing article...',
+    'msg-spin-premium-eval':'Self-review: assessing the draft…',
     'msg-spin-premium-deep':'deep verification, may take longer than usual',
-    'msg-spin-premium-eval2':'Premium: assessing article...',
+    'msg-spin-premium-eval2':'Self-review: assessing the draft…','spin-premium-improving':'Self-review: improving (score {n}/100)…',
     'msg-spin-premium-fix':'self-correction based on assessment results',
     'msg-spin-regen-fixes':'regenerating with fixes applied',
-    'msg-spin-serp':'Analyzing SERP...',
+    'msg-spin-serp':'Analyzing SERP…',
     'msg-spin-serp-sub':'checking what ranks for your keyword',
-    'msg-spin-reanalyze':'Reanalyzing...',
-    'msg-spin-img':'Generating image...',
-    'msg-spin-sections':'⏳ Generating sections...',
+    'msg-spin-reanalyze':'Reanalyzing…',
+    'msg-spin-img':'Generating image…',
+    'msg-spin-sections':'⏳ Generating sections…',
     // Badges
-    'badge-error':'error','badge-generating':'generating...','badge-uciety':'cut off',
+    'badge-error':'error','badge-generating':'generating…','badge-premium':'self-review…','badge-uciety':'cut off',
     // Loading
-    'msg-loading-article':'⏳ Analyzing article...',
-    'msg-loading-aio':'⏳ Analyzing for AI Overview...',
-    'msg-loading-brief':'⏳ Analyzing topic and knowledge base...',
-    'msg-loading-test':'⏳ Testing...',
-    'msg-loading-publish':'⏳ Publishing...',
+    'msg-loading-article':'⏳ Analyzing article…',
+    'msg-loading-aio':'⏳ Analyzing for AI Overview…',
+    'msg-loading-brief':'⏳ Analyzing topic and knowledge base…',
+    'msg-loading-test':'⏳ Testing…',
+    'msg-loading-publish':'⏳ Publishing…',
     'msg-loading-docx':'⏳ .docx',
     // Buttons states
     'msg-copied':'✓ Copied','msg-copied-2':'✅ Copied',
     // Empty states
-    'msg-no-urls':'No URLs in knowledge base. Add links to company pages to see suggestions.',
+    'msg-no-urls':'No URLs in the knowledge base. Add links to company pages to see suggestions.',
     'msg-no-art-analyze':'No article to analyze.',
     'msg-no-change':'Score did not change. Selected topics may be incompatible with the article or require deeper coverage. Skip them or try again with different ones.',
     // Errors
@@ -3821,40 +3821,40 @@ var I18N = {
     // Throws
     'err-url-extract':'Failed to read page content.',
     'err-url-fetch':'Could not fetch this page.',
-    'err-url-thin':'The page has too little text ({n} words). This usually means the content is loaded by a script. Use "Add text manually" and paste the content copied from the page.',
+    'err-url-thin':'The page has too little text ({n} words). This usually means the content is loaded by a script. Use “Add text manually” and paste the content copied from the page.',
     'err-fetch-blokada':'The site does not allow automated fetching.',
     'err-fetch-niedostepna':'The page did not respond.',
     'err-fetch-typ':'This is not a text page.',
     'err-fetch-dlugi':'The URL is too long.',
     'err-fetch-limit':'Too many requests. Try again shortly.',
     'err-fetch-adres':'The URL is invalid.',
-    'err-rate-limit':'API rate limit exceeded (30,000 tokens/minute). Wait a moment and try again. If the issue persists, disable SERP or Premium which increase token usage.',
-    'err-server-500':'Anthropic server returned an error (500). Try again shortly. If the error persists, disable SERP or Premium.',
-    'err-overloaded':'Anthropic API is temporarily overloaded. Wait 30 seconds and try again.',
-    'err-empty-response':'Empty response from API',
-    'err-no-image':'No image in API response',
+    'err-rate-limit':'The AI provider is limiting requests for a moment. Try again in a minute. If this keeps happening, turn off SERP analysis or self-review, as both use more tokens.',
+    'err-server-500':'The AI provider returned a server error (500). Try again in a moment. If it keeps happening, try without SERP analysis and self-review.',
+    'err-overloaded':'The AI model is temporarily overloaded. Try again in about 30 seconds.',
+    'err-empty-response':'The model returned no content. Try again.',
+    'err-no-image':'The image could not be generated. Try again or change the description.',
     // Dark mode tooltip
     'dm-title':'Dark mode',
     // ── Image generator (full) ──
-    'img-art-ctx':'ARTICLE CONTEXT','img-art-ctx-lbl':'ARTICLE CONTEXT',
+    'img-art-ctx':'Article context','img-art-ctx-lbl':'Article context',
     'img-load-art':'📄 Load from active article',
-    'img-ref-section':'REFERENCE IMAGE','img-ref-optional':'(optional)',
+    'img-ref-section':'Reference image','img-ref-optional':'(optional)',
     'img-ref-hint':'Upload or provide a URL. The app will reproduce it in the new image.',
     'img-upload-btn':'📎 Upload reference image',
-    'img-url-ph':'or paste URL...','img-url-add':'Add',
-    'img-style-section':'STYLE & BRANDING',
+    'img-url-ph':'or paste URL…','img-url-add':'Add',
+    'img-style-section':'Style and branding',
     'img-style-clean':'⬜ Studio (white, clean frame)',
-    'img-style-dark':'⬛ Deep Space (dark background, amber accents)',
-    'img-style-yellow':'🟡 Amber (amber accent)',
+    'img-style-dark':'⬛ Dark background with amber accents',
+    'img-style-yellow':'🟡 Amber and teal',
     'img-style-photo':'📷 Photorealistic','img-style-illust':'🎨 Illustration',
-    'img-format-section':'TARGET FORMAT','img-format-graphic':'IMAGE FORMAT',
+    'img-format-section':'Target format','img-format-graphic':'Image format',
     'img-fmt-short-horiz':'1536×1024 Horizontal','img-fmt-short-square':'1024×1024 Square','img-fmt-short-vert':'1024×1536 Vertical',
     'serp-phrases':'keywords','astat-chars':'chars','img-history-title':'Previous session images',
-    'img-format-horiz':'1536×1024 Horizontal (banners, email)',
-    'img-format-square':'1024×1024 Square (social media, App)',
+    'img-format-horiz':'1536×1024 Landscape (banners, email)',
+    'img-format-square':'1024×1024 Square (social media, apps)',
     'img-format-vert':'1024×1536 Vertical (mobile, push)',
-    'img-quality-section':'QUALITY','img-quality-std':'Standard','img-quality-hd':'HD (slower, more detail)',
-    'img-extra-section':'ADDITIONAL GUIDELINES',
+    'img-quality-section':'Quality','img-quality-std':'Medium','img-quality-hd':'HD (slower, more detail)',
+    'img-extra-section':'Additional guidelines',
     'img-gen-btn':'🎨 Generate image',
     'img-empty-title':'Generate your first image',
     'img-empty-sub':'Load article, pick style and format, click Generate',
@@ -3865,10 +3865,10 @@ var I18N = {
     'sidebar-add-link':'🔗 Add link / URL',
     'sidebar-add-text':'✏️ Add text manually',
     // ── Brief panel labels ──
-    'brief-kw-section':'KEYWORDS (CLICK TO ADD)',
-    'brief-h2-section':'SUGGESTED H2 STRUCTURE',
-    'brief-gap-section':'CONTENT GAP',
-    'brief-words-section':'RECOMMENDED LENGTH',
+    'brief-kw-section':'Keywords (click to add)',
+    'brief-h2-section':'Suggested H2 structure',
+    'brief-gap-section':'Content gaps',
+    'brief-words-section':'Recommended length',
     'brief-words-suffix':'words',
     // ── Bulk modal ──
     'bulk-modal-title':'⚡ Bulk generation',
@@ -3889,12 +3889,12 @@ var I18N = {
     'wp-pass-wp-ph':'application password',
     // ── Brand Voice ──
     'bv-desc':'Paste 2-5 existing company articles (or other texts). The app will extract the writing style and use it in generated content.',
-    'bv-loading':'⏳ Analyzing writing style...',
+    'bv-loading':'⏳ Analyzing writing style…',
     // ── Titles panel ──
-    'titles-desc':'5 alternative titles for different search intents. Click to copy.',
-    'titles-loading':'⏳ Generating variants...',
+    'titles-desc':'5 alternative titles for different search intents. Click a title to copy it.',
+    'titles-loading':'⏳ Generating variants…',
     // ── Premium info ──
-    'premium-desc':'Premium mode runs automatic self-correction. The article is first generated, then assessed by AI, and finally improved based on the assessment results. Generation takes 2-3 times longer.',
+    'premium-desc':'Self-review: the text is written, then the model scores it and revises it based on the score. Generation takes 2-3 times longer.',
     'premium-2-3x':'2-3 times longer',
     // ── Device error ──
     
@@ -3911,7 +3911,7 @@ var I18N = {
     'bazas-nazwa':'Document name','bazas-tresc':'Content','bazas-dodaj':'Add',
     'bazas-pusto':'No documents yet. Add the first one below.','bazas-usun':'Remove',
     'bazas-zamknij':'Close','bazas-tylko-admin':'Only an administrator can add to the shared base.',
-    'bazas-blad':'Could not reach the server.','bazas-dodaje':'Adding...',
+    'bazas-blad':'Could not reach the server.','bazas-dodaje':'Adding…',
     'openseo-menu-title':'OpenSEO','openseo-menu-sub':'rankings, backlinks, audits',
     'seo-frazy-title':'Keywords vetted in OpenSEO',
     'seo-title':'📈 Keywords from OpenSEO','seo-desc':'Keywords saved and tagged in OpenSEO. Reading them costs no credits - the data comes from OpenSEO\'s database, not from a new query.',
@@ -3920,7 +3920,7 @@ var I18N = {
     'seo-oddaj-hint':'Saves the current keywords with the content-ai tag so their rankings can be tracked.',
     'seo-pusto':'No saved keywords in this project.','seo-zamknij':'Close',
     'seo-wolumen':'searches/mo','seo-trudnosc':'difficulty','seo-brak-danych':'no data',
-    'seo-blad':'Could not reach OpenSEO.','seo-laduje':'Loading...',
+    'seo-blad':'Could not reach OpenSEO.','seo-laduje':'Loading…',
     'seo-zapisano':'Saved in OpenSEO','seo-nic-nie-zaznaczono':'Select some keywords first.',
     'seo-brak-fraz':'Add keywords to the article first.',
     'pakiet-badge-title':'Your plan and usage',
@@ -3938,47 +3938,47 @@ var I18N = {
     'pakiet-fn-wlasnyKlucz':'Own API key',
     'pakiet-limit-title':'Plan limit reached',
     'pakiet-limit-odnawialny':'The counter resets on the first day of next month.',
-    'pakiet-limit-zawsze':'This allowance does not reset - generating more needs a higher plan.',
+    'pakiet-limit-zawsze':'This allowance does not reset. To keep generating, you need a higher plan. Your account administrator can change your plan.',
     'pakiet-limit-zuzyto':'Used',
     'pakiet-funkcja-title':'This feature is not part of your plan',
     'pakiet-wywolania':'Model calls','pakiet-wywolanie':'Model calls',
     'pakiet-wywolania-opis':'One article takes several calls: brief, content, review, rewrites.',
     'start-menu-title':'Account setup','start-menu-sub':'API keys and first steps',
     'start-dalej':'Next','start-wstecz':'Back','start-pomin':'Skip setup',
-    'start-zaczynamy':'Let\'s start','start-sztuk':'pcs','start-twoj-pakiet':'Your plan',
+    'start-zaczynamy':'Start writing','start-sztuk':'items','start-twoj-pakiet':'Your plan',
     'start-1-tytul':'Welcome to Content AI',
     'start-1-opis':'Before you write your first article, let\'s go through three short screens. It takes a minute, and everything can be changed later in settings.',
     'start-2-tytul':'API keys - only if you want to',
-    'start-2-opis':'By default you use the server\'s keys and there is nothing to fill in here. If you have your own accounts with the providers, enter the keys below - generating then goes on your bill, not ours.',
-    'start-2-opis-pakiet':'On your plan, generating runs on the server\'s keys - there is nothing to fill in. Your own keys are available from the Standard plan.',
-    'start-2-gdzie':'Keys are stored only in this browser and are never saved on our server - they travel as a header on a single request, straight to the provider. On another device you will need to enter them again.',
+    'start-2-opis':'By default, generation runs on the server\'s keys, so there is nothing to enter here. If you have your own provider accounts, enter the keys below: model costs then go to your own provider bill. Plan limits apply the same way.',
+    'start-2-opis-pakiet':'On your plan, generation runs on the server\'s keys, so there is nothing to enter here. Your own keys are available from the Standard plan up.',
+    'start-2-gdzie':'Keys stay in this browser only. The server passes them to the provider with each request and stores nothing. On another device, enter them again.',
     'start-2-anthropic':'Anthropic - content','start-2-openai':'OpenAI - images, voice-over, transcription',
     'start-2-eleven':'ElevenLabs - better voice-over (optional)',
     'start-2-zly':'That does not look like an API key. Anthropic keys start with "sk-ant-", OpenAI with "sk-". Leave the field empty if you do not have your own key.',
     'start-3-tytul':'Your brand',
-    'start-3-opis':'Brand Voice describes how your content should sound: tone, vocabulary, what to avoid. Without it articles will be correct but impersonal. You can set it now or come back to it later.',
-    'start-3-otworz':'Open Brand Voice settings',
-    'start-3-potem':'The setup stays open - once Brand Voice is saved, come back here and click "Next".',
+    'start-3-opis':'Brand voice describes how your content should sound: tone, vocabulary, what to avoid. Without it articles will be correct but impersonal. You can set it now or come back to it later.',
+    'start-3-otworz':'Open brand voice settings',
+    'start-3-potem':'The setup stays open - once the brand voice is saved, come back here and click “Next”.',
     'start-4-tytul':'All set',
-    'start-4-opis':'Enter a topic, add keywords and hit generate. Your plan counter is always in the top right corner - click it to see what is left.',
-    'start-4-lista':'Where to find the rest: the ⚙️ icon in the top bar holds the knowledge base, CMS integration, Brand Voice and AI visibility. None of it is needed for a first article.',
+    'start-4-opis':'Enter a topic, add keywords and click “Generate content”. Your plan counter is always in the top right corner: click it to see what is left.',
+    'start-4-lista':'Where to find the rest: the ⚙️ icon in the top bar holds the knowledge base, CMS integration, brand voice and AI visibility. None of it is needed for a first article.',
     'history-select':'Select an article from the list',
     // ── Tooltips ──
     'title-brief-tooltip':'Generate brief before article',
-    'title-bulk-tooltip':'Bulk generation - many articles at once',
+    'title-bulk-tooltip':'Bulk generation: many articles at once',
     'title-premium-tooltip':'Deep self-correction mode. Generation takes 2-3 times longer, but the article is verified and corrected automatically.',
-    'title-premium-fix-tooltip':'Run Premium self-correction on existing article',
+    'title-premium-fix-tooltip':'The model scores the finished text and revises it accordingly',
     'title-include-kw':'Include in generation',
     'title-remove':'Remove','title-remove-link':'Remove link',
     'title-dm':'Toggle dark mode',
-    'img-quality-low':'Sketch / draft','img-quality-premium':'Premium',
+    'img-quality-low':'Sketch / draft','img-quality-premium':'High',
     // ── Misc ──
     'remove-link-btn':'⛓️‍💥 Remove link',
     'img-spin-sub':'Generation may take 30-60 seconds',
     'msg-no-api-resp':'No response from API. Check your API key and connection.',
     'kb-na-serwerze':'On the server','kb-wspolna':'Shared team base','kb-prywatna':'Your private base','kb-fragm':'chunks','kb-lokalnie':'Only in this browser','kb-przenies':'Move to server','kb-dodano':'Added to the server knowledge base','kb-zostaje-lokalnie':'The document was saved only in this browser.','kb-przeniesiono':'Moved to the server',
     'pakiet-zostalo':'{n} of {m} left','pakiet-zostalo-krotko':'{n} left','pakiet-od-standard':'Available from the Standard plan','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f} are not part of the {p} plan','pakiet-niedostepne':'not available',
-    'btn-przerwij':'Stop','msg-przerwano':'Generation stopped. The form is unchanged - you can adjust the brief and try again.','badge-przerwane':'stopped','spin-ponawiam-za':'API limit: retrying in {s} s','spin-proba':'attempt {n} of {m}','spin-ponawiam':'Retrying the request...',
+    'btn-przerwij':'Stop','msg-przerwano':'Generation stopped. The form is unchanged - you can adjust the brief and try again.','badge-przerwane':'stopped','spin-ponawiam-za':'API limit: retrying in {s} s','spin-proba':'attempt {n} of {m}','spin-ponawiam':'Retrying the request…',
     'badge-historia':'from history','hist-otworz':'Open in generator',
     'msg-blad-prefiks':'Error:','menu-wyloguj':'Log out','menu-wyloguj-sub':'end the session on this device',
     'msg-magazyn-pelny':'Browser storage is full. Some knowledge base documents will not survive a refresh - move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
@@ -3987,40 +3987,40 @@ var I18N = {
     'msg-no-content':'No content',
     'msg-refresh':'refresh',
     'msg-open-link':'Open →',
-    'no-kw-warning':'⚠️ No keyword provided. The article topic will be used as the query. Results may be less relevant.',
-    'no-kw-warning-full':'⚠️ No keyword provided. The article topic will be used as the SERP query. Enter the main keyword phrase for accurate SERP analysis.',
+    'no-kw-warning':'⚠️ No keyword, so the article topic will be used as the query. Results may be less accurate.',
+    'no-kw-warning-full':'⚠️ No keyword, so the SERP analysis will use the article topic. Enter the main keyword for a more accurate result.',
     // ── Missing EN ──
     'stat-generated':'Generated','stat-words-unit':'words','stat-read-unit':'min read','stat-sections-unit':'H2 sections',
     'stat-sub-unit':'H3 subsections',
-    'ph-history-search':'Search history...','title-settings':'CMS & Brand Voice settings','title-kw-add':'Add phrase',
+    'ph-history-search':'Search history…','title-settings':'Settings','title-kw-add':'Add phrase',
     'btn-cancel':'Cancel','btn-save':'Save','btn-add':'✓ Add',
     'btn-add-page':'🔗 Add page','btn-add-page-txt':'Add page','btn-add-txt':'Add','btn-analyze-style':'Analyze style',
-    'btn-continue-premium':'⭐ Continue in Premium mode','btn-generate-normal':'⚡ Generate normally',
-    'btn-generate-internet':'🌐 Generate from internet','btn-select-sources':'☑️ Select sources from base',
-    'btn-add-sources':'📁 Add sources to base','btn-save-draft':'💾 Save as draft',
+    'btn-continue-premium':'⭐ Continue with self-review','btn-generate-normal':'⚡ Generate from model knowledge',
+    'btn-generate-internet':'🌐 Generate with web search','btn-select-sources':'☑️ Select sources from the knowledge base',
+    'btn-add-sources':'📁 Add sources to the knowledge base','btn-save-draft':'💾 Save as draft',
     'no-src-title-empty':'⚠️ No knowledge sources','no-src-title-none':'⚠️ No sources selected',
     'no-src-desc-empty':'Knowledge base is empty. Add company materials or generate content using general internet knowledge.',
     'no-src-desc-none':'No source selected from knowledge base. Select materials or generate content using internet data.',
     'cms-modal-title':'🌐 CMS Integration','cms-drupal-hint-short':'Requires Basic Auth module (built into Drupal 8/9/10). Enable at: Extend → Basic Authentication.',
     'cms-drupal-hint':'Requires Basic Auth module (built into Drupal 8/9/10). Enable at: Extend → Basic Authentication.',
-    'cms-drupal-url-label':'DRUPAL URL (E.G. HTTPS://YOURCOMPANY.COM)','cms-format-label':'TEXT FORMAT',
-    'cms-url-label':'URL ADDRESS','cms-url-ph':'https://your-site.com',
-    'tpl-save-section':'OR SAVE CURRENT FORM AS TEMPLATE','tpl-name-ph':'Template name...',
-    'text-modal-title':'Add text to knowledge base','text-doc-name-label':'DOCUMENT NAME',
-    'text-doc-name-ph':'e.g. company offer, FAQ returns...','text-content-label':'CONTENT',
-    'url-label':'URL ADDRESS',
-    'bv-modal-full-title':'🎙 Brand Voice - brand style profile',
+    'cms-drupal-url-label':'Drupal URL (e.g. https://yourcompany.com)','cms-format-label':'Text format',
+    'cms-url-label':'URL','cms-url-ph':'https://your-site.com',
+    'tpl-save-section':'Or save the current form as a template','tpl-name-ph':'Template name…',
+    'text-modal-title':'Add text to knowledge base','text-doc-name-label':'Document name',
+    'text-doc-name-ph':'e.g. company offer, FAQ returns…','text-content-label':'Content',
+    'url-label':'URL',
+    'bv-modal-full-title':'🎙 Brand voice',
     'bv-modal-desc-full':'Paste 2-5 existing company articles (or other texts). The app will extract the style profile and apply it to all future generations.',
-    'ver-before-premium':'Before premium','ver-after-premium':'After premium correction','ver-serp':'SERP improvement',
+    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','ver-serp':'SERP improvement',
     'spin-sub-model':'model processes topic and knowledge base','spin-sub-hybrid2':'optimizing for SEO, AIO and readability simultaneously',
     'link-suggest-prefix':'Consider linking','link-suggest-at':'at words:',
     'gap-still-missing':'Still missing topics',
     'img-download-btn':'⬇ Download PNG','img-copy-btn-lbl':'📋 Copy',
     'img-step1-noref':'Step 1 of 2: creating image prompt',
     'img-prompt-used':'▸ Used prompt',
-    'editor-done':'Done','kb-words-suffix':'words','hist-words-suffix':'words',
+    'editor-done':'Done','kb-words-suffix':'words','kb-tag-text':'Text','kb-tag-file':'File','hist-words-suffix':'words',
     'url-fetch-done':'Done - page added to knowledge base!',
-    'url-demo-connect':'Connecting to page...','url-demo-fetch':'Fetching content...','url-demo-process':'Processing...','url-demo-done':'Done!',
+    'url-demo-connect':'Connecting to page…','url-demo-fetch':'Fetching content…','url-demo-process':'Processing…','upload-processing':'Processing: {name}','url-demo-done':'Done!',
     'img-style-minimal':'◽ Minimalistic',
     'link-dialog-text':'Link text (optional)','link-dialog-add':'Insert link','link-dialog-remove':'Remove link',
     'jsonld-hint-full':'Paste this code in the &lt;head&gt; section or before &lt;/body&gt; on your WP page.',
@@ -4031,8 +4031,8 @@ var I18N = {
     'hist-filter-all':'All','hist-filter-hybrid':'Hybrid',
     'bulk-gen-all-txt':'Generate all','improve-action-txt':'Improve article',
     // ── Spinner ──
-    'spin-generating-seo-aio':'Generating SEO+AIO content...','spin-generating':'Generating content...',
-    'spin-sub-premium-long':'premium mode, generation may take longer than usual',
+    'spin-generating-seo-aio':'Generating SEO+AIO content…','spin-generating':'Generating content…',
+    'spin-sub-premium-long':'self-review: generation takes 2-3 times longer',
     // ── Premium ──
     // ── Retry ──
     // ── Bulk ──
@@ -4050,13 +4050,13 @@ var I18N = {
     'tpl-service-name':'Service description','tpl-service-desc':'Product sheet',
     'tpl-own-label':'(custom)',
     // ── Repurpose ──
-    'rp-source-missing':'Missing API key. Add the key in the app file to use repurpose.',
+    'rp-source-missing':'Missing API key. Enter it in the settings menu → API keys to use repurposing.',
     // ── WP/Drupal ──
     'drupal-ok':'✓ Drupal JSON:API - connection works',
     // ── Image generator ──
-    'img-step1':'Step 1 of 2: analyzing reference image...',
-    'img-err-timeout':'180s limit exceeded. OpenAI or proxy may be overloaded. Try again in a moment.',
-    'img-err-net':'Network error: could not connect to API. Check internet, VPN or proxy status.',
+    'img-step1':'Step 1 of 2: analyzing reference image…',
+    'img-err-timeout':'The image was not ready within 3 minutes. The provider may be overloaded, so try again shortly.',
+    'img-err-net':'Cannot reach the image server. Check your internet connection or VPN and try again.',
     // ── Sidebar empty ──
     'sidebar-empty-title':'No knowledge sources.','sidebar-empty-sub':'Upload files, add a link or enter text below.',
     // ── Improve modal ──
@@ -4083,9 +4083,9 @@ var I18N = {
     'link-dialog-label':'🔗 Add link',
     
     'img-close-title':'Close',
-    'img-spin-init':'Analyzing article...',
+    'img-spin-init':'Analyzing article…',
     'text-modal-desc-full':'Paste any company content - offers, FAQs, service descriptions, product data, policies. AI will use this content during generation.',
-    'err-api-generic':'API error',
+    'err-api-generic':'The AI provider rejected the request.',
     'err-json-modelu':'The model returned a malformed response. Please try again.',
     'gap-btn-select':'✍️ Select topics to improve',
     'hist-default-name':'Article',
@@ -4957,7 +4957,7 @@ function hideProgress() {
 async function processFile(file) {
   const name = file.name;
   const ext = name.split('.').pop().toLowerCase();
-  showProgress(`Przetwarzam: ${name}`);
+  showProgress(_t('upload-processing').replace('{name}', name));
   let text = '';
   try {
     if (ext === 'txt' || ext === 'csv') {
@@ -5064,16 +5064,16 @@ function renderDocs() {
     const typeLabel = d.icon === '🔗'
       ? '<span class="kb-tag-url">URL</span>'
       : d.icon === '✏️'
-      ? '<span class="kb-tag-text">Tekst</span>'
-      : '<span class="kb-tag-file">Plik</span>';
+      ? '<span class="kb-tag-text">' + _t('kb-tag-text') + '</span>'
+      : '<span class="kb-tag-file">' + _t('kb-tag-file') + '</span>';
     el.innerHTML = `
-      <input type="checkbox" class="kb-check" ${d.selected ? 'checked' : ''} onclick="toggleSelect(${i})" title="Uwzględnij w generowaniu" data-i18n-title="title-include-kw" />
+      <input type="checkbox" class="kb-check" ${d.selected ? 'checked' : ''} onclick="toggleSelect(${i})" title="${_t('title-include-kw')}" data-i18n-title="title-include-kw" />
       <div class="kb-icon">${d.icon}</div>
       <div class="kb-body">
         <div class="kb-name">${escapeHtml(d.name)}${typeLabel}</div>
         <div class="kb-meta">${d.words.toLocaleString()} ${_t('kb-words-suffix')}</div>
       </div>
-      <button class="kb-del" title="Usuń" onclick="delDoc(event,${i})">×</button>`;
+      <button class="kb-del" title="${_t('title-remove')}" data-i18n-title="title-remove" onclick="delDoc(event,${i})">×</button>`;
     list.appendChild(el);
   });
   updateStats();
@@ -5443,7 +5443,7 @@ async function runPostGenerationPremium() {
   document.getElementById('spin-label').textContent = _t('msg-spin-premium-eval');
   document.getElementById('spin-sub').textContent = _t('msg-spin-premium-deep');
   document.getElementById('gen-btn').disabled = true;
-  document.getElementById('out-badge').textContent = 'premium...';
+  document.getElementById('out-badge').textContent = _t('badge-premium');
   document.getElementById('out-badge').className = 'badge running';
 
   try {
@@ -5458,7 +5458,7 @@ async function runPostGenerationPremium() {
     showArticleStats(art.innerHTML);
 
     if (improved && improved !== existingHtml) {
-      addVersion(improved, 'Premium (poprawiony)');
+      addVersion(improved, _t('ver-after-premium'));
     }
   } catch(e) {
     art.innerHTML = existingHtml;
@@ -5506,7 +5506,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
   }
 
   // Krok 2: Poprawa
-  document.getElementById('spin-label').textContent = 'Premium: ' + (currentLang === 'en' ? 'improving (score ' : 'poprawiam (wynik ') + evalResult.score + '/100)...';
+  document.getElementById('spin-label').textContent = _t('spin-premium-improving').replace('{n}', evalResult.score);
   document.getElementById('spin-sub').textContent = _t('msg-spin-premium-fix');
 
   const issuesList = evalResult.issues.join('; ');
@@ -5983,7 +5983,7 @@ ${html}`;
           const improved = oczyscHtmlModelu((improveData.content||[]).map(b=>b.text||'').join('').replace(/```html\s*/i,'').replace(/```\s*$/i,'').trim());
           if (improved) {
             const improvedFinal = lang === 'Polski' ? improved.replace(/[—–]/g, '-') : improved;
-            const origLabel = (currentLang==='en'?'Original':'Oryginał') + ' (' + scores + ')';
+            const origLabel = _t('ver-original') + ' (' + scores + ')';
             const fixLabel  = isHybrid ? _t('ver-poprawiony-hybryda') : (ctype === 'Treść AIO' ? _t('ver-poprawiony-aio') : _t('ver-poprawiony-seo'));
             pendingVersions = [
               { html: originalHtml, label: origLabel },
@@ -7772,7 +7772,7 @@ async function improveFromGaps() {
     showArticleStats(updatedHtml);
 
     gapImproveCount++;
-    const verLabel = gapImproveCount === 1 ? 'Poprawa SERP' : 'Poprawa SERP ' + gapImproveCount;
+    const verLabel = gapImproveCount === 1 ? _t('ver-serp') : _t('ver-serp') + ' ' + gapImproveCount;
     addVersion(updatedHtml, verLabel);
 
     gapSelectedTopics = [...new Set([...gapSelectedTopics, ...selectedNow])];
@@ -8224,8 +8224,8 @@ function saveTemplate() {
 function copyOut() {
   navigator.clipboard.writeText(currentText).then(() => {
     const btn = document.getElementById('copy-btn');
-    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Skopiowano`;
-    setTimeout(() => { btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Kopiuj`; }, 2000);
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> ${_t('btn-copied')}`;
+    setTimeout(() => { btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> <span data-i18n="btn-copy">${_t('btn-copy')}</span>`; }, 2000);
   });
 }
 
@@ -8360,8 +8360,8 @@ function syncMobileKbList() {
     const typeLabel = d.icon === '🔗'
       ? '<span class="kb-tag-url">URL</span>'
       : d.icon === '✏️'
-      ? '<span class="kb-tag-text">Tekst</span>'
-      : '<span class="kb-tag-file">Plik</span>';
+      ? '<span class="kb-tag-text">' + _t('kb-tag-text') + '</span>'
+      : '<span class="kb-tag-file">' + _t('kb-tag-file') + '</span>';
     return `<div class="kb-item${d.selected?' selected':''}" onclick="toggleSelect(${i});syncMobileKbList()"><input type="checkbox" class="kb-check" ${d.selected?'checked':''} onclick="event.stopPropagation();toggleSelect(${i});syncMobileKbList()" style="cursor:pointer;flex-shrink:0;accent-color:var(--red)" /><div class="kb-icon">${d.icon}</div><div class="kb-body"><div class="kb-name">${escapeHtml(d.name)}${typeLabel}</div><div class="kb-meta">${d.words.toLocaleString()} ${_t('kb-words-suffix')}</div></div><button class="kb-del" onclick="delDoc(event,${i})">×</button></div>`;
   }).join('');
 
@@ -11371,8 +11371,8 @@ function triggerAndroidFilePicker() {
 // Natywne formaty OpenAI GPT Image - maksymalna jakość bez skalowania
 const IMG_FORMATS = [
   { group:'img-format-graphic', items:[
-    {labelKey:'img-format-horiz', shortKey:'img-fmt-short-horiz',  label:'1536×1024 Poziomy (bannery, email)',  w:1536,h:1024,api:'1536x1024'},
-    {labelKey:'img-format-square', shortKey:'img-fmt-short-square', label:'1024×1024 Kwadrat (social media, App)',w:1024,h:1024,api:'1024x1024'},
+    {labelKey:'img-format-horiz', shortKey:'img-fmt-short-horiz',  label:'1536×1024 Poziomy (banery, e-mail)',  w:1536,h:1024,api:'1536x1024'},
+    {labelKey:'img-format-square', shortKey:'img-fmt-short-square', label:'1024×1024 Kwadrat (media społecznościowe, aplikacje)',w:1024,h:1024,api:'1024x1024'},
     {labelKey:'img-format-vert',   shortKey:'img-fmt-short-vert',   label:'1024×1536 Pionowy (mobile, push)',    w:1024,h:1536,api:'1024x1536'},
   ]},
 ];
@@ -11721,8 +11721,8 @@ async function generateImage() {
     if (!imgRes) {
       // wszystkie próby padły z błędem sieci
       const msg = lastErr && lastErr.name === 'AbortError'
-        ? 'Przekroczono limit 180s na generowanie. OpenAI lub proxy mogą być obciążone. Spróbuj ponownie lub zmień jakość na niższą.'
-        : 'Błąd sieci: nie udało się połączyć z API. Sprawdź internet, VPN lub status proxy.';
+        ? _t('img-err-timeout')
+        : _t('img-err-net');
       throw new Error(msg);
     }
 
@@ -12931,7 +12931,7 @@ async function kbAudioTranscribeAndOpen(file) {
 
     <div id="au-source-wrap" style="margin-bottom:14px">
       <label class="field-label" data-i18n="audio-source">Temat lub treść</label>
-      <textarea id="au-source" rows="5" data-i18n-ph="audio-source-ph" placeholder="Wpisz temat albo wklej gotową treść..." style="width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--surface);color:var(--text);font-family:inherit;font-size:14px;resize:vertical"></textarea>
+      <textarea id="au-source" rows="5" data-i18n-ph="audio-source-ph" placeholder="Wpisz temat albo wklej gotową treść…" style="width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--surface);color:var(--text);font-family:inherit;font-size:14px;resize:vertical"></textarea>
       <button class="btn-secondary" onclick="audioLoadArticle()" style="margin-top:8px;width:100%;justify-content:center" data-i18n="audio-from-article">Wczytaj artykuł z generatora</button>
     </div>
 
@@ -12956,7 +12956,7 @@ async function kbAudioTranscribeAndOpen(file) {
         <button class="btn-secondary" onclick="audioDownloadDocx(this)" data-i18n="audio-dl-docx" style="flex:1 1 100%;width:100%;justify-content:center">📄 Pobierz .docx</button>
       </div>
       <div id="au-trans-actions" style="display:none;gap:8px;margin-top:8px">
-        <button class="btn-secondary" onclick="audioTransToKb()" data-i18n="btn-trans-tokb">📚 Do bazy wiedzy</button>
+        <button class="btn-secondary" onclick="audioTransToKb()" data-i18n="btn-trans-tokb">Do bazy wiedzy</button>
       </div>
     </div>
   </div>
@@ -12988,7 +12988,7 @@ async function kbAudioTranscribeAndOpen(file) {
       <div style="font-weight:700;font-size:16px;color:var(--text)" data-i18n="bazas-title">📚 Baza wiedzy</div>
       <span id="bazas-stan" style="font-size:11px;color:var(--text3)"></span>
     </div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5" data-i18n="bazas-desc">Dokumenty leżą na serwerze, więc masz je na każdym urządzeniu. Przy generowaniu dobierane są tylko fragmenty pasujące do tematu.</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5" data-i18n="bazas-desc">Dokumenty leżą na serwerze, więc masz je na każdym urządzeniu, a przy generowaniu dobierane są tylko fragmenty pasujące do tematu. Pliki wgrywane w panelu bocznym to co innego: zostają w tej przeglądarce.</div>
 
     <div id="bazas-lista" style="margin-bottom:18px"></div>
 
@@ -13168,7 +13168,7 @@ async function kbAudioTranscribeAndOpen(file) {
     var btn = el('bazas-btn-dodaj');
     var etykieta = btn.textContent;
     btn.disabled = true;
-    btn.textContent = tekst('bazas-dodaje','Dodaję...');
+    btn.textContent = tekst('bazas-dodaje','Dodaję…');
     try {
       var odp = await fetch('/api/baza', {
         method: 'POST',
@@ -13328,7 +13328,7 @@ async function kbAudioTranscribeAndOpen(file) {
   window.otworzFrazySeo = async function(){
     el('seo-szukaj').placeholder = tekst('seo-szukaj', 'Szukaj frazy');
     el('seo-modal').style.display = 'flex';
-    status(tekst('seo-laduje', 'Wczytuję...'));
+    status(tekst('seo-laduje', 'Wczytuję…'));
     try {
       var odp = await fetch('/api/seo/projekty');
       if (!odp.ok) throw new Error('projekty');
@@ -13350,7 +13350,7 @@ async function kbAudioTranscribeAndOpen(file) {
   window.odswiezFrazySeo = async function(){
     var projekt = el('seo-projekt').value;
     if (!projekt) return;
-    status(tekst('seo-laduje', 'Wczytuję...'));
+    status(tekst('seo-laduje', 'Wczytuję…'));
     var adres = '/api/seo/frazy?projekt=' + encodeURIComponent(projekt);
     var tag = el('seo-tag').value;
     if (tag) adres += '&tag=' + encodeURIComponent(tag);
@@ -13423,7 +13423,7 @@ async function kbAudioTranscribeAndOpen(file) {
     if (typeof keywords === 'undefined' || !keywords.length) {
       return status(tekst('seo-brak-fraz', 'Najpierw dodaj frazy do artykułu.'));
     }
-    status(tekst('seo-laduje', 'Wczytuję...'));
+    status(tekst('seo-laduje', 'Wczytuję…'));
     try {
       var odp = await fetch('/api/seo/frazy', {
         method: 'POST',
@@ -13666,7 +13666,7 @@ async function kbAudioTranscribeAndOpen(file) {
           var ma = Boolean(stan.funkcje && stan.funkcje[f]);
           return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 0;color:'
             + (ma ? 'var(--text2)' : 'var(--text3)') + '">'
-            + '<span aria-hidden="true">' + (ma ? '✓' : '–') + '</span><span>' + bezpieczny(tekst('pakiet-fn-' + f, f))
+            + '<span aria-hidden="true">' + (ma ? '✓' : '-') + '</span><span>' + bezpieczny(tekst('pakiet-fn-' + f, f))
             + (ma ? '' : ' <span class="znacznik-pakietu">' + bezpieczny(tekst('pakiet-niedostepne','niedostępne')) + '</span>') + '</span></div>';
         }).join('');
   }
@@ -13885,10 +13885,10 @@ async function kbAudioTranscribeAndOpen(file) {
       cel.innerHTML = naglowek(
           tekst('start-2-tytul','Klucze API - tylko jeśli chcesz'),
           wolno
-            ? tekst('start-2-opis','Domyślnie korzystasz z kluczy serwera i nie musisz tu nic wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej - wtedy generowanie idzie na Twój rachunek, a nie na nasz.')
-            : tekst('start-2-opis-pakiet','W Twoim pakiecie generowanie idzie z kluczy serwera - nie musisz nic wpisywać. Własne klucze są dostępne od pakietu Standard.'))
+            ? tekst('start-2-opis','Domyślnie generowanie korzysta z kluczy serwera, więc nic tu nie trzeba wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej: koszt modelu przejdzie wtedy na Twój rachunek u dostawcy. Limity pakietu obowiązują tak samo.')
+            : tekst('start-2-opis-pakiet','W Twoim pakiecie generowanie korzysta z kluczy serwera, więc nic tu nie trzeba wpisywać. Własne klucze są dostępne od pakietu Standard.'))
         + '<div style="font-size:12px;color:var(--text2);background:var(--surface2);border-left:3px solid var(--accent,#d97706);padding:10px 12px;border-radius:0 var(--radius) var(--radius) 0;margin-bottom:18px;line-height:1.55">'
-          + tekst('start-2-gdzie','Klucze zapisują się wyłącznie w tej przeglądarce i nigdy nie trafiają na nasz serwer do zapisu - lecą tylko jako nagłówek pojedynczego żądania, prosto do dostawcy. Na innym urządzeniu trzeba je wpisać ponownie.')
+          + tekst('start-2-gdzie','Klucze zostają tylko w tej przeglądarce. Serwer przekazuje je dostawcy z każdym zapytaniem i niczego nie zapisuje. Na innym urządzeniu trzeba je wpisać ponownie.')
           + '</div>'
  : '')
  : '')
@@ -13899,25 +13899,25 @@ async function kbAudioTranscribeAndOpen(file) {
     else if (kroki[krok] === 'marka'){
       cel.innerHTML = naglowek(
           tekst('start-3-tytul','Twoja marka'),
-          tekst('start-3-opis','Brand Voice to opis tego, jak ma brzmieć Twoja treść: ton, słownictwo, czego unikać. Bez niego artykuły będą poprawne, ale bezosobowe. Możesz to ustawić teraz albo wrócić do tego później.'))
+          tekst('start-3-opis','Głos marki to opis tego, jak ma brzmieć Twoja treść: ton, słownictwo, czego unikać. Bez niego artykuły będą poprawne, ale bezosobowe. Możesz to ustawić teraz albo wrócić do tego później.'))
         + '<button onclick="openBvModal()" style="width:100%;padding:12px;border:1px solid var(--accent,#d97706);border-radius:var(--radius);background:none;color:var(--accent,#d97706);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px">'
-          + tekst('start-3-otworz','Otwórz ustawienia Brand Voice') + '</button>'
+          + tekst('start-3-otworz','Otwórz ustawienia głosu marki') + '</button>'
         + '<div style="font-size:12px;color:var(--text3);line-height:1.55">'
-          + tekst('start-3-potem','Kreator zostaje otwarty - po zapisaniu Brand Voice wróć tutaj i kliknij „Dalej”.') + '</div>';
+          + tekst('start-3-potem','Kreator zostaje otwarty - po zapisaniu głosu marki wróć tutaj i kliknij „Dalej”.') + '</div>';
     }
 
     else {
       cel.innerHTML = naglowek(
           tekst('start-4-tytul','Wszystko gotowe'),
-          tekst('start-4-opis','Wpisz temat, dodaj słowa kluczowe i kliknij generowanie. Licznik pakietu masz zawsze w prawym górnym rogu - kliknięcie pokazuje, ile Ci zostało.'))
+          tekst('start-4-opis','Wpisz temat, dodaj słowa kluczowe i kliknij „Wygeneruj treść”. Licznik pakietu jest zawsze w prawym górnym rogu: kliknięcie pokazuje, ile zostało.'))
         + '<div style="font-size:12px;color:var(--text2);line-height:1.7">'
-          + tekst('start-4-lista','Gdzie szukać reszty: ikona ⚙️ w pasku górnym to baza wiedzy, integracja z CMS, Brand Voice i widoczność w AI. Nic z tego nie jest potrzebne do pierwszego artykułu.')
+          + tekst('start-4-lista','Gdzie szukać reszty: ikona ⚙️ w pasku górnym to baza wiedzy, integracja z CMS, głos marki i widoczność w AI. Nic z tego nie jest potrzebne do pierwszego artykułu.')
           + '</div>';
     }
 
     el('start-wstecz').style.visibility = krok === 0 ? 'hidden' : 'visible';
     el('start-dalej').textContent = (krok === kroki.length - 1)
-      ? tekst('start-zaczynamy','Zaczynamy') : tekst('start-dalej','Dalej');
+      ? tekst('start-zaczynamy','Zacznij pisać') : tekst('start-dalej','Dalej');
     el('start-pomin').style.display = (krok === kroki.length - 1) ? 'none' : '';
   }
 
