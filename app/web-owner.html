@@ -4169,6 +4169,9 @@ let skipSourceCheck = false;
 let webEnabledByModal = false;
 let keywords = [];
 let history = [];
+// Wpis historii, ktory jest teraz w #article - tam trafiaja reczne poprawki
+// autora po wyjsciu z edycji. null = artykul spoza historii.
+let biezacyHist = null;
 let genCount = 0;
 let currentText = '';
 let premiumMode = false;       // tryb Jakość Premium - samokorekcja po generowaniu
@@ -5877,6 +5880,7 @@ ${html}`;
 
   const wordCount = currentText.split(/\s+/).filter(Boolean).length;
   history.unshift({ topic: topic || _t('hist-default-name'), type: ctype, words: wordCount, time: new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}), html });
+  biezacyHist = 0;
   renderHistory();
   saveState();
   return true;
@@ -5913,6 +5917,8 @@ function previewHistory(i) {
   if (activeEl) activeEl.classList.add('active');
   const h = history[i];
   if (!h) return;
+  if (editMode) toggleEdit();
+  biezacyHist = i;
 
   if (document.body.classList.contains('is-mobile')) {
     // Na mobile: załaduj artykuł bezposrednio w zakladce Generator
@@ -7636,6 +7642,7 @@ function toggleEdit() {
     currentText = art.innerText;
     showArticleStats(art.innerHTML);
     seoCache = null; aioCache = null;
+    zapiszRecznePoprawki();
   } else if (isMobile) {
     toolbar.classList.add('show');
     art.focus();
@@ -7667,7 +7674,23 @@ function renderVersionsBar() {
   });
 }
 
+// Reczne poprawki trafiaja do biezacej wersji i do wpisu historii, inaczej
+// przelaczenie wersji albo odswiezenie strony kasowalo je bez ostrzezenia.
+function zapiszRecznePoprawki() {
+  const art = document.getElementById('article');
+  if (!art) return;
+  const h = art.innerHTML;
+  if (versions[activeVersion]) versions[activeVersion].html = h;
+  if (biezacyHist != null && history[biezacyHist]) {
+    history[biezacyHist].html = h;
+    history[biezacyHist].words = (art.innerText || '').split(/\s+/).filter(Boolean).length;
+    saveState();
+  }
+}
+
 function switchVersion(i) {
+  if (editMode) toggleEdit();
+  else if (versions[activeVersion]) versions[activeVersion].html = document.getElementById('article').innerHTML;
   activeVersion = i;
   const art = document.getElementById('article');
   art.innerHTML = oczyscHtmlModelu(versions[i].html);
