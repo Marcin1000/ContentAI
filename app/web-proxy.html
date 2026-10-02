@@ -387,6 +387,13 @@ body.is-mobile .settings-btn { font-size: 16px; padding: 3px 4px; }
 .kb-del:hover { opacity: 1 !important; color: var(--red); }
 
 .kb-serwer { padding: 8px 8px 0; }
+.znacznik-pakietu { display: inline-flex; align-items: center; margin-left: 6px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border2); font-size: 10px; font-weight: 600; line-height: 1.5; color: var(--text2); letter-spacing: .02em; vertical-align: middle; }
+.znacznik-pakietu[hidden] { display: none; }
+.zablokowane { opacity: .75; }
+.toggle-row.zablokowane { cursor: not-allowed; }
+#pakiet-badge .pakiet-licznik-krotko { display: none; }
+body.is-mobile #pakiet-badge .pakiet-licznik { display: none; }
+body.is-mobile #pakiet-badge .pakiet-licznik-krotko { display: inline; }
 .kb-serwer[hidden] { display: none; }
 .kb-sekcja { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 4px; font-size: 11px; font-weight: 600; letter-spacing: .02em; color: var(--text3); }
 .kb-sekcja-lokalna { margin-top: 8px; border-top: 1px solid var(--border); padding-top: 10px; }
@@ -3399,7 +3406,7 @@ var I18N = {
     'start-1-opis':'Zanim napiszesz pierwszy artykuł, przejdźmy przez trzy krótkie ekrany. Zajmie to minutę, a wszystko można zmienić później w ustawieniach.',
     'start-2-tytul':'Klucze API - tylko jeśli chcesz',
     'start-2-opis':'Domyślnie korzystasz z kluczy serwera i nie musisz tu nic wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej - wtedy generowanie idzie na Twój rachunek, a nie na nasz.',
-    'start-2-opis-pakiet':'W Twoim pakiecie generowanie idzie z kluczy serwera - nie musisz nic wpisywać. Jeśli mimo to masz własne klucze, możesz ich użyć: koszt przejdzie wtedy na Twoje konto u dostawcy.',
+    'start-2-opis-pakiet':'W Twoim pakiecie generowanie idzie z kluczy serwera - nie musisz nic wpisywać. Własne klucze są dostępne od pakietu Standard.',
     'start-2-gdzie':'Klucze zapisują się wyłącznie w tej przeglądarce i nigdy nie trafiają na nasz serwer do zapisu - lecą tylko jako nagłówek pojedynczego żądania, prosto do dostawcy. Na innym urządzeniu trzeba je wpisać ponownie.',
     'start-2-anthropic':'Anthropic - treść','start-2-openai':'OpenAI - grafiki, lektor, transkrypcja',
     'start-2-eleven':'ElevenLabs - lepszy lektor (opcjonalnie)',
@@ -3536,6 +3543,7 @@ var I18N = {
     'img-step1-noref':'Krok 1 z 2: tworzenie promptu graficznego',
     'msg-no-api-resp':'Brak odpowiedzi z API. Sprawdź klucz API i połączenie.',
     'kb-na-serwerze':'Na serwerze','kb-wspolna':'Baza wspólna zespołu','kb-prywatna':'Twoja baza prywatna','kb-fragm':'fragm.','kb-lokalnie':'Tylko w tej przeglądarce','kb-przenies':'Przenieś na serwer','kb-dodano':'Dodano do bazy wiedzy na serwerze','kb-zostaje-lokalnie':'Dokument zapisano tylko w tej przeglądarce.','kb-przeniesiono':'Przeniesiono na serwer',
+    'pakiet-zostalo':'Zostało {n} z {m}','pakiet-zostalo-krotko':'{n} art.','pakiet-od-standard':'Dostępne od pakietu Standard','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f} nie wchodzą w pakiet {p}','pakiet-niedostepne':'niedostępne',
     'msg-blad-prefiks':'Błąd:','menu-wyloguj':'Wyloguj się','menu-wyloguj-sub':'zakończ sesję na tym urządzeniu',
     'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Część dokumentów z bazy nie przetrwa odświeżenia - przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
     'ver-poprawiony-hybryda':'Poprawiony SEO+AIO','ver-poprawiony-aio':'Poprawiony AIO','ver-poprawiony-seo':'Poprawiony SEO','ver-wariant':'Wariant',
@@ -3932,7 +3940,7 @@ var I18N = {
     'start-1-opis':'Before you write your first article, let\'s go through three short screens. It takes a minute, and everything can be changed later in settings.',
     'start-2-tytul':'API keys - only if you want to',
     'start-2-opis':'By default you use the server\'s keys and there is nothing to fill in here. If you have your own accounts with the providers, enter the keys below - generating then goes on your bill, not ours.',
-    'start-2-opis-pakiet':'On your plan, generating runs on the server\'s keys - there is nothing to fill in. If you do have your own keys, you can still use them: the cost then moves to your provider account.',
+    'start-2-opis-pakiet':'On your plan, generating runs on the server\'s keys - there is nothing to fill in. Your own keys are available from the Standard plan.',
     'start-2-gdzie':'Keys are stored only in this browser and are never saved on our server - they travel as a header on a single request, straight to the provider. On another device you will need to enter them again.',
     'start-2-anthropic':'Anthropic - content','start-2-openai':'OpenAI - images, voice-over, transcription',
     'start-2-eleven':'ElevenLabs - better voice-over (optional)',
@@ -3959,6 +3967,7 @@ var I18N = {
     'img-spin-sub':'Generation may take 30-60 seconds',
     'msg-no-api-resp':'No response from API. Check your API key and connection.',
     'kb-na-serwerze':'On the server','kb-wspolna':'Shared team base','kb-prywatna':'Your private base','kb-fragm':'chunks','kb-lokalnie':'Only in this browser','kb-przenies':'Move to server','kb-dodano':'Added to the server knowledge base','kb-zostaje-lokalnie':'The document was saved only in this browser.','kb-przeniesiono':'Moved to the server',
+    'pakiet-zostalo':'{n} of {m} left','pakiet-zostalo-krotko':'{n} left','pakiet-od-standard':'Available from the Standard plan','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f} are not part of the {p} plan','pakiet-niedostepne':'not available',
     'msg-blad-prefiks':'Error:','menu-wyloguj':'Log out','menu-wyloguj-sub':'end the session on this device',
     'msg-magazyn-pelny':'Browser storage is full. Some knowledge base documents will not survive a refresh - move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
     'ver-poprawiony-hybryda':'Improved SEO+AIO','ver-poprawiony-aio':'Improved AIO','ver-poprawiony-seo':'Improved SEO','ver-wariant':'Variant',
@@ -11613,6 +11622,9 @@ async function generateImage() {
       const err = await imgRes.json().catch(() => ({}));
       const apiMsg = (err && err.error && err.error.message) ? err.error.message : '';
       const st = imgRes.status;
+      // 402 = pakiet: okno pakietu juz wyjasnia, co sie stalo. Drugi komunikat
+      // "OpenAI blad 402" tylko by mylil.
+      if (st === 402) { const e402 = new Error(''); e402.pakiet = true; throw e402; }
       let m;
       if (st === 401 || st === 403) {
         m = (currentLang === 'en'
@@ -11653,7 +11665,7 @@ async function generateImage() {
   } catch(e) {
     document.getElementById('img-spinner').style.display    = 'none';
     document.getElementById('img-empty').style.display     = 'block';
-    powiadomBlad(_t('msg-gen-error') + e.message);
+    if (!(e && e.pakiet)) powiadomBlad(_t('msg-gen-error') + e.message);
   }
 
   document.getElementById('img-gen-btn').disabled = false;
@@ -13441,16 +13453,73 @@ async function kbAudioTranscribeAndOpen(file) {
     var b = el('pakiet-badge');
     if (!b || !stan) return;
     var a = stan.uzycie && stan.uzycie.artykul;
-    var licznik = (!a || a.limit === null) ? '∞' : (a.zuzyte + '/' + a.limit);
+    // "Zostaly 3 z 3" zamiast "0/3": samo 0/3 nie mowilo, czy to zuzyte,
+    // czy pozostale. Na telefonie zostaje krotkie "3 art.".
+    var zostalo = a && a.limit !== null ? Math.max(0, a.limit - a.zuzyte) : null;
+    var licznik = (!a || a.limit === null) ? tekst('pakiet-bez-limitu','bez limitu')
+      : tekst('pakiet-zostalo','Zostało {n} z {m}').replace('{n}', zostalo).replace('{m}', a.limit);
+    var krotko = (!a || a.limit === null) ? '∞' : tekst('pakiet-zostalo-krotko','{n} art.').replace('{n}', zostalo);
     // Nazwa w osobnym elemencie - na telefonie chowa ja CSS, zostaje licznik.
     b.innerHTML = '<span class="pakiet-nazwa">' + bezpieczny(poJezyku('nazwa')) + ' · </span>'
-      + bezpieczny(licznik);
+      + '<span class="pakiet-licznik">' + bezpieczny(licznik) + '</span>'
+      + '<span class="pakiet-licznik-krotko">' + bezpieczny(krotko) + '</span>';
+    rysujBlokady();
     b.style.display = 'flex';
     // Ostatnia sztuka ma byc widoczna, zanim uzytkownik w nia wejdzie.
     var malo = a && a.limit !== null && a.zostalo <= 1;
     b.style.borderColor = malo ? 'rgba(226,50,68,.45)' : 'var(--border)';
     b.style.color = malo ? '#e06c6c' : 'var(--text)';
   }
+
+  // Funkcje spoza pakietu sa oznaczone, zanim uzytkownik w nie wejdzie:
+  // przelacznik SERP jest wylaczony z podpisem, a Grafika i Audio maja
+  // znacznik pakietu, od ktorego sa dostepne. Klikniecie otwiera okno pakietu
+  // z wyjasnieniem, a nie formularz, ktory i tak skonczylby sie odmowa.
+  function rysujBlokady(){
+    if (!stan) return;
+    var pule = stan.uzycie || {};
+    var brakGrafik = pule.grafika && pule.grafika.limit === 0;
+    var brakAudio = pule.audio && pule.audio.limit === 0;
+    var brakSerp = stan.funkcje && stan.funkcje.serp === false;
+    oznaczBlokade(document.querySelector('.btn-module[onclick="openImgPanelSmart()"]'), brakGrafik, 'grafika');
+    oznaczBlokade(document.querySelector('.btn-module[onclick="openAudioPanel()"]'), brakAudio, 'audio');
+    var serp = el('use-serp');
+    if (serp) {
+      serp.disabled = !!brakSerp;
+      if (brakSerp) serp.checked = false;
+      var rzad = serp.closest('.toggle-row');
+      if (rzad) {
+        rzad.classList.toggle('zablokowane', !!brakSerp);
+        var p = rzad.querySelector('.znacznik-pakietu');
+        if (brakSerp && !p) {
+          p = document.createElement('span');
+          p.className = 'znacznik-pakietu';
+          rzad.querySelector('.toggle-label').appendChild(p);
+        }
+        if (p) { p.textContent = tekst('pakiet-od-standard-krotko','Standard'); p.hidden = !brakSerp; p.title = tekst('pakiet-od-standard','Dostępne od pakietu Standard'); }
+      }
+    }
+  }
+  function oznaczBlokade(przycisk, zablokowany, pula){
+    if (!przycisk) return;
+    przycisk.classList.toggle('zablokowane', !!zablokowany);
+    przycisk.dataset.blokadaPuli = zablokowany ? pula : '';
+    var p = przycisk.querySelector('.znacznik-pakietu');
+    if (zablokowany && !p) {
+      p = document.createElement('span');
+      p.className = 'znacznik-pakietu';
+      przycisk.appendChild(p);
+    }
+    if (p) { p.textContent = tekst('pakiet-od-standard-krotko','Standard'); p.hidden = !zablokowany; }
+    przycisk.title = zablokowany ? tekst('pakiet-od-standard','Dostępne od pakietu Standard') : '';
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target && e.target.closest && e.target.closest('[data-blokada-puli]');
+    if (!b || !b.dataset.blokadaPuli) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    window.pokazLimitPakietu({ czynnosc: b.dataset.blokadaPuli, limit: 0, zuzyte: 0 });
+  }, true);
 
   function rysujTresc(){
     if (!stan){
@@ -13488,8 +13557,9 @@ async function kbAudioTranscribeAndOpen(file) {
       + FUNKCJE.map(function(f){
           var ma = Boolean(stan.funkcje && stan.funkcje[f]);
           return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 0;color:'
-            + (ma ? 'var(--text2)' : 'var(--text3)') + (ma ? '"' : ';opacity:.7"') + '>'
-            + '<span>' + (ma ? '✓' : '·') + '</span><span>' + bezpieczny(tekst('pakiet-fn-' + f, f)) + '</span></div>';
+            + (ma ? 'var(--text2)' : 'var(--text3)') + '">'
+            + '<span aria-hidden="true">' + (ma ? '✓' : '–') + '</span><span>' + bezpieczny(tekst('pakiet-fn-' + f, f))
+            + (ma ? '' : ' <span class="znacznik-pakietu">' + bezpieczny(tekst('pakiet-niedostepne','niedostępne')) + '</span>') + '</span></div>';
         }).join('');
   }
 
@@ -13533,6 +13603,11 @@ async function kbAudioTranscribeAndOpen(file) {
       alarm.innerHTML = '<div style="font-weight:600;margin-bottom:4px">'
         + bezpieczny(tekst('pakiet-funkcja-title','Ta funkcja nie wchodzi w Twój pakiet')) + '</div>'
         + '<div style="color:var(--text2)">' + bezpieczny((dane.error && dane.error.komunikat) || '') + '</div>';
+    } else if (dane && dane.czynnosc && Number(dane.limit) === 0) {
+      // Limit 0 to nie wyczerpanie, tylko funkcja spoza pakietu.
+      alarm.innerHTML = '<div style="font-weight:600;margin-bottom:4px">'
+        + bezpieczny(tekst('pakiet-poza-tytul','{f} nie wchodzą w pakiet {p}').replace('{f}', tekst('pakiet-' + dane.czynnosc, dane.czynnosc)).replace('{p}', stan ? poJezyku('nazwa') : '')) + '</div>'
+        + '<div style="color:var(--text2)">' + bezpieczny(tekst('pakiet-od-standard','Dostępne od pakietu Standard')) + '</div>';
     } else {
       var czynnosc = dane && dane.czynnosc ? tekst('pakiet-' + dane.czynnosc, dane.czynnosc) : '';
       alarm.innerHTML = '<div style="font-weight:600;margin-bottom:4px">'
@@ -13703,13 +13778,13 @@ async function kbAudioTranscribeAndOpen(file) {
           tekst('start-2-tytul','Klucze API - tylko jeśli chcesz'),
           wolno
             ? tekst('start-2-opis','Domyślnie korzystasz z kluczy serwera i nie musisz tu nic wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej - wtedy generowanie idzie na Twój rachunek, a nie na nasz.')
-            : tekst('start-2-opis-pakiet','W Twoim pakiecie generowanie idzie z kluczy serwera - nie musisz nic wpisywać. Jeśli mimo to masz własne klucze, możesz ich użyć: koszt przejdzie wtedy na Twoje konto u dostawcy.'))
+            : tekst('start-2-opis-pakiet','W Twoim pakiecie generowanie idzie z kluczy serwera - nie musisz nic wpisywać. Własne klucze są dostępne od pakietu Standard.'))
         + '<div style="font-size:12px;color:var(--text2);background:var(--surface2);border-left:3px solid var(--accent,#d97706);padding:10px 12px;border-radius:0 var(--radius) var(--radius) 0;margin-bottom:18px;line-height:1.55">'
           + tekst('start-2-gdzie','Klucze zapisują się wyłącznie w tej przeglądarce i nigdy nie trafiają na nasz serwer do zapisu - lecą tylko jako nagłówek pojedynczego żądania, prosto do dostawcy. Na innym urządzeniu trzeba je wpisać ponownie.')
           + '</div>'
-        + polePola('start-k-anthropic', tekst('start-2-anthropic','Anthropic - treść'), 'sk-ant-...', magazyn.getItem('cai_klucz_anthropic'))
-        + polePola('start-k-openai', tekst('start-2-openai','OpenAI - grafiki, lektor, transkrypcja'), 'sk-proj-...', magazyn.getItem('cai_klucz_openai'))
-        + polePola('start-k-eleven', tekst('start-2-eleven','ElevenLabs - lepszy lektor (opcjonalnie)'), '...', magazyn.getItem('cai_klucz_eleven'))
+ : '')
+ : '')
+ : '')
         + '<div id="start-k-blad" style="display:none;font-size:12px;color:#e06c6c;margin-top:-6px"></div>';
     }
 

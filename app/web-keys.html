@@ -386,6 +386,13 @@ body.is-mobile .settings-btn { font-size: 16px; padding: 3px 4px; }
 .kb-del:hover { opacity: 1 !important; color: var(--red); }
 
 .kb-serwer { padding: 8px 8px 0; }
+.znacznik-pakietu { display: inline-flex; align-items: center; margin-left: 6px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border2); font-size: 10px; font-weight: 600; line-height: 1.5; color: var(--text2); letter-spacing: .02em; vertical-align: middle; }
+.znacznik-pakietu[hidden] { display: none; }
+.zablokowane { opacity: .75; }
+.toggle-row.zablokowane { cursor: not-allowed; }
+#pakiet-badge .pakiet-licznik-krotko { display: none; }
+body.is-mobile #pakiet-badge .pakiet-licznik { display: none; }
+body.is-mobile #pakiet-badge .pakiet-licznik-krotko { display: inline; }
 .kb-serwer[hidden] { display: none; }
 .kb-sekcja { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 4px; font-size: 11px; font-weight: 600; letter-spacing: .02em; color: var(--text3); }
 .kb-sekcja-lokalna { margin-top: 8px; border-top: 1px solid var(--border); padding-top: 10px; }
@@ -3461,6 +3468,7 @@ var I18N = {
     'img-step1-noref':'Krok 1 z 2: tworzenie promptu graficznego',
     'msg-no-api-resp':'Brak odpowiedzi z API. Sprawdź klucz API i połączenie.',
     'kb-na-serwerze':'Na serwerze','kb-wspolna':'Baza wspólna zespołu','kb-prywatna':'Twoja baza prywatna','kb-fragm':'fragm.','kb-lokalnie':'Tylko w tej przeglądarce','kb-przenies':'Przenieś na serwer','kb-dodano':'Dodano do bazy wiedzy na serwerze','kb-zostaje-lokalnie':'Dokument zapisano tylko w tej przeglądarce.','kb-przeniesiono':'Przeniesiono na serwer',
+    'pakiet-zostalo':'Zostało {n} z {m}','pakiet-zostalo-krotko':'{n} art.','pakiet-od-standard':'Dostępne od pakietu Standard','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f} nie wchodzą w pakiet {p}','pakiet-niedostepne':'niedostępne',
     'msg-blad-prefiks':'Błąd:','menu-wyloguj':'Wyloguj się','menu-wyloguj-sub':'zakończ sesję na tym urządzeniu',
     'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Część dokumentów z bazy nie przetrwa odświeżenia - przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
     'ver-poprawiony-hybryda':'Poprawiony SEO+AIO','ver-poprawiony-aio':'Poprawiony AIO','ver-poprawiony-seo':'Poprawiony SEO','ver-wariant':'Wariant',
@@ -3835,6 +3843,7 @@ var I18N = {
     'img-spin-sub':'Generation may take 30-60 seconds',
     'msg-no-api-resp':'No response from API. Check your API key and connection.',
     'kb-na-serwerze':'On the server','kb-wspolna':'Shared team base','kb-prywatna':'Your private base','kb-fragm':'chunks','kb-lokalnie':'Only in this browser','kb-przenies':'Move to server','kb-dodano':'Added to the server knowledge base','kb-zostaje-lokalnie':'The document was saved only in this browser.','kb-przeniesiono':'Moved to the server',
+    'pakiet-zostalo':'{n} of {m} left','pakiet-zostalo-krotko':'{n} left','pakiet-od-standard':'Available from the Standard plan','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f} are not part of the {p} plan','pakiet-niedostepne':'not available',
     'msg-blad-prefiks':'Error:','menu-wyloguj':'Log out','menu-wyloguj-sub':'end the session on this device',
     'msg-magazyn-pelny':'Browser storage is full. Some knowledge base documents will not survive a refresh - move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
     'ver-poprawiony-hybryda':'Improved SEO+AIO','ver-poprawiony-aio':'Improved AIO','ver-poprawiony-seo':'Improved SEO','ver-wariant':'Variant',
@@ -11356,6 +11365,9 @@ async function generateImage() {
       const err = await imgRes.json().catch(() => ({}));
       const apiMsg = (err && err.error && err.error.message) ? err.error.message : '';
       const st = imgRes.status;
+      // 402 = pakiet: okno pakietu juz wyjasnia, co sie stalo. Drugi komunikat
+      // "OpenAI blad 402" tylko by mylil.
+      if (st === 402) { const e402 = new Error(''); e402.pakiet = true; throw e402; }
       let m;
       if (st === 401 || st === 403) {
         m = (currentLang === 'en'
@@ -11396,7 +11408,7 @@ async function generateImage() {
   } catch(e) {
     document.getElementById('img-spinner').style.display    = 'none';
     document.getElementById('img-empty').style.display     = 'block';
-    powiadomBlad(_t('msg-gen-error') + e.message);
+    if (!(e && e.pakiet)) powiadomBlad(_t('msg-gen-error') + e.message);
   }
 
   document.getElementById('img-gen-btn').disabled = false;
