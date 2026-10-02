@@ -33,3 +33,4 @@ serwer/dane/
 # ESLint instaluje się doraźnie (aplikacja i serwer nie mają zależności npm)
 node_modules/
 package-lock.json
+test-zrzuty/

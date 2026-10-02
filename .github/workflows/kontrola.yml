@@ -96,6 +96,24 @@ jobs:
       - name: Teksty - bez dlugich myslnikow
         run: python3 narzedzia/audyt_myslniki.py
 
+      # Jedyna kontrola, która URUCHAMIA aplikację: Chromium, atrapa dostawców AI
+      # (narzedzia/atrapa/dostawcy.js) i serwer z kontami testowymi. Generuje
+      # artykuły, przerywa, klika okna, loguje dwa konta. Podpisy wyżej mówią,
+      # że poprawka jest w kodzie; ten krok mówi, że działa.
+      - name: Aplikacja w przeglądarce - test dymny z atrapą dostawców
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.63.0
+          npx playwright install --with-deps chromium
+          CAI_TEST_ZRZUTY=test-zrzuty node narzedzia/test_dymny.js
+
+      - name: Zrzuty z nieudanego testu dymnego
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-dymny-zrzuty
+          path: test-zrzuty/
+          if-no-files-found: ignore
+
       # Placeholdery w aplikacji ("sk-ant-...", "sk-proj-...") są krótkie,
       # więc wymóg 40+ znaków po prefiksie ich nie łapie. Prawdziwe klucze łapie.
       - name: Brak prawdziwych kluczy API
