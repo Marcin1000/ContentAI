@@ -22,9 +22,9 @@
  * ale dziala, zamiast nie dzialac wcale.
  */
 
-const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const pliki = require('./pliki.js');
 
 const ROZMIAR_FRAGMENTU = 1500;   // znakow - jak w Cosmosie
 const MAKS_FRAGMENTOW = 60;       // na dokument; Cosmos ma 30, tu dokumenty bywaja dluzsze
@@ -120,19 +120,14 @@ function sciezka(katalog, zakres, login) {
   return path.join(katalog, nazwaPliku(zakres, login));
 }
 
+// Brak pliku = pusta baza. Uszkodzony plik to BladDanych (503), a nie pusta
+// lista - inaczej nastepne dodanie nadpisaloby resztki jednym dokumentem.
 function wczytaj(katalog, zakres, login) {
-  try {
-    const dane = JSON.parse(fs.readFileSync(sciezka(katalog, zakres, login), 'utf8'));
-    return Array.isArray(dane) ? dane : [];
-  } catch (e) {
-    if (e.code !== 'ENOENT') console.error('[baza] odczyt:', e.message);
-    return [];
-  }
+  return pliki.czytajJson(sciezka(katalog, zakres, login), [], pliki.czyTablica);
 }
 
 function zapisz(katalog, zakres, login, dokumenty) {
-  fs.mkdirSync(katalog, { recursive: true });
-  fs.writeFileSync(sciezka(katalog, zakres, login), JSON.stringify(dokumenty, null, 1), { mode: 0o600 });
+  pliki.zapiszJson(sciezka(katalog, zakres, login), dokumenty, 1);
 }
 
 // ─── Operacje ─────────────────────────────────────────────────────────────────

@@ -236,6 +236,7 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
     testyPlanow();
     await testyStrony();
     testyMarki();
+    await testyPoprawek();
 
     console.log(`\n  ${zaliczone} zaliczonych, ${bledy.length} bledow\n`);
     if (bledy.length) {
@@ -323,7 +324,8 @@ async function testyOpenSeo() {
       {
         sesjaZadania: () => (zalogowany ? { login: 'marcin', rola: 'admin' } : null),
         obslugaLogowania: async (req, res) => res.writeHead(302, { Location: '/' }).end(),
-        stronaLogowania: (k) => `<html><body>${k || 'logowanie'}</body></html>`,
+        // Brama podaje kod komunikatu ('openseo'), tekst sklada ekran logowania.
+        stronaLogowania: (k) => `<html><body>Zaloguj (${k || 'logowanie'})</body></html>`,
         adresIp: () => '127.0.0.1',
       }
     );
@@ -1194,9 +1196,15 @@ function testyMarki() {
       marka.zapisz(glebszy, { name: 'Y' });
       sprawdz('zapis tworzy brakujacy katalog', marka.wczytaj(glebszy).name === 'Y');
 
+      // Uszkodzony plik to blad danych (503), a nie "marki nie ma": inaczej
+      // zespol pisalby po cichu bez regul marki. Obok zostaje kopia.
       fs.writeFileSync(path.join(katalog, 'marka.json'), 'to nie jest JSON');
-      sprawdz('uszkodzony plik nie wywala odczytu',
-        Object.keys(marka.wczytaj(katalog)).length === 0);
+      let bladMarki = null;
+      try { marka.wczytaj(katalog); } catch (e) { bladMarki = e; }
+      sprawdz('uszkodzony plik marki zglasza BladDanych zamiast pustej marki',
+        bladMarki !== null && bladMarki.name === 'BladDanych' && bladMarki.status === 503);
+      sprawdz('uszkodzony plik marki ma kopie .uszkodzony-*',
+        fs.readdirSync(katalog).some((n) => n.startsWith('marka.json.uszkodzony-')));
     } finally {
       fs.rmSync(katalog, { recursive: true, force: true });
     }
@@ -1225,5 +1233,616 @@ function testyMarki() {
     // marki wazy po oczyszczeniu okolo 18 kB, wiec ma wlasny, mniejszy limit.
     sprawdz('zapis marki ma wlasny limit ciala zadania',
       odPost > 0 && /cialoJson\(req, 64 \* 1024\)/.test(zrodlo.slice(odPost, odPost + 700)));
+  }
+}
+
+// ─── Poprawki serwera (runda bezpieczenstwa i niezawodnosci) ────────────────
+// Kazdy blok odpowiada jednemu ustaleniu z przegladu: zapis atomowy, SERP po
+// tresci, SSRF, limity czasu i zerwane polaczenia, naglowki, CSRF, koszt,
+// drobne poprawki logowania, prosby o dostep, brama OpenSEO z pakietem.
+// Czesc HTTP stawia prawdziwy serwer aplikacji na porcie 0 z atrapa dostawcy.
+
+async function testyPoprawek() {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const http = require('node:http');
+  const zlib = require('node:zlib');
+  const pliki = require('./pliki.js');
+
+  console.log('\n  pliki danych - zapis atomowy i uszkodzone pliki');
+  {
+    const kat = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-pliki-'));
+    try {
+      const plik = path.join(kat, 'a', 'lista.json');
+      pliki.zapiszJson(plik, [1, 2, 3]);
+      sprawdz('zapis atomowy tworzy katalog i plik', JSON.parse(fs.readFileSync(plik, 'utf8')).length === 3);
+      sprawdz('po zapisie nie zostaje plik tymczasowy',
+        !fs.readdirSync(path.dirname(plik)).some((n) => n.includes('.tmp-')));
+      sprawdz('plik danych ma tryb 0600', (fs.statSync(plik).mode & 0o777) === 0o600);
+      sprawdz('brak pliku daje wartosc domyslna', pliki.czytajJson(path.join(kat, 'brak.json'), [], pliki.czyTablica).length === 0);
+
+      fs.writeFileSync(plik, '[{"a":1},{"b":');
+      let blad = null;
+      try { pliki.czytajJson(plik, [], pliki.czyTablica); } catch (e) { blad = e; }
+      sprawdz('uciety JSON to BladDanych 503, nie pusta lista', blad instanceof pliki.BladDanych && blad.status === 503);
+      try { pliki.czytajJson(plik, [], pliki.czyTablica); } catch { /* drugi odczyt */ }
+      const kopie = fs.readdirSync(path.dirname(plik)).filter((n) => n.startsWith('lista.json.uszkodzony-'));
+      sprawdz('uszkodzony plik ma dokladnie jedna kopie mimo kilku odczytow', kopie.length === 1);
+      sprawdz('kopia zawiera uszkodzona tresc', fs.readFileSync(path.join(path.dirname(plik), kopie[0]), 'utf8') === '[{"a":1},{"b":');
+
+      fs.writeFileSync(plik, '{"to":"obiekt"}');
+      let zlyKsztalt = null;
+      try { pliki.czytajJson(plik, [], pliki.czyTablica); } catch (e) { zlyKsztalt = e; }
+      sprawdz('zly ksztalt danych tez jest BladDanych', zlyKsztalt instanceof pliki.BladDanych);
+
+      const jsonl = path.join(kat, 'p.jsonl');
+      pliki.dopiszLinie(jsonl, { n: 1 });
+      pliki.dopiszLinie(jsonl, { n: 2, tekst: 'z\nnowa linia' });
+      fs.appendFileSync(jsonl, '{"n":3,"uciete');
+      const linie = pliki.czytajLinie(jsonl);
+      sprawdz('JSON Lines: dwie linie czytelne, ucieta pominieta', linie.wpisy.length === 2 && linie.pominiete === 1);
+    } finally {
+      fs.rmSync(kat, { recursive: true, force: true });
+    }
+  }
+
+  console.log('\n  pliki danych - uszkodzony plik nie jest nadpisywany');
+  {
+    const baza = require('./baza.js');
+    const plany = require('./plany.js');
+    const kat = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-uszk-'));
+    try {
+      // Scenariusz z przegladu it-kod: dokumenty A i B, plik uciety w polowie,
+      // potem dodanie C. Dawniej zostawal plik z samym C.
+      await baza.dodaj({ katalog: kat, zakres: 'prywatna', login: 'anna', nazwa: 'A', tresc: 'Dokument A tresc', konfWektorow: {} });
+      await baza.dodaj({ katalog: kat, zakres: 'prywatna', login: 'anna', nazwa: 'B', tresc: 'Dokument B tresc', konfWektorow: {} });
+      const plik = path.join(kat, 'u-anna.json');
+      const cale = fs.readFileSync(plik, 'utf8');
+      const uciete = cale.slice(0, Math.floor(cale.length / 2));
+      fs.writeFileSync(plik, uciete);
+      let bladListy = null;
+      try { baza.lista({ katalog: kat, login: 'anna' }); } catch (e) { bladListy = e; }
+      sprawdz('baza: lista z ucietego pliku to blad, nie pusta lista', bladListy instanceof pliki.BladDanych);
+      let bladDodania = null;
+      try {
+        await baza.dodaj({ katalog: kat, zakres: 'prywatna', login: 'anna', nazwa: 'C', tresc: 'Dokument C', konfWektorow: {} });
+      } catch (e) { bladDodania = e; }
+      sprawdz('baza: dodanie do uszkodzonej bazy odmawia', bladDodania instanceof pliki.BladDanych);
+      sprawdz('baza: uszkodzony plik zostaje nietkniety (resztki A i B nie zniszczone)', fs.readFileSync(plik, 'utf8') === uciete);
+
+      const konto = { login: 'ola', plan: 'darmowy', rola: 'uzytkownik' };
+      plany.policz({ katalog: kat, uzytkownik: konto, czynnosc: 'artykul' });
+      fs.writeFileSync(plany.plikUzycia(kat, 'ola'), '{"zawsze":{"artykul":');
+      let bladLimitu = null;
+      try { plany.sprawdzLimit({ katalog: kat, uzytkownik: konto, czynnosc: 'artykul' }); } catch (e) { bladLimitu = e; }
+      sprawdz('plany: uszkodzone liczniki nie zeruja limitu po cichu', bladLimitu instanceof pliki.BladDanych);
+      let bladZapisu = null;
+      try { plany.policz({ katalog: kat, uzytkownik: konto, czynnosc: 'artykul' }); } catch (e) { bladZapisu = e; }
+      sprawdz('plany: zliczenie nie nadpisuje uszkodzonego pliku',
+        bladZapisu instanceof pliki.BladDanych && fs.readFileSync(plany.plikUzycia(kat, 'ola'), 'utf8') === '{"zawsze":{"artykul":');
+    } finally {
+      fs.rmSync(kat, { recursive: true, force: true });
+    }
+  }
+
+  console.log('\n  SERP rozpoznawany po tresci, nie po samym web_search');
+  {
+    const serp = require('./serp.js');
+    const narzedzia = [{ type: 'web_search_20250305', name: 'web_search' }];
+    const zadanieSerp = {
+      tools: narzedzia,
+      system: 'Write the context, topics and phrases in Polish. Search for top Google results for the given keyword. Analyze top 5-10 results',
+      messages: [{ role: 'user', content: 'Keyword: kurier\nSearch and analyze top results. Return JSON only.' }],
+    };
+    sprawdz('analiza SERP z fetchSerpContext jest rozpoznana', serp.czyZapytanieSerp(zadanieSerp));
+    sprawdz('artykul z wyszukiwaniem w sieci NIE jest SERP', !serp.czyZapytanieSerp({
+      tools: narzedzia, system: 'Jestes redaktorem. Napisz artykul.', messages: [{ role: 'user', content: 'Temat: kurier' }],
+    }));
+    sprawdz('monitor AI z web_search NIE jest SERP', !serp.czyZapytanieSerp({
+      tools: narzedzia, messages: [{ role: 'user', content: 'Keyword: x' }],
+    }));
+    sprawdz('prompt SERP bez web_search nie jest SERP', !serp.czyZapytanieSerp({ ...zadanieSerp, tools: [] }));
+    sprawdz('prompt systemowy jako lista blokow tez rozpoznany', serp.czyZapytanieSerp({
+      ...zadanieSerp, system: [{ type: 'text', text: 'Search for top Google results for the given keyword.' }],
+    }));
+    sprawdz('naglowek x-cai-czynnosc: serp wystarcza przy web_search',
+      serp.czyZapytanieSerp({ tools: narzedzia, messages: [] }, { 'x-cai-czynnosc': 'serp' }));
+    // Kontrola zgodnosci z aplikacja: jesli ktos zmieni prompt w fetchSerpContext,
+    // ten test powie, ze serwer przestanie rozpoznawac SERP.
+    const zrodloApp = path.join(__dirname, '..', 'app', 'contentai.src.html');
+    if (fs.existsSync(zrodloApp)) {
+      const app = fs.readFileSync(zrodloApp, 'utf8');
+      const fn = app.slice(app.indexOf('async function fetchSerpContext'), app.indexOf('async function fetchSerpContext') + 3000);
+      sprawdz('fetchSerpContext w aplikacji nadal wysyla znak SERP i "Keyword:"',
+        /Search for top Google results/.test(fn) && /Keyword: \$\{/.test(fn));
+    }
+  }
+
+  console.log('\n  SSRF - pelna lista zakresow specjalnych (net.BlockList)');
+  {
+    const SPECJALNE = ['0.1.2.3', '10.1.1.1', '100.64.0.1', '127.0.0.2', '169.254.1.1', '172.20.0.1', '192.0.0.8',
+      '192.0.2.1', '192.88.99.1', '192.168.1.1', '198.18.0.1', '198.51.100.1', '203.0.113.1', '224.0.0.1', '240.0.0.1',
+      '::', '::1', '::ffff:127.0.0.1', '::ffff:7f00:1', '64:ff9b::7f00:1', '64:ff9b:1::1', '100::1', '2001:0:4136:e378::1',
+      '2001:db8::1', '2002:7f00:1::1', 'fd00::1', 'fe80::1', 'fec0::1', 'ff02::1'];
+    const przepuszczone = SPECJALNE.filter((ip) => !strona.adresPrywatny(ip));
+    sprawdz(`wszystkie 29 adresow specjalnych IANA zablokowane (przepuszczone: ${przepuszczone.join(',') || 'brak'})`, przepuszczone.length === 0);
+    const publiczne = ['8.8.8.8', '1.1.1.1', '2606:4700:4700::1111', '2a00:1450:4001::1', '::ffff:8.8.8.8'];
+    sprawdz('adresy publiczne (takze IPv4 zapisany jako IPv6) przechodza', publiczne.every((ip) => !strona.adresPrywatny(ip)));
+
+    let odrzucony = null;
+    try { await strona.sprawdzAdres('http://[::1]:8080/'); } catch (e) { odrzucony = e; }
+    sprawdz('adres IPv6 w nawiasach odrzucony jako wewnetrzny', odrzucony && odrzucony.code === 'CAI_SIEC_WEWNETRZNA');
+
+    // lookup w chwili laczenia: nazwa rozwiazywana na petle zwrotna
+    const zLookup = await new Promise((r) => strona.bezpiecznyLookup('localhost', { all: true }, (e) => r(e)));
+    sprawdz('lookup przy laczeniu odrzuca nazwe wskazujaca siec wewnetrzna', zLookup && zLookup.code === 'CAI_SIEC_WEWNETRZNA');
+    const zLookup1 = await new Promise((r) => strona.bezpiecznyLookup('localhost', {}, (e) => r(e)));
+    sprawdz('lookup odrzuca takze w trybie jednego adresu', zLookup1 && zLookup1.code === 'CAI_SIEC_WEWNETRZNA');
+
+    // Prawdziwe zapytanie do lokalnego serwera: musi polec, zanim cokolwiek pobierze.
+    let dotarlo = 0;
+    const lokalny = http.createServer((req, res) => { dotarlo += 1; res.end('tajne'); });
+    await new Promise((r) => lokalny.listen(0, '127.0.0.1', r));
+    let bladLok = null;
+    try { await strona.pobierz(`http://localhost:${lokalny.address().port}/`); } catch (e) { bladLok = e; }
+    sprawdz('pobranie localhost konczy sie odmowa bez zapytania', bladLok instanceof strona.BladStrony && dotarlo === 0);
+    await new Promise((r) => lokalny.close(r));
+
+    // Przekierowania w sprawdzaniu odnosnikow: kazdy skok kontrolowany.
+    const opcjeFetch = [];
+    const wynik = await strona.sprawdzOdnosniki(['https://8.8.8.8/start'], async (adres, o) => {
+      opcjeFetch.push({ adres, redirect: o.redirect });
+      return { status: 302, ok: false, headers: { get: (k) => (k === 'location' ? 'http://169.254.169.254/latest/' : null) } };
+    });
+    sprawdz('odnosnik przekierowany do sieci wewnetrznej ma stan "odrzucony"', wynik[0].stan === 'odrzucony');
+    sprawdz('przekierowania sledzone recznie (redirect: manual)', opcjeFetch.length > 0 && opcjeFetch.every((o) => o.redirect === 'manual'));
+    sprawdz('adres wewnetrzny z przekierowania nie zostal zapytany', !opcjeFetch.some((o) => o.adres.includes('169.254')));
+
+    let skoki = 0;
+    const poPrzekierowaniu = await strona.sprawdzOdnosniki(['https://8.8.8.8/a'], async () => {
+      skoki += 1;
+      return skoki === 1
+        ? { status: 301, ok: false, headers: { get: (k) => (k === 'location' ? 'https://1.1.1.1/b' : null) } }
+        : { status: 200, ok: true, headers: { get: () => null } };
+    });
+    sprawdz('przekierowanie na adres publiczny konczy sie wynikiem koncowym', poPrzekierowaniu[0].dziala === true && skoki === 2);
+
+    // Limit bajtow liczony w trakcie czytania strumienia.
+    const { Readable } = require('node:stream');
+    let wydano = 0;
+    const strumien = new Readable({
+      read() { wydano += 1; this.push(wydano > 50 ? null : Buffer.alloc(64 * 1024)); },
+    });
+    let bladLimitu = null;
+    try { await strona.czytajZLimitem({ strumien }, 256 * 1024); } catch (e) { bladLimitu = e; }
+    sprawdz('limit bajtow przerywa czytanie w trakcie strumienia', bladLimitu && /za duza/.test(bladLimitu.message) && wydano < 50);
+  }
+
+  // ── Serwer aplikacji na porcie 0 ──────────────────────────────────────────
+  const kat = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-http-'));
+  const zapytaniaAtrapy = [];
+  const przerwaneWAtrapie = [];
+  const atrapa = http.createServer((req, res) => {
+    let cialo = '';
+    req.on('data', (c) => { cialo += c; });
+    req.on('end', () => {
+      let b = {};
+      try { b = JSON.parse(cialo || '{}'); } catch { /* multipart albo pusto */ }
+      const tekst = JSON.stringify(b.messages || '');
+      zapytaniaAtrapy.push({ url: req.url, model: b.model, tekst });
+      const odpowiedz = () => {
+        if (res.destroyed) return;
+        if (req.url.startsWith('/v1/images')) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ data: [{ b64_json: 'AAAA' }] }));
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ content: [{ type: 'text', text: '<h1>Artykul z atrapy</h1>' }], usage: { input_tokens: 1, output_tokens: 1 } }));
+      };
+      const zwloka = /WOLNO/.test(tekst) ? 2500 : 0;
+      if (zwloka) {
+        const t = setTimeout(odpowiedz, zwloka);
+        res.on('close', () => { if (!res.writableEnded) { przerwaneWAtrapie.push(tekst); clearTimeout(t); } });
+      } else odpowiedz();
+    });
+  });
+  await new Promise((r) => atrapa.listen(0, '127.0.0.1', r));
+  const portAtrapy = atrapa.address().port;
+  const atrapaOpenSeo = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end('<html><head></head><body>KONTENER-OPENSEO</body></html>');
+  });
+  await new Promise((r) => atrapaOpenSeo.listen(0, '127.0.0.1', r));
+
+  const ENV = {
+    CAI_UZYTKOWNICY: path.join(kat, 'uzytkownicy.json'), CAI_BAZA: path.join(kat, 'baza'),
+    CAI_UZYCIE: path.join(kat, 'uzycie'), CAI_MARKA: kat, CAI_SEKRET_PLIK: path.join(kat, 'sekret'),
+    CAI_WYLOGOWANE: path.join(kat, 'wylogowane.json'), CAI_PROSBY: path.join(kat, 'prosby.jsonl'),
+    CAI_COOKIE_SECURE: '0', ANTHROPIC_KEY: 'test', OPENAI_KEY: 'test',
+    CAI_URL_ANTHROPIC: `http://127.0.0.1:${portAtrapy}/v1/messages`, CAI_URL_OPENAI: `http://127.0.0.1:${portAtrapy}/v1`,
+    CAI_CZAS_TRESCI_MS: '800', CAI_SERP: 'dataforseo', DATAFORSEO_LOGIN: 'x', DATAFORSEO_HASLO: 'y',
+    CAI_STRONA_ORIGIN: 'https://content-ai.net,https://www.content-ai.net',
+  };
+  const przedEnv = {};
+  for (const [k, v] of Object.entries(ENV)) { przedEnv[k] = process.env[k]; process.env[k] = v; }
+  const modulySerwera = ['./server.js', './prosby.js'].map((m) => require.resolve(m));
+  const kopieModulow = modulySerwera.map((m) => require.cache[m]);
+  for (const m of modulySerwera) delete require.cache[m];
+  const srv = require('./server.js');
+  const prosby = require('./prosby.js');
+
+  const { hash, sol } = srv.zahaszuj('test-haslo-123');
+  fs.writeFileSync(ENV.CAI_UZYTKOWNICY, JSON.stringify([
+    { login: 'admin', hash, sol, rola: 'admin', plan: 'premium' },
+    { login: 'standard', hash, sol, rola: 'uzytkownik', plan: 'standard' },
+    { login: 'darmowy', hash, sol, rola: 'uzytkownik', plan: 'darmowy' },
+  ]));
+
+  const serwer = srv.utworzSerwer();
+  await new Promise((r) => serwer.listen(0, '127.0.0.1', r));
+  const ADRES = `http://127.0.0.1:${serwer.address().port}`;
+  const zadanie = (sciezka, opcje = {}) => fetch(ADRES + sciezka, { redirect: 'manual', ...opcje });
+  async function zaloguj(login) {
+    const odp = await zadanie('/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `login=${login}&haslo=test-haslo-123`,
+    });
+    return (odp.headers.get('set-cookie') || '').split(';')[0];
+  }
+  const json = (cookie, body, inne = {}) => ({
+    method: 'POST', headers: { 'Content-Type': 'application/json', cookie, ...inne }, body: JSON.stringify(body),
+  });
+
+  try {
+    const cAdmin = await zaloguj('admin');
+    const cStd = await zaloguj('standard');
+    const cDarm = await zaloguj('darmowy');
+    sprawdz('logowanie testowych kont dziala', /^cai_auth=/.test(cAdmin) && /^cai_auth=/.test(cStd) && /^cai_auth=/.test(cDarm));
+
+    console.log('\n  naglowki bezpieczenstwa');
+    {
+      const api = await zadanie('/api/baza', { headers: { cookie: cStd } });
+      const h = (n) => api.headers.get(n) || '';
+      sprawdz('CSP z frame-ancestors none i unsafe-inline jak w raporcie', h('content-security-policy') === srv.CSP
+        && srv.CSP.includes("frame-ancestors 'none'") && srv.CSP.includes("script-src 'self' 'unsafe-inline'"));
+      sprawdz('X-Frame-Options DENY i nosniff', h('x-frame-options') === 'DENY' && h('x-content-type-options') === 'nosniff');
+      sprawdz('Referrer-Policy same-origin i COOP same-origin', h('referrer-policy') === 'same-origin' && h('cross-origin-opener-policy') === 'same-origin');
+      sprawdz('Permissions-Policy z microphone=(self)', h('permissions-policy').includes('microphone=(self)') && h('permissions-policy').includes('camera=()'));
+      sprawdz('/api ma Cache-Control no-store', h('cache-control') === 'no-store');
+      const logowanie = await zadanie('/');
+      sprawdz('ekran logowania ma CSP i no-store', Boolean(logowanie.headers.get('content-security-policy')) && logowanie.headers.get('cache-control') === 'no-store');
+      const app = await zadanie('/', { headers: { cookie: cStd } });
+      sprawdz('strona aplikacji zostaje private, no-store', app.headers.get('cache-control') === 'private, no-store');
+    }
+
+    console.log('\n  ekran logowania');
+    {
+      const pl = await (await zadanie('/', { headers: { 'accept-language': 'pl-PL,pl;q=0.9,en;q=0.8' } })).text();
+      const en = await (await zadanie('/', { headers: { 'accept-language': 'en-US,en;q=0.9' } })).text();
+      const enParam = await (await zadanie('/?lang=en', { headers: { 'accept-language': 'pl' } })).text();
+      sprawdz('jezyk z Accept-Language: polski', pl.includes('<html lang="pl"') && pl.includes('Zaloguj się'));
+      sprawdz('jezyk z Accept-Language: angielski', en.includes('<html lang="en"') && en.includes('Sign in'));
+      sprawdz('przelacznik ?lang=en ma pierwszenstwo', enParam.includes('<html lang="en"'));
+      sprawdz('odnosnik "Popros o dostep" PL i EN', pl.includes('https://content-ai.net/#dostep') && en.includes('https://content-ai.net/en/#dostep'));
+      sprawdz('pola login i haslo z etykietami (kontrakt bramy i testow e2e)',
+        pl.includes('name="login"') && pl.includes('name="haslo"') && pl.includes('<label for="login"') && pl.includes('<label for="haslo"'));
+      sprawdz('ekran logowania bez skryptow i bez obcych zasobow',
+        !/<script/i.test(pl) && !/(src|href)="https?:\/\/(?!content-ai\.net)/.test(pl.replace(/href="https:\/\/content-ai\.net[^"]*"/g, '')));
+      const dlugi = String.fromCharCode(0x2014);
+      sprawdz('ekran logowania bez dlugich myslnikow', !pl.includes(dlugi) && !en.includes(dlugi));
+      sprawdz('motyw jasny wg prefers-color-scheme', pl.includes('prefers-color-scheme:light'));
+      const zle = await zadanie('/auth/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'accept-language': 'en' },
+        body: 'login=standard&haslo=zle-haslo&jezyk=pl',
+      });
+      const zleHtml = await zle.text();
+      sprawdz('bledne haslo: 401 i komunikat w aria-live', zle.status === 401 && /aria-live="assertive"/.test(zleHtml) && zleHtml.includes('Niepoprawny login lub hasło.'));
+      sprawdz('jezyk formularza zachowany po bledzie (pole jezyk)', zleHtml.includes('<html lang="pl"'));
+      sprawdz('pola oznaczone aria-invalid po bledzie', zleHtml.includes('aria-invalid="true"'));
+      const wstrzykniety = await (await zadanie('/auth/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'login=%22%3E%3Cimg%20src%3Dx%3E&haslo=x',
+      })).text();
+      sprawdz('login spoza formatu nie wraca do HTML', !wstrzykniety.includes('<img src=x>'));
+    }
+
+    console.log('\n  logowanie - drobne poprawki');
+    {
+      const zle = await zadanie('/', { headers: { cookie: 'inne=%E0%A4%A' } });
+      sprawdz('obce ciasteczko z blednym kodowaniem nie daje 500', zle.status === 200);
+      sprawdz('parsowanie ciasteczek zostawia surowa wartosc przy bledzie', srv.parsujCiasteczka('a=%E0%A4%A; b=ok').a === '%E0%A4%A');
+      const czas = async (login) => {
+        const t = process.hrtime.bigint();
+        await zadanie('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'x-real-ip': '10.20.30.' + login.length }, body: `login=${login}&haslo=zle-haslo` });
+        return Number(process.hrtime.bigint() - t) / 1e6;
+      };
+      const brak = (await czas('nie-ma-takiego') + await czas('nie-ma-takiego'));
+      const jest = (await czas('standard') + await czas('standard'));
+      sprawdz(`scrypt liczony takze dla nieistniejacego loginu (${brak.toFixed(0)} ms wobec ${jest.toFixed(0)} ms)`, brak > jest * 0.4);
+      const zPetli = { headers: { 'x-real-ip': '203.0.113.7', 'x-forwarded-for': '1.2.3.4' }, socket: { remoteAddress: '127.0.0.1' } };
+      const zObcego = { headers: { 'x-real-ip': '203.0.113.7', 'x-forwarded-for': '1.2.3.4' }, socket: { remoteAddress: '198.51.100.9' } };
+      sprawdz('X-Real-IP przyjmowany z petli zwrotnej', srv.adresIp(zPetli) === '203.0.113.7');
+      sprawdz('X-Real-IP i X-Forwarded-For ignorowane z innego adresu', srv.adresIp(zObcego) === '198.51.100.9');
+      sprawdz('X-Forwarded-For nie jest juz zrodlem adresu', srv.adresIp({ headers: { 'x-forwarded-for': '1.2.3.4' }, socket: { remoteAddress: '::1' } }) === '::1');
+      sprawdz('format loginu: poprawne', ['marcin', 'a.b', 'jan_k-2', 'ab'].every(srv.poprawnyLogin));
+      sprawdz('format loginu: odrzucone', ['a', 'Marcin', 'a b', '../x', 'ż', 'x'.repeat(41), ''].every((l) => !srv.poprawnyLogin(l)));
+      sprawdz('sciezka wylogowanych z CAI_WYLOGOWANE', srv.PLIK_WYLOGOWANYCH === ENV.CAI_WYLOGOWANE);
+    }
+
+    console.log('\n  CSRF');
+    {
+      const dok = { nazwa: 'csrf', tresc: 'dokument testowy csrf' };
+      const obcy = await zadanie('/api/baza', json(cStd, dok, { origin: 'https://obca.example' }));
+      sprawdz('POST z obcym Origin -> 403', obcy.status === 403);
+      const siostrzany = await zadanie('/api/baza', json(cStd, dok, { 'sec-fetch-site': 'same-site' }));
+      sprawdz('POST z Sec-Fetch-Site same-site (np. strona produktowa) -> 403', siostrzany.status === 403);
+      const tekst = await zadanie('/api/baza', { method: 'POST', headers: { 'Content-Type': 'text/plain', cookie: cStd }, body: JSON.stringify(dok) });
+      sprawdz('POST JSON z Content-Type text/plain -> 415', tekst.status === 415);
+      const wlasny = await zadanie('/api/baza', json(cStd, dok, { origin: ADRES, 'sec-fetch-site': 'same-origin' }));
+      sprawdz('POST z wlasnej strony przechodzi', wlasny.status === 200);
+      const obcyLogout = await zadanie('/auth/logout', { method: 'POST', headers: { cookie: cStd, origin: 'https://obca.example' } });
+      sprawdz('wylogowanie POST z obcej strony -> 403', obcyLogout.status === 403);
+      const obcyGet = await zadanie('/auth/logout', { headers: { cookie: cStd, 'sec-fetch-site': 'cross-site' } });
+      const obcyGetHtml = await obcyGet.text();
+      sprawdz('wylogowanie GET z obcego odnosnika -> ekran z przyciskiem POST', obcyGet.status === 403 && /method="POST" action="\/auth\/logout"/.test(obcyGetHtml));
+      sprawdz('po odmowie sesja nadal wazna', (await zadanie('/auth/me', { headers: { cookie: cStd } })).status === 200);
+      const obcyLogin = await zadanie('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'sec-fetch-site': 'cross-site' }, body: 'login=standard&haslo=test-haslo-123' });
+      sprawdz('logowanie z obcej strony (login CSRF) -> 403 bez ciasteczka', obcyLogin.status === 403 && !obcyLogin.headers.get('set-cookie'));
+      const cWyl = await zaloguj('standard');
+      const wyl = await zadanie('/auth/logout', { method: 'POST', headers: { cookie: cWyl, origin: ADRES, 'sec-fetch-site': 'same-origin', 'Content-Type': 'application/x-www-form-urlencoded' } });
+      sprawdz('wylogowanie formularzem POST z wlasnej strony -> 302', wyl.status === 302);
+      sprawdz('po wylogowaniu stare ciasteczko nie dziala', (await zadanie('/auth/me', { headers: { cookie: cWyl } })).status === 401);
+      sprawdz('wylogowanie zapisane w CAI_WYLOGOWANE', fs.existsSync(ENV.CAI_WYLOGOWANE));
+      const cGet = await zaloguj('standard');
+      const getWlasny = await zadanie('/auth/logout', { headers: { cookie: cGet, 'sec-fetch-site': 'same-origin' } });
+      sprawdz('GET /auth/logout z wlasnej strony nadal dziala (zgodnosc)', getWlasny.status === 302
+        && (await zadanie('/auth/me', { headers: { cookie: cGet } })).status === 401);
+    }
+
+    console.log('\n  koszt: modele, max_tokens, grafiki');
+    {
+      sprawdz('modele odczytane z aplikacji (MODEL_*)', srv.DOZWOLONE.modele.has('claude-opus-5') && srv.DOZWOLONE.modele.has('claude-sonnet-5'));
+      sprawdz('rozmiary grafik odczytane z IMG_FORMATS', ['1536x1024', '1024x1024', '1024x1536'].every((r) => srv.DOZWOLONE.rozmiary.has(r)));
+      const przed = zapytaniaAtrapy.length;
+      const zlyModel = await zadanie('/api', json(cAdmin, { model: 'claude-opus-dowolny', max_tokens: 10, messages: [{ role: 'user', content: 'x' }] }));
+      const zlyModelJson = await zlyModel.json();
+      sprawdz('model spoza listy -> 400 z komunikatem', zlyModel.status === 400 && /nie jest dostępny/.test(zlyModelJson.error.message));
+      const duzo = await zadanie('/api', json(cAdmin, { model: 'claude-opus-5', max_tokens: 128000, messages: [{ role: 'user', content: 'x' }] }));
+      sprawdz('max_tokens powyzej sufitu -> 400', duzo.status === 400);
+      sprawdz('odrzucone zapytania nie dotarly do dostawcy', zapytaniaAtrapy.length === przed);
+      const ok = await zadanie('/api', json(cAdmin, { model: 'claude-sonnet-5', max_tokens: 1000, messages: [{ role: 'user', content: 'x' }] }));
+      sprawdz('model aplikacji przechodzi', ok.status === 200);
+      const dwie = await zadanie('/api/images', json(cAdmin, { model: 'gpt-image-1', prompt: 'x', n: 4, size: '1024x1024' }));
+      sprawdz('/api/images z n=4 -> 400', dwie.status === 400);
+      const rozmiar = await zadanie('/api/images', json(cAdmin, { model: 'gpt-image-1', prompt: 'x', n: 1, size: '4096x4096' }));
+      sprawdz('/api/images z rozmiarem spoza listy -> 400', rozmiar.status === 400);
+      const grafika = await zadanie('/api/images', json(cAdmin, { model: 'gpt-image-1', prompt: 'x', n: 1, size: '1536x1024' }));
+      sprawdz('/api/images z rozmiarem aplikacji przechodzi', grafika.status === 200 && zapytaniaAtrapy.some((z) => z.url === '/v1/images/generations'));
+    }
+
+    console.log('\n  SERP a artykul z wyszukiwaniem (CAI_SERP=dataforseo)');
+    {
+      const przed = zapytaniaAtrapy.length;
+      const artykul = await zadanie('/api', json(cDarm, {
+        model: 'claude-opus-5', max_tokens: 4000, tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        system: 'Jestes redaktorem SEO.', messages: [{ role: 'user', content: 'Napisz artykul o wysylce paczek.' }],
+      }, { 'x-cai-czynnosc': 'artykul' }));
+      const tresc = await artykul.json();
+      sprawdz('plan darmowy: artykul z siecia przechodzi (bez 402 "Analiza SERP")', artykul.status === 200);
+      sprawdz('CAI_SERP=dataforseo: artykul z siecia dostaje artykul, nie JSON SERP',
+        zapytaniaAtrapy.length === przed + 1 && /Artykul z atrapy/.test(tresc.content[0].text));
+      const serpDarm = await zadanie('/api', json(cDarm, {
+        model: 'claude-sonnet-5', max_tokens: 1000, tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        system: 'Write the context in Polish. Search for top Google results for the given keyword.',
+        messages: [{ role: 'user', content: 'Keyword: kurier\nSearch' }],
+      }));
+      sprawdz('plan darmowy: prawdziwa analiza SERP nadal 402', serpDarm.status === 402);
+      const projekty = await zadanie('/api/seo/projekty', { headers: { cookie: cDarm } });
+      const pj = await projekty.json();
+      sprawdz('GET /api/seo/projekty bez OpenSEO -> 200 {projekty:[], dostepne:false}',
+        projekty.status === 200 && pj.dostepne === false && Array.isArray(pj.projekty) && pj.projekty.length === 0);
+      const inne = await zadanie('/api/seo/frazy', { headers: { cookie: cDarm } });
+      sprawdz('pozostale /api/seo/* bez OpenSEO nadal 501', inne.status === 501);
+    }
+
+    console.log('\n  limity czasu i zerwanie przez klienta');
+    {
+      const t0 = Date.now();
+      const wolny = await zadanie('/api', json(cAdmin, { model: 'claude-sonnet-5', max_tokens: 100, messages: [{ role: 'user', content: 'WOLNO' }] }));
+      const wolnyJson = await wolny.json();
+      sprawdz('dostawca bez odpowiedzi w limicie -> 504', wolny.status === 504 && Date.now() - t0 < 2400);
+      sprawdz('504 z czytelnym komunikatem po polsku i typem timeout_error',
+        wolnyJson.error.type === 'timeout_error' && /nie odpowiedział w ciągu/.test(wolnyJson.error.message));
+      sprawdz('dlugie generowanie ma limit co najmniej 300 s', srv.KONF.czasy.dlugi >= 300000);
+
+      // Zerwanie: klient odchodzi po 1 s, dostawca odpowiedzialby po 2,5 s.
+      const plikUzycia = path.join(ENV.CAI_UZYCIE, 'standard.json');
+      const licznik = () => {
+        try { const d = JSON.parse(fs.readFileSync(plikUzycia, 'utf8')); return Object.values(d).reduce((s, o) => s + (o.artykul || 0) + (o.wywolanie || 0), 0); } catch { return 0; }
+      };
+      const przed = licznik();
+      const ster = new AbortController();
+      setTimeout(() => ster.abort(), 1000);
+      let zerwane = false;
+      try {
+        await zadanie('/api', { ...json(cStd, { model: 'claude-opus-5', max_tokens: 6000, messages: [{ role: 'user', content: 'WOLNO artykul' }] }, { 'x-cai-czynnosc': 'artykul' }), signal: ster.signal });
+      } catch { zerwane = true; }
+      await new Promise((r) => setTimeout(r, 2200));
+      sprawdz('zapytanie zerwane przez klienta po 1 s', zerwane);
+      sprawdz('zerwane zapytanie nie zwieksza licznika pakietu', licznik() === przed);
+      sprawdz('zerwanie przerywa tez wywolanie dostawcy', przerwaneWAtrapie.some((t) => t.includes('WOLNO artykul')));
+      const normalne = await zadanie('/api', json(cStd, { model: 'claude-opus-5', max_tokens: 6000, messages: [{ role: 'user', content: 'artykul' }] }, { 'x-cai-czynnosc': 'artykul' }));
+      sprawdz('udane zapytanie liczy sie normalnie', normalne.status === 200 && licznik() === przed + 2);
+    }
+
+    console.log('\n  kompresja i pamiec podreczna plikow');
+    {
+      const br = await new Promise((r) => http.get(ADRES + '/', { headers: { cookie: cStd, 'accept-encoding': 'br, gzip' } }, (o) => {
+        const k = []; o.on('data', (c) => k.push(c)); o.on('end', () => r({ o, b: Buffer.concat(k) }));
+      }));
+      const html = zlib.brotliDecompressSync(br.b).toString('utf8');
+      sprawdz('HTML aplikacji pakowany brotli przy Accept-Encoding: br', br.o.headers['content-encoding'] === 'br' && /<html/i.test(html));
+      sprawdz('spakowany HTML jest wyraznie mniejszy', br.b.length < Buffer.byteLength(html) / 2);
+      sprawdz('Vary: Accept-Encoding', br.o.headers.vary === 'Accept-Encoding');
+      const gz = await new Promise((r) => http.get(ADRES + '/', { headers: { cookie: cStd, 'accept-encoding': 'gzip' } }, (o) => { o.resume(); r(o); }));
+      sprawdz('gzip, gdy klient nie zna brotli', gz.headers['content-encoding'] === 'gzip');
+      const bez = await new Promise((r) => http.get(ADRES + '/', { headers: { cookie: cStd } }, (o) => { o.resume(); r(o); }));
+      sprawdz('bez Accept-Encoding odpowiedz niespakowana', !bez.headers['content-encoding']);
+      srv.KONF.kompresja = false;
+      const wyl = await new Promise((r) => http.get(ADRES + '/', { headers: { cookie: cStd, 'accept-encoding': 'br' } }, (o) => { o.resume(); r(o); }));
+      srv.KONF.kompresja = true;
+      sprawdz('CAI_KOMPRESJA=0 wylacza kompresje w Node', !wyl.headers['content-encoding']);
+
+      const manifest = await zadanie('/manifest.json');
+      sprawdz('manifest dostepny przed zalogowaniem z max-age=3600 i ETag',
+        manifest.status === 200 && manifest.headers.get('cache-control') === 'public, max-age=3600' && Boolean(manifest.headers.get('etag')));
+      const ponownie = await zadanie('/manifest.json', { headers: { 'if-none-match': manifest.headers.get('etag') } });
+      sprawdz('If-None-Match z tym samym ETag -> 304', ponownie.status === 304);
+      const biblioteki = fs.readdirSync(path.join(__dirname, '..', 'app', 'pwa', 'lib')).filter((n) => n.endsWith('.js'));
+      if (biblioteki.length) {
+        const bezSesji = await zadanie('/pwa/lib/' + biblioteki[0]);
+        sprawdz('biblioteki aplikacji tylko po zalogowaniu', /text\/html/.test(bezSesji.headers.get('content-type') || ''));
+        const lib = await zadanie('/pwa/lib/' + biblioteki[0], { headers: { cookie: cStd } });
+        sprawdz('biblioteki z Cache-Control immutable na rok', lib.headers.get('cache-control') === 'public, max-age=31536000, immutable');
+      }
+      const ikony = fs.readdirSync(path.join(__dirname, '..', 'app', 'pwa', 'icons'));
+      if (ikony.length) {
+        const ik = await zadanie('/icons/' + ikony[0]);
+        sprawdz('ikony dostepne przed zalogowaniem, immutable', ik.status === 200 && /immutable/.test(ik.headers.get('cache-control') || ''));
+      }
+    }
+
+    console.log('\n  prosba o dostep ze strony produktowej');
+    {
+      prosby.wyzerujLimity();
+      const STRONA = 'https://content-ai.net';
+      const wyslijProsbe = (dane, naglowki = {}) => zadanie('/api/prosba-o-dostep', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', origin: STRONA, ...naglowki }, body: JSON.stringify(dane),
+      });
+      const dobra = { imie: 'Anna', email: 'anna@firma.pl', firma: 'Firma', pakiet: 'standard', wiadomosc: 'Zespol 3 osob', jezyk: 'pl', strona: '' };
+      const pre = await zadanie('/api/prosba-o-dostep', { method: 'OPTIONS', headers: { origin: STRONA, 'access-control-request-method': 'POST', 'access-control-request-headers': 'content-type' } });
+      sprawdz('preflight OPTIONS z dozwolonego Origin -> 204 z CORS',
+        pre.status === 204 && pre.headers.get('access-control-allow-origin') === STRONA && /POST/.test(pre.headers.get('access-control-allow-methods') || ''));
+      sprawdz('CORS bez ciasteczek (brak Allow-Credentials)', !pre.headers.get('access-control-allow-credentials'));
+      const drugi = await zadanie('/api/prosba-o-dostep', { method: 'OPTIONS', headers: { origin: 'https://www.content-ai.net' } });
+      sprawdz('lista Origin po przecinku', drugi.status === 204);
+      const obcy = await wyslijProsbe(dobra, { origin: 'https://obca.example' });
+      sprawdz('obcy Origin -> 403 bez naglowkow CORS', obcy.status === 403 && !obcy.headers.get('access-control-allow-origin'));
+      const tekstowy = await zadanie('/api/prosba-o-dostep', { method: 'POST', headers: { 'Content-Type': 'text/plain', origin: STRONA }, body: JSON.stringify(dobra) });
+      sprawdz('Content-Type inny niz JSON -> 415', tekstowy.status === 415);
+      const bledy = [
+        [{ ...dobra, imie: '' }, 'imie', 'brak-imienia'], [{ ...dobra, imie: 'x'.repeat(101) }, 'imie', 'za-dlugie'],
+        [{ ...dobra, email: 'nie-email' }, 'email', 'zly-email'], [{ ...dobra, email: 'a@' + 'b'.repeat(198) + '.pl' }, 'email', 'za-dlugie'],
+        [{ ...dobra, firma: 'f'.repeat(201) }, 'firma', 'za-dlugie'], [{ ...dobra, pakiet: 'vip' }, 'pakiet', 'zly-pakiet'],
+        [{ ...dobra, wiadomosc: 'w'.repeat(2001) }, 'wiadomosc', 'za-dlugie'], [{ ...dobra, jezyk: 'de' }, undefined, 'zly-jezyk'],
+      ];
+      let wszystkieBledy = true;
+      for (const [dane, pole, kod] of bledy) {
+        const o = await wyslijProsbe(dane);
+        const j = await o.json();
+        if (!(o.status === 400 && j.ok === false && j.blad === kod && j.pole === pole && typeof j.komunikat === 'string' && j.komunikat
+          && o.headers.get('access-control-allow-origin') === STRONA)) {
+          wszystkieBledy = false;
+          console.log('    niezgodne:', kod, o.status, JSON.stringify(j));
+        }
+      }
+      sprawdz('walidacja wg kontraktu strony: 400 {ok:false, blad:<kod>, pole, komunikat} z Allow-Origin', wszystkieBledy);
+      const graniczne = await wyslijProsbe({ ...dobra, imie: 'x'.repeat(100), email: 'a@' + 'b'.repeat(194) + '.pl', firma: 'f'.repeat(200), firma2: 1 }, { 'x-real-ip': '198.51.100.40' });
+      sprawdz('wartosci na granicy kontraktu (imie 100, email 200, firma 200) przechodza', graniczne.status === 200);
+      const pustaFirma = await wyslijProsbe({ ...dobra, firma: '', wiadomosc: '' }, { 'x-real-ip': '198.51.100.41' });
+      sprawdz('pusta firma i wiadomosc przechodza', pustaFirma.status === 200);
+      const en = await (await wyslijProsbe({ ...dobra, email: 'zly', jezyk: 'en' })).json();
+      sprawdz('komunikat w jezyku formularza', /valid email/.test(en.komunikat));
+      const linieProsb = () => (fs.existsSync(ENV.CAI_PROSBY) ? fs.readFileSync(ENV.CAI_PROSBY, 'utf8').trim().split('\n').length : 0);
+      const przedPulapka = linieProsb();
+      const pulapka = await wyslijProsbe({ ...dobra, strona: 'http://spam.example' });
+      sprawdz('pole-pulapka: udawane 200 {ok:true}', pulapka.status === 200 && (await pulapka.json()).ok === true);
+      sprawdz('pole-pulapka: nic nie zapisane', linieProsb() === przedPulapka);
+      const ok = await wyslijProsbe(dobra, { 'x-real-ip': '198.51.100.20' });
+      sprawdz('poprawna prosba -> 200 {ok:true} z Allow-Origin', ok.status === 200 && (await ok.json()).ok === true
+        && ok.headers.get('access-control-allow-origin') === STRONA && /Origin/.test(ok.headers.get('vary') || ''));
+      const zapis = fs.readFileSync(ENV.CAI_PROSBY, 'utf8').trim().split('\n').map((l) => JSON.parse(l)).filter((p) => p.ip === '198.51.100.20');
+      sprawdz('prosba zapisana w JSON Lines z czasem, IP i zgoda:true',
+        zapis.length === 1 && zapis[0].email === 'anna@firma.pl' && zapis[0].zgoda === true && /^\d{4}-\d\d-\d\dT/.test(zapis[0].czas));
+      sprawdz('pola spoza kontraktu nie trafiaja do zapisu', !fs.readFileSync(ENV.CAI_PROSBY, 'utf8').includes('firma2'));
+      sprawdz('pakiet "nie-wiem" (domyslna opcja formularza) przyjety', (await wyslijProsbe({ ...dobra, pakiet: 'nie-wiem' }, { 'x-real-ip': '198.51.100.21' })).status === 200);
+      let ostatni = 0;
+      for (let i = 0; i < 5; i++) ostatni = (await wyslijProsbe(dobra, { 'x-real-ip': '198.51.100.30' })).status;
+      const szosta = await wyslijProsbe(dobra, { 'x-real-ip': '198.51.100.30' });
+      const szostaJson = await szosta.json();
+      sprawdz('5 prosb na godzine z adresu przechodzi, szosta -> 429 {ok:false, blad:"limit"} z Allow-Origin',
+        ostatni === 200 && szosta.status === 429 && szostaJson.blad === 'limit' && szostaJson.ok === false
+        && szosta.headers.get('access-control-allow-origin') === STRONA);
+      sprawdz('inny adres ma wlasny limit', (await wyslijProsbe(dobra, { 'x-real-ip': '198.51.100.31' })).status === 200);
+      const listaAdmin = await zadanie('/api/admin/prosby', { headers: { cookie: cAdmin } });
+      const la = await listaAdmin.json();
+      sprawdz('admin widzi liste prosb, najnowsze pierwsze', listaAdmin.status === 200 && la.prosby.length === 10 && la.prosby[0].ip === '198.51.100.31');
+      sprawdz('zwykle konto nie widzi prosb', (await zadanie('/api/admin/prosby', { headers: { cookie: cStd } })).status === 403);
+      // Limit dobowy: liczniki w pamieci, wiec sprawdzamy funkcje wprost.
+      prosby.wyzerujLimity();
+      let przeszlo = 0;
+      for (let i = 0; i < prosby.NA_DOBE + 5; i++) if (prosby.wolno('10.0.' + Math.floor(i / 4) + '.' + (i % 4))) przeszlo += 1;
+      sprawdz('globalny limit dobowy 200', przeszlo === prosby.NA_DOBE);
+      prosby.wyzerujLimity();
+    }
+
+    console.log('\n  brama OpenSEO sprawdza pakiet');
+    {
+      srv.KONF.openseo.host = '127.0.0.1';
+      srv.KONF.openseo.port = atrapaOpenSeo.address().port;
+      const brama = srv.utworzBrameOpenSeo();
+      await new Promise((r) => brama.listen(0, '127.0.0.1', r));
+      const B = `http://127.0.0.1:${brama.address().port}`;
+      const darm = await fetch(B + '/', { headers: { cookie: cDarm } });
+      const darmHtml = await darm.text();
+      sprawdz('konto darmowe na bramie -> 402 ze strona informacyjna', darm.status === 402 && /Premium/.test(darmHtml) && !darmHtml.includes('KONTENER-OPENSEO'));
+      const darmPost = await fetch(B + '/api/research', { method: 'POST', headers: { cookie: cDarm } });
+      sprawdz('konto darmowe: POST do API kontenera tez 402', darmPost.status === 402);
+      const std = await fetch(B + '/', { headers: { cookie: cStd } });
+      sprawdz('konto standard (bez openseo w pakiecie) -> 402', std.status === 402);
+      const adm = await fetch(B + '/', { headers: { cookie: cAdmin } });
+      sprawdz('admin przechodzi do kontenera', adm.status === 200 && (await adm.text()).includes('KONTENER-OPENSEO'));
+      const bez = await fetch(B + '/');
+      sprawdz('bez sesji ekran logowania (401)', bez.status === 401 && (await bez.text()).includes('name="login"'));
+      const ws = (cookie) => new Promise((r) => {
+        const z = http.request({ host: '127.0.0.1', port: brama.address().port, path: '/ws', headers: { cookie, connection: 'Upgrade', upgrade: 'websocket' } });
+        z.on('upgrade', (o, g) => { g.destroy(); r('upgrade'); });
+        z.on('response', () => r('odpowiedz'));
+        z.on('error', () => r('zamkniete'));
+        z.end();
+      });
+      sprawdz('WebSocket konta darmowego zamykany', await ws(cDarm) === 'zamkniete');
+      await new Promise((r) => brama.close(r));
+    }
+
+    console.log('\n  uszkodzone pliki danych przez HTTP');
+    {
+      const plikBazy = path.join(ENV.CAI_BAZA, 'u-standard.json');
+      const zawartosc = fs.readFileSync(plikBazy, 'utf8');
+      fs.writeFileSync(plikBazy, zawartosc.slice(0, 20));
+      const odp = await zadanie('/api/baza', { headers: { cookie: cStd } });
+      sprawdz('uszkodzona baza: GET /api/baza -> 503, nie pusta lista', odp.status === 503);
+      const dod = await zadanie('/api/baza', json(cStd, { nazwa: 'nowy', tresc: 'tresc nowego dokumentu' }));
+      sprawdz('uszkodzona baza: dodanie -> 503 i plik nietkniety', dod.status === 503 && fs.readFileSync(plikBazy, 'utf8') === zawartosc.slice(0, 20));
+      fs.writeFileSync(plikBazy, zawartosc);
+      const konta = fs.readFileSync(ENV.CAI_UZYTKOWNICY, 'utf8');
+      fs.writeFileSync(ENV.CAI_UZYTKOWNICY, konta.slice(0, 40));
+      const strona503 = await zadanie('/', { headers: { cookie: cStd } });
+      const strona503Html = await strona503.text();
+      sprawdz('uszkodzony plik kont: 503 z wyjasnieniem zamiast "nikt nie istnieje"', strona503.status === 503 && /chwilowo niedostępne/.test(strona503Html));
+      sprawdz('uszkodzony plik kont: plik nietkniety, kopia obok',
+        fs.readFileSync(ENV.CAI_UZYTKOWNICY, 'utf8') === konta.slice(0, 40)
+        && fs.readdirSync(kat).some((n) => n.startsWith('uzytkownicy.json.uszkodzony-')));
+      fs.writeFileSync(ENV.CAI_UZYTKOWNICY, konta);
+      sprawdz('po przywroceniu pliku wszystko wraca', (await zadanie('/auth/me', { headers: { cookie: cStd } })).status === 200);
+    }
+  } finally {
+    await new Promise((r) => serwer.close(r));
+    await new Promise((r) => atrapa.close(r));
+    await new Promise((r) => atrapaOpenSeo.close(r));
+    for (const [k, v] of Object.entries(przedEnv)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+    modulySerwera.forEach((m, i) => { delete require.cache[m]; if (kopieModulow[i]) require.cache[m] = kopieModulow[i]; });
+    fs.rmSync(kat, { recursive: true, force: true });
   }
 }

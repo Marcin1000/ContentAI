@@ -11,8 +11,10 @@
 // Tutaj pobieramy ja naprawde: zwyklym zadaniem HTTP, bez modelu i bez
 // tokenow. Zwracamy tytul i czysty tekst.
 
-const dns = require('node:dns').promises;
+const dns = require('node:dns');
 const net = require('node:net');
+const http = require('node:http');
+const https = require('node:https');
 
 const LIMIT_BAJTOW = 4 * 1024 * 1024;   // wiecej niz strona tekstowa potrzebuje
 const LIMIT_ZNAKOW = 400000;            // ~100 tys. tokenow, gorna granica sensu
@@ -29,58 +31,197 @@ const ROWNOLEGLE_ODNOSNIKI = 6;
 // Przegladarka, ktora sie nie przedstawia, bywa odrzucana przez CDN-y.
 const AGENT = 'Mozilla/5.0 (compatible; ContentAI/1.0; +https://content-ai.net)';
 
+/**
+ * Blad z komunikatem napisanym przez nas - wolno go pokazac w przegladarce.
+ * Wszystko inne (bledy sieci z adresami i portami) serwer zamienia na ogolny
+ * komunikat, zeby nie opowiadac o sieci, w ktorej stoi.
+ */
+class BladStrony extends Error {
+  constructor(komunikat, kod) {
+    super(komunikat);
+    this.name = 'BladStrony';
+    if (kod) this.code = kod;
+  }
+}
+
 // ─── Ochrona przed SSRF ──────────────────────────────────────────────────────
 // Serwer pobiera adres podany przez zalogowanego uzytkownika, wiec bez tej
 // kontroli byloby to okienko do sieci wewnetrznej: ktos wpisalby
 // http://169.254.169.254/ i dostal metadane maszyny prosto do bazy wiedzy.
-// Sprawdzamy KAZDY skok przekierowania, nie tylko pierwszy adres.
+//
+// Trzy warstwy:
+//   1. lista zakresow specjalnych z rejestrow IANA (net.BlockList),
+//   2. kontrola KAZDEGO skoku przekierowania - takze przy sprawdzaniu odnosnikow,
+//   3. kontrola adresu W CHWILI LACZENIA (opcja lookup w http/https.request):
+//      odpowiedz DNS nie moze sie zmienic miedzy sprawdzeniem a polaczeniem.
+
+const ZAKRESY_V4 = [
+  ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8], ['169.254.0.0', 16],
+  ['172.16.0.0', 12], ['192.0.0.0', 24], ['192.0.2.0', 24], ['192.88.99.0', 24], ['192.168.0.0', 16],
+  ['198.18.0.0', 15], ['198.51.100.0', 24], ['203.0.113.0', 24], ['224.0.0.0', 4], ['240.0.0.0', 4],
+];
+// Bez ::ffff:0:0/96: BlockList sam ocenia adresy IPv4 zapisane jako IPv6
+// (w kazdym zapisie) wedlug regul IPv4, a ta regula zablokowalaby caly IPv4.
+const ZAKRESY_V6 = [
+  ['::', 128], ['::1', 128], ['64:ff9b::', 96], ['64:ff9b:1::', 48], ['100::', 64],
+  ['2001::', 23], ['2001:db8::', 32], ['2002::', 16], ['fc00::', 7], ['fe80::', 10], ['fec0::', 10], ['ff00::', 8],
+];
+const ZABLOKOWANE = new net.BlockList();
+for (const [a, p] of ZAKRESY_V4) ZABLOKOWANE.addSubnet(a, p, 'ipv4');
+for (const [a, p] of ZAKRESY_V6) ZABLOKOWANE.addSubnet(a, p, 'ipv6');
 
 function adresPrywatny(ip) {
-  const rodzaj = net.isIP(ip);
-  if (rodzaj === 4) {
-    const o = ip.split('.').map(Number);
-    if (o[0] === 10) return true;
-    if (o[0] === 127) return true;
-    if (o[0] === 0) return true;
-    if (o[0] === 172 && o[1] >= 16 && o[1] <= 31) return true;
-    if (o[0] === 192 && o[1] === 168) return true;
-    if (o[0] === 169 && o[1] === 254) return true;   // metadane chmury
-    if (o[0] === 100 && o[1] >= 64 && o[1] <= 127) return true;
-    if (o[0] >= 224) return true;                    // multicast i wyzej
-    return false;
+  const rodzaj = net.isIP(String(ip || ''));
+  if (rodzaj === 0) return true;   // nie rozpoznalismy - traktujemy jak prywatny
+  try {
+    return ZABLOKOWANE.check(ip, rodzaj === 4 ? 'ipv4' : 'ipv6');
+  } catch {
+    return true;
   }
-  if (rodzaj === 6) {
-    const a = ip.toLowerCase();
-    if (a === '::1' || a === '::') return true;
-    if (a.startsWith('fc') || a.startsWith('fd')) return true;   // unique local
-    if (a.startsWith('fe8') || a.startsWith('fe9')
-      || a.startsWith('fea') || a.startsWith('feb')) return true; // link local
-    // ::ffff:10.0.0.1 - adres IPv4 zapisany jako IPv6
-    const m = a.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-    if (m) return adresPrywatny(m[1]);
-    return false;
-  }
-  return true;   // nie rozpoznalismy - traktujemy jak prywatny
+}
+
+/** Nazwa hosta z adresu bez nawiasow IPv6 ([::1] -> ::1). */
+function hostBezNawiasow(u) {
+  return u.hostname.replace(/^\[|\]$/g, '');
 }
 
 async function sprawdzAdres(adres) {
   let u;
-  try { u = new URL(adres); } catch { throw new Error('Niepoprawny adres'); }
+  try { u = new URL(adres); } catch { throw new BladStrony('Niepoprawny adres'); }
   if (u.protocol !== 'http:' && u.protocol !== 'https:') {
-    throw new Error('Dozwolone sa tylko adresy http i https');
+    throw new BladStrony('Dozwolone sa tylko adresy http i https');
   }
-  // Gdy w adresie jest wprost IP, dns.lookup i tak je zwroci - sprawdzamy raz.
+  const host = hostBezNawiasow(u);
+  // Adres podany wprost jako IP sprawdzamy od razu - przy laczeniu Node nie
+  // pyta wtedy DNS, wiec kontrola w lookup by go nie zobaczyla.
+  if (net.isIP(host)) {
+    if (adresPrywatny(host)) throw new BladStrony('Adres wskazuje na siec wewnetrzna', 'CAI_SIEC_WEWNETRZNA');
+    return u;
+  }
   let wyniki;
   try {
-    wyniki = await dns.lookup(u.hostname, { all: true });
+    wyniki = await dns.promises.lookup(host, { all: true });
   } catch {
-    throw new Error('Nie udalo sie rozwiazac nazwy hosta');
+    throw new BladStrony('Nie udalo sie rozwiazac nazwy hosta');
   }
-  if (!wyniki.length) throw new Error('Nie udalo sie rozwiazac nazwy hosta');
+  if (!wyniki.length) throw new BladStrony('Nie udalo sie rozwiazac nazwy hosta');
   for (const w of wyniki) {
-    if (adresPrywatny(w.address)) throw new Error('Adres wskazuje na siec wewnetrzna');
+    if (adresPrywatny(w.address)) throw new BladStrony('Adres wskazuje na siec wewnetrzna', 'CAI_SIEC_WEWNETRZNA');
   }
   return u;
+}
+
+/**
+ * lookup dla http/https.request: rozwiazuje nazwe i odrzuca polaczenie, gdy
+ * KTORYKOLWIEK adres jest wewnetrzny. Dziala w chwili laczenia, wiec zmiana
+ * odpowiedzi DNS po sprawdzAdres (DNS rebinding) nic nie da.
+ */
+function bezpiecznyLookup(hostname, opcje, oddzwon) {
+  dns.lookup(hostname, opcje, (blad, adres, rodzina) => {
+    if (blad) return oddzwon(blad);
+    const lista = Array.isArray(adres) ? adres : [{ address: adres, family: rodzina }];
+    if (!lista.length || lista.some((a) => adresPrywatny(a.address))) {
+      return oddzwon(new BladStrony('Adres wskazuje na siec wewnetrzna', 'CAI_SIEC_WEWNETRZNA'));
+    }
+    return oddzwon(null, adres, rodzina);
+  });
+}
+
+/**
+ * Jedno zapytanie HTTP bez sledzenia przekierowan, z kontrola adresu przy
+ * laczeniu. Zwraca obiekt w ksztalcie odpowiedzi fetch (status, ok,
+ * headers.get) plus surowy strumien do czytania z limitem bajtow.
+ */
+function zapytanieHttp(href, opcje = {}) {
+  return new Promise((rozwiaz, odrzuc) => {
+    const u = new URL(href);
+    const modul = u.protocol === 'https:' ? https : http;
+    const zadanie = modul.request(u, {
+      method: opcje.method || 'GET',
+      headers: opcje.headers || {},
+      lookup: bezpiecznyLookup,
+      signal: opcje.signal,
+    }, (odp) => {
+      rozwiaz({
+        status: odp.statusCode,
+        ok: odp.statusCode >= 200 && odp.statusCode < 300,
+        headers: { get: (k) => { const v = odp.headers[String(k).toLowerCase()]; return v === undefined ? null : String(v); } },
+        strumien: odp,
+        zamknij: () => odp.destroy(),
+      });
+    });
+    zadanie.on('error', odrzuc);
+    zadanie.end();
+  });
+}
+
+/**
+ * Czyta cialo odpowiedzi, liczac bajty w trakcie: po przekroczeniu limitu
+ * przerywa od razu, zamiast najpierw wczytac calosc do pamieci.
+ */
+async function czytajZLimitem(odp, limit) {
+  if (odp.strumien) {
+    return new Promise((rozwiaz, odrzuc) => {
+      const kawalki = [];
+      let rozmiar = 0;
+      odp.strumien.on('data', (c) => {
+        rozmiar += c.length;
+        if (rozmiar > limit) {
+          odp.strumien.destroy();
+          odrzuc(new BladStrony('Strona jest za duza'));
+          return;
+        }
+        kawalki.push(c);
+      });
+      odp.strumien.on('end', () => rozwiaz(Buffer.concat(kawalki)));
+      odp.strumien.on('error', odrzuc);
+    });
+  }
+  if (odp.body && typeof odp.body.getReader === 'function') {
+    const czytnik = odp.body.getReader();
+    const kawalki = [];
+    let rozmiar = 0;
+    for (;;) {
+      const { done, value } = await czytnik.read();
+      if (done) break;
+      rozmiar += value.length;
+      if (rozmiar > limit) {
+        await czytnik.cancel().catch(() => {});
+        throw new BladStrony('Strona jest za duza');
+      }
+      kawalki.push(Buffer.from(value));
+    }
+    return Buffer.concat(kawalki);
+  }
+  // Odpowiedz bez strumienia (atrapa w testach) - sprawdzamy po fakcie.
+  const bufor = Buffer.from(await odp.arrayBuffer());
+  if (bufor.length > limit) throw new BladStrony('Strona jest za duza');
+  return bufor;
+}
+
+/** Zwalnia polaczenie, gdy tresci odpowiedzi nie potrzebujemy. */
+function porzuc(odp) {
+  try {
+    if (odp && typeof odp.zamknij === 'function') odp.zamknij();
+    else if (odp && odp.body && typeof odp.body.cancel === 'function') odp.body.cancel().catch(() => {});
+  } catch { /* juz zamkniete */ }
+}
+
+/**
+ * Petla przekierowan: kazdy skok przechodzi te sama kontrole adresu co
+ * pierwszy. Zwraca { odp, adres } ostatniego skoku.
+ */
+async function zPrzekierowaniami(adres, opcje, fetchImpl) {
+  let biezacy = adres;
+  for (let skok = 0; skok <= LIMIT_PRZEKIEROWAN; skok++) {
+    const u = await sprawdzAdres(biezacy);
+    const odp = await fetchImpl(u.href, { ...opcje, redirect: 'manual' });
+    const dokad = odp.status >= 300 && odp.status < 400 ? odp.headers.get('location') : null;
+    if (!dokad) return { odp, adres: u.href };
+    porzuc(odp);
+    biezacy = new URL(dokad, u.href).href;
+  }
+  throw new BladStrony('Za duzo przekierowan');
 }
 
 // ─── HTML na tekst ───────────────────────────────────────────────────────────
@@ -138,39 +279,25 @@ function naTekst(html) {
 // fetchImpl wstrzykujemy tak samo jak w baza.js - zeby testy mogly przejsc
 // petle przekierowan bez sieci. Kontrola adresu zostaje w srodku, wiec
 // podstawiony fetch nie omija jej ani na pierwszym adresie, ani na zadnym
-// kolejnym skoku.
-async function pobierz(adres, fetchImpl = fetch) {
-  let biezacy = adres;
-  let odp = null;
+// kolejnym skoku. Domyslnie zapytanieHttp, ktore sprawdza adres takze przy
+// samym laczeniu.
+async function pobierz(adres, fetchImpl = zapytanieHttp) {
+  const { odp, adres: koncowy } = await zPrzekierowaniami(adres, {
+    signal: AbortSignal.timeout(CZAS_ODPOWIEDZI),
+    headers: { 'User-Agent': AGENT, Accept: 'text/html,application/xhtml+xml,text/plain' },
+  }, fetchImpl);
 
-  for (let skok = 0; skok <= LIMIT_PRZEKIEROWAN; skok++) {
-    const u = await sprawdzAdres(biezacy);
-    const przerwij = AbortSignal.timeout(CZAS_ODPOWIEDZI);
-    odp = await fetchImpl(u.href, {
-      redirect: 'manual',           // kazdy skok sprawdzamy sami
-      signal: przerwij,
-      headers: { 'User-Agent': AGENT, Accept: 'text/html,application/xhtml+xml,text/plain' },
-    });
-    if (odp.status >= 300 && odp.status < 400 && odp.headers.get('location')) {
-      biezacy = new URL(odp.headers.get('location'), u.href).href;
-      odp = null;
-      continue;
-    }
-    break;
-  }
-
-  if (!odp) throw new Error('Za duzo przekierowan');
-  if (!odp.ok) throw new Error('Strona odpowiedziala bledem HTTP ' + odp.status);
+  if (!odp.ok) { porzuc(odp); throw new BladStrony('Strona odpowiedziala bledem HTTP ' + odp.status); }
 
   const typ = (odp.headers.get('content-type') || '').toLowerCase();
   if (typ && !typ.includes('html') && !typ.includes('text/plain') && !typ.includes('xml')) {
-    throw new Error('To nie jest strona tekstowa (' + typ.split(';')[0] + ')');
+    porzuc(odp);
+    throw new BladStrony('To nie jest strona tekstowa (' + typ.split(';')[0] + ')');
   }
   const dlugosc = Number(odp.headers.get('content-length') || 0);
-  if (dlugosc && dlugosc > LIMIT_BAJTOW) throw new Error('Strona jest za duza');
+  if (dlugosc && dlugosc > LIMIT_BAJTOW) { porzuc(odp); throw new BladStrony('Strona jest za duza'); }
 
-  const bufor = Buffer.from(await odp.arrayBuffer());
-  if (bufor.length > LIMIT_BAJTOW) throw new Error('Strona jest za duza');
+  const bufor = await czytajZLimitem(odp, LIMIT_BAJTOW);
   const html = bufor.toString('utf8');
 
   const tekst = naTekst(html).slice(0, LIMIT_ZNAKOW);
@@ -178,11 +305,11 @@ async function pobierz(adres, fetchImpl = fetch) {
   if (slowa < 30) {
     // Najczestszy powod: strona buduje sie w przegladarce i w samym HTML-u
     // nie ma jeszcze tresci. Mowimy to wprost, zamiast zwracac pustke.
-    throw new Error('Strona nie zawiera czytelnego tekstu (' + slowa
+    throw new BladStrony('Strona nie zawiera czytelnego tekstu (' + slowa
       + ' slow). Prawdopodobnie tresc dogrywa sie skryptem.');
   }
 
-  return { adres: biezacy, tytul: tytulStrony(html), tekst, slowa };
+  return { adres: koncowy, tytul: tytulStrony(html), tekst, slowa };
 }
 
 // ─── Sprawdzenie, czy odnosnik zyje ──────────────────────────────────────────
@@ -190,15 +317,20 @@ async function pobierz(adres, fetchImpl = fetch) {
 // zrodla, a prowadzi donikad. Przegladarka tego nie sprawdzi, bo obca witryna
 // nie pozwala jej czytac odpowiedzi. Serwer moze - i robi to z ta sama
 // ochrona adresu co przy pobieraniu strony.
-async function sprawdzOdnosniki(adresy, fetchImpl = fetch) {
+async function sprawdzOdnosniki(adresy, fetchImpl = zapytanieHttp) {
   const doSprawdzenia = adresy.slice(0, 40);
 
+  // Przekierowania sledzimy sami, z kontrola kazdego skoku - redirect:'follow'
+  // sprawdzal tylko pierwszy adres, a kolejne skoki mogly prowadzic do sieci
+  // wewnetrznej. Tresci nie czytamy: liczy sie kod odpowiedzi.
   async function zapytaj(href, metoda) {
-    return fetchImpl(href, {
-      method: metoda, redirect: 'follow',
+    const { odp } = await zPrzekierowaniami(href, {
+      method: metoda,
       signal: AbortSignal.timeout(CZAS_ODNOSNIKA),
       headers: { 'User-Agent': AGENT },
-    });
+    }, fetchImpl);
+    porzuc(odp);
+    return odp;
   }
 
   async function jeden(adres) {
@@ -220,6 +352,10 @@ async function sprawdzOdnosniki(adresy, fetchImpl = fetch) {
     } catch (e) {
       blad = e;
     }
+    // Przekierowanie do sieci wewnetrznej to odmowa, nie "nie odpowiada".
+    if (blad && blad.code === 'CAI_SIEC_WEWNETRZNA') {
+      return { adres, status: 0, stan: 'odrzucony', dziala: false, blad: blad.message };
+    }
     const wartoPonowic = !odp
       || odp.status === 403 || odp.status === 405
       || odp.status === 501 || odp.status === 429;
@@ -231,14 +367,20 @@ async function sprawdzOdnosniki(adresy, fetchImpl = fetch) {
         blad = e;
         odp = null;
       }
+      if (blad && blad.code === 'CAI_SIEC_WEWNETRZNA') {
+        return { adres, status: 0, stan: 'odrzucony', dziala: false, blad: blad.message };
+      }
     }
 
     if (!odp) {
       // NIE to samo co "adres nie odpowiada". Przekroczony czas albo blad
       // sieci znaczy, ze kontrola sie nie odbyla - zglaszanie tego jako
       // martwego odnosnika bylo falszywym alarmem na dzialajacych stronach.
+      // Komunikat systemowy (adres, port) nie idzie do przegladarki.
+      const czas = blad && (blad.name === 'TimeoutError' || blad.name === 'AbortError' || /timeout|aborted/i.test(blad.message));
       return { adres, status: 0, stan: 'nieznany', dziala: false,
-               blad: blad ? blad.message : '' };
+               blad: !blad ? '' : blad instanceof BladStrony ? blad.message
+                 : czas ? 'Brak odpowiedzi w wyznaczonym czasie' : 'Blad polaczenia' };
     }
     return {
       adres, status: odp.status,
@@ -264,4 +406,7 @@ async function sprawdzOdnosniki(adresy, fetchImpl = fetch) {
   return wynik;
 }
 
-module.exports = { pobierz, naTekst, adresPrywatny, sprawdzAdres, sprawdzOdnosniki };
+module.exports = {
+  pobierz, naTekst, adresPrywatny, sprawdzAdres, sprawdzOdnosniki,
+  BladStrony, zapytanieHttp, czytajZLimitem, bezpiecznyLookup, ZAKRESY_V4, ZAKRESY_V6,
+};
