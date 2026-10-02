@@ -1,0 +1,48 @@
+<!doctype html>
+{# Polityka prywatnosci: /prywatnosc/ (PL) i /en/privacy/ (EN). Tresc prawna DO PRZEGLADU przez Marcina przed publikacja. #}
+<html lang="{{$jezyk}}">
+<head>
+<meta charset="utf-8">
+<title>{{a:priv-meta-title}}</title>
+<meta name="description" content="{{a:priv-meta-desc}}">
+<link rel="canonical" href="{{$url}}">
+<link rel="alternate" hreflang="pl" href="{{$url_pl}}">
+<link rel="alternate" hreflang="en" href="{{$url_en}}">
+<link rel="alternate" hreflang="x-default" href="{{$url_en}}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Content AI">
+<meta property="og:title" content="{{a:priv-meta-title}}">
+<meta property="og:description" content="{{a:priv-meta-desc}}">
+<meta property="og:url" content="{{$url}}">
+<meta property="og:image" content="{{$og_obraz}}">
+<meta property="og:locale" content="{{$og_locale}}">
+{{>glowa}}
+</head>
+<body class="podstrona">
+{{>nawigacja}}
+
+<main id="tresc" class="dokument">
+  <div class="kont dokument-siatka">
+    <header class="dokument-nag">
+      <p class="etyk"><svg class="etyk-znak" aria-hidden="true" focusable="false"><use href="#i-znak"/></svg>{{t:priv-kicker}}</p>
+      <h1>{{t:priv-h1}}</h1>
+      <p class="lead">{{t:priv-lead}}</p>
+      <p class="mala">{{t:priv-updated}}</p>
+    </header>
+    <div class="dokument-tresc">
+      <section aria-labelledby="pr-1"><h2 id="pr-1"><span class="etyk-nr">01</span>{{t:priv-1-t}}</h2><p>{{t:priv-1-p}}</p></section>
+      <section aria-labelledby="pr-2"><h2 id="pr-2"><span class="etyk-nr">02</span>{{t:priv-2-t}}</h2><p>{{t:priv-2-p}}</p></section>
+      <section aria-labelledby="pr-3"><h2 id="pr-3"><span class="etyk-nr">03</span>{{t:priv-3-t}}</h2><p>{{t:priv-3-p}}</p></section>
+      <section aria-labelledby="pr-4"><h2 id="pr-4"><span class="etyk-nr">04</span>{{t:priv-4-t}}</h2><p>{{t:priv-4-p}}</p></section>
+      <section aria-labelledby="pr-5"><h2 id="pr-5"><span class="etyk-nr">05</span>{{t:priv-5-t}}</h2><p>{{t:priv-5-p}}</p></section>
+      <p class="cta">
+        <a class="btn btn-glowny" href="{{$glowna}}#dostep">{{t:priv-to-form}}<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
+        <a class="btn btn-drugi" href="{{$glowna}}">{{t:priv-back}}</a>
+      </p>
+    </div>
+  </div>
+</main>
+
+{{>stopka}}
+</body>
+</html>

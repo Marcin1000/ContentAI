@@ -78,10 +78,12 @@ jobs:
           python3 narzedzia/audyt_i18n.py
           python3 narzedzia/audyt_uchwyty.py
 
-      # Strona produktowa ma własne dwa słowniki wpisane wprost w plik i tę
-      # samą cichą usterkę: brak klucza nie wywala niczego, tylko angielska
-      # wersja pokazuje polskie zdanie.
-      - name: Strona produktowa - tłumaczenia
+      # Strona produktowa powstaje z jednego szablonu i słownika PL/EN
+      # (narzedzia/buduj_strone.py). Kontrola zatrzymuje wydanie, gdy pliki
+      # strony są nieaktualne, brakuje tekstu w PL lub EN, liczby pakietów
+      # rozjechały się z serwer/plany.js, strona ładuje coś z obcego serwera
+      # albo łamie zasady CSP (skrypty w treści, onclick, style=).
+      - name: Strona produktowa - generator, teksty, obce serwery, CSP
         run: python3 narzedzia/audyt_showcase.py
 
       # README to wizytówka publicznego repozytorium. Zepsuty odnośnik nie

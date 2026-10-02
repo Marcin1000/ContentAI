@@ -1,0 +1,940 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Content AI · Content for Google and AI answers, from your sources</title>
+<meta name="description" content="Content AI writes articles from your knowledge base, scores them for SEO, AIO, AEO and GEO, checks facts and links, and publishes to WordPress or Drupal.">
+<link rel="canonical" href="https://content-ai.net/en/">
+<link rel="alternate" hreflang="pl" href="https://content-ai.net/">
+<link rel="alternate" hreflang="en" href="https://content-ai.net/en/">
+<link rel="alternate" hreflang="x-default" href="https://content-ai.net/en/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Content AI">
+<meta property="og:title" content="Content for Google and AI answers. Written from your sources.">
+<meta property="og:description" content="Knowledge base, web research with sources, SEO, AIO, AEO and GEO scores and a fact check in one workspace.">
+<meta property="og:url" content="https://content-ai.net/en/">
+<meta property="og:image" content="https://content-ai.net/obrazy/og-en.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Content AI: an article draft with SEO, AIO, AEO and GEO scores and a fact check note in the margin">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="pl_PL">
+<meta name="twitter:card" content="summary_large_image">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111110">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F7F6F2">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/obrazy/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="preload" href="/fonty/literata-latin-pl.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonty/schibsted-grotesk-latin-pl.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/zasoby/strona.css?v=7aeeed8ffd">
+
+<script src="/zasoby/motyw.js?v=5fcd5d4153"></script>
+<script src="/zasoby/strona.js?v=ebfcc1be67" defer></script>
+
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "Organization",
+   "@id": "https://content-ai.net/#organizacja",
+   "name": "Content AI",
+   "url": "https://content-ai.net/",
+   "logo": "https://content-ai.net/obrazy/icon-512.png"
+  },
+  {
+   "@type": "SoftwareApplication",
+   "@id": "https://content-ai.net/#aplikacja",
+   "name": "Content AI",
+   "applicationCategory": "BusinessApplication",
+   "operatingSystem": "Web",
+   "url": "https://content-ai.net/en/",
+   "inLanguage": "en",
+   "description": "Content AI writes articles from your knowledge base, scores them for SEO, AIO, AEO and GEO, checks facts and links, and publishes to WordPress or Drupal.",
+   "publisher": {
+    "@id": "https://content-ai.net/#organizacja"
+   }
+  },
+  {
+   "@type": "FAQPage",
+   "@id": "https://content-ai.net/en/#faq",
+   "inLanguage": "en",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "How is Content AI different from an AI chat?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "A chat answers from the model's memory. Content AI writes from your knowledge base, goes to the web only for missing information and cites it, then scores the draft for SEO, AIO, AEO and GEO and checks the facts. All in one workspace, from topic to publication."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Where do the facts come from?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "From the knowledge base. With web search on, missing information comes from the pages listed under the article. Information about your company always comes from the base only."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Will the text be error-free?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No AI tool can guarantee that. Content AI reduces the risk: figures and links come from the sources, and the fact check lists the sentences the sources do not support, quoting each one. A person always has the final say."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Which AI models does Content AI use?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Drafts are written by Anthropic's Claude. The server can switch to open-source models through NVIDIA NIM with no change to the app. Images, voice-over and transcription use OpenAI, with an optional ElevenLabs voice."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can I use my own API key?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes, on the Standard and Premium plans, for Anthropic, OpenAI and ElevenLabs. Model costs then go to your own provider account. The key is saved only in your browser; the server passes it to the provider with each request and stores nothing. Plan limits still apply."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Where do my documents go?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Knowledge base documents live on the Content AI server: private ones are visible only to their owner, shared ones to the whole team. When generating, the model provider receives only the passages from them that match the topic. Text history stays in your browser."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Where does the SERP data come from?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "It depends on the server setup: either a web search run by the model (an estimate) or the DataForSEO API (measured organic results). SERP analysis is available from the Standard plan up."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Which languages does Content AI support?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "The interface is in Polish and English. Content can be written in Polish, English, German and Czech."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How do I get an account?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Through the “Request access” form on this page. An administrator creates the account, and new accounts start on the Free plan: 3 articles to try it out."
+     }
+    }
+   ]
+  }
+ ]
+}
+</script>
+</head>
+<body>
+
+<a class="skip" href="#tresc">Skip to content</a>
+
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<symbol id="i-znak" viewBox="0 0 32 32"><g fill="currentColor" stroke="none"><path d="M16 1.5 L18.82 12.33 L17.94 13.21 A3.4 3.4 0 0 0 14.06 13.21 L13.18 12.33 Z M30.5 16 L19.67 18.82 L18.79 17.94 A3.4 3.4 0 0 0 18.79 14.06 L19.67 13.18 Z M16 30.5 L13.18 19.67 L14.06 18.79 A3.4 3.4 0 0 0 17.94 18.79 L18.82 19.67 Z M1.5 16 L12.33 13.18 L13.21 14.06 A3.4 3.4 0 0 0 13.21 17.94 L12.33 18.82 Z"/><circle cx="16" cy="16" r="1.6"/></g></symbol>
+<symbol id="i-logotyp" viewBox="44.4 8.6 149.2 14.8"><path fill="currentColor" stroke="none" transform="translate(44 9)" d="M7.5 14.2Q5.5 14.2 3.9 13.3Q2.4 12.4 1.6 10.8Q0.7 9.1 0.7 7.0Q0.7 4.8 1.6 3.2Q2.4 1.6 3.9 0.7Q5.4 -0.2 7.5 -0.2Q9.8 -0.2 11.4 0.9Q13.0 2.1 13.5 4.3L11.0 4.9Q10.6 3.4 9.7 2.6Q8.8 1.9 7.5 1.9Q6.2 1.9 5.3 2.5Q4.4 3.2 3.9 4.3Q3.4 5.5 3.4 7.0Q3.4 8.5 3.9 9.7Q4.4 10.9 5.3 11.5Q6.2 12.1 7.4 12.1Q8.8 12.1 9.7 11.4Q10.7 10.6 11.0 9.1L13.6 9.7Q13.0 11.9 11.4 13.1Q9.8 14.2 7.5 14.2Z M24.6 14.2Q22.5 14.2 20.9 13.4Q19.4 12.5 18.6 10.9Q17.7 9.2 17.7 7.0Q17.7 4.8 18.6 3.1Q19.4 1.5 20.9 0.6Q22.5 -0.2 24.6 -0.2Q26.7 -0.2 28.3 0.6Q29.8 1.5 30.7 3.1Q31.5 4.8 31.5 7.0Q31.5 9.2 30.7 10.9Q29.8 12.5 28.3 13.4Q26.7 14.2 24.6 14.2ZM24.6 12.1Q25.9 12.1 26.9 11.5Q27.8 10.9 28.3 9.7Q28.8 8.6 28.8 7.0Q28.8 5.4 28.3 4.3Q27.8 3.1 26.9 2.5Q25.9 1.9 24.6 1.9Q23.3 1.9 22.4 2.5Q21.4 3.1 20.9 4.3Q20.4 5.4 20.4 7.0Q20.4 8.6 20.9 9.7Q21.4 10.9 22.4 11.5Q23.3 12.1 24.6 12.1Z M36.5 14.0V0.0H40.1L46.8 12.5L46.2 12.6V0.0H48.6V14.0H45.1L38.2 1.4L38.9 1.4V14.0Z M58.2 14.0V2.1H53.3V0.0H65.7V2.1H60.8V14.0Z M70.4 14.0V0.0H80.1V2.1H73.0V5.6H79.1V7.6H73.0V11.9H80.2V14.0Z M85.1 14.0V0.0H88.7L95.5 12.5L94.8 12.6V0.0H97.2V14.0H93.7L86.8 1.4L87.5 1.4V14.0Z M106.9 14.0V2.1H101.9V0.0H114.4V2.1H109.4V14.0Z M125.0 14.0 130.6 0.0H133.6L139.2 14.0H136.5L132.1 2.0L127.7 14.0ZM128.4 9.9V7.8H135.8V9.9Z M142.9 14.0V12.0H144.8V2.0H142.9V0.0H149.2V2.0H147.3V12.0H149.2V14.0Z"/></symbol>
+<symbol id="i-arrow-right" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /> <path vector-effect="non-scaling-stroke" d="m12 5 7 7-7 7" /></symbol>
+<symbol id="i-bot" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 8V4H8" /> <rect vector-effect="non-scaling-stroke" width="16" height="12" x="4" y="8" rx="2" /> <path vector-effect="non-scaling-stroke" d="M2 14h2" /> <path vector-effect="non-scaling-stroke" d="M20 14h2" /> <path vector-effect="non-scaling-stroke" d="M15 13v2" /> <path vector-effect="non-scaling-stroke" d="M9 13v2" /></symbol>
+<symbol id="i-chart-column" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 3v16a2 2 0 0 0 2 2h16" /> <path vector-effect="non-scaling-stroke" d="M18 17V9" /> <path vector-effect="non-scaling-stroke" d="M13 17V5" /> <path vector-effect="non-scaling-stroke" d="M8 17v-3" /></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 6 9 17l-5-5" /></symbol>
+<symbol id="i-circle-check" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol>
+<symbol id="i-file-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M12 18v-6" /> <path vector-effect="non-scaling-stroke" d="m9 15 3 3 3-3" /></symbol>
+<symbol id="i-file-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <circle vector-effect="non-scaling-stroke" cx="11.5" cy="14.5" r="2.5" /> <path vector-effect="non-scaling-stroke" d="M13.3 16.3 15 18" /></symbol>
+<symbol id="i-file-text" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M10 9H8" /> <path vector-effect="non-scaling-stroke" d="M16 13H8" /> <path vector-effect="non-scaling-stroke" d="M16 17H8" /></symbol>
+<symbol id="i-gauge" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m12 14 4-4" /> <path vector-effect="non-scaling-stroke" d="M3.34 19a10 10 0 1 1 17.32 0" /></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /> <path vector-effect="non-scaling-stroke" d="M2 12h20" /></symbol>
+<symbol id="i-headphones" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" /></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" ry="2" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="9" r="2" /> <path vector-effect="non-scaling-stroke" d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 16v-4" /> <path vector-effect="non-scaling-stroke" d="M12 8h.01" /></symbol>
+<symbol id="i-key-round" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle vector-effect="non-scaling-stroke" cx="16.5" cy="7.5" r=".5" fill="currentColor" /></symbol>
+<symbol id="i-languages" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m5 8 6 6" /> <path vector-effect="non-scaling-stroke" d="m4 14 6-6 2-3" /> <path vector-effect="non-scaling-stroke" d="M2 5h12" /> <path vector-effect="non-scaling-stroke" d="M7 2h1" /> <path vector-effect="non-scaling-stroke" d="m22 22-5-10-5 10" /> <path vector-effect="non-scaling-stroke" d="M14 18h6" /></symbol>
+<symbol id="i-library" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 6 4 14" /> <path vector-effect="non-scaling-stroke" d="M12 6v14" /> <path vector-effect="non-scaling-stroke" d="M8 8v12" /> <path vector-effect="non-scaling-stroke" d="M4 4v16" /></symbol>
+<symbol id="i-lightbulb" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" /> <path vector-effect="non-scaling-stroke" d="M9 18h6" /> <path vector-effect="non-scaling-stroke" d="M10 22h4" /></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /> <path vector-effect="non-scaling-stroke" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path vector-effect="non-scaling-stroke" d="M7 11V7a5 5 0 0 1 10 0v4" /></symbol>
+<symbol id="i-megaphone" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" /> <path vector-effect="non-scaling-stroke" d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14" /> <path vector-effect="non-scaling-stroke" d="M8 6v8" /></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></symbol>
+<symbol id="i-monitor" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></symbol>
+<symbol id="i-notebook-pen" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4" /> <path vector-effect="non-scaling-stroke" d="M2 6h4" /> <path vector-effect="non-scaling-stroke" d="M2 10h4" /> <path vector-effect="non-scaling-stroke" d="M2 14h4" /> <path vector-effect="non-scaling-stroke" d="M2 18h4" /> <path vector-effect="non-scaling-stroke" d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /></symbol>
+<symbol id="i-package" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /> <path vector-effect="non-scaling-stroke" d="M12 22V12" /> <polyline vector-effect="non-scaling-stroke" points="3.29 7 12 12 20.71 7" /> <path vector-effect="non-scaling-stroke" d="m7.5 4.27 9 5.15" /></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></symbol>
+<symbol id="i-pen-line" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13 21h8" /> <path vector-effect="non-scaling-stroke" d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /> <path vector-effect="non-scaling-stroke" d="M12 5v14" /></symbol>
+<symbol id="i-refresh-cw" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path vector-effect="non-scaling-stroke" d="M21 3v5h-5" /> <path vector-effect="non-scaling-stroke" d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path vector-effect="non-scaling-stroke" d="M8 16H3v5" /></symbol>
+<symbol id="i-scan-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 7V5a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M17 3h2a2 2 0 0 1 2 2v2" /> <path vector-effect="non-scaling-stroke" d="M21 17v2a2 2 0 0 1-2 2h-2" /> <path vector-effect="non-scaling-stroke" d="M7 21H5a2 2 0 0 1-2-2v-2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /> <path vector-effect="non-scaling-stroke" d="m16 16-1.9-1.9" /></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></symbol>
+<symbol id="i-share-2" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="18" cy="5" r="3" /> <circle vector-effect="non-scaling-stroke" cx="6" cy="12" r="3" /> <circle vector-effect="non-scaling-stroke" cx="18" cy="19" r="3" /> <line vector-effect="non-scaling-stroke" x1="8.59" x2="15.42" y1="13.51" y2="17.49" /> <line vector-effect="non-scaling-stroke" x1="15.41" x2="8.59" y1="6.51" y2="10.49" /></symbol>
+<symbol id="i-shield-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /> <path vector-effect="non-scaling-stroke" d="m9 12 2 2 4-4" /></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="4" /> <path vector-effect="non-scaling-stroke" d="M12 2v2" /> <path vector-effect="non-scaling-stroke" d="M12 20v2" /> <path vector-effect="non-scaling-stroke" d="m4.93 4.93 1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="m17.66 17.66 1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="M2 12h2" /> <path vector-effect="non-scaling-stroke" d="M20 12h2" /> <path vector-effect="non-scaling-stroke" d="m6.34 17.66-1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="m19.07 4.93-1.41 1.41" /></symbol>
+<symbol id="i-trending-up" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 7h6v6" /> <path vector-effect="non-scaling-stroke" d="m22 7-8.5 8.5-5-5L2 17" /></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v12" /> <path vector-effect="non-scaling-stroke" d="m17 8-5-5-5 5" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path vector-effect="non-scaling-stroke" d="M16 3.128a4 4 0 0 1 0 7.744" /> <path vector-effect="non-scaling-stroke" d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="7" r="4" /></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M18 6 6 18" /> <path vector-effect="non-scaling-stroke" d="m6 6 12 12" /></symbol>
+</svg>
+
+<header class="nav" id="nav">
+  <div class="kont nav-in">
+    <a class="logo" href="/en/" aria-label="Content AI, home page">
+      <svg class="logo-znak" aria-hidden="true" focusable="false"><use href="#i-znak"/></svg>
+      <svg class="logo-tekst" aria-hidden="true" focusable="false"><use href="#i-logotyp"/></svg>
+    </a>
+    <nav class="nav-linki" aria-label="Page sections">
+      <a href="/en/#jak">How it works</a>
+      <a href="/en/#funkcje">Features</a>
+      <a href="/en/#niezawodnosc">Reliability</a>
+      <a href="/en/#bezpieczenstwo">Security</a>
+      <a href="/en/#pakiety">Plans</a>
+      <a href="/en/#faq">FAQ</a>
+    </nav>
+    <div class="nav-akcje">
+      <nav class="jezyk" aria-label="Language">
+        <a href="/" lang="pl" hreflang="pl" data-jezyk="pl" >PL</a><a href="/en/" lang="en" hreflang="en" data-jezyk="en" aria-current="page">EN</a>
+      </nav>
+      <button class="ikona-btn motyw" type="button" data-na-jasny="Switch to light theme" data-na-ciemny="Switch to dark theme" aria-label="Switch to light theme">
+        <svg class="ik ik-slonce" aria-hidden="true" focusable="false"><use href="#i-sun"/></svg>
+        <svg class="ik ik-ksiezyc" aria-hidden="true" focusable="false"><use href="#i-moon"/></svg>
+      </button>
+      <a class="zaloguj" href="https://app.content-ai.net/?lang=en">Log in</a>
+      <a class="btn btn-glowny nav-cta" href="/en/#dostep">Request access</a>
+      <a class="ikona-btn menu-btn" href="#stopka-spis" aria-label="Open menu" data-otworz="Open menu" data-zamknij="Close menu">
+        <svg class="ik ik-menu" aria-hidden="true" focusable="false"><use href="#i-menu"/></svg>
+        <svg class="ik ik-x" aria-hidden="true" focusable="false"><use href="#i-x"/></svg>
+      </a>
+    </div>
+  </div>
+  <div class="menu-panel" id="menu-panel" hidden>
+    <nav class="kont" aria-label="Page sections">
+      <a href="/en/#jak">How it works</a>
+      <a href="/en/#funkcje">Features</a>
+      <a href="/en/#niezawodnosc">Reliability</a>
+      <a href="/en/#bezpieczenstwo">Security</a>
+      <a href="/en/#pakiety">Plans</a>
+      <a href="/en/#faq">FAQ</a>
+      <div class="menu-dol">
+        <a href="/" hreflang="pl" lang="pl">Polski</a>
+        <a class="btn btn-glowny" href="/en/#dostep">Request access</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main id="tresc">
+
+  <section class="hero" aria-labelledby="h1">
+    <div class="kont hero-siatka">
+      <div class="hero-tekst">
+        <p class="etyk"><svg class="etyk-znak" aria-hidden="true" focusable="false"><use href="#i-znak"/></svg>Content for SEO, AIO, AEO and GEO</p>
+        <h1 id="h1">Content for Google and AI answers. <span class="zakr">Written from your sources.</span></h1>
+        <p class="lead">Content AI writes articles from your knowledge base and looks up anything the base is missing on the web, citing the page. Then it scores the draft for SEO, AIO, AEO and GEO, checks facts and links, and shows what to fix.</p>
+        <div class="cta">
+          <a class="btn btn-glowny btn-duzy" href="#dostep">Request access<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn-drugi btn-duzy" href="#jak">See how it works</a>
+        </div>
+        <p class="mala">Have an account? <a class="link" href="https://app.content-ai.net/?lang=en">Log in</a></p>
+        <p class="mala mala-2">An administrator creates each account. New accounts start on the Free plan: 3 articles to try it out.</p>
+      </div>
+
+      <figure class="ramka" id="ramka" aria-labelledby="ramka-opis">
+        <figcaption class="sr" id="ramka-opis">Example of working in the app</figcaption>
+        <div class="ramka-pasek">
+          <span class="kropki" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="ramka-adres" aria-hidden="true">app.content-ai.net</span>
+          <span class="ramka-przyklad" aria-hidden="true">example</span>
+          <button class="ramka-pauza" type="button" aria-pressed="false" data-pauza="Pause the example animation" data-wznow="Resume the example animation" aria-label="Pause the example animation">
+            <svg class="ik ik-pauza" aria-hidden="true" focusable="false"><use href="#i-pause"/></svg>
+            <svg class="ik ik-graj" aria-hidden="true" focusable="false"><use href="#i-play"/></svg>
+          </button>
+        </div>
+        <div class="ramka-tresc" aria-hidden="true">
+          <div class="ramka-glowna">
+            <div class="pole"><span class="pole-et">Topic</span><span class="pole-w"><span class="pisanie">How to choose a CRM for a small business</span><span class="kursor"></span></span></div>
+            <div class="zrodla"><span class="et">Sources</span>
+              <span class="plik"><svg class="ik"><use href="#i-file-text"/></svg>crm-offer.pdf</span>
+              <span class="plik"><svg class="ik"><use href="#i-file-text"/></svg>plan-pricing.pdf</span>
+              <span class="plik"><svg class="ik"><use href="#i-file-text"/></svg>customer-survey.xlsx</span>
+            </div>
+            <div class="kartka kartka-ramka">
+              <p class="ramka-status"><span class="kropka-praca"></span>Writing from your knowledge base…</p>
+              <h3>A CRM for a small business: where to start</h3>
+              <p><span class="zd">A CRM keeps contacts, conversation history and the stage of every sale in one place. </span><span class="zd">The Start plan covers up to 5 users and contact import from a CSV file. </span><span class="zd"><span class="zakr-cel zc-1">Setup usually takes 2 days</span>, and <span class="zakr-cel zc-2">data can be moved from any program</span>.</span></p>
+              <span class="linie linie-ramka"><i></i><i></i><i class="krotka"></i></span>
+            </div>
+          </div>
+          <div class="ramka-margines">
+            <p class="margines-et">Scores</p>
+            <div class="wyniki">
+              <div class="wynik"><span class="w-et">SEO</span><span class="w-liczba" data-cel="91">91</span><span class="w-pasek"><i class="w91"></i></span></div>
+              <div class="wynik"><span class="w-et">AIO</span><span class="w-liczba" data-cel="88">88</span><span class="w-pasek"><i class="w88"></i></span></div>
+              <div class="wynik"><span class="w-et">AEO</span><span class="w-liczba" data-cel="84">84</span><span class="w-pasek"><i class="w84"></i></span></div>
+              <div class="wynik"><span class="w-et">GEO</span><span class="w-liczba" data-cel="80">80</span><span class="w-pasek"><i class="w80"></i></span></div>
+            </div>
+            <p class="odczyt">FOG <b>10.4</b> · density <b>1.6%</b></p>
+            <div class="notka notka-bl"><svg class="znacznik"><use href="#i-znak"/></svg><div><b>Figure not found in the sources</b><span>“2 days”: none of the 3 documents says so</span></div></div>
+            <div class="notka notka-uw"><svg class="znacznik"><use href="#i-znak"/></svg><div><b>Claim wider than the source</b><span>the source only mentions a CSV file</span></div></div>
+          </div>
+        </div>
+        <ol class="ramka-kroki" aria-label="Example steps">
+          <li><button type="button" data-krok="1"><span class="rk-nr">1</span>Topic</button></li>
+          <li><button type="button" data-krok="2"><span class="rk-nr">2</span>Sources</button></li>
+          <li><button type="button" data-krok="3"><span class="rk-nr">3</span>Draft</button></li>
+          <li><button type="button" data-krok="4"><span class="rk-nr">4</span>Scores</button></li>
+          <li><button type="button" data-krok="5"><span class="rk-nr">5</span>Facts</button></li>
+        </ol>
+      </figure>
+    </div>
+
+    <div class="kont">
+      <ul class="dowody" aria-label="Product facts">
+        <li><b>4 scores</b><span>SEO, AIO, AEO and GEO for every draft</span></li>
+        <li><b>Fact check</b><span>figures, claims and links against your sources</span></li>
+        
+        <li><b class="licz" data-cel="282">282</b><span>server tests on every code change</span></li>
+        <li><b>0</b><span>npm dependencies on the server</span></li>
+        <li><b>PL · EN · DE · CS</b><span>content languages</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sekcja" id="dlaczego" aria-labelledby="h-prob">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">01</span>Why</p>
+        <h2 id="h-prob">Search is no longer one place.</h2>
+        <p class="sek-lead">The same article now has to work in Google results, in AI Overviews, in assistants and in models that cite their sources. General-purpose AI tools write smoothly, but they do not know your business.</p>
+      </header>
+      <div class="problemy">
+        <article class="problem wej">
+          <div class="ilu ilu-1" aria-hidden="true">
+            <span>Google results</span><span>AI Overviews</span><span>answer engines and assistants</span><span>citations in language models</span>
+            <svg class="ilu-znak"><use href="#i-znak"/></svg>
+          </div>
+          <h3>Four surfaces, one draft</h3>
+          <p>Writing four versions of the same article is not a plan. Content AI writes one and scores it separately for each surface.</p>
+        </article>
+        <article class="problem wej">
+          <div class="ilu ilu-2" aria-hidden="true">
+            <span class="ilu-luka">pricing?</span><span class="ilu-luka">product name?</span><span class="ilu-luka">service area?</span>
+          </div>
+          <h3>AI does not know your offer</h3>
+          <p>Prices, product names, service areas. Without them, a text reads well but cannot be published. Here the model writes from your company documents.</p>
+        </article>
+        <article class="problem wej">
+          <div class="ilu ilu-3" aria-hidden="true">
+            <span class="ilu-adres"><svg class="ik"><use href="#i-link"/></svg><s>example.com/report-2024</s></span>
+            <span class="ilu-nota"><svg class="znacznik"><use href="#i-znak"/></svg>Address does not respond</span>
+          </div>
+          <h3>Invented figures and links</h3>
+          <p>Asked about something its sources do not cover, a model will happily fill in the gap. Here figures and addresses come from the sources, and the fact check flags sentences without support.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="sekcja" id="jak" aria-labelledby="h-jak">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">02</span>How it works</p>
+        <h2 id="h-jak">From topic to publication in five steps.</h2>
+      </header>
+      <div class="kroki-uklad">
+      <ol class="kroki">
+        <li class="krok" id="krok-1">
+          <div class="krok-ekran ekran" aria-hidden="true">
+            <div class="ekran-pasek"><svg class="ik"><use href="#i-lightbulb"/></svg>Topic</div>
+            <div class="ekran-tresc">
+              <div class="pole pole-duze"><span class="pole-w">Small business owners who lose offers in their inbox</span></div>
+              <ul class="tematy">
+                <li><b>How to choose a CRM for a small business</b><span>searched by: an owner comparing offers</span></li>
+                <li><b>CRM or spreadsheet: when to switch</b><span>searched by: a sales team on one spreadsheet</span></li>
+                <li><b>What a CRM for 5 people costs</b><span>searched by: someone with a budget to approve</span></li>
+              </ul>
+              <p class="ekran-meta">+ 7 more topics</p>
+            </div>
+          </div>
+          <div class="krok-tekst">
+            <span class="krok-nr">1</span>
+            <h3>Topic</h3>
+            <p>Type a topic or describe who the text should attract. Content AI suggests 10 topics and says who searches for each one and why.</p>
+            <p class="krok-cap">A described need: 10 topics with search intent</p>
+          </div>
+        </li>
+        <li class="krok" id="krok-2">
+          <div class="krok-ekran ekran" aria-hidden="true">
+            <div class="ekran-pasek"><svg class="ik"><use href="#i-library"/></svg>Sources</div>
+            <div class="ekran-tresc">
+              <ul class="baza">
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>crm-offer.pdf</span><em>shared</em><i class="trafnosc"><b class="w92"></b></i></li>
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>customer-survey.xlsx</span><em>private</em><i class="trafnosc"><b class="w86"></b></i></li>
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>plan-pricing.pdf</span><em>shared</em><i class="trafnosc"><b class="w71"></b></i></li>
+                <li class="baza-slaby"><svg class="ik"><use href="#i-globe"/></svg><span>example.com/crm</span><em>URL</em><i class="trafnosc"><b class="w24"></b></i></li>
+              </ul>
+              <p class="ekran-meta">passages that match the topic</p>
+            </div>
+          </div>
+          <div class="krok-tekst">
+            <span class="krok-nr">2</span>
+            <h3>Sources</h3>
+            <p>PDF, DOCX, XLSX, PPTX, TXT and CSV files, web pages by address, notes and recordings to transcribe. From the server knowledge base, only passages that match the topic reach the draft.</p>
+            <p class="krok-cap">Private and shared knowledge base, on the server</p>
+          </div>
+        </li>
+        <li class="krok" id="krok-3">
+          <div class="krok-ekran ekran" aria-hidden="true">
+            <div class="ekran-pasek"><svg class="ik"><use href="#i-pen-line"/></svg>Draft</div>
+            <div class="ekran-tresc">
+              <div class="chipy"><span>Guide</span><span>1,200 words</span><span>matter-of-fact</span><span>English</span><span class="chip-wl"><i></i>Search the web</span></div>
+              <div class="kartka kartka-mala">
+                <h4>A CRM for a small business: where to start</h4>
+                <p>A CRM keeps contacts, conversation history and the stage of every sale in one place. The Start plan covers up to 5 users and contact import from a CSV file. </p>
+                <span class="linie"><i></i><i></i><i class="krotka"></i></span>
+              </div>
+            </div>
+          </div>
+          <div class="krok-tekst">
+            <span class="krok-nr">3</span>
+            <h3>Draft</h3>
+            <p>Content type, length, tone, audience and language. Optionally, a SERP analysis before writing and a web search with sources listed under the article.</p>
+            <p class="krok-cap">Type, length, tone, audience, language, web sources</p>
+          </div>
+        </li>
+        <li class="krok" id="krok-4">
+          <div class="krok-ekran ekran" aria-hidden="true">
+            <div class="ekran-pasek"><svg class="ik"><use href="#i-gauge"/></svg>Review</div>
+            <div class="ekran-tresc">
+              <div class="wyniki wyniki-4">
+                <div class="wynik"><span class="w-et">SEO</span><span class="w-liczba">91</span><span class="w-pasek"><i class="w91"></i></span></div>
+                <div class="wynik"><span class="w-et">AIO</span><span class="w-liczba">88</span><span class="w-pasek"><i class="w88"></i></span></div>
+                <div class="wynik"><span class="w-et">AEO</span><span class="w-liczba">84</span><span class="w-pasek"><i class="w84"></i></span></div>
+                <div class="wynik"><span class="w-et">GEO</span><span class="w-liczba">80</span><span class="w-pasek"><i class="w80"></i></span></div>
+              </div>
+              <ul class="kryteria kryteria-male">
+                <li class="ok"><svg class="ik"><use href="#i-circle-check"/></svg><span>Keyword in the H1 and the first paragraph</span></li>
+                <li class="uw"><svg class="ik"><use href="#i-info"/></svg><span>Add an FAQ section: 5-7 questions</span></li>
+              </ul>
+              <div class="notka notka-bl"><svg class="znacznik"><use href="#i-znak"/></svg><div><b>Figure not found in the sources</b><span>“2 days”: none of the 3 documents says so</span></div></div>
+            </div>
+          </div>
+          <div class="krok-tekst">
+            <span class="krok-nr">4</span>
+            <h3>Review</h3>
+            <p>SEO, AIO, AEO and GEO scores with specific findings, gaps against Google results and a fact check. On request, the model revises the draft based on the findings.</p>
+            <p class="krok-cap">SEO, AIO, AEO and GEO scores plus a fact check</p>
+          </div>
+        </li>
+        <li class="krok" id="krok-5">
+          <div class="krok-ekran ekran" aria-hidden="true">
+            <div class="ekran-pasek"><svg class="ik"><use href="#i-share-2"/></svg>Publish</div>
+            <div class="ekran-tresc">
+              <p class="ekran-et">Export and publishing</p>
+              <div class="chipy chipy-pliki"><span><svg class="ik"><use href="#i-file-down"/></svg>DOCX</span><span><svg class="ik"><use href="#i-file-down"/></svg>PDF</span><span><svg class="ik"><use href="#i-file-down"/></svg>TXT</span><span>{ } JSON-LD</span><span><svg class="ik"><use href="#i-upload"/></svg>WordPress</span><span><svg class="ik"><use href="#i-upload"/></svg>Drupal</span></div>
+              <p class="ekran-et">Repurpose</p>
+              <div class="chipy"><span>LinkedIn</span><span>Facebook</span><span>Newsletter</span><span>FAQ</span></div>
+              <p class="gotowe"><svg class="ik"><use href="#i-circle-check"/></svg>Ready to publish</p>
+            </div>
+          </div>
+          <div class="krok-tekst">
+            <span class="krok-nr">5</span>
+            <h3>Publish</h3>
+            <p>DOCX, PDF and TXT files, a JSON-LD schema, or publishing straight to WordPress or Drupal. The same draft becomes a post, a newsletter, an image and a recording.</p>
+            <p class="krok-cap">DOCX, PDF, JSON-LD or publishing to WordPress</p>
+          </div>
+        </li>
+      </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="sekcja" id="powierzchnie" aria-labelledby="h-pow">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">03</span>Four surfaces</p>
+        <h2 id="h-pow">One draft. Four ways to be found.</h2>
+        <p class="sek-lead">Content AI writes once and scores the draft separately for each surface: a score, specific findings and a fix instead of a bare number.</p>
+      </header>
+      <div class="pow wej" data-pow="seo">
+        <div class="zakladki" role="tablist" aria-label="Answer surface">
+          <button role="tab" id="t-seo" aria-selected="true" aria-controls="p-pow" data-pow="seo" type="button">SEO <small>classic Google results</small></button>
+          <button role="tab" id="t-aio" aria-selected="false" aria-controls="p-pow" data-pow="aio" type="button" tabindex="-1">AIO <small>AI Overviews in Google</small></button>
+          <button role="tab" id="t-aeo" aria-selected="false" aria-controls="p-pow" data-pow="aeo" type="button" tabindex="-1">AEO <small>answer engines and assistants</small></button>
+          <button role="tab" id="t-geo" aria-selected="false" aria-controls="p-pow" data-pow="geo" type="button" tabindex="-1">GEO <small>citations in language models</small></button>
+        </div>
+        <div class="uklad-margines" id="p-pow" role="tabpanel" aria-labelledby="t-seo">
+          <article class="kartka kartka-duza" aria-label="One paragraph, four perspectives">
+            <p class="k-meta">H1 · guide · English</p>
+            <h3><span class="z" data-z="seo">How to choose a CRM for a small business</span>: three criteria and costs</h3>
+            <p><span class="z" data-z="aio aeo">A CRM is software that keeps customer contacts, conversation history and the stage of every sale in one place.</span> <span class="z" data-z="aio geo">In a survey of 120 customers, 7 in 10 businesses adopted one once offers started getting lost in the inbox.</span></p>
+            <h4><span class="z" data-z="aeo seo">What does a CRM for 5 people cost?</span></h4>
+            <p><span class="z" data-z="aeo">The Start plan covers up to 5 users and contact import from a CSV file.</span> <span class="z" data-z="geo">Three things matter when choosing: contact import, email integration and the price per user.</span></p>
+            <p class="k-opis-meta"><span class="z" data-z="seo">How to choose a CRM for a small business: contact import, email and price per user, based on the offer and a survey.</span> <span class="mono">meta, 121 chars</span></p>
+          </article>
+          <aside class="margines" aria-live="polite">
+            <div class="pow-opis" data-dla="seo">
+              <div class="margines-nag"><span class="duza">91</span><span class="opis">SEO score<br>on-page content</span></div>
+              <p class="pow-zdanie">The keyword early in the text and in the heading, content that matches the query.</p>
+              <ul class="kryteria">
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>The H1 contains the keyword</span></li>
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>Keyword in headings and body<small>density 1.6%, app range 0.5-2.5%</small></span></li>
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>Meta description with the keyword, up to 160 characters</span></li>
+                <li class="uw"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg><span>Consider going beyond 1,000 words</span></li>
+              </ul>
+            </div>
+            <div class="pow-opis" data-dla="aio">
+              <div class="margines-nag"><span class="duza">88</span><span class="opis">AIO score<br>for AI Overviews</span></div>
+              <p class="pow-zdanie">A direct answer in the first sentence that AI Overviews can quote.</p>
+              <ul class="kryteria">
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>A direct answer in the first sentence</span></li>
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>A sourced figure in the first paragraph</span></li>
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>Short sentences that are easy to quote</span></li>
+                <li class="uw"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg><span>Add conclusions with figures at the end</span></li>
+              </ul>
+            </div>
+            <div class="pow-opis" data-dla="aeo">
+              <div class="margines-nag"><span class="duza">84</span><span class="opis">AEO score<br>for answer engines</span></div>
+              <p class="pow-zdanie">A short definition up front and a concise list: the format of an assistant answer.</p>
+              <ul class="kryteria">
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>A definition up front, 25-50 words</span></li>
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>Headings phrased as questions</span></li>
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>Figures in the introduction</span></li>
+                <li class="uw"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg><span>FAQ: 3 questions, target 5-7</span></li>
+              </ul>
+            </div>
+            <div class="pow-opis" data-dla="geo">
+              <div class="margines-nag"><span class="duza">80</span><span class="opis">GEO score<br>computed in the app</span></div>
+              <p class="pow-zdanie">Specific, checkable statements a model can cite together with the source.</p>
+              <ul class="kryteria">
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>AEO format<small>weight 50%</small></span></li>
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>Structure and JSON-LD schema<small>weight 30%</small></span></li>
+                <li class="uw"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg><span>Entity: brand and business lines<small>weight 20%; the brand is set in the configuration</small></span></li>
+              </ul>
+            </div>
+            <p class="zrodlo-prawdy">Criteria as in the app: the model scores SEO, AIO and AEO, while density, fog index and GEO are computed by the app itself.</p>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sekcja" id="fakty" aria-labelledby="h-fk">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">04</span>Fact check</p>
+        <h2 id="h-fk">Content backed by your own sources.</h2>
+        <p class="sek-lead">The check compares the draft with the selected documents and lists what they do not support, quoting the fragment. The server also checks links: whether they are in the sources and whether the page responds.</p>
+      </header>
+      <div class="fk uklad-margines wej" id="fk">
+        <svg class="fk-linie" aria-hidden="true" focusable="false"></svg>
+        <article class="kartka kartka-duza fk-tekst">
+          <p class="k-meta">A CRM for a small business: where to start</p>
+          <p class="fk-akapit">
+            <span class="tw-w"><mark class="tw" tabindex="0" data-stan="ok" aria-describedby="dz-0">A CRM keeps contacts and conversation history in one place.</mark><span class="dymek" id="dz-0" role="tooltip"><b><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>Backed by the source</b>crm-offer.pdf, p. 1: “contacts, conversation history and sales stages in one view”</span></span>
+            <span class="tw-w"><mark class="tw" tabindex="0" data-stan="ok" aria-describedby="dz-1">The Start plan covers up to 5 users.</mark><span class="dymek" id="dz-1" role="tooltip"><b><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>Backed by the source</b>Source: “Start plan: up to 5 users, contact import from a CSV file.”</span></span>
+            <mark class="tw" tabindex="0" data-stan="bl" data-nota="n-liczba" aria-describedby="n-liczba">Setup usually takes 2 days.</mark>
+            <mark class="tw" tabindex="0" data-stan="uw" data-nota="n-zakres" aria-describedby="n-zakres">Data can be moved from any program.</mark>
+            <mark class="tw" tabindex="0" data-stan="bl" data-nota="n-link" aria-describedby="n-link">Full pricing: example.com/pricing-2024</mark>
+          </p>
+          <p class="fk-wskazowka">Hover over an underlined sentence or tap it.</p>
+        </article>
+        <aside class="fk-margines" aria-label="Fact check result">
+          <p class="fk-licznik">To review: 3. Most serious first.</p>
+          <div class="nota nota-bl" id="n-liczba">
+            <b><svg class="znacznik" aria-hidden="true"><use href="#i-znak"/></svg>Figure not found in the sources</b>
+            <q>Setup usually takes 2 days.</q>
+            <span>The source only says: “Setup includes contact import and team training.”</span>
+          </div>
+          <div class="nota nota-bl" id="n-link">
+            <b><svg class="znacznik" aria-hidden="true"><use href="#i-znak"/></svg>Address does not respond</b>
+            <q>Full pricing: example.com/pricing-2024</q>
+            <span>The server checked the address live: the page does not respond.</span>
+          </div>
+          <div class="nota nota-uw" id="n-zakres">
+            <b><svg class="znacznik" aria-hidden="true"><use href="#i-znak"/></svg>Claim wider than the source</b>
+            <q>Data can be moved from any program.</q>
+            <span>The source only says: “contact import from a CSV file”.</span>
+          </div>
+          <p class="fk-uczciwie"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg>Example. The check is automated and does not replace reading the text before publication.</p>
+        </aside>
+      </div>
+      <ul class="fk-dodatki wej">
+        <li><b>Addresses</b>not in the sources, with a made-up path, or dead; the server checks them live</li>
+        <li><b>Contradictions</b>two different values for the same thing in one draft</li>
+        <li><b>Competitors</b>a recommendation of a company on the excluded list</li>
+        <li><b>Link text</b>repeated or empty, like “click here”</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sekcja" id="funkcje" aria-labelledby="h-fun">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">05</span>Features</p>
+        <h2 id="h-fun">Everything from idea to publication, in one workspace.</h2>
+      </header>
+      <div class="bento">
+        <article class="kafel kb7 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-file-search"/></svg></span>
+          <h3>Fact check</h3>
+          <p>Compares the draft with the selected sources and lists what they do not support: unsupported figures, claims wider than the source, contradictions and recommendations that point to a competitor. Among links, it catches addresses not in the sources, dead pages and anchors that say nothing.</p>
+          <div class="podglad podglad-fakty" aria-hidden="true">
+            <span class="pf-linia"><span class="pf-zdanie">Setup usually takes 2 days.</span></span>
+            <span class="notka notka-bl"><svg class="znacznik"><use href="#i-znak"/></svg><span><b>Figure not found in the sources</b></span></span>
+          </div>
+          <a class="link kafel-link" href="#fakty">See a sample check<svg class="ik" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+        </article>
+        <article class="kafel kb5 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-library"/></svg></span>
+          <h3>Knowledge base</h3>
+          <p>Private, and shared with the team. Documents live on the server, so they are available on any device, and only matching passages reach the draft.</p>
+          <div class="podglad frag" aria-hidden="true">
+            <div><span>crm-offer.pdf</span><i><b class="w92"></b></i><span class="mono">0,92</span></div>
+            <div><span>customer-survey.xlsx</span><i><b class="w86"></b></i><span class="mono">0,86</span></div>
+            <div><span>plan-pricing.pdf</span><i><b class="w71"></b></i><span class="mono">0,71</span></div>
+          </div>
+        </article>
+        <article class="kafel kb4 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-globe"/></svg></span>
+          <h3>Web research with sources</h3>
+          <p>What the base lacks, the model looks up and cites. Competitor domains can be excluded.</p>
+          <div class="podglad zrodla-sieci" aria-hidden="true">
+            <span class="ps-et">Sources from the web</span>
+            <span><i>1</i>example.org/crm-badanie</span>
+            <span><i>2</i>example.net/poradnik-crm</span>
+          </div>
+        </article>
+        <article class="kafel kb4 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-chart-column"/></svg></span>
+          <h3>SERP and gaps</h3>
+          <p>Google results for your keyword and the topics your draft misses, added on request.</p>
+          <span class="plan-tag">from the Standard plan</span>
+        </article>
+        <article class="kafel kb4 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-gauge"/></svg></span>
+          <h3>Four scores</h3>
+          <p>SEO, AIO, AEO and GEO: a score, specific findings and, on request, a revision based on them.</p>
+          <div class="podglad mini-wyniki" aria-hidden="true"><span>SEO <b>91</b></span><span>AIO <b>88</b></span><span>AEO <b>84</b></span><span>GEO <b>80</b></span></div>
+        </article>
+        <article class="kafel kb3 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-image"/></svg></span>
+          <h3>Images</h3>
+          <p>An illustration from the topic in three formats and six styles, with an optional reference image.</p>
+          <div class="formaty" aria-hidden="true"><span class="f32">3:2</span><span class="f11">1:1</span><span class="f23">2:3</span></div>
+          <span class="plan-tag">from the Standard plan</span>
+        </article>
+        <article class="kafel kb3 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-headphones"/></svg></span>
+          <h3>Audio and podcast</h3>
+          <p>A podcast for 1-4 voices, an audio newsletter, an audiobook and transcription. MP3 download.</p>
+          <div class="fala" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><span>2 voices · MP3</span></div>
+          <span class="plan-tag">from the Standard plan</span>
+        </article>
+        <article class="kafel kb3 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-refresh-cw"/></svg></span>
+          <h3>Repurposing</h3>
+          <p>LinkedIn and Facebook posts, a newsletter, an FAQ, a landing page intro and 5 titles.</p>
+          <div class="chipy chipy-male" aria-hidden="true"><span>LinkedIn</span><span>Facebook</span><span>Newsletter</span><span>FAQ</span></div>
+        </article>
+        <article class="kafel kb3 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-share-2"/></svg></span>
+          <h3>Export and publishing</h3>
+          <p>DOCX, PDF, TXT and JSON-LD, or publishing straight to WordPress or Drupal.</p>
+          <div class="chipy chipy-male" aria-hidden="true"><span>DOCX</span><span>PDF</span><span>JSON-LD</span><span>WordPress</span></div>
+        </article>
+      </div>
+      <div class="takze wej">
+        <h3>Also included</h3>
+        <ul>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Brand voice: paste 2-5 of your company texts and the model adopts their style</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Self-review: the model scores the finished draft and revises it accordingly (takes 2-3 times longer)</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Bulk generation: a list of topics, one per line</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Export market pages: Germany, Czechia, Slovakia, the Netherlands and France</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Brand visibility in AI answers: an on-demand snapshot</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>llms.txt files, robots.txt rules for AI bots and UTM links</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Dictation and read-aloud</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Content in Polish, English, German and Czech</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sekcja" id="niezawodnosc" aria-labelledby="h-rel">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">06</span>AI reliability</p>
+        <h2 id="h-rel">Built around the ways AI gets things wrong.</h2>
+        <p class="sek-lead">A language model does not raise an error; it just keeps writing. So every typical failure has its own safeguard here.</p>
+      </header>
+      <div class="rel wej">
+        <table class="rel-tabela">
+          <thead><tr><th scope="col"><span class="sr">#</span></th><th scope="col">Problem</th><th scope="col">What Content AI does</th></tr></thead>
+          <tbody>
+            <tr><td class="rel-nr">01</td><th scope="row">Invented figures</th><td>Numbers are required only when the sources contain them, and the fact check compares each figure with the documents.</td></tr>
+            <tr><td class="rel-nr">02</td><th scope="row">Filling gaps from memory</th><td>Three outcomes are allowed: the knowledge base, a search result listed as the source, or dropping the claim.</td></tr>
+            <tr><td class="rel-nr">03</td><th scope="row">Fabricated links</th><td>Addresses are copied from the sources character for character, and every link in a finished draft is checked twice: against the sources and live from the server.</td></tr>
+            <tr><td class="rel-nr">04</td><th scope="row">Facts stretched beyond the source</th><td>Scope is pinned to what the source says: one country, one product, one kind of customer.</td></tr>
+            <tr><td class="rel-nr">05</td><th scope="row">Outdated year</th><td>Every prompt receives today's date, read from the clock at call time.</td></tr>
+            <tr><td class="rel-nr">06</td><th scope="row">Malformed responses</th><td>A repair pass resolves unclear spots the way a reader would, and shows a clear message when it cannot.</td></tr>
+          </tbody>
+        </table>
+        <p class="rel-stopka"><svg class="ik" aria-hidden="true"><use href="#i-shield-check"/></svg>Each of these fixes is pinned in automated checks: removing or reverting one stops the release.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sekcja" id="bezpieczenstwo" aria-labelledby="h-sec">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">07</span>Security</p>
+        <h2 id="h-sec">Keys and data under control.</h2>
+        <p class="sek-lead">Content AI holds API keys and company documents, so it keeps the places where something could go wrong to a minimum.</p>
+      </header>
+      <div class="sec-siatka">
+        <figure class="droga wej" aria-labelledby="droga-tytul">
+          <figcaption id="droga-tytul" class="droga-tytul">How a request travels</figcaption>
+          <ol class="droga-lista">
+            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-monitor"/></svg></span><b>Browser</b><span>sends the topic and settings, without the server key</span></li>
+            <li class="droga-srodek"><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-server"/></svg></span><b>Content AI server</b><span>checks the session and plan limit, adds the key</span><span class="droga-klucz"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg></span></li>
+            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-bot"/></svg></span><b>AI provider</b><span>receives the topic and matching passages</span></li>
+          </ol>
+          <p class="droga-nota"><svg class="znacznik" aria-hidden="true"><use href="#i-znak"/></svg>Your own key passes through the server in a single request and is not stored.</p>
+        </figure>
+        <ul class="sec-lista">
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg><h3>Server keys stay on the server</h3><p>The browser never receives them: the app sends each request to the server, and only the server talks to the AI provider.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-lock"/></svg><h3>Your own key, never stored on the server</h3><p>On the Standard and Premium plans you can use your own key. It is saved only in your browser; the server passes it to the provider with each request and stores nothing.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-shield-check"/></svg><h3>Passwords and sessions</h3><p>Passwords are hashed with scrypt and a random salt. After 8 failed attempts from one address, sign-in is blocked for 15 minutes. The session lives in a signed HttpOnly cookie.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-users"/></svg><h3>Document access</h3><p>A private base is visible only to its owner, the shared one to the whole team. Only an administrator adds to the shared base.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-package"/></svg><h3>Nothing from third-party servers</h3><p>The app loads no scripts or fonts from outside: libraries and typefaces come from the same server. The server has zero npm dependencies.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-scan-search"/></svg><h3>Safe page fetching</h3><p>An address added to the knowledge base is checked at every redirect, so the server never queries an internal network.</p></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sekcja" id="dla-kogo" aria-labelledby="h-who">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">08</span>Who it is for</p>
+        <h2 id="h-who">For teams that write a lot and cannot afford mistakes.</h2>
+      </header>
+      <ul class="kto">
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-megaphone"/></svg><h3>Marketing teams</h3><p>A shared knowledge base, one brand configuration for everyone and separate accounts. A new team member writes by the same rules from day one.</p></li>
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-trending-up"/></svg><h3>SEO agencies</h3><p>SERP analysis, gaps, scores for four surfaces and bulk generation. Finished drafts go straight to WordPress or Drupal.</p></li>
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-notebook-pen"/></svg><h3>Writers and editors</h3><p>Dictation, a fact check that quotes the fragment, and versions before and after self-review. Copy ready to publish, not to rewrite.</p></li>
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-languages"/></svg><h3>Companies selling abroad</h3><p>Content in Polish, English, German and Czech, plus market pages for five export destinations.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sekcja" id="pakiety" aria-labelledby="h-plan">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">09</span>Plans</p>
+        <h2 id="h-plan">Three plans. Usage is always visible in the app.</h2>
+      </header>
+      <div class="pakiety">
+        <article class="pakiet wej" aria-labelledby="pk-free">
+          <h3 id="pk-free">Free</h3>
+          <p class="pakiet-opis">To try it out.</p>
+          <ul>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>3 articles, no renewal</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>up to 3 documents in the knowledge base</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>scores, fact check, repurposing and file export</li>
+          </ul>
+          <a class="btn btn-drugi" href="#dostep" data-pakiet="darmowy" aria-label="Request access: plan Free">Request access</a>
+        </article>
+        <article class="pakiet pakiet-wyroz wej" aria-labelledby="pk-std">
+          <h3 id="pk-std">Standard</h3>
+          <p class="pakiet-opis">For regular content work.</p>
+          <ul>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>50 articles a month</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>50 images, 20 audio pieces and 20 transcriptions a month</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>up to 50 documents in the knowledge base</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>SERP analysis and gaps</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>your own API key and CMS publishing</li>
+          </ul>
+          <a class="btn btn-glowny" href="#dostep" data-pakiet="standard" aria-label="Request access: plan Standard">Request access</a>
+        </article>
+        <article class="pakiet wej" aria-labelledby="pk-pro">
+          <h3 id="pk-pro">Premium</h3>
+          <p class="pakiet-opis">Everything, with no per-item limits.</p>
+          <ul>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>unlimited articles, images, audio and documents</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>everything in Standard</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>OpenSEO data: keywords and rankings</li>
+          </ul>
+          <a class="btn btn-drugi" href="#dostep" data-pakiet="premium" aria-label="Request access: plan Premium">Request access</a>
+        </article>
+      </div>
+      <p class="pakiety-nota wej">Plans are assigned by an administrator. Monthly counters reset on the first day of the month. Each plan also has a ceiling on model calls (30 to start, 750 a month, unlimited), because one article takes several calls. Limits also apply with your own key.</p>
+    </div>
+  </section>
+
+  <section class="sekcja" id="faq" aria-labelledby="h-faq">
+    <div class="kont faq-siatka">
+      <header class="sek-nag faq-nag wej">
+        <p class="etyk"><span class="etyk-nr">10</span>FAQ</p>
+        <h2 id="h-faq">Frequently asked questions</h2>
+      </header>
+      <div class="faq-lista wej">
+        <details><summary>How is Content AI different from an AI chat?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>A chat answers from the model's memory. Content AI writes from your knowledge base, goes to the web only for missing information and cites it, then scores the draft for SEO, AIO, AEO and GEO and checks the facts. All in one workspace, from topic to publication.</p></details>
+        <details><summary>Where do the facts come from?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>From the knowledge base. With web search on, missing information comes from the pages listed under the article. Information about your company always comes from the base only.</p></details>
+        <details><summary>Will the text be error-free?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>No AI tool can guarantee that. Content AI reduces the risk: figures and links come from the sources, and the fact check lists the sentences the sources do not support, quoting each one. A person always has the final say.</p></details>
+        <details><summary>Which AI models does Content AI use?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Drafts are written by Anthropic's Claude. The server can switch to open-source models through NVIDIA NIM with no change to the app. Images, voice-over and transcription use OpenAI, with an optional ElevenLabs voice.</p></details>
+        <details><summary>Can I use my own API key?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Yes, on the Standard and Premium plans, for Anthropic, OpenAI and ElevenLabs. Model costs then go to your own provider account. The key is saved only in your browser; the server passes it to the provider with each request and stores nothing. Plan limits still apply.</p></details>
+        <details><summary>Where do my documents go?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Knowledge base documents live on the Content AI server: private ones are visible only to their owner, shared ones to the whole team. When generating, the model provider receives only the passages from them that match the topic. Text history stays in your browser.</p></details>
+        <details><summary>Where does the SERP data come from?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>It depends on the server setup: either a web search run by the model (an estimate) or the DataForSEO API (measured organic results). SERP analysis is available from the Standard plan up.</p></details>
+        <details><summary>Which languages does Content AI support?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>The interface is in Polish and English. Content can be written in Polish, English, German and Czech.</p></details>
+        <details><summary>How do I get an account?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Through the “Request access” form on this page. An administrator creates the account, and new accounts start on the Free plan: 3 articles to try it out.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="koniec" id="dostep" aria-labelledby="h-dostep">
+    <div class="kont koniec-siatka">
+      <div class="koniec-tekst wej">
+        <h2 id="h-dostep">Your next piece: from your sources, not from guesses.</h2>
+        <p class="sek-lead">Draft, scores, fact check, image, audio and publishing. From topic to finished article in one workspace.</p>
+        <div class="koniec-nota" aria-hidden="true">
+          <span class="kn-linia"><span class="kn-zakr">A CRM for a small business: where to start</span></span>
+          <span class="notka notka-ok"><svg class="znacznik"><use href="#i-znak"/></svg><span><b>Ready to publish</b></span></span>
+        </div>
+        <p class="mala">Already have an account? <a class="link" href="https://app.content-ai.net/?lang=en">Log in</a></p>
+      </div>
+      
+      <form class="formularz wej" id="formularz" data-api="https://app.content-ai.net/api/prosba-o-dostep" data-jezyk="en" novalidate aria-labelledby="form-tytul"
+            data-wysylanie="Sending…" data-b-imie="Enter your first name." data-b-email="Enter an email address, e.g. anna@company.com."
+            data-b-zgoda="Tick the box so we can reply." data-b-dlugie="This text is too long." data-b-pakiet="Choose a plan from the list."
+            data-b-ogolny="Check the form fields and try again." data-b-429="Too many attempts. Please try again later." data-b-siec="The request could not be sent. Try again in a moment.">
+        <h3 class="form-tytul" id="form-tytul">Request access to Content AI</h3>
+        <p class="form-nojs" id="form-nojs"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg>This form needs JavaScript. Turn it on in your browser to send an access request.</p>
+        <fieldset class="pola" id="form-pola" disabled>
+          <div class="dwa">
+            <div class="pole-f">
+              <label for="f-imie">First name</label>
+              <input id="f-imie" name="imie" autocomplete="given-name" required maxlength="100" aria-describedby="b-imie">
+              <p class="blad" id="b-imie" hidden></p>
+            </div>
+            <div class="pole-f">
+              <label for="f-email">Work email</label>
+              <input id="f-email" name="email" type="email" autocomplete="email" required maxlength="200" aria-describedby="b-email" inputmode="email">
+              <p class="blad" id="b-email" hidden></p>
+            </div>
+          </div>
+          <div class="dwa">
+            <div class="pole-f">
+              <label for="f-firma">Company or team <span class="opc">(optional)</span></label>
+              <input id="f-firma" name="firma" autocomplete="organization" maxlength="200" aria-describedby="b-firma">
+              <p class="blad" id="b-firma" hidden></p>
+            </div>
+            <div class="pole-f">
+              <label for="f-pakiet">Plan</label>
+              <select id="f-pakiet" name="pakiet" aria-describedby="b-pakiet">
+                <option value="nie-wiem">Not sure yet</option>
+                <option value="darmowy">Free</option>
+                <option value="standard">Standard</option>
+                <option value="premium">Premium</option>
+              </select>
+              <p class="blad" id="b-pakiet" hidden></p>
+            </div>
+          </div>
+          <div class="pole-f">
+            <label for="f-wiadomosc">Message <span class="opc">(optional)</span></label>
+            <textarea id="f-wiadomosc" name="wiadomosc" rows="3" maxlength="2000" placeholder="Who will write, and what kind of content?" aria-describedby="b-wiadomosc"></textarea>
+            <p class="blad" id="b-wiadomosc" hidden></p>
+          </div>
+          
+          <div class="pulapka" aria-hidden="true">
+            <label for="f-strona">Leave this field empty</label>
+            <input id="f-strona" name="strona" tabindex="-1" autocomplete="off">
+          </div>
+          <div class="pole-f">
+            <label class="zgoda" for="f-zgoda"><input id="f-zgoda" name="zgoda" type="checkbox" required aria-describedby="b-zgoda"><span>I agree to be contacted about access to Content AI. <a class="link" href="/en/privacy/">How we handle your data</a></span></label>
+            <p class="blad" id="b-zgoda" hidden></p>
+          </div>
+          <div class="form-dol">
+            <button class="btn btn-glowny btn-duzy form-wyslij" type="submit"><span class="fw-tekst">Send request</span><svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></button>
+            <p class="form-komunikat" id="form-komunikat" role="alert" hidden></p>
+          </div>
+        </fieldset>
+        <div class="wyslano" id="wyslano" hidden tabindex="-1">
+          <p class="wyslano-tytul"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>Request sent.</p>
+          <p>We will reply to <b class="wyslano-email"></b>.</p>
+          <p class="wyslano-et">What happens next</p>
+          <ol>
+            <li>An administrator creates the account and assigns a plan.</li>
+            <li>Our reply includes the sign-in address and account details.</li>
+            <li>You sign in at app.content-ai.net and write your first piece.</li>
+          </ol>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="stopka">
+  <div class="kont stopka-siatka">
+    <div class="stopka-marka">
+      <a class="logo" href="/en/" aria-label="Content AI, home page">
+        <svg class="logo-znak" aria-hidden="true" focusable="false"><use href="#i-znak"/></svg>
+        <svg class="logo-tekst" aria-hidden="true" focusable="false"><use href="#i-logotyp"/></svg>
+      </a>
+      <p>Content for SEO, AIO, AEO and GEO, written from your sources.</p>
+      <p class="stopka-uwaga">No third-party scripts, fonts or analytics on this site.</p>
+    </div>
+    <nav class="stopka-kol" id="stopka-spis" aria-labelledby="st-produkt">
+      <h2 id="st-produkt">Product</h2>
+      <ul>
+        <li><a href="/en/#jak">How it works</a></li>
+        <li><a href="/en/#funkcje">Features</a></li>
+        <li><a href="/en/#niezawodnosc">Reliability</a></li>
+        <li><a href="/en/#bezpieczenstwo">Security</a></li>
+        <li><a href="/en/#pakiety">Plans</a></li>
+        <li><a href="/en/#faq">FAQ</a></li>
+      </ul>
+    </nav>
+    <nav class="stopka-kol" aria-labelledby="st-app">
+      <h2 id="st-app">App</h2>
+      <ul>
+        <li><a href="https://app.content-ai.net/?lang=en">Log in</a></li>
+        <li><a href="/en/#dostep">Request access</a></li>
+      </ul>
+    </nav>
+    <nav class="stopka-kol" aria-labelledby="st-info">
+      <h2 id="st-info">Information</h2>
+      <ul>
+        <li><a href="/en/privacy/">Privacy policy</a></li>
+        <li><a href="/en/#dostep">Contact</a></li>
+        <li><a href="/" hreflang="pl" lang="pl">Czytaj po polsku</a></li>
+      </ul>
+    </nav>
+  </div>
+  <div class="kont stopka-dol">
+    <span>© 2026 Content AI</span>
+    <span class="stopka-znak" aria-hidden="true"><svg><use href="#i-znak"/></svg></span>
+  </div>
+</footer>
+
+<div class="pasek-cta" id="pasek-cta" role="region" aria-label="Quick actions" hidden>
+  <a class="btn btn-drugi" href="https://app.content-ai.net/?lang=en">Log in</a>
+  <a class="btn btn-glowny" href="#dostep">Request access</a>
+</div>
+</body>
+</html>
