@@ -54,8 +54,8 @@ KONTROLE = [
      'onclick="openKeysModal();closeSettingsMenu()"', None, ("keys",)),
     ("F4/modal", "modal Kluczy API",
      'id="keys-modal"', None, ("keys",)),
-    ("F4/store", "klucze czytane z localStorage",
-     "localStorage.getItem('cai_key_anthropic')", None, ("keys",)),
+    ("F4/store", "klucze czytane z magazynu przegladarki",
+     "magazyn.getItem('cai_key_anthropic')", None, ("keys",)),
     ("F4/i18n", "klucze i18n panelu (PL i EN)",
      "'keys-modal-title':'Klucze API',", None, ("keys",)),
     ("F4/nokey", "komunikat braku klucza kieruje do panelu",
@@ -529,7 +529,7 @@ KONTROLE = [
 
     # ── konfiguracja wariantow ──
     ("W/keys", "klucze z localStorage, deklaracje modyfikowalne",
-     "let API_KEY = localStorage.getItem('cai_key_anthropic')", None, ("keys",)),
+     "let API_KEY = magazyn.getItem('cai_key_anthropic')", None, ("keys",)),
     ("W/owner", "tryb owner wylacza blokade urzadzenia",
      "const OWNER_MODE = true;", None, ("owner",)),
     ("W/proxy", "proxy kieruje ruch na workera",
@@ -539,7 +539,7 @@ KONTROLE = [
     # Proxy czyta klucz z localStorage (pusty = klucz serwera). W pliku nadal nie
     # ma zadnego klucza - i nie moze byc.
     ("W/proxy", "proxy nie trzyma kluczy w pliku",
-     "let API_KEY = localStorage.getItem('cai_klucz_anthropic') || '';",
+     "let API_KEY = magazyn.getItem('cai_klucz_anthropic') || '';",
      "const API_KEY = 'WSTAW_TUTAJ_NOWY_KLUCZ_API'; //", ("proxy",)),
 
     # ── podpowiedzi tematow (wszystkie warianty - to zwykle wywolanie modelu) ──
@@ -661,6 +661,12 @@ KONTROLE = [
      "art.innerHTML = h.html ? oczyscHtmlModelu(h.html)", None, None),
     ("G/oceny-esc", "uwagi z oceny SEO/AIO escapowane",
      '<span class="seo-item-text">${escapeHtml(item.text)}</span>', '<span class="seo-item-text">${item.text}</span>', None),
+    ("G/magazyn", "uszkodzone ustawienia w magazynie nie zatrzymuja skryptu",
+     "let wpSettings = czytajJson('cai-wp', {}) || {};", "JSON.parse(localStorage.getItem('cai-wp')", None),
+    ("G/magazyn-jeden", "aplikacja nie siega do localStorage poza magazynem",
+     "var magazyn = (function () {", "= localStorage.getItem(", None),
+    ("G/konto", "za serwerem dane przegladarki rozdzielone miedzy konta",
+     '<meta name="cai-konto" content="WSTAW_TUTAJ_KONTO">', None, ("proxy",)),
     ("G/zrodla", "zrodla sieciowe zerowane na starcie kazdego generowania",
      "  zrodlaSieciowe = [];\n  stanSieci = null;\n  if (API_KEY === 'WSTAW_TUTAJ_KLUCZ_API'", None, None),
 ]

@@ -396,6 +396,14 @@ function adresIp(req) {
 const PLACEHOLDER_WORKER = 'https://twoj-worker.workers.dev';
 const PLACEHOLDER_OPENSEO = 'WSTAW_TUTAJ_ADRES_OPENSEO';
 const PLACEHOLDER_DOMENA = 'WSTAW_TUTAJ_DOMENA_CIASTECZKA';
+// Identyfikator konta dla aplikacji: na nim aplikacja zaklada osobne miejsce
+// w localStorage, zeby na wspolnym komputerze konta nie widzialy nawzajem
+// historii i kluczy. Skrot zamiast loginu - login nie musi lezec w kluczach
+// przegladarki.
+const PLACEHOLDER_KONTO = 'WSTAW_TUTAJ_KONTO';
+function idKonta(login) {
+  return crypto.createHash('sha256').update('cai-konto:' + String(login)).digest('hex').slice(0, 16);
+}
 let htmlAplikacji = null;
 
 function wczytajAplikacje() {
@@ -1258,7 +1266,9 @@ async function obsluz(req, res) {
 
   // Aplikacja i pliki statyczne
   if (sciezka === '/' || sciezka === '/index.html') {
-    const html = htmlAplikacji || wczytajAplikacje();
+    const html = (htmlAplikacji || wczytajAplikacje()).split(PLACEHOLDER_KONTO).join(idKonta(sesja.login));
+    // Strona zawiera identyfikator konta - nie moze trafic do wspolnej pamieci podrecznej.
+    res.setHeader('Cache-Control', 'private, no-store');
     return odpowiedzTekst(res, 200, html, 'text/html; charset=utf-8');
   }
 
