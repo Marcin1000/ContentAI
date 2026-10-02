@@ -385,6 +385,14 @@ body.is-mobile .settings-btn { font-size: 16px; padding: 3px 4px; }
 .kb-item:hover .kb-del { opacity: 0.5; }
 .kb-del:hover { opacity: 1 !important; color: var(--red); }
 
+.kb-serwer { padding: 8px 8px 0; }
+.kb-serwer[hidden] { display: none; }
+.kb-sekcja { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 4px; font-size: 11px; font-weight: 600; letter-spacing: .02em; color: var(--text3); }
+.kb-sekcja-lokalna { margin-top: 8px; border-top: 1px solid var(--border); padding-top: 10px; }
+.kb-sekcja-licznik { font-variant-numeric: tabular-nums; }
+.kb-item-serwer { cursor: default; }
+.kb-przenies { font: inherit; font-size: 11px; font-weight: 600; color: var(--text2); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+.kb-przenies:hover { color: var(--text); border-color: var(--border2); }
 .kb-empty { padding: 28px 16px; text-align: center; color: var(--text3); font-size: 13px; line-height: 1.6; }
 .kb-empty-icon { font-size: 28px; display: block; margin-bottom: 8px; }
 
@@ -3430,6 +3438,7 @@ var I18N = {
     'img-download-btn':'⬇ Pobierz PNG',
     'img-step1-noref':'Krok 1 z 2: tworzenie promptu graficznego',
     'msg-no-api-resp':'Brak odpowiedzi z API. Sprawdź klucz API i połączenie.',
+    'kb-na-serwerze':'Na serwerze','kb-wspolna':'Baza wspólna zespołu','kb-prywatna':'Twoja baza prywatna','kb-fragm':'fragm.','kb-lokalnie':'Tylko w tej przeglądarce','kb-przenies':'Przenieś na serwer','kb-dodano':'Dodano do bazy wiedzy na serwerze','kb-zostaje-lokalnie':'Dokument zapisano tylko w tej przeglądarce.','kb-przeniesiono':'Przeniesiono na serwer',
     'msg-blad-prefiks':'Błąd:','menu-wyloguj':'Wyloguj się','menu-wyloguj-sub':'zakończ sesję na tym urządzeniu',
     'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Część dokumentów z bazy nie przetrwa odświeżenia - przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
     'ver-poprawiony-hybryda':'Poprawiony SEO+AIO','ver-poprawiony-aio':'Poprawiony AIO','ver-poprawiony-seo':'Poprawiony SEO','ver-wariant':'Wariant',
@@ -3794,6 +3803,7 @@ var I18N = {
     'remove-link-btn':'⛓️‍💥 Remove link',
     'img-spin-sub':'Generation may take 30-60 seconds',
     'msg-no-api-resp':'No response from API. Check your API key and connection.',
+    'kb-na-serwerze':'On the server','kb-wspolna':'Shared team base','kb-prywatna':'Your private base','kb-fragm':'chunks','kb-lokalnie':'Only in this browser','kb-przenies':'Move to server','kb-dodano':'Added to the server knowledge base','kb-zostaje-lokalnie':'The document was saved only in this browser.','kb-przeniesiono':'Moved to the server',
     'msg-blad-prefiks':'Error:','menu-wyloguj':'Log out','menu-wyloguj-sub':'end the session on this device',
     'msg-magazyn-pelny':'Browser storage is full. Some knowledge base documents will not survive a refresh - move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
     'ver-poprawiony-hybryda':'Improved SEO+AIO','ver-poprawiony-aio':'Improved AIO','ver-poprawiony-seo':'Improved SEO','ver-wariant':'Variant',
@@ -4172,6 +4182,9 @@ let history = [];
 // Wpis historii, ktory jest teraz w #article - tam trafiaja reczne poprawki
 // autora po wyjsciu z edycji. null = artykul spoza historii.
 let biezacyHist = null;
+// Fragmenty bazy na serwerze, ktore dostal model przy pisaniu biezacego
+// artykulu. Kontrola faktow i linkow musi widziec te same zrodla co model.
+let ostatniaWiedzaSerwera = '';
 let genCount = 0;
 let currentText = '';
 let premiumMode = false;       // tryb Jakość Premium - samokorekcja po generowaniu
@@ -4819,10 +4832,15 @@ function getSelectedDocs() {
   return anySelected ? docs.filter(d => d.selected) : docs;
 }
 
+// Dokumenty z obu miejsc: z tej przegladarki i (za serwerem) z bazy na
+// serwerze. Komunikat "baza jest pusta" ma sie opierac na obu - wczesniej
+// liczyl tylko lokalne i straszyl uzytkownika z pelna baza serwerowa.
+function liczbaDokumentow() { return docs.length + (window._bazaSerwerLiczba || 0); }
+
 function renderDocs() {
   const list = document.getElementById('kb-list');
   const empty = document.getElementById('kb-empty');
-  empty.style.display = docs.length ? 'none' : 'block';
+  empty.style.display = liczbaDokumentow() ? 'none' : 'block';
   const items = list.querySelectorAll('.kb-item');
   items.forEach(el => el.remove());
 
@@ -5319,9 +5337,9 @@ async function generate(skipPremiumModal = false) {
   }
 
   // ── Ostrzeżenie: brak źródeł
-  const noneSelected = docs.length > 0 && !docs.some(d => d.selected);
-  if ((docs.length === 0 || noneSelected) && !document.getElementById('use-web').checked && !skipSourceCheck) {
-    const isEmpty = docs.length === 0;
+  const noneSelected = docs.length > 0 && !docs.some(d => d.selected) && !(window._bazaSerwerLiczba > 0);
+  if ((liczbaDokumentow() === 0 || noneSelected) && !document.getElementById('use-web').checked && !skipSourceCheck) {
+    const isEmpty = liczbaDokumentow() === 0;
     document.getElementById('no-source-title').textContent = isEmpty ? _t('no-src-title-empty') : _t('no-src-title-none');
     document.getElementById('no-source-msg').textContent = isEmpty
       ? _t('no-src-desc-empty')
@@ -5944,6 +5962,7 @@ function previewHistory(i) {
     // wtedy nie ten tekst, co trzeba - wiec go chowamy.
     zrodlaSieciowe = [];
     stanSieci = null;
+    ostatniaWiedzaSerwera = '';
     trybUzupelniania = false;
     pokazStanSieci(null, 0);
     // Wynik kontroli faktow tez dotyczyl poprzedniego artykulu.
@@ -6223,6 +6242,7 @@ function adresyZeZrodel() {
   // na rowni z dokumentami - inaczej kontrola zglaszalaby wlasna bibliografie
   // jako adresy nieznanego pochodzenia.
   zrodlaSieciowe.forEach(function (z) { zbior[kluczAdresu(z.url)] = true; });
+  (String(ostatniaWiedzaSerwera || '').match(/https?:\/\/[^\s"'<>)\]]+/g) || []).forEach(function (u) { zbior[kluczAdresu(u)] = true; });
   getSelectedDocs().forEach(function (d) {
     if (d.url) zbior[kluczAdresu(d.url)] = true;
     const znalezione = String(d.content || '').match(/https?:\/\/[^\s"'<>)\]]+/g) || [];
@@ -6363,9 +6383,10 @@ function przelaczPanelFaktow() {
 // Gdyby kontrola dostala inny zestaw, zglaszalaby braki tam, gdzie ich nie ma.
 function zrodlaDoKontroli() {
   const aktywne = getSelectedDocs();
-  return aktywne.map(function (d) {
+  const lokalne = aktywne.map(function (d) {
     return '### ' + d.name + '\n' + d.content;
   }).join('\n\n---\n\n');
+  return [ostatniaWiedzaSerwera, lokalne].filter(Boolean).join('\n\n---\n\n');
 }
 
 async function uruchomKontroleFaktow(wymus) {
@@ -8057,7 +8078,7 @@ function switchMobileTab(name) {
 function syncMobileKbList() {
   const mList = document.getElementById('kb-list-mobile');
   if (!mList) return;
-  const empty = docs.length === 0
+  const empty = liczbaDokumentow() === 0
     ? `<div class="kb-empty"><span class="kb-empty-icon">📂</span>${_t('sidebar-empty-title')}<br>${_t('sidebar-empty-sub')}</div>`
     : '';
   mList.innerHTML = empty + docs.map((d, i) => {
@@ -8074,7 +8095,7 @@ function syncMobileKbList() {
   const fmt = n => n > 999 ? (n/1000).toFixed(1)+'k' : n;
   ['s-docs-m','s-words-m','s-gen-m'].forEach((id, i) => {
     const el = document.getElementById(id);
-    if (el) el.textContent = [docs.length, fmt(totalWords), genCount][i];
+    if (el) el.textContent = [liczbaDokumentow(), fmt(totalWords), genCount][i];
   });
 }
 
@@ -8082,10 +8103,10 @@ function syncMobileKbList() {
 function updateStats() {
   const totalWords = docs.reduce((s, d) => s + d.words, 0);
   const wLabel = totalWords > 999 ? (totalWords/1000).toFixed(1)+'k' : totalWords;
-  ['s-docs','s-docs-m'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = docs.length; });
+  ['s-docs','s-docs-m'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = liczbaDokumentow(); });
   ['s-words','s-words-m'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = wLabel; });
   ['s-gen','s-gen-m'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = genCount; });
-  const hd = document.getElementById('h-docs'); if(hd) hd.textContent = docs.length;
+  const hd = document.getElementById('h-docs'); if(hd) hd.textContent = liczbaDokumentow();
   syncMobileKbList();
 }
 
