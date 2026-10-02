@@ -602,8 +602,9 @@ KONTROLE = [
     # ── brama OpenSEO (tylko wariant proxy) ──
     # Adres i domene podstawia serwer przy serwowaniu strony; w repo maja zostac
     # placeholdery, inaczej kazdy klon niesie czyjas domene.
-    ("O/menu", "pozycja OpenSEO w menu ustawien",
-     'onclick="otworzOpenSeo();closeSettingsMenu()"', None, ("proxy",)),
+    # OpenSEO stoi w obszarze "Widocznosc AI" w pasku gornym (nowy uklad, E4).
+    ("O/menu", "pozycja OpenSEO w menu Widocznosc AI",
+     'id="openseo-item" style="display:none" onclick="otworzOpenSeo()"', None, ("proxy",)),
     ("O/adres", "adres OpenSEO zostaje placeholderem",
      "var ADRES = 'WSTAW_TUTAJ_ADRES_OPENSEO';", None, ("proxy",)),
     ("O/domena", "domena ciasteczka zostaje placeholderem",
