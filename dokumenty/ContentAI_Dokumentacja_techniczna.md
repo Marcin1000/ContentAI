@@ -60,8 +60,8 @@ albo jest opakowywany w Electron / Capacitor.
 
 Modele: `claude-sonnet-4-6` (treść), `claude-haiku-4-5` (zadania pomocnicze),
 `gpt-image-1` (grafiki), `gpt-4o-mini-tts` i ElevenLabs (audio), `gpt-4o-transcribe`
-(transkrypcja). Biblioteki do plików (mammoth, pdf.js, pdfmake, xlsx, html-docx-js) oraz krój
-IBM Plex leżą **w repozytorium**, w `app/pwa/lib/` i `app/pwa/fonty/` - aplikacja nie pobiera
+(transkrypcja). Biblioteki do plików (mammoth, pdf.js, pdfmake, xlsx, html-docx-js) oraz kroje
+Schibsted Grotesk, Literata i JetBrains Mono (licencja OFL) leżą **w repozytorium**, w `app/pwa/lib/` i `app/pwa/fonty/` - aplikacja nie pobiera
 niczego z obcych serwerów.
 
 ### Jedno źródło, trzy warianty

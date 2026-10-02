@@ -45,9 +45,13 @@ licences and are NOT covered by the notice above:
     xlsx.full.min.js                SheetJS
     html-docx.js                    html-docx-js
 
-  app/pwa/fonty/                    IBM Plex Sans and IBM Plex Mono, IBM
+  app/pwa/fonty/, showcase/fonty/  Schibsted Grotesk, Literata and JetBrains
+                                    Mono, SIL Open Font License 1.1 (licence
+                                    texts next to the files)
 
-  showcase/index.html               loads three.js, GSAP and Lenis from a CDN
+  icon sprite in app/contentai.src.html and showcase/zrodlo/ikony.svg
+                                    Lucide icons, ISC licence
+                                    (showcase/zrodlo/ikony-LICENCJA-lucide.txt)
 
 Nothing in this file limits, overrides or reduces the rights granted by those
 licences, and nothing here should be read as claiming ownership of them.

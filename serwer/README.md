@@ -566,7 +566,7 @@ Co serwer robi:
   kończą się 404; przed zalogowaniem dostępne są tylko manifest, ikony i kroje (ekran
   logowania), biblioteki aplikacji dopiero po zalogowaniu
 - aplikacja nie pobiera niczego z obcych serwerów: biblioteki (mammoth, pdf.js, pdfmake,
-  xlsx, html-docx-js) i krój IBM Plex leżą w repozytorium i idą z Twojego hosta
+  xlsx, html-docx-js) i kroje (Schibsted Grotesk, Literata, JetBrains Mono) leżą w repozytorium i idą z Twojego hosta
 - szczegóły błędów dostawcy trafiają do logu serwera, nie do przeglądarki
 
 Czego **nie** robi - i o czym trzeba wiedzieć:
