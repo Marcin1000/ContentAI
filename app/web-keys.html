@@ -5626,7 +5626,16 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
       }
       throw new Error(msg || _t('err-api-generic'));
     }
-    html = (data.content || []).map(b => b.text || '').join('');
+    // Przy wyszukiwaniu model bywa, ze zapowiada je zdaniem ("Wyszukam
+    // aktualne informacje...") - takie zdanie trafialo nad H1. Artykul to
+    // tekst po ostatnim wyniku wyszukiwania; gdy go nie ma, bierzemy calosc.
+    {
+      const bloki = data.content || [];
+      let od = 0;
+      bloki.forEach((b, i) => { if (b && b.type === 'web_search_tool_result') od = i + 1; });
+      const poWynikach = bloki.slice(od).map(b => b.text || '').join('');
+      html = poWynikach.trim() ? poWynikach : bloki.map(b => b.text || '').join('');
+    }
     // Limit dlugosci odpowiedzi ucina tekst w pol zdania. Taki artykul
     // pokazujemy, ale z ostrzezeniem zamiast odznaki "gotowe".
     artykulUciety = data.stop_reason === 'max_tokens';
@@ -9695,7 +9704,9 @@ async function visQuery(query, brand, competitors) {
   });
   const data = await res.json().catch(() => null);
   if (!data || !data.content) return { present: false, position: null, competitors: [], sources: [], note: 'no response', error: true };
-  const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('\n');
+  // Bez separatora: przypis potrafi podzielic jeden JSON na kilka blokow
+  // tekstu, a znak nowej linii w srodku napisu psul parsowanie.
+  const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
   const j = _visExtractJson(text);
   if (!j) return { present: false, position: null, competitors: [], sources: [], note: 'parse error', error: true };
   return {
@@ -9879,7 +9890,7 @@ async function runNarrative() {
       body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 700, system: sys1, messages: [{ role: 'user', content: 'Opowiedz o marce: ' + brand }], tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] })
     });
     const d1 = await r1.json().catch(() => null);
-    const narrative = (d1 && d1.content ? d1.content.filter(b => b.type === 'text').map(b => b.text).join('\n') : '').trim();
+    const narrative = (d1 && d1.content ? d1.content.filter(b => b.type === 'text').map(b => b.text).join('') : '').trim();
     if (!narrative) { out.innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'No narrative returned.' : 'Brak odpowiedzi z narracją.') + '</div>'; prog.textContent = ''; btn.disabled = false; btn.style.opacity = '1'; return; }
     prog.textContent = en ? 'Step 2/2: comparing with knowledge base...' : 'Krok 2/2: porównanie z bazą wiedzy...';
     const kb = _visKb();
@@ -9891,7 +9902,7 @@ async function runNarrative() {
       body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 900, system: sys2, messages: [{ role: 'user', content: user2 }] })
     });
     const d2 = await r2.json().catch(() => null);
-    const txt2 = d2 && d2.content ? d2.content.filter(b => b.type === 'text').map(b => b.text).join('\n') : '';
+    const txt2 = d2 && d2.content ? d2.content.filter(b => b.type === 'text').map(b => b.text).join('') : '';
     const ev = _visExtractJson(txt2) || { alignment: null, factual_issues: [], missing_strengths: [], note: 'parse error' };
     prog.textContent = '';
     btn.disabled = false; btn.style.opacity = '1';
