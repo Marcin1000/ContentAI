@@ -640,6 +640,17 @@ KONTROLE = [
     ("P/kolejnosc", "frazy renderowane w jednym miejscu, nie w dwoch kopiach",
      'return \'<div class="brief-section"><h4>\' + _t(\'brief-kw-section\') + \'</h4><div id="brief-kw-list"></div></div>\';',
      None, None),
+
+    # ── generowanie: stan wyniku z flag, nie z wygladu (audyt rundy 1) ──
+    ("G/blad", "blad generowania rozpoznany po fladze, nie po stylu akapitu",
+     "if (!html || bladGenerowania) {",
+     "html.startsWith('<p style=\"color:var(--red)\">')", None),
+    ("G/escape", "tresc bledu API escapowana przed wstawieniem",
+     "escapeHtml(e && e.message || '')", "</strong> ${e.message}</p>", None),
+    ("G/uciety", "artykul uciety na limicie dlugosci oznaczony ostrzezeniem",
+     "artykulUciety = data.stop_reason === 'max_tokens';", None, None),
+    ("G/zrodla", "zrodla sieciowe zerowane na starcie kazdego generowania",
+     "  zrodlaSieciowe = [];\n  stanSieci = null;\n  if (API_KEY === 'WSTAW_TUTAJ_KLUCZ_API'", None, None),
 ]
 
 

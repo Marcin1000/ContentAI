@@ -604,6 +604,8 @@ body.dark-mode .serp-tag { background: var(--surface2); }
 
 .badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); color: var(--text3); background: var(--surface2); white-space: nowrap; }
 .badge.ready { background: #D1FAE5; color: #065F46; border-color: #6EE7B7; }
+.badge.uwaga { background: var(--yellow-light); color: var(--text); border-color: var(--yellow); }
+.komunikat-bledu { color: var(--red); padding: 16px; }
 .badge.running { background: var(--yellow-light); color: #7A6000; border-color: var(--yellow-dark); }
 
 .output-scroll { flex: 1; overflow-y: auto; padding: 28px 32px; }
@@ -3088,7 +3090,7 @@ var I18N = {
     'msg-spin-img':'Generuję grafikę...',
     'msg-spin-sections':'⏳ Generuję sekcje...',
     // Badges
-    'badge-error':'błąd','badge-generating':'generowanie...',
+    'badge-error':'błąd','badge-generating':'generowanie...','badge-uciety':'ucięty',
     // Loading
     'msg-loading-article':'⏳ Analizuję artykuł...',
     'msg-loading-aio':'⏳ Analizuję pod kątem AI Overview...',
@@ -3316,6 +3318,8 @@ var I18N = {
     'img-download-btn':'⬇ Pobierz PNG',
     'img-step1-noref':'Krok 1 z 2: tworzenie promptu graficznego',
     'msg-no-api-resp':'Brak odpowiedzi z API. Sprawdź klucz API i połączenie.',
+    'msg-blad-prefiks':'Błąd:',
+    'msg-artykul-uciety':'Tekst został ucięty na limicie długości. Zmniejsz długość albo wygeneruj ponownie.',
     'msg-no-content':'Brak treści',
     'msg-open-link':'Otwórz →',
     'msg-refresh':'odśwież',
@@ -3557,7 +3561,7 @@ var I18N = {
     'msg-spin-img':'Generating image...',
     'msg-spin-sections':'⏳ Generating sections...',
     // Badges
-    'badge-error':'error','badge-generating':'generating...',
+    'badge-error':'error','badge-generating':'generating...','badge-uciety':'cut off',
     // Loading
     'msg-loading-article':'⏳ Analyzing article...',
     'msg-loading-aio':'⏳ Analyzing for AI Overview...',
@@ -3676,6 +3680,8 @@ var I18N = {
     'remove-link-btn':'⛓️‍💥 Remove link',
     'img-spin-sub':'Generation may take 30-60 seconds',
     'msg-no-api-resp':'No response from API. Check your API key and connection.',
+    'msg-blad-prefiks':'Error:',
+    'msg-artykul-uciety':'The text was cut off at the length limit. Reduce the length or generate again.',
     'msg-no-content':'No content',
     'msg-refresh':'refresh',
     'msg-open-link':'Open →',
@@ -5241,6 +5247,15 @@ async function generate(skipPremiumModal = false) {
   // ── REAL API (uncomment when key is set) ─────────────────────────────────
   // ── Sprawdź klucz API
   let html = '';
+  // Blad rozpoznajemy po fladze, nie po wygladzie komunikatu. Wczesniej
+  // generate() sprawdzalo prefiks stylu akapitu - po zmianie stylu blad API
+  // trafial do historii jako gotowy artykul.
+  let bladGenerowania = false;
+  let artykulUciety = false;
+  // Zrodla i statystyki sieci z poprzedniego przebiegu nie moga przejsc na nowy
+  // artykul, gdy ten zakonczy sie bledem przed ich ponownym ustawieniem.
+  zrodlaSieciowe = [];
+  stanSieci = null;
   if (API_KEY === 'WSTAW_TUTAJ_KLUCZ_API' || API_KEY === 'WSTAW_TUTAJ_NOWY_KLUCZ_API') {
     clearInterval(iv);
     document.getElementById('spinner').style.display = 'none';
@@ -5438,6 +5453,9 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
       throw new Error(msg || _t('err-api-generic'));
     }
     html = (data.content || []).map(b => b.text || '').join('');
+    // Limit dlugosci odpowiedzi ucina tekst w pol zdania. Taki artykul
+    // pokazujemy, ale z ostrzezeniem zamiast odznaki "gotowe".
+    artykulUciety = data.stop_reason === 'max_tokens';
     // Adresy, z ktorych model skorzystal. Zbieramy je tutaj, bo dalej tresc
     // przechodzi jeszcze przez korekte premium i bloki wynikow zniknelyby.
     zrodlaSieciowe = useWeb ? zrodlaZOdpowiedzi(data) : [];
@@ -5611,7 +5629,8 @@ ${html}`;
       };
     }
   } catch(e) {
-    html = `<p style="color:var(--red);padding:16px"><strong>Błąd:</strong> ${e.message}</p>`;
+    bladGenerowania = true;
+    html = '<p class="komunikat-bledu"><strong>' + escapeHtml(_t('msg-blad-prefiks')) + '</strong> ' + escapeHtml(e && e.message || '') + '</p>';
   }
 
   clearInterval(iv);
@@ -5631,9 +5650,9 @@ ${html}`;
   document.getElementById('gen-btn').disabled = false;
 
   // Sprawdź czy html zawiera błąd
-  if (!html || html.startsWith('<p style="color:var(--red)">')) {
+  if (!html || bladGenerowania) {
     const art = document.getElementById('article');
-    art.innerHTML = html || '<p style="color:var(--red)">' + _t('msg-no-api-resp') + '</p>';
+    art.innerHTML = html || '<p class="komunikat-bledu">' + escapeHtml(_t('msg-no-api-resp')) + '</p>';
     art.style.display = 'block';
     document.getElementById('out-badge').textContent = _t('badge-error');
     document.getElementById('out-badge').className = 'badge';
@@ -5662,8 +5681,12 @@ ${html}`;
   aioCache = null;
   document.getElementById('seo-panel').classList.remove('show');
   document.getElementById('aio-panel').classList.remove('show');
-  document.getElementById('out-badge').textContent = _t('badge-done');
-  document.getElementById('out-badge').className = 'badge ready';
+  {
+    const ob = document.getElementById('out-badge');
+    ob.textContent = artykulUciety ? _t('badge-uciety') : _t('badge-done');
+    ob.className = artykulUciety ? 'badge uwaga' : 'badge ready';
+    ob.title = artykulUciety ? _t('msg-artykul-uciety') : '';
+  }
   document.getElementById('premium-fix-btn').style.display = 'flex';
   document.getElementById('img-btn').style.display = 'flex';
   document.getElementById('copy-btn').style.display = 'flex';
