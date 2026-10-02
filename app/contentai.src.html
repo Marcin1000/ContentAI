@@ -533,6 +533,7 @@ body.dark-mode .btn-premium.active {
 
 /* Historia - filtry tagów */
 .htag-filter {
+  font-family: inherit; line-height: inherit;
   font-size: 10px; padding: 2px 8px; border-radius: 10px;
   background: var(--surface2); border: 1px solid var(--border);
   color: var(--text3); cursor: pointer; white-space: nowrap;
@@ -1722,15 +1723,15 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="field">
               <label class="field-label" data-i18n="label-ctype">Typ treści</label>
               <select id="ctype" onchange="onContentTypeChange()">
-                <option data-i18n="opt-hybrid">Hybryda SEO + AIO</option>
-                <option data-i18n="opt-seo">Artykuł SEO</option>
-                <option data-i18n="opt-aio">Treść AIO</option>
-                <option data-i18n="opt-faq">FAQ page</option>
-                <option data-i18n="opt-landing">Landing page copy</option>
-                <option data-i18n="opt-blog">Wpis blogowy</option>
-                <option data-i18n="opt-product">Opis produktu/usługi</option>
-                <option data-i18n="opt-directional">Strona kierunkowa (eksport)</option>
-                <option data-i18n="opt-press">Informacja prasowa</option>
+                <option value="Hybryda SEO + AIO" data-i18n="opt-hybrid">Hybryda SEO + AIO</option>
+                <option value="Artykuł SEO" data-i18n="opt-seo">Artykuł SEO</option>
+                <option value="Treść AIO" data-i18n="opt-aio">Treść AIO</option>
+                <option value="FAQ page" data-i18n="opt-faq">FAQ page</option>
+                <option value="Landing page copy" data-i18n="opt-landing">Landing page copy</option>
+                <option value="Wpis blogowy" data-i18n="opt-blog">Wpis blogowy</option>
+                <option value="Opis produktu/usługi" data-i18n="opt-product">Opis produktu/usługi</option>
+                <option value="Strona kierunkowa (eksport)" data-i18n="opt-directional">Strona kierunkowa (eksport)</option>
+                <option value="Informacja prasowa" data-i18n="opt-press">Informacja prasowa</option>
               </select>
             </div>
             <div class="field">
@@ -2224,10 +2225,10 @@ document.addEventListener('DOMContentLoaded', function () {
           <div style="padding:8px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
             <input type="text" id="hist-filter" placeholder="Szukaj w historii..." data-i18n="ph-history-search" oninput="filterHistory()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:5px 10px;font-size:12px;background:var(--surface2);color:var(--text);outline:none;box-sizing:border-box"/>
             <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap" id="hist-tag-filters">
-              <span class="htag-filter active" onclick="setHistFilter(this,'all')" data-i18n="hist-filter-all">Wszystkie</span>
-              <span class="htag-filter" onclick="setHistFilter(this,'Treść SEO')">SEO</span>
-              <span class="htag-filter" onclick="setHistFilter(this,'Treść AIO')">AIO</span>
-              <span class="htag-filter" onclick="setHistFilter(this,'Hybryda SEO + AIO')" data-i18n="hist-filter-hybrid">Hybryda</span>
+              <button type="button" class="htag-filter active" aria-pressed="true" onclick="setHistFilter(this,'all')" data-i18n="hist-filter-all">Wszystkie</button>
+              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Artykuł SEO')">SEO</button>
+              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Treść AIO')">AIO</button>
+              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Hybryda SEO + AIO')" data-i18n="hist-filter-hybrid">Hybryda</button>
             </div>
           </div>
           <div id="h-list-inner" style="padding:8px">
@@ -3474,7 +3475,8 @@ var I18N = {
     'img-download-btn':'⬇ Pobierz PNG',
     'img-step1-noref':'Krok 1 z 2: tworzenie promptu graficznego',
     'msg-no-api-resp':'Brak odpowiedzi z API. Sprawdź klucz API i połączenie.',
-    'msg-blad-prefiks':'Błąd:',
+    'msg-blad-prefiks':'Błąd:','okno-zamknij':'Zamknij',
+    'ver-poprawiony-hybryda':'Poprawiony SEO+AIO','ver-poprawiony-aio':'Poprawiony AIO','ver-poprawiony-seo':'Poprawiony SEO','ver-wariant':'Wariant',
     'msg-artykul-uciety':'Tekst został ucięty na limicie długości. Zmniejsz długość albo wygeneruj ponownie.',
     'msg-no-content':'Brak treści',
     'msg-open-link':'Otwórz →',
@@ -3907,7 +3909,8 @@ var I18N = {
     'remove-link-btn':'⛓️‍💥 Remove link',
     'img-spin-sub':'Generation may take 30-60 seconds',
     'msg-no-api-resp':'No response from API. Check your API key and connection.',
-    'msg-blad-prefiks':'Error:',
+    'msg-blad-prefiks':'Error:','okno-zamknij':'Close',
+    'ver-poprawiony-hybryda':'Improved SEO+AIO','ver-poprawiony-aio':'Improved AIO','ver-poprawiony-seo':'Improved SEO','ver-wariant':'Variant',
     'msg-artykul-uciety':'The text was cut off at the length limit. Reduce the length or generate again.',
     'msg-no-content':'No content',
     'msg-refresh':'refresh',
@@ -4159,6 +4162,12 @@ let API_KEY = localStorage.getItem('cai_klucz_anthropic') || '';
 // DIRECT:  'https://api.anthropic.com/v1/messages'  (domyślne, klucz w pliku)
 // PROXY:   ustaw window.API_ENDPOINT_OVERRIDE przed załadowaniem skryptu
 const API_ENDPOINT = window.API_ENDPOINT_OVERRIDE || 'https://api.anthropic.com/v1/messages';
+// Jedno pytanie "czy mozna wolac model" dla calej aplikacji. Za proxy klucz
+// jest na serwerze, wiec pusty API_KEY nie oznacza braku dostepu - wczesniej
+// trzy funkcje sprawdzaly sam klucz i na produkcji po cichu nie dzialaly.
+function maDostepDoApi() {
+  return !!window.API_ENDPOINT_OVERRIDE || (typeof API_KEY !== 'undefined' && !!API_KEY && !API_KEY.startsWith('WSTAW'));
+}
 
 // ─── OPENAI (grafiki) ─────────────────────────────────────────────────────────
 // PROXY: jesli window.OPENAI_IMG_ENDPOINT_OVERRIDE jest ustawiony, klucz nie jest potrzebny
@@ -5884,7 +5893,7 @@ ${html}`;
           if (improved) {
             const improvedFinal = lang === 'Polski' ? improved.replace(/[—–]/g, '-') : improved;
             const origLabel = (currentLang==='en'?'Original':'Oryginał') + ' (' + scores + ')';
-            const fixLabel  = isHybrid ? 'Poprawiony SEO+AIO' : (ctype === 'Treść AIO' ? 'Poprawiony AIO' : 'Poprawiony SEO');
+            const fixLabel  = isHybrid ? _t('ver-poprawiony-hybryda') : (ctype === 'Treść AIO' ? _t('ver-poprawiony-aio') : _t('ver-poprawiony-seo'));
             pendingVersions = [
               { html: originalHtml, label: origLabel },
               { html: improvedFinal, label: fixLabel }
@@ -6032,7 +6041,7 @@ ${html}`;
       pendingVersions = null;
     } else {
       const verNum = versions.length + 1;
-      addVersion(html, `Wariant ${verNum}`);
+      addVersion(html, _t('ver-wariant') + ' ' + verNum);
     }
     if (window._lastSeoResult) {
       // Zapisz wynik cicho - panel otwiera się tylko ręcznie
@@ -6066,7 +6075,7 @@ function renderHistory() {
   if (!inner) return;
 
   let filtered = history.map((h, i) => ({ ...h, origIdx: i }));
-  if (histFilterType !== 'all') filtered = filtered.filter(h => h.type === histFilterType);
+  if (histFilterType !== 'all') filtered = filtered.filter(h => typKanoniczny(h.type) === histFilterType);
   if (histFilterText) filtered = filtered.filter(h => (h.topic||'').toLowerCase().includes(histFilterText));
 
   if (!filtered.length) {
@@ -6076,7 +6085,7 @@ function renderHistory() {
   inner.innerHTML = filtered.map((h, i) => `
     <div class="h-item" data-idx="${h.origIdx}" onclick="previewHistory(${h.origIdx})">
       <div class="h-item-topic">${escapeHtml(h.topic)}</div>
-      <div class="h-item-meta">${escapeHtml(h.type)} · ~${h.words} ${_t('hist-words-suffix')} · ${h.time}</div>
+      <div class="h-item-meta">${escapeHtml(nazwaTypu(h.type))} · ~${h.words} ${_t('hist-words-suffix')} · ${h.time}</div>
     </div>`).join('');
   // Nie auto-ładuj artykułu przy zmianie filtra - użytkownik klika sam
 }
@@ -7745,6 +7754,20 @@ function buildLinkSuggestions() {
 // ─── FEATURE: HISTORIA Z FILTROWANIEM ─────────────────────────────────────────
 let histFilterText = '';
 let histFilterType = 'all';
+// Typ tresci zapisujemy pod stala nazwa (wartosc opcji #ctype, po polsku),
+// niezaleznie od jezyka interfejsu. Starsze wpisy historii maja nazwe
+// angielska - sprowadzamy ja do tej samej postaci przy filtrowaniu i wyswietlaniu.
+const TYPY_Z_ANGIELSKIEGO = {
+  'SEO + AIO Hybrid': 'Hybryda SEO + AIO', 'SEO Article': 'Artykuł SEO', 'AIO Content': 'Treść AIO',
+  'Blog post': 'Wpis blogowy', 'Product / service copy': 'Opis produktu/usługi',
+  'Directional page (export)': 'Strona kierunkowa (eksport)', 'Press release': 'Informacja prasowa'
+};
+function typKanoniczny(t) { return TYPY_Z_ANGIELSKIEGO[t] || t; }
+function nazwaTypu(t) {
+  const k = typKanoniczny(t);
+  const o = [...document.getElementById('ctype').options].find(x => x.value === k);
+  return o ? o.textContent : (t || '');
+}
 
 function filterHistory() {
   histFilterText = (document.getElementById('hist-filter').value || '').toLowerCase();
@@ -7753,8 +7776,9 @@ function filterHistory() {
 
 function setHistFilter(el, type) {
   histFilterType = type;
-  document.querySelectorAll('.htag-filter').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.htag-filter').forEach(e => { e.classList.remove('active'); e.setAttribute('aria-pressed', 'false'); });
   el.classList.add('active');
+  el.setAttribute('aria-pressed', 'true');
   renderHistory();
 }
 
@@ -9058,7 +9082,7 @@ FORMAT: Czysty tekst bez gwiazdek, bez # ani innych znaczników markdown.
 WAŻNE: Zwróć TYLKO tekst landing page, gotowy do wklejenia.`
   };
 
-  const noKey = !API_KEY || API_KEY.startsWith('WSTAW_TUTAJ');
+  const noKey = !maDostepDoApi();
   if (noKey) {
     setTimeout(() => showRepurpose(_t('rp-source-missing')), 800);
     return;
@@ -9856,7 +9880,7 @@ async function runVisibility() {
     document.getElementById('vis-results').innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'Web search is not available in the GPT-only mode. Use direct Anthropic or Azure Foundry (Claude) mode.' : 'Wyszukiwanie w sieci nie działa w trybie GPT-only. Użyj trybu bezpośredniego Anthropic lub Azure Foundry (Claude).') + '</div>';
     return;
   }
-  if (!API_KEY || API_KEY.startsWith('WSTAW')) {
+  if (!maDostepDoApi()) {
     document.getElementById('vis-results').innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'Anthropic API key is missing.' : 'Brak klucza API Anthropic.') + '</div>';
     return;
   }
@@ -9998,7 +10022,7 @@ async function runNarrative() {
   const gptMode = (typeof USE_AZURE_GPT !== 'undefined' && USE_AZURE_GPT && typeof AZURE_OPENAI_CHAT_URL !== 'undefined' && AZURE_OPENAI_CHAT_URL && !AZURE_OPENAI_CHAT_URL.startsWith('WSTAW'));
   const out = document.getElementById('vis-results');
   if (gptMode) { out.innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'Web search is not available in the GPT-only mode.' : 'Wyszukiwanie w sieci nie działa w trybie GPT-only.') + '</div>'; return; }
-  if (!API_KEY || API_KEY.startsWith('WSTAW')) { out.innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'Anthropic API key is missing.' : 'Brak klucza API Anthropic.') + '</div>'; return; }
+  if (!maDostepDoApi()) { out.innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'Anthropic API key is missing.' : 'Brak klucza API Anthropic.') + '</div>'; return; }
   const brand = document.getElementById('vis-brand').value.trim() || BRAND.name;
   const btn = document.getElementById('vis-narr-btn');
   const prog = document.getElementById('vis-progress');
@@ -10892,8 +10916,115 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#ctx-menu')) closeContextMenu();
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeContextMenu(); closeLinkDialog(); closeNoSourceModal(); closePremiumModal(); closeTitlesModal(); closeGapPanel(); closeSerpPanel(); if(seoOpen){seoOpen=false;document.getElementById('seo-panel')?.classList.remove('show');} if(aioOpen){aioOpen=false;document.getElementById('aio-panel')?.classList.remove('show');} if(aeoOpen){aeoOpen=false;document.getElementById('aeo-panel')?.classList.remove('show');} if(geoOpen){geoOpen=false;document.getElementById('geo-panel')?.classList.remove('show');} closeBriefPanel(); if(linksOpen) toggleLinksPanel(); closeImgPanelSmart(); closeBvModal(); closeLlmsModal(); closeVisModal(); closeRepModal(); closeTrkModal(); closeTextModal(); closeUrlModal(); if(!bulkRunning) closeBulkModal(); closeImproveModal(); closeWpModal(); closeTplModal(); closeWpPublishModal(); closeSettingsMenu(); zamknijTematy(); zamknijGrupyPaska(); if(typeof zamknijPakiet==='function') zamknijPakiet(); if(typeof startPomin==='function' && document.getElementById('start-modal')?.style.display==='flex') startPomin(); const fi=document.getElementById('fog-panel'); if(fi) fi.style.display='none'; }
+  // Najpierw okno na wierzchu i tylko ono - kolejne Escape zamyka nastepne.
+  if (e.key === 'Escape' && typeof zamknijGorneOkno === 'function' && zamknijGorneOkno()) return;
+  if (e.key === 'Escape') { if (typeof zamknijPanelFaktow === 'function') zamknijPanelFaktow(); closeContextMenu(); closeLinkDialog(); closeNoSourceModal(); closePremiumModal(); closeTitlesModal(); closeGapPanel(); closeSerpPanel(); if(seoOpen){seoOpen=false;document.getElementById('seo-panel')?.classList.remove('show');} if(aioOpen){aioOpen=false;document.getElementById('aio-panel')?.classList.remove('show');} if(aeoOpen){aeoOpen=false;document.getElementById('aeo-panel')?.classList.remove('show');} if(geoOpen){geoOpen=false;document.getElementById('geo-panel')?.classList.remove('show');} closeBriefPanel(); if(linksOpen) toggleLinksPanel(); closeImgPanelSmart(); closeBvModal(); closeLlmsModal(); closeVisModal(); closeRepModal(); closeTrkModal(); closeTextModal(); closeUrlModal(); if(!bulkRunning) closeBulkModal(); closeImproveModal(); closeWpModal(); closeTplModal(); closeWpPublishModal(); closeSettingsMenu(); zamknijTematy(); zamknijGrupyPaska(); if(typeof zamknijPakiet==='function') zamknijPakiet(); if(typeof startPomin==='function' && document.getElementById('start-modal')?.style.display==='flex') startPomin(); const fi=document.getElementById('fog-panel'); if(fi) fi.style.display='none'; }
 });
+// ── OKNA: dostepnosc, fokus, kolejnosc i Escape w jednym miejscu ─────────
+// Okna sa otwierane przez kilkadziesiat roznych funkcji (klasa .open albo
+// style.display). Zamiast poprawiac kazda z nich, obserwujemy same okna:
+// otwarte trafia na stos, dostaje role="dialog", fokus i warstwe nad
+// poprzednim oknem; zamkniete oddaje fokus przyciskowi, ktory je otworzyl.
+(function () {
+  const ZAMKNIJ = {
+    'pii-modal': 'piiClose', 'keys-modal': 'closeKeysModal', 'bazas-modal': 'zamknijBazeSerwera',
+    'seo-modal': 'zamknijFrazySeo', 'pakiet-modal': 'zamknijPakiet', 'start-modal': 'startPomin'
+  };
+  const FOKUSOWALNE = 'input:not([type=hidden]):not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+  const stos = [];
+  const otwierajacy = new Map();
+  // Czesc funkcji otwierajacych sama przenosi fokus do okna, zanim okno
+  // trafi na stos - dlatego pamietamy ostatni element poza oknami.
+  let ostatniPozaOknem = null;
+  document.addEventListener('focusin', e => {
+    if (e.target instanceof Element && !e.target.closest('.overlay, [role="dialog"]')) ostatniPozaOknem = e.target;
+  }, true);
+
+  function widoczny(el) { return !!el && getComputedStyle(el).display !== 'none' && el.getClientRects().length > 0; }
+  function dialogW(okno) { return okno.id === 'pii-modal' ? okno : (okno.querySelector('.modal') || okno.firstElementChild || okno); }
+  function polaW(okno) { return [...dialogW(okno).querySelectorAll(FOKUSOWALNE)].filter(widoczny); }
+
+  function oznacz(okno) {
+    const d = dialogW(okno);
+    d.setAttribute('role', 'dialog');
+    d.setAttribute('aria-modal', 'true');
+    if (!d.hasAttribute('aria-labelledby')) {
+      const t = d.querySelector('h1, h2, h3, [class*="title"]');
+      if (t) { if (!t.id) t.id = okno.id + '-tytul'; d.setAttribute('aria-labelledby', t.id); }
+    }
+    if (!d.hasAttribute('tabindex')) d.setAttribute('tabindex', '-1');
+  }
+
+  function poOtwarciu(okno) {
+    if (stos.includes(okno)) return;
+    const aktywny = document.activeElement;
+    const zrodlo = (aktywny && aktywny !== document.body && !okno.contains(aktywny)) ? aktywny : ostatniPozaOknem;
+    if (zrodlo) otwierajacy.set(okno, zrodlo);
+    stos.push(okno);
+    oznacz(okno);
+    okno.dataset.zPrzed = okno.style.zIndex || '';
+    okno.style.zIndex = String(10010 + stos.length);
+    requestAnimationFrame(() => {
+      if (!widoczny(okno) || okno.contains(document.activeElement)) return;
+      const pola = polaW(okno);
+      const pierwsze = pola.find(p => !p.classList.contains('modal-close')) || pola[0] || dialogW(okno);
+      try { pierwsze.focus({ preventScroll: true }); } catch (e) {}
+    });
+  }
+
+  function poZamknieciu(okno) {
+    const i = stos.indexOf(okno);
+    if (i < 0) return;
+    stos.splice(i, 1);
+    okno.style.zIndex = okno.dataset.zPrzed || '';
+    const o = otwierajacy.get(okno);
+    otwierajacy.delete(okno);
+    if (o && document.contains(o) && widoczny(o)) { try { o.focus({ preventScroll: true }); } catch (e) {} }
+  }
+
+  function sprawdz(okno) { (widoczny(okno) ? poOtwarciu : poZamknieciu)(okno); }
+
+  window.zamknijGorneOkno = function () {
+    while (stos.length && !widoczny(stos[stos.length - 1])) poZamknieciu(stos[stos.length - 1]);
+    const okno = stos[stos.length - 1];
+    if (!okno) return false;
+    if (okno.id === 'bulk-modal' && typeof bulkRunning !== 'undefined' && bulkRunning) return true;
+    const f = ZAMKNIJ[okno.id];
+    if (f && typeof window[f] === 'function') window[f]();
+    // Okna .overlay zamykaja sie kliknieciem w tlo - ta sama sciezka co mysza.
+    else okno.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    sprawdz(okno);
+    return true;
+  };
+
+  // Tab nie wychodzi poza okno na wierzchu.
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Tab' || !stos.length) return;
+    const okno = stos[stos.length - 1];
+    if (!widoczny(okno)) return;
+    const pola = polaW(okno);
+    if (!pola.length) { e.preventDefault(); return; }
+    const pierwsze = pola[0], ostatnie = pola[pola.length - 1];
+    if (!dialogW(okno).contains(document.activeElement)) { e.preventDefault(); pierwsze.focus(); }
+    else if (e.shiftKey && document.activeElement === pierwsze) { e.preventDefault(); ostatnie.focus(); }
+    else if (!e.shiftKey && document.activeElement === ostatnie) { e.preventDefault(); pierwsze.focus(); }
+  }, true);
+
+  function start() {
+    const okna = [...document.querySelectorAll('.overlay')].concat(Object.keys(ZAMKNIJ).map(id => document.getElementById(id)).filter(Boolean));
+    const obs = new MutationObserver(lista => {
+      const dotkniete = new Set(lista.map(m => m.target));
+      dotkniete.forEach(sprawdz);
+    });
+    okna.forEach(o => {
+      o.querySelectorAll('.modal-close').forEach(b => { if (!b.hasAttribute('aria-label')) b.setAttribute('aria-label', _t('okno-zamknij')); b.type = 'button'; });
+      obs.observe(o, { attributes: true, attributeFilter: ['class', 'style'] });
+      if (widoczny(o)) poOtwarciu(o);
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
 // ═══════════════════════════════════════════════════════════════════════
 // ── MOBILE DETECTION & INIT ─────────────────────────────────────────────
 (function initMobile() {
@@ -11021,6 +11152,10 @@ function openImgPanelSmart() {
 }
 
 function closeImgPanelSmart() {
+  // Zamykanie, nie przelaczanie: Escape wolal te funkcje zawsze i przy
+  // zamknietym panelu otwieral Generator grafik na caly ekran.
+  const p = document.getElementById('img-panel');
+  if (!p || getComputedStyle(p).display === 'none') return;
   if (document.body.classList.contains('is-mobile')) {
     switchMobileTab('generator');
   } else {
@@ -11458,7 +11593,7 @@ function aivCfg() {
 function aivSave(c) { try { localStorage.setItem('cai_aiv', JSON.stringify(c)); } catch(e) {} }
 
 function aivIsGpt() { return (typeof USE_AZURE_GPT !== 'undefined' && USE_AZURE_GPT && typeof AZURE_OPENAI_CHAT_URL !== 'undefined' && AZURE_OPENAI_CHAT_URL && !AZURE_OPENAI_CHAT_URL.startsWith('WSTAW')); }
-function aivHasApi() { return !!window.API_ENDPOINT_OVERRIDE || (typeof API_KEY !== 'undefined' && API_KEY && !API_KEY.startsWith('WSTAW')); }
+function aivHasApi() { return maDostepDoApi(); }
 
 function aivOpen() {
   if (typeof closeSettingsMenu === 'function') closeSettingsMenu();

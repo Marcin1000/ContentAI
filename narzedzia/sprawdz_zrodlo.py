@@ -649,6 +649,8 @@ KONTROLE = [
      "escapeHtml(e && e.message || '')", "</strong> ${e.message}</p>", None),
     ("G/uciety", "artykul uciety na limicie dlugosci oznaczony ostrzezeniem",
      "artykulUciety = data.stop_reason === 'max_tokens';", None, None),
+    ("G/dostep", "przerobki, widocznosc i narracja dzialaja za proxy (bez klucza w przegladarce)",
+     "const noKey = !maDostepDoApi();", "!API_KEY || API_KEY.startsWith(", None),
     ("G/zrodla", "zrodla sieciowe zerowane na starcie kazdego generowania",
      "  zrodlaSieciowe = [];\n  stanSieci = null;\n  if (API_KEY === 'WSTAW_TUTAJ_KLUCZ_API'", None, None),
 ]
