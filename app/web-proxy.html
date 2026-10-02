@@ -5263,7 +5263,7 @@ async function runPostGenerationPremium() {
     tmp.innerHTML = existingHtml;
     const articleText = tmp.innerText || '';
 
-    const improved = await doPremiumCorrection(existingHtml, articleText, topic, kwText, ctype);
+    const improved = oczyscHtmlModelu(await doPremiumCorrection(existingHtml, articleText, topic, kwText, ctype));
 
     art.innerHTML = improved || existingHtml;
     currentText = art.innerText;
@@ -5641,6 +5641,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
     // Limit dlugosci odpowiedzi ucina tekst w pol zdania. Taki artykul
     // pokazujemy, ale z ostrzezeniem zamiast odznaki "gotowe".
     artykulUciety = data.stop_reason === 'max_tokens';
+    html = oczyscHtmlModelu(html.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim());
     // Adresy, z ktorych model skorzystal. Zbieramy je tutaj, bo dalej tresc
     // przechodzi jeszcze przez korekte premium i bloki wynikow zniknelyby.
     zrodlaSieciowe = useWeb ? zrodlaZOdpowiedzi(data) : [];
@@ -5767,7 +5768,7 @@ ${html}`;
         });
         const improveData = await improveRes.json();
         if (!improveData.error) {
-          const improved = (improveData.content||[]).map(b=>b.text||'').join('').replace(/```html\s*/i,'').replace(/```\s*$/i,'').trim();
+          const improved = oczyscHtmlModelu((improveData.content||[]).map(b=>b.text||'').join('').replace(/```html\s*/i,'').replace(/```\s*$/i,'').trim());
           if (improved) {
             const improvedFinal = lang === 'Polski' ? improved.replace(/[—–]/g, '-') : improved;
             const origLabel = (currentLang==='en'?'Original':'Oryginał') + ' (' + scores + ')';
@@ -5788,7 +5789,7 @@ ${html}`;
       document.getElementById('spin-sub').textContent = _t('msg-spin-premium-deep');
       const tmp0p = document.createElement('div'); tmp0p.innerHTML = html;
       const articleTextP = tmp0p.innerText || '';
-      const premiumHtml = await doPremiumCorrection(html, articleTextP, topic, kwText, ctype);
+      const premiumHtml = oczyscHtmlModelu(await doPremiumCorrection(html, articleTextP, topic, kwText, ctype));
       if (premiumHtml && premiumHtml !== html) {
         const origLabel = _t('ver-before-premium');
         const premLabel = _t('ver-after-premium');
@@ -5981,7 +5982,7 @@ function previewHistory(i) {
     switchMobileTab('generator');
     const art = document.getElementById('article');
     if (!art) return;
-    art.innerHTML = h.html || '<p style="color:var(--text3)">' + _t('msg-no-content') + '</p>';
+    art.innerHTML = h.html ? oczyscHtmlModelu(h.html) : '<p style="color:var(--text3)">' + _t('msg-no-content') + '</p>';
     art.style.display = 'block';
     art.contentEditable = 'false';
     const ph = document.getElementById('placeholder');
@@ -6853,7 +6854,7 @@ function dlPdf() {
     const _mbEl = art.querySelector('.meta-box');
     const _artClone = art.cloneNode(true);
     const _mbClone = _artClone.querySelector('.meta-box'); if (_mbClone) _mbClone.remove();
-    const articleContent = buildContent(_artClone.innerHTML);
+    const articleContent = buildContent(oczyscHtmlModelu(_artClone.innerHTML));
     if (_mbEl) {
       const _lblEl = _mbEl.querySelector('.meta-label');
       const _lbl = (_lblEl ? _lblEl.textContent.trim() : 'Meta description (SEO)').toUpperCase();
@@ -7523,10 +7524,10 @@ async function improveFromGaps() {
     const kwBlock   = updatedKw || originalKw || '';
     const metaBlock = savedMeta || '';
 
-    const updatedHtml = baseHtml
+    const updatedHtml = oczyscHtmlModelu(baseHtml
       + (newSectionsOnly ? '\n' + newSectionsOnly : '')
       + (kwBlock         ? '\n' + kwBlock         : '')
-      + (metaBlock       ? '\n' + metaBlock        : '');
+      + (metaBlock       ? '\n' + metaBlock        : ''));
 
     art.innerHTML = updatedHtml;
     currentText   = art.innerText;
@@ -7733,7 +7734,7 @@ function renderVersionsBar() {
 function switchVersion(i) {
   activeVersion = i;
   const art = document.getElementById('article');
-  art.innerHTML = versions[i].html;
+  art.innerHTML = oczyscHtmlModelu(versions[i].html);
   currentText = art.innerText;
   showArticleStats(versions[i].html);
   renderVersionsBar();
@@ -7809,7 +7810,7 @@ async function toggleSeoPanel(forceRefresh = false) {
     showSeoResult(result);
     updateSeoHeader(false);
   } catch(e) {
-    document.getElementById('seo-content').innerHTML = `<div class="seo-loading" style="color:var(--red)">${_t('msg-err-prefix')}${e.message}</div>`;
+    document.getElementById('seo-content').innerHTML = `<div class="seo-loading" style="color:var(--red)">${_t('msg-err-prefix')}${escapeHtml(e.message)}</div>`;
   }
 }
 
@@ -7824,8 +7825,8 @@ function showSeoResult(r) {
   const isDark = document.body.classList.contains('dark-mode');
   const color = r.score>=75 ? (isDark?'#4ADE80':'#2D6A4F') : r.score>=50 ? (isDark?'#FCD34D':'#92400E') : 'var(--red)';
   document.getElementById('seo-content').innerHTML = `
-    <div class="seo-score-ring"><div class="seo-score-num" style="color:${color}">${r.score}</div><div class="seo-score-lbl">${_t('pts-seo')}</div></div>
-    <div class="seo-items">${r.items.map(item=>`<div class="seo-item"><span class="seo-item-icon">${item.ok?'✅':'⚠️'}</span><span class="seo-item-text">${item.text}</span></div>`).join('')}</div>`;
+    <div class="seo-score-ring"><div class="seo-score-num" style="color:${color}">${Number(r.score) || 0}</div><div class="seo-score-lbl">${_t('pts-seo')}</div></div>
+    <div class="seo-items">${r.items.map(item=>`<div class="seo-item"><span class="seo-item-icon">${item.ok?'✅':'⚠️'}</span><span class="seo-item-text">${escapeHtml(item.text)}</span></div>`).join('')}</div>`;
 }
 
 // ─── AIO ASSESSMENT ───────────────────────────────────────────────────────────
@@ -7896,7 +7897,7 @@ The 6 criteria to evaluate (give one item per criterion):
     showAioResult(result);
     updateAioHeader(false);
   } catch(e) {
-    document.getElementById('aio-content').innerHTML = `<div class="seo-loading" style="color:var(--red)">${_t('msg-err-prefix')}${e.message}</div>`;
+    document.getElementById('aio-content').innerHTML = `<div class="seo-loading" style="color:var(--red)">${_t('msg-err-prefix')}${escapeHtml(e.message)}</div>`;
   }
 }
 
@@ -7911,8 +7912,8 @@ function showAioResult(r) {
   const isDark2 = document.body.classList.contains('dark-mode');
   const color = r.score>=75 ? (isDark2?'#4ADE80':'#2D6A4F') : r.score>=50 ? (isDark2?'#FCD34D':'#92400E') : 'var(--red)';
   document.getElementById('aio-content').innerHTML = `
-    <div class="seo-score-ring"><div class="seo-score-num" style="color:${color}">${r.score}</div><div class="seo-score-lbl">${_t('pts-aio')}</div></div>
-    <div class="seo-items">${r.items.map(item=>`<div class="seo-item"><span class="seo-item-icon">${item.ok?'✅':'⚠️'}</span><span class="seo-item-text">${item.text}</span></div>`).join('')}</div>`;
+    <div class="seo-score-ring"><div class="seo-score-num" style="color:${color}">${Number(r.score) || 0}</div><div class="seo-score-lbl">${_t('pts-aio')}</div></div>
+    <div class="seo-items">${r.items.map(item=>`<div class="seo-item"><span class="seo-item-icon">${item.ok?'✅':'⚠️'}</span><span class="seo-item-text">${escapeHtml(item.text)}</span></div>`).join('')}</div>`;
 }
 
 // ─── TEMPLATES ────────────────────────────────────────────────────────────────
@@ -8312,7 +8313,7 @@ async function testCmsConnection() {
       else res.innerHTML = `<span style="color:var(--red)">${currentLang==='en'?'✗ Drupal error ':'✗ Drupal błąd '}${r.status}${currentLang==='en'?' - check credentials or Basic Auth module':' - sprawdź dane lub moduł Basic Auth'}</span>`;
     }
   } catch(e) {
-    res.innerHTML = `<span style="color:var(--red)">✗ ${e.message}${currentLang==='en' ? ' - CORS header may be missing. Add in Drupal: Response Headers or use CORS module.' : ' - może brakować nagłówka CORS. Dodaj w Drupal: Response Headers lub użyj modułu CORS.'}</span>`;
+    res.innerHTML = `<span style="color:var(--red)">✗ ${escapeHtml(e.message)}${currentLang==='en' ? ' - CORS header may be missing. Add in Drupal: Response Headers or use CORS module.' : ' - może brakować nagłówka CORS. Dodaj w Drupal: Response Headers lub użyj modułu CORS.'}</span>`;
   }
 }
 
@@ -8355,7 +8356,7 @@ async function publishToCms(status) {
     const excerpt = metaEl ? metaEl.innerText.trim() : '';
     const artClone = art.cloneNode(true);
     artClone.querySelector('.meta-box')?.remove();
-    const content = artClone.innerHTML;
+    const content = oczyscHtmlModelu(artClone.innerHTML);
 
     if (activeCms === 'wp') {
       await publishToWordPress(title, content, excerpt, status, res);
@@ -8363,7 +8364,7 @@ async function publishToCms(status) {
       await publishToDrupal(title, content, excerpt, status, res);
     }
   } catch(e) {
-    res.innerHTML = `<span style="color:var(--red)">✗ ${e.message}</span>`;
+    res.innerHTML = `<span style="color:var(--red)">✗ ${escapeHtml(e.message)}</span>`;
   }
 }
 
@@ -8380,7 +8381,7 @@ async function publishToWordPress(title, content, excerpt, status, resEl) {
     resEl.innerHTML = '<span style="color:#065F46">✓ WordPress - ' + label + '! <a href="' + post.link + '" target="_blank" rel="noopener" style="color:var(--red)">' + _t('msg-open-link') + '</a></span>';
   } else {
     const err = await r.json().catch(()=>({}));
-    resEl.innerHTML = `<span style="color:var(--red)">✗ WP ${r.status}: ${err.message || 'błąd'}</span>`;
+    resEl.innerHTML = `<span style="color:var(--red)">✗ WP ${r.status}: ${escapeHtml(err.message || 'błąd')}</span>`;
   }
 }
 
@@ -8420,7 +8421,7 @@ async function publishToDrupal(title, content, excerpt, status, resEl) {
   } else {
     const err = await r.json().catch(()=>({}));
     const msg = err?.errors?.[0]?.detail || err?.message || r.status;
-    resEl.innerHTML = `<span style="color:var(--red)">✗ Drupal ${r.status}: ${msg}</span>`;
+    resEl.innerHTML = `<span style="color:var(--red)">✗ Drupal ${r.status}: ${escapeHtml(msg)}</span>`;
   }
 }
 
@@ -8642,7 +8643,7 @@ async function openBriefPanel() {
     const raw = (d.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     showBrief(parsujJsonModelu(raw));
   } catch(e) {
-    document.getElementById('brief-content').innerHTML = `<div class="seo-loading" style="color:var(--red)">${_t('msg-err-prefix')}${e.message}</div>`;
+    document.getElementById('brief-content').innerHTML = `<div class="seo-loading" style="color:var(--red)">${_t('msg-err-prefix')}${escapeHtml(e.message)}</div>`;
   }
 }
 
@@ -8775,7 +8776,7 @@ async function analyzeBrandVoice() {
     const raw = (d.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     saveBrandVoice(parsujJsonModelu(raw));
   } catch(e) {
-    document.getElementById('bv-loading').innerHTML = `<span style="color:var(--red)">${_t('msg-err-prefix')}${e.message}</span>`;
+    document.getElementById('bv-loading').innerHTML = `<span style="color:var(--red)">${_t('msg-err-prefix')}${escapeHtml(e.message)}</span>`;
   }
 }
 
@@ -9037,7 +9038,7 @@ async function startBulkGenerate() {
   const bar = document.getElementById('bulk-bar');
   const status = document.getElementById('bulk-status');
 
-  queue.innerHTML = topics.map((t,i) => `<li class="bulk-item" id="bulk-item-${i}"><span class="bulk-icon">⏳</span><span>${t}</span></li>`).join('');
+  queue.innerHTML = topics.map((t,i) => `<li class="bulk-item" id="bulk-item-${i}"><span class="bulk-icon">⏳</span><span>${escapeHtml(t)}</span></li>`).join('');
 
   for (let i = 0; i < topics.length; i++) {
     const item = document.getElementById(`bulk-item-${i}`);
@@ -9608,6 +9609,48 @@ function pressBlock(todayStr) {
 }
 
 // Deterministyczny strażnik struktury: gwarantuje wypełniona meta description i meta-box na samym końcu.
+// ─── OCZYSZCZANIE HTML Z MODELU ──────────────────────────────────────────────
+// Tresc od modelu moze niesc to, co model przeczytal: strone dodana do bazy,
+// wynik wyszukiwania, dokument z bazy wspolnej. Zanim trafi do DOM, historii
+// albo WordPressa, zostawiamy w niej wylacznie znaczniki tekstu. Parsujemy
+// w obojetnym dokumencie (DOMParser), wiec atrybuty zdarzen nie wykonaja sie
+// nawet podczas samego czyszczenia.
+const HTML_DOZWOLONE = new Set(['H1','H2','H3','H4','H5','H6','P','UL','OL','LI','A','STRONG','EM','B','I','U','S',
+  'BLOCKQUOTE','TABLE','THEAD','TBODY','TFOOT','TR','TH','TD','CAPTION','BR','HR','DIV','SPAN','CODE','PRE','SUP','SUB',
+  'FIGURE','FIGCAPTION','DL','DT','DD','MARK','SMALL','ABBR','CITE','Q','TIME','SECTION','ARTICLE','HEADER','FOOTER','ASIDE','DETAILS','SUMMARY']);
+const HTML_USUN_CALE = new Set(['SCRIPT','STYLE','IFRAME','FRAME','FRAMESET','OBJECT','EMBED','SVG','MATH','FORM','INPUT','BUTTON',
+  'TEXTAREA','SELECT','OPTION','BASE','META','LINK','TEMPLATE','NOSCRIPT','IMG','VIDEO','AUDIO','SOURCE','PICTURE','CANVAS','PORTAL','DIALOG']);
+const HTML_ATRYBUTY = new Set(['class','id','title','colspan','rowspan','scope','lang','dir','datetime','open']);
+function oczyscHtmlModelu(html) {
+  if (!html) return '';
+  let dok;
+  try { dok = new DOMParser().parseFromString('<!doctype html><body>' + String(html), 'text/html'); }
+  catch (e) { return escapeHtml(String(html)); }
+  const czysc = (wezel) => {
+    [...wezel.childNodes].forEach(n => {
+      if (n.nodeType === 8) { n.remove(); return; }
+      if (n.nodeType !== 1) return;
+      const tag = n.tagName.toUpperCase();
+      if (HTML_USUN_CALE.has(tag)) { n.remove(); return; }
+      czysc(n);
+      if (!HTML_DOZWOLONE.has(tag)) { n.replaceWith(...n.childNodes); return; }
+      [...n.attributes].forEach(a => {
+        const nazwa = a.name.toLowerCase();
+        const wartosc = a.value;
+        let zostaw = HTML_ATRYBUTY.has(nazwa) || /^data-[a-z0-9-]+$/.test(nazwa);
+        if (nazwa === 'class') zostaw = /^[\w\s-]*$/.test(wartosc);
+        if (nazwa === 'id') zostaw = /^[A-Za-z][\w-]{0,80}$/.test(wartosc);
+        if (tag === 'A' && nazwa === 'href') zostaw = /^(https?:|mailto:|#|\/(?!\/))/i.test(wartosc.trim());
+        if (tag === 'A' && (nazwa === 'target' || nazwa === 'rel')) zostaw = true;
+        if (!zostaw) n.removeAttribute(a.name);
+      });
+      if (tag === 'A' && n.getAttribute('target')) { n.setAttribute('target', '_blank'); n.setAttribute('rel', 'noopener noreferrer'); }
+    });
+  };
+  czysc(dok.body);
+  return dok.body.innerHTML;
+}
+
 function normalizeArticleHtml(rawHtml, outLang) {
   let wrap;
   try { wrap = document.createElement('div'); wrap.innerHTML = rawHtml; } catch (e) { return rawHtml; }
@@ -12225,7 +12268,7 @@ async function audioGenerate(btn){
     if(!res.ok || !data.content){ throw new Error((data&&data.error&&(data.error.message||data.error))||('HTTP '+res.status)); }
     var scriptCost=0; if(data.usage){ try{ scriptCost=kosztOdpowiedzi(data); sessionCost += scriptCost; updateCostDisplay(); }catch(e){} }
     var html=(data.content||[]).map(function(c){return c.text||'';}).join('').trim();
-    var sc=document.getElementById('au-script'); sc.innerHTML=html||'<p>(brak treści)</p>';
+    var sc=document.getElementById('au-script'); html=oczyscHtmlModelu(html); sc.innerHTML=html||'<p>(brak treści)</p>';
     document.getElementById('au-result-wrap').style.display='block';
     var sa=document.getElementById('au-script-actions'); if(sa) sa.style.display='flex';
     var ta=document.getElementById('au-trans-actions'); if(ta) ta.style.display='none';
