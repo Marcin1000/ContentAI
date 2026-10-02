@@ -1,0 +1,43 @@
+{# Stopka wspolna. #stopka-spis jest celem przycisku menu na telefonie, gdy JS nie dziala. #}
+<footer class="stopka">
+  <div class="kont stopka-siatka">
+    <div class="stopka-marka">
+      <a class="logo" href="{{$glowna}}" aria-label="{{a:nav-home}}">
+        <svg class="logo-znak" aria-hidden="true" focusable="false"><use href="#i-znak"/></svg>
+        <svg class="logo-tekst" aria-hidden="true" focusable="false"><use href="#i-logotyp"/></svg>
+      </a>
+      <p>{{t:foot-tagline}}</p>
+      <p class="stopka-uwaga">{{t:foot-made}}</p>
+    </div>
+    <nav class="stopka-kol" id="stopka-spis" aria-labelledby="st-produkt">
+      <h2 id="st-produkt">{{t:foot-col-product}}</h2>
+      <ul>
+        <li><a href="{{$glowna}}#jak">{{t:nav-how}}</a></li>
+        <li><a href="{{$glowna}}#funkcje">{{t:nav-features}}</a></li>
+        <li><a href="{{$glowna}}#niezawodnosc">{{t:nav-reliability}}</a></li>
+        <li><a href="{{$glowna}}#bezpieczenstwo">{{t:nav-security}}</a></li>
+        <li><a href="{{$glowna}}#pakiety">{{t:nav-plans}}</a></li>
+        <li><a href="{{$glowna}}#faq">{{t:nav-faq}}</a></li>
+      </ul>
+    </nav>
+    <nav class="stopka-kol" aria-labelledby="st-app">
+      <h2 id="st-app">{{t:foot-col-app}}</h2>
+      <ul>
+        <li><a href="{{$app}}">{{t:foot-login}}</a></li>
+        <li><a href="{{$glowna}}#dostep">{{t:nav-cta}}</a></li>
+      </ul>
+    </nav>
+    <nav class="stopka-kol" aria-labelledby="st-info">
+      <h2 id="st-info">{{t:foot-col-company}}</h2>
+      <ul>
+        <li><a href="{{$prywatnosc}}">{{t:foot-privacy}}</a></li>
+        <li><a href="{{$glowna}}#dostep">{{t:foot-contact}}</a></li>
+        <li><a href="{{$alt}}" hreflang="{{$jezyk_alt}}" lang="{{$jezyk_alt}}">{{t:lang-alt-long}}</a></li>
+      </ul>
+    </nav>
+  </div>
+  <div class="kont stopka-dol">
+    <span>{{t:foot-copy}}</span>
+    <span class="stopka-znak" aria-hidden="true"><svg><use href="#i-znak"/></svg></span>
+  </div>
+</footer>

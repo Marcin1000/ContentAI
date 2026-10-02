@@ -1,0 +1,13 @@
+{
+ "name": "Content AI",
+ "short_name": "Content AI",
+ "start_url": "/",
+ "display": "browser",
+ "background_color": "#111110",
+ "theme_color": "#111110",
+ "icons": [
+  {"src": "/obrazy/icon-192.png", "sizes": "192x192", "type": "image/png"},
+  {"src": "/obrazy/icon-512.png", "sizes": "512x512", "type": "image/png"},
+  {"src": "/obrazy/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+ ]
+}
