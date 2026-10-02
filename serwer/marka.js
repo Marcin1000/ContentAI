@@ -11,8 +11,8 @@
 // Konfiguracja jest JEDNA dla calego wdrozenia: pisze ja administrator,
 // czytaja wszyscy. Zwykly plik JSON, jak reszta danych tej aplikacji.
 
-const fs = require('node:fs');
 const path = require('node:path');
+const pliki = require('./pliki.js');
 
 // Tylko te pola. Cokolwiek innego przyjdzie w zadaniu, zostanie pominiete -
 // konfiguracja trafia prosto do promptow, wiec nie moze byc workiem na
@@ -47,20 +47,18 @@ function oczysc(dane) {
 }
 
 function wczytaj(katalog) {
-  try {
-    return oczysc(JSON.parse(fs.readFileSync(plik(katalog), 'utf8')));
-  } catch {
-    // Brak pliku to normalny stan przed pierwszym zapisem, nie blad.
-    return {};
-  }
+  // Brak pliku to normalny stan przed pierwszym zapisem, nie blad. Uszkodzony
+  // plik to BladDanych (kopia .uszkodzony-*), a nie "marki nie ma" - inaczej
+  // zespol pisalby po cichu bez regul marki.
+  return oczysc(pliki.czytajJson(plik(katalog), {}, pliki.czyObiekt));
 }
 
 function zapisz(katalog, dane) {
   const czyste = oczysc(dane);
-  fs.mkdirSync(katalog, { recursive: true });
   // 0o600: konfiguracja marki nie jest sekretem, ale lezy w tym samym
   // katalogu co sekret sesji i konta, wiec trzyma sie tych samych uprawnien.
-  fs.writeFileSync(plik(katalog), JSON.stringify(czyste, null, 1), { mode: 0o600 });
+  // Zapis atomowy: zapis przerwany w polowie nie zostawi polowy pliku.
+  pliki.zapiszJson(plik(katalog), czyste, 1);
   return czyste;
 }
 

@@ -5,9 +5,10 @@
  *   node serwer/uzytkownicy.js lista
  *   node serwer/uzytkownicy.js dodaj <login> [admin|uzytkownik]
  *   node serwer/uzytkownicy.js haslo <login>
-  node serwer/uzytkownicy.js plan <login> <darmowy|standard|premium>
+ *   node serwer/uzytkownicy.js plan  <login> <darmowy|standard|premium>
  *   node serwer/uzytkownicy.js rola  <login> <admin|uzytkownik>
  *   node serwer/uzytkownicy.js usun  <login>
+ *   node serwer/uzytkownicy.js prosby [ile]   - ostatnie prosby o dostep ze strony
  *
  * Hasla nie sa nigdzie zapisywane jawnie - w pliku ladują sie wylacznie hash i sol.
  * Haslo wpisuje sie interaktywnie, bez echa, zeby nie zostalo w historii powloki.
@@ -17,8 +18,9 @@
 
 const readline = require('node:readline');
 const plany = require('./plany.js');
+const prosby = require('./prosby.js');
 const {
-  zahaszuj, ROLE, PLIK_UZYTKOWNIKOW, wczytajUzytkownikow, zapiszUzytkownikow,
+  zahaszuj, ROLE, PLIK_UZYTKOWNIKOW, wczytajUzytkownikow, zapiszUzytkownikow, poprawnyLogin,
 } = require('./server.js');
 
 function pytaj(pytanie, ukryte = false) {
@@ -61,8 +63,28 @@ function sprawdzRole(rola) {
   }
 }
 
+function wypiszProsby(ile) {
+  const { wpisy, pominiete } = prosby.lista(ile);
+  if (!wpisy.length) {
+    console.log(`Brak próśb o dostęp (${prosby.PLIK}).`);
+    return;
+  }
+  console.log(`Prośby o dostęp, najnowsze pierwsze (${prosby.PLIK}):\n`);
+  for (const p of wpisy) {
+    const kiedy = String(p.czas || '').replace('T', ' ').slice(0, 16);
+    console.log(`  ${kiedy}  ${String(p.imie || '').padEnd(20)} ${String(p.email || '').padEnd(32)} ${String(p.pakiet || '-').padEnd(9)} ${p.jezyk || '-'}`);
+    if (p.firma) console.log(`  ${' '.repeat(16)}  firma: ${p.firma}`);
+    if (p.wiadomosc) console.log(`  ${' '.repeat(16)}  ${String(p.wiadomosc).replace(/\s+/g, ' ').slice(0, 200)}`);
+  }
+  if (pominiete) console.log(`\n  (pominięto nieczytelnych linii: ${pominiete})`);
+}
+
 async function main() {
   const [polecenie, login, arg] = process.argv.slice(2);
+  // Prośby nie potrzebują pliku kont - działają nawet przy jego awarii.
+  if (polecenie === 'prosby') return wypiszProsby(Math.min(Math.max(Number(login) || 20, 1), 500));
+  // Uszkodzony plik kont kończy się błędem tutaj, zanim cokolwiek zapiszemy:
+  // dawniej "dodaj" zapisywało wtedy listę z jednym kontem na miejscu całej reszty.
   const lista = wczytajUzytkownikow();
 
   switch (polecenie) {
@@ -81,6 +103,10 @@ async function main() {
 
     case 'dodaj': {
       if (!login) return uzycie('dodaj <login> [rola]');
+      if (!poprawnyLogin(login)) {
+        console.error('BŁĄD: login może mieć 2-40 znaków: małe litery a-z, cyfry, kropkę, podkreślnik i myślnik.');
+        process.exit(1);
+      }
       const rola = arg || 'uzytkownik';
       sprawdzRole(rola);
       if (lista.some((u) => u.login === login)) {
@@ -178,8 +204,10 @@ async function main() {
   node serwer/uzytkownicy.js plan <login> <darmowy|standard|premium>
   node serwer/uzytkownicy.js rola  <login> <admin|uzytkownik>
   node serwer/uzytkownicy.js usun  <login>
+  node serwer/uzytkownicy.js prosby [ile]
 
-Plik z kontami: ${PLIK_UZYTKOWNIKOW}`);
+Plik z kontami: ${PLIK_UZYTKOWNIKOW}
+Prośby o dostęp: ${prosby.PLIK}`);
   }
 }
 

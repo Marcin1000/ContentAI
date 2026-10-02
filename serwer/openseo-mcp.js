@@ -99,7 +99,8 @@ function poslij(cialo, konf) {
         });
       }
     );
-    zadanie.on('timeout', () => zadanie.destroy(new BladOpenSeo('przekroczony czas OpenSEO')));
+    // 504, nie 502: kontener zyje, tylko nie zdazyl - aplikacja moze to powiedziec wprost.
+    zadanie.on('timeout', () => zadanie.destroy(new BladOpenSeo('OpenSEO nie odpowiedzialo w wyznaczonym czasie', 504)));
     zadanie.on('error', (e) =>
       odrzuc(e instanceof BladOpenSeo ? e : new BladOpenSeo(`brak polaczenia z OpenSEO: ${e.message}`))
     );

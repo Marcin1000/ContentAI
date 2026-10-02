@@ -39,8 +39,8 @@
  * artykulu, i tak ma skonczona pule. To nie jest zamek, tylko granica kosztu.
  */
 
-const fs = require('node:fs');
 const path = require('node:path');
+const pliki = require('./pliki.js');
 
 // ─── Pakiety ──────────────────────────────────────────────────────────────────
 // okres: 'zawsze'  - limit na cale konto, nie odnawia sie (pakiet probny)
@@ -153,19 +153,14 @@ function plikUzycia(katalog, login) {
   return path.join(katalog, `${czysty}.json`);
 }
 
+// Uszkodzony plik licznikow to BladDanych, nie pusty obiekt: pusty oznaczalby
+// po cichu wyzerowane limity, a nastepny zapis utrwalilby to zerowanie.
 function wczytajUzycie(katalog, login) {
-  try {
-    const dane = JSON.parse(fs.readFileSync(plikUzycia(katalog, login), 'utf8'));
-    return dane && typeof dane === 'object' ? dane : {};
-  } catch (e) {
-    if (e.code !== 'ENOENT') console.error('[plany] odczyt uzycia:', e.message);
-    return {};
-  }
+  return pliki.czytajJson(plikUzycia(katalog, login), {}, pliki.czyObiekt);
 }
 
 function zapiszUzycie(katalog, login, dane) {
-  fs.mkdirSync(katalog, { recursive: true });
-  fs.writeFileSync(plikUzycia(katalog, login), JSON.stringify(dane), { mode: 0o600 });
+  pliki.zapiszJson(plikUzycia(katalog, login), dane);
 }
 
 /**

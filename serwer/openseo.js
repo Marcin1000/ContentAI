@@ -223,6 +223,12 @@ code{font-family:'IBM Plex Mono',monospace;color:#46D5F2}</style></head><body>
 Content AI działa niezależnie - panel treści jest sprawny.</p></div></body></html>`;
 }
 
+// Zapasowa strona "bez pakietu", gdy wpinajacy nie podal wlasnej.
+const STRONA_BEZ_PAKIETU = `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
+<title>OpenSEO w pakiecie Premium</title></head><body>
+<h1>OpenSEO jest dostępne w pakiecie Premium</h1>
+<p>Twoje konto nie ma dostępu do OpenSEO. Poproś administratora o zmianę pakietu.</p></body></html>`;
+
 // ─── Wpiecie ──────────────────────────────────────────────────────────────────
 
 /**
@@ -234,6 +240,20 @@ Content AI działa niezależnie - panel treści jest sprawny.</p></div></body></
  */
 function utworz(konf, zaleznosci) {
   const { sesjaZadania, obslugaLogowania, stronaLogowania, adresIp } = zaleznosci;
+  // Pakiet: kontener OpenSEO dziala bez logowania (local_noauth), wiec brama
+  // jest jedynym miejscem, ktore moze odmowic kontu bez pakietu Premium.
+  // Bez tych zaleznosci (stare wpiecie, testy) brama wpuszcza tylko admina.
+  const kontoSesji = zaleznosci.kontoSesji || ((s) => s);
+  const maDostep = zaleznosci.maDostepDoOpenSeo || ((konto) => konto && konto.rola === 'admin');
+  const stronaBezPakietu = zaleznosci.stronaBezPakietu || (() => STRONA_BEZ_PAKIETU);
+  const wolno = (sesja) => {
+    try {
+      return Boolean(sesja) && maDostep(kontoSesji(sesja));
+    } catch (e) {
+      console.error('[openseo] sprawdzenie pakietu:', e.message);
+      return false;
+    }
+  };
   const plikMotywu = path.join(__dirname, '..', 'app', 'openseo-motyw.css');
 
   // Wersja w adresie arkusza zmienia sie przy kazdym starcie - inaczej
@@ -265,16 +285,24 @@ function utworz(konf, zaleznosci) {
       return obslugaLogowania(req, res);
     }
 
-    if (!sesjaZadania(req)) {
-      return res.writeHead(401, { 'Content-Type': 'text/html; charset=utf-8' })
-        .end(stronaLogowania('Zaloguj się, żeby wejść do OpenSEO.'));
+    const sesja = sesjaZadania(req);
+    if (!sesja) {
+      return res.writeHead(401, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
+        .end(stronaLogowania('openseo', req));
+    }
+    if (!wolno(sesja)) {
+      // 402: konto jest, brakuje pakietu. Strona mowi, co zrobic, zamiast
+      // przepuszczac do kontenera, ktory nikogo nie pyta o uprawnienia.
+      return res.writeHead(402, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
+        .end(stronaBezPakietu(req));
     }
 
     return przepusc(req, res, pelnaKonf, adresIp(req));
   }
 
   function obsluzUpgrade(req, gniazdo, glowa) {
-    if (!sesjaZadania(req)) return gniazdo.destroy();
+    // WebSocket nie ma strony bledu - bez sesji albo bez pakietu po prostu zamykamy.
+    if (!wolno(sesjaZadania(req))) return gniazdo.destroy();
     return przepuscUpgrade(req, gniazdo, glowa, pelnaKonf, adresIp(req));
   }
 

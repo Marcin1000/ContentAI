@@ -31,12 +31,34 @@ function jezykDoDataForSeo(nazwaWAplikacji) {
 
 /**
  * Czy zadanie do /api jest zapytaniem o kontekst SERP?
- * Rozpoznajemy po narzedziu web_search, ktore aplikacja dokłada tylko tam.
+ *
+ * Kiedys wystarczalo samo narzedzie web_search, bo aplikacja dokladala je
+ * tylko tu. Dzis dostaje je tez artykul z przelacznikiem sieci, monitor AI,
+ * widocznosc i narracja - i wszystkie te zapytania trafialy w SERP: plan
+ * darmowy dostawal 402 "Analiza SERP", a przy CAI_SERP=dataforseo artykul
+ * przychodzil jako JSON z danymi SERP.
+ *
+ * Teraz rozpoznajemy tresc: fetchSerpContext (app/contentai.src.html) wysyla
+ * prompt systemowy "Search for top Google results for the given keyword"
+ * i wiadomosc "Keyword: <fraza>". Oba warunki naraz plus web_search. Naglowek
+ * x-cai-czynnosc: serp tez wystarcza (z narzedziem), gdyby aplikacja go wyslala.
  */
-function czyZapytanieSerp(body) {
+const ZNAK_SERP = /search for top google results/i;
+
+function czyZapytanieSerp(body, naglowki) {
   const narzedzia = body?.tools;
   if (!Array.isArray(narzedzia)) return false;
-  return narzedzia.some((t) => t && (t.name === 'web_search' || String(t.type || '').startsWith('web_search')));
+  const zWyszukiwaniem = narzedzia.some((t) => t && (t.name === 'web_search' || String(t.type || '').startsWith('web_search')));
+  if (!zWyszukiwaniem) return false;
+  if (String(naglowki?.['x-cai-czynnosc'] || '').toLowerCase() === 'serp') return true;
+  return ZNAK_SERP.test(tekstSystemu(body)) && frazaZZadania(body) !== '';
+}
+
+/** Prompt systemowy jako tekst - bywa napisem albo lista blokow. */
+function tekstSystemu(body) {
+  const sys = body?.system;
+  if (Array.isArray(sys)) return sys.map((b) => (b && typeof b.text === 'string' ? b.text : '')).join(' ');
+  return String(sys || '');
 }
 
 /** Wyciaga frazę z wiadomosci uzytkownika: "Keyword: <fraza>\n..." */
@@ -53,7 +75,7 @@ function frazaZZadania(body) {
 
 /** Jezyk odczytany z promptu systemowego ("Write the context ... in Polish."). */
 function jezykZZadania(body) {
-  const sys = String(body?.system || '');
+  const sys = tekstSystemu(body);
   for (const [nazwaPl, dane] of Object.entries(JEZYKI)) {
     if (sys.includes(dane.nazwa)) return nazwaPl;
   }
@@ -80,6 +102,8 @@ async function zDataForSeo(fraza, jezykAplikacji, konf, fetchImpl = fetch) {
         depth: 10,
       },
     ]),
+    // Bez limitu zawieszone DataForSEO trzymaloby generowanie bez konca.
+    signal: AbortSignal.timeout(konf.czasMs || 30000),
   });
 
   if (!odp.ok) {
