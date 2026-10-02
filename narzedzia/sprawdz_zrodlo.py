@@ -522,10 +522,13 @@ KONTROLE = [
      None, "wczytajMarkeZSerwera", ("keys", "owner")),
 
     # ── warstwa reskinu ──
-    ("R/splash", "splash raz na sesje",
-     'id="cin-splash"', None, None),
-    ("R/splash-css", "style splasha",
-     'id="cin-splash-css"', None, None),
+    # Splash trzymal gotowa aplikacje jeszcze 2,4 s (stale 1900 ms + zanikanie) i zjadal
+    # pierwsze dotkniecie. Motyw i jezyk ustawia teraz skrypt w <head>, wiec nie ma czego
+    # zaslaniac - splash nie wraca, a stan widoku jest gotowy przed pierwszym malowaniem.
+    ("R/splash", "bez splasha trzymajacego gotowa aplikacje",
+     'id="cai-motyw-start"', "setTimeout(done, 1900)", None),
+    ("R/splash-css", "bez czastek i poswiaty splasha",
+     "document.documentElement.classList.remove('bez-anim')", 'id="cin-splash-cv"', None),
     ("R/styl", "blok stylow reskinu",
      '<style id="cin-reskin">', None, None),
     ("R/postep", "paski postepu generowania",
@@ -618,8 +621,12 @@ KONTROLE = [
      "pwa/lib/mammoth.browser.min.js", "cdnjs.cloudflare.com", None),
     ("Z/pdfmake", "pdfmake i jego fonty z wlasnego hosta",
      "pwa/lib/pdfmake.min.js", None, None),
-    ("Z/fonty", "IBM Plex z wlasnego hosta, nie z Google Fonts",
-     "pwa/fonty/ibm-plex-sans-latin-ext-400-normal.woff2", "fonts.googleapis.com", None),
+    ("Z/fonty", "kroje marki z wlasnego hosta, nie z Google Fonts",
+     "pwa/fonty/schibsted-grotesk-latin-ext-wght-normal.woff2", "fonts.googleapis.com", None),
+    ("Z/leniwe", "ciezkie biblioteki ladowane w miejscu uzycia, nie w <head>",
+     "await wczytajSkrypt('pwa/lib/mammoth.browser.min.js');", '<script src="pwa/lib/xlsx.full.min.js"></script>', None),
+    ("R/tokeny", "tokeny systemu projektowego i warstwy kaskady",
+     '<style id="cai-tokeny">', None, None),
     ("Z/sw", "aplikacja nie rejestruje nieistniejacego service workera",
      None, "navigator.serviceWorker.register", None),
 

@@ -3,7 +3,7 @@
 <head>
   <!-- ═══ PWA ══════════════════════════════════════════════════════════════ -->
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#08090F">
+  <meta name="theme-color" content="#111110">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,218 +12,339 @@
   <!-- ════════════════════════════════════════════════════════════════════════ -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script id="cai-motyw-start">
+/* Stan widoku ustawiany przed pierwszym malowaniem: motyw, jezyk i klasy ukladu.
+   Bez tego aplikacja migala jasnym motywem przy odswiezeniu, pokazywala polskie
+   napisy w wersji EN, a formularz odjezdzal o szerokosc panelu bazy wiedzy. */
+(function () {
+  var d = document.documentElement, ls = null;
+  try { ls = window.localStorage; } catch (e) {}
+  function czytaj(n) { try { return ls ? ls.getItem(n) : null; } catch (e) { return null; } }
+  var konto = '';
+  try {
+    var m = document.querySelector('meta[name="cai-konto"]');
+    if (m && m.content && !/^WSTAW/.test(m.content)) konto = m.content;
+  } catch (e) {}
+  var pref = czytaj('cai-dark');
+  var jasnySystem = false;
+  try { jasnySystem = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches); } catch (e) {}
+  var ciemny = pref === null ? !jasnySystem : pref === '1';
+  d.setAttribute('data-theme', ciemny ? 'dark' : 'light');
+  var jezyk = czytaj('cai_lang') || ((navigator.language || 'pl').toLowerCase().indexOf('pl') === 0 ? 'pl' : 'en');
+  d.lang = jezyk;
+  d.className += ' bez-anim jezyk-' + jezyk + (jezyk !== 'pl' ? ' i18n-czeka' : '');
+  var ua = navigator.userAgent || '';
+  var mobilny = /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua) || window.innerWidth < 900
+    || ('ontouchstart' in window && window.innerWidth < 1024);
+  window.CAI_START = {
+    ciemny: ciemny, jezyk: jezyk, mobilny: mobilny,
+    zwiniety: czytaj((konto ? 'u:' + konto + ':' : '') + 'cai_kb_collapsed') !== '0'
+  };
+  var tc = document.querySelector('meta[name="theme-color"]');
+  if (tc) tc.setAttribute('content', ciemny ? '#111110' : '#F7F6F2');
+  // Serwer podaje ikony spod /icons/, plik otwarty z dysku ma je w pwa/icons/.
+  // Z dysku nie wczytujemy tez fontow z wyprzedzeniem: preload z crossorigin
+  // dla file:// konczy sie bledem CORS w konsoli (sam @font-face dziala).
+  var zDysku = location.protocol === 'file:';
+  var ik = document.createElement('link');
+  ik.rel = 'icon'; ik.type = 'image/svg+xml'; ik.href = zDysku ? 'pwa/icons/favicon.svg' : '/icons/favicon.svg';
+  document.head.appendChild(ik);
+  if (!zDysku) {
+    ['schibsted-grotesk-latin-wght-normal', 'schibsted-grotesk-latin-ext-wght-normal'].forEach(function (n) {
+      var l = document.createElement('link');
+      l.rel = 'preload'; l.as = 'font'; l.type = 'font/woff2'; l.crossOrigin = 'anonymous';
+      l.href = 'pwa/fonty/' + n + '.woff2';
+      document.head.appendChild(l);
+    });
+  }
+  // Zabezpieczenie: gdyby skrypt glowny nie doszedl do applyLang, tresc i tak sie pokaze.
+  setTimeout(function () { d.classList.remove('i18n-czeka'); }, 2500);
+})();
+</script>
 <title data-i18n="page-title">Content AI - Generator treści, grafik i audio</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJnIiBjeD0iNTAlIiBjeT0iNTAlIiByPSI2MCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNGRkQyN0EiLz48c3RvcCBvZmZzZXQ9IjU1JSIgc3RvcC1jb2xvcj0iI0ZGQjAwMCIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI0UwOEEwMCIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgcng9IjciIGZpbGw9IiMwQTBCMTEiLz48cGF0aCBkPSJNMTYgMi41IEwxOC4xIDEzLjkgTDI5LjUgMTYgTDE4LjEgMTguMSBMMTYgMjkuNSBMMTMuOSAxOC4xIEwyLjUgMTYgTDEzLjkgMTMuOSBaIiBmaWxsPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTE2IDggTDE2LjkgMTUuMSBMMjQgMTYgTDE2LjkgMTYuOSBMMTYgMjQgTDE1LjEgMTYuOSBMOCAxNiBMMTUuMSAxNS4xIFoiIGZpbGw9IiMwQTBCMTEiIG9wYWNpdHk9IjAuMzUiLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIxLjYiIGZpbGw9IiNGRkU5QzIiLz48L3N2Zz4K">
-<style>
-  /* IBM Plex hostowany razem z aplikacja. Wczesniej szedl z Google Fonts, przez co
-     w zamknietej sieci firmowej aplikacja traci wlasciwy kroj, a kazde uruchomienie
-     melduje sie u zewnetrznego dostawcy. Latin-ext jest konieczny dla polskich znakow. */
-  @font-face {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 300;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-sans-latin-300-normal.woff2') format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+<style id="cai-tokeny">
+/* Kolejnosc warstw kaskady. Caly dawny CSS siedzi w "stare", wiec kazda nowa regula
+   wygrywa bez !important i bez wyscigu specyficznosci. "wymuszone" zawiera WYLACZNIE
+   deklaracje !important (dla nich kolejnosc warstw jest odwrotna - pierwsza wygrywa),
+   "reset" lezy pod "stare", zeby nie zmienial wygladu starych komponentow. */
+@layer wymuszone, reset, stare, tokeny, komponenty, widoki, narzedzia;
+
+/* ===== 1. Kroje =========================================================== */
+@font-face {
+  font-family: "Schibsted Grotesk";
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url("pwa/fonty/schibsted-grotesk-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: "Schibsted Grotesk";
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url("pwa/fonty/schibsted-grotesk-latin-ext-wght-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: "Literata";
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("pwa/fonty/literata-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: "Literata";
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("pwa/fonty/literata-latin-ext-wght-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: "Literata";
+  font-style: italic;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("pwa/fonty/literata-latin-wght-italic.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: "Literata";
+  font-style: italic;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("pwa/fonty/literata-latin-ext-wght-italic.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url("pwa/fonty/jetbrains-mono-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url("pwa/fonty/jetbrains-mono-latin-ext-wght-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+@layer tokeny {
+/* ===== 2. Motyw ciemny (domyslny) + stale ================================== */
+:root {
+  color-scheme: dark;
+  /* --- kolor: warstwy, tekst, akcent, stany --------------------------- */
+  --c-tlo: #111110;  /* plotno aplikacji, za panelami */
+  --c-panel: #171715;  /* panele: formularz, wynik, pasek */
+  --c-pole: #1E1E1B;  /* pola, karty, powierzchnia podniesiona */
+  --c-nad: #252522;  /* menu, popover, toast, okno */
+  --c-najazd: #2A2A26;  /* tlo po najechaniu */
+  --c-wcisk: #33332E;  /* tlo wcisniete / wybrane */
+  --c-strona: #191917;  /* kartka artykulu (czytanie) */
+  --c-linia: #2A2A27;  /* podzial dekoracyjny */
+  --c-linia-2: #363632;  /* obrys kart i paneli */
+  --c-ramka: #716F67;  /* obrys pol (>= 3:1) */
+  --c-ramka-najazd: #8A877F;  /* obrys pola po najechaniu */
+  --c-tekst: #EDEBE6;  /* tekst glowny */
+  --c-tekst-2: #B9B6AE;  /* tekst drugorzedny */
+  --c-tekst-3: #A29E95;  /* meta, placeholder (>= 4,5:1) */
+  --c-tekst-wyl: #6A675F;  /* wylaczone (bez wymogu kontrastu) */
+  --c-akcent: #F6A623;  /* bursztyn marki: wypelnienie przycisku glownego */
+  --c-akcent-najazd: #FFB84D;
+  --c-akcent-wcisk: #E39410;
+  --c-na-akcencie: #1C1303;  /* tekst na bursztynie */
+  --c-akcent-mocny: #F6A623;  /* bursztyn jako tekst, link, wskaznik zakladki */
+  --c-akcent-tlo: #362B17;
+  --c-akcent-ramka: #70501B;
+  --c-fokus: #F6A623;  /* pierscien fokusu */
+  --c-dowod: #5AD1C4;  /* zrodla, cytaty, informacja (dziedzictwo cyjanu) */
+  --c-dowod-tlo: #20312E;
+  --c-dowod-ramka: #32615B;
+  --c-sukces: #5BC793;
+  --c-sukces-tlo: #213027;
+  --c-sukces-ramka: #325D47;
+  --c-uwaga: #F39A5D;  /* ostrzezenie (pomarancz, nie bursztyn) */
+  --c-uwaga-tlo: #36291F;
+  --c-uwaga-ramka: #6F4B32;
+  --c-blad: #F47C7C;
+  --c-blad-tlo: #362523;
+  --c-blad-ramka: #6F3F3E;
+  --c-blad-pelny: #C8383A;
+  --c-na-bledzie: #FFFFFF;
+  --c-przel-wl: #F6A623;  /* przelacznik / pole wyboru wlaczone */
+  --c-dane-1: #F6A623;
+  --c-dane-2: #5AD1C4;
+  --c-dane-3: #A99CF0;
+  --c-dane-4: #E7E3D8;
+  --c-zaslona: rgba(6, 6, 5, .66);  /* tlo pod oknem modalnym */
+  --c-zaznaczenie: rgba(246, 166, 35, .30);  /* ::selection */
+  --cien-1: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 1px 2px rgba(0, 0, 0, .45);  /* karta, pole uniesione */
+  --cien-2: 0 0 0 1px rgba(255, 255, 255, .06), 0 10px 28px -8px rgba(0, 0, 0, .65);  /* menu, popover, toast */
+  --cien-3: 0 0 0 1px rgba(255, 255, 255, .06), 0 28px 72px -18px rgba(0, 0, 0, .8);  /* okno modalne */
+
+  /* --- typografia ---------------------------------------------------- */
+  --f-ui: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-tresc: "Literata", Georgia, "Times New Roman", serif;   /* artykul, naglowki redakcyjne */
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;   /* dane, kod, JSON-LD */
+  --t-xs: 12px;     /* minimum: meta, odznaki, podpisy pol */
+  --t-sm: 13px;     /* gesty interfejs: tabele, pasek narzedzi, przyciski male */
+  --t-md: 14px;     /* podstawa interfejsu, pola, przyciski */
+  --t-lg: 16px;     /* tytuly sekcji w panelu */
+  --t-xl: 18px;     /* tytuly okien i paneli */
+  --t-2xl: 22px;
+  --t-3xl: 28px;
+  --t-4xl: 36px;
+  --t-5xl: 48px;
+  --t-display: clamp(40px, 6.4vw, 84px);   /* tylko strona produktowa */
+  --t-tresc: 17px;  /* tekst artykulu (Literata) */
+  --l-ciasna: 1.15; --l-naglowek: 1.25; --l-ui: 1.43; --l-tresc: 1.65;
+  --g-normal: 400; --g-sredni: 500; --g-mocny: 600; --g-gruby: 700;
+  --k-display: -0.025em; --k-naglowek: -0.012em; --k-wersaliki: 0.06em;
+  --tresc-max: 68ch;   /* szerokosc kolumny czytania */
+
+  /* --- odstepy: siatka 4 px, nazwa = wartosc w px -------------------- */
+  --s-2: 2px; --s-4: 4px; --s-6: 6px; --s-8: 8px; --s-12: 12px; --s-16: 16px; --s-20: 20px;
+  --s-24: 24px; --s-32: 32px; --s-40: 40px; --s-48: 48px; --s-64: 64px; --s-80: 80px; --s-96: 96px;
+
+  /* --- wysokosci kontrolek (gestosc) --------------------------------- */
+  --h-xs: 24px;   /* odznaka-przycisk, chip */
+  --h-sm: 28px;   /* pasek narzedzi, przycisk maly */
+  --h-md: 32px;   /* domyslny przycisk, pasek narzedzi */
+  --h-pole: 36px;   /* pole formularza, select (dlugie formularze) */
+  --h-lg: 40px;   /* przycisk glowny formularza */
+  --h-dotyk: 44px;   /* minimum na ekranie dotykowym */
+
+  /* --- promienie ------------------------------------------------------ */
+  --r-xs: 4px; --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px; --r-pelny: 999px;
+
+  /* --- ikony (Lucide v1, ISC; kreska 1,5 przy 16 px) ------------------ */
+  --ikona-s: 14px; --ikona-m: 16px; --ikona-l: 20px; --ikona-xl: 24px; --ikona-kreska: 1.5;
+
+  /* --- ruch ----------------------------------------------------------- */
+  --m-1: 90ms;    /* kolor po najechaniu, wcisniecie */
+  --m-2: 150ms;   /* przelacznik, zakladka, pole wyboru */
+  --m-3: 220ms;   /* menu, popover, toast - wejscie */
+  --m-4: 320ms;   /* okno, panel boczny */
+  --m-5: 480ms;   /* tylko strona produktowa */
+  --e-std: cubic-bezier(.2, 0, 0, 1);       /* zmiana stanu */
+  --e-wejscie: cubic-bezier(0, 0, .2, 1);   /* pojawienie sie */
+  --e-wyjscie: cubic-bezier(.4, 0, 1, 1);   /* znikniecie (krocej niz wejscie) */
+
+  /* --- warstwy i uklad ------------------------------------------------ */
+  --z-pasek: 100; --z-menu: 300; --z-okno: 1000; --z-toast: 1100; --z-podpowiedz: 1200;
+  --pasek-h: 48px; --boczny-w: 380px; --inspektor-w: 340px; --strona-max: 1200px; --margines: 16px;
+}
+@media (min-width: 720px) { :root { --margines: 32px; } }
+
+/* ===== 3. Motyw jasny ===================================================== */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --c-tlo: #ECEBE6;  /* plotno aplikacji, za panelami */
+  --c-panel: #F7F6F2;  /* panele: formularz, wynik, pasek */
+  --c-pole: #FFFFFF;  /* pola, karty, powierzchnia podniesiona */
+  --c-nad: #FFFFFF;  /* menu, popover, toast, okno */
+  --c-najazd: #EFEEE9;  /* tlo po najechaniu */
+  --c-wcisk: #E6E4DE;  /* tlo wcisniete / wybrane */
+  --c-strona: #FFFEFB;  /* kartka artykulu (czytanie) */
+  --c-linia: #E3E1DB;  /* podzial dekoracyjny */
+  --c-linia-2: #D6D3CB;  /* obrys kart i paneli */
+  --c-ramka: #8D897F;  /* obrys pol (>= 3:1) */
+  --c-ramka-najazd: #6F6B62;  /* obrys pola po najechaniu */
+  --c-tekst: #1B1A17;  /* tekst glowny */
+  --c-tekst-2: #4F4C45;  /* tekst drugorzedny */
+  --c-tekst-3: #67635B;  /* meta, placeholder (>= 4,5:1) */
+  --c-tekst-wyl: #A3A097;  /* wylaczone (bez wymogu kontrastu) */
+  --c-akcent: #F6A623;  /* bursztyn marki: wypelnienie przycisku glownego */
+  --c-akcent-najazd: #FFB547;
+  --c-akcent-wcisk: #E89512;
+  --c-na-akcencie: #1C1303;  /* tekst na bursztynie */
+  --c-akcent-mocny: #8F5A00;  /* bursztyn jako tekst, link, wskaznik zakladki */
+  --c-akcent-tlo: #F7EEDD;
+  --c-akcent-ramka: #F7D295;
+  --c-fokus: #B06C00;  /* pierscien fokusu */
+  --c-dowod: #0B7268;  /* zrodla, cytaty, informacja (dziedzictwo cyjanu) */
+  --c-dowod-tlo: #DFE9E4;
+  --c-dowod-ramka: #8DBBB4;
+  --c-sukces: #1B7042;
+  --c-sukces-tlo: #E1E9E0;
+  --c-sukces-ramka: #94BAA3;
+  --c-uwaga: #A2470B;  /* ostrzezenie (pomarancz, nie bursztyn) */
+  --c-uwaga-tlo: #EEE4DB;
+  --c-uwaga-ramka: #D1A78A;
+  --c-blad: #B72B29;
+  --c-blad-tlo: #F1E2DE;
+  --c-blad-ramka: #DA9B98;
+  --c-blad-pelny: #B72B29;
+  --c-na-bledzie: #FFFFFF;
+  --c-przel-wl: #A86A00;  /* przelacznik / pole wyboru wlaczone */
+  --c-dane-1: #B37400;
+  --c-dane-2: #0B8F83;
+  --c-dane-3: #6D5BD0;
+  --c-dane-4: #4F4C45;
+  --c-zaslona: rgba(27, 26, 23, .38);  /* tlo pod oknem modalnym */
+  --c-zaznaczenie: rgba(246, 166, 35, .32);  /* ::selection */
+  --cien-1: 0 1px 2px rgba(27, 26, 23, .06), 0 0 0 1px rgba(27, 26, 23, .04);  /* karta, pole uniesione */
+  --cien-2: 0 0 0 1px rgba(27, 26, 23, .07), 0 10px 28px -10px rgba(27, 26, 23, .22);  /* menu, popover, toast */
+  --cien-3: 0 0 0 1px rgba(27, 26, 23, .06), 0 28px 72px -20px rgba(27, 26, 23, .32);  /* okno modalne */
+}
+
+/* ===== 5. Warstwa zgodnosci: stare nazwy z app/contentai.src.html:195-245 ==============
+   Pozwala podmienic palete od razu, bez przepisywania ~1000 uzyc var(--.). Do usuniecia po migracji
+   komponentow. Uwaga: pola formularzy po migracji biora obrys z --c-ramka (>= 3:1), nie z --border. */
+:root {
+  --yellow: var(--c-akcent); --yellow-mid: var(--c-akcent-najazd); --yellow-dark: var(--c-akcent-mocny);
+  --yellow-light: var(--c-akcent-tlo);
+  --red: var(--c-blad); --red-dark: var(--c-blad-pelny); --red-light: var(--c-blad-tlo);
+  --bg: var(--c-tlo); --surface: var(--c-panel); --surface2: var(--c-pole);
+  --border: var(--c-linia-2); --border2: var(--c-ramka);
+  --text: var(--c-tekst); --text2: var(--c-tekst-2); --text3: var(--c-tekst-3);
+  --accent: var(--c-akcent); --accent2: var(--c-dowod);
+  --glow: transparent; --glow-amber: transparent; --grid-line: transparent; --dark: var(--c-tlo);
+  --radius: var(--r-md); --radius-lg: var(--r-lg); --shadow: var(--cien-2);
+}
+
+@media (prefers-contrast: more) {
+  :root, :root[data-theme="light"] { --c-tekst-2: var(--c-tekst); --c-tekst-3: var(--c-tekst); --c-linia-2: var(--c-ramka); }
+}
+@media (pointer: coarse) {
+  :root { --h-sm: 36px; --h-md: 40px; --h-pole: var(--h-dotyk); --h-lg: var(--h-dotyk); }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --m-1: 0ms; --m-2: 0ms; --m-3: 0ms; --m-4: 0ms; --m-5: 0ms; }
+}
+}
+
+@layer wymuszone {
+  /* Do pierwszej klatki nic sie nie animuje: klasy ukladu (zwiniety panel, telefon)
+     sa juz ustawione, wiec przejscie pokazaloby tylko ruch od stanu, ktorego nie bylo. */
+  .bez-anim *, .bez-anim *::before, .bez-anim *::after { transition: none !important; animation: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important; scroll-behavior: auto !important;
+    }
   }
-  @font-face {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 300;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-sans-latin-ext-300-normal.woff2') format('woff2');
-    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
-  }
-  @font-face {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-sans-latin-400-normal.woff2') format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-  }
-  @font-face {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-sans-latin-ext-400-normal.woff2') format('woff2');
-    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
-  }
-  @font-face {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-sans-latin-500-normal.woff2') format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-  }
-  @font-face {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 500;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-sans-latin-ext-500-normal.woff2') format('woff2');
-    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
-  }
-  @font-face {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-sans-latin-600-normal.woff2') format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-  }
-  @font-face {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-sans-latin-ext-600-normal.woff2') format('woff2');
-    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
-  }
-  @font-face {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-sans-latin-700-normal.woff2') format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-  }
-  @font-face {
-    font-family: 'IBM Plex Sans';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-sans-latin-ext-700-normal.woff2') format('woff2');
-    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
-  }
-  @font-face {
-    font-family: 'IBM Plex Mono';
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-mono-latin-400-normal.woff2') format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-  }
-  @font-face {
-    font-family: 'IBM Plex Mono';
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-mono-latin-ext-400-normal.woff2') format('woff2');
-    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
-  }
-  @font-face {
-    font-family: 'IBM Plex Mono';
-    font-style: normal;
-    font-weight: 500;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-mono-latin-500-normal.woff2') format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-  }
-  @font-face {
-    font-family: 'IBM Plex Mono';
-    font-style: normal;
-    font-weight: 500;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-mono-latin-ext-500-normal.woff2') format('woff2');
-    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
-  }
-  @font-face {
-    font-family: 'IBM Plex Mono';
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-mono-latin-600-normal.woff2') format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-  }
-  @font-face {
-    font-family: 'IBM Plex Mono';
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-mono-latin-ext-600-normal.woff2') format('woff2');
-    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
-  }
-  @font-face {
-    font-family: 'IBM Plex Mono';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-mono-latin-700-normal.woff2') format('woff2');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-  }
-  @font-face {
-    font-family: 'IBM Plex Mono';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('pwa/fonty/ibm-plex-mono-latin-ext-700-normal.woff2') format('woff2');
-    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
-  }
+}
+
+@layer reset {
+  button, input, select, textarea { font: inherit; color: inherit; }
+}
+
+/* Wersja EN: do zastosowania slownika tresc jest niewidoczna (zamiast mignac po polsku). */
+html.i18n-czeka body { visibility: hidden; }
 </style>
 <!-- File parsing libraries -->
-<script src="pwa/lib/mammoth.browser.min.js"></script>
-<script src="pwa/lib/xlsx.full.min.js"></script>
-<script src="pwa/lib/pdf.min.js"></script>
-<script src="pwa/lib/html-docx.js"></script>
 <style>
+@layer stare {
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ═══ CONTENT AI · paleta "Daylight Ops" (jasny, czysty aerospace) ═══ */
-:root {
-  --yellow: #F5A300;        /* akcent podstawowy: bursztyn instrumentów */
-  --yellow-dark: #C98300;
-  --yellow-light: #FFF0D2;
-  --yellow-mid: #FFC24D;
-  --red: #E23244;           /* alert / błąd: koralowa czerwień */
-  --red-dark: #C01F30;
-  --red-light: #FCE6E9;
-  --bg: #EEF1F6;
-  --surface: #FFFFFF;
-  --surface2: #F2F5FA;
-  --border: #DCE2EC;
-  --border2: #C2CAD8;
-  --text: #0D1320;
-  --text2: #475064;
-  --text3: #616A7E;
-  --accent: var(--yellow);
-  --accent2: #1FA8C7;       /* cyan techniczny */
-  --glow: rgba(31,168,199,0.28);
-  --glow-amber: rgba(245,163,0,0.30);
-  --dark: #0A0B11;
-  --grid-line: rgba(13,19,32,0.045);
-  --radius: 10px;
-  --radius-lg: 14px;
-  --shadow: 0 1px 3px rgba(13,19,32,0.06), 0 8px 28px rgba(13,19,32,0.07);
-}
-
-/* ═══ CONTENT AI · paleta "Deep Space" (ciemny, domyślny - widok bohaterski) ═══ */
-body.dark-mode {
-  --yellow: #FFB000;        /* bursztyn na czerni - readout */
-  --yellow-dark: #E09400;
-  --yellow-light: #2A2100;
-  --yellow-mid: #FFCB4D;
-  --red: #FF5566;
-  --red-dark: #E23B4C;
-  --red-light: #3A1418;
-  --bg: #07080D;
-  --surface: #11131D;
-  --surface2: #171A27;
-  --border: #242A3B;
-  --border2: #353D54;
-  --text: #E9EDF6;
-  --text2: #9DA6BC;
-  --text3: #868FAB;
-  --accent: var(--yellow);
-  --accent2: #46D5F2;       /* cyan świecący */
-  --glow: rgba(70,213,242,0.34);
-  --glow-amber: rgba(255,176,0,0.34);
-  --dark: #04050A;
-  --grid-line: rgba(120,150,210,0.06);
-  --shadow: 0 1px 3px rgba(0,0,0,0.5), 0 12px 40px rgba(0,0,0,0.45);
-}
+/* Paleta i skale: blok cai-tokeny (warstwa tokeny + aliasy starych nazw). */
 
 /* DARK MODE TOGGLE */
 .dm-toggle { display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;flex-shrink:0; }
@@ -305,7 +426,7 @@ body.is-mobile .aio-panel {
 
 html { height: 100%; overflow: hidden; }
 
-body { font-family: 'IBM Plex Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); height: 100%; overflow: hidden; display: flex; flex-direction: column; font-size: 14px; }
+body { font-family: var(--f-ui); background: var(--bg); color: var(--text); height: 100%; overflow: hidden; display: flex; flex-direction: column; font-size: 14px; }
 
 /* TOP BAR */
 .topbar {
@@ -370,7 +491,7 @@ body.is-mobile .settings-btn { font-size: 16px; padding: 3px 4px; }
 
 .kb-select-bar { display: none; align-items: center; justify-content: space-between; padding: 5px 10px; background: var(--yellow-light); border-bottom: 1px solid var(--yellow-dark); font-size: 11px; color: #7A6000; }
 .kb-select-bar.show { display: flex; }
-.kb-select-bar button { background: none; border: none; font-size: 11px; color: var(--red); cursor: pointer; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-weight: 500; padding: 0; }
+.kb-select-bar button { background: none; border: none; font-size: 11px; color: var(--red); cursor: pointer; font-family: var(--f-ui); font-weight: 500; padding: 0; }
 
 .kb-icon {
   width: 30px; height: 30px; border-radius: 7px;
@@ -429,7 +550,7 @@ body.is-mobile #pakiet-badge .pakiet-licznik-krotko { display: inline; }
   padding: 8px; border-radius: var(--radius);
   border: 1px solid var(--border); background: var(--surface);
   font-size: 12px; color: var(--text2); cursor: pointer;
-  transition: all 0.13s; font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  transition: all 0.13s; font-family: var(--f-ui);
 }
 .btn-text-add:hover { border-color: var(--yellow-dark); background: var(--yellow-light); color: var(--text); }
 
@@ -444,7 +565,7 @@ body.is-mobile #pakiet-badge .pakiet-licznik-krotko { display: inline; }
 
 /* TABS */
 .tabs { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; }
-.tab { font-size: 13px; padding: 14px 0; margin-right: 24px; border: none; background: none; color: var(--text3); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.13s; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-weight: 400; }
+.tab { font-size: 13px; padding: 14px 0; margin-right: 24px; border: none; background: none; color: var(--text3); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.13s; font-family: var(--f-ui); font-weight: 400; }
 .tab:hover { color: var(--text); }
 .tab.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 500; }
 
@@ -468,7 +589,7 @@ input[type=text], input[type=number], input[type=url], input[type=password], tex
   padding: 9px 11px;
   font-size: 13px;
   color: var(--text);
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-family: var(--f-ui);
   background: var(--surface);
   outline: none;
   transition: border-color 0.13s, box-shadow 0.13s;
@@ -493,7 +614,7 @@ input::-webkit-input-placeholder, textarea::-webkit-input-placeholder { color: v
   background: var(--red); color: white;
   border: none; border-radius: var(--radius);
   padding: 11px; font-size: 14px; font-weight: 600;
-  cursor: pointer; font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  cursor: pointer; font-family: var(--f-ui);
   transition: all 0.13s; width: 100%;
   letter-spacing: 0.01em;
 }
@@ -506,7 +627,7 @@ input::-webkit-input-placeholder, textarea::-webkit-input-placeholder { color: v
   background: var(--surface); color: var(--text);
   border: 1px solid var(--border); border-radius: var(--radius);
   padding: 7px 14px; font-size: 12px; cursor: pointer;
-  font-family: 'IBM Plex Sans', system-ui, sans-serif; transition: all 0.13s;
+  font-family: var(--f-ui); transition: all 0.13s;
 }
 .btn-secondary:hover { background: var(--surface2); border-color: var(--border2); }
 
@@ -516,7 +637,7 @@ input::-webkit-input-placeholder, textarea::-webkit-input-placeholder { color: v
   background: var(--surface); color: var(--text);
   border: 1px solid var(--border); border-radius: var(--radius);
   padding: 7px 14px; font-size: 12px; cursor: pointer;
-  font-family: 'IBM Plex Sans', system-ui, sans-serif; transition: all 0.13s;
+  font-family: var(--f-ui); transition: all 0.13s;
   width: 100%; justify-content: center;
 }
 .btn-premium:hover { background: var(--surface2); border-color: var(--border2); }
@@ -873,7 +994,7 @@ body.dark-mode .kb-tag-file { background: #2A2200 !important; color: #F0E88A !im
 .mobile-nav-btn {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 3px; background: none; border: none; cursor: pointer;
-  font-family: 'IBM Plex Sans', system-ui, sans-serif; color: var(--text3);
+  font-family: var(--f-ui); color: var(--text3);
   font-size: 10px; font-weight: 500; padding: 6px 4px;
   transition: color 0.13s;
 }
@@ -1159,7 +1280,7 @@ body.dark .mic-btn.mic-active{background:#3b1416}
 .mobile-nav-btn, .seo-panel-head h4, .aio-panel-head h4,
 .seo-score-num, .seo-score-lbl, .tpl-card-title, .h-item-meta,
 .edit-hint {
-  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  font-family: var(--f-mono);
 }
 .btn-generate, .btn-secondary, .btn-premium, .ver-btn { letter-spacing:.04em; }
 body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
@@ -1387,7 +1508,7 @@ body.is-mobile .kb-tab { display:none !important; }
 .btn-module {
   flex:1; display:flex; align-items:center; justify-content:center; gap:8px;
   padding:15px 14px; border-radius:12px; cursor:pointer;
-  font-family:'IBM Plex Mono', ui-monospace, 'SF Mono', monospace; font-size:14px; font-weight:600; letter-spacing:.04em;
+  font-family:var(--f-mono); font-size:14px; font-weight:600; letter-spacing:.04em;
   background:var(--surface); color:var(--text); border:1px solid var(--border);
   transition:border-color .15s, box-shadow .15s, transform .15s;
 }
@@ -1436,7 +1557,7 @@ body.audio-bar-open #audio-panel { padding-bottom: 240px; }
 }
 #audio-bar-meta {
   display: flex; justify-content: space-between; margin-top: 6px;
-  font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10.5px;
+  font-family: var(--f-mono); font-size: 10.5px;
   letter-spacing: .04em; color: var(--text3);
 }
 #audio-bar-pct { color: var(--accent); }
@@ -1452,34 +1573,23 @@ body.is-mobile .astat-sep { margin: 0; }
 .toggle-row > :first-child { min-width: 0; }
 .toggle-row > :last-child { flex-shrink: 0; }
 body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh - 88px); }
+}
 </style>
 </head>
 <body>
-<style id="cin-splash-css">
-  #cin-splash{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;transition:opacity .5s ease;overflow:hidden;
-    background:#07080D;}
-  #cin-splash.hide{opacity:0;pointer-events:none}
-  #cin-splash-cv{position:absolute;inset:0;width:100%;height:100%;z-index:1}
-  #cin-splash .cin-splash-logo,#cin-splash .cin-splash-bar{position:relative;z-index:2}
-  .cin-splash-logo{display:flex;align-items:center;gap:14px;font-family:'IBM Plex Mono',ui-monospace,monospace;text-transform:uppercase}
-  .cin-splash-mark{color:var(--accent,#F6A623);display:inline-flex;line-height:0;filter:drop-shadow(0 0 14px rgba(245,163,0,.6));animation:cinSpark 2.4s ease-in-out infinite}
-  .cin-splash-mark svg{width:38px;height:38px;display:block}
-  .cin-splash-word{font-size:22px;font-weight:600;letter-spacing:.24em;color:#ECEBE6}
-  .cin-splash-word b{color:var(--accent,#F6A623);font-weight:700;margin-left:.16em}
-  .cin-splash-bar{width:160px;height:3px;border-radius:3px;background:rgba(255,255,255,.10);overflow:hidden}
-  .cin-splash-fill{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,var(--accent,#F6A623),#35E0D0);animation:cinSplashBar 1.6s ease-out forwards}
-  @keyframes cinSpark{0%,100%{transform:rotate(0) scale(1)}50%{transform:rotate(90deg) scale(1.12)}}
-  @keyframes cinSplashBar{to{width:100%}}
-  @media (prefers-reduced-motion:reduce){.cin-splash-mark,.cin-splash-fill{animation:none}}
-</style>
-<div id="cin-splash" aria-hidden="true">
-  <canvas id="cin-splash-cv"></canvas>
-  <div class="cin-splash-logo">
-    <span class="cin-splash-mark"><svg viewBox="0 0 32 32"><path d="M16 1.5 L18.4 13.6 L30.5 16 L18.4 18.4 L16 30.5 L13.6 18.4 L1.5 16 L13.6 13.6 Z" fill="currentColor"/><circle cx="16" cy="16" r="1.7" fill="#07080D"/></svg></span>
-    <span class="cin-splash-word">CONTENT<b>AI</b></span>
-  </div>
-  <div class="cin-splash-bar"><div class="cin-splash-fill"></div></div>
-</div>
+<script id="cai-start-body">
+(function () {
+  var s = window.CAI_START, b = document.body;
+  if (s) {
+    if (s.ciemny) b.classList.add('dark-mode');
+    if (s.zwiniety) b.classList.add('kb-collapsed');
+    if (s.mobilny) b.classList.add('is-mobile');
+  }
+  var zdejmij = function () { document.documentElement.classList.remove('bez-anim'); };
+  if (window.requestAnimationFrame) requestAnimationFrame(function () { requestAnimationFrame(zdejmij); });
+  setTimeout(zdejmij, 600);
+})();
+</script>
 
 <div class="topbar">
   <div class="topbar-logo">
@@ -2898,6 +3008,21 @@ body.is-mobile .modal { max-height: calc(100vh - 88px); max-height: calc(100dvh 
 // za serwerem kazde konto ma wlasne klucze (prefiks z identyfikatora konta),
 // wiec na wspolnym komputerze nastepna osoba nie widzi historii ani kluczy
 // poprzedniej. Jezyk i motyw zostaja wspolne dla urzadzenia.
+// Ciezkie biblioteki (pdf.js, xlsx, mammoth, html-docx: razem ponad 2 MB) ladujemy
+// dopiero w chwili uzycia. W <head> blokowaly pierwsze malowanie o ~300 ms na telefonie.
+var _skrypty = {};
+function wczytajSkrypt(src) {
+  if (_skrypty[src]) return _skrypty[src];
+  _skrypty[src] = new Promise(function (ok, blad) {
+    var s = document.createElement('script');
+    s.src = src; s.async = true;
+    s.onload = function () { ok(); };
+    s.onerror = function () { delete _skrypty[src]; blad(new Error('nie wczytano ' + src)); };
+    document.head.appendChild(s);
+  });
+  return _skrypty[src];
+}
+
 var magazyn = (function () {
   var konto = '';
   try {
@@ -4045,6 +4170,8 @@ function applyLang(lang) {
 
   // 4. Page title
   if (T['page-title']) document.title = T['page-title'];
+  document.documentElement.classList.remove('i18n-czeka', 'jezyk-pl', 'jezyk-en');
+  document.documentElement.classList.add('jezyk-' + lang);
 
   // 5. Dynamicznie tworzone elementy z data-i18n-key (np. img-fmt-btn)
   document.querySelectorAll('.img-fmt-btn[data-i18n-key]').forEach(btn => {
@@ -4780,7 +4907,6 @@ function triggerFileInput(id) {
 }
 
 // ─── FILE UPLOAD & PARSING ────────────────────────────────────────────────────
-if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = 'pwa/lib/pdf.worker.min.js'; }
 
 // Drag & drop only on non-touch devices
 const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
@@ -4848,6 +4974,8 @@ async function processFile(file) {
 }
 
 async function extractPDF(file) {
+  await wczytajSkrypt('pwa/lib/pdf.min.js');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'pwa/lib/pdf.worker.min.js';
   const ab = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
   let text = '';
@@ -4860,6 +4988,7 @@ async function extractPDF(file) {
 }
 
 async function extractXLSX(file) {
+  await wczytajSkrypt('pwa/lib/xlsx.full.min.js');
   const ab = await file.arrayBuffer();
   const wb = XLSX.read(ab, { type: 'array' });
   let text = '';
@@ -4872,6 +5001,7 @@ async function extractXLSX(file) {
 }
 
 async function extractDOCX(file) {
+  await wczytajSkrypt('pwa/lib/mammoth.browser.min.js');
   const ab = await file.arrayBuffer();
   const result = await mammoth.extractRawText({ arrayBuffer: ab });
   return result.value.trim();
@@ -7735,8 +7865,14 @@ function setHistFilter(el, type) {
 }
 
 // ─── DARK MODE ────────────────────────────────────────────────────────────────
+function ustawMotywDokumentu(isDark) {
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if (tc) tc.setAttribute('content', isDark ? '#111110' : '#F7F6F2');
+}
 function toggleDarkMode() {
   const isDark = document.body.classList.toggle('dark-mode');
+  ustawMotywDokumentu(isDark);
   document.getElementById('dm-track').classList.toggle('on', isDark);
   document.getElementById('dm-icon').textContent = isDark ? '☀️' : '🌙';
   try { magazyn.setItem('cai-dark', isDark ? '1' : ''); } catch(e) {}
@@ -7744,7 +7880,9 @@ function toggleDarkMode() {
 (function initDarkMode() {
   try {
     var pref = magazyn.getItem('cai-dark');
-    var useDark = (pref === null) ? true : (pref === '1'); // domyślnie Deep Space
+    // Bez zapisanego wyboru idziemy za ustawieniem systemu (jak skrypt w <head>).
+    var useDark = (pref === null) ? !(window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) : (pref === '1');
+    ustawMotywDokumentu(useDark);
     if (useDark) {
       document.body.classList.add('dark-mode');
       setTimeout(() => {
@@ -8097,6 +8235,7 @@ async function dlDocx() {
     </style>
     </head><body>${artHtml}</body></html>`;
 
+    await wczytajSkrypt('pwa/lib/html-docx.js');
     const blob = htmlDocx.asBlob(fullHtml);
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -10306,7 +10445,7 @@ function repToHtml(rep) {
 
 function copyReport() { const rep = buildReport(); if (!rep) return; navigator.clipboard.writeText(repToText(rep)).catch(() => {}); }
 
-function dlReportDocx() {
+async function dlReportDocx() {
   const rep = buildReport(); if (!rep) return;
   const full = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
     + 'body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#1A1916}'
@@ -10315,6 +10454,7 @@ function dlReportDocx() {
     + 'table{border-collapse:collapse;width:100%;margin:8pt 0}th,td{border:1px solid #ccc;padding:6pt;text-align:left;font-size:10pt}th{background:#FFB000}'
     + '</style></head><body>' + repToHtml(rep) + '</body></html>';
   try {
+    await wczytajSkrypt('pwa/lib/html-docx.js');
     const blob = htmlDocx.asBlob(full);
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = 'Raport_AI_widocznosc.docx'; a.click();
@@ -12485,6 +12625,7 @@ async function audioDownloadDocx(btn){
   try{
     var artHtml=sc.innerHTML;
     var fullHtml='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#1A1916}h1{font-size:20pt;font-weight:bold;margin-bottom:12pt}h2{font-size:14pt;font-weight:bold;margin-top:16pt;margin-bottom:6pt}h3{font-size:12pt;font-weight:bold;margin-top:12pt;margin-bottom:4pt}p{margin-bottom:8pt;line-height:1.5}strong,b{font-weight:bold}em,i{font-style:italic}</style></head><body>'+artHtml+'</body></html>';
+    await wczytajSkrypt('pwa/lib/html-docx.js');
     var blob=htmlDocx.asBlob(fullHtml);
     var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname+'.docx'; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function(){ try{ URL.revokeObjectURL(a.href); }catch(e){} }, 1500);
@@ -12790,6 +12931,7 @@ async function kbAudioTranscribeAndOpen(file) {
 
 <!-- ============ Content AI - reskin (Faza 1 fix + Faza 2 + Faza 3 splash), append-only ============ -->
 <style id="cin-reskin">
+@layer stare {
   @keyframes cinRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
   @keyframes cinField{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
   @keyframes cinPanelIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -12821,51 +12963,8 @@ async function kbAudioTranscribeAndOpen(file) {
     .btn-generate:active,.btn-module:active,.btn-premium:active,.btn-secondary:active{transform:none}
     .cin-progress-bar{transition:none}
   }
+}
 </style>
-<script id="cin-splash-js">
-(function(){
-  var sp=document.getElementById('cin-splash'); if(!sp) return;
-  var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion:reduce)").matches;
-  var seen=false; try{ seen=sessionStorage.getItem('cin_splash')==='1'; }catch(e){}
-  if(seen||reduce){ sp.parentNode&&sp.parentNode.removeChild(sp); return; }
-  try{ sessionStorage.setItem('cin_splash','1'); }catch(e){}
-
-  var cv=document.getElementById('cin-splash-cv'), raf=null, running=true;
-  if(cv){
-    var ctx=cv.getContext('2d'), DPR=Math.min(window.devicePixelRatio||1,2), W,H,parts=[];
-    function resize(){ W=cv.width=innerWidth*DPR; H=cv.height=innerHeight*DPR; }
-    resize(); addEventListener('resize',resize,{passive:true});
-    var N=innerWidth<760?95:150;
-    for(var i=0;i<N;i++){
-      parts.push({x:Math.random()*W, y:Math.random()*H,
-        vx:(Math.random()-0.5)*0.16*DPR, vy:(Math.random()-0.5)*0.16*DPR,
-        r:(Math.random()*0.9+0.4)*DPR, c:Math.random()<0.5?'246,166,35':'53,224,208',
-        a:Math.random()*0.4+0.22, ph:Math.random()*6.28});
-    }
-    var t0=performance.now();
-    function frame(now){
-      if(!running) return;
-      var t=(now-t0)/1000;
-      ctx.clearRect(0,0,W,H); ctx.globalCompositeOperation='lighter';
-      for(var i=0;i<parts.length;i++){ var o=parts[i];
-        o.x+=o.vx; o.y+=o.vy;
-        if(o.x<0)o.x=W; else if(o.x>W)o.x=0;
-        if(o.y<0)o.y=H; else if(o.y>H)o.y=0;
-        var tw=o.a*(0.45+0.55*Math.sin(t*1.4+o.ph)), R=o.r*5;
-        var g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,R);
-        g.addColorStop(0,'rgba('+o.c+','+tw+')'); g.addColorStop(1,'rgba('+o.c+',0)');
-        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(o.x,o.y,R,0,6.2832); ctx.fill();
-      }
-      ctx.globalCompositeOperation='source-over'; raf=requestAnimationFrame(frame);
-    }
-    raf=requestAnimationFrame(frame);
-  }
-  function done(){ running=false; if(raf) cancelAnimationFrame(raf); sp.classList.add('hide');
-    setTimeout(function(){ sp.parentNode&&sp.parentNode.removeChild(sp); },520); }
-  sp.addEventListener('click', done);
-  setTimeout(done, 1900);
-})();
-</script>
 <script id="cin-reskin-js">
 (function(){
   var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion:reduce)").matches;
