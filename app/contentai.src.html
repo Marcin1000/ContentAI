@@ -56,9 +56,8 @@
   var jezyk = czytaj('cai_lang') || ((navigator.language || 'pl').toLowerCase().indexOf('pl') === 0 ? 'pl' : 'en');
   d.lang = jezyk;
   d.className += ' bez-anim jezyk-' + jezyk + (jezyk !== 'pl' ? ' i18n-czeka' : '');
-  var ua = navigator.userAgent || '';
-  var mobilny = /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua) || window.innerWidth < 900
-    || ('ontouchstart' in window && window.innerWidth < 1024);
+  var mobilny = false;
+  try { mobilny = window.matchMedia('(max-width: 899px)').matches; } catch (e) { mobilny = window.innerWidth < 900; }
   window.CAI_START = {
     ciemny: ciemny, jezyk: jezyk, mobilny: mobilny,
     zwiniety: czytaj((konto ? 'u:' + konto + ':' : '') + 'cai_kb_collapsed') !== '0'
@@ -2001,9 +2000,9 @@ body.kb-collapsed:not(.is-mobile) .sidebar { transform: translateX(-100%); visib
 @layer widoki {
 /* ponizej 1280 px pasek akcji chowa podpisy do ikon (podpis zostaje w podpowiedzi i dla czytnika) */
 @media (max-width: 1279px) {
-  body:not(.is-mobile) .output-bar > .btn-secondary, body:not(.is-mobile) .output-bar > .grupa-wrap > .btn-secondary { font-size: 0; gap: 2px; padding: 0 var(--s-8); }
-  body:not(.is-mobile) .output-bar > .btn-secondary .ikona, body:not(.is-mobile) .output-bar > .grupa-wrap > .btn-secondary .ikona { width: 16px; height: 16px; }
-  body:not(.is-mobile) .output-bar > .btn-secondary span { font-size: 0; }
+  body:not(.is-mobile) .pasek-akcje > .btn-secondary, body:not(.is-mobile) .pasek-akcje > .grupa-wrap > .btn-secondary { font-size: 0; gap: 2px; padding: 0 var(--s-8); }
+  body:not(.is-mobile) .pasek-akcje > .btn-secondary .ikona, body:not(.is-mobile) .pasek-akcje > .grupa-wrap > .btn-secondary .ikona { width: 16px; height: 16px; }
+  body:not(.is-mobile) .pasek-akcje > .btn-secondary span { font-size: 0; }
 }
 }
 @layer widoki {
@@ -2029,6 +2028,99 @@ body.is-mobile.inspektor-otwarty .ins-zaslona { display: block; position: fixed;
 body.is-mobile .output-scroll { padding: var(--s-12) var(--s-12) var(--s-48); }
 body.is-mobile .article { padding: var(--s-24) var(--s-20); border-radius: var(--r-md); }
 body.is-mobile .article h1 { font-size: 26px; } body.is-mobile .article h2 { font-size: 21px; } body.is-mobile .article h3 { font-size: 18px; }
+}
+@layer widoki {
+.pasek-akcje { display: flex; align-items: center; gap: var(--s-6); margin-left: auto; min-width: 0; }
+.mobilny-widok { display: none; }
+
+/* ══ TELEFON (body.is-mobile, max 899 px) ═════════════════════════════════ */
+body.is-mobile { --nav-h: 60px; --dol: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px)); }
+body.is-mobile .topbar { height: 52px; padding: 0 var(--s-12); gap: var(--s-8); }
+body.is-mobile .topbar-app { font-size: 12px; letter-spacing: .12em; }
+body.is-mobile .settings-wrap > .settings-btn { display: none; }
+body.is-mobile .topbar-right { gap: var(--s-6); }
+body.is-mobile .mobilny-widok { display: inline-flex; }
+body.is-mobile:has(#tab-history.active) .mobilny-widok, body.is-mobile:has(#mobile-sidebar.open) .mobilny-widok { display: none; }
+body.is-mobile .mobilny-widok button { height: 32px; padding: 0 var(--s-12); font-size: var(--t-sm); }
+body.is-mobile #pakiet-badge { height: 32px; padding: 0 var(--s-8); }
+@media (max-width: 360px) { body.is-mobile .topbar-app { display: none; } }
+
+/* dolna nawigacja */
+.mobile-nav { height: var(--dol); padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--c-panel); border-top: 1px solid var(--c-linia);
+  grid-template-columns: repeat(4, 1fr); z-index: 300; box-shadow: none; }
+.mobile-nav-btn { min-height: 44px; gap: 3px; color: var(--c-tekst-3); font-family: var(--f-ui); font-size: 11px; font-weight: var(--g-sredni); letter-spacing: normal; }
+.mobile-nav-btn .nav-icon .ikona { width: 22px; height: 22px; }
+.mobile-nav-btn.active, .mobile-nav-btn[aria-expanded="true"] { color: var(--c-tekst); font-weight: var(--g-mocny); }
+.mobile-nav-btn.active .nav-icon { color: var(--c-akcent-mocny); }
+.mobile-nav-btn:active { transform: scale(.96); }
+
+/* Brief / Wynik: dwa ekrany */
+body.is-mobile.widok-wynik .form-col { display: none; }
+body.is-mobile:not(.widok-wynik) .output-col { display: none; }
+body.is-mobile .gen-split { padding-bottom: 0; }
+body.is-mobile .form-col { padding: var(--s-16) var(--s-16) calc(var(--dol) + 88px); border: 0; gap: var(--s-16); }
+body.is-mobile .brief-naglowek { display: none; }
+body.is-mobile .form-actions-sticky { position: fixed; left: 0; right: 0; bottom: var(--dol); z-index: 290; margin: 0;
+  padding: var(--s-10, 10px) var(--s-16); background: var(--c-panel); border-top: 1px solid var(--c-linia); gap: var(--s-8); }
+body.is-mobile .generuj-rzad .btn-generate { min-height: 48px; font-size: var(--t-lg); }
+body.is-mobile .generuj-rzad .grupa-wrap > button { width: 48px; min-height: 48px; }
+body.is-mobile .btn-generate .kbd { display: none; }
+body.is-mobile .btn-premium { min-height: 32px; }
+body.is-mobile #topic { font-size: 16px; }
+body.is-mobile .row2 { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+
+/* Wynik: kartka na cala szerokosc, pasek akcji przy dolnej nawigacji */
+body.is-mobile .output-col { min-height: calc(100vh - 52px - var(--dol)); padding-bottom: calc(var(--dol) + 64px); overflow: visible; }
+body.is-mobile .output-bar { position: static; min-height: 44px; padding: var(--s-6) var(--s-12); flex-wrap: nowrap; }
+body.is-mobile .output-bar .output-bar-left { flex: 1 1 auto; }
+body.is-mobile .pasek-akcje { position: fixed; left: 0; right: 0; bottom: var(--dol); z-index: 280; margin: 0; gap: 0; padding: var(--s-4) var(--s-4);
+  justify-content: space-around; background: var(--c-panel); border-top: 1px solid var(--c-linia); }
+body.is-mobile:not(.widok-wynik) .pasek-akcje, body.is-mobile:not(:has(#article-stats.show)) .pasek-akcje, body.is-mobile:has(#tab-history.active) .pasek-akcje { display: none; }
+body.is-mobile .pasek-akcje .pasek-sep { display: none; }
+body.is-mobile .pasek-akcje > .btn-secondary, body.is-mobile .pasek-akcje > .grupa-wrap > .btn-secondary {
+  flex-direction: column; gap: 2px; min-height: 52px; min-width: 56px; padding: 4px 6px; border: 0; background: none; font-size: 11px; font-weight: var(--g-sredni); color: var(--c-tekst-2); }
+body.is-mobile .pasek-akcje > .btn-secondary .ikona, body.is-mobile .pasek-akcje > .grupa-wrap > .btn-secondary .ikona { width: 20px; height: 20px; }
+body.is-mobile .pasek-akcje > .btn-secondary span, body.is-mobile .pasek-akcje > .grupa-wrap > .btn-secondary span { font-size: 11px; }
+body.is-mobile .pasek-akcje .grupa-wrap { display: inline-flex; }
+body.is-mobile .pasek-akcje .grupa-wrap > button[aria-haspopup]::after { display: none; }
+body.is-mobile .pasek-akcje > .btn-secondary:active, body.is-mobile .pasek-akcje > .grupa-wrap > .btn-secondary:active { background: var(--c-wcisk); }
+body.is-mobile .article-stats { margin-bottom: var(--s-8); padding: 0 var(--s-4); }
+body.is-mobile .jsonld-box { width: auto; margin: var(--s-12); }
+
+/* arkusze od dolu: menu grup, konto, okna z formularzami */
+body.is-mobile .grupa-menu, body.is-mobile .settings-menu.open { position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto; min-width: 0; max-width: none;
+  max-height: 78vh; overflow-y: auto; border-radius: var(--r-lg) var(--r-lg) 0 0; border-bottom: 0; z-index: 460;
+  padding: var(--s-16) var(--s-8) calc(var(--s-12) + var(--dol)); box-shadow: 0 0 0 100vmax var(--c-zaslona), var(--cien-3);
+  animation: arkusz-wejscie var(--m-4) var(--e-wejscie); }
+body.is-mobile .grupa-menu::before, body.is-mobile .settings-menu.open::before, body.is-mobile .inspektor::before, body.is-mobile .overlay .modal::before, body.is-mobile .okno-tlo > .modal::before {
+  content: ""; display: block; width: 36px; height: 4px; border-radius: 2px; background: var(--c-linia-2); margin: -6px auto var(--s-10, 10px); }
+body.is-mobile .grupa-backdrop.show { background: transparent; }
+body.is-mobile .settings-menu { top: auto !important; }
+body.is-mobile .overlay, body.is-mobile .okno-tlo { align-items: flex-end; justify-content: stretch; padding: 0; }
+body.is-mobile .overlay .modal, body.is-mobile .okno-tlo > .modal { width: 100%; max-width: 100%; max-height: 92vh; margin: 0; border-radius: var(--r-lg) var(--r-lg) 0 0;
+  border-bottom: 0; padding: var(--s-16) var(--s-16) calc(var(--s-16) + env(safe-area-inset-bottom, 0px)); animation: arkusz-wejscie var(--m-4) var(--e-wejscie); }
+body.is-mobile .modal-head { position: sticky; top: calc(var(--s-16) * -1); z-index: 2; margin: calc(var(--s-16) * -1) calc(var(--s-16) * -1) var(--s-12); padding: var(--s-16) var(--s-8) var(--s-8) var(--s-16); background: var(--c-nad); }
+body.is-mobile .modal-head .modal-close { margin: -8px 0 0 0; }
+/* potwierdzenia zostaja na srodku */
+body.is-mobile #no-source-modal, body.is-mobile #premium-modal { align-items: center; padding: var(--s-16); }
+body.is-mobile #no-source-modal .modal, body.is-mobile #premium-modal .modal { border-radius: var(--r-lg); border-bottom: 1px solid var(--c-linia-2); }
+body.is-mobile #no-source-modal .modal::before, body.is-mobile #premium-modal .modal::before { display: none; }
+body.is-mobile .inspektor { padding-top: var(--s-12); }
+@keyframes arkusz-wejscie { from { transform: translateY(24px); opacity: 0; } }
+
+/* baza wiedzy na telefonie: pelny ekran */
+.mobile-sidebar-panel { background: var(--c-panel); z-index: 250; padding-bottom: var(--dol); }
+.mobile-sidebar-panel .sidebar-head { padding: var(--s-12) var(--s-8) var(--s-12) var(--s-16); border-bottom: 1px solid var(--c-linia); }
+.mobile-sidebar-panel .sidebar-head h2 { font-size: var(--t-lg); font-weight: var(--g-mocny); letter-spacing: normal; text-transform: none; color: var(--c-tekst); }
+/* historia na telefonie */
+body.is-mobile .history-panel { padding: var(--s-12) var(--s-16) !important; }
+body.is-mobile .h-stats { grid-template-columns: 1fr 1fr; gap: var(--s-8); }
+body.is-mobile #tab-history { padding-bottom: var(--dol); }
+.mob-hist-modal { background: var(--c-tlo); padding-bottom: var(--dol); }
+.mob-hist-modal-head { background: var(--c-panel); border-bottom: 1px solid var(--c-linia); min-height: 52px; }
+.mob-hist-back { color: var(--c-tekst); }
+.mob-hist-modal-title { font-size: var(--t-md); font-weight: var(--g-mocny); color: var(--c-tekst); }
+body.is-mobile #powiadomienia { bottom: calc(var(--dol) + 72px); }
 }
 </style>
 </head>
@@ -2096,6 +2188,10 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
   </nav>
   <div class="topbar-right">
+    <div class="segmenty mobilny-widok" role="group" aria-label="Widok" data-i18n-label="widok-etykieta">
+      <button type="button" id="widok-brief" aria-pressed="true" onclick="ustawWidokMobilny('brief')" data-i18n="brief-naglowek">Brief</button>
+      <button type="button" id="widok-wynik" aria-pressed="false" onclick="ustawWidokMobilny('wynik')" data-i18n="widok-wynik">Wynik</button>
+    </div>
 <!--@@IF proxy-->
     <button id="pakiet-badge" onclick="otworzPakiet()" data-i18n-title="pakiet-badge-title" title="Twój pakiet i zużycie" style="display:none"></button>
 <!--@@ENDIF-->
@@ -2195,17 +2291,19 @@ document.addEventListener('DOMContentLoaded', function () {
 </div>
 
 <!-- MOBILE BOTTOM NAV -->
-<nav class="mobile-nav" role="navigation">
-  <button class="mobile-nav-btn" onclick="openMobileSidebar()" id="mnav-kb">
+<nav class="mobile-nav" aria-label="Nawigacja" data-i18n-label="nav-obszary">
+  <button type="button" class="mobile-nav-btn active" onclick="switchMobileTab('generator')" id="mnav-gen">
+    <span class="nav-icon"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-square-pen"/></svg></span><span data-i18n="nav-pisz">Pisz</span>
+  </button>
+  <button type="button" class="mobile-nav-btn" onclick="openMobileSidebar()" id="mnav-kb">
     <span class="nav-icon"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-library"/></svg></span><span data-i18n="nav-base">Baza</span>
   </button>
-  <button class="mobile-nav-btn active" onclick="switchMobileTab('generator')" id="mnav-gen">
-    <span class="nav-icon"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-square-pen"/></svg></span>Generator
-  </button>
-  <button class="mobile-nav-btn" onclick="switchMobileTab('history')" id="mnav-hist">
+  <button type="button" class="mobile-nav-btn" onclick="switchMobileTab('history')" id="mnav-hist">
     <span class="nav-icon"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-history"/></svg></span><span data-i18n="nav-history">Historia</span>
   </button>
-
+  <button type="button" class="mobile-nav-btn" onclick="otworzKontoMobilne(event)" id="mnav-konto" aria-haspopup="true">
+    <span class="nav-icon"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-user"/></svg></span><span data-i18n="konto-menu">Konto</span>
+  </button>
 </nav>
 
 <!-- MOBILE FAB (generate) - widoczny tylko na zakładce Generator -->
@@ -2469,6 +2567,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <span class="ver-label" data-i18n="versions-label">Warianty:</span>
               </div>
             </div>
+            <div class="pasek-akcje">
             <button class="btn-secondary" id="edit-btn" style="display:none" onclick="toggleEdit()" data-i18n="btn-edit" data-ikona="pencil"><svg class="ikona" aria-hidden="true"><use href="#i-pencil"/></svg>Edytuj</button>
             <span class="pasek-sep"></span>
 
@@ -2539,6 +2638,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <button class="btn-secondary" id="wp-pub-btn" style="display:none" onclick="openWpPublish()" data-i18n="btn-wp-pub" data-ikona="globe"><svg class="ikona" aria-hidden="true"><use href="#i-globe"/></svg>Publikuj WP</button>
                 <button class="btn-secondary" id="jsonld-btn" style="display:none" onclick="toggleJsonLd()" data-i18n="btn-jsonld">{ } JSON-LD</button>
               </div>
+            </div>
             </div>
           </div>
 
@@ -3679,7 +3779,7 @@ var currentLang = magazyn.getItem('cai_lang') || ((navigator.language||'pl').toL
 var I18N = {
   pl: {
     // nowy uklad (E4)
-    'nav-pisz':'Pisz',
+    'nav-pisz':'Pisz','widok-wynik':'Wynik','widok-etykieta':'Widok',
     'nav-widocznosc':'Widoczność AI',
     'nav-obszary':'Obszary pracy',
     'konto-menu':'Konto',
@@ -4277,7 +4377,7 @@ var I18N = {
   },
   en: {
     // nowy uklad (E4)
-    'nav-pisz':'Write',
+    'nav-pisz':'Write','widok-wynik':'Result','widok-etykieta':'View',
     'nav-widocznosc':'AI visibility',
     'nav-obszary':'Work areas',
     'konto-menu':'Account',
@@ -9213,7 +9313,7 @@ function odswiezKonto(login) {
 }
 // Podpowiedz z podpisem dla przyciskow paska, ktore na wezszym ekranie pokazuja sama ikone.
 function podpiszPasek() {
-  document.querySelectorAll('.output-bar > .btn-secondary, .output-bar > .grupa-wrap > .btn-secondary').forEach(function (b) {
+  document.querySelectorAll('.pasek-akcje > .btn-secondary, .pasek-akcje > .grupa-wrap > .btn-secondary').forEach(function (b) {
     var tx = (b.textContent || '').trim(); if (tx) b.title = tx;
   });
 }
@@ -9239,6 +9339,34 @@ function odswiezUklad() { odswiezLiczniki(); odswiezPodsumowanie(); odswiezInspe
     fetch('/auth/me', { credentials: 'same-origin' }).then(function (o) { return o.ok ? o.json() : null; })
       .then(function (d) { if (d && d.login) odswiezKonto(d.login); }).catch(function () {});
 //@@ENDIF
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
+// ── TELEFON (E5): Brief / Wynik, konto z dolnej nawigacji ─────────────────
+function ustawWidokMobilny(w) {
+  document.body.classList.toggle('widok-wynik', w === 'wynik');
+  document.getElementById('widok-brief')?.setAttribute('aria-pressed', String(w !== 'wynik'));
+  document.getElementById('widok-wynik')?.setAttribute('aria-pressed', String(w === 'wynik'));
+  if (document.body.classList.contains('is-mobile')) window.scrollTo(0, 0);
+}
+function otworzKontoMobilne(e) {
+  if (e) e.stopPropagation();
+  toggleSettingsMenu();
+  const otwarte = document.getElementById('settings-menu').classList.contains('open');
+  document.getElementById('mnav-konto')?.setAttribute('aria-expanded', String(otwarte));
+}
+(function startTelefonu() {
+  function start() {
+    // Generowanie i gotowy tekst przelaczaja telefon na Wynik.
+    const sp = document.getElementById('spinner');
+    if (sp) new MutationObserver(function () {
+      if (getComputedStyle(sp).display !== 'none' && document.body.classList.contains('is-mobile')) ustawWidokMobilny('wynik');
+    }).observe(sp, { attributes: true, attributeFilter: ['style'] });
+    const ob = document.getElementById('out-badge');
+    if (ob) new MutationObserver(function () {
+      if (/\bready\b|\buwaga\b/.test(ob.className) && document.body.classList.contains('is-mobile')) ustawWidokMobilny('wynik');
+    }).observe(ob, { attributes: true, attributeFilter: ['class'] });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
@@ -9541,7 +9669,7 @@ function toggleSettingsMenu() {
   }
   // Pozycjonuj fixed względem przycisku
   var btn = document.querySelector('.settings-btn');
-  if (btn) {
+  if (btn && !document.body.classList.contains('is-mobile')) {
     var rect = btn.getBoundingClientRect();
     menu.style.top  = (rect.bottom + 6) + 'px';
     menu.style.right = (window.innerWidth - rect.right) + 'px';
@@ -12284,22 +12412,29 @@ document.addEventListener('keydown', e => {
 
 // ═══════════════════════════════════════════════════════════════════════
 // ── MOBILE DETECTION & INIT ─────────────────────────────────────────────
-(function initMobile() {
-  const ua = navigator.userAgent || '';
-  const isMobile = /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua)
-    || window.innerWidth < 900
-    || ('ontouchstart' in window && window.innerWidth < 1024);
-
-  if (!isMobile) return;
-
-  document.body.classList.add('is-mobile');
-  if (window.innerWidth < 480) document.body.classList.add('is-small');
-
+// Uklad telefonu wybiera szerokosc okna (matchMedia), a nie user-agent: obrot ekranu,
+// tablet i zwezone okno przelaczaja uklad na zywo. Klasa is-mobile zostaje hakiem dla JS.
+var MQ_TELEFON = (window.matchMedia && window.matchMedia('(max-width: 899px)')) || { matches: window.innerWidth < 900, addEventListener: function () {} };
+function ustawUkladTelefonu(m) {
+  const b = document.body, d = document.documentElement.style;
+  b.classList.toggle('is-mobile', m);
+  b.classList.toggle('is-small', m && window.innerWidth < 480);
   // Odblokuj scroll na poziomie html (CSS :has() może nie działać na starszym Android)
-  document.documentElement.style.overflow = 'auto';
-  document.documentElement.style.height = 'auto';
-  document.documentElement.style.overflowX = 'hidden';
-  document.documentElement.style.maxWidth = '100vw';
+  d.overflow = m ? 'auto' : ''; d.height = m ? 'auto' : ''; d.overflowX = m ? 'hidden' : ''; d.maxWidth = m ? '100vw' : '';
+}
+function poZmianieUkladu(e) {
+  ustawUkladTelefonu(e.matches);
+  closeSettingsMenu(); zamknijGrupyPaska();
+  // Panel aktywnej zakladki ma display liczony z ukladu (block na telefonie, flex na komputerze).
+  const hist = document.getElementById('tab-history')?.classList.contains('active');
+  if (e.matches) switchMobileTab(hist ? 'history' : 'generator');
+  else { document.getElementById('mobile-sidebar')?.classList.remove('open'); switchTab(hist ? 'history' : 'generator', document.querySelectorAll('.obszary .tab')[hist ? 1 : 0]); }
+}
+try { MQ_TELEFON.addEventListener('change', poZmianieUkladu); } catch (e) { try { MQ_TELEFON.addListener(poZmianieUkladu); } catch (e2) {} }
+(function initMobile() {
+  const isMobile = MQ_TELEFON.matches;
+  ustawUkladTelefonu(isMobile);
+  if (!isMobile) return;
 
   // Android file upload fix - use hidden input triggered via label/button
   // Remove the overlay input that causes blank screen, replace with button that
