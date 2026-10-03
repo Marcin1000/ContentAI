@@ -2276,6 +2276,25 @@ body:not(.is-mobile) .output-bar { padding-inline: max(var(--s-16), calc((100% -
 #gen-btn.z-samokorekta .gen-samokorekta { display: inline; }
 #gen-btn.z-samokorekta .kbd, #gen-btn:disabled .gen-samokorekta { display: none; }
 @media (prefers-reduced-motion: reduce) { .menu-przelacznik-tor { transition: none; } }
+/* Pasek Wygeneruj na telefonie: tresc briefu zanika pod nim zamiast byc przecieta w pol pola. */
+body.is-mobile .form-actions-sticky::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 32px; pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--c-panel)); }
+body.is-mobile .form-actions-sticky { border-top-color: transparent; }
+/* Konto: grupy jako kategorie (naglowek z kreska nad soba, ikony w kafelkach), nie jak zwykly tekst. */
+.settings-menu .menu-naglowek { margin: var(--s-8) var(--s-8) var(--s-4); padding: var(--s-12) 0 0; border-top: 1px solid var(--c-linia);
+  font-size: 12px; font-weight: var(--g-mocny); letter-spacing: .08em; text-transform: uppercase; color: var(--c-tekst-3); }
+.settings-menu hr + .menu-naglowek { margin-top: var(--s-4); padding-top: var(--s-8); border-top: 0; }
+.settings-menu .settings-item > span:first-child { width: 36px; height: 36px; border-radius: var(--r-md); background: var(--c-wcisk);
+  align-items: center; justify-content: center; color: var(--c-tekst-2); }
+.settings-menu .settings-item { gap: var(--s-12); }
+/* Frazy z OpenSEO bez projektu albo bez polaczenia */
+.seo-pusty { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-8); padding: var(--s-16); margin-bottom: var(--s-8);
+  border: 1px dashed var(--c-linia-2); border-radius: var(--r-md); }
+.seo-pusty[hidden], #seo-narzedzia[hidden] { display: none; }
+.seo-pusty > .ikona { color: var(--c-tekst-3); }
+.seo-pusty b { font-size: var(--t-md, 15px); color: var(--c-tekst); }
+.seo-pusty p { margin: 0; font-size: var(--t-sm); line-height: 1.5; color: var(--c-tekst-2); }
+.seo-pusty-akcje { display: flex; flex-wrap: wrap; gap: var(--s-8); margin-top: var(--s-4); }
 
 /* R3-04: Generator grafik na telefonie - nic nie wychodzi poza ekran */
 body.is-mobile #img-panel { top: 48px !important; bottom: var(--dol) !important; padding: var(--s-16) var(--s-16) var(--s-24); }
@@ -11237,11 +11256,19 @@ function zapiszSzkic() {
   if (!isNaN(ost) && history[ost]) {
     // Temat ze szkicu ma pierwszenstwo przed tematem artykulu - autor mogl
     // juz zaczac nastepny tekst.
+    // Po wejsciu do aplikacji brief jest pusty (nowy tekst), a ostatni artykul
+    // czeka w Wyniku. Temat i frazy, z ktorych ten artykul powstal, nie wracaja do
+    // briefu; zostaje tylko temat nastepnego tekstu, jesli autor zaczal go pisac.
     const pokaz = () => {
       const temat = document.getElementById('topic').value;
+      const tematArtykulu = String(history[ost].topic || '').trim();
       otworzWGeneratorze(ost);
-      if (szkic && szkic.topic) document.getElementById('topic').value = temat;
-      window.scrollTo(0, 0);
+      const nowyTemat = szkic && szkic.topic && szkic.topic.trim() !== tematArtykulu;
+      document.getElementById('topic').value = nowyTemat ? temat : '';
+      if (!nowyTemat) { keywords.length = 0; if (typeof renderKws === 'function') renderKws(); zapiszSzkic(); }
+      // Obserwatory odznaki przelaczaja telefon na Wynik przy gotowym artykule;
+      // przy samym wejsciu zostajemy na Briefie (po nich, stad setTimeout).
+      setTimeout(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); window.scrollTo(0, 0); }, 0);
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pokaz); else setTimeout(pokaz, 0);
   }
