@@ -27,7 +27,10 @@
   if (btnMotyw) {
     btnMotyw.addEventListener('click', function () {
       var nowy = motywTeraz() === 'light' ? 'dark' : 'light';
+      // bez przejść na czas zmiany: setki elementów zmieniają kolor naraz, przejścia tylko spowalniają odpowiedź
+      d.classList.add('motyw-zmiana');
       d.setAttribute('data-theme', nowy);
+      requestAnimationFrame(function () { requestAnimationFrame(function () { d.classList.remove('motyw-zmiana'); }); });
       zapisz('cai-motyw', nowy);
       etykietaMotywu();
       rysujLinie();
@@ -80,6 +83,33 @@
     $$('main section[id]').forEach(function (s) { obsSekcji.observe(s); });
   }
 
+  /* ---------- kotwice: sekcje z content-visibility mają szacowaną wysokość, więc po przewinięciu
+     do kotwicy cel bywa przesunięty (sekcje po drodze dostają prawdziwą wysokość). Po zakończeniu
+     przewijania poprawiamy pozycję bez animacji, najwyżej kilka razy. ---------- */
+  function popraw(cel, prob) {
+    var gora = cel.getBoundingClientRect().top, odstep = parseFloat(getComputedStyle(d).scrollPaddingTop) || 0;
+    if (Math.abs(gora - odstep) > 6 && prob > 0) {
+      window.scrollBy({ top: gora - odstep, left: 0, behavior: 'instant' });
+      setTimeout(function () { popraw(cel, prob - 1); }, 120);
+    }
+  }
+  function poPrzewinieciu(cel) {
+    var zrobione = false;
+    var raz = function () { if (zrobione) return; zrobione = true; window.removeEventListener('scrollend', raz); popraw(cel, 4); };
+    if ('onscrollend' in window) window.addEventListener('scrollend', raz);
+    setTimeout(raz, spokoj ? 80 : 1400);
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest ? e.target.closest('a[href*="#"]') : null;
+    if (!a || a.origin !== location.origin || a.pathname !== location.pathname || !a.hash || a.hash.length < 2) return;
+    var cel = document.getElementById(decodeURIComponent(a.hash.slice(1)));
+    if (cel) poPrzewinieciu(cel);
+  });
+  if (location.hash.length > 1) {
+    var celStart = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    if (celStart) window.addEventListener('load', function () { setTimeout(function () { popraw(celStart, 4); }, 60); });
+  }
+
   /* ---------- wejścia (raz) ---------- */
   var poWejsciu = [];
   if (maIO) {
@@ -128,6 +158,7 @@
       if (wPauzie) k += ' pauza';
       if (spokoj) k += ' bez-petli';
       if (bezPrzejsc) k += ' bez-przejsc';
+      if (wPauzie || !widoczna || document.hidden) k += ' zatrzymana';
       ramka.className = k;
       kroki.forEach(function (b, i) {
         if (i === n - 1) {
@@ -136,9 +167,10 @@
         } else b.removeAttribute('aria-current');
       });
     };
-    var zatrzymaj = function () { if (zegar) { clearTimeout(zegar); zegar = null; } };
+    var zatrzymaj = function () { if (zegar) { clearTimeout(zegar); zegar = null; } ramka.classList.add('zatrzymana'); };
     var planuj = function () {
       if (zegar || wPauzie || wstrzymana || !widoczna || document.hidden || spokoj) return;
+      ramka.classList.remove('zatrzymana');
       zegar = setTimeout(nastepny, krok === 0 ? 400 : CZAS[krok - 1]);
     };
     var nastepny = function () {
@@ -327,7 +359,7 @@
     var wyslano = $('#wyslano', form);
     var tekstPrzycisku = wyslijTekst.textContent;
     var POLA = ['imie', 'email', 'firma', 'pakiet', 'wiadomosc', 'zgoda'];
-    var KODY = { 'brak-imienia': 'data-b-imie', 'zly-email': 'data-b-email', 'za-dlugie': 'data-b-dlugie', 'zly-pakiet': 'data-b-pakiet' };
+    var KODY = { 'brak-imienia': 'data-b-imie', 'zly-email': 'data-b-email', 'za-dlugie': 'data-b-dlugie', 'zly-pakiet': 'data-b-pakiet', 'brak-zgody': 'data-b-zgoda' };
     var pole = function (n) { return form.elements[n]; };
     var tekst = function (atr) { return form.getAttribute(atr) || ''; };
     pola.disabled = false;
@@ -381,6 +413,7 @@
         pakiet: pole('pakiet').value,
         wiadomosc: pole('wiadomosc').value.trim(),
         jezyk: form.getAttribute('data-jezyk') || d.lang,
+        zgoda: pole('zgoda').checked === true,
         strona: pole('strona').value
       };
       stanWysylania(true);
@@ -399,9 +432,11 @@
         stanWysylania(false);
         if (w.status === 200 && w.cialo.ok === true) { sukces(dane.email); return; }
         if (w.status === 429) { pokazKomunikat(tekst('data-b-429')); return; }
+        if (w.status === 413) { pokazKomunikat(tekst('data-b-dlugie')); return; }
         if (w.status === 400) {
           var c = w.cialo, msg = (c.blad && KODY[c.blad]) ? tekst(KODY[c.blad]) : (typeof c.komunikat === 'string' && c.komunikat) || tekst('data-b-ogolny');
-          if (c.pole && POLA.indexOf(c.pole) >= 0 && pokazBlad(c.pole, msg)) pole(c.pole).focus();
+          var nazwaPola = c.pole || (c.blad === 'brak-zgody' ? 'zgoda' : '');
+          if (nazwaPola && POLA.indexOf(nazwaPola) >= 0 && pokazBlad(nazwaPola, msg)) pole(nazwaPola).focus();
           else pokazKomunikat(msg);
           return;
         }

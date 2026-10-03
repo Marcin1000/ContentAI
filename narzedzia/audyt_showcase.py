@@ -13,7 +13,8 @@ Ta kontrola pilnuje rzeczy, ktorych nie widac golym okiem, a ktore psuja strone 
      i dokladnie jeden naglowek h1,
   5. pod CSP: zadnych skryptow w tresci poza JSON-LD, zadnych onclick/onchange, zadnych style=,
      JSON-LD jest poprawnym JSON-em,
-  6. budzet JS: wlasne skrypty razem <= 15 kB po gzip.
+  6. budzet JS: wlasne skrypty razem <= 15 kB po gzip,
+  7. system marki: w arkuszu strony zadnego pisma ponizej 12 px; fonty strony razem <= 110 kB.
 
 Uzycie:
     python3 narzedzia/audyt_showcase.py
@@ -42,6 +43,8 @@ DOZWOLONE_LINKI = re.compile(r'^https://(app\.)?content-ai\.net(/|$|\?)')
 NIE_SIEC = re.compile(r'^https?://(www\.w3\.org|schema\.org|www\.sitemaps\.org)/')
 TEKSTOWE = ('.html', '.css', '.js', '.json', '.svg', '.txt', '.xml', '.webmanifest')
 BUDZET_JS = 15 * 1024
+BUDZET_FONTY = 110 * 1024
+MIN_PISMO = 12
 
 
 def pliki_tekstowe():
@@ -164,6 +167,18 @@ def main():
     if rozmiar > BUDZET_JS:
         bledy.append('JS strony %d B po gzip, budzet %d B' % (rozmiar, BUDZET_JS))
     print('  %s    JS strony %.1f kB po gzip (budzet 15 kB)' % ('ok' if rozmiar <= BUDZET_JS else 'BLAD', rozmiar / 1024))
+
+    # 7. minimum pisma i budzet fontow
+    przed = len(bledy)
+    for css in sorted((SHOWCASE / 'zasoby').glob('*.css')):
+        for nr, linia in enumerate(css.read_text(encoding='utf-8').splitlines(), 1):
+            for m in re.finditer(r'font-size:\s*([0-9.]+)px', linia):
+                if float(m.group(1)) < MIN_PISMO:
+                    bledy.append('zasoby/%s:%d: pismo %spx, minimum systemu marki to %d px' % (css.name, nr, m.group(1), MIN_PISMO))
+    fonty = sum(p.stat().st_size for p in (SHOWCASE / 'fonty').glob('*.woff2'))
+    if fonty > BUDZET_FONTY:
+        bledy.append('fonty strony %d B, budzet %d B' % (fonty, BUDZET_FONTY))
+    print('  %s    pismo >= %d px, fonty %.0f kB (budzet 110 kB)' % ('ok' if len(bledy) == przed else 'BLAD', MIN_PISMO, fonty / 1024))
 
     for b in bledy:
         print('  BLAD  %s' % b)
