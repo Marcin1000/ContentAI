@@ -57,7 +57,8 @@ node serwer/uzytkownicy.js prosby 20               # ostatnie prośby o dostęp 
 Hasło ma minimum 10 znaków. Login: 2-40 znaków, małe litery `a-z`, cyfry, kropka,
 podkreślnik i myślnik (baza wiedzy i liczniki trzymają login w nazwie pliku, więc dwa
 różne loginy nie mogą dać tej samej nazwy). Ostatniego admina nie da się usunąć ani
-zdegradować.
+zdegradować. `usun` kasuje razem z kontem jego prywatną bazę wiedzy i liczniki
+użycia (dane marki są wspólne dla zespołu i zostają) i wypisuje, które pliki usunął.
 
 Ekran logowania jest w barwach marki, po polsku albo angielsku (wg `Accept-Language`,
 przełącznik `?lang=en|pl`), w jasnym lub ciemnym motywie wg systemu, bez skryptów i bez

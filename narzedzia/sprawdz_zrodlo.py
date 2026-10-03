@@ -140,8 +140,9 @@ KONTROLE = [
      '<span class="progress-spinner" style="display:inline-block"></span>',
      "btn.textContent = _t('msg-spin-sections');", None),
 
+    # R3: PDF skladany z kopii artykulu (trescPdf) - ramka meta odkladana i dopisywana na koncu.
     ("F16", "eksport PDF doklejа meta-box na samym koncu",
-     "const _mbClone = _artClone.querySelector('.meta-box');", None, None),
+     "if (el.classList.contains('meta-box')) { meta = el; return; }", None, None),
 
     ("F17", "empty state jako SVG, nie znak Unicode",
      '<div class="placeholder-box"><svg viewBox="0 0 32 32"',
@@ -213,7 +214,7 @@ KONTROLE = [
     ("F27/linki", "powtorzone odnosniki usuwane maszynowo",
      "function usunPowtorzoneLinki(html) {", None, None),
     ("F27/uzycie", "artykul przechodzi przez odchudzanie linkow",
-     "art.innerHTML = dolaczZrodla(usunPowtorzoneLinki(html), zrodlaSieciowe);",
+     "const htmlArtykulu = dolaczZrodla(usunPowtorzoneLinki(html), zrodlaSieciowe);",
      "\n  art.innerHTML = html;\n  art.style.display = 'block';", None),
 
     # Wszystkie bloki doklejane jednym wywolaniem - zeby nie dalo sie dodac
@@ -480,7 +481,7 @@ KONTROLE = [
     ("F50/licznik", "liczba zapytan do sieci i przypisow policzona",
      "function statystykiWyszukiwania(dane) {", None, None),
     ("F50/wskaznik", "przebieg wyszukiwania widoczny po wygenerowaniu",
-     "zrodlaSieciowe);\n  pokazStanSieci(stanSieci, zrodlaSieciowe.length);", None, None),
+     "uporzadkujArtykul(art);\n  pokazStanSieci(stanSieci, zrodlaSieciowe.length);", None, None),
 
     # Wartosc jest ustawiana programowo, wiec nie ma data-i18n i applyLang
     # jej nie rusza: w angielskim interfejsie stalo "Web: nie szukal".
@@ -726,6 +727,56 @@ KONTROLE = [
      '<meta name="cai-konto" content="WSTAW_TUTAJ_KONTO">', None, ("proxy",)),
     ("G/zrodla", "zrodla sieciowe zerowane na starcie kazdego generowania",
      "  zrodlaSieciowe = [];\n  stanSieci = null;\n  if (API_KEY === 'WSTAW_TUTAJ_KLUCZ_API'", None, None),
+
+    # ── runda 3, grupa R3B (wykonawca logiki: eksporty, stan, oceny) ──
+    # DOCX przez html-docx-js byl HTML-em w opakowaniu (altChunk, strona Letter): Google Docs,
+    # LibreOffice i Pages pokazywaly pusty dokument.
+    ("R3B/docx", "DOCX z wlasnego generatora WordprocessingML (wszystkie trzy miejsca)",
+     "await wczytajSkrypt('pwa/lib/docx-natywny.js');", "wczytajSkrypt('pwa/lib/html-docx.js')", None),
+    ("R3B/docx-bez-altchunk", "zadne miejsce nie sklada DOCX starym sposobem",
+     None, "htmlDocx.asBlob(", None),
+    ("R3B/kopia", "wszystkie eksporty z jednej kopii artykulu",
+     "function kopiaDoEksportu(zrodlo) {", None, None),
+    ("R3B/tylko-ekran", "elementy data-tylko-ekran usuwane z eksportu i historii",
+     "kopia.querySelectorAll('[data-tylko-ekran]').forEach(function (el) { el.remove(); });", None, None),
+    ("R3B/niewidoczne", "tresc niewidoczna na ekranie nie wychodzi do klienta",
+     "const ukryte = niewidoczneWArtykule(zrodlo);", None, None),
+    ("R3B/notatki-luk", "notatka autora o luce (p[data-brak]) nie trafia do eksportu",
+     "const luki = usunNotatkiLuk(kopia);", None, None),
+    ("R3B/schowek", "schowek z kopii w chwili klikniecia, nie z tekstu sprzed edycji",
+     "const tekst = art && art.innerHTML.trim() ? tekstEksportu(kopiaDoEksportu(art)) : currentText;", None, None),
+    ("R3B/cms-kopia", "WordPress i Drupal dostaja te sama kopie co pliki",
+     "const artClone = kopiaDoEksportu(art);", None, None),
+    ("R3B/historia", "wpis historii ze zrodlami, bez elementow ekranowych, z jezykiem artykulu",
+     "html: htmlDoZapisu(art), jezyk: KODY_JEZYKOW[lang] || '' });", None, None),
+    # "(368 days ago)" pod polskim artykulem i w plikach dla klienta.
+    ("R3B/daty", "page_age przeliczane na date bezwzgledna przy generowaniu",
+     "data = dataZrodla(data, teraz);", None, None),
+    ("R3B/miesiace", "data zrodla ze stalej tablicy miesiecy (30 wrz 2025 / 30 Sep 2025)",
+     "pl: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'],", None, None),
+    ("R3B/bez-var", "data zrodla bez stylu z tokenem motywu",
+     None, "const data = z.data ? ' <span style=\"color:var(--text3)\">(' + escapeHtml(z.data)", None),
+    ("R3B/zrodla-aplikacji", "lista zrodel tylko od aplikacji (blok z modelu wypada)",
+     "const podrobione = pojemnik.querySelectorAll('.zrodla-box');", None, None),
+    ("R3B/jezyk", "etykiety i daty eksportu w jezyku artykulu, nie interfejsu",
+     "jezykArtykulu = KODY_JEZYKOW[lang] || '';", None, None),
+    ("R3B/nazwy", "nazwy plikow: transliteracja, laczniki, ciecie na granicy slowa, bez marki",
+     "function rdzenNazwyPliku(tekst) {", "slugMarki()", None),
+    ("R3B/klasy", "klasy i data-* z odpowiedzi modelu tylko z listy aplikacji",
+     "const HTML_KLASY = new Set(['meta-box', 'meta-label', 'zrodla-box', 'zrodla-label', 'zrodlo-data']);",
+     "/^data-[a-z0-9-]+$/.test(nazwa)", None),
+    ("R3B/jsonld", "kod JSON-LD nie zamyka znacznika skryptu tekstem z artykulu",
+     "JSON.stringify(schema, null, 2).replace(/</g, '\\\\u003c')", None, None),
+    ("R3B/oceny", "jeden wzor naglowka czterech ocen",
+     "function naglowekOceny(wynik, rodzaj) {", "const lbl = en ? 'AEO points' : 'pkt AEO';", None),
+    ("R3B/aeo-geo", "teksty paneli AEO i GEO ze slownika (przelaczaja sie z jezykiem)",
+     "_t('geo-skladnik-struktura')", "'Struktura / schema'", None),
+    ("R3B/statystyki", "pasek statystyk i panele poprzedniego artykulu czyszczone na starcie generowania",
+     "  // Statystyki, panele i wyniki poprzedniego artykulu nie przeciekaja do nowego (R3-20).\n  wyczyscStanArtykulu();", None, None),
+    ("R3B/fakty-stan", "stan kontroli faktow przekazywany takze w sciezce z pamieci",
+     "pokazWynikFaktow(faktyWynik, faktyStan);", "    pokazWynikFaktow(faktyWynik);\n    return;", None),
+    ("R3B/docx-blad", "blad DOCX bez surowego komunikatu wyjatku",
+     None, "powiadomBlad(_t('msg-docx-error') + ((e && e.message) || ''))", None),
 ]
 
 
