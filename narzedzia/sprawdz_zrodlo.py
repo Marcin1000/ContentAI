@@ -574,6 +574,8 @@ KONTROLE = [
      ".settings-menu .menu-naglowek { margin: var(--s-8) var(--s-8) var(--s-4); padding: var(--s-12) 0 0; border-top: 1px solid var(--c-linia);", None, None),
     ("R3/pasek-zanikanie", "pasek Wygeneruj na telefonie: tresc zanika zamiast byc przecieta",
      "body.is-mobile .form-actions-sticky::before {", None, None),
+    ("R3/dotyk-bez-hover", "ekrany dotykowe: podswietlenie pozycji menu nie zostaje po dotknieciu",
+     "@media (hover: none) {\n  .settings-item:hover:not(:focus-visible)", None, None),
     ("R3/wytyczne-w-briefie", "Dodatkowe wytyczne w glownym briefie, przed Zrodlami (poza zaawansowanymi)",
      "re:id=\"extra\"[\\s\\S]{0,2000}<div class=\"field zrodla\">", None, None),
     ("R3/ton-w-briefie", "Ton i Jezyk w glownym briefie, nie w zaawansowanych",
