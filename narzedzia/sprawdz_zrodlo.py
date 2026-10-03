@@ -524,6 +524,14 @@ KONTROLE = [
     ("F49/bezserwera", "warianty bez serwera nie wolaja jego endpointow",
      None, "wczytajMarkeZSerwera", ("keys", "owner")),
 
+    # ── runda 2 ──
+    ("R2/premium-uciety", "ucieta samokorekta zostawia oryginal i informuje",
+     "if (impData.stop_reason === 'max_tokens') {", None, None),
+    ("R2/wyloguj-sekrety", "wylogowanie usuwa klucze i hasla CMS konta",
+     "var SEKRETY_KONTA = /^(cai_key_|cai_klucz_)|^(cai-wp|cai-drupal)$/;", None, ("proxy",)),
+    ("R2/brief-telefon", "menu zadan briefu na telefonie jako arkusz od dolu",
+     "body.is-mobile #grupa-brief-menu, body.is-mobile #grupa-widocznosc-menu { top: auto; bottom: 0;", None, None),
+
     # ── warstwa reskinu ──
     # Splash trzymal gotowa aplikacje jeszcze 2,4 s (stale 1900 ms + zanikanie) i zjadal
     # pierwsze dotkniecie. Motyw i jezyk ustawia teraz skrypt w <head>, wiec nie ma czego

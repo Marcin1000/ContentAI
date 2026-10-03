@@ -2196,6 +2196,16 @@ body.is-mobile .start-poz-meta { display: none; }
 body.is-mobile .szkielet-kartka { padding: var(--s-24) var(--s-20); border-radius: var(--r-md); }
 body.is-mobile .spinner-wrap { padding-top: var(--s-16); min-height: 0; }
 }
+@layer widoki {
+/* R2: menu zadan briefu na telefonie jako arkusz od dolu (selektor ID bil regule arkusza) */
+body.is-mobile #grupa-brief-menu, body.is-mobile #grupa-widocznosc-menu { top: auto; bottom: 0; left: 0; right: 0; min-width: 0; width: auto; }
+}
+@layer widoki {
+body.is-mobile:has(#audio-panel[style*="block"]) .mobilny-widok, body.is-mobile:has(#img-panel[style*="block"]) .mobilny-widok { display: none; }
+}
+@layer widoki {
+body.is-mobile .form-actions-sticky:has(.grupa-menu.open), body.is-mobile .pasek-akcje:has(.grupa-menu.open) { z-index: 470; }
+}
 </style>
 </head>
 <body>
@@ -2716,21 +2726,6 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
           </div>
 
-          <!-- Brief overlay backdrop -->
-          <div class="brief-overlay" id="brief-overlay" onclick="closeBriefPanel()"></div>
-
-          <!-- Panel Briefu -->
-          <div class="brief-panel" id="brief-panel">
-            <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-              <strong class="tekst-zwykly" data-i18n="brief-title">Brief artykułu</strong>
-              <div style="display:flex;gap:8px">
-                <button class="btn-secondary btn-maly" onclick="applyBriefKeywords()" data-i18n="brief-use-kw" data-ikona="check"><svg class="ikona" aria-hidden="true"><use href="#i-check"/></svg>Użyj słów kluczowych</button>
-                <button class="seo-close" onclick="closeBriefPanel()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
-              </div>
-            </div>
-            <div style="overflow-y:auto;flex:1" id="brief-content"><div class="seo-loading" data-i18n="msg-loading-brief">Analizuję temat i bazę wiedzy…</div></div>
-          </div>
-
           <!-- Panel Przeróbek -->
           <div class="repurpose-panel" id="repurpose-panel">
             <div class="repurpose-head">
@@ -3041,6 +3036,23 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
   </div>
 </div>
+
+<!-- Panel briefu poza kolumna wyniku: na telefonie kolumna wyniku jest ukryta w widoku Brief. -->
+<!-- Brief overlay backdrop -->
+<div class="brief-overlay" id="brief-overlay" onclick="closeBriefPanel()"></div>
+
+<!-- Panel Briefu -->
+<div class="brief-panel" id="brief-panel">
+  <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <strong class="tekst-zwykly" data-i18n="brief-title">Brief artykułu</strong>
+    <div style="display:flex;gap:8px">
+      <button class="btn-secondary btn-maly" onclick="applyBriefKeywords()" data-i18n="brief-use-kw" data-ikona="check"><svg class="ikona" aria-hidden="true"><use href="#i-check"/></svg>Użyj słów kluczowych</button>
+      <button class="seo-close" onclick="closeBriefPanel()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </div>
+  </div>
+  <div style="overflow-y:auto;flex:1" id="brief-content"><div class="seo-loading" data-i18n="msg-loading-brief">Analizuję temat i bazę wiedzy…</div></div>
+</div>
+
 
 <!-- URL MODAL -->
 <div class="overlay" id="url-modal" onclick="if(event.target===this)closeUrlModal()">
@@ -3854,7 +3866,21 @@ function pokazPowiadomienie(tekst, rodzaj, czas) {
 // Wylogowanie konczy sesje na serwerze. Dane w przegladarce zostaja w miejscu
 // tego konta (magazyn), wiec nastepna osoba ich nie zobaczy, a po ponownym
 // zalogowaniu historia jest na swoim miejscu.
+// Sekrety konta (klucze API, hasla CMS) znikaja z przegladarki przy wylogowaniu -
+// historia, szkic i ustawienia zostaja na swoim miejscu.
+var SEKRETY_KONTA = /^(cai_key_|cai_klucz_)|^(cai-wp|cai-drupal)$/;
+function usunSekretyKonta() {
+  try {
+    var pref = magazyn.konto ? 'u:' + magazyn.konto + ':' : '';
+    for (var i = localStorage.length - 1; i >= 0; i--) {
+      var k = localStorage.key(i);
+      if (!k || (pref && k.indexOf(pref) !== 0)) continue;
+      if (SEKRETY_KONTA.test(pref ? k.slice(pref.length) : k)) localStorage.removeItem(k);
+    }
+  } catch (e) { console.warn('[wyloguj] nie usunieto sekretow:', e && e.name); }
+}
 function wyloguj() {
+  usunSekretyKonta();
   // POST, nie przejscie pod adres: wylogowania nie da sie wywolac obrazkiem
   // ani linkiem z obcej strony.
   const f = document.createElement('form');
@@ -4478,6 +4504,7 @@ var I18N = {
     'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Część dokumentów z bazy nie przetrwa odświeżenia - przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
     'ver-poprawiony-hybryda':'Poprawiony SEO+AIO','ver-poprawiony-aio':'Poprawiony AIO','ver-poprawiony-seo':'Poprawiony SEO','ver-wariant':'Wariant',
     'msg-artykul-uciety':'Tekst został ucięty na limicie długości. Zmniejsz długość albo wygeneruj ponownie.',
+    'msg-premium-uciety':'Samokorekta nie zmieściła się w limicie długości, więc zostaje tekst przed korektą. Spróbuj krótszej długości.',
     'msg-no-content':'Brak treści',
     'msg-open-link':'Otwórz →',
     'msg-refresh':'odśwież',
@@ -4973,6 +5000,7 @@ var I18N = {
     'msg-magazyn-pelny':'Browser storage is full. Some knowledge base documents will not survive a refresh - move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
     'ver-poprawiony-hybryda':'Improved SEO+AIO','ver-poprawiony-aio':'Improved AIO','ver-poprawiony-seo':'Improved SEO','ver-wariant':'Variant',
     'msg-artykul-uciety':'The text was cut off at the length limit. Reduce the length or generate again.',
+    'msg-premium-uciety':'The self-review did not fit within the length limit, so the text before the review stays. Try a shorter length.',
     'msg-no-content':'No content',
     'msg-refresh':'refresh',
     'msg-open-link':'Open →',
@@ -6532,8 +6560,10 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
       })
     });
     const evalData = await evalRes.json();
+    // Ucieta ocena to niepelna lista uwag - lepiej nie poprawiac niz poprawiac po polowie.
+    if (evalData.stop_reason === 'max_tokens') { console.warn('[premium] ocena ucieta na limicie'); return originalHtml; }
     evalResult = parsujJsonModelu((evalData.content||[]).map(b=>b.text||'').join(''));
-  } catch(e) {}
+  } catch(e) { console.warn('[premium] ocena nie powiodla sie:', e && e.message); }
 
   if (!evalResult || evalResult.score >= 82 || !evalResult.issues?.length) {
     // Artykuł już jest dobry - nie poprawiaj
@@ -6567,8 +6597,14 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
       })
     });
     const impData = await impRes.json();
+    // Poprawka ucieta na limicie dlugosci jest krotsza od oryginalu (bez meta, bez konca) -
+    // zostaje oryginal, a autor dostaje informacje, zamiast cicho gubic pol tekstu.
+    if (impData.stop_reason === 'max_tokens') {
+      pokazPowiadomienie(_t('msg-premium-uciety'), 'uwaga');
+      return originalHtml;
+    }
     improved = (impData.content||[]).map(b=>b.text||'').join('').replace(/```html\s*/i,'').replace(/```\s*$/i,'').trim();
-  } catch(e) {}
+  } catch(e) { console.warn('[premium] poprawa nie powiodla sie:', e && e.message); }
 
   return improved || originalHtml;
 }

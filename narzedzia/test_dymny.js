@@ -29,11 +29,22 @@ let chromium;
 try { ({ chromium } = require('playwright')); }
 catch (e) { console.error('Brak pakietu playwright: npm install --no-save playwright && npx playwright install chromium'); process.exit(1); }
 
-// Atrapa na wolnym porcie, zanim modul przeczyta konfiguracje.
-process.env.ATRAPA_PORT = process.env.ATRAPA_PORT || '9299';
-const atrapa = require('./atrapa/dostawcy.js');
-const PORT_ATRAPY = Number(process.env.ATRAPA_PORT);
-const PORT_SERWERA = Number(process.env.CAI_TEST_PORT || 3998);
+// Porty z ATRAPA_PORT / CAI_TEST_PORT albo wolne, wskazane przez system (rownolegle
+// przebiegi nie koliduja). Atrapa czyta port przy require, wiec ladujemy ja po wyborze.
+let atrapa, PORT_ATRAPY, PORT_SERWERA;
+function wolnyPort() {
+  return new Promise((ok, zle) => {
+    const srv = require('net').createServer();
+    srv.once('error', zle);
+    srv.listen(0, '127.0.0.1', () => { const p = srv.address().port; srv.close(() => ok(p)); });
+  });
+}
+async function przygotujPorty() {
+  PORT_ATRAPY = Number(process.env.ATRAPA_PORT) || await wolnyPort();
+  PORT_SERWERA = Number(process.env.CAI_TEST_PORT) || await wolnyPort();
+  process.env.ATRAPA_PORT = String(PORT_ATRAPY);
+  atrapa = require('./atrapa/dostawcy.js');
+}
 const ZRZUTY = process.env.CAI_TEST_ZRZUTY || path.join(os.tmpdir(), 'cai-test-zrzuty');
 const HASLO = 'test-haslo-123';
 
@@ -41,6 +52,13 @@ let bledow = 0;
 function wynik(nazwa, ok, szczegol) {
   console.log((ok ? 'ok    ' : 'BLAD  ') + nazwa + (!ok && szczegol ? '  [' + szczegol + ']' : ''));
   if (!ok) bledow++;
+}
+
+// Limit czasu kroku nie przerywa testu, ale konczy sie BLEDEM z nazwa kroku - wczesniej
+// polkniety limit przenosil czerwien na nastepny scenariusz.
+async function krok(nazwa, obietnica) {
+  try { await obietnica; return true; }
+  catch (e) { wynik('krok: ' + nazwa, false, (e && e.message || String(e)).split('\n')[0]); return false; }
 }
 
 function czekajNaPort(port, ms) {
@@ -157,6 +175,14 @@ async function wariantKeys(b) {
   r = await generuj(s, 'Temat ze wstepem [atrapa:wstep]');
   wynik('keys: zapowiedz wyszukiwania nie trafia nad tytul', !/Wyszukam|I will search/.test(r.poczatek.slice(0, 80)), r.poczatek.slice(0, 60));
 
+  // Ucieta samokorekta (max_tokens przy poprawie) nie zastepuje pelnego artykulu.
+  await s.fill('#topic', 'Temat premium [atrapa:ocena=55@ocena-premium] [atrapa:max-tokens@poprawa]');
+  await s.evaluate(() => { document.getElementById('use-web').checked = true; premiumMode = true; generate(true); });
+  await krok('generowanie z samokorekta', s.waitForFunction(() => !document.getElementById('gen-btn').disabled && getComputedStyle(document.getElementById('spinner')).display === 'none', null, { timeout: 60000 }));
+  const pr = await s.evaluate(() => { premiumMode = false; const a = document.getElementById('article');
+    return { h2: a.querySelectorAll('h2').length, meta: !!a.querySelector('.meta-box'), info: [...document.querySelectorAll('.powiadomienie')].map(p => p.textContent).join(' ') }; });
+  wynik('keys: ucieta samokorekta zostawia oryginal i informuje', pr.h2 >= 3 && pr.meta && /limicie|length limit/.test(pr.info), JSON.stringify(pr));
+
   // Escape na swiezej stronie nie otwiera Generatora grafik; okna maja role i fokus.
   await s.keyboard.press('Escape');
   await s.keyboard.press('Escape');
@@ -180,7 +206,7 @@ async function wariantKeys(b) {
   await s.click('#gen-btn');
   await s.waitForTimeout(1500);
   await s.click('#spin-stop');
-  await czekajNaKoniec(s, 8000).catch(() => {});
+  await krok('Przerwij konczy generowanie', czekajNaKoniec(s, 8000));
   const po = await s.evaluate(() => ({ odz: document.getElementById('out-badge').className, h: history.length, temat: document.getElementById('topic').value }));
   wynik('keys: Przerwij konczy generowanie bez wpisu w historii', po.h === histPrzed && /Dlugie/.test(po.temat) && !/ready/.test(po.odz), JSON.stringify(po));
 
@@ -188,7 +214,7 @@ async function wariantKeys(b) {
   await s.fill('#topic', 'Temat w trakcie pisania');
   await s.waitForTimeout(600);
   await s.reload({ waitUntil: 'load' });
-  await s.waitForTimeout(1000);
+  await krok('szkic i artykul po odswiezeniu', s.waitForFunction(() => document.getElementById('topic').value !== '' && getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: 8000 }));
   const st = await s.evaluate(() => ({ t: document.getElementById('topic').value, art: getComputedStyle(document.getElementById('article')).display }));
   wynik('keys: szkic formularza i artykul wracaja po odswiezeniu', st.t === 'Temat w trakcie pisania' && st.art === 'block', JSON.stringify(st));
   wynik('keys: bez bledow JavaScript', !bledy.length, bledy.join(' | '));
@@ -242,7 +268,7 @@ async function wariantProxy(b) {
   const r = await generuj(s, 'Artykul konta premium');
   wynik('proxy: artykul gotowy', /ready/.test(r.odznaka) && r.h2 >= 3, JSON.stringify(r));
   await s.evaluate(() => runRepurpose('linkedin'));
-  await s.waitForFunction(() => { const o = document.getElementById('repurpose-out'); return o && o.value && o.value.length > 20; }, null, { timeout: 30000 }).catch(() => {});
+  await krok('przerobka LinkedIn', s.waitForFunction(() => { const o = document.getElementById('repurpose-out'); return o && o.value && o.value.length > 20; }, null, { timeout: 30000 }));
   const rp = await s.evaluate(() => (document.getElementById('repurpose-out') || {}).value || '');
   wynik('proxy: przerobka LinkedIn dziala bez klucza w przegladarce', rp.length > 20 && !/Brak klucza|Missing API key/.test(rp), rp.slice(0, 60));
 
@@ -251,12 +277,16 @@ async function wariantProxy(b) {
   await s.fill('#m-name', 'Cennik montazu');
   await s.fill('#m-content', 'Montaz kosztuje od 18 do 35 tys. zl. Gwarancja 7 lat.');
   await s.evaluate(() => saveText());
-  await s.waitForFunction(() => (window._bazaSerwerLiczba || 0) > 0, null, { timeout: 10000 }).catch(() => {});
+  await krok('dokument w bazie serwera', s.waitForFunction(() => (window._bazaSerwerLiczba || 0) > 0, null, { timeout: 10000 }));
   wynik('proxy: dokument z panelu trafia do bazy na serwerze', await s.evaluate(() => window._bazaSerwerLiczba === 1 && docs.length === 0));
 
   wynik('proxy: pozycja Wyloguj sie w menu', !!(await s.$('[onclick="wyloguj()"]')));
+  await s.evaluate(() => { magazyn.setItem('cai_klucz_anthropic', 'sk-ant-wlasny'); magazyn.setItem('cai-wp', '{"url":"https://x.pl","pass":"tajne"}'); zapiszSzkic(); });
   await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.evaluate(() => wyloguj())]);
   wynik('proxy: wylogowanie wraca do ekranu logowania', !!(await s.$('input[name="login"]')));
+  const mag = await s.evaluate(() => Object.keys(localStorage));
+  wynik('proxy: wylogowanie usuwa klucze i hasla CMS konta, szkic zostaje',
+    !mag.some((n) => /cai_klucz_|cai_key_|cai-wp$|cai-drupal$/.test(n)) && mag.some((n) => /cai_szkic$/.test(n)), mag.join(','));
   await s.close();
   s = await zaloguj(k, 'standard');
   wynik('proxy: inne konto nie widzi historii poprzedniego', await s.evaluate(() => history.length === 0));
@@ -267,6 +297,7 @@ async function wariantProxy(b) {
 }
 
 (async () => {
+  await przygotujPorty();
   const serwerAtrapy = atrapa.uruchom();
   const kat = przygotujDane();
   const serwer = uruchomSerwer(kat);
