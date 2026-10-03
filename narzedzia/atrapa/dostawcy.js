@@ -333,7 +333,9 @@ function wynikiWyszukiwania(zapytanie, los, ile = 5) {
       url: s.url,
       title: s.title,
       encrypted_content: zaszyfrowane(120),
-      page_age: d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      // Produkcja podaje page_age na dwa sposoby: data ("September 30, 2025") albo wiek
+      // strony ("368 days ago"). Na zmiane, zeby testy widzialy oba (R3-28).
+      page_age: i % 2 ? dni + ' days ago' : d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       _cytat: s.cytat,
     });
   }

@@ -104,7 +104,7 @@
         <li><b>{{t:dowod-1-b}}</b><span>{{t:dowod-1-p}}</span></li>
         <li><b>{{t:dowod-2-b}}</b><span>{{t:dowod-2-p}}</span></li>
         {# liczba testow: node serwer/testy.js (CI, kontrola.yml); zmienic tutaj przy zmianie liczby testow #}
-        <li><b class="licz" data-cel="443">443</b><span>{{t:dowod-3-p}}</span></li>
+        <li><b class="licz" data-cel="450">450</b><span>{{t:dowod-3-p}}</span></li>
         <li><b>0</b><span>{{t:dowod-4-p}}</span></li>
         <li><b>PL · EN · DE · CS</b><span>{{t:dowod-5-p}}</span></li>
       </ul>
@@ -698,9 +698,10 @@
 
 {{>stopka}}
 
+{# Telefon: jeden główny przycisk; „Zaloguj się" jest stale w nagłówku. Pasek pojawia się po minięciu hero,
+   chowa się przy przewijaniu w górę (wtedy część przeglądarek pokazuje własny przycisk „do góry"), przy formularzu i stopce. #}
 <div class="pasek-cta" id="pasek-cta" role="region" aria-label="{{a:mob-bar}}" hidden>
-  <a class="btn btn-drugi" href="{{$app}}">{{t:nav-login}}</a>
-  <a class="btn btn-glowny" href="#dostep">{{t:nav-cta}}</a>
+  <a class="btn btn-glowny" href="#dostep">{{t:nav-cta}}<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
 </div>
 </body>
 </html>

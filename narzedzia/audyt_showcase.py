@@ -14,7 +14,9 @@ Ta kontrola pilnuje rzeczy, ktorych nie widac golym okiem, a ktore psuja strone 
   5. pod CSP: zadnych skryptow w tresci poza JSON-LD, zadnych onclick/onchange, zadnych style=,
      JSON-LD jest poprawnym JSON-em,
   6. budzet JS: wlasne skrypty razem <= 15 kB po gzip,
-  7. system marki: w arkuszu strony zadnego pisma ponizej 12 px; fonty strony razem <= 110 kB.
+  7. system marki: w arkuszu strony zadnego pisma ponizej 12 px; fonty strony razem <= 110 kB,
+  8. zadnych znacznikow roboczych na opublikowanych stronach: [DO UZUPELNIENIA ...], TO BE COMPLETED,
+     TODO, TBD, FIXME ani nawiasow-znacznikow w rodzaju [WSTAW ...] - to notatki dla autora, nie dla czytelnika.
 
 Uzycie:
     python3 narzedzia/audyt_showcase.py
@@ -44,6 +46,15 @@ NIE_SIEC = re.compile(r'^https?://(www\.w3\.org|schema\.org|www\.sitemaps\.org)/
 TEKSTOWE = ('.html', '.css', '.js', '.json', '.svg', '.txt', '.xml', '.webmanifest')
 BUDZET_JS = 15 * 1024
 BUDZET_FONTY = 110 * 1024
+# Znaczniki robocze, ktore nie moga trafic na opublikowana strone (wielkosc liter w nawiasie ma znaczenie:
+# [DO UZUPELNIENIA], [WSTAW ADRES], [TBD]; zwykly tekst w nawiasie, np. JSON-LD, nie pasuje).
+ZNACZNIKI_ROBOCZE = [
+    (re.compile(r'UZUPE[\u0141L]NI'), 'UZUPELNI...'),
+    (re.compile(r'TO BE COMPLETED'), 'TO BE COMPLETED'),
+    (re.compile(r'\[\s*(do\s+uzupe|to\s+be\s+completed|todo|tbd|wstaw|uzupe)', re.I), '[do uzupelnienia ...]'),
+    (re.compile(r'\b(TODO|TBD|FIXME|XXX)\b'), 'TODO/TBD/FIXME'),
+    (re.compile(r'\[[A-Z\u0104\u0106\u0118\u0141\u0143\u00d3\u015a\u0179\u017b][A-Z\u0104\u0106\u0118\u0141\u0143\u00d3\u015a\u0179\u017b0-9 ,.:/()-]{2,}\]'), 'nawias-znacznik [WIELKIE LITERY]'),
+]
 MIN_PISMO = 12
 
 
@@ -160,6 +171,18 @@ def main():
             continue
         sprawdz_strone(plik.read_text(encoding='utf-8'), nazwa, jezyk, kanoniczny, bledy)
     print('  %s    lang, title, description, canonical, hreflang, jedno h1, CSP' % ('ok' if len(bledy) == przed else 'BLAD'))
+
+    # 8. znaczniki robocze na opublikowanych stronach
+    przed = len(bledy)
+    for nazwa in STRONY:
+        plik = SHOWCASE / nazwa
+        if not plik.is_file():
+            continue
+        tresc = plik.read_text(encoding='utf-8')
+        for wzor, opis in ZNACZNIKI_ROBOCZE:
+            for m in wzor.finditer(tresc):
+                bledy.append('%s: znacznik roboczy (%s): ...%s...' % (nazwa, opis, tresc[max(0, m.start() - 30):m.end() + 30].replace('\n', ' ')))
+    print('  %s    bez znacznikow roboczych (DO UZUPELNIENIA, TODO, [WSTAW ...])' % ('ok' if len(bledy) == przed else 'BLAD'))
 
     # 6. budzet JS
     js = sorted((SHOWCASE / 'zasoby').glob('*.js'))
