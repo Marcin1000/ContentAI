@@ -16,12 +16,40 @@
 
 'use strict';
 
+const fs = require('node:fs');
+const path = require('node:path');
 const readline = require('node:readline');
 const plany = require('./plany.js');
 const prosby = require('./prosby.js');
+const baza = require('./baza.js');
 const {
-  zahaszuj, ROLE, PLIK_UZYTKOWNIKOW, wczytajUzytkownikow, zapiszUzytkownikow, poprawnyLogin,
+  zahaszuj, ROLE, PLIK_UZYTKOWNIKOW, wczytajUzytkownikow, zapiszUzytkownikow, poprawnyLogin, KONF,
 } = require('./server.js');
+
+// Dane konta na dysku: prywatna baza wiedzy (u-<login>.json) i liczniki uzycia
+// (<login>.json) razem z kopiami uszkodzonych wersji i plikami tymczasowymi zapisu.
+// Bez tego plik zostawal po usunieciu konta, a nowe konto o tym samym loginie
+// przejmowalo cudza baze wiedzy (R3-38). Dane marki (marka.json) sa wspolne
+// dla zespolu, wiec zostaja. Zwraca liste usunietych plikow.
+function usunDaneKonta(login) {
+  const glowne = [
+    path.join(KONF.katalogBazy, baza.nazwaPliku('prywatna', login)),
+    plany.plikUzycia(KONF.katalogUzycia, login),
+  ];
+  const usuniete = [];
+  for (const plik of glowne) {
+    const katalog = path.dirname(plik);
+    const nazwa = path.basename(plik);
+    let wpisy = [];
+    try { wpisy = fs.readdirSync(katalog); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+    for (const w of wpisy) {
+      if (w !== nazwa && !w.startsWith(nazwa + '.uszkodzony-') && !w.startsWith('.' + nazwa + '.tmp-')) continue;
+      fs.unlinkSync(path.join(katalog, w));
+      usuniete.push(path.join(katalog, w));
+    }
+  }
+  return usuniete;
+}
 
 function pytaj(pytanie, ukryte = false) {
   return new Promise((resolve) => {
@@ -192,6 +220,14 @@ async function main() {
       // pliku - brak konta to koniec dostepu, od razu i bez restartu.
       zapiszUzytkownikow(lista.filter((x) => x.login !== login));
       console.log(`Usunięto konto "${login}". Dostęp odcięty natychmiast, bez restartu.`);
+      const usuniete = usunDaneKonta(login);
+      if (usuniete.length) {
+        console.log('Usunięte dane konta (prywatna baza wiedzy, liczniki użycia):');
+        usuniete.forEach((p) => console.log(`  - ${p}`));
+      } else {
+        console.log('Konto nie miało na serwerze prywatnej bazy wiedzy ani liczników użycia.');
+      }
+      console.log('Dane marki są wspólne dla zespołu i zostają.');
       return;
     }
 

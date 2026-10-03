@@ -113,6 +113,25 @@ jobs:
           npx playwright install --with-deps chromium
           CAI_TEST_ZRZUTY=test-zrzuty node narzedzia/test_dymny.js
 
+      # Stan miedzy artykulami (statystyki, Fakty, przerobki, JSON-LD, historia)
+      # i komunikaty bledow dostawcy po polsku i angielsku.
+      - name: Aplikacja - stan miedzy generowaniami i komunikaty bledow
+        run: CAI_TEST_ZRZUTY=test-zrzuty node narzedzia/test_stan.js
+
+      # Pobiera DOCX, PDF i TXT: prawdziwy DOCX w A4 (bez altChunk), brak
+      # "days ago" i var(--), nazwy plikow w ASCII, sekcja zrodel. pymupdf
+      # wlacza dodatkowo kontrole tekstu i metadanych PDF.
+      - name: Aplikacja - eksporty PDF, DOCX i TXT
+        run: |
+          pip install --quiet pymupdf
+          CAI_TEST_ZRZUTY=test-zrzuty node narzedzia/test_eksport.js
+
+      # Uklad na 5 rozmiarach (320 do 1920): brak poziomego przewijania,
+      # uciec, nakladania paskow, celow dotyku ponizej 44 px; telefon takze
+      # z tekstem powiekszonym o 20%, jak w Samsung Internet.
+      - name: Aplikacja - uklad na telefonie, tablecie i komputerze
+        run: node narzedzia/test_uklad.js --ci
+
       - name: Zrzuty z nieudanego testu dymnego
         if: failure()
         uses: actions/upload-artifact@v4
