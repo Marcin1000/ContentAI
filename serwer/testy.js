@@ -236,6 +236,7 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
     testyPlanow();
     await testyStrony();
     testyMarki();
+    testyUsuwaniaKonta();
     await testyPoprawek();
 
     console.log(`\n  ${zaliczone} zaliczonych, ${bledy.length} bledow\n`);
@@ -1244,6 +1245,60 @@ function testyMarki() {
 // tresci, SSRF, limity czasu i zerwane polaczenia, naglowki, CSRF, koszt,
 // drobne poprawki logowania, prosby o dostep, brama OpenSEO z pakietem.
 // Czesc HTTP stawia prawdziwy serwer aplikacji na porcie 0 z atrapa dostawcy.
+
+// R3-38: `uzytkownicy.js usun` kasuje tez dane konta na dysku. Wczesniej zostawala
+// prywatna baza wiedzy i liczniki uzycia, a nowe konto o tym samym loginie
+// przejmowalo cudza baze (it-bezpieczenstwo).
+function testyUsuwaniaKonta() {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const { spawnSync } = require('node:child_process');
+
+  console.log('\n  usuwanie konta z danymi (uzytkownicy.js usun)');
+  const kat = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-usun-'));
+  try {
+    const kBaza = path.join(kat, 'baza');
+    const kUzycie = path.join(kat, 'uzycie');
+    fs.mkdirSync(kBaza);
+    fs.mkdirSync(kUzycie);
+    const konta = ['admin', 'jan', 'janek'].map((login) => Object.assign(
+      { login, rola: login === 'admin' ? 'admin' : 'uzytkownik', plan: 'standard', utworzony: '2026-01-01' }, zahaszuj('test-haslo-123')));
+    fs.writeFileSync(path.join(kat, 'uzytkownicy.json'), JSON.stringify(konta));
+    const pliki = {
+      bazaJana: path.join(kBaza, 'u-jan.json'),
+      kopiaBazyJana: path.join(kBaza, 'u-jan.json.uszkodzony-2026-01-01T00-00-00-000Z'),
+      tmpBazyJana: path.join(kBaza, '.u-jan.json.tmp-1-abcd'),
+      uzycieJana: path.join(kUzycie, 'jan.json'),
+      bazaJanka: path.join(kBaza, 'u-janek.json'),
+      uzycieJanka: path.join(kUzycie, 'janek.json'),
+      wspolna: path.join(kBaza, 'wspolna.json'),
+      marka: path.join(kat, 'marka.json'),
+    };
+    Object.values(pliki).forEach((p) => fs.writeFileSync(p, '[]'));
+    const env = Object.assign({}, process.env, {
+      CAI_UZYTKOWNICY: path.join(kat, 'uzytkownicy.json'), CAI_BAZA: kBaza, CAI_UZYCIE: kUzycie,
+      CAI_MARKA: kat, CAI_SEKRET_PLIK: path.join(kat, 'sekret'), CAI_PROSBY: path.join(kat, 'prosby.jsonl'),
+    });
+    const r = spawnSync(process.execPath, [path.join(__dirname, 'uzytkownicy.js'), 'usun', 'jan'], { env, encoding: 'utf8' });
+    const po = JSON.parse(fs.readFileSync(path.join(kat, 'uzytkownicy.json'), 'utf8')).map((u) => u.login);
+    sprawdz('usun: konto znika z pliku kont', r.status === 0 && po.join(',') === 'admin,janek');
+    sprawdz('usun: prywatna baza wiedzy konta usunieta (z kopia uszkodzonej i plikiem tymczasowym)',
+      !fs.existsSync(pliki.bazaJana) && !fs.existsSync(pliki.kopiaBazyJana) && !fs.existsSync(pliki.tmpBazyJana));
+    sprawdz('usun: liczniki uzycia konta usuniete', !fs.existsSync(pliki.uzycieJana));
+    sprawdz('usun: dane innego konta o podobnym loginie, baza wspolna i marka zostaja',
+      fs.existsSync(pliki.bazaJanka) && fs.existsSync(pliki.uzycieJanka) && fs.existsSync(pliki.wspolna) && fs.existsSync(pliki.marka));
+    sprawdz('usun: komunikat wymienia usuniete pliki i mowi, ze marka zostaje',
+      r.stdout.includes(pliki.bazaJana) && r.stdout.includes(pliki.uzycieJana) && /marki są wspólne/.test(r.stdout));
+    const r2 = spawnSync(process.execPath, [path.join(__dirname, 'uzytkownicy.js'), 'usun', 'janek'], { env, encoding: 'utf8' });
+    sprawdz('usun: drugie konto tez czysci swoje dane', r2.status === 0 && !fs.existsSync(pliki.bazaJanka) && !fs.existsSync(pliki.uzycieJanka));
+    fs.writeFileSync(path.join(kat, 'uzytkownicy.json'), JSON.stringify(konta.slice(0, 1).concat([Object.assign({}, konta[1], { login: 'ola' })])));
+    const r3 = spawnSync(process.execPath, [path.join(__dirname, 'uzytkownicy.js'), 'usun', 'ola'], { env, encoding: 'utf8' });
+    sprawdz('usun: konto bez danych - komunikat, ze nie bylo czego usuwac', r3.status === 0 && /nie miało na serwerze/.test(r3.stdout));
+  } finally {
+    fs.rmSync(kat, { recursive: true, force: true });
+  }
+}
 
 async function testyPoprawek() {
   const fs = require('node:fs');

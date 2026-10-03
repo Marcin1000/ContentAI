@@ -43,7 +43,6 @@ licences and are NOT covered by the notice above:
                                     MIT, per the notice in the file itself
     mammoth.browser.min.js          mammoth.js
     xlsx.full.min.js                SheetJS
-    html-docx.js                    html-docx-js
 
   app/pwa/fonty/, showcase/fonty/  Schibsted Grotesk, Literata and JetBrains
                                     Mono, SIL Open Font License 1.1 (licence
