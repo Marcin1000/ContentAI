@@ -2206,6 +2206,44 @@ body.is-mobile:has(#audio-panel[style*="block"]) .mobilny-widok, body.is-mobile:
 @layer widoki {
 body.is-mobile .form-actions-sticky:has(.grupa-menu.open), body.is-mobile .pasek-akcje:has(.grupa-menu.open) { z-index: 470; }
 }
+@layer widoki {
+/* R2: zamkniety panel bazy z telefonu nie lapie Tab (byl tylko przesuniety poza ekran) */
+.mobile-sidebar-panel { visibility: hidden; transition: transform var(--m-4) var(--e-std), visibility 0s linear var(--m-4); }
+.mobile-sidebar-panel.open { visibility: visible; transition: transform var(--m-4) var(--e-std), visibility 0s; }
+body:not(.is-mobile) .mobile-sidebar-panel { display: none; }
+/* komunikat bledu generowania z ponowieniem */
+.komunikat-bledu { display: grid; gap: var(--s-12); justify-items: start; max-width: calc(var(--tresc-max) + 2 * var(--s-56, 56px)); margin: 0 auto;
+  padding: var(--s-20); border: 1px solid var(--c-blad-ramka); border-radius: var(--r-md); background: var(--c-blad-tlo); color: var(--c-tekst);
+  font-family: var(--f-ui); font-size: var(--t-md); line-height: 1.55; }
+.komunikat-bledu strong { color: var(--c-blad); }
+.komunikat-bledu p { margin: 0; font-family: var(--f-ui); font-size: var(--t-md); }
+.ponow-generowanie.btn-generate { width: auto; }
+}
+@layer widoki {
+/* R2: cele dotyku >= 44 px na telefonie */
+body.is-mobile .grupa-menu .btn-secondary, body.is-mobile .grupa-menu .repurpose-item, body.is-mobile .grupa-menu .poz-menu,
+body.is-mobile .settings-item, body.is-mobile .img-fmt-btn, body.is-mobile .btn-maly, body.is-mobile .panel-akcja,
+body.is-mobile .btn-link, body.is-mobile #start-pomin, body.is-mobile .btn-premium, body.is-mobile .segmenty button,
+body.is-mobile .htag-filter, body.is-mobile .ver-btn, body.is-mobile .ins-zakl { min-height: var(--h-dotyk); }
+body.is-mobile .btn-link { padding: 0 var(--s-4); }
+body.is-mobile .pomoce { gap: 0 var(--s-8); margin-top: 0; }
+body.is-mobile .mobilny-widok button { height: var(--h-dotyk); min-height: var(--h-dotyk); }
+body.is-mobile .img-fmt-btn { padding: 0 var(--s-12); }
+/* R2: pismo nie mniejsze niz 12 px (skala marki) */
+.mobile-nav-btn, .obszar .licz, .konto-awatar, .kbd, .start-nr, .start-poz-meta, .znacznik-pakietu,
+body.is-mobile .pasek-akcje > .btn-secondary, body.is-mobile .pasek-akcje > .grupa-wrap > .btn-secondary,
+body.is-mobile .pasek-akcje > .btn-secondary span, body.is-mobile .pasek-akcje > .grupa-wrap > .btn-secondary span { font-size: var(--t-xs); }
+.znacznik-pakietu { height: 20px; }
+}
+@layer widoki {
+/* R2: telefon - powiadomienia i pasek audio stoja nad najwyzszym stalym paskiem dolu
+   (CTA briefu, pasek akcji wyniku, nawigacja). --nad-paskami liczy paskiDolne(). */
+body.is-mobile #powiadomienia { bottom: calc(var(--nad-audio, calc(var(--dol) + 132px)) + var(--s-8)); }
+body.is-mobile #audio-bar:not(.inline) { bottom: calc(var(--nad-paskami, var(--dol)) + var(--s-8)); z-index: 300; }
+#audio-bar:not(.inline) { background: var(--c-panel); border-top: 1px solid var(--c-linia); box-shadow: var(--cien-3); }
+body.is-mobile #audio-bar:not(.inline) { left: var(--s-8); right: var(--s-8); padding: var(--s-8) var(--s-12);
+  border: 1px solid var(--c-linia); border-radius: var(--r-md); }
+}
 </style>
 </head>
 <body>
@@ -2280,7 +2318,7 @@ document.addEventListener('DOMContentLoaded', function () {
     <button class="btn-secondary" id="pakiet-badge" onclick="otworzPakiet()" data-i18n-title="pakiet-badge-title" title="Twój pakiet i zużycie" style="display:none"></button>
 <!--@@ENDIF-->
     <div class="settings-wrap" id="settings-wrap">
-      <button type="button" class="settings-btn konto-btn" id="settings-btn" onclick="toggleSettingsMenu()" title="Konto i ustawienia" aria-label="Konto i ustawienia" data-i18n-title="title-settings" data-i18n-label="title-settings" aria-haspopup="true"><span class="konto-awatar" id="konto-awatar"><svg class="ikona" aria-hidden="true"><use href="#i-user"/></svg></span></button>
+      <button type="button" class="settings-btn konto-btn" id="settings-btn" onclick="toggleSettingsMenu()" title="Konto i ustawienia" aria-label="Konto i ustawienia" data-i18n-title="title-settings" data-i18n-label="title-settings" aria-haspopup="true" aria-expanded="false" aria-controls="settings-menu"><span class="konto-awatar" id="konto-awatar"><svg class="ikona" aria-hidden="true"><use href="#i-user"/></svg></span></button>
       <div class="settings-menu" id="settings-menu" role="menu" aria-label="Konto" data-i18n-label="konto-menu">
         <div class="menu-konto"><span class="konto-awatar" id="konto-awatar-menu"><svg class="ikona" aria-hidden="true"><use href="#i-user"/></svg></span><div><b id="konto-nazwa" data-i18n="konto-gosc">Ten komputer</b><span id="konto-opis" data-i18n="konto-opis">Ustawienia aplikacji</span></div></div>
         <hr>
@@ -4482,6 +4520,14 @@ var I18N = {
     'ctx-bold':'Pogrub','ctx-italic':'Pochyl',
     'link-dialog-label':'Dodaj link',
     'err-api-generic':'Dostawca AI odrzucił zapytanie.',
+    'msg-plik-pusty':'W pliku „{name}” nie ma tekstu do odczytania (np. skan PDF albo dokument z samym obrazem). Nic nie dodano do bazy. Wklej treść przez „Dodaj tekst ręcznie”.',
+    'msg-plik-blad':'Nie udało się odczytać pliku „{name}” ({msg}). Nic nie dodano do bazy. Zapisz go jako DOCX lub PDF z tekstem albo wklej treść ręcznie.',
+    'msg-plik-pptx':'Prezentacji „{name}” nie da się jeszcze odczytać. Skopiuj treść slajdów i dodaj ją przez „Dodaj tekst ręcznie”.',
+    'err-siec':'Brak połączenia z serwerem. Sprawdź internet i spróbuj ponownie.',
+    'err-odpowiedz-zla':'Serwer zwrócił nieoczekiwaną odpowiedź (zwykle chwilowa przerwa). Spróbuj ponownie za chwilę.',
+    'err-timeout':'Dostawca AI nie odpowiedział w czasie. Spróbuj ponownie za chwilę albo wybierz krótszy tekst.',
+    'err-limit-pakietu':'Limit pakietu na ten miesiąc jest wyczerpany. Szczegóły są w oknie pakietu.',
+    'btn-sprobuj-ponownie':'Spróbuj ponownie',
     'err-json-modelu':'Model zwrócił odpowiedź w uszkodzonym formacie. Spróbuj jeszcze raz.',
     'wp-published':'opublikowano',
     'wp-draft':'zapisano jako szkic',
@@ -4504,6 +4550,9 @@ var I18N = {
     'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Część dokumentów z bazy nie przetrwa odświeżenia - przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
     'ver-poprawiony-hybryda':'Poprawiony SEO+AIO','ver-poprawiony-aio':'Poprawiony AIO','ver-poprawiony-seo':'Poprawiony SEO','ver-wariant':'Wariant',
     'msg-artykul-uciety':'Tekst został ucięty na limicie długości. Zmniejsz długość albo wygeneruj ponownie.',
+    'msg-cms-https':'Adres CMS musi zaczynać się od https://. Przeglądarka nie wysyła danych z tej aplikacji na adres http://.',
+    'msg-wp-cors':'sprawdź adres i czy WordPress przyjmuje zapytania z tej domeny (CORS).',
+    'msg-drupal-cors':'może brakować nagłówka CORS. Dodaj w Drupalu Response Headers albo użyj modułu CORS.',
     'msg-premium-uciety':'Samokorekta nie zmieściła się w limicie długości, więc zostaje tekst przed korektą. Spróbuj krótszej długości.',
     'msg-no-content':'Brak treści',
     'msg-open-link':'Otwórz →',
@@ -5000,6 +5049,9 @@ var I18N = {
     'msg-magazyn-pelny':'Browser storage is full. Some knowledge base documents will not survive a refresh - move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
     'ver-poprawiony-hybryda':'Improved SEO+AIO','ver-poprawiony-aio':'Improved AIO','ver-poprawiony-seo':'Improved SEO','ver-wariant':'Variant',
     'msg-artykul-uciety':'The text was cut off at the length limit. Reduce the length or generate again.',
+    'msg-cms-https':'The CMS address must start with https://. The browser does not send data from this app to an http:// address.',
+    'msg-wp-cors':'check the address and whether WordPress accepts requests from this domain (CORS).',
+    'msg-drupal-cors':'the CORS header may be missing. Add Response Headers in Drupal or use the CORS module.',
     'msg-premium-uciety':'The self-review did not fit within the length limit, so the text before the review stays. Try a shorter length.',
     'msg-no-content':'No content',
     'msg-refresh':'refresh',
@@ -5111,6 +5163,14 @@ var I18N = {
     'img-spin-init':'Analyzing article…',
     'text-modal-desc-full':'Paste any company content - offers, FAQs, service descriptions, product data, policies. AI will use this content during generation.',
     'err-api-generic':'The AI provider rejected the request.',
+    'msg-plik-pusty':'The file “{name}” has no readable text (for example a scanned PDF or an image-only document). Nothing was added to the knowledge base. Paste the content with “Add text manually”.',
+    'msg-plik-blad':'Could not read the file “{name}” ({msg}). Nothing was added to the knowledge base. Save it as DOCX or a text PDF, or paste the content manually.',
+    'msg-plik-pptx':'The presentation “{name}” cannot be read yet. Copy the slide content and add it with “Add text manually”.',
+    'err-siec':'No connection to the server. Check your internet connection and try again.',
+    'err-odpowiedz-zla':'The server returned an unexpected response (usually a short outage). Try again in a moment.',
+    'err-timeout':'The AI provider did not respond in time. Try again in a moment or choose a shorter text.',
+    'err-limit-pakietu':'Your plan limit for this month is used up. Details are in the plan window.',
+    'btn-sprobuj-ponownie':'Try again',
     'err-json-modelu':'The model returned a malformed response. Please try again.',
     'gap-btn-select':'Select topics to improve',
     'hist-default-name':'Article',
@@ -5394,7 +5454,6 @@ const BRAND = {
 // kolory-eksportu:koniec
 };
 // Slug uzywany w nazwach pobieranych plikow
-const BRAND_SLUG = ((BRAND.name || 'ContentAI').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,'')) || 'ContentAI';
 // Hosty marki (do auto-poprawki linkow i wykrywania) - z BRAND.domains lub z siteUrl
 function brandHosts() {
   // Konfiguracja z okna marki ma pierwszenstwo nad wartoscia wpisana w kodzie,
@@ -5552,6 +5611,22 @@ async function apiFetch(options, maxRetries = 3) {
     if (spinLabel) spinLabel.textContent = _t('spin-ponawiam');
   }
 }
+
+// Surowe komunikaty przegladarki i parsera ("Failed to fetch", "Unexpected token '<'"
+// przy stronie bledu 502) zamieniamy na zdanie ze slownika w jezyku interfejsu.
+// Adres z odpowiedzi CMS do href: tylko http(s), z ucieczka znakow.
+function bezpiecznyHref(u) { u = String(u || '').trim(); return /^https?:\/\//i.test(u) ? escapeHtml(u) : '#'; }
+function komunikatBleduApi(e) {
+  const m = (e && e.message) || '';
+  if (e && e.name === 'TypeError' && /fetch|network|load failed/i.test(m)) return _t('err-siec');
+  if ((e && e.name === 'SyntaxError') || /Unexpected token|is not valid JSON|JSON\.parse/i.test(m)) return _t('err-odpowiedz-zla');
+  if (/timeout|504/i.test(m)) return _t('err-timeout');
+  return m || _t('err-api-generic');
+}
+// Po powrocie sieci przycisk ponowienia w komunikacie bledu staje sie glowna akcja.
+window.addEventListener('online', function () {
+  document.querySelectorAll('.ponow-generowanie').forEach(function (b) { b.classList.remove('btn-secondary'); b.classList.add('btn-generate'); });
+});
 
 // ─── FILE ICONS ───────────────────────────────────────────────────────────────
 const ICONS = { pdf:'📄', xlsx:'📊', xls:'📊', docx:'📝', doc:'📝', pptx:'📋', ppt:'📋', txt:'📃', csv:'📊', default:'📁' };
@@ -6025,15 +6100,22 @@ async function processFile(file) {
     } else if (['docx','doc'].includes(ext)) {
       text = await extractDOCX(file);
     } else if (['pptx','ppt'].includes(ext)) {
-      text = (currentLang==='en' ? `[PowerPoint file: ${name}]\nPPTX support requires an additional library. Copy slide content manually.` : `[Plik PowerPoint: ${name}]\nObsługa PPTX wymaga dodatkowej biblioteki. Skopiuj treść slajdów ręcznie.`);
+      // Prezentacji nie czytamy - zamiast udawanego dokumentu w bazie jasna informacja.
+      pokazPowiadomienie(_t('msg-plik-pptx').replace('{name}', name), 'uwaga');
+      return;
     } else {
       text = await file.text().catch(() => _t('file-read-err'));
     }
     if (text.trim()) {
       addDoc(name, text, getIcon(name));
+    } else {
+      // Skan PDF bez warstwy tekstu albo DOCX z samym osadzonym HTML: nic nie trafia do bazy,
+      // ale autor musi wiedziec dlaczego.
+      pokazPowiadomienie(_t('msg-plik-pusty').replace('{name}', name), 'uwaga');
     }
   } catch(e) {
-    addDoc(name, (currentLang==='en'?`[File read error: ${e.message}]`:`[Błąd odczytu pliku: ${e.message}]`), '⚠️');
+    // Blad odczytu nie staje sie zaznaczonym zrodlem z trescia "[Blad odczytu...]".
+    powiadomBlad(_t('msg-plik-blad').replace('{name}', name).replace('{msg}', (e && e.message) || ''));
   } finally {
     hideProgress();
   }
@@ -6902,8 +6984,13 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
       : await (await apiFetch({ method: 'POST', headers: naglowkiArtykulu,
           body: JSON.stringify(cialoArtykulu) })).json();
     if (data.error) {
+      // Bledy wlasne serwera (limit pakietu, brak uprawnien) przychodza jako napis.
+      if (typeof data.error === 'string') {
+        throw new Error(/limit/i.test(data.error) || data.czynnosc ? _t('err-limit-pakietu') : _t('err-api-generic'));
+      }
       const msg = data.error.message || '';
       const type = data.error.type || '';
+      if (type === 'timeout_error') throw new Error(_t('err-timeout'));
       if (type === 'rate_limit_error' || msg.includes('rate limit')) {
         throw new Error(_t('err-rate-limit'));
       }
@@ -7107,7 +7194,8 @@ ${html}`;
       przerwano = true;
       html = '<p class="komunikat-przerwania">' + escapeHtml(_t('msg-przerwano')) + '</p>';
     } else {
-      html = '<p class="komunikat-bledu"><strong>' + escapeHtml(_t('msg-blad-prefiks')) + '</strong> ' + escapeHtml(e && e.message || '') + '</p>';
+      html = '<div class="komunikat-bledu" role="alert"><p><strong>' + escapeHtml(_t('msg-blad-prefiks')) + '</strong> ' + escapeHtml(komunikatBleduApi(e)) + '</p>'
+        + '<button type="button" class="btn-secondary ponow-generowanie" onclick="generate()">' + ikona('refresh-cw') + escapeHtml(_t('btn-sprobuj-ponownie')) + '</button></div>';
     }
   }
 
@@ -8046,6 +8134,13 @@ function showArticleStats(html) {
 // Kolory eksportu ida z konfiguracji marki. Wczesniej byly tu wpisane wprost
 // barwy jednego klienta, wiec PDF kazdej innej firmy wychodzil w cudzych.
 // kolory-eksportu:start (stale kolory dokumentu, nie motywu)
+// Kroje marki w PDF (pwa/lib/vfs_fonts.js: Literata i Schibsted Grotesk, podzbior PL).
+function ustawKrojePdf() {
+  pdfMake.fonts = {
+    Literata: { normal: 'Literata-Regular.ttf', bold: 'Literata-SemiBold.ttf', italics: 'Literata-Italic.ttf', bolditalics: 'Literata-SemiBoldItalic.ttf' },
+    Schibsted: { normal: 'SchibstedGrotesk-SemiBold.ttf', bold: 'SchibstedGrotesk-SemiBold.ttf', italics: 'SchibstedGrotesk-SemiBold.ttf', bolditalics: 'SchibstedGrotesk-SemiBold.ttf' }
+  };
+}
 function kolorMarki(ktory) {
   const c = (BRAND.colors || {});
   if (ktory === 'primary') return c.primary || '#8F5A00';
@@ -8089,7 +8184,7 @@ function dlPdf() {
       tr.querySelectorAll('th,td').forEach(cell => {
         const isHdr = cell.tagName === 'TH';
         cells.push({ text: getInline(cell), bold: isHdr, fontSize: 9,
-          fillColor: isHdr ? kolorMarki('secondary') : (rows.length % 2 === 1 ? '#F7F6F2' : null),
+          fillColor: isHdr ? '#F7EEDD' : (rows.length % 2 === 1 ? '#F7F6F2' : null),
           margin: [4, 3, 4, 3] });
       });
       if (cells.length) rows.push(cells);
@@ -8112,7 +8207,7 @@ function dlPdf() {
         table: { widths: ['*'], body: [[{ text: el.textContent.trim(),
           bold: true, fontSize: 13, color: '#1B1A17', border: [false,false,false,true],
           margin: [0, 4, 0, 4] }]] },
-        layout: { hLineColor: (i) => i === 1 ? kolorMarki('secondary') : 'white',
+        layout: { hLineColor: (i) => i === 1 ? '#D6D3CB' : 'white',
           hLineWidth: (i) => i === 1 ? 2 : 0, vLineWidth: () => 0 },
         margin: [0, 14, 0, 4]
       });
@@ -8146,7 +8241,7 @@ function dlPdf() {
             { text: label, bold: true, color: kolorMarki('primary'), fontSize: 9, margin: [0,0,0,4] },
             { text: body, fontSize: 10.5, lineHeight: 1.5 }
           ], fillColor: '#F7EEDD', margin: [10, 8, 10, 8] }]] },
-          layout: { hLineColor: () => kolorMarki('secondary'), vLineColor: () => kolorMarki('secondary'),
+          layout: { hLineColor: () => '#D6D3CB', vLineColor: () => '#D6D3CB',
             hLineWidth: () => 1.5, vLineWidth: () => 1.5 },
           margin: [0, 16, 0, 0]
         });
@@ -8182,28 +8277,29 @@ function dlPdf() {
           { text: _lbl, bold: true, color: '#8F5A00', fontSize: 9, margin: [0,0,0,4] },
           { text: _body, fontSize: 10.5, lineHeight: 1.5 }
         ], fillColor: '#F7EEDD', margin: [10, 8, 10, 8] }]] },
-          layout: { hLineColor: () => kolorMarki('secondary'), vLineColor: () => kolorMarki('secondary'), hLineWidth: () => 1.5, vLineWidth: () => 1.5 },
+          layout: { hLineColor: () => '#D6D3CB', vLineColor: () => '#D6D3CB', hLineWidth: () => 1.5, vLineWidth: () => 1.5 },
           margin: [0, 16, 0, 0] });
       }
     }
     const dd = {
       pageSize: 'A4',
-      pageMargins: [40, 20, 40, 40],
+      pageMargins: [40, 56, 40, 40],
       header: {
         table: { widths: ['auto', '*'], body: [[
-          { text: (BRAND.name || 'Content AI'), fontSize: 20, bold: true, color: kolorMarki('primary'),
-            border: [false,false,false,false], margin: [40, 12, 0, 12] },
-          { text: 'Content AI  ·  ' + (BRAND.name || ''), fontSize: 9, bold: true,
-            color: '#1B1A17', alignment: 'right',
+          { text: (nazwaMarki() || 'Content AI'), font: 'Schibsted', fontSize: 13, bold: true, color: '#1B1A17',
+            border: [false,false,false,false], margin: [40, 14, 0, 10] },
+          { text: nazwaMarki() ? 'Content AI' : '', font: 'Schibsted', fontSize: 8, bold: true,
+            color: '#67635B', alignment: 'right',
             border: [false,false,false,false], margin: [0, 16, 40, 12] }
         ]] },
-        layout: { fillColor: () => kolorMarki('secondary'), hLineWidth: () => 0, vLineWidth: () => 0 }
+        layout: { hLineWidth: (i, n) => (i === n.table.body.length ? 0.5 : 0), hLineColor: () => '#D6D3CB', vLineWidth: () => 0 }
       },
       footer: (page, pages) => ({ text: page + ' / ' + pages, alignment: 'right',
         fontSize: 8, color: '#8D897F', margin: [0, 0, 40, 10] }),
       content: articleContent,
-      defaultStyle: { font: 'Roboto', fontSize: 11, color: '#1B1A17' }
+      defaultStyle: { font: 'Literata', fontSize: 10.5, lineHeight: 1.3, color: '#1B1A17' }
     };
+    ustawKrojePdf();
     pdfMake.createPdf(dd).download(topic + '.pdf');
   }
 
@@ -8214,7 +8310,7 @@ function dlPdf() {
     s.onerror = () => powiadomBlad(_t('msg-pdf-load-fail'));
     document.head.appendChild(s);
   }
-  if (window.pdfMake) { _runPdf(); return; }
+  if (window.pdfMake && typeof window.pdfMake.createPdf === 'function') { _runPdf(); return; }
   loadScript('pwa/lib/pdfmake.min.js', () => {
     loadScript('pwa/lib/vfs_fonts.js', _runPdf);
   });
@@ -9357,16 +9453,17 @@ async function dlDocx() {
       h2 { font-size: 15pt; font-weight: bold; color: #1B1A17; margin-top: 18pt; margin-bottom: 6pt; }
       h3 { font-size: 12.5pt; font-weight: bold; color: #1B1A17; margin-top: 14pt; margin-bottom: 4pt; }
       p { margin-bottom: 8pt; line-height: 1.55; }
-      table, th, td { font-family: Calibri, Arial, sans-serif; font-size: 10pt; }
+      table, th, td { font-family: Literata, Georgia, serif; font-size: 10pt; }
+      th { font-family: 'Schibsted Grotesk', Arial, sans-serif; }
       th { background: #F7F6F2; }
       ul, ol { margin-left: 20pt; margin-bottom: 8pt; }
       li { margin-bottom: 4pt; }
       strong, b { font-weight: bold; }
       em, i { font-style: italic; }
       a { color: #0B7268; }
-      .meta-box { font-family: Calibri, Arial, sans-serif; background: #F7EEDD; border: 1pt solid #F7D295; padding: 10pt; margin-top: 16pt; }
-      .meta-label { font-family: Calibri, Arial, sans-serif; font-size: 9pt; font-weight: bold; color: #8F5A00; margin-bottom: 4pt; }
-      .zrodla-box { font-family: Calibri, Arial, sans-serif; font-size: 10pt; border-top: 1pt solid #D6D3CB; margin-top: 16pt; padding-top: 8pt; }
+      .meta-box { font-family: Literata, Georgia, serif; background: #F7EEDD; border: 1pt solid #F7D295; padding: 10pt; margin-top: 16pt; }
+      .meta-label { font-family: 'Schibsted Grotesk', Arial, sans-serif; font-size: 9pt; font-weight: bold; color: #8F5A00; margin-bottom: 4pt; }
+      .zrodla-box { font-family: Literata, Georgia, serif; font-size: 10pt; border-top: 1pt solid #D6D3CB; margin-top: 16pt; padding-top: 8pt; }
     </style>
     </head><body>${artHtml}</body></html>`;
 
@@ -9423,6 +9520,11 @@ function odswiezInspektor() {
   Object.keys(INSPEKTOR).forEach(function (n) { if (!otwarty && panelWidoczny(INSPEKTOR[n].el)) otwarty = n; });
   ins.hidden = !otwarty;
   document.body.classList.toggle('inspektor-otwarty', !!otwarty);
+  // 1280-1439 px: brief + panel kontroli zostawialy artykulowi ~40 znakow w linii.
+  // Przy otwartym panelu brief zwija sie do szyny (i wraca, gdy panel sie zamknie).
+  var b = document.body, sredni = window.innerWidth >= 1280 && window.innerWidth < 1440 && !b.classList.contains('is-mobile');
+  if (otwarty && sredni && !b.classList.contains('brief-zwiniety')) { przelaczBrief(true); b.dataset.briefAuto = '1'; }
+  else if (!otwarty && b.dataset.briefAuto === '1') { delete b.dataset.briefAuto; przelaczBrief(false); }
   var gr = otwarty ? INSPEKTOR[otwarty].gr : '';
   ins.classList.toggle('ocena', gr === 'ocena');
   ins.querySelectorAll('.ins-zakl').forEach(function (z) {
@@ -9440,6 +9542,7 @@ function odswiezInspektor() {
 // Brief zwija sie do szyny na zyczenie (wiecej miejsca na kartke i inspektor).
 function przelaczBrief(zwin) {
   var b = document.body;
+  if (typeof zwin !== 'boolean') delete b.dataset.briefAuto;
   var nowy = typeof zwin === 'boolean' ? zwin : !b.classList.contains('brief-zwiniety');
   b.classList.toggle('brief-zwiniety', nowy);
 }
@@ -9544,6 +9647,44 @@ function otworzKontoMobilne(e) {
     if (ob) new MutationObserver(function () {
       if (/\bready\b|\buwaga\b/.test(ob.className) && document.body.classList.contains('is-mobile')) ustawWidokMobilny('wynik');
     }).observe(ob, { attributes: true, attributeFilter: ['class'] });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
+// Telefon (R2): wysokosc najwyzszego stalego paska dolu (nawigacja, CTA briefu, pasek akcji
+// wyniku) jako --nad-paskami, a z paskiem audio jako --nad-audio. Powiadomienia i pasek audio
+// stoja nad nimi, wiec nie zaslaniaja "Wygeneruj tresc" ani nawigacji.
+(function paskiDolne() {
+  function gorna(sel, gora) {
+    // Z ukladu (bottom + wysokosc), nie z getBoundingClientRect: paski wjezdzaja animacja
+    // transform, a ResizeObserver nie budzi sie, gdy animacja sie konczy.
+    document.querySelectorAll(sel).forEach(function (e) {
+      const cs = getComputedStyle(e);
+      if (cs.position !== 'fixed' || !e.offsetHeight) return;
+      const g = window.innerHeight - (parseFloat(cs.bottom) || 0) - e.offsetHeight;
+      if (g < gora) gora = g;
+    });
+    return gora;
+  }
+  function przelicz() {
+    const h = window.innerHeight, de = document.documentElement;
+    if (!document.body.classList.contains('is-mobile')) { de.style.removeProperty('--nad-paskami'); de.style.removeProperty('--nad-audio'); return; }
+    const paski = gorna('.mobile-nav, .form-actions-sticky, .pasek-akcje', h);
+    de.style.setProperty('--nad-paskami', Math.max(0, Math.round(h - paski)) + 'px');
+    de.style.setProperty('--nad-audio', Math.max(0, Math.round(h - gorna('#audio-bar.show:not(.inline)', paski))) + 'px');
+  }
+  let czeka = false;
+  function zaplanuj() { if (czeka) return; czeka = true; requestAnimationFrame(function () { czeka = false; przelicz(); }); }
+  function start() {
+    if (typeof ResizeObserver === 'function') {
+      const ro = new ResizeObserver(zaplanuj);
+      document.querySelectorAll('.mobile-nav, .form-actions-sticky, .pasek-akcje, #audio-bar').forEach(function (e) { ro.observe(e); });
+    }
+    const ab = document.getElementById('audio-bar');
+    if (ab) new MutationObserver(zaplanuj).observe(ab, { attributes: true, attributeFilter: ['class'] });
+    new MutationObserver(zaplanuj).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('resize', zaplanuj);
+    przelicz();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
@@ -9841,7 +9982,7 @@ function saveCmsSettings() {
 function toggleSettingsMenu() {
   var menu = document.getElementById('settings-menu');
   if (menu.classList.contains('open')) {
-    menu.classList.remove('open');
+    closeSettingsMenu();
     return;
   }
   // Pozycjonuj fixed względem przycisku
@@ -9853,9 +9994,26 @@ function toggleSettingsMenu() {
     menu.style.left = 'auto';
   }
   menu.classList.add('open');
+  document.getElementById('settings-btn')?.setAttribute('aria-expanded', 'true');
+  // Z klawiatury fokus wchodzi do menu na pierwsza pozycje (strzalki chodza dalej).
+  requestAnimationFrame(function () { const p = menu.querySelector('.settings-item'); if (p) p.focus({ preventScroll: true }); });
+}
+// Przycisk otwierajacy menu, w ktorym lezy element (fokus wraca na niego po zamknieciu).
+function przyciskMenuDla(el) {
+  if (!el || !el.closest) return null;
+  if (el.closest('.settings-menu')) {
+    return document.body.classList.contains('is-mobile') ? document.getElementById('mnav-konto') : document.getElementById('settings-btn');
+  }
+  const gm = el.closest('.grupa-menu');
+  return gm && gm.parentElement ? gm.parentElement.querySelector('[aria-haspopup]') : null;
 }
 function closeSettingsMenu() {
-  document.getElementById('settings-menu').classList.remove('open');
+  const m = document.getElementById('settings-menu');
+  if (!m.classList.contains('open')) return;
+  m.classList.remove('open');
+  document.getElementById('settings-btn')?.setAttribute('aria-expanded', 'false');
+  document.getElementById('mnav-konto')?.setAttribute('aria-expanded', 'false');
+  if (m.contains(document.activeElement)) { const p = przyciskMenuDla(m); if (p && p.offsetParent !== null) p.focus({ preventScroll: true }); }
 }
 document.addEventListener('click', e => {
   if (!e.target.closest('#settings-wrap')) closeSettingsMenu();
@@ -9872,14 +10030,30 @@ function updateWpBtn() {
     sub.textContent = `WP: ${wpSettings.url.replace(/^https?:\/\//, '')}`;
     icon.innerHTML = ikona('circle-dot', 'ok');
   } else {
-    sub.textContent = 'WordPress / Drupal - nie skonfigurowano';
+    sub.textContent = _t('settings-cms-sub');
     icon.innerHTML = ikona('globe');
   }
+  // "Publikuj" dla biezacego artykulu od razu po zapisaniu ustawien, nie dopiero przy nastepnym.
+  const pub = document.getElementById('wp-pub-btn'), art = document.getElementById('article');
+  if (pub) pub.style.display = ((wpSettings.url || drupalSettings.url) && art && art.style.display !== 'none' && art.textContent.trim()) ? 'flex' : 'none';
+}
+
+// Strona z https (a w wariancie z serwerem CSP connect-src https:) nie polaczy sie z CMS pod http://.
+// Przegladarka zglasza wtedy goly TypeError, wiec mowimy wprost, czego brakuje.
+function cmsBezHttps(url) {
+  if (!/^http:\/\//i.test(url || '')) return false;
+//@@IF proxy
+  return true;
+//@@ELSE
+  return location.protocol === 'https:';
+//@@ENDIF
 }
 
 async function testCmsConnection() {
   const res = document.getElementById('wp-test-result');
   res.innerHTML = _t('msg-loading-test');
+  const adresCms = document.getElementById(activeCms === 'wp' ? 'wp-url' : 'drupal-url').value.trim();
+  if (cmsBezHttps(adresCms)) { res.innerHTML = `<span class="stan-blad">${escapeHtml(_t('msg-cms-https'))}</span>`; return; }
   try {
     if (activeCms === 'wp') {
       const url = document.getElementById('wp-url').value.trim().replace(/\/$/, '');
@@ -9895,7 +10069,7 @@ async function testCmsConnection() {
       else res.innerHTML = `<span class="stan-blad">${currentLang==='en'?'Drupal error ':'Drupal błąd '}${r.status}${currentLang==='en'?' - check credentials or Basic Auth module':' - sprawdź dane lub moduł Basic Auth'}</span>`;
     }
   } catch(e) {
-    res.innerHTML = `<span class="stan-blad">${escapeHtml(e.message)}${currentLang==='en' ? ' - CORS header may be missing. Add in Drupal: Response Headers or use CORS module.' : ' - może brakować nagłówka CORS. Dodaj w Drupal: Response Headers lub użyj modułu CORS.'}</span>`;
+    res.innerHTML = `<span class="stan-blad">${escapeHtml(e.message)} - ${escapeHtml(_t(activeCms === 'wp' ? 'msg-wp-cors' : 'msg-drupal-cors'))}</span>`;
   }
 }
 
@@ -9932,12 +10106,17 @@ async function publishToCms(status) {
   const res = document.getElementById('wp-pub-result');
   res.innerHTML = _t('msg-loading-publish');
   try {
+    const adresCms = activeCms === 'wp' ? wpSettings.url : drupalSettings.url;
+    if (cmsBezHttps(adresCms)) { res.innerHTML = `<span class="stan-blad">${escapeHtml(_t('msg-cms-https'))}</span>`; return; }
     const art = document.getElementById('article');
-    const title = document.getElementById('topic').value.trim() || _t('wp-default-title');
     const metaEl = art.querySelector('.meta-box p');
     const excerpt = metaEl ? metaEl.innerText.trim() : '';
     const artClone = art.cloneNode(true);
     artClone.querySelector('.meta-box')?.remove();
+    // Tytul idzie osobnym polem; H1 w tresci dalby wpis z dwoma H1.
+    const h1 = artClone.querySelector('h1');
+    const title = (h1 && h1.textContent.trim()) || document.getElementById('topic').value.trim() || _t('wp-default-title');
+    if (h1) h1.remove();
     const content = oczyscHtmlModelu(artClone.innerHTML);
 
     if (activeCms === 'wp') {
@@ -9960,7 +10139,7 @@ async function publishToWordPress(title, content, excerpt, status, resEl) {
   if (r.ok) {
     const post = await r.json();
     const label = status === 'publish' ? _t('wp-published') : _t('wp-draft');
-    resEl.innerHTML = '<span class="stan-ok">WordPress - ' + label + '! <a href="' + post.link + '" target="_blank" rel="noopener" class="link-akcent">' + _t('msg-open-link') + '</a></span>';
+    resEl.innerHTML = '<span class="stan-ok">WordPress - ' + label + '! <a href="' + bezpiecznyHref(post.link) + '" target="_blank" rel="noopener" class="link-akcent">' + _t('msg-open-link') + '</a></span>';
   } else {
     const err = await r.json().catch(()=>({}));
     resEl.innerHTML = `<span class="stan-blad">WP ${r.status}: ${escapeHtml(err.message || 'błąd')}</span>`;
@@ -9999,7 +10178,7 @@ async function publishToDrupal(title, content, excerpt, status, resEl) {
     const nid = d?.data?.attributes?.drupal_internal__nid || '';
     const nodeUrl = nid ? `${drupalSettings.url}/node/${nid}` : drupalSettings.url;
     const label = status === 'publish' ? 'opublikowano' : 'zapisano jako szkic';
-    resEl.innerHTML = '<span class="stan-ok">Drupal - ' + label + '! <a href="' + nodeUrl + '" target="_blank" rel="noopener" class="link-akcent">' + _t('msg-open-link') + '</a></span>';
+    resEl.innerHTML = '<span class="stan-ok">Drupal - ' + label + '! <a href="' + bezpiecznyHref(nodeUrl) + '" target="_blank" rel="noopener" class="link-akcent">' + _t('msg-open-link') + '</a></span>';
   } else {
     const err = await r.json().catch(()=>({}));
     const msg = err?.errors?.[0]?.detail || err?.message || r.status;
@@ -10506,7 +10685,7 @@ Szanowni Państwo,
 [CTA - jedno zdanie zachęcające do działania, np. "Skontaktuj się z nami" lub "Dowiedz się więcej"]
 
 Z poważaniem,
-Zespół ${BRAND.name}
+Zespół ${nazwaMarki()}
 
 STYL: Profesjonalny, konkretny, bez marketingowej napuszystości.
 WAŻNE: Napisz KOMPLETNY email - nie urywaj. Zwróć TYLKO tekst maila, bez komentarzy.`,
@@ -10781,7 +10960,7 @@ function buildOrganizationSchema(cfg) {
 
 function buildServiceSchema(cfg) {
   const services = (cfg.services || '').split('\n').map(s => s.trim()).filter(Boolean);
-  const name = _articleHeadline() || ((cfg.name || BRAND.name) + ' - usługi');
+  const name = _articleHeadline() || ((cfg.name || nazwaMarki()) + ' - usługi');
   return {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -10817,7 +10996,7 @@ function buildLocalBusinessSchema(cfg) {
 
 function buildArticleSchema(cfg) {
   const e = SCHEMA_ENTITY;
-  const headline = _articleHeadline() || (BRAND.name + " - artykuł");
+  const headline = _articleHeadline() || (nazwaMarki() + " - artykuł");
   const today = new Date().toISOString().slice(0, 10);
   return {
     "@context": "https://schema.org",
@@ -10837,7 +11016,7 @@ function buildBreadcrumbSchema(cfg) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": BRAND.name, "item": base + "/" },
+      { "@type": "ListItem", "position": 1, "name": nazwaMarki(), "item": base + "/" },
       { "@type": "ListItem", "position": 2, "name": "Blog", "item": base + "/blog/" },
       { "@type": "ListItem", "position": 3, "name": headline }
     ]
@@ -10867,8 +11046,20 @@ function copyJsonLd() {
 // ═══════════════════════════════════════════════════════════════════════
 // ── LLMS.TXT / LLMS-FULL.TXT GENERATOR ──────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════
-const LLMS_DEFAULTS = {
-  name: BRAND.name || 'Twoja Firma',
+// Wartosci z szablonu BRAND ("Twoja Firma...") to podpowiedzi, nie dane marki: nie trafiaja
+// do pol jako wartosci, na serwer jako marka zespolu ani do llms.txt, JSON-LD i nazw plikow.
+const PRZYKLAD_MARKI = {
+  name: 'Twoja Firma', legalName: 'Twoja Firma Sp. z o.o.', siteUrl: 'https://www.twojafirma.pl',
+  description: 'Krotki opis dzialalnosci firmy: czym sie zajmuje, dla kogo, co ja wyroznia.',
+  services: 'Pierwsza usluga\nDruga usluga\nTrzecia usluga'
+};
+function bezPrzykladu(c) {
+  const w = Object.assign({}, c);
+  Object.keys(PRZYKLAD_MARKI).forEach(k => { if (String(w[k] || '').trim() === PRZYKLAD_MARKI[k]) w[k] = ''; });
+  return w;
+}
+const LLMS_DEFAULTS = bezPrzykladu({
+  name: BRAND.name || '',
   legalName: BRAND.legalName || BRAND.name || '',
   siteUrl: BRAND.siteUrl || '',
   description: BRAND.description || '',
@@ -10877,7 +11068,9 @@ const LLMS_DEFAULTS = {
   // Jedna na linie, zeby pole w oknie bylo zwyklym obszarem tekstowym.
   domains: (BRAND.domains || []).join('\n'),
   blockedDomains: (BRAND.blockedDomains || []).join('\n')
-};
+});
+function nazwaMarki() { try { return getLlmsConfig().name || ''; } catch (e) { return ''; } }
+function slugMarki() { return (nazwaMarki().replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '')) || 'ContentAI'; }
 
 // Domeny z pola tekstowego na liste, ktora przyjmie API: same nazwy hostow,
 // bez schematu, bez www, bez sciezki. Narzedzie wyszukiwania odrzuca zadanie
@@ -10912,10 +11105,10 @@ function getLlmsConfig() {
   // Serwer jest zrodlem prawdy: konfiguracja jest jedna dla calego wdrozenia,
   // wiec nowa osoba w zespole nie zaczyna od pustej i nie generuje tekstow
   // bez regul o marce.
-  if (markaZSerwera) return Object.assign({}, LLMS_DEFAULTS, markaZSerwera);
+  if (markaZSerwera) return bezPrzykladu(Object.assign({}, LLMS_DEFAULTS, markaZSerwera));
   try {
     const s = JSON.parse(magazyn.getItem('cai-llms') || 'null');
-    if (s) return Object.assign({}, LLMS_DEFAULTS, s);
+    if (s) return bezPrzykladu(Object.assign({}, LLMS_DEFAULTS, s));
   } catch (e) {}
   return Object.assign({}, LLMS_DEFAULTS);
 }
@@ -10998,6 +11191,11 @@ function ustawTrybEdycjiMarki() {
 
 function openLlmsModal() {
   const c = getLlmsConfig();
+  // Przyklady jako podpowiedz w pustym polu, nigdy jako wartosc.
+  const PODP = currentLang === 'en'
+    ? { 'llms-name': 'Your Company', 'llms-legal': 'Your Company Ltd.', 'llms-url': 'https://www.yourcompany.com', 'llms-desc': 'A short description: what the company does, for whom and what sets it apart.', 'llms-services': 'First service\nSecond service\nThird service' }
+    : { 'llms-name': 'Twoja Firma', 'llms-legal': 'Twoja Firma Sp. z o.o.', 'llms-url': 'https://www.twojafirma.pl', 'llms-desc': 'Krótki opis działalności: czym się zajmuje firma, dla kogo i co ją wyróżnia.', 'llms-services': 'Pierwsza usługa\nDruga usługa\nTrzecia usługa' };
+  Object.keys(PODP).forEach(id => { document.getElementById(id).placeholder = PODP[id]; });
   document.getElementById('llms-name').value = c.name;
   document.getElementById('llms-legal').value = c.legalName;
   document.getElementById('llms-url').value = c.siteUrl;
@@ -11029,6 +11227,7 @@ function saveLlmsConfig() {
     domains: document.getElementById('llms-domains').value,
     blockedDomains: document.getElementById('llms-blocked').value
   };
+  Object.assign(c, bezPrzykladu(c));
   magazyn.setItem('cai-llms', JSON.stringify(c));
   odswiezLicznikDomen();
 //@@IF proxy
@@ -11185,7 +11384,7 @@ function directionalBlock() {
   const codeEl = document.getElementById('dir-country');
   const code = codeEl ? codeEl.value : 'DE';
   const country = DIR_COUNTRY_NAMES[code] || 'Germany';
-  const brand = (BRAND && BRAND.name) ? BRAND.name : 'the company';
+  const brand = nazwaMarki() || 'the company';
   return `\n\nDIRECTIONAL EXPORT LANDING PAGE - this content is a cross-border landing page for customers selling or shipping to ${country} via ${brand}. Mandatory structure:
 - H1 naming the destination market (${country}) and the relevant service.
 - Opening definition box of 25 to 50 words: what the service is and who it is for (businesses serving customers in ${country}).
@@ -11239,8 +11438,18 @@ function oczyscHtmlModelu(html) {
         const wartosc = a.value;
         let zostaw = HTML_ATRYBUTY.has(nazwa) || /^data-[a-z0-9-]+$/.test(nazwa);
         if (nazwa === 'class') zostaw = /^[\w\s-]*$/.test(wartosc);
-        if (nazwa === 'id') zostaw = /^[A-Za-z][\w-]{0,80}$/.test(wartosc);
-        if (tag === 'A' && nazwa === 'href') zostaw = /^(https?:|mailto:|#|\/(?!\/))/i.test(wartosc.trim());
+        // id z modelu dostaje przedrostek: element o id="pdfMake" albo "article" przeslanialby
+        // globalne nazwy i elementy aplikacji. Kotwice w tekscie ida za tym samym przedrostkiem.
+        if (nazwa === 'id') {
+          zostaw = false;
+          if (/^[A-Za-z][\w-]{0,80}$/.test(wartosc)) n.setAttribute('id', wartosc.indexOf('art-') === 0 ? wartosc : 'art-' + wartosc);
+          return;
+        }
+        if (tag === 'A' && nazwa === 'href') {
+          zostaw = /^(https?:|mailto:|#|\/(?!\/))/i.test(wartosc.trim());
+          const kot = wartosc.trim().match(/^#([A-Za-z][\w-]{0,80})$/);
+          if (kot && kot[1].indexOf('art-') !== 0) n.setAttribute('href', '#art-' + kot[1]);
+        }
         if (tag === 'A' && (nazwa === 'target' || nazwa === 'rel')) zostaw = true;
         if (!zostaw) n.removeAttribute(a.name);
       });
@@ -11298,7 +11507,7 @@ function onContentTypeChange() {
 // jednej branzy, wiec kazda inna firma dostawala na start gotowy raport o cudzym
 // rynku - i latwo bylo go uruchomic, nie zauwazywszy, ze bada nie to, co trzeba.
 const VIS_DEFAULTS = {
-  brand: BRAND.name,
+  brand: nazwaMarki(),
   competitors: '',
   iterations: 1,
   prompts: ''
@@ -11397,7 +11606,7 @@ async function runVisibility() {
   }
   const c = saveVisConfig();
   const prompts = c.prompts.split('\n').map(s => s.trim()).filter(Boolean);
-  const brand = c.brand || BRAND.name;
+  const brand = c.brand || nazwaMarki();
   if (!prompts.length) return;
 
   const btn = document.getElementById('vis-run-btn');
@@ -11533,7 +11742,7 @@ async function runNarrative() {
   const out = document.getElementById('vis-results');
   if (gptMode) { out.innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'Web search is not available in the GPT-only mode.' : 'Wyszukiwanie w sieci nie działa w trybie GPT-only.') + '</div>'; return; }
   if (!maDostepDoApi()) { out.innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'Anthropic API key is missing.' : 'Brak klucza API Anthropic.') + '</div>'; return; }
-  const brand = document.getElementById('vis-brand').value.trim() || BRAND.name;
+  const brand = document.getElementById('vis-brand').value.trim() || nazwaMarki();
   const btn = document.getElementById('vis-narr-btn');
   const prog = document.getElementById('vis-progress');
   btn.disabled = true; btn.style.opacity = '0.6';
@@ -11669,10 +11878,10 @@ function buildReport() {
 
   const topCompName = topComp.length ? topComp[0][0] : (en ? 'no data' : 'brak danych');
   const summaryText = (en
-    ? `${last.brand || BRAND.name} scored ${score}/100 on the position-weighted visibility index, appearing in ${present} of ${n} control queries (${pct}% presence) at an average position of ${avgPosition == null ? 'n/a' : '#' + avgPosition}.`
+    ? `${last.brand || nazwaMarki()} scored ${score}/100 on the position-weighted visibility index, appearing in ${present} of ${n} control queries (${pct}% presence) at an average position of ${avgPosition == null ? 'n/a' : '#' + avgPosition}.`
       + (trend ? ` Change vs previous measurement: ${trend.scoreDelta > 0 ? '+' : ''}${trend.scoreDelta} pts.` : '')
       + ` Most cited competitor: ${topCompName}. Queries to improve: ${pri.length}.`
-    : `${last.brand || BRAND.name} uzyskała ${score}/100 we wskaźniku widoczności ważonym pozycją, pojawiając się w ${present} z ${n} kontrolnych zapytań (${pct}% obecności) na średniej pozycji ${avgPosition == null ? 'b.d.' : '#' + avgPosition}.`
+    : `${last.brand || nazwaMarki()} uzyskała ${score}/100 we wskaźniku widoczności ważonym pozycją, pojawiając się w ${present} z ${n} kontrolnych zapytań (${pct}% obecności) na średniej pozycji ${avgPosition == null ? 'b.d.' : '#' + avgPosition}.`
       + (trend ? ` Zmiana względem poprzedniego pomiaru: ${trend.scoreDelta > 0 ? '+' : ''}${trend.scoreDelta} pkt.` : '')
       + ` Najczęściej cytowany konkurent: ${topCompName}. Zapytań do poprawy: ${pri.length}.`);
 
@@ -11765,7 +11974,7 @@ function renderRepModal(rep) {
 function repToText(rep) {
   const en = currentLang === 'en';
   const L = [];
-  L.push((en ? 'AI VISIBILITY REPORT - ' : 'RAPORT WIDOCZNOŚCI AI - ') + (rep.last.brand || BRAND.name));
+  L.push((en ? 'AI VISIBILITY REPORT - ' : 'RAPORT WIDOCZNOŚCI AI - ') + (rep.last.brand || nazwaMarki()));
   L.push('Snapshot: ' + _repDate(rep.last.ts));
   L.push('');
   L.push(rep.summaryText);
@@ -11807,7 +12016,7 @@ function repToHtml(rep) {
   const thS = 'background:#F7EEDD;color:#1B1A17;text-align:left;padding:6px 8px;font-size:10pt;border:1px solid #F7D295';
   const tdS = 'padding:6px 8px;font-size:10pt;border:1px solid #ddd';
   let b = '';
-  b += '<h1>' + (en ? 'AI Visibility Report' : 'Raport widoczności AI') + ' - ' + _visEsc(rep.last.brand || BRAND.name) + '</h1>';
+  b += '<h1>' + (en ? 'AI Visibility Report' : 'Raport widoczności AI') + ' - ' + _visEsc(rep.last.brand || nazwaMarki()) + '</h1>';
   b += '<p style="color:#67635B"><em>Snapshot: ' + _repDate(rep.last.ts) + '</em></p>';
   b += '<table style="border-collapse:collapse;width:100%;margin:10pt 0"><tr>'
     + '<td style="background:#F7EEDD;border:1px solid #F7D295;padding:8pt;text-align:center;width:33%"><div style="font-size:18pt;font-weight:bold;color:#1B1A17">' + rep.score + '</div><div style="font-size:9pt;color:#67635B">' + (en ? 'Visibility score' : 'Wskaźnik widoczności') + '</div></td>'
@@ -11871,13 +12080,13 @@ function dlReportPdf() {
   const en = currentLang === 'en';
   function content() {
     const c = [];
-    c.push({ text: (en ? 'AI Visibility Report' : 'Raport widoczności AI') + ' - ' + (rep.last.brand || BRAND.name), fontSize: 18, bold: true, color: '#1B1A17', margin: [0, 0, 0, 4] });
+    c.push({ text: (en ? 'AI Visibility Report' : 'Raport widoczności AI') + ' - ' + (rep.last.brand || nazwaMarki()), fontSize: 18, bold: true, color: '#1B1A17', margin: [0, 0, 0, 4] });
     c.push({ text: 'Snapshot: ' + _repDate(rep.last.ts), fontSize: 9, color: '#67635B', margin: [0, 0, 0, 10] });
     c.push({ table: { widths: ['*', '*', '*'], body: [[
       { stack: [{ text: '' + rep.score, fontSize: 16, bold: true, alignment: 'center' }, { text: (en ? 'Visibility score' : 'Wskaźnik widoczności'), fontSize: 8, color: '#67635B', alignment: 'center' }], fillColor: '#F7EEDD', margin: [4, 6, 4, 6] },
       { stack: [{ text: rep.pct + '% (' + rep.present + '/' + rep.n + ')', fontSize: 16, bold: true, alignment: 'center' }, { text: (en ? 'Presence' : 'Obecność'), fontSize: 8, color: '#67635B', alignment: 'center' }], fillColor: '#F7EEDD', margin: [4, 6, 4, 6] },
       { stack: [{ text: (rep.avgPosition == null ? (en ? 'n/a' : 'b.d.') : '#' + rep.avgPosition), fontSize: 16, bold: true, alignment: 'center' }, { text: (en ? 'Avg position' : 'Śr. pozycja'), fontSize: 8, color: '#67635B', alignment: 'center' }], fillColor: '#F7EEDD', margin: [4, 6, 4, 6] }
-    ]] }, layout: { hLineColor: () => kolorMarki('secondary'), vLineColor: () => kolorMarki('secondary'), hLineWidth: () => 0.5, vLineWidth: () => 0.5 }, margin: [0, 0, 0, 10] });
+    ]] }, layout: { hLineColor: () => '#D6D3CB', vLineColor: () => '#D6D3CB', hLineWidth: () => 0.5, vLineWidth: () => 0.5 }, margin: [0, 0, 0, 10] });
     c.push({ text: en ? 'Summary' : 'Podsumowanie', fontSize: 13, bold: true, margin: [0, 4, 0, 4] });
     c.push({ text: rep.summaryText, fontSize: 10, margin: [0, 0, 0, 6] });
     c.push({ text: (en ? 'Visibility score (position-weighted): ' : 'Wskaźnik widoczności (ważony pozycją): ') + rep.score + '/100', fontSize: 11, bold: true, margin: [0, 0, 0, 2] });
@@ -11892,7 +12101,7 @@ function dlReportPdf() {
       if (rep.trend.newlyPresent.length) c.push({ text: (en ? 'Newly present: ' : 'Nowo obecne: ') + rep.trend.newlyPresent.join('; '), fontSize: 9, color: '#1B7042', margin: [0, 0, 0, 2] });
       if (rep.trend.newlyAbsent.length) c.push({ text: (en ? 'Newly absent: ' : 'Nowo nieobecne: ') + rep.trend.newlyAbsent.join('; '), fontSize: 9, color: '#B72B29', margin: [0, 0, 0, 6] });
     }
-    const hcell = t => ({ text: t, bold: true, color: kolorMarki('dark'), fillColor: kolorMarki('secondary'), fontSize: 9, margin: [2, 3, 2, 3] });
+    const hcell = t => ({ text: t, bold: true, color: kolorMarki('dark'), fillColor: '#F7EEDD', fontSize: 9, margin: [2, 3, 2, 3] });
     const tblLayout = { hLineColor: () => '#ddd', vLineColor: () => '#ddd', hLineWidth: () => 0.5, vLineWidth: () => 0.5 };
     if (rep.topComp.length) {
       c.push({ text: en ? 'Competitors cited by AI' : 'Konkurenci cytowani przez AI', fontSize: 12, bold: true, margin: [0, 8, 0, 4] });
@@ -11920,16 +12129,17 @@ function dlReportPdf() {
     const dd = {
       pageSize: 'A4', pageMargins: [40, 60, 40, 40],
       header: { table: { widths: ['auto', '*'], body: [[
-        { text: (BRAND.name || 'Content AI'), fontSize: 20, bold: true, color: kolorMarki('primary'), border: [false, false, false, false], margin: [40, 12, 0, 12] },
-        { text: 'Content AI  ·  ' + (BRAND.name || ''), fontSize: 9, bold: true, color: '#1B1A17', alignment: 'right', border: [false, false, false, false], margin: [0, 16, 40, 12] }
-      ]] }, layout: { fillColor: () => kolorMarki('secondary'), hLineWidth: () => 0, vLineWidth: () => 0 } },
+        { text: (nazwaMarki() || 'Content AI'), font: 'Schibsted', fontSize: 13, bold: true, color: '#1B1A17', border: [false, false, false, false], margin: [40, 14, 0, 10] },
+        { text: nazwaMarki() ? 'Content AI' : '', font: 'Schibsted', fontSize: 8, bold: true, color: '#67635B', alignment: 'right', border: [false, false, false, false], margin: [0, 18, 40, 10] }
+      ]] }, layout: { hLineWidth: (i, n) => (i === n.table.body.length ? 0.5 : 0), hLineColor: () => '#D6D3CB', vLineWidth: () => 0 } },
       footer: (page, pages) => ({ text: page + ' / ' + pages, alignment: 'right', fontSize: 8, color: '#8D897F', margin: [0, 0, 40, 10] }),
-      content: content(), defaultStyle: { font: 'Roboto', fontSize: 11, color: '#1B1A17' }
+      content: content(), defaultStyle: { font: 'Literata', fontSize: 10.5, lineHeight: 1.3, color: '#1B1A17' }
     };
+    ustawKrojePdf();
     pdfMake.createPdf(dd).download('Raport_AI_widocznosc.pdf');
   }
   function load(src, cb) { const s = document.createElement('script'); s.src = src; s.onload = cb; s.onerror = () => powiadomBlad(_t('msg-pdf-load-fail')); document.head.appendChild(s); }
-  if (window.pdfMake) { run(); return; }
+  if (window.pdfMake && typeof window.pdfMake.createPdf === 'function') { run(); return; }
   load('pwa/lib/pdfmake.min.js', () => load('pwa/lib/vfs_fonts.js', run));
 }
 // kolory-eksportu:koniec
@@ -12104,7 +12314,7 @@ function computeGeo() {
     const primary = kws[0].kw;
     const others = kws.slice(1).filter(o => new RegExp('\\b' + esc(o.kw) + '\\b').test(txt));
     lineOk = others.length === 0;
-    brandOk = new RegExp('\\b' + esc(primary) + '\\b').test(txt) || (BRAND.name && txt.indexOf(BRAND.name.toLowerCase()) >= 0);
+    brandOk = new RegExp('\\b' + esc(primary) + '\\b').test(txt) || (nazwaMarki() && txt.indexOf(nazwaMarki().toLowerCase()) >= 0);
   }
   const entityChecks = [lineOk, brandOk];
   const entityScore = Math.round(entityChecks.filter(Boolean).length / entityChecks.length * 100);
@@ -12490,8 +12700,11 @@ document.addEventListener('keydown', e => {
     if (i < 0) return;
     stos.splice(i, 1);
     okno.style.zIndex = okno.dataset.zPrzed || '';
-    const o = otwierajacy.get(okno);
+    let o = otwierajacy.get(okno);
     otwierajacy.delete(okno);
+    // Okno otwarte z menu (konto, Widocznosc AI, grupy paska): pozycja menu jest juz
+    // ukryta, wiec fokus wraca na przycisk, ktory to menu otworzyl.
+    if (o && document.contains(o) && !widoczny(o)) o = przyciskMenuDla(o) || o;
     if (o && document.contains(o) && widoczny(o)) { try { o.focus({ preventScroll: true }); } catch (e) {} }
   }
 
@@ -12565,10 +12778,19 @@ document.addEventListener('keydown', e => {
       el.click();
       return;
     }
-    // Strzalki w menu grup paska wyniku.
-    const menu = el.closest('.grupa-menu');
+    // Escape i Tab w menu: menu sie zamyka, fokus wraca na przycisk, ktory je otworzyl.
+    const wMenu = el.closest('.grupa-menu, .settings-menu');
+    if (wMenu && (e.key === 'Escape' || e.key === 'Tab')) {
+      const p = przyciskMenuDla(el);
+      if (wMenu.classList.contains('settings-menu')) closeSettingsMenu(); else zamknijGrupyPaska();
+      if (p) p.focus();
+      if (e.key === 'Escape') e.preventDefault();
+      return;
+    }
+    // Strzalki w menu grup paska wyniku i w menu konta.
+    const menu = el.closest('.grupa-menu, .settings-menu');
     if (menu && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Home' || e.key === 'End')) {
-      const pozycje = [...menu.querySelectorAll('button, [role="button"]')].filter(b => b.offsetParent !== null);
+      const pozycje = [...menu.querySelectorAll('button, [role="button"], .settings-item')].filter((b, i, w) => b.offsetParent !== null && w.indexOf(b) === i);
       if (!pozycje.length) return;
       e.preventDefault();
       let i = pozycje.indexOf(el);
@@ -13110,7 +13332,7 @@ function imgShowResult(blob, label, w, h, prompt) {
 
   const dl = document.getElementById('img-download-link');
   dl.href     = url;
-  dl.download = `${BRAND_SLUG}_${label.replace('×','x')}_${Date.now()}.png`;
+  dl.download = `${slugMarki()}_${label.replace('×','x')}_${Date.now()}.png`;
 }
 
 async function imgCopyResult() {
@@ -13138,7 +13360,7 @@ function imgRenderHistory() {
       </div>
       <div style="padding:4px 6px;display:flex;align-items:center;justify-content:space-between">
         <span style="font-size:9px;color:var(--text3)">${item.shortKey ? _t(item.shortKey) : item.label}</span>
-        <a href="${url}" download="${BRAND_SLUG}_${(item.shortKey ? _t(item.shortKey) : item.label).replace('×','x')}_${i}.png"
+        <a href="${url}" download="${slugMarki()}_${(item.shortKey ? _t(item.shortKey) : item.label).replace('×','x')}_${i}.png"
            onclick="event.stopPropagation()" style="text-decoration:none">' + ikona('download') + '</a>
       </div>
     </div>`;
@@ -13158,7 +13380,7 @@ function imgLoadFromHistory(idx) {
 /* ───────────────────────── TRACKER WIDOCZNOSCI W AI (AI VISIBILITY) ───────────────────────── */
 var AIV_DEFAULT = {
   domains: brandHosts(),
-  brands: [BRAND.name],
+  brands: [nazwaMarki()],
   queries: []
 };
 function aivCfg() {
@@ -13291,7 +13513,7 @@ function aivExport() {
   var csv = rows.map(function(r){ return r.map(function(v){ return '"' + String(v).replace(/"/g,'""') + '"'; }).join(','); }).join('\n');
   var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
   var url = URL.createObjectURL(blob);
-  var a = document.createElement('a'); a.href = url; a.download = BRAND_SLUG + '_widocznosc_AI.csv'; a.click();
+  var a = document.createElement('a'); a.href = url; a.download = slugMarki() + '_widocznosc_AI.csv'; a.click();
   setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
 }
 
@@ -13704,7 +13926,7 @@ async function podcastDownload(btn) {
     var blobs = []; for (var i = 0; i < units.length; i++) blobs.push(await podGen(units[i]));
     var full = new Blob(blobs, { type: 'audio/mpeg' });
     var url = URL.createObjectURL(full);
-    var a = document.createElement('a'); a.href = url; a.download = BRAND_SLUG + '_podcast.mp3'; a.click();
+    var a = document.createElement('a'); a.href = url; a.download = slugMarki() + '_podcast.mp3'; a.click();
     setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
   } catch(e) { powiadomBlad(ttsErrMsg(e)); }
   btn.innerHTML = old; btn.disabled = false;
@@ -13814,7 +14036,7 @@ function audioRaf(){ if(AUDIO.raf) cancelAnimationFrame(AUDIO.raf); var step=fun
 function audioStartSrc(off){ var ctx=audioCtx(); var s=ctx.createBufferSource(); s.buffer=AUDIO.buffer; s.connect(ctx.destination); s.onended=function(){ if(s._stopped) return; AUDIO.playing=false; AUDIO.offset=AUDIO.dur; if(AUDIO.raf){ cancelAnimationFrame(AUDIO.raf); AUDIO.raf=0; } audioBarTick(); audioSetPlayBtn(audioActiveBtn||document.getElementById('au-play-btn'),'idle'); audioBarSetIcon('play'); }; AUDIO.src=s; AUDIO.offset=Math.max(0,Math.min(off,AUDIO.dur)); AUDIO.startedAt=ctx.currentTime; AUDIO.playing=true; s.start(0, AUDIO.offset); audioRaf(); }
 function audioPauseSrc(){ if(!AUDIO.playing||!AUDIO.src) return; AUDIO.offset=audioPos(); AUDIO.playing=false; try{ AUDIO.src._stopped=true; AUDIO.src.onended=null; AUDIO.src.stop(); }catch(e){} AUDIO.src=null; if(AUDIO.raf){ cancelAnimationFrame(AUDIO.raf); AUDIO.raf=0; } }
 function audioSeek(pr){ if(!AUDIO.buffer) return; var off=Math.max(0,Math.min(1,pr))*AUDIO.dur; if(AUDIO.playing){ try{ AUDIO.src._stopped=true; AUDIO.src.onended=null; AUDIO.src.stop(); }catch(e){} AUDIO.src=null; audioStartSrc(off); } else { AUDIO.offset=off; audioBarTick(); } }
-function audioFileName(){ var sc=document.getElementById('au-script'); var hh=sc?sc.querySelector('h1'):null; var topic=(hh&&hh.textContent)?hh.textContent.trim():''; if(!topic){ var s=document.getElementById('au-source'); topic=(s&&s.value)?s.value.trim():''; } topic=(topic||audioType()).slice(0,60); var bad=':*?"<>|/'+String.fromCharCode(92); var out=''; for(var i=0;i<topic.length;i++){ var chx=topic.charAt(i); out+=(bad.indexOf(chx)>=0)?'':chx; } out=out.replace(/ +/g,'_'); while(out.indexOf('__')>=0) out=out.replace('__','_'); while(out.charAt(0)==='_') out=out.slice(1); while(out.length&&out.charAt(out.length-1)==='_') out=out.slice(0,-1); if(!out) out=BRAND_SLUG+'_'+audioType(); return out+'.mp3'; }
+function audioFileName(){ var sc=document.getElementById('au-script'); var hh=sc?sc.querySelector('h1'):null; var topic=(hh&&hh.textContent)?hh.textContent.trim():''; if(!topic){ var s=document.getElementById('au-source'); topic=(s&&s.value)?s.value.trim():''; } topic=(topic||audioType()).slice(0,60); var bad=':*?"<>|/'+String.fromCharCode(92); var out=''; for(var i=0;i<topic.length;i++){ var chx=topic.charAt(i); out+=(bad.indexOf(chx)>=0)?'':chx; } out=out.replace(/ +/g,'_'); while(out.indexOf('__')>=0) out=out.replace('__','_'); while(out.charAt(0)==='_') out=out.slice(1); while(out.length&&out.charAt(out.length-1)==='_') out=out.slice(0,-1); if(!out) out=slugMarki()+'_'+audioType(); return out+'.mp3'; }
 function audioHistTopic(){ var s=document.getElementById('au-source'); var v=(s&&s.value)?s.value.trim():''; if(v) return v.slice(0,60); var sc=document.getElementById('au-script'); var hh=sc?sc.querySelector('h1'):null; return (hh&&hh.textContent)?hh.textContent.trim().slice(0,60):_t('audio-hist'); }
 function audioHistSave(type, html, cost){ var e={ topic:audioHistTopic(), type:type, html:html, ts:new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}), sig:null, blob:null, buffer:null, dur:0, cost:cost||0 }; audioHistory.unshift(e); if(audioHistory.length>20) audioHistory.length=20; audioCurEntry=e; audioRenderHistory(); }
 function audioHistAttach(buffer, blob, dur, sig, ttsCost){ var e=audioCurEntry; if(!e) return; e.buffer=buffer; e.blob=blob; e.dur=dur; e.sig=sig; e.cost=(e.cost||0)+(ttsCost||0); var sc=document.getElementById('au-script'); if(sc) e.html=sc.innerHTML; audioRenderHistory(); }
@@ -15264,7 +15486,7 @@ async function kbAudioTranscribeAndOpen(file) {
       cel.innerHTML = naglowek(
           tekst('start-3-tytul','Twoja marka'),
           tekst('start-3-opis','Głos marki to opis tego, jak ma brzmieć Twoja treść: ton, słownictwo, czego unikać. Bez niego artykuły będą poprawne, ale bezosobowe. Możesz to ustawić teraz albo wrócić do tego później.'))
-        + '<button onclick="openBvModal()" style="width:100%;padding:12px;border:1px solid var(--c-akcent);border-radius:var(--radius);background:none;color:var(--c-akcent);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px">'
+        + '<button type="button" class="btn-secondary btn-pelny" onclick="openBvModal()" style="margin-bottom:10px">'
           + tekst('start-3-otworz','Otwórz ustawienia głosu marki') + '</button>'
         + '<div style="font-size:12px;color:var(--text3);line-height:1.55">'
           + tekst('start-3-potem','Kreator zostaje otwarty - po zapisaniu głosu marki wróć tutaj i kliknij „Dalej”.') + '</div>';

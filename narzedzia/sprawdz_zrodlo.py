@@ -511,7 +511,7 @@ KONTROLE = [
     # urzadzenie mialy wlasna kopie, a nowa osoba w zespole zaczynala od pustej
     # i generowala teksty bez regul o marce.
     ("F49/serwer", "konfiguracja marki z serwera ma pierwszenstwo nad przegladarka",
-     "if (markaZSerwera) return Object.assign({}, LLMS_DEFAULTS, markaZSerwera);",
+     "if (markaZSerwera) return bezPrzykladu(Object.assign({}, LLMS_DEFAULTS, markaZSerwera));",
      "function getLlmsConfig() {\n  try {", None),
     ("F49/pobranie", "pobranie konfiguracji marki z serwera",
      "async function wczytajMarkeZSerwera() {", None, ("proxy",)),
@@ -531,6 +531,16 @@ KONTROLE = [
      "var SEKRETY_KONTA = /^(cai_key_|cai_klucz_)|^(cai-wp|cai-drupal)$/;", None, ("proxy",)),
     ("R2/brief-telefon", "menu zadan briefu na telefonie jako arkusz od dolu",
      "body.is-mobile #grupa-brief-menu, body.is-mobile #grupa-widocznosc-menu { top: auto; bottom: 0;", None, None),
+    # Na telefonie powiadomienie przez kilka sekund zaslanialo "Wygeneruj tresc", a pasek
+    # audio lezal pod dolna nawigacja. Oba stoja teraz nad najwyzszym stalym paskiem.
+    ("R2/paski-dolne", "powiadomienia i pasek audio nad paskami dolu telefonu",
+     "body.is-mobile #powiadomienia { bottom: calc(var(--nad-audio,", None, None),
+    ("R2/wp-bez-h1", "tresc do CMS bez H1 (tytul idzie osobnym polem)",
+     "if (h1) h1.remove();", None, None),
+    ("R2/wp-publikuj", "Publikuj dla biezacego artykulu po zapisaniu ustawien CMS",
+     "if (pub) pub.style.display = ((wpSettings.url || drupalSettings.url) && art", None, None),
+    ("R2/cms-https", "CMS pod http:// - komunikat o https zamiast CORS",
+     "if (cmsBezHttps(adresCms)) {", None, None),
 
     # ── warstwa reskinu ──
     # Splash trzymal gotowa aplikacje jeszcze 2,4 s (stale 1900 ms + zanikanie) i zjadal
@@ -677,7 +687,7 @@ KONTROLE = [
      "if (!html || bladGenerowania) {",
      "html.startsWith('<p style=\"color:var(--red)\">')", None),
     ("G/escape", "tresc bledu API escapowana przed wstawieniem",
-     "escapeHtml(e && e.message || '')", "</strong> ${e.message}</p>", None),
+     "escapeHtml(komunikatBleduApi(e))", "</strong> ${e.message}</p>", None),
     ("G/uciety", "artykul uciety na limicie dlugosci oznaczony ostrzezeniem",
      "artykulUciety = data.stop_reason === 'max_tokens';", None, None),
     ("G/dostep", "przerobki, widocznosc i narracja dzialaja za proxy (bez klucza w przegladarce)",

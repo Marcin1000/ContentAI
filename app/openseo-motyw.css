@@ -61,6 +61,8 @@
   --color-base-100: #ffffff; /* powierzchnia kart */
   --color-base-200: #f7f6f2; /* tlo strony */
   --color-base-300: #d6d3cb; /* obramowania, separatory */
+  --cai-obrys-pola: #8d897f; /* obrys pol, 3.2:1 do tla (WCAG 1.4.11) */
+  --cai-fokus: #b06c00; /* fokus: ciemny bursztyn, czytelny na jasnym */
   --color-base-content: #1b1a17; /* tekst */
 
   --color-primary: #f6a623; /* bursztyn marki - tylko decyzja */
@@ -100,6 +102,8 @@
     --color-base-100: #171715;
     --color-base-200: #111110;
     --color-base-300: #363632;
+    --cai-obrys-pola: #716f67;
+    --cai-fokus: #f6a623;
     --color-base-content: #edebe6;
 
     --color-primary: #f6a623; 
@@ -131,6 +135,8 @@ html.cai-ciemny {
   --color-base-100: #171715;
   --color-base-200: #111110;
   --color-base-300: #363632;
+  --cai-obrys-pola: #716f67;
+  --cai-fokus: #f6a623;
   --color-base-content: #edebe6;
 
   --color-primary: #f6a623;
@@ -161,6 +167,8 @@ html.cai-jasny {
   --color-base-100: #ffffff;
   --color-base-200: #f7f6f2;
   --color-base-300: #d6d3cb;
+  --cai-obrys-pola: #8d897f;
+  --cai-fokus: #b06c00;
   --color-base-content: #1b1a17;
 
   --color-primary: #f6a623;
@@ -244,13 +252,35 @@ samp,
   --btn-border: var(--btn-color, var(--color-base-300));
 }
 
-/* Pola aktywne obrysowane cyanem, jak w calej aplikacji. */
+/* Obrys pol jak --c-ramka w Content AI. daisyUI 5 bierze kolor ramki pola
+   z --input-color, wiec podmieniamy tylko te zmienna. Separatory i karty
+   zostaja na --color-base-300. */
+.input,
+.textarea,
+.select,
+.file-input {
+  --input-color: var(--cai-obrys-pola);
+}
+
+/* Fokus jak w calej aplikacji: bursztynowy obrys 2 px z odstepem. */
 .input:focus,
-.input:focus-visible,
+.input:focus-within,
 .textarea:focus,
-.textarea:focus-visible,
 .select:focus,
-.select:focus-visible {
-  outline: none;
-  border-color: var(--color-accent);
+.select:focus-within,
+.file-input:focus,
+.file-input:focus-within {
+  --input-color: var(--cai-obrys-pola);
+  outline: 2px solid var(--cai-fokus);
+  outline-offset: 2px;
+}
+:focus-visible,
+.btn:focus-visible,
+.checkbox:focus-visible,
+.radio:focus-visible,
+.toggle:focus-visible,
+.tab:focus-visible,
+.menu li > *:focus-visible {
+  outline: 2px solid var(--cai-fokus);
+  outline-offset: 2px;
 }
