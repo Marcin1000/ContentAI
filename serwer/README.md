@@ -51,9 +51,19 @@ node serwer/uzytkownicy.js lista
 node serwer/uzytkownicy.js haslo anna              # zmiana hasła
 node serwer/uzytkownicy.js rola anna admin
 node serwer/uzytkownicy.js usun anna
+node serwer/uzytkownicy.js prosby 20               # ostatnie prośby o dostęp ze strony
 ```
 
-Hasło ma minimum 10 znaków. Ostatniego admina nie da się usunąć ani zdegradować.
+Hasło ma minimum 10 znaków. Login: 2-40 znaków, małe litery `a-z`, cyfry, kropka,
+podkreślnik i myślnik (baza wiedzy i liczniki trzymają login w nazwie pliku, więc dwa
+różne loginy nie mogą dać tej samej nazwy). Ostatniego admina nie da się usunąć ani
+zdegradować.
+
+Ekran logowania jest w barwach marki, po polsku albo angielsku (wg `Accept-Language`,
+przełącznik `?lang=en|pl`), w jasnym lub ciemnym motywie wg systemu, bez skryptów i bez
+zasobów z obcych serwerów (kroje z `app/pwa/fonty/`). Logowanie zawsze liczy scrypt,
+także dla nieistniejącego loginu, więc po czasie odpowiedzi nie da się rozpoznać,
+które loginy istnieją.
 
 Sesja siedzi w **podpisanym ciasteczku**, nie w pamięci procesu - restart usługi,
 a więc każda aktualizacja, nie wylogowuje zespołu.
@@ -113,6 +123,23 @@ Wszystko przez zmienne środowiskowe.
 | `CAI_OPENSEO_UPSTREAM` | `3001` | port kontenera OpenSEO |
 | `CAI_OPENSEO_HOST` | `127.0.0.1` | host kontenera OpenSEO |
 | `CAI_OPENSEO_ADRES` | - | publiczny adres OpenSEO - dokłada pozycję w menu |
+| `CAI_MARKA` | `serwer/dane` | katalog z `marka.json` |
+| `CAI_SEKRET_PLIK` | `serwer/dane/sekret` | plik z sekretem sesji (gdy brak `CAI_SEKRET_SESJI`) |
+| `CAI_WYLOGOWANE` | `serwer/dane/wylogowane.json` | lista sesji wylogowanych ręcznie |
+| `CAI_PROSBY` | `serwer/dane/prosby.jsonl` | prośby o dostęp ze strony produktowej (JSON Lines) |
+| `CAI_STRONA_ORIGIN` | `https://content-ai.net,https://www.content-ai.net` | skąd wolno wysłać prośbę o dostęp (lista po przecinku) |
+| `CAI_PROSBY_DNI` | `365` | ile dni trzymać prośby o dostęp; starsze wypadają przy starcie i przy zapisie |
+| `CAI_MODELE` | - | modele dopuszczone **oprócz** stałych `MODEL_*` aplikacji (lista po przecinku) |
+| `CAI_MAX_TOKENS` | `32000` | sufit `max_tokens` w `/api` |
+| `CAI_ROZMIARY_GRAFIK` | - | rozmiary grafik **oprócz** `IMG_FORMATS` aplikacji, np. `1792x1024` |
+| `CAI_CZAS_TRESCI_MS` | `120000` | limit czasu krótkich wywołań modelu |
+| `CAI_CZAS_DLUGI_MS` | `600000` (min. 300000) | limit czasu artykułu, wyszukiwania w sieci, `max_tokens` > 4000 |
+| `CAI_CZAS_OBRAZOW_MS` | `240000` | limit czasu generowania grafiki |
+| `CAI_CZAS_AUDIO_MS` | `120000` | limit czasu syntezy mowy (OpenAI, ElevenLabs) |
+| `CAI_CZAS_TRANSKRYPCJI_MS` | `300000` | limit czasu transkrypcji |
+| `CAI_CZAS_SERP_MS` | `30000` | limit czasu DataForSEO i SERP przez OpenSEO |
+| `CAI_CZAS_OPENSEO_MS` | `120000` | limit bezczynności bramy OpenSEO |
+| `CAI_KOMPRESJA` | `1` | `0` wyłącza kompresję w Node (gdy pakuje Caddy) |
 
 ### Klucze mieszane
 
@@ -174,9 +201,15 @@ albo strona odmówi, schodzi na narzędzie `web_fetch` modelu.
 
 **Adres jest sprawdzany przy każdym skoku przekierowania.** Bez tego endpoint byłby
 okienkiem do sieci wewnętrznej: wystarczyłoby podać `http://169.254.169.254/`, żeby
-metadane maszyny trafiły do bazy wiedzy. Odrzucane są pętla zwrotna, zakresy prywatne,
-link-local, CGNAT i wszystko, czego nie da się rozpoznać jako adres publiczny. Limity:
-4 MB odpowiedzi, 400 tys. znaków tekstu, 5 przekierowań, 20 sekund.
+metadane maszyny trafiły do bazy wiedzy. Odrzucane są wszystkie zakresy specjalne
+z rejestrów IANA (`net.BlockList`: pętla zwrotna, prywatne, link-local, CGNAT,
+dokumentacyjne, benchmarkowe, multicast, 6to4, NAT64, IPv4 zapisane jako IPv6 i inne)
+oraz wszystko, czego nie da się rozpoznać jako adres publiczny. Adres jest sprawdzany
+drugi raz **w chwili łączenia** (opcja `lookup` w `http/https.request`), więc zmiana
+odpowiedzi DNS między sprawdzeniem a połączeniem nic nie da. Limit 4 MB jest liczony
+w trakcie czytania odpowiedzi, a nie po wczytaniu całości. Limity: 4 MB odpowiedzi,
+400 tys. znaków tekstu, 5 przekierowań, 20 sekund. Do przeglądarki idą tylko nasze
+komunikaty; szczegóły błędów sieci zostają w logu.
 
 ### Konfiguracja marki
 
@@ -261,6 +294,13 @@ u Anthropic**. Ma to dwie konsekwencje:
 `CAI_SERP=dataforseo` bierze dane z API DataForSEO - realne wyniki organiczne, niezależnie
 od dostawcy modelu. To **to samo źródło, z którego korzysta OpenSEO**.
 
+Zapytanie o SERP serwer rozpoznaje po treści, a nie po samym narzędziu `web_search`:
+prompt systemowy analizy SERP („Search for top Google results for the given keyword")
+i wiadomość „Keyword: <fraza>" z `fetchSerpContext`. Narzędzie dostają też artykuł
+z przełącznikiem sieci, monitor AI i widoczność marki - te idą do modelu jak zwykłe
+wywołanie (pakiet darmowy ich nie blokuje, a przy `CAI_SERP=dataforseo` artykuł
+dostaje artykuł, nie JSON z danymi SERP).
+
 ```
 CAI_SERP=dataforseo
 DATAFORSEO_LOGIN=twoj@email.pl
@@ -293,6 +333,18 @@ ciasteczka - po restarcie wszyscy logują się ponownie.
 
 Token sesji Content AI jest **wycinany** z nagłówka `Cookie` przed przekazaniem żądania
 do kontenera - obca aplikacja go nie widzi.
+
+Brama wysyła też **nagłówki bezpieczeństwa**: jej własne strony (logowanie, 402, błąd
+kontenera) mają ten sam zestaw co aplikacja (CSP z `frame-ancestors 'none'`,
+`X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`), a strony z kontenera minimum,
+które nie łamie obcej aplikacji: `X-Frame-Options: SAMEORIGIN`,
+`Content-Security-Policy: frame-ancestors 'self'`, `nosniff`, `Referrer-Policy: same-origin`.
+Nagłówek ustawiony przez samo OpenSEO wygrywa z naszym.
+
+Brama sprawdza też **pakiet**: kontener nie ma własnego logowania, więc bez tego każde
+konto (także darmowe) miałoby pełne OpenSEO, łącznie z płatnymi badaniami DataForSEO.
+Wchodzi konto z funkcją `openseo` w pakiecie (Premium) albo z rolą admin; reszta dostaje
+**402** ze stroną z wyjaśnieniem, a WebSocket jest zamykany.
 
 ### Pakiety i limity
 
@@ -388,6 +440,10 @@ W trybie `local_noauth` ten endpoint nie wymaga tokenu, a ruch idzie po pętli z
 | `GET /api/seo/okazje` | strony na pozycjach 4-20 (wymaga GSC + GA4) | **0** |
 | `POST /api/seo/badaj` | badanie nowych fraz | **płatne** |
 
+Bez bramy OpenSEO (`CAI_OPENSEO_PORT` puste) `GET /api/seo/projekty` odpowiada
+`200 {projekty: [], dostepne: false}` - aplikacja sprawdza tę listę przy każdym starcie
+i brak OpenSEO jest normalnym stanem, nie błędem. Pozostałe `/api/seo/*` dają wtedy 501.
+
 Zero oznacza tu dosłownie zero: te narzędzia czytają bazę OpenSEO i nie wołają DataForSEO.
 Płatne narzędzie odmówi wywołania bez jawnego `potwierdzam: true` i zapisze do logu login
 osoby, która je uruchomiła - wydatek ma mieć właściciela.
@@ -456,14 +512,139 @@ objawem byłoby wylogowywanie po każdym restarcie i limity, które nic nie licz
 
 ### Caddy - HTTPS
 
+Jedno źródło prawdy: **`dokumenty/Caddyfile.content-ai`** (strona produktowa
+`content-ai.net`, przekierowanie `www`, aplikacja `app.`, opcjonalnie `seo.`). Ten sam blok
+jest w `dokumenty/ContentAI_Domena_Cloudflare.md` i `dokumenty/ContentAI_obok_Cosmosa.md`;
+wersje z bramą Authelia i z OpenSEO: `brama/Caddyfile.przyklad`, `openseo/Caddyfile.przyklad`.
+
+**Nie nadpisuj `/etc/caddy/Caddyfile`** - na serwerze może stać Cosmos albo inna usługa.
+Zrób kopię, blok globalny `{ servers { ... } }` dopisz na samą górę (Caddy przyjmuje tylko
+jeden, pierwszy w pliku; jeśli już jest, dopisz do niego sekcję `servers`), bloki domen
+Content AI zastąp albo dopisz, potem `caddy validate --config /etc/caddy/Caddyfile
+--adapter caddyfile` i `systemctl reload caddy`. Wymaga Caddy 2.7+.
+
 ```
-contentai.twojadomena.pl {
-    reverse_proxy 127.0.0.1:3100
+{
+    servers {
+        # Adresy Cloudflare. Tylko z nich Caddy przyjmie adres klienta z naglowka;
+        # od kazdego innego polaczenia {client_ip} to adres samego polaczenia.
+        # Aplikacja (app., szara chmurka) idzie z pominieciem Cloudflare, wiec u niej
+        # {client_ip} to zawsze prawdziwy adres. Aktualna lista: https://www.cloudflare.com/ips/
+        trusted_proxies static 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22 2400:cb00::/32 2606:4700::/32 2803:f800::/32 2405:b500::/32 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32
+        # Cloudflare zawsze wysyla CF-Connecting-IP; X-Forwarded-For jako zapasowy jest zbedny.
+        client_ip_headers CF-Connecting-IP
+    }
 }
+
+# ── Strona produktowa: jeden adres kanoniczny ───────────────────────────────
+# www przekierowuje na apex: strona ma canonical i hreflang na https://content-ai.net/,
+# a formularz "Popros o dostep" wysyla z jednego pochodzenia (CAI_STRONA_ORIGIN).
+www.content-ai.net {
+    redir https://content-ai.net{uri} permanent
+}
+
+content-ai.net {
+    encode zstd gzip
+    root * /srv/contentai/showcase
+
+    # Zrodla generatora strony (szablon.html, teksty.json, czesci/) nie sa strona.
+    @zrodlo path /zrodlo /zrodlo/*
+    respond @zrodlo 404
+
+    # --- Pamiec podreczna ---
+    # HTML: przegladarka zawsze pyta (ETag); krawedz Cloudflare trzyma 10 minut.
+    @html path / /en/ /prywatnosc/ /en/privacy/ *.html
+    header @html Cache-Control "public, max-age=0, must-revalidate"
+    header @html CDN-Cache-Control "max-age=600"
+    # CSS i JS maja w adresie ?v=<skrot tresci> (buduj_strone.py): nowa wersja = nowy adres.
+    @zasoby path /zasoby/*
+    header @zasoby Cache-Control "public, max-age=31536000, immutable"
+    # Fonty maja nazwy bez wersji, wiec 30 dni, nie rok.
+    @fonty path /fonty/*
+    header @fonty Cache-Control "public, max-age=2592000"
+    # Obrazy, ikony, manifest: dzien + tydzien stale-while-revalidate (og-*.png bez wersji w nazwie).
+    @obrazy path /obrazy/* /favicon.ico /favicon.svg /site.webmanifest
+    header @obrazy Cache-Control "public, max-age=86400, stale-while-revalidate=604800"
+    @seo path /robots.txt /sitemap.xml
+    header @seo Cache-Control "public, max-age=3600"
+
+    # --- Bezpieczenstwo ---
+    # Strona nie ma skryptow ani stylow inline i nie laduje nic z obcych serwerow.
+    # connect-src: formularz wysyla POST na https://app.content-ai.net/api/prosba-o-dostep.
+    header {
+        Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://app.content-ai.net; manifest-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+        Cross-Origin-Opener-Policy "same-origin"
+        -Server
+    }
+
+    file_server
+}
+
+# ── Aplikacja ───────────────────────────────────────────────────────────────
+# Logowanie i konta obsluguje sam Content AI - NIE dodawaj tu basic_auth.
+# Naglowki bezpieczenstwa (CSP, X-Frame-Options, nosniff...) wysyla Node; tu tylko HSTS.
+# Bez encode: Node sam pakuje HTML/JS/CSS (brotli albo gzip, wersje spakowane trzyma
+# w pamieci). Jesli wolisz pakowanie w Caddy, dopisz encode zstd gzip i ustaw
+# CAI_KOMPRESJA=0 w /etc/contentai/srodowisko.
+app.content-ai.net {
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        -Server
+    }
+    reverse_proxy 127.0.0.1:3100 {
+        # NADPISUJE naglowek od klienta. Bez tej linii X-Real-IP od klienta przechodzi
+        # bez zmian i Node mu ufa (limit prob logowania do ominiecia), a bez naglowka
+        # wszyscy uzytkownicy sa dla Node jednym adresem 127.0.0.1.
+        header_up X-Real-IP {client_ip}
+    }
+}
+
+# ── OpenSEO (tylko gdy wdrozone, CAI_OPENSEO_PORT=3110) ──────────────────────
+# Port 3110 (brama Content AI), NIGDY 3001 (goly kontener bez logowania).
+# encode ma tu sens: brama oddaje HTML nieskompresowany, bo dokleja do niego motyw.
+#
+# seo.content-ai.net {
+#     encode zstd gzip
+#     header {
+#         Strict-Transport-Security "max-age=31536000; includeSubDomains"
+#         -Server
+#     }
+#     reverse_proxy 127.0.0.1:3110 {
+#         header_up X-Real-IP {client_ip}
+#     }
+# }
 ```
 
-Caddy sam pobierze certyfikat. **Nie dodawaj tu `basicauth`** - logowanie obsługuje
+Caddy sam pobierze certyfikat. **Nie dodawaj tu `basic_auth`** - logowanie obsługuje
 już serwer, a dwa ekrany logowania pod rząd tylko męczą.
+
+- **`header_up X-Real-IP {client_ip}` jest obowiązkowe.** Node czyta `X-Real-IP` tylko
+  wtedy, gdy połączenie przyszło z pętli zwrotnej (Caddy na tej samej maszynie);
+  `X-Forwarded-For` jest ignorowany. Bez tej linii wszyscy użytkownicy są dla Node jednym
+  adresem `127.0.0.1` (8 błędnych prób jednej osoby blokuje logowanie całemu zespołowi),
+  a gołe `reverse_proxy` przepuszcza `X-Real-IP` od klienta, więc da się nim obejść limit.
+  Serwer wypisuje w logu ostrzeżenie, gdy żądanie z pętli zwrotnej przyjdzie bez tego
+  nagłówka (raz na godzinę).
+- **`trusted_proxies` + `client_ip_headers CF-Connecting-IP`**: strona produktowa idzie
+  przez Cloudflare (pomarańczowa chmurka), więc bez tego `{client_ip}` byłby adresem
+  Cloudflare. Aplikacja (`app.`, szara chmurka) łączy się z pominięciem Cloudflare - tam
+  `{client_ip}` to zawsze adres połączenia.
+- **HSTS** ustawia Caddy, bo dotyczy HTTPS, którego Node nie widzi. Bez `preload` na
+  start; `includeSubDomains` obejmuje też `seo.` i każdą inną poddomenę, więc wszystkie
+  muszą mieć certyfikat (Caddy robi to sam). Pozostałe nagłówki bezpieczeństwa aplikacji
+  wysyła Node, więc w bloku `app.` ich nie dubluj.
+- **Kompresja**: Node sam pakuje HTML, JS i CSS (brotli albo gzip wg `Accept-Encoding`,
+  z `Vary: Accept-Encoding`, wersje spakowane trzyma w pamięci), więc blok `app.` nie ma
+  `encode`. Jeśli wolisz pakowanie w Caddy, dopisz `encode zstd gzip` i ustaw
+  `CAI_KOMPRESJA=0`.
+- Brama OpenSEO (`seo.` → port `CAI_OPENSEO_PORT`) potrzebuje tego samego
+  `header_up X-Real-IP {client_ip}`; tam `encode` zostaje, bo brama oddaje HTML
+  nieskompresowany.
 
 ### Aktualizacja
 
@@ -471,6 +652,9 @@ już serwer, a dwa ekrany logowania pod rząd tylko męczą.
 cd /srv/contentai && sudo git pull
 sudo systemctl restart contentai
 ```
+
+Gdy wydanie zmienia blok Caddy (`dokumenty/Caddyfile.content-ai`): **najpierw** Caddyfile,
+`caddy validate` i `systemctl reload caddy`, **dopiero potem** `git pull` i restart.
 
 ---
 
@@ -484,9 +668,10 @@ Co serwer robi:
 - klucze API nigdy nie docierają do przeglądarki
 - pliki statyczne tylko z listy dozwolonych: `manifest.json`, `icons/*`, `pwa/lib/*.js`
   i `pwa/fonty/*.woff2` - reszta katalogu jest niedostępna, próby wyjścia poza katalog
-  kończą się 404
+  kończą się 404; przed zalogowaniem dostępne są tylko manifest, ikony i kroje (ekran
+  logowania), biblioteki aplikacji dopiero po zalogowaniu
 - aplikacja nie pobiera niczego z obcych serwerów: biblioteki (mammoth, pdf.js, pdfmake,
-  xlsx, html-docx-js) i krój IBM Plex leżą w repozytorium i idą z Twojego hosta
+  xlsx, html-docx-js) i kroje (Schibsted Grotesk, Literata, JetBrains Mono) leżą w repozytorium i idą z Twojego hosta
 - szczegóły błędów dostawcy trafiają do logu serwera, nie do przeglądarki
 
 Czego **nie** robi - i o czym trzeba wiedzieć:
@@ -495,5 +680,124 @@ Czego **nie** robi - i o czym trzeba wiedzieć:
 - brak resetu hasła przez e-mail - hasło zmienia admin poleceniem
 - licznik prób logowania jest w pamięci i per IP; za wspólnym NAT-em zablokuje wszystkich
   z tego adresu naraz
-- serwer ufa nagłówkowi `X-Forwarded-For` - ma sens **tylko** za własnym Caddy/nginx;
-  nie wystawiaj go bezpośrednio na świat
+- adres klienta bierze z `X-Real-IP` tylko przy połączeniu z pętli zwrotnej (od Caddy),
+  więc port Node nie może być wystawiony na świat; `CAI_HOST` zostaje na `127.0.0.1`
+
+### Nagłówki bezpieczeństwa
+
+Każda odpowiedź aplikacji i ekranu logowania ma:
+
+| Nagłówek | Wartość |
+|---|---|
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https:; media-src 'self' blob: data:; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'` |
+| `X-Frame-Options` | `DENY` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `same-origin` |
+| `Permissions-Policy` | `camera=(), geolocation=(), payment=(), usb=(), microphone=(self)` |
+| `Cross-Origin-Opener-Policy` | `same-origin` |
+| `Cache-Control` (`/api/*`, `/auth/*`, ekran logowania) | `no-store` |
+
+`'unsafe-inline'` w `script-src` musi zostać, dopóki aplikacja ma setki atrybutów
+`on*` i skrypty w HTML. Taka polityka nie zatrzyma wstrzykniętego skryptu, ale odcina
+mu wyprowadzanie danych i osadzanie aplikacji w obcej ramce. `connect-src https:`
+zostaje dla publikacji do WordPressa i Drupala prosto z przeglądarki; po przeniesieniu
+publikacji na serwer można je zawęzić do `'self'`. HSTS: patrz sekcja Caddy.
+
+### CSRF
+
+`SameSite=Lax` nie chroni przed żądaniami z tej samej domeny nadrzędnej (strona
+produktowa i `seo.` są dla przeglądarki tą samą „stroną" co aplikacja). Dlatego:
+
+- POST (i inne metody zmieniające stan) z `Sec-Fetch-Site` innym niż `same-origin`
+  albo z `Origin` wskazującym inny host niż żądanie → **403**,
+- endpointy JSON wymagają `Content-Type: application/json` (inaczej **415**); wyjątki:
+  formularze `/auth/login` i `/auth/logout` oraz nagrania do `/api/transcribe`
+  (`multipart/form-data`),
+- wylogowanie to POST formularzem; `GET /auth/logout` działa dla zgodności tylko
+  z własnej strony albo wpisany ręcznie, a z obcego odnośnika pokazuje ekran
+  z przyciskiem „Wyloguj się",
+- jedyny wyjątek od kontroli pochodzenia to `/api/prosba-o-dostep` (własne CORS).
+
+### Pliki danych
+
+Każdy plik danych (konta, liczniki, baza wiedzy, wylogowania, marka, sekret) jest
+zapisywany atomowo: plik tymczasowy w tym samym katalogu, `fsync`, `rename`. Na dysku
+jest zawsze cała stara albo cała nowa wersja. Uszkodzony plik **nie jest** traktowany
+jak pusty: serwer go nie nadpisuje, obok kładzie kopię `<plik>.uszkodzony-<czas>`,
+zapisuje błąd w logu i odpowiada **503** („dane chwilowo niedostępne"), dopóki
+administrator nie przywróci pliku z kopii albo go nie usunie. Dawniej uszkodzony plik
+kont dawał pustą listę, a następne `uzytkownicy.js dodaj` zapisywało listę z jednym
+kontem na miejscu całej reszty.
+
+### Pamięć podręczna plików statycznych
+
+`pwa/lib/*`, `pwa/fonty/*` i `icons/*` idą z `Cache-Control: public, max-age=31536000,
+immutable` i `ETag`; `manifest.json` z `max-age=3600`. Strona aplikacji (`/`) zostaje
+`private, no-store`, bo zawiera identyfikator konta.
+
+**Zasada: zmiana treści takiego pliku = nowa nazwa pliku** (np. `icon-192-v2.png`,
+`pdfmake-0.2.10.min.js`) i nowe odwołanie w aplikacji lub manifeście. Podmiana pliku
+pod tą samą nazwą nie dotrze do przeglądarek, które mają go już w pamięci, przez rok.
+
+### Limity czasu i zerwane połączenia
+
+Każde wywołanie dostawcy (Anthropic, NVIDIA, OpenAI, ElevenLabs, DataForSEO, OpenSEO)
+ma limit czasu z tabeli konfiguracji. Po jego przekroczeniu aplikacja dostaje **504**
+z komunikatem „Dostawca nie odpowiedział w ciągu N s. Spróbuj ponownie za chwilę."
+(`error.type: timeout_error`). Długie generowanie (artykuł, wyszukiwanie w sieci,
+`max_tokens` > 4000) ma osobny limit, nigdy krótszy niż 300 s.
+
+Gdy przeglądarka zamknie połączenie (zamknięta karta, ponowienie), serwer przerywa też
+wywołanie dostawcy. Pakiet jest liczony tylko wtedy, gdy odpowiedź dostawcy była udana
+**i** klient nadal na nią czekał.
+
+### Koszt: modele, tokeny, grafiki
+
+Na koncie serwera płaci operator, więc granice stawia serwer, a nie przeglądarka:
+
+- `/api` przyjmuje tylko modele ze stałych `MODEL_*` aplikacji (odczytanych z
+  `web-proxy.html` przy starcie, więc zmiana modelu w aplikacji nie wymaga zmiany
+  serwera) i z `CAI_MODELE`; `max_tokens` najwyżej `CAI_MAX_TOKENS`,
+- `/api/images`: jedna grafika na zapytanie (`n` = 1), rozmiar tylko z `IMG_FORMATS`
+  aplikacji i `CAI_ROZMIARY_GRAFIK`,
+- zapytanie spoza tych granic → **400** z komunikatem, bez wywołania dostawcy.
+
+### Prośby o dostęp (`POST /api/prosba-o-dostep`)
+
+Formularz „Poproś o dostęp" ze strony produktowej. Bez logowania, CORS tylko dla
+`CAI_STRONA_ORIGIN` (bez ciasteczek), `Content-Type: application/json`.
+
+| Pole | Zasada |
+|---|---|
+| `imie` | 1-100 znaków |
+| `email` | adres e-mail, najwyżej 200 znaków |
+| `firma` | może być puste, najwyżej 200 znaków |
+| `pakiet` | `nie-wiem` (domyślna opcja formularza), `darmowy`, `standard` albo `premium` |
+| `wiadomosc` | może być puste, najwyżej 2000 znaków |
+| `jezyk` | `pl` albo `en` |
+| `strona` | pole-pułapka: niepuste = bot, udawane `200 {ok:true}` bez zapisu |
+
+Odpowiedzi (kontrakt formularza `showcase/zasoby/strona.js`): `200 {ok:true}`;
+`400 {ok:false, blad, pole?, komunikat}`, gdzie `blad` to `brak-imienia`, `zly-email`,
+`za-dlugie`, `zly-pakiet`, `zly-jezyk` albo `zle-dane`, a `pole` wskazuje pole formularza;
+`413 {ok:false, blad:'za-duze'}` przy ciele ponad 16 kB (odpowiedź z CORS, a nie zerwane
+połączenie); `429 {ok:false, blad:'limit'}`. `OPTIONS` → 204. Każda odpowiedź na dozwolony
+`Origin` ma ten sam `Access-Control-Allow-Origin`, `Allow-Methods: POST, OPTIONS`,
+`Allow-Headers: Content-Type` i `Vary: Origin`; obcy `Origin` dostaje 403 bez nagłówków CORS.
+
+Limity (liczniki w pamięci procesu):
+
+| Limit | Wartość | Po przekroczeniu |
+|---|---|---|
+| jeden adres | 5 na godzinę | 429 |
+| jedna sieć (`/24` IPv4, `/48` IPv6) | 20 na dobę | 429 |
+| wszystkie prośby, miękki | 200 na dobę | przyjęta z `ponadLimit: true` i ostrzeżeniem w logu - ktoś z wieloma adresami nie zatka formularza wszystkim |
+| wszystkie prośby, twardy | 2000 na dobę | 429 |
+
+Adres to wynik `adresIp()` serwera (`X-Real-IP` tylko od Caddy z pętli zwrotnej,
+`X-Forwarded-For` jest ignorowany). Pole `zgoda` jest opcjonalne: rekord ma `zgoda: true`
+tylko wtedy, gdy formularz je wysłał (`zgoda: true`), w każdym innym razie `false`.
+Każda prośba to jedna linia JSON w `CAI_PROSBY` (czas, adres IP, pola formularza, zgoda,
+pochodzenie). Prośby starsze niż `CAI_PROSBY_DNI` (domyślnie 365 dni) serwer usuwa przy
+starcie i przy zapisie (najwyżej raz na dobę); nieczytelnych linii nie wyrzuca.
+Odczyt: `GET /api/admin/prosby` (rola admin) albo `node serwer/uzytkownicy.js prosby [ile]`.

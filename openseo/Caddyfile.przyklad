@@ -1,19 +1,44 @@
 # Caddy - Content AI i OpenSEO na jednym serwerze
 #
-# Wklej oba bloki do /etc/caddy/Caddyfile, podmien domeny, potem:
+# NIE nadpisuj /etc/caddy/Caddyfile. Zrob kopie, blok globalny dopisz na sama gore
+# (albo do istniejacego bloku globalnego), bloki domen ZASTAP albo dopisz, wpisow
+# innych uslug (np. Cosmosa) nie ruszaj. Podmien domeny, potem:
+#   caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 #   sudo systemctl reload caddy
+# Przy aktualizacji: najpierw Caddy + reload, dopiero potem git pull + restart contentai.
+# Wariant dla content-ai.net (strona produktowa, www, naglowki): dokumenty/Caddyfile.content-ai
 #
 # Wczesniej ustaw w DNS rekordy A obu poddomen na IP serwera.
 # Obie musza byc poddomenami TEJ SAMEJ domeny - inaczej jedno logowanie nie
 # obejmie obu aplikacji, bo ciasteczko sesji nie przechodzi miedzy domenami.
 
+# ── Blok globalny: jeden, NA SAMEJ GORZE /etc/caddy/Caddyfile ────────────────
+# Jesli plik ma juz blok globalny (np. od Cosmosa), dopisz do niego sekcje servers.
+# Adresy Cloudflare - tylko gdy przed serwerem stoi Cloudflare z pomaranczowa chmurka;
+# bez niego ten blok niczego nie zmienia. Lista: https://www.cloudflare.com/ips/
+# Wymaga Caddy 2.7+ (caddy version).
+{
+    servers {
+        trusted_proxies static 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22 2400:cb00::/32 2606:4700::/32 2803:f800::/32 2405:b500::/32 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32
+        client_ip_headers CF-Connecting-IP
+    }
+}
+
 # ── Content AI ───────────────────────────────────────────────────────────────
 # Ma wlasne logowanie (konta z rolami) w serwerze Node, wiec Caddy tylko
 # przekazuje ruch. NIE dodawaj tu basic_auth - dwa ekrany logowania pod rzad
 # tylko mecza uzytkownika.
+# Node sam pakuje odpowiedzi i wysyla naglowki bezpieczenstwa - tu tylko HSTS.
 contentai.twojadomena.pl {
-    encode zstd gzip
-    reverse_proxy 127.0.0.1:3100
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        -Server
+    }
+    reverse_proxy 127.0.0.1:3100 {
+        # NADPISUJE naglowek od klienta: Node ufa X-Real-IP tylko od Caddy (petla zwrotna).
+        # Bez tej linii limit prob logowania da sie obejsc, a wszyscy dziela jeden licznik.
+        header_up X-Real-IP {client_ip}
+    }
 }
 
 # ── OpenSEO ──────────────────────────────────────────────────────────────────
@@ -33,5 +58,13 @@ contentai.twojadomena.pl {
 # bo musi widziec HTML, zeby doklejic motyw. Pakuje ja dopiero Caddy.
 seo.twojadomena.pl {
     encode zstd gzip
-    reverse_proxy 127.0.0.1:3110
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        -Server
+    }
+    reverse_proxy 127.0.0.1:3110 {
+        # NADPISUJE naglowek od klienta: Node ufa X-Real-IP tylko od Caddy (petla zwrotna).
+        # Bez tej linii limit prob logowania da sie obejsc, a wszyscy dziela jeden licznik.
+        header_up X-Real-IP {client_ip}
+    }
 }

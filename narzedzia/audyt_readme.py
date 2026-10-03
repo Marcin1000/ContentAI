@@ -61,12 +61,26 @@ def sprawdz_liczbe_testow(plik):
         print('  info  liczby testow nie sprawdzono (nieoczekiwane wyjscie testow)')
         return []
 
+    bledy = []
     if zadeklarowane.group(1) != faktyczne.group(1):
-        return ['README podaje %s testow, a jest ich %s'
-                % (zadeklarowane.group(1), faktyczne.group(1))]
+        bledy.append('README podaje %s testow, a jest ich %s'
+                     % (zadeklarowane.group(1), faktyczne.group(1)))
+    else:
+        print('  ok    liczba testow w README zgadza sie z faktyczna (%s)' % faktyczne.group(1))
 
-    print('  ok    liczba testow w README zgadza sie z faktyczna (%s)' % faktyczne.group(1))
-    return []
+    # Ta sama liczba stoi na stronie produktowej (pasek dowodow). Strona to
+    # obietnica dla klienta, wiec rozjazd jest tu gorszy niz w README.
+    szablon = KORZEN / 'showcase' / 'zrodlo' / 'szablon.html'
+    if szablon.exists():
+        na_stronie = re.search(r'data-cel="(\d+)">(\d+)</b><span>\{\{t:dowod-3-p\}\}', szablon.read_text(encoding='utf-8'))
+        if not na_stronie:
+            bledy.append('showcase/zrodlo/szablon.html: nie znaleziono liczby testow przy dowod-3-p')
+        elif not (na_stronie.group(1) == na_stronie.group(2) == faktyczne.group(1)):
+            bledy.append('strona produktowa podaje %s testow, a jest ich %s (showcase/zrodlo/szablon.html, potem buduj_strone.py)'
+                         % (na_stronie.group(2), faktyczne.group(1)))
+        else:
+            print('  ok    liczba testow na stronie produktowej zgadza sie z faktyczna')
+    return bledy
 
 
 def main():

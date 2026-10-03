@@ -1,0 +1,706 @@
+<!doctype html>
+{# Strona glowna content-ai.net. Zrodlo dla / (PL) i /en/ (EN): python3 narzedzia/buduj_strone.py
+   Teksty: zrodlo/teksty.json. Koncepcja „Margines" (agencja-strona-projekt), kierunek A „Redakcja" (agencja-marka).
+   Zasady: tresc widoczna bez JS; makiety produktu sa ilustracja (aria-hidden), bez udawanych kontrolek;
+   brak atrybutow style= i skryptow w tresci (CSP); jedyny <script> w dokumencie poza plikami to JSON-LD. #}
+<html lang="{{$jezyk}}">
+<head>
+<meta charset="utf-8">
+<title>{{a:meta-title}}</title>
+<meta name="description" content="{{a:meta-desc}}">
+<link rel="canonical" href="{{$url}}">
+<link rel="alternate" hreflang="pl" href="{{$url_pl}}">
+<link rel="alternate" hreflang="en" href="{{$url_en}}">
+<link rel="alternate" hreflang="x-default" href="{{$url_en}}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Content AI">
+<meta property="og:title" content="{{a:og-title}}">
+<meta property="og:description" content="{{a:og-desc}}">
+<meta property="og:url" content="{{$url}}">
+<meta property="og:image" content="{{$og_obraz}}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{a:og-alt}}">
+<meta property="og:locale" content="{{$og_locale}}">
+<meta property="og:locale:alternate" content="{{$og_locale_alt}}">
+<meta name="twitter:card" content="summary_large_image">
+{{>glowa}}
+<script type="application/ld+json">
+{{$jsonld}}
+</script>
+</head>
+<body>
+{{>nawigacja}}
+
+<main id="tresc">
+
+  {# ================= 1. HERO ================= #}
+  <section class="hero" aria-labelledby="h1">
+    <div class="kont hero-siatka">
+      <div class="hero-tekst">
+        <p class="etyk">{{t:hero-eyebrow}}</p>
+        <h1 id="h1">{{t:hero-h1}}</h1>
+        <p class="lead">{{t:hero-lede}}</p>
+        <div class="cta">
+          <a class="btn btn-glowny btn-duzy" href="#dostep">{{t:hero-cta1}}<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn-drugi btn-duzy" href="#jak">{{t:hero-cta2}}</a>
+        </div>
+        <p class="mala">{{t:hero-login-q}} <a class="link" href="{{$app}}">{{t:nav-login}}</a></p>
+        <p class="mala mala-2">{{t:hero-note}}</p>
+      </div>
+
+      <figure class="ramka" id="ramka" aria-labelledby="ramka-opis">
+        <figcaption class="sr" id="ramka-opis">{{t:hero-demo-label}}</figcaption>
+        <div class="ramka-pasek">
+          <span class="kropki" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="ramka-adres" aria-hidden="true">app.content-ai.net</span>
+          <span class="ramka-przyklad" aria-hidden="true">{{t:hero-demo-example}}</span>
+          <button class="ramka-pauza" type="button" aria-pressed="false" data-pauza="{{a:hero-demo-pause}}" data-wznow="{{a:hero-demo-play}}" aria-label="{{a:hero-demo-pause}}">
+            <svg class="ik ik-pauza" aria-hidden="true" focusable="false"><use href="#i-pause"/></svg>
+            <svg class="ik ik-graj" aria-hidden="true" focusable="false"><use href="#i-play"/></svg>
+          </button>
+        </div>
+        <div class="ramka-tresc" aria-hidden="true">
+          <div class="ramka-glowna">
+            <div class="pole"><span class="pole-et">{{t:hero-demo-topic-label}}</span><span class="pole-w"><span class="pisanie">{{t:hero-demo-topic}}</span><span class="kursor"></span></span></div>
+            <div class="zrodla"><span class="et">{{t:hero-demo-sources}}</span>
+              <span class="plik"><svg class="ik"><use href="#i-file-text"/></svg>{{t:demo-plik-1}}</span>
+              <span class="plik"><svg class="ik"><use href="#i-file-text"/></svg>{{t:demo-plik-2}}</span>
+              <span class="plik"><svg class="ik"><use href="#i-file-text"/></svg>{{t:demo-plik-3}}</span>
+            </div>
+            <div class="kartka kartka-ramka">
+              <p class="ramka-status"><span class="kropka-praca"></span>{{t:hero-demo-writing}}</p>
+              <h3>{{t:hero-demo-h}}</h3>
+              <p><span class="zd">{{t:hero-demo-z1}}</span><span class="zd">{{t:hero-demo-z2}}</span><span class="zd"><span class="zakr-cel zc-1">{{t:hero-demo-z3}}</span>{{t:hero-demo-z-laczy}}<span class="zakr-cel zc-2">{{t:hero-demo-z4}}</span>.</span></p>
+              <span class="linie linie-ramka"><i></i><i></i><i class="krotka"></i></span>
+            </div>
+          </div>
+          <div class="ramka-margines">
+            <p class="margines-et">{{t:hero-demo-scores}}</p>
+            <div class="wyniki">
+              <div class="wynik"><span class="w-et">SEO</span><span class="w-liczba" data-cel="91">91</span><span class="w-pasek"><i class="w91"></i></span></div>
+              <div class="wynik"><span class="w-et">AIO</span><span class="w-liczba" data-cel="88">88</span><span class="w-pasek"><i class="w88"></i></span></div>
+              <div class="wynik"><span class="w-et">AEO</span><span class="w-liczba" data-cel="84">84</span><span class="w-pasek"><i class="w84"></i></span></div>
+              <div class="wynik"><span class="w-et">GEO</span><span class="w-liczba" data-cel="80">80</span><span class="w-pasek"><i class="w80"></i></span></div>
+            </div>
+            <p class="odczyt">{{t:hero-demo-readout}}</p>
+            <div class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><div><b>{{t:hero-demo-flag}}</b><span>{{t:hero-demo-flag-p}}</span></div></div>
+            <div class="notka notka-uw"><svg class="znacznik ik"><use href="#i-triangle-alert"/></svg><div><b>{{t:hero-demo-flag2}}</b><span>{{t:hero-demo-flag2-p}}</span></div></div>
+          </div>
+        </div>
+        <ol class="ramka-kroki" aria-label="{{a:hero-demo-steps}}">
+          <li><button type="button" data-krok="1"><span class="rk-nr">1</span>{{t:hero-krok-1}}</button></li>
+          <li><button type="button" data-krok="2"><span class="rk-nr">2</span>{{t:hero-krok-2}}</button></li>
+          <li><button type="button" data-krok="3"><span class="rk-nr">3</span>{{t:hero-krok-3}}</button></li>
+          <li><button type="button" data-krok="4"><span class="rk-nr">4</span>{{t:hero-krok-4}}</button></li>
+          <li><button type="button" data-krok="5"><span class="rk-nr">5</span>{{t:hero-krok-5}}</button></li>
+        </ol>
+      </figure>
+    </div>
+
+    {# ================= 2. PASEK DOWODOW ================= #}
+    <div class="kont">
+      <ul class="dowody" aria-label="{{a:dowody-label}}">
+        <li><b>{{t:dowod-1-b}}</b><span>{{t:dowod-1-p}}</span></li>
+        <li><b>{{t:dowod-2-b}}</b><span>{{t:dowod-2-p}}</span></li>
+        {# liczba testow: node serwer/testy.js (CI, kontrola.yml); zmienic tutaj przy zmianie liczby testow #}
+        <li><b class="licz" data-cel="443">443</b><span>{{t:dowod-3-p}}</span></li>
+        <li><b>0</b><span>{{t:dowod-4-p}}</span></li>
+        <li><b>PL · EN · DE · CS</b><span>{{t:dowod-5-p}}</span></li>
+      </ul>
+    </div>
+  </section>
+
+  {# ================= 3. PROBLEM ================= #}
+  <section class="sekcja" id="dlaczego" aria-labelledby="h-prob">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">01</span>{{t:prob-kicker}}</p>
+        <h2 id="h-prob">{{t:prob-title}}</h2>
+        <p class="sek-lead">{{t:prob-lead}}</p>
+      </header>
+      <div class="problemy">
+        <article class="problem wej">
+          <div class="ilu ilu-1" aria-hidden="true">
+            <span>{{t:prob-ilu-1}}</span><span>AI Overviews</span><span>{{t:surf-aeo}}</span><span>{{t:surf-geo}}</span>
+            <svg class="ilu-znak"><use href="#i-znak"/></svg>
+          </div>
+          <h3>{{t:prob-1-t}}</h3>
+          <p>{{t:prob-1-p}}</p>
+        </article>
+        <article class="problem wej">
+          <div class="ilu ilu-2" aria-hidden="true">
+            <span class="ilu-luka">{{t:prob-ilu-2a}}</span><span class="ilu-luka">{{t:prob-ilu-2b}}</span><span class="ilu-luka">{{t:prob-ilu-2c}}</span>
+          </div>
+          <h3>{{t:prob-2-t}}</h3>
+          <p>{{t:prob-2-p}}</p>
+        </article>
+        <article class="problem wej">
+          <div class="ilu ilu-3" aria-hidden="true">
+            <span class="ilu-adres"><svg class="ik"><use href="#i-link"/></svg><s>{{t:prob-ilu-3}}</s></span>
+            <span class="ilu-nota"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg>{{t:fact-3-state}}</span>
+          </div>
+          <h3>{{t:prob-3-t}}</h3>
+          <p>{{t:prob-3-p}}</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  {# ================= 4. JAK TO DZIALA ================= #}
+  <section class="sekcja" id="jak" aria-labelledby="h-jak">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">02</span>{{t:how-kicker}}</p>
+        <h2 id="h-jak">{{t:how-title}}</h2>
+      </header>
+      <div class="kroki-uklad">
+      <ol class="kroki">
+        <li class="krok" id="krok-1">
+          <div class="krok-ekran ekran" aria-hidden="true">
+            <div class="ekran-pasek"><svg class="ik"><use href="#i-lightbulb"/></svg>{{t:how-1-t}}</div>
+            <div class="ekran-tresc">
+              <div class="pole pole-duze"><span class="pole-w">{{t:how-s1-pole}}</span></div>
+              <ul class="tematy">
+                <li><b>{{t:how-s1-1}}</b><span>{{t:how-s1-1k}}</span></li>
+                <li><b>{{t:how-s1-2}}</b><span>{{t:how-s1-2k}}</span></li>
+                <li><b>{{t:how-s1-3}}</b><span>{{t:how-s1-3k}}</span></li>
+              </ul>
+              <p class="ekran-meta">{{t:how-s1-wiecej}}</p>
+            </div>
+          </div>
+          <div class="krok-tekst">
+            <span class="krok-nr">1</span>
+            <h3>{{t:how-1-t}}</h3>
+            <p>{{t:how-1-p}}</p>
+            <p class="krok-cap">{{t:how-1-cap}}</p>
+          </div>
+        </li>
+        <li class="krok" id="krok-2">
+          <div class="krok-ekran ekran" aria-hidden="true">
+            <div class="ekran-pasek"><svg class="ik"><use href="#i-library"/></svg>{{t:how-2-t}}</div>
+            <div class="ekran-tresc">
+              <ul class="baza">
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>{{t:demo-plik-1}}</span><em>{{t:how-s2-wspolna}}</em><i class="trafnosc"><b class="w92"></b></i></li>
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>{{t:demo-plik-3}}</span><em>{{t:how-s2-prywatna}}</em><i class="trafnosc"><b class="w86"></b></i></li>
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>{{t:demo-plik-2}}</span><em>{{t:how-s2-wspolna}}</em><i class="trafnosc"><b class="w71"></b></i></li>
+                <li class="baza-slaby"><svg class="ik"><use href="#i-globe"/></svg><span>example.com/crm</span><em>URL</em><i class="trafnosc"><b class="w24"></b></i></li>
+              </ul>
+              <p class="ekran-meta">{{t:how-s2-frag}}</p>
+            </div>
+          </div>
+          <div class="krok-tekst">
+            <span class="krok-nr">2</span>
+            <h3>{{t:how-2-t}}</h3>
+            <p>{{t:how-2-p}}</p>
+            <p class="krok-cap">{{t:how-2-cap}}</p>
+          </div>
+        </li>
+        <li class="krok" id="krok-3">
+          <div class="krok-ekran ekran" aria-hidden="true">
+            <div class="ekran-pasek"><svg class="ik"><use href="#i-pen-line"/></svg>{{t:how-3-t}}</div>
+            <div class="ekran-tresc">
+              <div class="chipy"><span>{{t:how-s3-typ}}</span><span>{{t:how-s3-dl}}</span><span>{{t:how-s3-ton}}</span><span>{{t:how-s3-jez}}</span><span class="chip-wl"><i></i>{{t:how-s3-siec}}</span></div>
+              <div class="kartka kartka-mala">
+                <h4>{{t:hero-demo-h}}</h4>
+                <p>{{t:hero-demo-z1}}{{t:hero-demo-z2}}</p>
+                <span class="linie"><i></i><i></i><i class="krotka"></i></span>
+              </div>
+            </div>
+          </div>
+          <div class="krok-tekst">
+            <span class="krok-nr">3</span>
+            <h3>{{t:how-3-t}}</h3>
+            <p>{{t:how-3-p}}</p>
+            <p class="krok-cap">{{t:how-3-cap}}</p>
+          </div>
+        </li>
+        <li class="krok" id="krok-4">
+          <div class="krok-ekran ekran" aria-hidden="true">
+            <div class="ekran-pasek"><svg class="ik"><use href="#i-gauge"/></svg>{{t:how-4-t}}</div>
+            <div class="ekran-tresc">
+              <div class="wyniki wyniki-4">
+                <div class="wynik"><span class="w-et">SEO</span><span class="w-liczba">91</span><span class="w-pasek"><i class="w91"></i></span></div>
+                <div class="wynik"><span class="w-et">AIO</span><span class="w-liczba">88</span><span class="w-pasek"><i class="w88"></i></span></div>
+                <div class="wynik"><span class="w-et">AEO</span><span class="w-liczba">84</span><span class="w-pasek"><i class="w84"></i></span></div>
+                <div class="wynik"><span class="w-et">GEO</span><span class="w-liczba">80</span><span class="w-pasek"><i class="w80"></i></span></div>
+              </div>
+              <ul class="kryteria kryteria-male">
+                <li class="ok"><svg class="ik"><use href="#i-circle-check"/></svg><span>{{t:how-s4-u1}}</span></li>
+                <li class="uw"><svg class="ik"><use href="#i-info"/></svg><span>{{t:how-s4-u2}}</span></li>
+              </ul>
+              <div class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><div><b>{{t:hero-demo-flag}}</b><span>{{t:hero-demo-flag-p}}</span></div></div>
+            </div>
+          </div>
+          <div class="krok-tekst">
+            <span class="krok-nr">4</span>
+            <h3>{{t:how-4-t}}</h3>
+            <p>{{t:how-4-p}}</p>
+            <p class="krok-cap">{{t:how-4-cap}}</p>
+          </div>
+        </li>
+        <li class="krok" id="krok-5">
+          <div class="krok-ekran ekran" aria-hidden="true">
+            <div class="ekran-pasek"><svg class="ik"><use href="#i-share-2"/></svg>{{t:how-5-t}}</div>
+            <div class="ekran-tresc">
+              <p class="ekran-et">{{t:how-s5-eksport}}</p>
+              <div class="chipy chipy-pliki"><span><svg class="ik"><use href="#i-file-down"/></svg>DOCX</span><span><svg class="ik"><use href="#i-file-down"/></svg>PDF</span><span><svg class="ik"><use href="#i-file-down"/></svg>TXT</span><span>{ } JSON-LD</span><span><svg class="ik"><use href="#i-upload"/></svg>WordPress</span><span><svg class="ik"><use href="#i-upload"/></svg>Drupal</span></div>
+              <p class="ekran-et">{{t:how-s5-przerob}}</p>
+              <div class="chipy"><span>LinkedIn</span><span>Facebook</span><span>Newsletter</span><span>FAQ</span></div>
+              <p class="gotowe"><svg class="ik"><use href="#i-circle-check"/></svg>{{t:hero-demo-done}}</p>
+            </div>
+          </div>
+          <div class="krok-tekst">
+            <span class="krok-nr">5</span>
+            <h3>{{t:how-5-t}}</h3>
+            <p>{{t:how-5-p}}</p>
+            <p class="krok-cap">{{t:how-5-cap}}</p>
+          </div>
+        </li>
+      </ol>
+      </div>
+    </div>
+  </section>
+
+  {# ================= 4a. CZTERY POWIERZCHNIE ================= #}
+  <section class="sekcja" id="powierzchnie" aria-labelledby="h-pow">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">03</span>{{t:surf-kicker}}</p>
+        <h2 id="h-pow">{{t:surf-title}}</h2>
+        <p class="sek-lead">{{t:surf-p}}</p>
+      </header>
+      <div class="pow wej" data-pow="seo">
+        <div class="zakladki" role="tablist" aria-label="{{a:surf-tabs}}">
+          <button role="tab" id="t-seo" aria-selected="true" aria-controls="p-pow" data-pow="seo" type="button">SEO <small>{{t:surf-seo}}</small></button>
+          <button role="tab" id="t-aio" aria-selected="false" aria-controls="p-pow" data-pow="aio" type="button" tabindex="-1">AIO <small>{{t:surf-aio}}</small></button>
+          <button role="tab" id="t-aeo" aria-selected="false" aria-controls="p-pow" data-pow="aeo" type="button" tabindex="-1">AEO <small>{{t:surf-aeo}}</small></button>
+          <button role="tab" id="t-geo" aria-selected="false" aria-controls="p-pow" data-pow="geo" type="button" tabindex="-1">GEO <small>{{t:surf-geo}}</small></button>
+        </div>
+        <div class="uklad-margines" id="p-pow" role="tabpanel" aria-labelledby="t-seo">
+          <article class="kartka kartka-duza" aria-label="{{a:surf-demo-label}}">
+            <p class="k-meta">{{t:surf-art-meta}}</p>
+            <h3>{{t:surf-art-h}}</h3>
+            <p>{{t:surf-art-p1}}</p>
+            <h4>{{t:surf-art-h2}}</h4>
+            <p>{{t:surf-art-p2}}</p>
+            <p class="k-opis-meta">{{t:surf-art-meta2}}</p>
+          </article>
+          <aside class="margines" aria-live="polite">
+            <div class="pow-opis" data-dla="seo">
+              <div class="margines-nag"><span class="duza">91</span><span class="opis">{{t:surf-seo-nag}}</span></div>
+              <p class="pow-zdanie">{{t:surf-demo-seo}}</p>
+              <ul class="kryteria">
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>{{t:surf-seo-1}}</span></li>
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>{{t:surf-seo-2}}<small>{{t:surf-seo-2s}}</small></span></li>
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>{{t:surf-seo-3}}</span></li>
+                <li class="uw"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg><span>{{t:surf-seo-4}}</span></li>
+              </ul>
+            </div>
+            <div class="pow-opis" data-dla="aio">
+              <div class="margines-nag"><span class="duza">88</span><span class="opis">{{t:surf-aio-nag}}</span></div>
+              <p class="pow-zdanie">{{t:surf-demo-aio}}</p>
+              <ul class="kryteria">
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>{{t:surf-aio-1}}</span></li>
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>{{t:surf-aio-2}}</span></li>
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>{{t:surf-aio-3}}</span></li>
+                <li class="uw"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg><span>{{t:surf-aio-4}}</span></li>
+              </ul>
+            </div>
+            <div class="pow-opis" data-dla="aeo">
+              <div class="margines-nag"><span class="duza">84</span><span class="opis">{{t:surf-aeo-nag}}</span></div>
+              <p class="pow-zdanie">{{t:surf-demo-aeo}}</p>
+              <ul class="kryteria">
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>{{t:surf-aeo-1}}</span></li>
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>{{t:surf-aeo-2}}</span></li>
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>{{t:surf-aeo-3}}</span></li>
+                <li class="uw"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg><span>{{t:surf-aeo-4}}</span></li>
+              </ul>
+            </div>
+            <div class="pow-opis" data-dla="geo">
+              <div class="margines-nag"><span class="duza">80</span><span class="opis">{{t:surf-geo-nag}}</span></div>
+              <p class="pow-zdanie">{{t:surf-demo-geo}}</p>
+              <ul class="kryteria">
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>{{t:surf-geo-1}}<small>{{t:surf-geo-1s}}</small></span></li>
+                <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>{{t:surf-geo-2}}<small>{{t:surf-geo-2s}}</small></span></li>
+                <li class="uw"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg><span>{{t:surf-geo-3}}<small>{{t:surf-geo-3s}}</small></span></li>
+              </ul>
+            </div>
+            <p class="zrodlo-prawdy">{{t:surf-zrodlo}}</p>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ================= 4b. KONTROLA FAKTOW ================= #}
+  <section class="sekcja" id="fakty" aria-labelledby="h-fk">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">04</span>{{t:fact-kicker}}</p>
+        <h2 id="h-fk">{{t:fact-title}}</h2>
+        <p class="sek-lead">{{t:fact-lead}}</p>
+      </header>
+      <div class="fk uklad-margines wej" id="fk">
+        <svg class="fk-linie" aria-hidden="true" focusable="false"></svg>
+        <article class="kartka kartka-duza fk-tekst">
+          <p class="k-meta">{{t:hero-demo-h}}</p>
+          <p class="fk-akapit">
+            <span class="tw-w"><mark class="tw" tabindex="0" data-stan="ok" aria-describedby="dz-0">{{t:fact-0-claim}}</mark><span class="dymek" id="dz-0" role="tooltip"><b><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>{{t:fact-ok-label}}</b>{{t:fact-0-source}}</span></span>
+            <span class="tw-w"><mark class="tw" tabindex="0" data-stan="ok" aria-describedby="dz-1">{{t:fact-1-claim}}</mark><span class="dymek" id="dz-1" role="tooltip"><b><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>{{t:fact-ok-label}}</b>{{t:fact-1-source}}</span></span>
+            <mark class="tw" tabindex="0" data-stan="bl" data-nota="n-liczba" aria-describedby="n-liczba">{{t:fact-2-claim}}</mark>
+            <mark class="tw" tabindex="0" data-stan="uw" data-nota="n-zakres" aria-describedby="n-zakres">{{t:fact-4-claim}}</mark>
+            <mark class="tw" tabindex="0" data-stan="bl" data-nota="n-link" aria-describedby="n-link">{{t:fact-3-claim}}</mark>
+          </p>
+          <p class="fk-wskazowka">{{t:fact-hint}}</p>
+        </article>
+        <aside class="fk-margines" aria-label="{{a:fact-margin}}">
+          <p class="fk-licznik">{{t:fact-count}}</p>
+          <div class="nota nota-bl" id="n-liczba">
+            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-octagon-alert"/></svg>{{t:fact-2-state}}</b>
+            <q>{{t:fact-2-claim}}</q>
+            <span>{{t:fact-2-source}}</span>
+          </div>
+          <div class="nota nota-bl" id="n-link">
+            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-octagon-alert"/></svg>{{t:fact-3-state}}</b>
+            <q>{{t:fact-3-claim}}</q>
+            <span>{{t:fact-3-source}}</span>
+          </div>
+          <div class="nota nota-uw" id="n-zakres">
+            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-triangle-alert"/></svg>{{t:fact-4-state}}</b>
+            <q>{{t:fact-4-claim}}</q>
+            <span>{{t:fact-4-source}}</span>
+          </div>
+          <p class="fk-uczciwie"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg>{{t:fact-note}}</p>
+        </aside>
+      </div>
+      <ul class="fk-dodatki wej">
+        <li><b>{{t:fact-x-1-t}}</b>{{t:fact-x-1-p}}</li>
+        <li><b>{{t:fact-x-2-t}}</b>{{t:fact-x-2-p}}</li>
+        <li><b>{{t:fact-x-3-t}}</b>{{t:fact-x-3-p}}</li>
+        <li><b>{{t:fact-x-4-t}}</b>{{t:fact-x-4-p}}</li>
+      </ul>
+    </div>
+  </section>
+
+  {# ================= 5. FUNKCJE (bento) ================= #}
+  <section class="sekcja" id="funkcje" aria-labelledby="h-fun">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">05</span>{{t:feat-kicker}}</p>
+        <h2 id="h-fun">{{t:feat-title}}</h2>
+      </header>
+      <div class="bento">
+        <article class="kafel kb7 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-file-search"/></svg></span>
+          <h3>{{t:feat-facts-t}}</h3>
+          <p>{{t:feat-facts-p}}</p>
+          <div class="podglad podglad-fakty" aria-hidden="true">
+            <span class="pf-linia"><span class="pf-zdanie">{{t:fact-2-claim}}</span></span>
+            <span class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><span><b>{{t:fact-2-state}}</b></span></span>
+          </div>
+          <a class="link kafel-link" href="#fakty">{{t:feat-see-facts}}<svg class="ik" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+        </article>
+        <article class="kafel kb5 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-library"/></svg></span>
+          <h3>{{t:feat-kb-t}}</h3>
+          <p>{{t:feat-kb-p}}</p>
+          <div class="podglad frag" aria-hidden="true">
+            <div><span>{{t:demo-plik-1}}</span><i><b class="w92"></b></i><span class="mono">0,92</span></div>
+            <div><span>{{t:demo-plik-3}}</span><i><b class="w86"></b></i><span class="mono">0,86</span></div>
+            <div><span>{{t:demo-plik-2}}</span><i><b class="w71"></b></i><span class="mono">0,71</span></div>
+          </div>
+        </article>
+        <article class="kafel kb4 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-globe"/></svg></span>
+          <h3>{{t:feat-web-t}}</h3>
+          <p>{{t:feat-web-s}}</p>
+          <div class="podglad zrodla-sieci" aria-hidden="true">
+            <span class="ps-et">{{t:feat-web-zr}}</span>
+            <span><i>1</i>example.org/crm-badanie</span>
+            <span><i>2</i>example.net/poradnik-crm</span>
+          </div>
+        </article>
+        <article class="kafel kb4 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-chart-column"/></svg></span>
+          <h3>{{t:feat-serp-t}}</h3>
+          <p>{{t:feat-serp-s}}</p>
+          <span class="plan-tag">{{t:feat-tag-std}}</span>
+        </article>
+        <article class="kafel kb4 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-gauge"/></svg></span>
+          <h3>{{t:feat-score-t}}</h3>
+          <p>{{t:feat-score-s}}</p>
+          <div class="podglad mini-wyniki" aria-hidden="true"><span>SEO <b>91</b></span><span>AIO <b>88</b></span><span>AEO <b>84</b></span><span>GEO <b>80</b></span></div>
+        </article>
+        <article class="kafel kb3 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-image"/></svg></span>
+          <h3>{{t:feat-img-t}}</h3>
+          <p>{{t:feat-img-s}}</p>
+          <div class="formaty" aria-hidden="true"><span class="f32">3:2</span><span class="f11">1:1</span><span class="f23">2:3</span></div>
+          <span class="plan-tag">{{t:feat-tag-std}}</span>
+        </article>
+        <article class="kafel kb3 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-headphones"/></svg></span>
+          <h3>{{t:feat-audio-t}}</h3>
+          <p>{{t:feat-audio-s}}</p>
+          <div class="fala" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><span>{{t:feat-audio-glosy}}</span></div>
+          <span class="plan-tag">{{t:feat-tag-std}}</span>
+        </article>
+        <article class="kafel kb3 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-refresh-cw"/></svg></span>
+          <h3>{{t:feat-repurpose-t}}</h3>
+          <p>{{t:feat-repurpose-s}}</p>
+          <div class="chipy chipy-male" aria-hidden="true"><span>LinkedIn</span><span>Facebook</span><span>Newsletter</span><span>FAQ</span></div>
+        </article>
+        <article class="kafel kb3 wej">
+          <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-share-2"/></svg></span>
+          <h3>{{t:feat-publish-t}}</h3>
+          <p>{{t:feat-publish-s}}</p>
+          <div class="chipy chipy-male" aria-hidden="true"><span>DOCX</span><span>PDF</span><span>JSON-LD</span><span>WordPress</span></div>
+        </article>
+      </div>
+      <div class="takze wej">
+        <h3>{{t:feat-more-title}}</h3>
+        <ul>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:feat-more-1}}</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:feat-more-2}}</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:feat-more-3}}</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:feat-more-4}}</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:feat-more-5}}</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:feat-more-6}}</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:feat-more-7}}</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:feat-more-8}}</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  {# ================= 6. NIEZAWODNOSC ================= #}
+  <section class="sekcja" id="niezawodnosc" aria-labelledby="h-rel">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">06</span>{{t:rel-kicker}}</p>
+        <h2 id="h-rel">{{t:rel-title}}</h2>
+        <p class="sek-lead">{{t:rel-lead}}</p>
+      </header>
+      <div class="rel wej">
+        <table class="rel-tabela">
+          <thead><tr><th scope="col"><span class="sr">#</span></th><th scope="col">{{t:rel-col-problem}}</th><th scope="col">{{t:rel-col-fix}}</th></tr></thead>
+          <tbody>
+            <tr><td class="rel-nr">01</td><th scope="row">{{t:rel-1-p}}</th><td>{{t:rel-1-f}}</td></tr>
+            <tr><td class="rel-nr">02</td><th scope="row">{{t:rel-2-p}}</th><td>{{t:rel-2-f}}</td></tr>
+            <tr><td class="rel-nr">03</td><th scope="row">{{t:rel-3-p}}</th><td>{{t:rel-3-f}}</td></tr>
+            <tr><td class="rel-nr">04</td><th scope="row">{{t:rel-4-p}}</th><td>{{t:rel-4-f}}</td></tr>
+            <tr><td class="rel-nr">05</td><th scope="row">{{t:rel-5-p}}</th><td>{{t:rel-5-f}}</td></tr>
+            <tr><td class="rel-nr">06</td><th scope="row">{{t:rel-6-p}}</th><td>{{t:rel-6-f}}</td></tr>
+          </tbody>
+        </table>
+        <p class="rel-stopka"><svg class="ik" aria-hidden="true"><use href="#i-shield-check"/></svg>{{t:rel-foot}}</p>
+      </div>
+    </div>
+  </section>
+
+  {# ================= 7. BEZPIECZENSTWO ================= #}
+  <section class="sekcja" id="bezpieczenstwo" aria-labelledby="h-sec">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">07</span>{{t:sec-kicker}}</p>
+        <h2 id="h-sec">{{t:sec-title}}</h2>
+        <p class="sek-lead">{{t:sec-lead}}</p>
+      </header>
+      <div class="sec-siatka">
+        <figure class="droga wej" aria-labelledby="droga-tytul">
+          <figcaption id="droga-tytul" class="droga-tytul">{{t:sec-diag-title}}</figcaption>
+          <ol class="droga-lista">
+            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-monitor"/></svg></span><b>{{t:sec-diag-1}}</b><span>{{t:sec-diag-1p}}</span></li>
+            <li class="droga-srodek"><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-server"/></svg></span><b>{{t:sec-diag-2}}</b><span>{{t:sec-diag-2p}}</span><span class="droga-klucz"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg></span></li>
+            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-bot"/></svg></span><b>{{t:sec-diag-3}}</b><span>{{t:sec-diag-3p}}</span></li>
+          </ol>
+          <p class="droga-nota"><svg class="znacznik ik" aria-hidden="true"><use href="#i-info"/></svg>{{t:sec-diag-note}}</p>
+        </figure>
+        <ul class="sec-lista">
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg><h3>{{t:sec-1-t}}</h3><p>{{t:sec-1-p}}</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-lock"/></svg><h3>{{t:sec-2-t}}</h3><p>{{t:sec-2-p}}</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-shield-check"/></svg><h3>{{t:sec-3-t}}</h3><p>{{t:sec-3-p}}</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-users"/></svg><h3>{{t:sec-4-t}}</h3><p>{{t:sec-4-p}}</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-package"/></svg><h3>{{t:sec-5-t}}</h3><p>{{t:sec-5-p}}</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-scan-search"/></svg><h3>{{t:sec-6-t}}</h3><p>{{t:sec-6-p}}</p></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  {# ================= 8. DLA KOGO ================= #}
+  <section class="sekcja" id="dla-kogo" aria-labelledby="h-who">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">08</span>{{t:who-kicker}}</p>
+        <h2 id="h-who">{{t:who-title}}</h2>
+      </header>
+      <ul class="kto">
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-megaphone"/></svg><h3>{{t:who-1-t}}</h3><p>{{t:who-1-p}}</p></li>
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-trending-up"/></svg><h3>{{t:who-2-t}}</h3><p>{{t:who-2-p}}</p></li>
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-notebook-pen"/></svg><h3>{{t:who-3-t}}</h3><p>{{t:who-3-p}}</p></li>
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-languages"/></svg><h3>{{t:who-4-t}}</h3><p>{{t:who-4-p}}</p></li>
+      </ul>
+    </div>
+  </section>
+
+  {# ================= 9. PAKIETY (bez cen; liczby z serwer/plany.js, pilnuje buduj_strone.py) ================= #}
+  <section class="sekcja" id="pakiety" aria-labelledby="h-plan">
+    <div class="kont">
+      <header class="sek-nag wej">
+        <p class="etyk"><span class="etyk-nr">09</span>{{t:plan-kicker}}</p>
+        <h2 id="h-plan">{{t:plan-title}}</h2>
+      </header>
+      <div class="pakiety">
+        <article class="pakiet wej" aria-labelledby="pk-free">
+          <h3 id="pk-free">{{t:plan-free-name}}</h3>
+          <p class="pakiet-opis">{{t:plan-free-desc}}</p>
+          <ul>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-free-1}}</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-free-2}}</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-free-3}}</li>
+          </ul>
+          <a class="btn btn-drugi" href="#dostep" data-pakiet="darmowy" aria-label="{{a:plan-cta-label}} {{a:plan-free-name}}">{{t:plan-cta}}</a>
+        </article>
+        <article class="pakiet pakiet-wyroz wej" aria-labelledby="pk-std">
+          <h3 id="pk-std">{{t:plan-std-name}}</h3>
+          <p class="pakiet-opis">{{t:plan-std-desc}}</p>
+          <ul>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-std-1}}</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-std-2}}</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-std-3}}</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-std-4}}</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-std-5}}</li>
+          </ul>
+          <a class="btn btn-glowny" href="#dostep" data-pakiet="standard" aria-label="{{a:plan-cta-label}} {{a:plan-std-name}}">{{t:plan-cta}}</a>
+        </article>
+        <article class="pakiet wej" aria-labelledby="pk-pro">
+          <h3 id="pk-pro">{{t:plan-pro-name}}</h3>
+          <p class="pakiet-opis">{{t:plan-pro-desc}}</p>
+          <ul>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-pro-1}}</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-pro-2}}</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-pro-3}}</li>
+          </ul>
+          <a class="btn btn-drugi" href="#dostep" data-pakiet="premium" aria-label="{{a:plan-cta-label}} {{a:plan-pro-name}}">{{t:plan-cta}}</a>
+        </article>
+      </div>
+      <p class="pakiety-nota wej">{{t:plan-note}}</p>
+    </div>
+  </section>
+
+  {# ================= 10. FAQ (ta sama tresc w JSON-LD FAQPage) ================= #}
+  <section class="sekcja" id="faq" aria-labelledby="h-faq">
+    <div class="kont faq-siatka">
+      <header class="sek-nag faq-nag wej">
+        <p class="etyk"><span class="etyk-nr">10</span>FAQ</p>
+        <h2 id="h-faq">{{t:faq-title}}</h2>
+      </header>
+      <div class="faq-lista wej">
+        <details><summary>{{t:faq-1-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-1-a}}</p></details>
+        <details><summary>{{t:faq-2-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-2-a}}</p></details>
+        <details><summary>{{t:faq-3-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-3-a}}</p></details>
+        <details><summary>{{t:faq-4-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-4-a}}</p></details>
+        <details><summary>{{t:faq-5-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-5-a}}</p></details>
+        <details><summary>{{t:faq-6-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-6-a}}</p></details>
+        <details><summary>{{t:faq-7-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-7-a}}</p></details>
+        <details><summary>{{t:faq-8-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-8-a}}</p></details>
+        <details><summary>{{t:faq-9-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-9-a}}</p></details>
+      </div>
+    </div>
+  </section>
+
+  {# ================= 11. CTA + FORMULARZ ================= #}
+  <section class="koniec" id="dostep" aria-labelledby="h-dostep">
+    <div class="kont koniec-siatka">
+      <div class="koniec-tekst wej">
+        <h2 id="h-dostep">{{t:end-title}}</h2>
+        <p class="sek-lead">{{t:end-p}}</p>
+        <div class="koniec-nota" aria-hidden="true">
+          <span class="kn-linia"><span class="kn-zakr">{{t:hero-demo-h}}</span></span>
+          <span class="notka notka-ok"><svg class="znacznik ik"><use href="#i-circle-check"/></svg><span><b>{{t:hero-demo-done}}</b></span></span>
+        </div>
+        <p class="mala">{{t:end-login}} <a class="link" href="{{$app}}">{{t:nav-login}}</a></p>
+      </div>
+      {# data-api: adres endpointu; test podmienia go w przegladarce, nie w pliku #}
+      <form class="formularz wej" id="formularz" data-api="{{$api}}" data-jezyk="{{$jezyk}}" novalidate aria-labelledby="form-tytul"
+            data-wysylanie="{{a:form-wysylanie}}" data-b-imie="{{a:form-blad-imie}}" data-b-email="{{a:form-blad-email}}"
+            data-b-zgoda="{{a:form-blad-zgoda}}" data-b-dlugie="{{a:form-blad-dlugie}}" data-b-pakiet="{{a:form-blad-pakiet}}"
+            data-b-ogolny="{{a:form-blad-ogolny}}" data-b-429="{{a:form-blad-429}}" data-b-siec="{{a:form-blad-siec}}">
+        <h3 class="form-tytul" id="form-tytul">{{t:form-label}}</h3>
+        <p class="form-nojs" id="form-nojs"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg><span>{{t:form-nojs}} {{t:end-login}} <a class="link" href="{{$app}}">{{t:nav-login}}</a></span></p>
+        <fieldset class="pola" id="form-pola" disabled>
+          <div class="dwa">
+            <div class="pole-f">
+              <label for="f-imie">{{t:form-imie}}</label>
+              <input id="f-imie" name="imie" autocomplete="given-name" required maxlength="100" aria-describedby="b-imie">
+              <p class="blad" id="b-imie" hidden></p>
+            </div>
+            <div class="pole-f">
+              <label for="f-email">{{t:form-email}}</label>
+              <input id="f-email" name="email" type="email" autocomplete="email" required maxlength="200" aria-describedby="b-email" inputmode="email">
+              <p class="blad" id="b-email" hidden></p>
+            </div>
+          </div>
+          <div class="dwa">
+            <div class="pole-f">
+              <label for="f-firma">{{t:form-firma}} <span class="opc">({{t:form-opcjonalnie}})</span></label>
+              <input id="f-firma" name="firma" autocomplete="organization" maxlength="200" aria-describedby="b-firma">
+              <p class="blad" id="b-firma" hidden></p>
+            </div>
+            <div class="pole-f">
+              <label for="f-pakiet">{{t:form-pakiet}}</label>
+              <select id="f-pakiet" name="pakiet" aria-describedby="b-pakiet">
+                <option value="nie-wiem">{{t:form-pakiet-nie-wiem}}</option>
+                <option value="darmowy">{{t:plan-free-name}}</option>
+                <option value="standard">{{t:plan-std-name}}</option>
+                <option value="premium">{{t:plan-pro-name}}</option>
+              </select>
+              <p class="blad" id="b-pakiet" hidden></p>
+            </div>
+          </div>
+          <div class="pole-f">
+            <label for="f-wiadomosc">{{t:form-wiadomosc}} <span class="opc">({{t:form-opcjonalnie}})</span></label>
+            <textarea id="f-wiadomosc" name="wiadomosc" rows="3" maxlength="2000" placeholder="{{a:form-wiadomosc-ph}}" aria-describedby="b-wiadomosc"></textarea>
+            <p class="blad" id="b-wiadomosc" hidden></p>
+          </div>
+          {# pulapka na boty: czlowiek tego pola nie widzi ani nie dostaje fokusem #}
+          <div class="pulapka" aria-hidden="true">
+            <label for="f-strona">{{t:form-pulapka}}</label>
+            <input id="f-strona" name="strona" tabindex="-1" autocomplete="off">
+          </div>
+          <div class="pole-f">
+            <label class="zgoda" for="f-zgoda"><input id="f-zgoda" name="zgoda" type="checkbox" required aria-describedby="b-zgoda"><span>{{t:form-zgoda}} <a class="link" href="{{$prywatnosc}}">{{t:form-zgoda-link}}</a></span></label>
+            <p class="blad" id="b-zgoda" hidden></p>
+          </div>
+          <div class="form-dol">
+            <button class="btn btn-glowny btn-duzy form-wyslij" type="submit"><span class="fw-tekst">{{t:form-wyslij}}</span><svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></button>
+            <p class="form-komunikat" id="form-komunikat" role="alert" hidden></p>
+          </div>
+        </fieldset>
+        <div class="wyslano" id="wyslano" hidden tabindex="-1">
+          <p class="wyslano-tytul"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>{{t:form-ok-title}}</p>
+          <p>{{t:form-ok-p}} <b class="wyslano-email"></b>.</p>
+          <p class="wyslano-et">{{t:form-ok-dalej}}</p>
+          <ol>
+            <li>{{t:form-ok-1}}</li>
+            <li>{{t:form-ok-2}}</li>
+            <li>{{t:form-ok-3}}</li>
+          </ol>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+{{>stopka}}
+
+<div class="pasek-cta" id="pasek-cta" role="region" aria-label="{{a:mob-bar}}" hidden>
+  <a class="btn btn-drugi" href="{{$app}}">{{t:nav-login}}</a>
+  <a class="btn btn-glowny" href="#dostep">{{t:nav-cta}}</a>
+</div>
+</body>
+</html>

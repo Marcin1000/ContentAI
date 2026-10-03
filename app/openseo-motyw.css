@@ -16,6 +16,41 @@
    swiadomy wybor uzytkownika bije ustawienie systemu.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─── Kroje Content AI z wlasnego serwera (brama podaje /__cai/fonty/) ─── */
+@font-face {
+  font-family: 'Schibsted Grotesk';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/__cai/fonty/schibsted-grotesk-latin-wght-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'Schibsted Grotesk';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/__cai/fonty/schibsted-grotesk-latin-ext-wght-normal.woff2') format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('/__cai/fonty/jetbrains-mono-latin-wght-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('/__cai/fonty/jetbrains-mono-latin-ext-wght-normal.woff2') format('woff2');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+
 /* ─── Jasna paleta ─────────────────────────────────────────────────────────
    Odpowiednik jasnego motywu Content AI. "openseo" to nazwa ich motywu
    domyslnego; wymieniamy oba, bo daisyUI generuje selektor i dla :root,
@@ -24,67 +59,71 @@
 [data-theme='openseo'],
 [data-theme='openseo-dark'] {
   --color-base-100: #ffffff; /* powierzchnia kart */
-  --color-base-200: #eef1f6; /* tlo strony */
-  --color-base-300: #dce2ec; /* obramowania, separatory */
-  --color-base-content: #0d1320; /* tekst */
+  --color-base-200: #f7f6f2; /* tlo strony */
+  --color-base-300: #d6d3cb; /* obramowania, separatory */
+  --cai-obrys-pola: #8d897f; /* obrys pol, 3.2:1 do tla (WCAG 1.4.11) */
+  --cai-fokus: #b06c00; /* fokus: ciemny bursztyn, czytelny na jasnym */
+  --color-base-content: #1b1a17; /* tekst */
 
-  --color-primary: #f5a300; /* bursztyn - akcent podstawowy */
-  --color-primary-content: #0d1320; /* ciemny tekst na bursztynie */
-  --color-secondary: #1fa8c7; /* cyan techniczny */
+  --color-primary: #f6a623; /* bursztyn marki - tylko decyzja */
+  --color-primary-content: #1c1303; /* ciemny tekst na bursztynie */
+  --color-secondary: #0b7268; /* dowod: zrodla, informacja */
   --color-secondary-content: #ffffff;
-  --color-accent: #1fa8c7;
+  --color-accent: #0b7268;
   --color-accent-content: #ffffff;
 
-  --color-neutral: #0d1320;
-  --color-neutral-content: #ffffff;
+  --color-neutral: #1b1a17;
+  --color-neutral-content: #f7f6f2;
 
-  --color-info: #1fa8c7;
+  --color-info: #0b7268;
   --color-info-content: #ffffff;
-  --color-success: #059669;
+  --color-success: #1b7042;
   --color-success-content: #ffffff;
-  --color-warning: #f5a300;
-  --color-warning-content: #0d1320;
-  --color-error: #e23244;
+  --color-warning: #a2470b;
+  --color-warning-content: #ffffff;
+  --color-error: #b72b29;
   --color-error-content: #ffffff;
 
-  /* Geometria - Content AI ma 10px na polach i 14px na kartach */
-  --radius-selector: 10px;
-  --radius-field: 10px;
-  --radius-box: 14px;
+  /* Geometria - Content AI (kierunek "Redakcja"): 6px na polach, 12px na kartach */
+  --radius-selector: 6px;
+  --radius-field: 6px;
+  --radius-box: 12px;
   --border: 1px;
   --depth: 0;
   --noise: 0;
 }
 
 /* ─── Ciemna paleta wg ustawienia systemu ──────────────────────────────────
-   "Deep Space" - w Content AI to motyw domyslny. */
+   Cieply grafit kierunku "Redakcja" - w Content AI to motyw domyslny. */
 @media (prefers-color-scheme: dark) {
   :root,
   [data-theme='openseo'],
   [data-theme='openseo-dark'] {
-    --color-base-100: #11131d;
-    --color-base-200: #07080d;
-    --color-base-300: #242a3b;
-    --color-base-content: #e9edf6;
+    --color-base-100: #171715;
+    --color-base-200: #111110;
+    --color-base-300: #363632;
+    --cai-obrys-pola: #716f67;
+    --cai-fokus: #f6a623;
+    --color-base-content: #edebe6;
 
-    --color-primary: #ffb000; /* bursztyn na czerni */
-    --color-primary-content: #04050a;
-    --color-secondary: #46d5f2; /* cyan swiecacy */
-    --color-secondary-content: #04050a;
-    --color-accent: #46d5f2;
-    --color-accent-content: #04050a;
+    --color-primary: #f6a623; 
+    --color-primary-content: #1c1303;
+    --color-secondary: #5ad1c4; 
+    --color-secondary-content: #111110;
+    --color-accent: #5ad1c4;
+    --color-accent-content: #111110;
 
-    --color-neutral: #171a27;
-    --color-neutral-content: #e9edf6;
+    --color-neutral: #252522;
+    --color-neutral-content: #edebe6;
 
-    --color-info: #46d5f2;
-    --color-info-content: #04050a;
-    --color-success: #34d399;
-    --color-success-content: #04050a;
-    --color-warning: #ffb000;
-    --color-warning-content: #04050a;
-    --color-error: #ff5566;
-    --color-error-content: #04050a;
+    --color-info: #5ad1c4;
+    --color-info-content: #111110;
+    --color-success: #5bc793;
+    --color-success-content: #111110;
+    --color-warning: #f39a5d;
+    --color-warning-content: #111110;
+    --color-error: #f47c7c;
+    --color-error-content: #111110;
   }
 }
 
@@ -93,29 +132,31 @@
    zapisanego przez przelacznik w Content AI. Selektor jest mocniejszy niz
    :root, wiec bije ustawienie systemu niezaleznie od kolejnosci. */
 html.cai-ciemny {
-  --color-base-100: #11131d;
-  --color-base-200: #07080d;
-  --color-base-300: #242a3b;
-  --color-base-content: #e9edf6;
+  --color-base-100: #171715;
+  --color-base-200: #111110;
+  --color-base-300: #363632;
+  --cai-obrys-pola: #716f67;
+  --cai-fokus: #f6a623;
+  --color-base-content: #edebe6;
 
-  --color-primary: #ffb000;
-  --color-primary-content: #04050a;
-  --color-secondary: #46d5f2;
-  --color-secondary-content: #04050a;
-  --color-accent: #46d5f2;
-  --color-accent-content: #04050a;
+  --color-primary: #f6a623;
+  --color-primary-content: #1c1303;
+  --color-secondary: #5ad1c4;
+  --color-secondary-content: #111110;
+  --color-accent: #5ad1c4;
+  --color-accent-content: #111110;
 
-  --color-neutral: #171a27;
-  --color-neutral-content: #e9edf6;
+  --color-neutral: #252522;
+  --color-neutral-content: #edebe6;
 
-  --color-info: #46d5f2;
-  --color-info-content: #04050a;
-  --color-success: #34d399;
-  --color-success-content: #04050a;
-  --color-warning: #ffb000;
-  --color-warning-content: #04050a;
-  --color-error: #ff5566;
-  --color-error-content: #04050a;
+  --color-info: #5ad1c4;
+  --color-info-content: #111110;
+  --color-success: #5bc793;
+  --color-success-content: #111110;
+  --color-warning: #f39a5d;
+  --color-warning-content: #111110;
+  --color-error: #f47c7c;
+  --color-error-content: #111110;
 
   color-scheme: dark;
 }
@@ -124,27 +165,29 @@ html.cai-ciemny {
    Potrzebna, bo bez niej ciemny system przebilby wybor uzytkownika. */
 html.cai-jasny {
   --color-base-100: #ffffff;
-  --color-base-200: #eef1f6;
-  --color-base-300: #dce2ec;
-  --color-base-content: #0d1320;
+  --color-base-200: #f7f6f2;
+  --color-base-300: #d6d3cb;
+  --cai-obrys-pola: #8d897f;
+  --cai-fokus: #b06c00;
+  --color-base-content: #1b1a17;
 
-  --color-primary: #f5a300;
-  --color-primary-content: #0d1320;
-  --color-secondary: #1fa8c7;
+  --color-primary: #f6a623;
+  --color-primary-content: #1c1303;
+  --color-secondary: #0b7268;
   --color-secondary-content: #ffffff;
-  --color-accent: #1fa8c7;
+  --color-accent: #0b7268;
   --color-accent-content: #ffffff;
 
-  --color-neutral: #0d1320;
-  --color-neutral-content: #ffffff;
+  --color-neutral: #1b1a17;
+  --color-neutral-content: #f7f6f2;
 
-  --color-info: #1fa8c7;
+  --color-info: #0b7268;
   --color-info-content: #ffffff;
-  --color-success: #059669;
+  --color-success: #1b7042;
   --color-success-content: #ffffff;
-  --color-warning: #f5a300;
-  --color-warning-content: #0d1320;
-  --color-error: #e23244;
+  --color-warning: #a2470b;
+  --color-warning-content: #ffffff;
+  --color-error: #b72b29;
   --color-error-content: #ffffff;
 
   color-scheme: light;
@@ -163,7 +206,7 @@ textarea,
 .input,
 .select,
 .textarea {
-  font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  font-family: 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 code,
@@ -171,7 +214,7 @@ pre,
 kbd,
 samp,
 .font-mono {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-family: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 }
 
 /* ─── Detale wykonczenia ───────────────────────────────────────────────────
@@ -209,13 +252,35 @@ samp,
   --btn-border: var(--btn-color, var(--color-base-300));
 }
 
-/* Pola aktywne obrysowane cyanem, jak w calej aplikacji. */
+/* Obrys pol jak --c-ramka w Content AI. daisyUI 5 bierze kolor ramki pola
+   z --input-color, wiec podmieniamy tylko te zmienna. Separatory i karty
+   zostaja na --color-base-300. */
+.input,
+.textarea,
+.select,
+.file-input {
+  --input-color: var(--cai-obrys-pola);
+}
+
+/* Fokus jak w calej aplikacji: bursztynowy obrys 2 px z odstepem. */
 .input:focus,
-.input:focus-visible,
+.input:focus-within,
 .textarea:focus,
-.textarea:focus-visible,
 .select:focus,
-.select:focus-visible {
-  outline: none;
-  border-color: var(--color-accent);
+.select:focus-within,
+.file-input:focus,
+.file-input:focus-within {
+  --input-color: var(--cai-obrys-pola);
+  outline: 2px solid var(--cai-fokus);
+  outline-offset: 2px;
+}
+:focus-visible,
+.btn:focus-visible,
+.checkbox:focus-visible,
+.radio:focus-visible,
+.toggle:focus-visible,
+.tab:focus-visible,
+.menu li > *:focus-visible {
+  outline: 2px solid var(--cai-fokus);
+  outline-offset: 2px;
 }

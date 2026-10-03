@@ -16,6 +16,11 @@
  *   POST /api/transcribe    -> transkrypcja
  *   POST /api/eleven-tts    -> synteza ElevenLabs
  *
+ * Wlasne endpointy serwera (poza kontraktem workera):
+ *   POST /api/prosba-o-dostep -> formularz strony produktowej (bez logowania, CORS) - prosby.js
+ *   GET  /api/admin/prosby    -> lista prosb o dostep (admin)
+ *   oraz /api/baza, /api/strona, /api/odnosniki, /api/marka, /api/pakiet, /api/seo/* - opis w README
+ *
  * Konfiguracja przez zmienne srodowiskowe - patrz serwer/README.md.
  */
 
@@ -25,6 +30,10 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const zlib = require('node:zlib');
+const pliki = require('./pliki.js');
+const prosby = require('./prosby.js');
+const logowanie = require('./logowanie.js');
 const serp = require('./serp.js');
 const baza = require('./baza.js');
 const openseo = require('./openseo.js');
@@ -76,6 +85,11 @@ const KONF = {
   dostawca: (process.env.CAI_DOSTAWCA || 'anthropic').toLowerCase(),
   modelNvidia: process.env.CAI_MODEL_NVIDIA || 'nvidia/llama-3.3-nemotron-super-49b-v1.5',
   urlNvidia: process.env.CAI_URL_NVIDIA || 'https://integrate.api.nvidia.com/v1/chat/completions',
+  // Adresy pozostalych dostawcow. Domyslnie oficjalne API; nadpisanie sluzy
+  // atrapie w testach calej aplikacji i bramom zgodnym z tym samym API.
+  urlAnthropic: process.env.CAI_URL_ANTHROPIC || 'https://api.anthropic.com/v1/messages',
+  urlOpenai: (process.env.CAI_URL_OPENAI || 'https://api.openai.com/v1').replace(/\/+$/, ''),
+  urlEleven: (process.env.CAI_URL_ELEVEN || 'https://api.elevenlabs.io/v1').replace(/\/+$/, ''),
 
   klucze: {
     anthropic: process.env.ANTHROPIC_KEY || '',
@@ -105,7 +119,47 @@ const KONF = {
     login: process.env.DATAFORSEO_LOGIN || '',
     haslo: process.env.DATAFORSEO_HASLO || '',
   },
+
+  // Limity czasu na wywolania dostawcow (ms). Bez nich zawieszony dostawca
+  // trzymal zadanie do domyslnych limitow undici, a aplikacja krecila
+  // spinnerem bez konca. Dlugie generowanie (artykul, wyszukiwanie w sieci,
+  // duze max_tokens) ma osobny, dluzszy limit - nigdy krotszy niz 300 s.
+  czasy: {
+    tresc: liczbaMs(process.env.CAI_CZAS_TRESCI_MS, 120_000),
+    dlugi: Math.max(300_000, liczbaMs(process.env.CAI_CZAS_DLUGI_MS, 600_000)),
+    obrazy: liczbaMs(process.env.CAI_CZAS_OBRAZOW_MS, 240_000),
+    audio: liczbaMs(process.env.CAI_CZAS_AUDIO_MS, 120_000),
+    transkrypcja: liczbaMs(process.env.CAI_CZAS_TRANSKRYPCJI_MS, 300_000),
+    serp: liczbaMs(process.env.CAI_CZAS_SERP_MS, 30_000),
+    openseo: liczbaMs(process.env.CAI_CZAS_OPENSEO_MS, 120_000),
+  },
+
+  // Koszt: modele dozwolone na koncie serwera i sufit max_tokens. Lista modeli
+  // to stale MODEL_* odczytane z samej aplikacji przy starcie (zmiana modelu
+  // w aplikacji nie wymaga zmiany serwera) plus to, co dopisze CAI_MODELE.
+  modeleDodatkowe: lista(process.env.CAI_MODELE),
+  maxTokens: Number(process.env.CAI_MAX_TOKENS || 32000),
+  // Rozmiary grafik: z IMG_FORMATS aplikacji, plus CAI_ROZMIARY_GRAFIK.
+  rozmiaryDodatkowe: lista(process.env.CAI_ROZMIARY_GRAFIK),
+
+  // Kompresja HTML/JS/CSS w Node. Za Caddy z `encode zstd gzip` mozna ja
+  // wylaczyc (CAI_KOMPRESJA=0), zeby nie pakowac dwa razy.
+  kompresja: process.env.CAI_KOMPRESJA !== '0',
+
+  // Formularz "Popros o dostep" ze strony produktowej: skad wolno wysylac.
+  // Domyslnie apex i www: gdyby www nie przekierowywalo (Caddy), formularz
+  // z www dostawalby 403 bez CORS i pokazywal mylace "sprobuj za chwile".
+  stronaOrigin: lista(process.env.CAI_STRONA_ORIGIN || 'https://content-ai.net,https://www.content-ai.net'),
 };
+
+function liczbaMs(wartosc, domyslnie) {
+  const n = Number(wartosc);
+  return Number.isFinite(n) && n > 0 ? n : domyslnie;
+}
+
+function lista(tekst) {
+  return String(tekst || '').split(',').map((s) => s.trim()).filter(Boolean);
+}
 
 // ─── Uzytkownicy ──────────────────────────────────────────────────────────────
 // Plik JSON: [{ login, hash, sol, rola, utworzony }]. Rola: 'admin' | 'uzytkownik'.
@@ -113,20 +167,24 @@ const KONF = {
 
 const ROLE = ['admin', 'uzytkownik'];
 
+// Brak pliku = brak kont (start poprosi o pierwsze). Uszkodzony plik to
+// BladDanych: zadania dostaja 503, a `uzytkownicy.js dodaj` nie zapisze listy
+// z jednym kontem na miejscu calej reszty.
 function wczytajUzytkownikow() {
-  try {
-    const dane = JSON.parse(fs.readFileSync(PLIK_UZYTKOWNIKOW, 'utf8'));
-    return Array.isArray(dane) ? dane : [];
-  } catch (e) {
-    if (e.code !== 'ENOENT') console.error('Nie udalo sie wczytac uzytkownikow:', e.message);
-    return [];
-  }
+  return pliki.czytajJson(PLIK_UZYTKOWNIKOW, [], pliki.czyTablica);
 }
 
 function zapiszUzytkownikow(lista) {
-  fs.mkdirSync(path.dirname(PLIK_UZYTKOWNIKOW), { recursive: true });
   // 0600 - plik z hashami hasel nie powinien byc czytelny dla innych kont na serwerze
-  fs.writeFileSync(PLIK_UZYTKOWNIKOW, JSON.stringify(lista, null, 2), { mode: 0o600 });
+  pliki.zapiszJson(PLIK_UZYTKOWNIKOW, lista, 2);
+}
+
+// Login: male litery, cyfry, kropka, podkreslnik, myslnik; 2-40 znakow.
+// Baza wiedzy i liczniki trzymaja login w nazwie pliku po oczyszczeniu, wiec
+// dwa rozne loginy nie moga dac tej samej nazwy (np. "a b" i "a_b").
+const WZOR_LOGINU = /^[a-z0-9._-]{2,40}$/;
+function poprawnyLogin(login) {
+  return typeof login === 'string' && WZOR_LOGINU.test(login);
 }
 
 function zahaszuj(haslo, sol) {
@@ -138,8 +196,18 @@ function zahaszuj(haslo, sol) {
 function hasloPasuje(haslo, uzytkownik) {
   const { hash } = zahaszuj(haslo, uzytkownik.sol);
   const a = Buffer.from(hash, 'hex');
-  const b = Buffer.from(uzytkownik.hash, 'hex');
+  const b = Buffer.from(String(uzytkownik.hash || ''), 'hex');
   return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+// Konto-atrapa do logowania na nieistniejacy login: scrypt liczy sie zawsze,
+// wiec po czasie odpowiedzi nie da sie odroznic istniejacego loginu od zmyslonego.
+let ATRAPA_KONTA = null;
+function atrapaKonta() {
+  if (!ATRAPA_KONTA) {
+    ATRAPA_KONTA = zahaszuj(crypto.randomBytes(16).toString('hex'));
+  }
+  return ATRAPA_KONTA;
 }
 
 // ─── Sesje ────────────────────────────────────────────────────────────────────
@@ -159,7 +227,7 @@ function hasloPasuje(haslo, uzytkownik) {
 //     w pliku kont, co uniewaznia wszystkie starsze sesje tej osoby naraz.
 
 const PLIK_SEKRETU = process.env.CAI_SEKRET_PLIK || path.join(KATALOG, 'dane', 'sekret');
-const PLIK_WYLOGOWANYCH = path.join(KATALOG, 'dane', 'wylogowane.json');
+const PLIK_WYLOGOWANYCH = process.env.CAI_WYLOGOWANE || path.join(KATALOG, 'dane', 'wylogowane.json');
 
 /**
  * Sekret do podpisywania. Z konfiguracji, a jesli jej nie ma - losowany raz
@@ -176,8 +244,7 @@ function sekretSesji() {
   }
   const nowy = crypto.randomBytes(32).toString('hex');
   try {
-    fs.mkdirSync(path.dirname(PLIK_SEKRETU), { recursive: true });
-    fs.writeFileSync(PLIK_SEKRETU, nowy, { mode: 0o600 });
+    pliki.zapiszAtomowo(PLIK_SEKRETU, nowy);
     console.log(`Wygenerowano sekret sesji: ${PLIK_SEKRETU}`);
   } catch (e) {
     console.warn('[sesje] nie udalo sie zapisac sekretu - restart wylogowuje wszystkich:', e.message);
@@ -211,15 +278,13 @@ function utworzSesje(uzytkownik) {
   return `${cialo}.${podpis(cialo)}`;
 }
 
-/** Identyfikatory sesji wylogowanych recznie. Maly plik, czytany z dysku. */
+/**
+ * Identyfikatory sesji wylogowanych recznie. Maly plik, czytany z dysku.
+ * Uszkodzony plik to BladDanych, nie pusta lista: pusta oznaczalaby, ze
+ * wszystkie uniewaznione sesje znow sa wazne az do wygasniecia.
+ */
 function wylogowane() {
-  try {
-    const dane = JSON.parse(fs.readFileSync(PLIK_WYLOGOWANYCH, 'utf8'));
-    return Array.isArray(dane) ? dane : [];
-  } catch (e) {
-    if (e.code !== 'ENOENT') console.error('[sesje] odczyt listy wylogowanych:', e.message);
-    return [];
-  }
+  return pliki.czytajJson(PLIK_WYLOGOWANYCH, [], pliki.czyTablica);
 }
 
 function zapiszWylogowanie(id, wygasa) {
@@ -229,12 +294,7 @@ function zapiszWylogowanie(id, wygasa) {
   const teraz = Date.now();
   const lista = wylogowane().filter((w) => w.wygasa > teraz);
   lista.push({ id, wygasa });
-  try {
-    fs.mkdirSync(path.dirname(PLIK_WYLOGOWANYCH), { recursive: true });
-    fs.writeFileSync(PLIK_WYLOGOWANYCH, JSON.stringify(lista), { mode: 0o600 });
-  } catch (e) {
-    console.error('[sesje] zapis wylogowania:', e.message);
-  }
+  pliki.zapiszJson(PLIK_WYLOGOWANYCH, lista);
 }
 
 /**
@@ -324,7 +384,13 @@ function parsujCiasteczka(naglowek) {
   const out = {};
   for (const czesc of naglowek.split(';')) {
     const i = czesc.indexOf('=');
-    if (i > 0) out[czesc.slice(0, i).trim()] = decodeURIComponent(czesc.slice(i + 1).trim());
+    if (i <= 0) continue;
+    const surowa = czesc.slice(i + 1).trim();
+    // Obce ciasteczko z blednym kodowaniem (np. ustawione przez inna poddomene
+    // tej samej domeny) nie moze konczyc kazdego zadania bledem 500.
+    let wartosc = surowa;
+    try { wartosc = decodeURIComponent(surowa); } catch { /* zostaje surowa wartosc */ }
+    out[czesc.slice(0, i).trim()] = wartosc;
   }
   return out;
 }
@@ -377,11 +443,38 @@ function wolnoWyjsc(login, ile = 1) {
   return true;
 }
 
+/** Czy polaczenie przyszlo z petli zwrotnej (Caddy na tej samej maszynie). */
+function zPetliZwrotnej(adres) {
+  const a = String(adres || '');
+  return a === '::1' || /^(::ffff:)?127\./.test(a);
+}
+
+/**
+ * Adres klienta do licznikow (logowanie, prosby o dostep).
+ *
+ * X-Forwarded-For czytany wprost byl do podrobienia: inny naglowek = nowy
+ * licznik prob. Teraz ufamy wylacznie X-Real-IP i tylko wtedy, gdy polaczenie
+ * przyszlo z petli zwrotnej, czyli od Caddy na tej samej maszynie. Caddy
+ * ustawia go z {client_ip}, a ten - przy trusted_proxies dla Cloudflare -
+ * jest prawdziwym adresem odwiedzajacego (konfiguracja: serwer/README.md).
+ */
+let ostatnieOstrzezenieIp = 0;
 function adresIp(req) {
-  // Za Caddy/nginx prawdziwy adres jest w X-Forwarded-For
-  const xff = req.headers['x-forwarded-for'];
-  if (typeof xff === 'string' && xff) return xff.split(',')[0].trim();
-  return req.socket.remoteAddress || 'nieznany';
+  const zrodlo = req.socket?.remoteAddress || '';
+  if (zPetliZwrotnej(zrodlo)) {
+    const realny = req.headers['x-real-ip'];
+    if (typeof realny === 'string' && realny.trim()) return realny.trim().slice(0, 64);
+    // Zadanie z petli zwrotnej bez X-Real-IP = Caddy bez `header_up X-Real-IP
+    // {client_ip}`. Wtedy wszyscy maja jeden adres i jeden licznik prob
+    // logowania - blad konfiguracji ma byc widac w logu (raz na godzine).
+    if (Date.now() - ostatnieOstrzezenieIp > 3600_000) {
+      ostatnieOstrzezenieIp = Date.now();
+      console.warn('[adres] zadanie z petli zwrotnej bez naglowka X-Real-IP - w Caddy brakuje '
+        + '`header_up X-Real-IP {client_ip}` (dokumenty/Caddyfile.content-ai). Wszyscy klienci '
+        + 'dziela teraz jeden licznik prob logowania.');
+    }
+  }
+  return zrodlo || 'nieznany';
 }
 
 // ─── Aplikacja: wariant proxy z adresami przepisanymi na wlasny serwer ────────
@@ -391,7 +484,17 @@ function adresIp(req) {
 const PLACEHOLDER_WORKER = 'https://twoj-worker.workers.dev';
 const PLACEHOLDER_OPENSEO = 'WSTAW_TUTAJ_ADRES_OPENSEO';
 const PLACEHOLDER_DOMENA = 'WSTAW_TUTAJ_DOMENA_CIASTECZKA';
+// Identyfikator konta dla aplikacji: na nim aplikacja zaklada osobne miejsce
+// w localStorage, zeby na wspolnym komputerze konta nie widzialy nawzajem
+// historii i kluczy. Skrot zamiast loginu - login nie musi lezec w kluczach
+// przegladarki.
+const PLACEHOLDER_KONTO = 'WSTAW_TUTAJ_KONTO';
+function idKonta(login) {
+  return crypto.createHash('sha256').update('cai-konto:' + String(login)).digest('hex').slice(0, 16);
+}
 let htmlAplikacji = null;
+// Gotowa strona aplikacji per konto (identyfikator konta w HTML) z wersjami spakowanymi.
+const PAMIEC_STRONY = new Map();
 
 function wczytajAplikacje() {
   const plik = path.join(APP, 'web-proxy.html');
@@ -413,7 +516,49 @@ function wczytajAplikacje() {
   if (KONF.cookieDomena) {
     htmlAplikacji = htmlAplikacji.split(PLACEHOLDER_DOMENA).join(KONF.cookieDomena);
   }
+  ustalDozwolone(html);
   return htmlAplikacji;
+}
+
+// ─── Koszt: dozwolone modele, sufit tokenow, rozmiary grafik ─────────────────
+// /api przepuszczal dowolny model i max_tokens 128000 nawet z konta
+// darmowego, a /api/images dowolne n i size. Na koncie serwera to my placimy,
+// wiec granice stawia serwer. Listy bierzemy z samej aplikacji (stale MODEL_*
+// i IMG_FORMATS), zeby zmiana modelu w aplikacji nie psula generowania.
+
+const MODELE_DOMYSLNE = ['claude-opus-5', 'claude-sonnet-5'];
+const ROZMIARY_DOMYSLNE = ['1536x1024', '1024x1024', '1024x1536'];
+const DOZWOLONE = { modele: new Set(MODELE_DOMYSLNE), rozmiary: new Set(ROZMIARY_DOMYSLNE) };
+
+function ustalDozwolone(html) {
+  const modele = [...String(html).matchAll(/const\s+MODEL_[A-Z_]+\s*=\s*'([a-z0-9][a-z0-9._-]*)'/g)].map((m) => m[1]);
+  const formaty = /const IMG_FORMATS\s*=\s*\[([\s\S]*?)\];/.exec(String(html));
+  const rozmiary = formaty ? [...formaty[1].matchAll(/api:\s*'(\d+x\d+)'/g)].map((m) => m[1]) : [];
+  DOZWOLONE.modele = new Set([...(modele.length ? modele : MODELE_DOMYSLNE), ...KONF.modeleDodatkowe]);
+  DOZWOLONE.rozmiary = new Set([...(rozmiary.length ? rozmiary : ROZMIARY_DOMYSLNE), ...KONF.rozmiaryDodatkowe]);
+}
+
+/** Opis odmowy dla tresci (/api) albo null, gdy zadanie miesci sie w granicach. */
+function odmowaKosztuTresci(body) {
+  if (!body || typeof body !== 'object') return 'Niepoprawne zapytanie.';
+  if (!DOZWOLONE.modele.has(String(body.model || ''))) {
+    return `Model "${String(body.model || '').slice(0, 60)}" nie jest dostępny na tym serwerze. Dozwolone: ${[...DOZWOLONE.modele].join(', ')}.`;
+  }
+  const mt = body.max_tokens;
+  if (mt !== undefined && !(Number.isInteger(mt) && mt > 0 && mt <= KONF.maxTokens)) {
+    return `max_tokens musi być liczbą całkowitą od 1 do ${KONF.maxTokens}.`;
+  }
+  return null;
+}
+
+/** To samo dla /api/images: jedna grafika, rozmiar z listy aplikacji. */
+function odmowaKosztuGrafiki(body) {
+  if (!body || typeof body !== 'object') return 'Niepoprawne zapytanie.';
+  if (body.n !== undefined && body.n !== 1) return 'Serwer generuje jedną grafikę na zapytanie (n = 1).';
+  if (!DOZWOLONE.rozmiary.has(String(body.size || ''))) {
+    return `Rozmiar "${String(body.size || '').slice(0, 20)}" nie jest dostępny. Dozwolone: ${[...DOZWOLONE.rozmiary].join(', ')}.`;
+  }
+  return null;
 }
 
 // ─── Klucze: serwerowy domyslnie, wlasny uzytkownika gdy przyszedl w naglowku ──
@@ -467,6 +612,7 @@ function openaiNaAnthropic(dane) {
 // ─── Odpowiedzi ───────────────────────────────────────────────────────────────
 
 function odpowiedzJson(res, status, dane) {
+  if (res.headersSent || res.destroyed) return;
   const tresc = JSON.stringify(dane);
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
@@ -476,19 +622,140 @@ function odpowiedzJson(res, status, dane) {
 }
 
 function odpowiedzTekst(res, status, tekst, typ = 'text/plain; charset=utf-8') {
-  res.writeHead(status, { 'Content-Type': typ, 'Content-Length': Buffer.byteLength(tekst) });
-  res.end(tekst);
+  if (res.headersSent || res.destroyed) return;
+  wyslij(res, status, { 'Content-Type': typ }, Buffer.from(tekst, 'utf8'));
 }
 
+// ─── Naglowki bezpieczenstwa ─────────────────────────────────────────────────
+// Jedno zrodlo prawdy w Node, wiec dzialaja tez bez Caddy. HSTS ustawia Caddy
+// (serwer/README.md), bo dotyczy HTTPS, ktorego Node nie widzi.
+//
+// 'unsafe-inline' w script-src musi zostac, dopoki aplikacja ma setki
+// atrybutow on* i skrypty w HTML. Taka CSP nie zatrzyma wstrzyknietego
+// skryptu, ale odcina mu wyprowadzanie danych (connect/img/form/frame) i
+// osadzanie aplikacji w obcej ramce. connect-src https: zostaje tylko dla
+// publikacji do WordPressa/Drupala prosto z przegladarki.
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self' https:",
+  "media-src 'self' blob: data:",
+  "worker-src 'self' blob:",
+  "frame-src 'none'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ');
+
+const NAGLOWKI_BEZPIECZENSTWA = {
+  'Content-Security-Policy': CSP,
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'same-origin',
+  'Permissions-Policy': 'camera=(), geolocation=(), payment=(), usb=(), microphone=(self)',
+  'Cross-Origin-Opener-Policy': 'same-origin',
+};
+
+function ustawNaglowkiBezpieczenstwa(res, sciezka) {
+  for (const [k, v] of Object.entries(NAGLOWKI_BEZPIECZENSTWA)) res.setHeader(k, v);
+  // Odpowiedzi API i logowania sa osobiste - zadna pamiec podreczna ich nie trzyma.
+  if (sciezka === '/api' || sciezka.startsWith('/api/') || sciezka.startsWith('/auth/')) {
+    res.setHeader('Cache-Control', 'no-store');
+  }
+}
+
+// ─── Kompresja ───────────────────────────────────────────────────────────────
+// HTML aplikacji ma ponad 800 kB; spakowany brotli schodzi do okolo 200 kB.
+// Bez zaleznosci: zlib jest wbudowany. Za Caddy z `encode zstd gzip` mozna to
+// wylaczyc (CAI_KOMPRESJA=0) - Caddy nie pakuje odpowiedzi, ktora juz ma
+// Content-Encoding, ale po co liczyc to samo dwa razy.
+
+const TYPY_DO_KOMPRESJI = /^(text\/|application\/(json|javascript|manifest\+json)|image\/svg\+xml)/i;
+
+/** 'br', 'gzip' albo null - wg Accept-Encoding klienta. */
+function wybierzKodowanie(req) {
+  if (!KONF.kompresja || !req) return null;
+  const ae = String(req.headers['accept-encoding'] || '').toLowerCase();
+  const akceptuje = (nazwa) => ae.split(',').some((c) => {
+    const [n, ...param] = c.trim().split(';');
+    if (n.trim() !== nazwa) return false;
+    const q = param.map((p) => p.trim()).find((p) => p.startsWith('q='));
+    return !q || Number(q.slice(2)) > 0;
+  });
+  if (akceptuje('br')) return 'br';
+  if (akceptuje('gzip')) return 'gzip';
+  return null;
+}
+
+function spakuj(bufor, kodowanie, jakosc) {
+  if (kodowanie === 'br') {
+    return zlib.brotliCompressSync(bufor, {
+      params: {
+        [zlib.constants.BROTLI_PARAM_QUALITY]: jakosc || 5,
+        [zlib.constants.BROTLI_PARAM_SIZE_HINT]: bufor.length,
+      },
+    });
+  }
+  return zlib.gzipSync(bufor, { level: 6 });
+}
+
+/**
+ * Wysyla bufor, w razie potrzeby spakowany. `gotowe` pozwala podac wersje
+ * spakowane wczesniej (pliki statyczne liczymy raz, nie przy kazdym zadaniu).
+ */
+function wyslij(res, status, naglowki, bufor, gotowe) {
+  const typ = String(naglowki['Content-Type'] || '');
+  const doKompresji = TYPY_DO_KOMPRESJI.test(typ) && bufor.length > 1024;
+  let cialo = bufor;
+  const out = { ...naglowki };
+  if (doKompresji) {
+    out.Vary = 'Accept-Encoding';
+    const kod = wybierzKodowanie(res.req);
+    if (kod) {
+      cialo = (gotowe && gotowe[kod]) || spakuj(bufor, kod);
+      out['Content-Encoding'] = kod;
+    }
+  }
+  out['Content-Length'] = cialo.length;
+  res.writeHead(status, out);
+  res.end(res.req && res.req.method === 'HEAD' ? undefined : cialo);
+}
+
+/**
+ * Cialo zadania z limitem. Po przekroczeniu limitu NIE zrywamy od razu
+ * polaczenia: wtedy klient nie dostalby zadnej odpowiedzi (formularz pokazalby
+ * "blad sieci"). Odrzucamy z e.status = 413, reszte ciala przepuszczamy w proznie,
+ * zeby odpowiedz 413 mogla dojsc, a polaczenie zamykamy po chwili.
+ */
 function czytajCialo(req, limitBajtow = 25 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
     const kawalki = [];
     let rozmiar = 0;
+    let zaDuze = false;
+    const odrzucZaDuze = () => {
+      zaDuze = true;
+      kawalki.length = 0;
+      const e = new Error('cialo zadania za duze');
+      e.status = 413;
+      reject(e);
+      const t = setTimeout(() => req.destroy(), 2000);
+      if (t.unref) t.unref();
+    };
+    // Zadeklarowana dlugosc ponad limit - nie ma po co czytac.
+    if (Number(req.headers['content-length'] || 0) > limitBajtow) {
+      req.resume();
+      odrzucZaDuze();
+      return;
+    }
     req.on('data', (c) => {
+      if (zaDuze) return;
       rozmiar += c.length;
       if (rozmiar > limitBajtow) {
-        reject(new Error('cialo zadania za duze'));
-        req.destroy();
+        odrzucZaDuze();
         return;
       }
       kawalki.push(c);
@@ -496,6 +763,81 @@ function czytajCialo(req, limitBajtow = 25 * 1024 * 1024) {
     req.on('end', () => resolve(Buffer.concat(kawalki)));
     req.on('error', reject);
   });
+}
+
+// ─── Limity czasu i zerwanie przez klienta ───────────────────────────────────
+// Kazde wywolanie dostawcy ma dwa hamulce naraz:
+//   - limit czasu z konfiguracji (KONF.czasy) - po nim 504 z czytelnym komunikatem,
+//   - zerwanie przez klienta - gdy przegladarka zamknie polaczenie (zamknieta
+//     karta, ponowienie, utrata sieci), przerywamy tez wywolanie dostawcy,
+//     zamiast placic za odpowiedz, ktorej nikt nie odbierze. Uzycie pakietu
+//     liczymy tylko wtedy, gdy odpowiedz byla udana I klient nadal czeka.
+
+class BladCzasu extends Error {
+  constructor(ms) {
+    super(`Dostawca nie odpowiedział w ciągu ${Math.round(ms / 1000)} s. Spróbuj ponownie za chwilę.`);
+    this.name = 'BladCzasu';
+    this.status = 504;
+  }
+}
+
+class KlientOdszedl extends Error {
+  constructor() {
+    super('klient zamknal polaczenie');
+    this.name = 'KlientOdszedl';
+  }
+}
+
+/**
+ * Sygnal dla wywolania dostawcy: limit czasu albo zerwanie przez klienta.
+ * Jeden AbortController z dwoma wyzwalaczami (zamiast AbortSignal.any, ktorego
+ * nie ma w Node 18); powod przerwania mowi, ktory zadzialal.
+ */
+function hamulec(res, ms) {
+  const ster = new AbortController();
+  const zegar = setTimeout(() => ster.abort(new BladCzasu(ms)), ms);
+  if (zegar.unref) zegar.unref();
+  const poZamknieciu = () => { if (!res.writableEnded && !ster.signal.aborted) ster.abort(new KlientOdszedl()); };
+  res.on('close', poZamknieciu);
+  return {
+    signal: ster.signal,
+    // Czy po udanej odpowiedzi dostawcy ktos jeszcze na nia czeka.
+    klientCzeka: () => !(ster.signal.reason instanceof KlientOdszedl) && !res.destroyed && !res.writableEnded,
+    zwolnij: () => { clearTimeout(zegar); res.removeListener('close', poZamknieciu); },
+  };
+}
+
+/** Zamienia przerwanie z hamulca na wlasciwy wyjatek (fetch rzuca powod przerwania). */
+function powodPrzerwania(e, signal) {
+  if (signal && signal.aborted && signal.reason instanceof Error) return signal.reason;
+  return e;
+}
+
+/** Odpowiedz na limit czasu w ksztalcie bledu Anthropic/OpenAI - aplikacja czyta error.message. */
+function odpowiedzCzasu(res, e) {
+  odpowiedzJson(res, 504, {
+    type: 'error',
+    error: { type: 'timeout_error', message: e.message },
+    komunikat: e.message,
+  });
+}
+
+/** fetch z hamulcem; body czytane w tym samym limicie. */
+async function fetchZHamulcem(url, opcje, hamulecZadania, czytaj) {
+  try {
+    const odp = await fetch(url, { ...opcje, signal: hamulecZadania.signal });
+    const cialo = czytaj === 'bufor' ? Buffer.from(await odp.arrayBuffer()) : await odp.text();
+    return { odp, cialo };
+  } catch (e) {
+    throw powodPrzerwania(e, hamulecZadania.signal);
+  }
+}
+
+/** Czy zapytanie do /api to dlugie generowanie (osobny, dluzszy limit czasu). */
+function dlugieGenerowanie(body, czynnosci) {
+  if (czynnosci.includes('artykul')) return true;
+  if (Array.isArray(body.tools) && body.tools.length) return true;
+  return Number(body.max_tokens || 0) > 4000;
 }
 
 // ─── Proxy do dostawcow ───────────────────────────────────────────────────────
@@ -527,7 +869,7 @@ async function obsluzSerp(body) {
       const surowe = await openseoMcp.wolaj(
         'get_serp_results',
         { projectId: KONF.seoProjekt, queries: [{ keyword: fraza }] },
-        KONF.openseo,
+        { ...KONF.openseo, timeoutMs: KONF.czasy.serp },
         { platne: true }
       );
       const wynik = serp.zbudujWynik(openseoMcp.serpJakDataForSeo(surowe, fraza), fraza);
@@ -536,6 +878,9 @@ async function obsluzSerp(body) {
       return { status: 200, dane: wAnthropic(wynik) };
     } catch (e) {
       console.error('[serp] openseo:', e.message);
+      if (e.status === 504) {
+        return { status: 504, dane: { content: [], error: { type: 'timeout_error', message: 'OpenSEO nie odpowiedziało w czasie. Spróbuj ponownie za chwilę.' } } };
+      }
       return { status: 502, dane: { content: [], error: { komunikat: 'Nie udalo sie pobrac danych SERP z OpenSEO' } } };
     }
   }
@@ -548,11 +893,15 @@ async function obsluzSerp(body) {
     const fraza = serp.frazaZZadania(body);
     if (!fraza) return { status: 200, dane: wAnthropic({ context: '', topics: [], phrases: [] }) };
     try {
-      const wynik = await serp.zDataForSeo(fraza, serp.jezykZZadania(body), KONF.dataForSeo);
+      const wynik = await serp.zDataForSeo(fraza, serp.jezykZZadania(body),
+        { ...KONF.dataForSeo, czasMs: KONF.czasy.serp });
       console.log(`[serp] dataforseo "${fraza}": ${wynik.wynikow} wynikow`);
       return { status: 200, dane: wAnthropic(wynik) };
     } catch (e) {
       console.error('[serp] dataforseo:', e.message);
+      if (e.name === 'TimeoutError' || e.name === 'AbortError') {
+        return { status: 504, dane: { content: [], error: { type: 'timeout_error', message: 'DataForSEO nie odpowiedziało w czasie. Spróbuj ponownie za chwilę.' } } };
+      }
       return { status: 502, dane: { content: [], error: { komunikat: 'Nie udalo sie pobrac danych SERP' } } };
     }
   }
@@ -631,6 +980,7 @@ function policzUzycie(sesja, czynnosc) {
   }
 }
 
+
 async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
   let body;
   try {
@@ -639,8 +989,16 @@ async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
     return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' });
   }
 
-  // Zapytanie o kontekst SERP obslugujemy osobno - patrz serwer/serp.js
-  if (serp.czyZapytanieSerp(body)) {
+  // Granice kosztu: model z listy aplikacji i sufit max_tokens.
+  const odmowa = odmowaKosztuTresci(body);
+  if (odmowa) {
+    return odpowiedzJson(res, 400, { type: 'error', error: { type: 'invalid_request_error', message: odmowa }, komunikat: odmowa });
+  }
+
+  // Zapytanie o kontekst SERP obslugujemy osobno - patrz serwer/serp.js.
+  // Rozpoznajemy je po tresci (prompt analizy SERP), a nie po samym narzedziu
+  // web_search: to dostaje tez artykul z przelacznikiem sieci i monitor AI.
+  if (serp.czyZapytanieSerp(body, req.headers)) {
     // Analiza SERP kosztuje osobno (DataForSEO albo dluzsze wywolanie modelu),
     // wiec jest funkcja pakietowa, a nie czescia limitu artykulow.
     if (sesja && !plany.maFunkcje(kontoSesji(sesja), 'serp')) {
@@ -652,86 +1010,103 @@ async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
     }
     const wynik = await obsluzSerp(body);
     if (wynik) {
-      if (wynik.status < 400) policzUzycie(sesja, 'wywolanie');
+      if (wynik.status < 400 && !res.destroyed) policzUzycie(sesja, 'wywolanie');
       return odpowiedzJson(res, wynik.status, wynik.dane);
     }
     // null = zostaw dotychczasowa sciezke (dostawca anthropic z web_search)
   }
 
-  if (KONF.dostawca === 'nvidia') {
-    const { klucz } = kluczDoUzycia(req, 'x-api-key', KONF.klucze.nvidia);
-    if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak NVIDIA_KEY na serwerze' });
-    const odp = await fetch(KONF.urlNvidia, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + klucz },
-      body: JSON.stringify(anthropicNaOpenai(body)),
-    });
-    const surowe = await odp.text();
-    let dane = null;
-    try { dane = JSON.parse(surowe); } catch { /* dostawca zwrocil cos innego niz JSON */ }
-    if (!odp.ok) {
-      // Log po stronie serwera - w przegladarce nie pokazujemy szczegolow dostawcy
-      console.error(`[nvidia] HTTP ${odp.status}: ${surowe.slice(0, 300)}`);
-      return odpowiedzJson(res, odp.status, {
-        content: [],
-        error: { komunikat: `Dostawca NVIDIA odrzucil zadanie (HTTP ${odp.status})` },
-      });
+  const h = hamulec(res, dlugieGenerowanie(body, czynnosci) ? KONF.czasy.dlugi : KONF.czasy.tresc);
+  try {
+    if (KONF.dostawca === 'nvidia') {
+      const { klucz } = kluczDoUzycia(req, 'x-api-key', KONF.klucze.nvidia);
+      if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak NVIDIA_KEY na serwerze' });
+      const { odp, cialo: surowe } = await fetchZHamulcem(KONF.urlNvidia, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + klucz },
+        body: JSON.stringify(anthropicNaOpenai(body)),
+      }, h);
+      let dane = null;
+      try { dane = JSON.parse(surowe); } catch { /* dostawca zwrocil cos innego niz JSON */ }
+      if (!odp.ok) {
+        // Log po stronie serwera - w przegladarce nie pokazujemy szczegolow dostawcy
+        console.error(`[nvidia] HTTP ${odp.status}: ${surowe.slice(0, 300)}`);
+        return odpowiedzJson(res, odp.status, {
+          content: [],
+          error: { komunikat: `Dostawca NVIDIA odrzucil zadanie (HTTP ${odp.status})` },
+        });
+      }
+      if (!h.klientCzeka()) return undefined;
+      for (const czynnosc of czynnosci) policzUzycie(sesja, czynnosc);
+      return odpowiedzJson(res, 200, openaiNaAnthropic(dane));
     }
-    for (const czynnosc of czynnosci) policzUzycie(sesja, czynnosc);
-    return odpowiedzJson(res, 200, openaiNaAnthropic(dane));
-  }
 
-  const { klucz } = kluczDoUzycia(req, 'x-api-key', KONF.klucze.anthropic);
-  if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak ANTHROPIC_KEY na serwerze' });
-  const odp = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': klucz,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify(body),
-  });
-  const tekst = await odp.text();
-  if (odp.ok) for (const czynnosc of czynnosci) policzUzycie(sesja, czynnosc);
-  res.writeHead(odp.status, { 'Content-Type': 'application/json; charset=utf-8' });
-  res.end(tekst);
+    const { klucz } = kluczDoUzycia(req, 'x-api-key', KONF.klucze.anthropic);
+    if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak ANTHROPIC_KEY na serwerze' });
+    const { odp, cialo: tekst } = await fetchZHamulcem(KONF.urlAnthropic, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': klucz,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify(body),
+    }, h);
+    if (!h.klientCzeka()) return undefined;
+    if (odp.ok) for (const czynnosc of czynnosci) policzUzycie(sesja, czynnosc);
+    return wyslij(res, odp.status, { 'Content-Type': 'application/json; charset=utf-8' }, Buffer.from(tekst, 'utf8'));
+  } finally {
+    h.zwolnij();
+  }
 }
 
-async function proxyOpenAiJson(req, res, url, sesja, czynnosc) {
+async function proxyGrafika(req, res, sesja) {
+  const { klucz } = kluczDoUzycia(req, 'x-openai-key', KONF.klucze.openai);
+  if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak OPENAI_KEY na serwerze' });
+  let body;
+  try {
+    body = JSON.parse((await czytajCialo(req, 1024 * 1024)).toString('utf8'));
+  } catch {
+    return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' });
+  }
+  const odmowa = odmowaKosztuGrafiki(body);
+  if (odmowa) return odpowiedzJson(res, 400, { error: { message: odmowa, type: 'invalid_request_error' }, komunikat: odmowa });
+  return wolajOpenAi(res, KONF.urlOpenai + '/images/generations', klucz, JSON.stringify({ ...body, n: 1 }),
+    'application/json', KONF.czasy.obrazy, sesja, 'grafika');
+}
+
+async function proxyOpenAiJson(req, res, url, sesja, czynnosc, czasMs) {
   const { klucz } = kluczDoUzycia(req, 'x-openai-key', KONF.klucze.openai);
   if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak OPENAI_KEY na serwerze' });
   const cialo = await czytajCialo(req);
-  const odp = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + klucz },
-    body: cialo,
-  });
-  const bufor = Buffer.from(await odp.arrayBuffer());
-  if (odp.ok) policzUzycie(sesja, czynnosc);
-  res.writeHead(odp.status, {
-    'Content-Type': odp.headers.get('content-type') || 'application/json; charset=utf-8',
-    'Content-Length': bufor.length,
-  });
-  res.end(bufor);
+  return wolajOpenAi(res, url, klucz, cialo, 'application/json', czasMs, sesja, czynnosc);
 }
 
 async function proxyTranskrypcja(req, res, sesja) {
   const { klucz } = kluczDoUzycia(req, 'x-openai-key', KONF.klucze.openai);
   if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak OPENAI_KEY na serwerze' });
   const cialo = await czytajCialo(req);
-  const odp = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-    method: 'POST',
-    headers: {
-      Authorization: 'Bearer ' + klucz,
-      'Content-Type': req.headers['content-type'] || 'multipart/form-data',
-    },
-    body: cialo,
-  });
-  const tekst = await odp.text();
-  if (odp.ok) policzUzycie(sesja, 'transkrypcja');
-  res.writeHead(odp.status, { 'Content-Type': 'application/json; charset=utf-8' });
-  res.end(tekst);
+  return wolajOpenAi(res, KONF.urlOpenai + '/audio/transcriptions', klucz, cialo,
+    req.headers['content-type'] || 'multipart/form-data', KONF.czasy.transkrypcja, sesja, 'transkrypcja');
+}
+
+/** Wspolna droga do OpenAI: hamulec, liczenie po sukcesie, odpowiedz bez zmian. */
+async function wolajOpenAi(res, url, klucz, cialo, typ, czasMs, sesja, czynnosc) {
+  const h = hamulec(res, czasMs);
+  try {
+    const { odp, cialo: bufor } = await fetchZHamulcem(url, {
+      method: 'POST',
+      headers: { 'Content-Type': typ, Authorization: 'Bearer ' + klucz },
+      body: cialo,
+    }, h, 'bufor');
+    if (!h.klientCzeka()) return undefined;
+    if (odp.ok) policzUzycie(sesja, czynnosc);
+    return wyslij(res, odp.status, {
+      'Content-Type': odp.headers.get('content-type') || 'application/json; charset=utf-8',
+    }, bufor);
+  } finally {
+    h.zwolnij();
+  }
 }
 
 async function proxyEleven(req, res, sesja) {
@@ -745,67 +1120,29 @@ async function proxyEleven(req, res, sesja) {
   }
   const glos = dane.voice_id || '21m00Tcm4TlvDq8ikWAM';
   const format = dane.output_format || 'mp3_44100_128';
-  const odp = await fetch(
-    'https://api.elevenlabs.io/v1/text-to-speech/' + encodeURIComponent(glos) + '?output_format=' + encodeURIComponent(format),
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'xi-api-key': klucz },
-      body: JSON.stringify({
-        text: dane.text || '',
-        model_id: dane.model_id || 'eleven_multilingual_v2',
-      }),
-    }
-  );
-  const bufor = Buffer.from(await odp.arrayBuffer());
-  if (odp.ok) policzUzycie(sesja, 'audio');
-  res.writeHead(odp.status, {
-    'Content-Type': odp.headers.get('content-type') || 'audio/mpeg',
-    'Content-Length': bufor.length,
-  });
-  res.end(bufor);
+  const h = hamulec(res, KONF.czasy.audio);
+  try {
+    const { odp, cialo: bufor } = await fetchZHamulcem(
+      KONF.urlEleven + '/text-to-speech/' + encodeURIComponent(glos) + '?output_format=' + encodeURIComponent(format),
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'xi-api-key': klucz },
+        body: JSON.stringify({
+          text: dane.text || '',
+          model_id: dane.model_id || 'eleven_multilingual_v2',
+        }),
+      },
+      h,
+      'bufor'
+    );
+    if (!h.klientCzeka()) return undefined;
+    if (odp.ok) policzUzycie(sesja, 'audio');
+    return wyslij(res, odp.status, { 'Content-Type': odp.headers.get('content-type') || 'audio/mpeg' }, bufor);
+  } finally {
+    h.zwolnij();
+  }
 }
 
-// ─── Ekran logowania ──────────────────────────────────────────────────────────
-
-function stronaLogowania(komunikat = '') {
-  return `<!DOCTYPE html>
-<html lang="pl"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Content AI - logowanie</title>
-<style>
-  :root{color-scheme:dark}
-  *{box-sizing:border-box}
-  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background:#07080D;color:#ECEBE6;font:15px/1.5 system-ui,-apple-system,sans-serif;padding:20px}
-  form{width:100%;max-width:340px}
-  .znak{display:flex;align-items:center;gap:12px;margin-bottom:28px}
-  .znak svg{width:34px;height:34px;color:#F6A623;filter:drop-shadow(0 0 12px rgba(246,166,35,.5))}
-  .znak span{font:600 18px/1 ui-monospace,monospace;letter-spacing:.22em}
-  .znak b{color:#F6A623}
-  label{display:block;font-size:12px;font-weight:600;margin:0 0 6px}
-  input{width:100%;padding:11px 12px;margin-bottom:16px;border:1px solid #2a2d36;border-radius:8px;
-    background:#12141b;color:#ECEBE6;font-size:14px}
-  input:focus{outline:2px solid #F6A623;outline-offset:1px;border-color:transparent}
-  button{width:100%;padding:12px;border:0;border-radius:8px;background:#F6A623;color:#120A00;
-    font-size:14px;font-weight:600;cursor:pointer}
-  button:hover{background:#ffc661}
-  .blad{background:rgba(220,60,60,.12);border:1px solid rgba(220,60,60,.4);color:#ff9c9c;
-    padding:10px 12px;border-radius:8px;margin-bottom:16px;font-size:13px}
-</style></head><body>
-<form method="POST" action="/auth/login">
-  <div class="znak">
-    <svg viewBox="0 0 32 32"><path d="M16 1.5 L18.4 13.6 L30.5 16 L18.4 18.4 L16 30.5 L13.6 18.4 L1.5 16 L13.6 13.6 Z" fill="currentColor"/></svg>
-    <span>CONTENT<b>AI</b></span>
-  </div>
-  ${komunikat ? `<div class="blad">${komunikat}</div>` : ''}
-  <label for="login">Login</label>
-  <input id="login" name="login" autocomplete="username" autofocus required>
-  <label for="haslo">Hasło</label>
-  <input id="haslo" name="haslo" type="password" autocomplete="current-password" required>
-  <button type="submit">Zaloguj</button>
-</form>
-</body></html>`;
-}
 
 // ─── Logowanie ────────────────────────────────────────────────────────────────
 // Wydzielone z routera, bo tego samego ekranu uzywa port OpenSEO - jedno konto
@@ -820,19 +1157,48 @@ function atrybutyCiasteczka() {
   );
 }
 
+/** Jezyk ekranow serwera: ?lang=, pole formularza, potem Accept-Language. */
+function jezykZadania(req, wybrany) {
+  const jawny = String(wybrany || '').toLowerCase();
+  if (jawny === 'pl' || jawny === 'en') return jawny;
+  try {
+    const q = new URL(req.url, 'http://x').searchParams.get('lang');
+    if (q === 'pl' || q === 'en') return q;
+  } catch { /* zly adres - zostaje naglowek */ }
+  return logowanie.jezykZNaglowka(req.headers['accept-language']);
+}
+
+function stronaLogowania(kod, req, jezyk, login) {
+  return logowanie.stronaLogowania({
+    kod, jezyk: jezyk || (req ? jezykZadania(req) : 'pl'), sciezka: '/auth/login',
+    // Login wraca do pola tylko w poprawnym formacie - nic obcego nie trafia do HTML.
+    login: poprawnyLogin(login) ? login : '',
+  });
+}
+
 async function obslugaLogowania(req, res) {
+  const html = 'text/html; charset=utf-8';
+  // Formularz logowania wysyla tylko nasza wlasna strona. Logowanie z obcej
+  // (login CSRF) wpinaloby ofiare w konto napastnika.
+  if (obcePochodzenie(req)) {
+    return odpowiedzTekst(res, 403, stronaLogowania('obce-zrodlo', req), html);
+  }
   const ip = adresIp(req);
   if (zablokowany(ip)) {
-    return odpowiedzTekst(res, 429, stronaLogowania('Za dużo prób. Spróbuj za 15 minut.'), 'text/html; charset=utf-8');
+    return odpowiedzTekst(res, 429, stronaLogowania('za-duzo-prob', req), html);
   }
   const dane = new URLSearchParams((await czytajCialo(req, 8192)).toString('utf8'));
   const login = (dane.get('login') || '').trim();
   const haslo = dane.get('haslo') || '';
+  const jezyk = jezykZadania(req, dane.get('jezyk'));
   const uzytkownik = wczytajUzytkownikow().find((u) => u.login === login);
 
-  if (!uzytkownik || !hasloPasuje(haslo, uzytkownik)) {
+  // scrypt liczy sie zawsze, takze dla nieistniejacego loginu - inaczej czas
+  // odpowiedzi (1 ms wobec 50 ms) zdradzalby, ktore loginy istnieja.
+  const pasuje = hasloPasuje(haslo, uzytkownik || atrapaKonta());
+  if (!uzytkownik || !pasuje) {
     nieudanaProba(ip);
-    return odpowiedzTekst(res, 401, stronaLogowania('Niepoprawny login lub hasło.'), 'text/html; charset=utf-8');
+    return odpowiedzTekst(res, 401, stronaLogowania('zle-dane', req, jezyk, login), html);
   }
 
   proby.delete(ip);
@@ -841,6 +1207,38 @@ async function obslugaLogowania(req, res) {
   res.writeHead(302, { Location: '/', 'Set-Cookie': ciasteczko });
   return res.end();
 }
+
+// ─── CSRF ─────────────────────────────────────────────────────────────────────
+// SameSite=Lax nie chroni przed zadaniami z tej samej domeny nadrzednej:
+// content-ai.net (strona produktowa) i seo. sa dla przegladarki ta sama
+// "strona" co aplikacja. Dlatego zadania zmieniajace stan musza przyjsc
+// z tego samego pochodzenia:
+//   - Sec-Fetch-Site (wszystkie wspolczesne przegladarki) musi byc same-origin,
+//   - Origin, gdy jest, musi wskazywac ten sam host co zadanie.
+// Brak obu naglowkow = klient spoza przegladarki (curl, skrypt) - on i tak
+// nie ma cudzego ciasteczka, wiec CSRF go nie dotyczy.
+
+/** Powod odrzucenia albo null, gdy zadanie przyszlo z naszej strony. */
+function obcePochodzenie(req) {
+  const sfs = req.headers['sec-fetch-site'];
+  if (sfs && sfs !== 'same-origin') return 'sec-fetch-site';
+  const origin = req.headers.origin;
+  if (origin) {
+    let host = null;
+    try { host = new URL(origin).host; } catch { /* "null" albo smiec */ }
+    if (!host || host !== String(req.headers.host || '')) return 'origin';
+  }
+  return null;
+}
+
+/** Czy cialo zadania jest zadeklarowane jako JSON. */
+function typJson(req) {
+  return /^application\/json\s*(;|$)/i.test(String(req.headers['content-type'] || ''));
+}
+
+// Endpointy przyjmujace inne cialo niz JSON: formularze logowania i
+// wylogowania oraz nagrania do transkrypcji (multipart/form-data).
+const BEZ_JSON = new Set(['/auth/login', '/auth/logout', '/api/transcribe']);
 
 // ─── Dane z OpenSEO ───────────────────────────────────────────────────────────
 // Zamysl: OpenSEO wie, co warto pisac (frazy sprawdzone i otagowane przez
@@ -979,24 +1377,38 @@ async function cialoJson(req, limitBajtow) {
   }
 }
 
-/** Ekran wylogowania w trybie bramy - sesje trzyma ona, nie my. */
-function stronaWylogowaniaZBramy() {
-  return `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
-<title>Wylogowanie</title>
-<style>body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#07080D;color:#E9EDF6;
-display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}
-div{max-width:420px;padding:32px;background:#11131D;border:1px solid #242A3B;border-radius:14px}
-h1{font-size:18px;margin:0 0 12px;color:#FFB000}p{font-size:13px;color:#9DA6BC;line-height:1.6;margin:0}</style>
-</head><body><div><h1>Wyloguj się w bramie</h1>
-<p>Logowaniem zarządza brama uwierzytelniająca, więc sesję kończysz po jej stronie.
-Zamknięcie tej karty nie wystarczy.</p></div></body></html>`;
-}
-
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 async function obsluz(req, res) {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const sciezka = url.pathname;
+  const html = 'text/html; charset=utf-8';
+  ustawNaglowkiBezpieczenstwa(res, sciezka);
+
+  // ─── Prosba o dostep ze strony produktowej ─────────────────────────────────
+  // Jedyny endpoint bez logowania i jedyny wolany z innego pochodzenia
+  // (content-ai.net), wiec ma wlasne CORS zamiast kontroli CSRF.
+  if (sciezka === '/api/prosba-o-dostep') {
+    return prosby.obsluz(req, res, {
+      dozwoloneOrigin: KONF.stronaOrigin, adresIp, czytajCialo, odpowiedzJson, typJson,
+    });
+  }
+
+  // ─── CSRF: zadania zmieniajace stan tylko z naszej strony ──────────────────
+  const zmienia = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+  if (zmienia && sciezka !== '/auth/login') {
+    const powod = obcePochodzenie(req);
+    if (powod) {
+      console.warn(`[csrf] odrzucone ${req.method} ${sciezka} (${powod}: ${req.headers.origin || req.headers['sec-fetch-site'] || '-'})`);
+      return odpowiedzJson(res, 403, { error: 'Zadanie spoza aplikacji odrzucone', komunikat: 'Żądanie spoza aplikacji zostało odrzucone.' });
+    }
+    // Cialo JSON tylko z Content-Type application/json. Formularz z obcej
+    // strony moze wyslac wylacznie text/plain, urlencoded albo multipart -
+    // bez tego wymogu "prosty" POST omijalby preflight CORS.
+    if ((sciezka === '/api' || sciezka.startsWith('/api/')) && !BEZ_JSON.has(sciezka) && !typJson(req)) {
+      return odpowiedzJson(res, 415, { error: 'Wymagany Content-Type: application/json' });
+    }
+  }
 
   // Logowanie
   if (sciezka === '/auth/login' && req.method === 'POST') {
@@ -1008,15 +1420,29 @@ async function obsluz(req, res) {
   }
 
   if (sciezka === '/auth/logout') {
-    const s = sesjaZadania(req);
-    // Wylogowanie zapisujemy na dysku, zeby przezylo restart - podpisane
-    // ciasteczko samo w sobie jest wazne az do wygasniecia.
+    const jezyk = jezykZadania(req);
     // W trybie bramy nie mamy czego uniewazniac: sesje trzyma brama i to u niej
     // trzeba sie wylogowac, wiec tylko tam odsylamy.
     if (KONF.zaufanyNaglowek) {
-      return odpowiedzTekst(res, 200, stronaWylogowaniaZBramy(), 'text/html; charset=utf-8');
+      return odpowiedzTekst(res, 200, logowanie.stronaWylogowaniaZBramy(jezyk), html);
     }
-    if (s) zapiszWylogowanie(s.id, s.wygasa);
+    // Aplikacja wylogowuje formularzem POST. GET zostaje dla zgodnosci (stare
+    // zakladki), ale tylko z wlasnej strony albo wpisany recznie - link albo
+    // obrazek z obcej strony dostaje ekran z przyciskiem zamiast wylogowania.
+    if (req.method !== 'POST') {
+      const sfs = req.headers['sec-fetch-site'];
+      if (sfs && sfs !== 'same-origin' && sfs !== 'none') {
+        return odpowiedzTekst(res, 403, logowanie.stronaPotwierdzeniaWylogowania(jezyk), html);
+      }
+    }
+    const s = sesjaZadania(req);
+    // Wylogowanie zapisujemy na dysku, zeby przezylo restart - podpisane
+    // ciasteczko samo w sobie jest wazne az do wygasniecia.
+    if (s) {
+      try { zapiszWylogowanie(s.id, s.wygasa); } catch (e) {
+        console.error('[sesje] zapis wylogowania:', e.message);
+      }
+    }
     res.writeHead(302, {
       Location: '/',
       'Set-Cookie': `cai_auth=${atrybutyCiasteczka()}; Max-Age=0`,
@@ -1031,11 +1457,23 @@ async function obsluz(req, res) {
     if (sciezka.startsWith('/api') || sciezka.startsWith('/auth/')) {
       return odpowiedzJson(res, 401, { error: 'Niezalogowany' });
     }
-    return odpowiedzTekst(res, 200, stronaLogowania(), 'text/html; charset=utf-8');
+    // Manifest i ikony musza byc dostepne przed zalogowaniem (instalacja PWA,
+    // ikona karty na ekranie logowania); nie zawieraja nic osobistego.
+    if (czyPublicznyPlik(sciezka)) return plikStatyczny(req, res, sciezka);
+    res.setHeader('Cache-Control', 'no-store');
+    return odpowiedzTekst(res, 200, stronaLogowania('', req), html);
   }
 
   if (sciezka === '/auth/me') {
     return odpowiedzJson(res, 200, { login: sesja.login, rola: sesja.rola });
+  }
+
+  // Prosby o dostep - lista dla administratora.
+  if (sciezka === '/api/admin/prosby' && req.method === 'GET') {
+    if (sesja.rola !== 'admin') return odpowiedzJson(res, 403, { error: 'Wymagana rola admin' });
+    const ile = Math.min(Math.max(Number(url.searchParams.get('ile')) || 200, 1), 1000);
+    const { wpisy, pominiete } = prosby.lista(ile);
+    return odpowiedzJson(res, 200, { prosby: wpisy, pominiete });
   }
 
   // Status - tylko admin. Nie pokazuje kluczy, wylacznie czy sa ustawione.
@@ -1112,8 +1550,11 @@ async function obsluz(req, res) {
     try {
       return odpowiedzJson(res, 200, await strona.pobierz(String(dane.adres || '')));
     } catch (e) {
-      // 502, bo blad jest po stronie pobieranej witryny, nie zadania.
-      return odpowiedzJson(res, 502, { error: e.message || 'Nie udalo sie pobrac strony' });
+      // 502, bo blad jest po stronie pobieranej witryny, nie zadania. Do
+      // przegladarki idzie tylko nasz wlasny komunikat - komunikat bledu sieci
+      // (adres, port, kod systemowy) mowilby za duzo o sieci serwera.
+      if (!(e instanceof strona.BladStrony)) console.error('[strona]', e.message);
+      return odpowiedzJson(res, 502, { error: e instanceof strona.BladStrony ? e.message : 'Nie udalo sie pobrac strony' });
     }
   }
 
@@ -1172,6 +1613,7 @@ async function obsluz(req, res) {
       console.log(`[baza] +${zakres} "${opis.nazwa}" (${opis.fragmentow} fragm., wektory: ${opis.zWektorami})`);
       return odpowiedzJson(res, 200, opis);
     } catch (e) {
+      if (e instanceof pliki.BladDanych) throw e;
       return odpowiedzJson(res, 400, { error: e.message });
     }
   }
@@ -1207,6 +1649,12 @@ async function obsluz(req, res) {
   // wolaja DataForSEO, wymagaja jawnego potwierdzenia - patrz openseo-mcp.js.
   if (sciezka.startsWith('/api/seo/')) {
     if (!KONF.openseo.portNasluchu) {
+      // Aplikacja sprawdza te liste przy kazdym starcie, zeby wiedziec, czy
+      // pokazac przycisk OpenSEO. 501 zostawial czerwony blad w konsoli przy
+      // kazdym wejsciu - brak OpenSEO to normalny stan, a nie awaria.
+      if (sciezka === '/api/seo/projekty' && req.method === 'GET') {
+        return odpowiedzJson(res, 200, { projekty: [], dostepne: false });
+      }
       return odpowiedzJson(res, 501, { error: 'OpenSEO nie jest wdrozone na tym serwerze.' });
     }
     if (!plany.maFunkcje(kontoSesji(sesja), 'openseo')) {
@@ -1215,6 +1663,7 @@ async function obsluz(req, res) {
     try {
       return await obsluzSeo(sciezka, req, res, sesja);
     } catch (e) {
+      if (e instanceof pliki.BladDanych) throw e;
       const status = e.status || 502;
       if (status >= 500) console.error('[seo]', e.message);
       return odpowiedzJson(res, status, { error: e.message });
@@ -1241,11 +1690,22 @@ async function obsluz(req, res) {
 
     try {
       if (sciezka === '/api') return await proxyTresc(req, res, sesja, czynnosci);
-      if (sciezka === '/api/images') return await proxyOpenAiJson(req, res, 'https://api.openai.com/v1/images/generations', sesja, 'grafika');
-      if (sciezka === '/api/tts') return await proxyOpenAiJson(req, res, 'https://api.openai.com/v1/audio/speech', sesja, 'audio');
+      if (sciezka === '/api/images') return await proxyGrafika(req, res, sesja);
+      if (sciezka === '/api/tts') return await proxyOpenAiJson(req, res, KONF.urlOpenai + '/audio/speech', sesja, 'audio', KONF.czasy.audio);
       if (sciezka === '/api/transcribe') return await proxyTranskrypcja(req, res, sesja);
       if (sciezka === '/api/eleven-tts') return await proxyEleven(req, res, sesja);
     } catch (e) {
+      if (e instanceof KlientOdszedl) {
+        // Przegladarka zamknela polaczenie - wywolanie dostawcy przerwane,
+        // nic nie liczymy i nie ma komu odpowiadac.
+        console.log(`[proxy] ${sciezka}: klient odszedl, wywolanie dostawcy przerwane`);
+        return undefined;
+      }
+      if (e instanceof BladCzasu) {
+        console.error(`[proxy] ${sciezka}: ${e.message}`);
+        return odpowiedzCzasu(res, e);
+      }
+      if (e instanceof pliki.BladDanych) throw e;
       console.error(`[proxy] ${sciezka}:`, e.message);
       return odpowiedzJson(res, 502, { error: 'Błąd połączenia z dostawcą API' });
     }
@@ -1253,11 +1713,23 @@ async function obsluz(req, res) {
 
   // Aplikacja i pliki statyczne
   if (sciezka === '/' || sciezka === '/index.html') {
-    const html = htmlAplikacji || wczytajAplikacje();
-    return odpowiedzTekst(res, 200, html, 'text/html; charset=utf-8');
+    const id = idKonta(sesja.login);
+    // Strona zawiera identyfikator konta - nie moze trafic do wspolnej pamieci podrecznej.
+    res.setHeader('Cache-Control', 'private, no-store');
+    // HTML jest staly w obrebie procesu, rozni sie tylko identyfikatorem konta,
+    // wiec gotowa i spakowana wersje trzymamy per konto (pakowanie to ~30 ms).
+    let wpis = PAMIEC_STRONY.get(id);
+    if (!wpis) {
+      wpis = { dane: Buffer.from((htmlAplikacji || wczytajAplikacje()).split(PLACEHOLDER_KONTO).join(id), 'utf8'), spakowane: {} };
+      if (PAMIEC_STRONY.size >= 200) PAMIEC_STRONY.delete(PAMIEC_STRONY.keys().next().value);
+      PAMIEC_STRONY.set(id, wpis);
+    }
+    const kod = wybierzKodowanie(req);
+    if (kod && !wpis.spakowane[kod]) wpis.spakowane[kod] = spakuj(wpis.dane, kod);
+    return wyslij(res, 200, { 'Content-Type': html }, wpis.dane, wpis.spakowane);
   }
 
-  return plikStatyczny(res, sciezka);
+  return plikStatyczny(req, res, sciezka);
 }
 
 const TYPY = {
@@ -1272,7 +1744,33 @@ const TYPY = {
   '.woff2': 'font/woff2',
 };
 
-function plikStatyczny(res, sciezka) {
+// Pliki publiczne jeszcze przed zalogowaniem: manifest, ikony i fonty (ekran
+// logowania pisze krojem marki). Biblioteki aplikacji zostaja za logowaniem.
+function czyPublicznyPlik(sciezka) {
+  return /^\/(manifest\.json|icons\/[A-Za-z0-9._-]+|pwa\/fonty\/[A-Za-z0-9._-]+\.woff2)$/.test(sciezka);
+}
+
+// Pamiec podreczna plikow statycznych: tresc, ETag i wersje spakowane liczymy
+// raz na wersje pliku (rozmiar + czas zmiany), a nie przy kazdym zadaniu.
+const PAMIEC_PLIKOW = new Map();
+
+function wpisPliku(plik) {
+  const st = fs.statSync(plik);
+  const klucz = `${st.size}:${st.mtimeMs}`;
+  const byl = PAMIEC_PLIKOW.get(plik);
+  if (byl && byl.klucz === klucz) return byl;
+  const dane = fs.readFileSync(plik);
+  const wpis = {
+    klucz,
+    dane,
+    etag: '"' + crypto.createHash('sha256').update(dane).digest('base64url').slice(0, 27) + '"',
+    spakowane: {},
+  };
+  PAMIEC_PLIKOW.set(plik, wpis);
+  return wpis;
+}
+
+function plikStatyczny(req, res, sciezka) {
   // Manifest, ikony i biblioteki aplikacji; reszta katalogu nie jest publiczna.
   // Biblioteki (mammoth, pdf.js, pdfmake, xlsx, html-docx-js) leza u nas zamiast
   // na obcym CDN - dzieki temu dzialaja w zamknietej sieci i nikt z zewnatrz
@@ -1288,15 +1786,55 @@ function plikStatyczny(res, sciezka) {
   const wKatalogu = path.resolve(plik).startsWith(path.resolve(path.join(APP, 'pwa')));
   if (!wKatalogu || !fs.existsSync(plik)) return odpowiedzTekst(res, 404, 'Nie znaleziono');
 
-  const dane = fs.readFileSync(plik);
-  res.writeHead(200, {
+  const wpis = wpisPliku(plik);
+  // Biblioteki, fonty i ikony maja stale nazwy i nie zmieniaja sie miedzy
+  // wydaniami, wiec przegladarka trzyma je rok bez pytania. ZASADA: zmiana
+  // tresci takiego pliku = nowa nazwa pliku (serwer/README.md). Manifest
+  // zmienia sie przy zmianie marki - godzina, potem pytanie z ETag.
+  const naglowki = {
     'Content-Type': TYPY[path.extname(plik)] || 'application/octet-stream',
-    'Content-Length': dane.length,
-  });
-  res.end(dane);
+    'Cache-Control': sciezka === '/manifest.json' ? 'public, max-age=3600' : 'public, max-age=31536000, immutable',
+    ETag: wpis.etag,
+  };
+  const ifNone = String(req.headers['if-none-match'] || '');
+  if (ifNone && ifNone.split(',').map((t) => t.trim().replace(/^W\//, '')).includes(wpis.etag)) {
+    res.writeHead(304, { ETag: wpis.etag, 'Cache-Control': naglowki['Cache-Control'], Vary: 'Accept-Encoding' });
+    return res.end();
+  }
+  // Wersje spakowane liczymy raz, z najwyzsza jakoscia brotli - plik sie nie zmienia.
+  const kod = TYPY_DO_KOMPRESJI.test(naglowki['Content-Type']) && wpis.dane.length > 1024 ? wybierzKodowanie(req) : null;
+  if (kod && !wpis.spakowane[kod]) wpis.spakowane[kod] = spakuj(wpis.dane, kod, 11);
+  return wyslij(res, 200, naglowki, wpis.dane, wpis.spakowane);
 }
 
 // ─── Start ────────────────────────────────────────────────────────────────────
+
+/**
+ * Odpowiedz na blad, ktory wyszedl z routera. Uszkodzony plik danych to 503
+ * z wyjasnieniem, a nie "Blad serwera" - administrator ma wiedziec, co naprawic,
+ * a uzytkownik, ze to chwilowe.
+ */
+function odpowiedzNaBlad(req, res, e, nazwa) {
+  if (e instanceof pliki.BladDanych) {
+    console.error(`[${nazwa}] ${e.message}`);
+    if (res.headersSent) return res.end();
+    const sciezka = String(req.url || '').split('?')[0];
+    if (sciezka.startsWith('/api') || sciezka.startsWith('/auth/me')) {
+      return odpowiedzJson(res, 503, { error: 'Dane chwilowo niedostepne', komunikat: 'Dane serwera są chwilowo niedostępne. Administrator dostał zgłoszenie.' });
+    }
+    return odpowiedzTekst(res, 503, logowanie.stronaBleduDanych(jezykZadania(req)), 'text/html; charset=utf-8');
+  }
+  console.error(`[${nazwa}]`, e.message);
+  if (!res.headersSent) odpowiedzTekst(res, 500, 'Blad serwera');
+  else res.end();
+}
+
+/** Serwer aplikacji bez nasluchu - start() go uruchamia, testy stawiaja na porcie 0. */
+function utworzSerwer() {
+  return http.createServer((req, res) => {
+    obsluz(req, res).catch((e) => odpowiedzNaBlad(req, res, e, 'serwer'));
+  });
+}
 
 function start() {
   if (!ROLE.includes('admin')) throw new Error('bledna konfiguracja rol');
@@ -1308,7 +1846,13 @@ function start() {
     process.exit(1);
   }
 
-  const uzytkownicy = wczytajUzytkownikow();
+  let uzytkownicy;
+  try {
+    uzytkownicy = wczytajUzytkownikow();
+  } catch (e) {
+    console.error('BLAD:', e.message);
+    process.exit(1);
+  }
   if (uzytkownicy.length === 0) {
     console.error('BLAD: brak kont. Zaloz pierwsze: node serwer/uzytkownicy.js dodaj <login> admin');
     process.exit(1);
@@ -1321,19 +1865,47 @@ function start() {
     console.warn('UWAGA: brak ANTHROPIC_KEY - tresc zadziala tylko dla uzytkownikow z wlasnym kluczem.');
   }
 
-  http.createServer((req, res) => {
-    obsluz(req, res).catch((e) => {
-      console.error('[serwer]', e.message);
-      if (!res.headersSent) odpowiedzTekst(res, 500, 'Blad serwera');
-      else res.end();
-    });
-  }).listen(KONF.port, KONF.host, () => {
+  // Prosby o dostep (dane osobowe) trzymamy najwyzej CAI_PROSBY_DNI dni.
+  try { prosby.sprzataj(); } catch (e) { console.error('[prosby] sprzatanie:', e.message); }
+
+  utworzSerwer().listen(KONF.port, KONF.host, () => {
     console.log(`Content AI: http://${KONF.host}:${KONF.port}`);
     console.log(`  dostawca tresci: ${KONF.dostawca}${KONF.dostawca === 'nvidia' ? ' (' + KONF.modelNvidia + ')' : ''}`);
     console.log(`  kont: ${uzytkownicy.length}, cookie Secure: ${KONF.cookieSecure ? 'tak' : 'NIE (tylko do testow lokalnych)'}`);
+    console.log(`  modele: ${[...DOZWOLONE.modele].join(', ')}; max_tokens <= ${KONF.maxTokens}; kompresja: ${KONF.kompresja ? 'tak' : 'nie'}`);
   });
 
   if (KONF.openseo.portNasluchu) startOpenSeo();
+}
+
+/** Brama przed OpenSEO - wydzielona, zeby testy mogly ja postawic na porcie 0. */
+function utworzBrameOpenSeo() {
+  const brama = openseo.utworz({ ...KONF.openseo, timeoutMs: KONF.czasy.openseo }, {
+    sesjaZadania,
+    obslugaLogowania,
+    stronaLogowania,
+    adresIp,
+    // Brama sprawdza pakiet: OpenSEO w kontenerze nie ma wlasnego logowania,
+    // wiec bez tego kazde konto (takze darmowe) mialo pelne OpenSEO.
+    kontoSesji,
+    maDostepDoOpenSeo: (konto) => konto.rola === 'admin' || plany.maFunkcje(konto, 'openseo'),
+    stronaBezPakietu: (req) => logowanie.stronaOpenSeoBezPakietu(jezykZadania(req)),
+    // Strony samej bramy (logowanie, 402, blad) - ten sam zestaw co aplikacja.
+    naglowkiBezpieczenstwa: NAGLOWKI_BEZPIECZENSTWA,
+  });
+
+  const serwer = http.createServer((req, res) => {
+    brama.obsluz(req, res).catch((e) => odpowiedzNaBlad(req, res, e, 'openseo'));
+  });
+  serwer.on('upgrade', (req, gniazdo, glowa) => {
+    try {
+      brama.obsluzUpgrade(req, gniazdo, glowa);
+    } catch (e) {
+      console.error('[openseo ws]', e.message);
+      gniazdo.destroy();
+    }
+  });
+  return serwer;
 }
 
 /**
@@ -1341,24 +1913,7 @@ function start() {
  * (seo.twojadomena.pl) i wlasny korzen; szczegoly i uzasadnienie w openseo.js.
  */
 function startOpenSeo() {
-  const brama = openseo.utworz(KONF.openseo, {
-    sesjaZadania,
-    obslugaLogowania,
-    stronaLogowania,
-    adresIp,
-  });
-
-  const serwer = http.createServer((req, res) => {
-    brama.obsluz(req, res).catch((e) => {
-      console.error('[openseo]', e.message);
-      if (!res.headersSent) odpowiedzTekst(res, 500, 'Blad serwera');
-      else res.end();
-    });
-  });
-
-  serwer.on('upgrade', (req, gniazdo, glowa) => brama.obsluzUpgrade(req, gniazdo, glowa));
-
-  serwer.listen(KONF.openseo.portNasluchu, KONF.host, () => {
+  utworzBrameOpenSeo().listen(KONF.openseo.portNasluchu, KONF.host, () => {
     console.log(`OpenSEO za logowaniem: http://${KONF.host}:${KONF.openseo.portNasluchu}`);
     console.log(`  kontener: http://${KONF.openseo.host}:${KONF.openseo.port}`);
     if (!KONF.cookieDomena) {
@@ -1372,8 +1927,11 @@ if (require.main === module) start();
 module.exports = {
   wolnoWyjsc,
   zahaszuj, hasloPasuje, anthropicNaOpenai, openaiNaAnthropic, ROLE,
-  PLIK_UZYTKOWNIKOW, wczytajUzytkownikow, zapiszUzytkownikow,
+  PLIK_UZYTKOWNIKOW, wczytajUzytkownikow, zapiszUzytkownikow, poprawnyLogin, WZOR_LOGINU,
   // Sesje - wystawione do testow; produkcyjnie wola je tylko router.
   utworzSesje, sesjaZadania, zapiszWylogowanie, wylogowane, PLIK_WYLOGOWANYCH,
-  czynnosciTresci,
+  czynnosciTresci, parsujCiasteczka, adresIp, obcePochodzenie, jezykZadania,
+  wyzerujOstrzezenieIp: () => { ostatnieOstrzezenieIp = 0; },
+  // Serwer do testow integracyjnych (port 0, bez start()).
+  utworzSerwer, utworzBrameOpenSeo, wczytajAplikacje, KONF, DOZWOLONE, CSP,
 };

@@ -20,6 +20,7 @@ Pelny opis kazdej zmiany: INSTRUKCJA_naniesienia_zmian.md
 """
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -54,8 +55,8 @@ KONTROLE = [
      'onclick="openKeysModal();closeSettingsMenu()"', None, ("keys",)),
     ("F4/modal", "modal Kluczy API",
      'id="keys-modal"', None, ("keys",)),
-    ("F4/store", "klucze czytane z localStorage",
-     "localStorage.getItem('cai_key_anthropic')", None, ("keys",)),
+    ("F4/store", "klucze czytane z magazynu przegladarki",
+     "magazyn.getItem('cai_key_anthropic')", None, ("keys",)),
     ("F4/i18n", "klucze i18n panelu (PL i EN)",
      "'keys-modal-title':'Klucze API',", None, ("keys",)),
     ("F4/nokey", "komunikat braku klucza kieruje do panelu",
@@ -74,7 +75,13 @@ KONTROLE = [
      "in the same language as keyword", None),
 
     ("F7/krok", "spinner pokazuje pierwszy krok natychmiast",
-     "const iv = setInterval(_tickStep, 900);", None, None),
+     "  _tickStep();\n  const startGenerowania = Date.now();", None, None),
+    ("G/przerwij", "generowanie mozna przerwac (wspolny sygnal w apiFetch)",
+     "const sygnal = options.signal || (przerwanieGenerowania && przerwanieGenerowania.signal) || null;", None, None),
+    ("G/postep", "licznik nie udaje etapow po rozpoczeciu pisania",
+     "if (step < Math.min(3, activeSteps.length)) {", None, None),
+    ("G/szkic", "formularz i ostatni artykul wracaja po odswiezeniu",
+     "magazyn.setItem('cai_szkic', JSON.stringify(szkic));", None, None),
     ("F7/i18n", "komunikat premium przez _t(), nie zaszyty PL",
      "_t('msg-spin-premium-eval')",
      "'Premium: oceniam i poprawiam...'", None),
@@ -307,8 +314,10 @@ KONTROLE = [
      "overflow-wrap:anywhere", "word-break:break-all", None),
     ("F37/meta", "dlugosc meta poza zakresem sygnalizowana kolorem",
      "metaEl2.style.color", None, None),
+    # Sama kolejnosc (fakty -> kreska -> SEO), bez emoji, wciec i atrybutow: ikony,
+    # klasy i uklad paska moga sie zmieniac, kolejnosc pozycji w menu Ocen - nie.
     ("F37/kolejnosc", "kontrola faktow pierwsza w menu Ocen",
-     'id="fakty-btn" style="display:none" onclick="przelaczPanelFaktow()" data-i18n="btn-fakty">🔍 Kontrola faktów</button>\n                <div class="grupa-sep"></div>\n                <button class="btn-secondary" id="seo-btn"', None, None),
+     're:id="fakty-btn"[^\\n]*onclick="przelaczPanelFaktow\\(\\)"[^\\n]*</button>\\s*<div class="grupa-sep"></div>\\s*<button[^>]*id="seo-btn"', None, None),
 
     # -- czwarta runda: przelacznik uzupelniania wiedza ogolna --
 
@@ -329,7 +338,7 @@ KONTROLE = [
     ("F38/podpowiedz", "podpowiedz mowi o zrodlach i o danych firmy",
      "Dane o Twojej firmie zawsze tylko z bazy.", None, None),
     ("F38/czas", "podpowiedz uprzedza o dluzszym generowaniu",
-     "Wydłuża generowanie o ok. 30 sek.", None, None),
+     "Wydłuża generowanie o ok. 30 s.'", None, None),
 
     # Bezwarunkowe "baza wiedzy jest jedynym zrodlem faktow" stalo w
     # sprzecznosci z galezia promptu mowiaca "mozesz uzupelnic wiedza ogolna".
@@ -502,7 +511,7 @@ KONTROLE = [
     # urzadzenie mialy wlasna kopie, a nowa osoba w zespole zaczynala od pustej
     # i generowala teksty bez regul o marce.
     ("F49/serwer", "konfiguracja marki z serwera ma pierwszenstwo nad przegladarka",
-     "if (markaZSerwera) return Object.assign({}, LLMS_DEFAULTS, markaZSerwera);",
+     "if (markaZSerwera) return bezPrzykladu(Object.assign({}, LLMS_DEFAULTS, markaZSerwera));",
      "function getLlmsConfig() {\n  try {", None),
     ("F49/pobranie", "pobranie konfiguracji marki z serwera",
      "async function wczytajMarkeZSerwera() {", None, ("proxy",)),
@@ -515,11 +524,48 @@ KONTROLE = [
     ("F49/bezserwera", "warianty bez serwera nie wolaja jego endpointow",
      None, "wczytajMarkeZSerwera", ("keys", "owner")),
 
+    # ── runda 2 ──
+    ("R2/premium-uciety", "ucieta samokorekta zostawia oryginal i informuje",
+     "if (impData.stop_reason === 'max_tokens') {", None, None),
+    ("R2/wyloguj-sekrety", "wylogowanie usuwa klucze i hasla CMS konta",
+     "var SEKRETY_KONTA = /^(cai_key_|cai_klucz_)|^(cai-wp|cai-drupal)$/;", None, ("proxy",)),
+    ("R2/brief-telefon", "menu zadan briefu na telefonie jako arkusz od dolu",
+     "body.is-mobile #grupa-brief-menu, body.is-mobile #grupa-widocznosc-menu { top: auto; bottom: 0;", None, None),
+    # Na telefonie powiadomienie przez kilka sekund zaslanialo "Wygeneruj tresc", a pasek
+    # audio lezal pod dolna nawigacja. Oba stoja teraz nad najwyzszym stalym paskiem.
+    ("R2/paski-dolne", "powiadomienia i pasek audio nad paskami dolu telefonu",
+     "body.is-mobile #powiadomienia { bottom: calc(var(--nad-audio,", None, None),
+    ("R2/wp-bez-h1", "tresc do CMS bez H1 (tytul idzie osobnym polem)",
+     "if (h1) h1.remove();", None, None),
+    ("R2/wp-publikuj", "Publikuj dla biezacego artykulu po zapisaniu ustawien CMS",
+     "if (pub) pub.style.display = ((wpSettings.url || drupalSettings.url) && art", None, None),
+    ("R2/cms-https", "CMS pod http:// - komunikat o https zamiast CORS",
+     "if (cmsBezHttps(adresCms)) {", None, None),
+    ("R2/skip-link", "odnosnik Przejdz do tresci na poczatku strony",
+     'class="przejdz-do-tresci" onclick="return przejdzDoTresci()"', None, None),
+    # Odznaka miala data-i18n="badge-ready", wiec kazde applyLang (zmiana jezyka, start
+    # po odswiezeniu) cofalo gotowy artykul do "gotowy do generowania".
+    ("R2/odznaka-jezyk", "odznaka wyniku trzyma swoj klucz przy zmianie jezyka",
+     "ustawTekst(document.getElementById('out-badge'), 'badge-historia');", "document.getElementById('out-badge').textContent = _t(", None),
+    ("R2/odmiana", "odmiana liczebnikow w statusie generowania grupowego",
+     "status.textContent = _tn('bulk-gotowe', topics.length);", None, None),
+    ("R2/wczesny-jezyk", "teksty EN podmienione przed reszta skryptu (strona nie czeka ukryta)",
+     "tlumaczStatyczne(I18N[currentLang] || I18N.pl);", None, None),
+    ("R2/tytul-h1", "wariant tytulu mozna wstawic jako H1",
+     "onclick=\"uzyjTytuluJakoH1(${i}, this)\"", None, None),
+    ("R2/koszt-proxy", "bez kosztu sesji w wariancie z serwerem",
+     None, 'id="h-cost"', ("proxy",)),
+    ("R2/blokady-pakietu", "Grafika i Audio spoza pakietu oznaczone w menu zadan",
+     "document.querySelectorAll('[onclick=\"openAudioPanel()\"]').forEach(", ".btn-module[onclick=", ("proxy",)),
+
     # ── warstwa reskinu ──
-    ("R/splash", "splash raz na sesje",
-     'id="cin-splash"', None, None),
-    ("R/splash-css", "style splasha",
-     'id="cin-splash-css"', None, None),
+    # Splash trzymal gotowa aplikacje jeszcze 2,4 s (stale 1900 ms + zanikanie) i zjadal
+    # pierwsze dotkniecie. Motyw i jezyk ustawia teraz skrypt w <head>, wiec nie ma czego
+    # zaslaniac - splash nie wraca, a stan widoku jest gotowy przed pierwszym malowaniem.
+    ("R/splash", "bez splasha trzymajacego gotowa aplikacje",
+     'id="cai-motyw-start"', "setTimeout(done, 1900)", None),
+    ("R/splash-css", "bez czastek i poswiaty splasha",
+     "document.documentElement.classList.remove('bez-anim')", 'id="cin-splash-cv"', None),
     ("R/styl", "blok stylow reskinu",
      '<style id="cin-reskin">', None, None),
     ("R/postep", "paski postepu generowania",
@@ -529,7 +575,7 @@ KONTROLE = [
 
     # ── konfiguracja wariantow ──
     ("W/keys", "klucze z localStorage, deklaracje modyfikowalne",
-     "let API_KEY = localStorage.getItem('cai_key_anthropic')", None, ("keys",)),
+     "let API_KEY = magazyn.getItem('cai_key_anthropic')", None, ("keys",)),
     ("W/owner", "tryb owner wylacza blokade urzadzenia",
      "const OWNER_MODE = true;", None, ("owner",)),
     ("W/proxy", "proxy kieruje ruch na workera",
@@ -539,7 +585,7 @@ KONTROLE = [
     # Proxy czyta klucz z localStorage (pusty = klucz serwera). W pliku nadal nie
     # ma zadnego klucza - i nie moze byc.
     ("W/proxy", "proxy nie trzyma kluczy w pliku",
-     "let API_KEY = localStorage.getItem('cai_klucz_anthropic') || '';",
+     "let API_KEY = magazyn.getItem('cai_klucz_anthropic') || '';",
      "const API_KEY = 'WSTAW_TUTAJ_NOWY_KLUCZ_API'; //", ("proxy",)),
 
     # ── podpowiedzi tematow (wszystkie warianty - to zwykle wywolanie modelu) ──
@@ -577,15 +623,22 @@ KONTROLE = [
     ("B/menu", "pozycja Baza wiedzy w menu ustawien",
      'onclick="otworzBazeSerwera();closeSettingsMenu()"', None, ("proxy",)),
     ("B/prompt", "wiedza do promptu idzie z serwera, nie z calych dokumentow",
-     "kbContext += await wiedzaZSerwera(", None, ("proxy",)),
+     "ostatniaWiedzaSerwera = await wiedzaZSerwera(", None, ("proxy",)),
+    ("B/kontrola", "kontrola faktow widzi te same fragmenty bazy co model",
+     "return [ostatniaWiedzaSerwera, lokalne].filter(Boolean).join(", None, None),
+    ("B/jedna", "dokumenty dodane w panelu trafiaja do bazy na serwerze",
+     "var dodajLokalnie = window.addDoc;", None, ("proxy",)),
+    ("B/pusta", "komunikat o pustej bazie liczy tez dokumenty na serwerze",
+     "const isEmpty = liczbaDokumentow() === 0;", "const isEmpty = docs.length === 0;", None),
     ("B/api", "okno bazy rozmawia z endpointem wyszukiwania",
      "fetch('/api/baza/szukaj'", None, ("proxy",)),
 
     # ── brama OpenSEO (tylko wariant proxy) ──
     # Adres i domene podstawia serwer przy serwowaniu strony; w repo maja zostac
     # placeholdery, inaczej kazdy klon niesie czyjas domene.
-    ("O/menu", "pozycja OpenSEO w menu ustawien",
-     'onclick="otworzOpenSeo();closeSettingsMenu()"', None, ("proxy",)),
+    # OpenSEO stoi w obszarze "Widocznosc AI" w pasku gornym (nowy uklad, E4).
+    ("O/menu", "pozycja OpenSEO w menu Widocznosc AI",
+     'id="openseo-item" style="display:none" onclick="otworzOpenSeo()"', None, ("proxy",)),
     ("O/adres", "adres OpenSEO zostaje placeholderem",
      "var ADRES = 'WSTAW_TUTAJ_ADRES_OPENSEO';", None, ("proxy",)),
     ("O/domena", "domena ciasteczka zostaje placeholderem",
@@ -606,8 +659,12 @@ KONTROLE = [
      "pwa/lib/mammoth.browser.min.js", "cdnjs.cloudflare.com", None),
     ("Z/pdfmake", "pdfmake i jego fonty z wlasnego hosta",
      "pwa/lib/pdfmake.min.js", None, None),
-    ("Z/fonty", "IBM Plex z wlasnego hosta, nie z Google Fonts",
-     "pwa/fonty/ibm-plex-sans-latin-ext-400-normal.woff2", "fonts.googleapis.com", None),
+    ("Z/fonty", "kroje marki z wlasnego hosta, nie z Google Fonts",
+     "pwa/fonty/schibsted-grotesk-latin-ext-wght-normal.woff2", "fonts.googleapis.com", None),
+    ("Z/leniwe", "ciezkie biblioteki ladowane w miejscu uzycia, nie w <head>",
+     "await wczytajSkrypt('pwa/lib/mammoth.browser.min.js');", '<script src="pwa/lib/xlsx.full.min.js"></script>', None),
+    ("R/tokeny", "tokeny systemu projektowego i warstwy kaskady",
+     '<style id="cai-tokeny">', None, None),
     ("Z/sw", "aplikacja nie rejestruje nieistniejacego service workera",
      None, "navigator.serviceWorker.register", None),
 
@@ -640,6 +697,35 @@ KONTROLE = [
     ("P/kolejnosc", "frazy renderowane w jednym miejscu, nie w dwoch kopiach",
      'return \'<div class="brief-section"><h4>\' + _t(\'brief-kw-section\') + \'</h4><div id="brief-kw-list"></div></div>\';',
      None, None),
+
+    # ── generowanie: stan wyniku z flag, nie z wygladu (audyt rundy 1) ──
+    ("G/blad", "blad generowania rozpoznany po fladze, nie po stylu akapitu",
+     "if (!html || bladGenerowania) {",
+     "html.startsWith('<p style=\"color:var(--red)\">')", None),
+    ("G/escape", "tresc bledu API escapowana przed wstawieniem",
+     "escapeHtml(komunikatBleduApi(e))", "</strong> ${e.message}</p>", None),
+    ("G/uciety", "artykul uciety na limicie dlugosci oznaczony ostrzezeniem",
+     "artykulUciety = data.stop_reason === 'max_tokens';", None, None),
+    ("G/dostep", "przerobki, widocznosc i narracja dzialaja za proxy (bez klucza w przegladarce)",
+     "const noKey = !maDostepDoApi();", "!API_KEY || API_KEY.startsWith(", None),
+    ("G/oczysc", "HTML od modelu oczyszczany zaraz po odpowiedzi (lista dozwolonych znacznikow)",
+     "html = oczyscHtmlModelu(html.replace(", None, None),
+    ("G/oczysc-parser", "oczyszczanie w obojetnym dokumencie, nie w div glownego dokumentu",
+     "new DOMParser().parseFromString('<!doctype html><body>' + String(html), 'text/html')", None, None),
+    ("G/oczysc-cms", "do WordPressa i Drupala idzie oczyszczona tresc",
+     "const content = oczyscHtmlModelu(artClone.innerHTML);", "const content = artClone.innerHTML;", None),
+    ("G/oczysc-historia", "artykul z historii oczyszczany przy odczycie",
+     "art.innerHTML = h.html ? oczyscHtmlModelu(h.html)", None, None),
+    ("G/oceny-esc", "uwagi z oceny SEO/AIO escapowane",
+     '<span class="seo-item-text">${escapeHtml(item.text)}</span>', '<span class="seo-item-text">${item.text}</span>', None),
+    ("G/magazyn", "uszkodzone ustawienia w magazynie nie zatrzymuja skryptu",
+     "let wpSettings = czytajJson('cai-wp', {}) || {};", "JSON.parse(localStorage.getItem('cai-wp')", None),
+    ("G/magazyn-jeden", "aplikacja nie siega do localStorage poza magazynem",
+     "var magazyn = (function () {", "= localStorage.getItem(", None),
+    ("G/konto", "za serwerem dane przegladarki rozdzielone miedzy konta",
+     '<meta name="cai-konto" content="WSTAW_TUTAJ_KONTO">', None, ("proxy",)),
+    ("G/zrodla", "zrodla sieciowe zerowane na starcie kazdego generowania",
+     "  zrodlaSieciowe = [];\n  stanSieci = null;\n  if (API_KEY === 'WSTAW_TUTAJ_KLUCZ_API'", None, None),
 ]
 
 
@@ -701,8 +787,11 @@ def sprawdz(html, wariant, cicho=False):
             continue
         zrobione += 1
 
-        brak = jest is not None and jest not in html
-        wrocilo = niema is not None and niema in html
+        # Wzorzec "re:..." to wyrazenie regularne (kolejnosc elementow niezaleznie od zapisu).
+        def jest_w(wzor):
+            return re.search(wzor[3:], html) is not None if wzor.startswith("re:") else wzor in html
+        brak = jest is not None and not jest_w(jest)
+        wrocilo = niema is not None and jest_w(niema)
 
         if brak or wrocilo:
             powod = "brak sladu poprawki" if brak else "wrocil stan sprzed poprawki"
