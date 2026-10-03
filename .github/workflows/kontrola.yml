@@ -132,6 +132,11 @@ jobs:
       - name: Aplikacja - uklad na telefonie, tablecie i komputerze
         run: node narzedzia/test_uklad.js --ci
 
+      # Strona produktowa w przegladarce: telefon, tablet, komputer, PL/EN,
+      # jasny i ciemny, menu, kotwice, pigulka CTA, pismo powiekszone o 20%.
+      - name: Strona produktowa - uklad na telefonie, tablecie i komputerze
+        run: CAI_TEST_ZRZUTY=test-zrzuty node narzedzia/test_uklad_strony.js
+
       - name: Zrzuty z nieudanego testu dymnego
         if: failure()
         uses: actions/upload-artifact@v4
