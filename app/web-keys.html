@@ -4430,6 +4430,27 @@ var I18N = {
     'err-odpowiedz-zla':'Serwer zwrócił nieoczekiwaną odpowiedź (zwykle chwilowa przerwa). Spróbuj ponownie za chwilę.',
     'err-timeout':'Dostawca AI nie odpowiedział w czasie. Spróbuj ponownie za chwilę albo wybierz krótszy tekst.',
     'err-limit-pakietu':'Limit pakietu na ten miesiąc jest wyczerpany. Szczegóły są w oknie pakietu.',
+    'err-sesja':'Sesja wygasła. Odśwież stronę i zaloguj się ponownie.',
+    'err-odmowa-serwera':'Serwer aplikacji odrzucił to zapytanie. Odśwież stronę, a jeśli to się powtarza, zgłoś to administratorowi.',
+    'err-brak-klucza-serwera':'Na serwerze nie ustawiono klucza dostawcy AI dla tej funkcji. Zgłoś to administratorowi.',
+    'err-za-dlugi':'Za dużo tekstu naraz dla modelu AI. Odznacz część źródeł w bazie wiedzy albo skróć tekst i spróbuj jeszcze raz.',
+    'err-za-duze':'Zapytanie jest za duże dla dostawcy AI, zwykle przez duże pliki w bazie wiedzy. Odznacz część źródeł albo podziel duże pliki na mniejsze.',
+    'err-za-duze-plik':'Plik jest za duży dla dostawcy AI. Skróć nagranie albo zapisz je w mniejszym pliku i spróbuj jeszcze raz.',
+    'err-model':'Dostawca AI nie udostępnia temu kluczowi API modelu, którego używa aplikacja. Sprawdź dostęp do modeli w panelu dostawcy albo zgłoś to administratorowi.',
+    'err-moderacja':'Dostawca AI odrzucił zapytanie na podstawie swoich zasad dotyczących treści. Zmień opis albo wytyczne i spróbuj jeszcze raz.',
+    'err-przerwano':'Zapytanie zostało przerwane.','err-szczegoly':'Szczegóły techniczne',
+    'err-audio-siec':'Nie udało się połączyć z API audio. Sprawdź sieć i klucz API. Uwaga: OpenAI TTS jest blokowane przez CORS przeglądarki i wymaga proxy; ElevenLabs działa bezpośrednio z przeglądarki.',
+    'err-stt':'Nie udało się zamienić nagrania na tekst.','err-audio-skrypt':'Nie udało się przygotować skryptu audio.','gap-blad':'Analiza luk się nie udała.',
+    'err-cms-siec-wp':'WordPress: brak połączenia ze stroną. Sprawdź adres i czy WordPress przyjmuje zapytania z tej domeny (CORS).',
+    'err-cms-siec-drupal':'Drupal: brak połączenia ze stroną. Może brakować nagłówka CORS: dodaj w Drupalu Response Headers albo użyj modułu CORS.',
+    'err-cms-401-wp':'WordPress: login albo hasło aplikacji (Application Password) jest niepoprawne. Sprawdź je w menu ustawień → Integracja CMS.',
+    'err-cms-401-drupal':'Drupal: login albo hasło jest niepoprawne. Sprawdź je w menu ustawień → Integracja CMS i czy moduł Basic Auth jest włączony.',
+    'err-cms-403':'{cms}: to konto nie ma uprawnień do publikowania wpisów.','err-cms-404':'{cms}: pod tym adresem nie ma interfejsu API. Sprawdź adres strony w menu ustawień → Integracja CMS.',
+    'err-cms-5xx':'{cms}: serwer strony zwrócił błąd ({status}). Spróbuj ponownie za chwilę.','err-cms-inny':'{cms}: zapytanie odrzucone (HTTP {status}).',
+    'wp-zalogowano':'WordPress: zalogowano jako {name}',
+    'err-srodki':'Na koncie u dostawcy AI zabrakło środków. Doładuj konto w panelu dostawcy albo użyj innego klucza API.',
+    'err-uprawnienia':'Klucz API nie ma uprawnień do tej funkcji albo modelu. Sprawdź ustawienia klucza w panelu dostawcy AI.','btn-otworz-klucze':'Otwórz Klucze API',
+    'err-klucz':'Dostawca AI odrzucił klucz API: jest nieprawidłowy, wyłączony albo wygasł. Sprawdź go w menu ustawień → Klucze API.',
     'btn-sprobuj-ponownie':'Spróbuj ponownie',
     'err-json-modelu':'Model zwrócił odpowiedź w uszkodzonym formacie. Spróbuj jeszcze raz.',
     'wp-published':'opublikowano',
@@ -5038,6 +5059,27 @@ var I18N = {
     'err-odpowiedz-zla':'The server returned an unexpected response (usually a short outage). Try again in a moment.',
     'err-timeout':'The AI provider did not respond in time. Try again in a moment or choose a shorter text.',
     'err-limit-pakietu':'Your plan limit for this month is used up. Details are in the plan window.',
+    'err-sesja':'Your session has expired. Reload the page and sign in again.',
+    'err-odmowa-serwera':'The app server rejected this request. Reload the page, and if it happens again, tell your administrator.',
+    'err-brak-klucza-serwera':'No AI provider key is set on the server for this feature. Tell your administrator.',
+    'err-za-dlugi':'Too much text at once for the AI model. Deselect some sources in the knowledge base or shorten the text, then try again.',
+    'err-za-duze':'The request is too large for the AI provider, usually because of large files in the knowledge base. Deselect some sources or split large files into smaller ones.',
+    'err-za-duze-plik':'The file is too large for the AI provider. Shorten the recording or save it as a smaller file, then try again.',
+    'err-model':'The AI provider does not give this API key access to the model the app uses. Check model access in the provider dashboard or tell your administrator.',
+    'err-moderacja':'The AI provider rejected the request under its content policy. Change the description or guidelines, then try again.',
+    'err-przerwano':'The request was stopped.','err-szczegoly':'Technical details',
+    'err-audio-siec':'Could not reach the audio API. Check the network and API key. Note: OpenAI TTS is blocked by browser CORS and needs the proxy; ElevenLabs works directly from the browser.',
+    'err-stt':'Could not turn the recording into text.','err-audio-skrypt':'Could not prepare the audio script.','gap-blad':'The gap analysis failed.',
+    'err-cms-siec-wp':'WordPress: cannot reach the site. Check the address and whether WordPress accepts requests from this domain (CORS).',
+    'err-cms-siec-drupal':'Drupal: cannot reach the site. The CORS header may be missing: add Response Headers in Drupal or use the CORS module.',
+    'err-cms-401-wp':'WordPress: the username or application password is incorrect. Check them in the settings menu → CMS integration.',
+    'err-cms-401-drupal':'Drupal: the username or password is incorrect. Check them in the settings menu → CMS integration and make sure the Basic Auth module is enabled.',
+    'err-cms-403':'{cms}: this account is not allowed to publish posts.','err-cms-404':'{cms}: there is no API at this address. Check the site address in the settings menu → CMS integration.',
+    'err-cms-5xx':'{cms}: the site server returned an error ({status}). Try again in a moment.','err-cms-inny':'{cms}: request rejected (HTTP {status}).',
+    'wp-zalogowano':'WordPress: signed in as {name}',
+    'err-srodki':'The AI provider account has run out of credit. Top it up in the provider dashboard or use a different API key.',
+    'err-uprawnienia':'The API key has no permission for this feature or model. Check the key settings in the AI provider dashboard.','btn-otworz-klucze':'Open API keys',
+    'err-klucz':'The AI provider rejected the API key: it is invalid, disabled or expired. Check it in the settings menu → API keys.',
     'btn-sprobuj-ponownie':'Try again',
     'err-json-modelu':'The model returned a malformed response. Please try again.',
     'gap-btn-select':'Select topics to improve',
@@ -5502,12 +5544,175 @@ async function apiFetch(options, maxRetries = 3) {
 // przy stronie bledu 502) zamieniamy na zdanie ze slownika w jezyku interfejsu.
 // Adres z odpowiedzi CMS do href: tylko http(s), z ucieczka znakow.
 function bezpiecznyHref(u) { u = String(u || '').trim(); return /^https?:\/\//i.test(u) ? escapeHtml(u) : '#'; }
-function komunikatBleduApi(e) {
-  const m = (e && e.message) || '';
-  if (e && e.name === 'TypeError' && /fetch|network|load failed/i.test(m)) return _t('err-siec');
-  if ((e && e.name === 'SyntaxError') || /Unexpected token|is not valid JSON|JSON\.parse/i.test(m)) return _t('err-odpowiedz-zla');
-  if (/timeout|504/i.test(m)) return _t('err-timeout');
-  return m || _t('err-api-generic');
+// Bledy dostawcow AI (Anthropic, OpenAI, ElevenLabs) i serwera aplikacji.
+// Wczesniej generate() i panele pokazywaly surowe error.message: w polskim
+// interfejsie "Blad: invalid x-api-key" albo "prompt is too long...", zawsze
+// z "Sprobuj ponownie", choc ponowienie zlego klucza niczego nie naprawi.
+// Teraz blad niesie typ i status z odpowiedzi, komunikat mowi, co zrobic,
+// a ponowienie proponujemy tylko przy bledach przejsciowych.
+function bladOdpowiedzi(dane, status, dostawca) {
+  const er = dane && dane.error;
+  const det = dane && dane.detail;          // ElevenLabs: { detail: { status, message } }
+  let typ = '', kod = '', tresc = '';
+  if (er && typeof er === 'object') {
+    typ = String(er.type || '');
+    kod = String(er.code || '');
+    tresc = String(er.message || er.komunikat || '');
+  } else if (typeof er === 'string') {
+    tresc = er;
+  } else if (det && typeof det === 'object') {
+    kod = String(det.status || det.code || '');
+    tresc = String(det.message || '');
+  } else if (typeof det === 'string') {
+    tresc = det;
+  }
+  if (!tresc && dane && typeof dane.komunikat === 'string') tresc = dane.komunikat;
+  const st = Number(status) || Number((/HTTP (\d{3})/.exec(tresc) || [])[1]) || 0;
+  const bl = new Error(tresc || ('HTTP ' + (st || '?')));
+  bl.typ = typ;
+  bl.kod = kod;
+  bl.status = st;
+  bl.szczegol = tresc;
+  // Napis zamiast obiektu to blad wlasny serwera aplikacji (sesja, klucz serwera, pakiet).
+  bl.zSerwera = typeof er === 'string';
+  bl.dostawca = dostawca || '';
+  // Odpowiedz pakietowa serwera: okno pakietu juz mowi, co sie stalo.
+  if (dane && (dane.czynnosc || dane.funkcja)) bl.pakiet = true;
+  return bl;
+}
+
+// Rodzaj bledu decyduje o komunikacie i o tym, czy ponowienie ma sens.
+function rodzajBledu(e) {
+  if (!e) return 'inny';
+  const m = String(e.szczegol || e.message || '');
+  const typ = String(e.typ || '') + ' ' + String(e.kod || '');
+  const st = Number(e.status) || 0;
+  const zOdpowiedzi = !!(e.typ || e.kod || st || e.zSerwera);
+  // Umowne sygnaly z modulow audio: uzytkownik juz dostal komunikat albo anulowal.
+  if (!zOdpowiedzi && /^(cancel|empty|no key|no eleven key)$/.test(m)) return 'cichy';
+  if (e.name === 'AbortError') return 'przerwano';
+  if (e.name === 'TypeError' && /fetch|network|load failed/i.test(m)) return 'siec';
+  if (e.name === 'SyntaxError' || /Unexpected token|is not valid JSON|JSON\.parse/i.test(m)) return 'odpowiedz';
+  if (e.pakiet || (st === 402 && (e.zSerwera || !typ.trim())) || /limit pakietu/i.test(m)) return 'pakiet';
+  if (e.zSerwera) {
+    if (st === 401 || /niezalogowan/i.test(m)) return 'sesja';
+    if (/brak [a-z_]*key/i.test(m)) return 'klucz-serwera';
+    if (st === 403) return 'odmowa-serwera';
+  }
+  if (/credit balance|billing|insufficient_quota|exceeded your current quota|quota_exceeded/i.test(typ + ' ' + m)) return 'srodki';
+  if (/moderation|content_policy|safety system/i.test(typ + ' ' + m)) return 'moderacja';
+  if (/prompt is too long|too many (input )?tokens|context length|maximum context/i.test(m)) return 'za-dlugi';
+  if (/request_too_large/i.test(typ) || st === 413 || /exceeds the maximum allowed number of bytes/i.test(m)) return 'za-duze';
+  if (/authentication|invalid_api_key/i.test(typ) || /invalid x-api-key|incorrect api key|invalid api key/i.test(m) || st === 401) return 'klucz';
+  if (/permission/i.test(typ) || st === 403) return 'uprawnienia';
+  if (/not_found/i.test(typ) || st === 404) return 'model';
+  if (/timeout/i.test(typ) || st === 504 || st === 408 || /timeout|timed out|\b504\b/i.test(m)) return 'czas';
+  if (/rate_limit/i.test(typ) || st === 429 || /rate.?limit/i.test(m)) return 'limit-zapytan';
+  if (/overloaded/i.test(typ + ' ' + m) || st === 529) return 'przeciazenie';
+  if (/api_error/i.test(typ) || st >= 500 || /internal server error/i.test(m)) return 'serwer';
+  // Bez typu i statusu to nasz wlasny, juz przetlumaczony komunikat.
+  return zOdpowiedzi || !m ? 'inny' : 'wlasny';
+}
+const BLEDY_KLUCZE = {
+  przerwano: 'err-przerwano', siec: 'err-siec', odpowiedz: 'err-odpowiedz-zla', czas: 'err-timeout',
+  pakiet: 'err-limit-pakietu', sesja: 'err-sesja', 'klucz-serwera': 'err-brak-klucza-serwera',
+  'odmowa-serwera': 'err-odmowa-serwera', srodki: 'err-srodki', moderacja: 'err-moderacja',
+  'za-dlugi': 'err-za-dlugi', 'za-duze': 'err-za-duze', klucz: 'err-klucz', uprawnienia: 'err-uprawnienia',
+  model: 'err-model', 'limit-zapytan': 'err-rate-limit', przeciazenie: 'err-overloaded', serwer: 'err-server-500',
+};
+// Ten sam rodzaj bledu w innej czesci aplikacji brzmi inaczej (plik audio, grafika).
+const BLEDY_KONTEKSTU = {
+  audio: { siec: 'err-audio-siec', 'za-duze': 'err-za-duze-plik' },
+  grafika: { siec: 'img-err-net', czas: 'img-err-timeout' },
+};
+// Ponowienie ma sens tylko przy bledach przejsciowych: siec, limit zapytan (429),
+// przeciazenie (529), blad serwera (5xx), czas. Zly klucz, brak srodkow, brak
+// uprawnien albo za dlugi tekst wymagaja zmiany - dostaja instrukcje, nie przycisk.
+function czyPonowic(e) {
+  return ['przerwano', 'siec', 'odpowiedz', 'czas', 'limit-zapytan', 'przeciazenie', 'serwer', 'wlasny'].indexOf(rodzajBledu(e)) !== -1;
+}
+function komunikatBleduApi(e, zapas, kontekst) {
+  const r = rodzajBledu(e);
+  if (r === 'cichy') return '';
+  if (r === 'wlasny') return String(e.message);
+  if (r === 'inny') return _t(zapas || 'err-api-generic');
+  const nad = (BLEDY_KONTEKSTU[kontekst] || {})[r];
+  return _t(nad || BLEDY_KLUCZE[r]);
+}
+// Techniczny szczegol (dostawca, status, typ, tresc odpowiedzi) do zwinietej
+// sekcji - przydaje sie przy zgloszeniu. Nie dla komunikatow, ktore sami opisalismy.
+function szczegolBledu(e) {
+  if (!e || ['wlasny', 'cichy', 'przerwano', 'siec', 'odpowiedz'].indexOf(rodzajBledu(e)) !== -1) return '';
+  const czesci = [];
+  if (e.dostawca) czesci.push(e.dostawca);
+  if (e.status) czesci.push('HTTP ' + e.status);
+  if (e.typ || e.kod) czesci.push([e.typ, e.kod].filter(Boolean).join(' / '));
+  const tresc = String(e.szczegol || '').slice(0, 400);
+  if (tresc && !/^HTTP \d{3}$/.test(tresc)) czesci.push(tresc);
+  return czesci.join(' · ');
+}
+// Klucz poprawia sie w oknie Klucze API (keys) albo w kreatorze konta (proxy).
+// W wariancie owner klucz siedzi w pliku, wiec przycisku nie pokazujemy.
+const KLUCZ_W_PLIKU = false;
+function otworzUstawieniaKlucza() {
+  if (typeof window.openKeysModal === 'function') window.openKeysModal();
+}
+// Blok bledu w artykule i panelach: zdanie ze slownika, szczegoly zwiniete,
+// przy zlym kluczu przejscie do miejsca, gdzie sie go wpisuje, a "Sprobuj
+// ponownie" tylko wtedy, gdy ponowienie moze pomoc.
+function blokBledu(e, ponow, zapas, kontekst) {
+  const r = rodzajBledu(e);
+  let h = '<div class="komunikat-bledu" role="alert"><p><strong>' + escapeHtml(_t('msg-blad-prefiks')) + '</strong> '
+    + escapeHtml(komunikatBleduApi(e, zapas, kontekst)) + '</p>';
+  const szczegol = szczegolBledu(e);
+  if (szczegol) {
+    h += '<details class="rozwijka"><summary>' + ikona('chevron-down') + escapeHtml(_t('err-szczegoly')) + '</summary>'
+      + '<div class="tekst-pomoc" style="overflow-wrap:anywhere">' + escapeHtml(szczegol) + '</div></details>';
+  }
+  if (r === 'klucz' && !KLUCZ_W_PLIKU) {
+    h += '<button type="button" class="btn-secondary" onclick="otworzUstawieniaKlucza()">' + ikona('key-round') + escapeHtml(_t('btn-otworz-klucze')) + '</button>';
+  }
+  if (ponow && czyPonowic(e)) {
+    h += '<button type="button" class="btn-secondary ponow-generowanie" onclick="' + escapeHtml(ponow) + '">' + ikona('refresh-cw') + escapeHtml(_t('btn-sprobuj-ponownie')) + '</button>';
+  }
+  return h + '</div>';
+}
+// To samo dla bledow pokazywanych jako powiadomienie (grafika, audio, dyktowanie).
+function powiadomBladApi(e, zapas, kontekst, przedrostek) {
+  const r = rodzajBledu(e);
+  // Pakiet ma swoje okno, a anulowanie i brak klucza - swoj komunikat.
+  if (r === 'pakiet' || r === 'cichy') return;
+  let tekst = komunikatBleduApi(e, zapas, kontekst);
+  const szczegol = r === 'inny' ? szczegolBledu(e) : '';
+  if (szczegol) tekst += ' (' + szczegol.slice(0, 200) + ')';
+  powiadomBlad((przedrostek || '') + tekst);
+}
+// Bledy WordPressa i Drupala: status HTTP na zdanie ze slownika, odpowiedz CMS
+// (zwykle po angielsku) tylko w zwinietych szczegolach. Status 0 = brak polaczenia.
+function htmlBleduCms(status, szczegol, cms) {
+  const nazwa = cms === 'drupal' ? 'Drupal' : 'WordPress';
+  const st = Number(status) || 0;
+  const klucz = !st ? (cms === 'drupal' ? 'err-cms-siec-drupal' : 'err-cms-siec-wp')
+    : st === 401 ? (cms === 'drupal' ? 'err-cms-401-drupal' : 'err-cms-401-wp')
+    : st === 403 ? 'err-cms-403' : st === 404 ? 'err-cms-404'
+    : st >= 500 ? 'err-cms-5xx' : 'err-cms-inny';
+  let h = '<span class="stan-blad">' + escapeHtml(_t(klucz).replace(/\{cms\}/g, nazwa).replace('{status}', String(st))) + '</span>';
+  if (szczegol) {
+    h += '<details class="rozwijka"><summary>' + ikona('chevron-down') + escapeHtml(_t('err-szczegoly')) + '</summary>'
+      + '<div class="tekst-pomoc" style="overflow-wrap:anywhere">' + escapeHtml(String(szczegol).slice(0, 400)) + '</div></details>';
+  }
+  return h;
+}
+async function szczegolOdpowiedziCms(r) {
+  const d = await r.json().catch(() => ({}));
+  return String((d && (d.message || (d.errors && d.errors[0] && d.errors[0].detail))) || '');
+}
+// Liczby z ulamkiem w jezyku interfejsu: po polsku przecinek (2,5), po angielsku kropka.
+function formatujLiczbe(x, miejsca, stale) {
+  const n = Number(x);
+  if (!isFinite(n)) return String(x == null ? '' : x);
+  const m = miejsca == null ? 1 : miejsca;
+  return n.toLocaleString(currentLang === 'en' ? 'en-US' : 'pl-PL', { maximumFractionDigits: m, minimumFractionDigits: stale ? m : 0 });
 }
 // Po powrocie sieci przycisk ponowienia w komunikacie bledu staje sie glowna akcja.
 window.addEventListener('online', function () {
@@ -6149,7 +6354,7 @@ function renderKws() {
 
 function updateCostDisplay() {
   const el = document.getElementById('h-cost');
-  if (el) el.textContent = '$' + sessionCost.toFixed(3);
+  if (el) el.textContent = '$' + formatujLiczbe(sessionCost, 3, true);
 }
 function updateSerpWarn() {
   const warn = document.getElementById('serp-kw-warn');
@@ -6297,7 +6502,7 @@ async function saveUrl() {
       });
 
       const data = await res.json();
-      if (data.error) throw new Error(data.error.message || _t('err-url-extract'));
+      if (data.error) throw bladOdpowiedzi(data, res.status);
 
       // Tekst bierzemy z bloku wyniku narzedzia, a nie z prozy modelu.
       // Dzieki temu do bazy wiedzy trafia tresc strony slowo w slowo,
@@ -6338,7 +6543,7 @@ async function saveUrl() {
   } catch(e) {
     fill.style.width = '100%';
     fill.style.background = 'var(--red)';
-    status.textContent = `Błąd: ${e.message}`;
+    status.textContent = _t('msg-blad-prefiks') + ' ' + komunikatBleduApi(e, 'err-url-extract');
     status.style.color = 'var(--red)';
     saveBtn.disabled = false;
     setTimeout(() => {
@@ -6844,25 +7049,9 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
       ? await wywolajZWyszukiwaniem(cialoArtykulu, naglowkiArtykulu)
       : await (await apiFetch({ method: 'POST', headers: naglowkiArtykulu,
           body: JSON.stringify(cialoArtykulu) })).json();
-    if (data.error) {
-      // Bledy wlasne serwera (limit pakietu, brak uprawnien) przychodza jako napis.
-      if (typeof data.error === 'string') {
-        throw new Error(/limit/i.test(data.error) || data.czynnosc ? _t('err-limit-pakietu') : _t('err-api-generic'));
-      }
-      const msg = data.error.message || '';
-      const type = data.error.type || '';
-      if (type === 'timeout_error') throw new Error(_t('err-timeout'));
-      if (type === 'rate_limit_error' || msg.includes('rate limit')) {
-        throw new Error(_t('err-rate-limit'));
-      }
-      if (type === 'api_error' || msg.toLowerCase().includes('internal server error')) {
-        throw new Error(_t('err-server-500'));
-      }
-      if (type === 'overloaded_error' || msg.toLowerCase().includes('overloaded')) {
-        throw new Error(_t('err-overloaded'));
-      }
-      throw new Error(msg || _t('err-api-generic'));
-    }
+    // Typ i status bledu ida dalej: komunikat zalezy od nich (zly klucz, brak
+    // srodkow, za dlugi tekst), tak samo jak to, czy ponowienie ma sens.
+    if (data.error) throw bladOdpowiedzi(data);
     // Przy wyszukiwaniu model bywa, ze zapowiada je zdaniem ("Wyszukam
     // aktualne informacje...") - takie zdanie trafialo nad H1. Artykul to
     // tekst po ostatnim wyniku wyszukiwania; gdy go nie ma, bierzemy calosc.
@@ -7055,8 +7244,7 @@ ${html}`;
       przerwano = true;
       html = '<p class="komunikat-przerwania">' + escapeHtml(_t('msg-przerwano')) + '</p>';
     } else {
-      html = '<div class="komunikat-bledu" role="alert"><p><strong>' + escapeHtml(_t('msg-blad-prefiks')) + '</strong> ' + escapeHtml(komunikatBleduApi(e)) + '</p>'
-        + '<button type="button" class="btn-secondary ponow-generowanie" onclick="generate()">' + ikona('refresh-cw') + escapeHtml(_t('btn-sprobuj-ponownie')) + '</button></div>';
+      html = blokBledu(e, 'generate()');
     }
   }
 
@@ -8916,6 +9104,7 @@ async function openTitlesPanel() {
       })
     });
     const data = await res.json();
+    if (data.error) throw bladOdpowiedzi(data, res.status);
     const raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     const titles = parsujJsonModelu(raw);
     _titlesCache = Array.isArray(titles) ? titles : [];
@@ -8929,7 +9118,7 @@ async function openTitlesPanel() {
         ${jestArtykul ? `<button type="button" class="btn-secondary btn-maly title-opt-h1" onclick="uzyjTytuluJakoH1(${i}, this)">${_t('btn-uzyj-h1')}</button>` : ''}
       </div>`).join('');
   } catch(e) {
-    document.getElementById('titles-loading').textContent = _t('msg-titles-err');
+    document.getElementById('titles-loading').textContent = komunikatBleduApi(e, 'msg-titles-err');
   }
 }
 
@@ -9399,6 +9588,7 @@ async function runGapAnalysis() {
       })
     });
     const data   = await res.json();
+    if (data.error) throw bladOdpowiedzi(data, res.status);
     const raw    = (data.content || []).map(b => b.text || '').join('').replace(/```json|```/g, '').trim();
     const parsed = parsujJsonModelu(raw);
     // Zastąp niedeterministyczny score Claude wyliczeniem z liczby tematów
@@ -9427,7 +9617,7 @@ async function runGapAnalysis() {
       renderGapResult(parsed);
     }
   } catch(e) {
-    loadEl.textContent = 'B\u0142\u0105d analizy. Spr\xf3buj ponownie.';
+    loadEl.textContent = komunikatBleduApi(e, 'gap-blad');
     if (rBtn) rBtn.style.display = 'inline-block';
   }
 }
@@ -9456,10 +9646,6 @@ async function improveFromGaps() {
   const kwSectionName = { 'Polish':'Kluczowe wnioski', 'English':'Key takeaways', 'German':'Wichtigste Erkenntnisse', 'Czech':'Klíčové poznatky' }[outLang];
 
   if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><span class="progress-spinner" style="display:inline-block"></span><span>' + _t('msg-spin-sections').replace('⏳','').trim() + '</span></span>'; }
-  const _genInd = document.createElement('div');
-  _genInd.id = 'gap-gen-indicator';
-  _genInd.style.cssText = 'margin:18px 0;padding:14px 16px;border:1px dashed var(--accent);border-radius:var(--radius);color:var(--accent);font-weight:600;display:flex;align-items:center;gap:10px';
-  _genInd.innerHTML = '<span class="progress-spinner"></span><span>' + _t('msg-spin-sections').replace('⏳', '').trim() + '</span>';
   // status generowania sekcji tylko na gorze (przycisk); bez dolnego wskaznika i skoku na dol
 
   // Wyciągnij i usuń sekcję "Kluczowe wnioski" z oryginalnego HTML
@@ -9869,13 +10055,14 @@ async function toggleSeoPanel(forceRefresh = false) {
       })
     });
     const data = await res.json();
+    if (data.error) throw bladOdpowiedzi(data, res.status);
     const raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     const result = parsujJsonModelu(raw);
     seoCache = { articleHash: currentHash, result };
     showSeoResult(result);
     updateSeoHeader(false);
   } catch(e) {
-    document.getElementById('seo-content').innerHTML = `<div class="seo-loading" style="color:var(--red)">${_t('msg-err-prefix')}${escapeHtml(e.message)}</div>`;
+    document.getElementById('seo-content').innerHTML = blokBledu(e, 'seoOpen=false;toggleSeoPanel(true)');
   }
 }
 
@@ -9980,13 +10167,14 @@ The 6 criteria to evaluate (give one item per criterion):
       })
     });
     const data = await res.json();
+    if (data.error) throw bladOdpowiedzi(data, res.status);
     const raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     const result = parsujJsonModelu(raw);
     aioCache = { articleHash: currentHashAio, result };
     showAioResult(result);
     updateAioHeader(false);
   } catch(e) {
-    document.getElementById('aio-content').innerHTML = `<div class="seo-loading" style="color:var(--red)">${_t('msg-err-prefix')}${escapeHtml(e.message)}</div>`;
+    document.getElementById('aio-content').innerHTML = blokBledu(e, 'aioOpen=false;toggleAioPanel(true)');
   }
 }
 
@@ -10387,7 +10575,7 @@ function syncMobileKbList() {
 
   // sync stats
   const totalWords = docs.reduce((s,d) => s+d.words, 0);
-  const fmt = n => n > 999 ? (n/1000).toFixed(1)+'k' : n;
+  const fmt = n => n > 999 ? formatujLiczbe(n/1000)+'k' : n;
   ['s-docs-m','s-words-m','s-gen-m'].forEach((id, i) => {
     const el = document.getElementById(id);
     if (el) el.textContent = [liczbaDokumentow(), fmt(totalWords), genCount][i];
@@ -10397,7 +10585,7 @@ function syncMobileKbList() {
 // Override updateStats to also sync mobile
 function updateStats() {
   const totalWords = docs.reduce((s, d) => s + d.words, 0);
-  const wLabel = totalWords > 999 ? (totalWords/1000).toFixed(1)+'k' : totalWords;
+  const wLabel = totalWords > 999 ? formatujLiczbe(totalWords/1000)+'k' : totalWords;
   ['s-docs','s-docs-m'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = liczbaDokumentow(); });
   ['s-words','s-words-m'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = wLabel; });
   ['s-gen','s-gen-m'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = genCount; });
@@ -10660,17 +10848,17 @@ async function testCmsConnection() {
       const url = document.getElementById('wp-url').value.trim().replace(/\/$/, '');
       const creds = btoa(`${document.getElementById('wp-user').value.trim()}:${document.getElementById('wp-pass').value.trim()}`);
       const r = await fetch(`${url}/wp-json/wp/v2/users/me`, { headers: { 'Authorization': `Basic ${creds}` } });
-      if (r.ok) { const d = await r.json(); res.innerHTML = `<span class="stan-ok">WordPress - zalogowano jako: ${escapeHtml(String(d.name || ''))}</span>`; }
-      else res.innerHTML = `<span class="stan-blad">${currentLang==='en'?'WP error ':'WP błąd '}${r.status}${currentLang==='en'?' - check Application Password':' - sprawdź Application Password'}</span>`;
+      if (r.ok) { const d = await r.json(); res.innerHTML = `<span class="stan-ok">${escapeHtml(_t('wp-zalogowano').replace('{name}', String(d.name || '')))}</span>`; }
+      else res.innerHTML = htmlBleduCms(r.status, await szczegolOdpowiedziCms(r), 'wp');
     } else {
       const url = document.getElementById('drupal-url').value.trim().replace(/\/$/, '');
       const creds = btoa(`${document.getElementById('drupal-user').value.trim()}:${document.getElementById('drupal-pass').value.trim()}`);
       const r = await fetch(`${url}/jsonapi`, { headers: { 'Authorization': `Basic ${creds}`, 'Accept': 'application/vnd.api+json' } });
       if (r.ok) res.innerHTML = `<span style="color:var(--c-sukces)">${_t('drupal-ok')}</span>`;
-      else res.innerHTML = `<span class="stan-blad">${currentLang==='en'?'Drupal error ':'Drupal błąd '}${r.status}${currentLang==='en'?' - check credentials or Basic Auth module':' - sprawdź dane lub moduł Basic Auth'}</span>`;
+      else res.innerHTML = htmlBleduCms(r.status, await szczegolOdpowiedziCms(r), 'drupal');
     }
   } catch(e) {
-    res.innerHTML = `<span class="stan-blad">${escapeHtml(e.message)} - ${escapeHtml(_t(activeCms === 'wp' ? 'msg-wp-cors' : 'msg-drupal-cors'))}</span>`;
+    res.innerHTML = (e && e.name === 'TypeError') ? htmlBleduCms(0, '', activeCms) : '<span class="stan-blad">' + escapeHtml(komunikatBleduApi(e)) + '</span>';
   }
 }
 
@@ -10727,7 +10915,7 @@ async function publishToCms(status) {
       await publishToDrupal(title, content, excerpt, status, res);
     }
   } catch(e) {
-    res.innerHTML = `<span class="stan-blad">${escapeHtml(e.message)}</span>`;
+    res.innerHTML = (e && e.name === 'TypeError') ? htmlBleduCms(0, '', activeCms) : '<span class="stan-blad">' + escapeHtml(komunikatBleduApi(e)) + '</span>';
   }
 }
 
@@ -10744,7 +10932,7 @@ async function publishToWordPress(title, content, excerpt, status, resEl) {
     resEl.innerHTML = '<span class="stan-ok">WordPress - ' + label + '! <a href="' + bezpiecznyHref(post.link) + '" target="_blank" rel="noopener" class="link-akcent">' + _t('msg-open-link') + '</a></span>';
   } else {
     const err = await r.json().catch(()=>({}));
-    resEl.innerHTML = `<span class="stan-blad">WP ${r.status}: ${escapeHtml(err.message || 'błąd')}</span>`;
+    resEl.innerHTML = htmlBleduCms(r.status, err.message || '', 'wp');
   }
 }
 
@@ -10779,12 +10967,11 @@ async function publishToDrupal(title, content, excerpt, status, resEl) {
     const d = await r.json();
     const nid = d?.data?.attributes?.drupal_internal__nid || '';
     const nodeUrl = nid ? `${drupalSettings.url}/node/${nid}` : drupalSettings.url;
-    const label = status === 'publish' ? 'opublikowano' : 'zapisano jako szkic';
+    const label = status === 'publish' ? _t('wp-published') : _t('wp-draft');
     resEl.innerHTML = '<span class="stan-ok">Drupal - ' + label + '! <a href="' + bezpiecznyHref(nodeUrl) + '" target="_blank" rel="noopener" class="link-akcent">' + _t('msg-open-link') + '</a></span>';
   } else {
     const err = await r.json().catch(()=>({}));
-    const msg = err?.errors?.[0]?.detail || err?.message || r.status;
-    resEl.innerHTML = `<span class="stan-blad">Drupal ${r.status}: ${escapeHtml(msg)}</span>`;
+    resEl.innerHTML = htmlBleduCms(r.status, err?.errors?.[0]?.detail || err?.message || '', 'drupal');
   }
 }
 
@@ -10946,7 +11133,7 @@ async function generujTematy() {
       })
     });
     var d = await res.json();
-    if (d.error) throw new Error(d.error.message || _t('err-api-generic'));
+    if (d.error) throw bladOdpowiedzi(d, res.status);
     var raw = (d.content || []).map(function(b){ return b.text || ''; }).join('').replace(/```json|```/g, '').trim();
     var parsed = parsujJsonModelu(raw);
     propozycjeTematow = (parsed.tematy || []).filter(function(t){ return t && t.temat; });
@@ -10954,7 +11141,7 @@ async function generujTematy() {
     zapiszPropozycje(opis);
     rysujPropozycje();
   } catch (e) {
-    cel.innerHTML = '<div class="seo-loading" class="link-akcent">' + _t('msg-err-prefix') + escapeHtml(e.message) + '</div>';
+    cel.innerHTML = blokBledu(e, 'generujTematy()');
   } finally {
     btn.disabled = false;
     btn.style.opacity = '';
@@ -11003,10 +11190,11 @@ async function openBriefPanel() {
       })
     });
     const d = await res.json();
+    if (d.error) throw bladOdpowiedzi(d, res.status);
     const raw = (d.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     showBrief(parsujJsonModelu(raw));
   } catch(e) {
-    document.getElementById('brief-content').innerHTML = `<div class="seo-loading" style="color:var(--red)">${_t('msg-err-prefix')}${escapeHtml(e.message)}</div>`;
+    document.getElementById('brief-content').innerHTML = blokBledu(e, 'openBriefPanel()');
   }
 }
 
@@ -11133,10 +11321,11 @@ async function analyzeBrandVoice() {
       })
     });
     const d = await res.json();
+    if (d.error) throw bladOdpowiedzi(d, res.status);
     const raw = (d.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     saveBrandVoice(parsujJsonModelu(raw));
   } catch(e) {
-    document.getElementById('bv-loading').innerHTML = `<span class="stan-blad">${_t('msg-err-prefix')}${escapeHtml(e.message)}</span>`;
+    document.getElementById('bv-loading').innerHTML = blokBledu(e, 'analyzeBrandVoice()');
   }
 }
 
@@ -11341,9 +11530,10 @@ WAŻNE: Zwróć TYLKO tekst landing page, gotowy do wklejenia.`
       })
     });
     const d = await res.json();
+    if (d.error) throw bladOdpowiedzi(d, res.status);
     showRepurpose((d.content||[]).map(b=>b.text||'').join('').trim());
   } catch(e) {
-    showRepurpose(`Błąd: ${e.message}`);
+    showRepurpose(_t('msg-blad-prefiks') + ' ' + komunikatBleduApi(e));
   }
 }
 
@@ -12224,7 +12414,7 @@ function renderVisResults(run) {
   let html = '';
   html += '<div style="display:flex;gap:14px;align-items:center;background:var(--surface2);border-radius:var(--radius);padding:12px 14px;margin-bottom:6px">';
   html += '<div style="font-size:30px;font-weight:700;color:' + color + '">' + score + '</div>';
-  html += '<div style="font-size:12px;color:var(--text2)">' + (en ? 'Visibility score (position-weighted)' : 'Wskaźnik widoczności (ważony pozycją)') + '<br>' + (en ? 'present in' : 'obecność w') + ' <strong>' + present + '/' + n + '</strong> ' + (en ? 'queries, avg position' : 'zapytań, śr. pozycja') + ' <strong>' + (avgPos == null ? (en ? 'n/a' : 'b.d.') : '#' + avgPos) + '</strong><br>' + _visEsc(run.brand) + '</div></div>';
+  html += '<div style="font-size:12px;color:var(--text2)">' + (en ? 'Visibility score (position-weighted)' : 'Wskaźnik widoczności (ważony pozycją)') + '<br>' + (en ? 'present in' : 'obecność w') + ' <strong>' + present + '/' + n + '</strong> ' + (en ? 'queries, avg position' : 'zapytań, śr. pozycja') + ' <strong>' + (avgPos == null ? (en ? 'n/a' : 'b.d.') : '#' + formatujLiczbe(avgPos)) + '</strong><br>' + _visEsc(run.brand) + '</div></div>';
   html += '<div style="font-size:11px;color:var(--text3);margin:0 0 12px">' + (en ? 'Presence alone is ' + pct + '%; the score lowers it for weak positions and instability.' : 'Sama obecność to ' + pct + '%; wskaźnik obniża ją za dalsze pozycje i niestabilność.') + '</div>';
 
   if (topComp.length) {
@@ -12235,7 +12425,7 @@ function renderVisResults(run) {
   html += '<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">';
   results.forEach(r => {
     const icon = r.error ? ikona('triangle-alert','uwaga') : (r.present ? ikona('circle-check','ok') : ikona('circle-x','blad'));
-    const pos = (r.present && r.avgPosition) ? (' (#' + r.avgPosition + ')') : '';
+    const pos = (r.present && r.avgPosition) ? (' (#' + formatujLiczbe(r.avgPosition) + ')') : '';
     let stab = '';
     if (r.iterations > 1) {
       const sp = Math.round(r.presentCount / r.iterations * 100);
@@ -12396,10 +12586,10 @@ function buildReport() {
 
   const topCompName = topComp.length ? topComp[0][0] : (en ? 'no data' : 'brak danych');
   const summaryText = (en
-    ? `${last.brand || nazwaMarki()} scored ${score}/100 on the position-weighted visibility index, appearing in ${present} of ${n} control queries (${pct}% presence) at an average position of ${avgPosition == null ? 'n/a' : '#' + avgPosition}.`
+    ? `${last.brand || nazwaMarki()} scored ${score}/100 on the position-weighted visibility index, appearing in ${present} of ${n} control queries (${pct}% presence) at an average position of ${avgPosition == null ? 'n/a' : '#' + formatujLiczbe(avgPosition)}.`
       + (trend ? ` Change vs previous measurement: ${trend.scoreDelta > 0 ? '+' : ''}${trend.scoreDelta} pts.` : '')
       + ` Most cited competitor: ${topCompName}. Queries to improve: ${pri.length}.`
-    : `${last.brand || nazwaMarki()} uzyskała ${score}/100 we wskaźniku widoczności ważonym pozycją, pojawiając się w ${present} z ${n} kontrolnych zapytań (${pct}% obecności) na średniej pozycji ${avgPosition == null ? 'b.d.' : '#' + avgPosition}.`
+    : `${last.brand || nazwaMarki()} uzyskała ${score}/100 we wskaźniku widoczności ważonym pozycją, pojawiając się w ${present} z ${n} kontrolnych zapytań (${pct}% obecności) na średniej pozycji ${avgPosition == null ? 'b.d.' : '#' + formatujLiczbe(avgPosition)}.`
       + (trend ? ` Zmiana względem poprzedniego pomiaru: ${trend.scoreDelta > 0 ? '+' : ''}${trend.scoreDelta} pkt.` : '')
       + ` Najczęściej cytowany konkurent: ${topCompName}. Zapytań do poprawy: ${pri.length}.`);
 
@@ -12414,7 +12604,7 @@ function buildReport() {
             : (en ? 'weak presence' : 'słaba obecność');
   const findings = [];
   findings.push((en ? 'Position-weighted visibility score: ' : 'Wskaźnik widoczności ważony pozycją: ') + score + '/100' + (score < pct ? (en ? ' - lower than ' + pct + '% raw presence because of weak positions or instability.' : ' - niżej niż ' + pct + '% surowej obecności z powodu dalszych pozycji lub niestabilności.') : '.'));
-  findings.push((en ? 'Presence: ' : 'Obecność: ') + pct + '% (' + present + '/' + n + ') - ' + band + (avgPosition != null ? (en ? ', average position #' : ', średnia pozycja #') + avgPosition : ''));
+  findings.push((en ? 'Presence: ' : 'Obecność: ') + pct + '% (' + present + '/' + n + ') - ' + band + (avgPosition != null ? (en ? ', average position #' : ', średnia pozycja #') + formatujLiczbe(avgPosition) : ''));
   if (avgPosition != null && avgPosition > 3) findings.push(en ? 'Average position is outside the top 3, so the brand is rarely the first source AI cites.' : 'Średnia pozycja jest poza pierwszą trójką, więc marka rzadko jest pierwszym źródłem cytowanym przez AI.');
   if (absentQ.length) findings.push((en ? 'Absent in ' : 'Nieobecna w ') + absentQ.length + (en ? ' query(ies): ' : ' zapytaniach: ') + absentQ.slice(0, 3).join('; ') + (absentQ.length > 3 ? '...' : ''));
   if (lowPosQ.length) findings.push((en ? 'Ranked #4 or lower in ' : 'Pozycja #4 lub dalej w ') + lowPosQ.length + (en ? ' query(ies).' : ' zapytaniach.'));
@@ -12424,7 +12614,7 @@ function buildReport() {
   // ── Rekomendacje (deterministyczne, wyprowadzone z danych)
   const recommendations = [];
   absentQ.slice(0, 4).forEach(q => recommendations.push((en ? 'Publish AI-ready content that directly answers: ' : 'Opublikuj treść AI-ready wprost odpowiadającą na: ') + '"' + q + '"'));
-  lowPosQ.slice(0, 3).forEach(r => recommendations.push((en ? 'Improve citability (AEO mode) and schema for: ' : 'Wzmocnij cytowalność (tryb AEO) i schema dla: ') + '"' + r.prompt + '" (' + (en ? 'pos #' : 'poz #') + r.avgPosition + (r.competitors && r.competitors[0] ? ', ' + (en ? 'leader: ' : 'lider: ') + r.competitors[0] : '') + ')'));
+  lowPosQ.slice(0, 3).forEach(r => recommendations.push((en ? 'Improve citability (AEO mode) and schema for: ' : 'Wzmocnij cytowalność (tryb AEO) i schema dla: ') + '"' + r.prompt + '" (' + (en ? 'pos #' : 'poz #') + formatujLiczbe(r.avgPosition) + (r.competitors && r.competitors[0] ? ', ' + (en ? 'leader: ' : 'lider: ') + r.competitors[0] : '') + ')'));
   unstableQ.slice(0, 3).forEach(r => recommendations.push((en ? 'Stabilise presence for: ' : 'Ustabilizuj obecność dla: ') + '"' + r.prompt + '" - ' + (en ? 'add concrete numbers and entity definitions' : 'dodaj konkretne liczby i definicje encji') + ' (' + r.presentCount + '/' + r.iterations + ')'));
   if (compLead && compLead[2] >= 50) recommendations.push((en ? 'Benchmark ' : 'Benchmarkuj narrację ') + compLead[0] + (en ? ' (cited in ' : ' (cytowany w ') + compLead[2] + (en ? '% of queries) and cover the topics where they lead.' : '% zapytań) i pokryj tematy, w których prowadzi.'));
   if (!recommendations.length) recommendations.push(en ? 'Maintain current presence and expand the monitored query set to detect new gaps.' : 'Utrzymaj obecność i rozszerz zestaw monitorowanych zapytań, aby wykrywać nowe luki.');
@@ -12453,7 +12643,7 @@ function renderRepModal(rep) {
   h += '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">' + (en ? 'Latest snapshot' : 'Ostatni snapshot') + ': ' + _repDate(rep.last.ts) + '</div>';
   h += '<div style="display:flex;gap:14px;align-items:center;background:var(--surface2);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">';
   h += '<div style="font-size:30px;font-weight:700;color:' + color + '">' + rep.score + '</div>';
-  h += '<div style="font-size:12px;color:var(--text2)">' + (en ? 'Visibility score (position-weighted)' : 'Wskaźnik widoczności (ważony pozycją)') + '<br>' + (en ? 'presence' : 'obecność') + ' <strong>' + rep.pct + '%</strong> (' + rep.present + '/' + rep.n + ') &middot; ' + (en ? 'avg position' : 'śr. pozycja') + ' <strong>' + (rep.avgPosition == null ? (en ? 'n/a' : 'b.d.') : '#' + rep.avgPosition) + '</strong></div></div>';
+  h += '<div style="font-size:12px;color:var(--text2)">' + (en ? 'Visibility score (position-weighted)' : 'Wskaźnik widoczności (ważony pozycją)') + '<br>' + (en ? 'presence' : 'obecność') + ' <strong>' + rep.pct + '%</strong> (' + rep.present + '/' + rep.n + ') &middot; ' + (en ? 'avg position' : 'śr. pozycja') + ' <strong>' + (rep.avgPosition == null ? (en ? 'n/a' : 'b.d.') : '#' + formatujLiczbe(rep.avgPosition)) + '</strong></div></div>';
   h += '<p style="font-size:12px;color:var(--text2);line-height:1.5;margin:0 0 12px">' + _visEsc(rep.summaryText) + '</p>';
   if (rep.findings && rep.findings.length) {
     h += '<div style="font-size:12px;font-weight:600;margin:4px 0 4px">' + (en ? 'Key findings' : 'Kluczowe ustalenia') + '</div>';
@@ -12475,7 +12665,7 @@ function renderRepModal(rep) {
   }
   h += '<div style="font-size:12px;font-weight:600;margin:4px 0 4px">' + (en ? 'Per query' : 'Per zapytanie') + '</div>';
   h += '<table style="width:100%;border-collapse:collapse;margin-bottom:12px"><thead><tr><th style="' + th + '">' + (en ? 'Query' : 'Zapytanie') + '</th><th style="' + th + '">' + (en ? 'Present' : 'Obecność') + '</th><th style="' + th + '">' + (en ? 'Pos.' : 'Poz.') + '</th><th style="' + th + '">' + (en ? 'Top competitor' : 'Gł. konkurent') + '</th></tr></thead><tbody>';
-  h += rep.rows.map(r => '<tr><td style="' + td + '">' + _visEsc(r.prompt) + '</td><td style="' + td + ';color:' + (r.present ? 'var(--c-sukces)' : 'var(--red)') + '">' + (r.present ? yesL : noL) + '</td><td style="' + td + '">' + (r.avgPosition || '-') + '</td><td style="' + td + '">' + _visEsc(r.topCompetitor) + '</td></tr>').join('');
+  h += rep.rows.map(r => '<tr><td style="' + td + '">' + _visEsc(r.prompt) + '</td><td style="' + td + ';color:' + (r.present ? 'var(--c-sukces)' : 'var(--red)') + '">' + (r.present ? yesL : noL) + '</td><td style="' + td + '">' + (r.avgPosition ? formatujLiczbe(r.avgPosition) : '-') + '</td><td style="' + td + '">' + _visEsc(r.topCompetitor) + '</td></tr>').join('');
   h += '</tbody></table>';
   if (rep.pri.length) {
     h += '<div style="font-size:12px;font-weight:600;margin-bottom:4px">' + (en ? 'Priorities' : 'Priorytety') + '</div>';
@@ -12499,7 +12689,7 @@ function repToText(rep) {
   L.push('');
   if (rep.findings && rep.findings.length) { L.push(en ? 'KEY FINDINGS:' : 'KLUCZOWE USTALENIA:'); rep.findings.forEach(f => L.push('  - ' + f)); L.push(''); }
   L.push((en ? 'Visibility score (position-weighted): ' : 'Wskaźnik widoczności (ważony pozycją): ') + rep.score + '/100');
-  L.push((en ? 'Share of presence: ' : 'Obecność marki: ') + rep.pct + '% (' + rep.present + '/' + rep.n + '), ' + (en ? 'avg position: ' : 'śr. pozycja: ') + (rep.avgPosition == null ? (en ? 'n/a' : 'b.d.') : rep.avgPosition));
+  L.push((en ? 'Share of presence: ' : 'Obecność marki: ') + rep.pct + '% (' + rep.present + '/' + rep.n + '), ' + (en ? 'avg position: ' : 'śr. pozycja: ') + (rep.avgPosition == null ? (en ? 'n/a' : 'b.d.') : formatujLiczbe(rep.avgPosition)));
   if (rep.trend) {
     const s = rep.trend.scoreDelta > 0 ? '+' : '';
     L.push((en ? 'Trend vs previous: ' : 'Trend vs poprzedni: ') + s + rep.trend.scoreDelta + ' pkt');
@@ -12513,7 +12703,7 @@ function repToText(rep) {
     L.push('');
   }
   L.push(en ? 'Per query:' : 'Per zapytanie:');
-  rep.rows.forEach(r => L.push('  - ' + r.prompt + ' | ' + (r.present ? (en ? 'present' : 'obecna') : (en ? 'absent' : 'nieobecna')) + ' | ' + (en ? 'pos ' : 'poz ') + (r.avgPosition || '-') + (r.topCompetitor ? ' | ' + (en ? 'top: ' : 'gł.: ') + r.topCompetitor : '')));
+  rep.rows.forEach(r => L.push('  - ' + r.prompt + ' | ' + (r.present ? (en ? 'present' : 'obecna') : (en ? 'absent' : 'nieobecna')) + ' | ' + (en ? 'pos ' : 'poz ') + (r.avgPosition ? formatujLiczbe(r.avgPosition) : '-') + (r.topCompetitor ? ' | ' + (en ? 'top: ' : 'gł.: ') + r.topCompetitor : '')));
   L.push('');
   if (rep.pri.length) {
     L.push(en ? 'Priorities:' : 'Priorytety:');
@@ -13631,6 +13821,7 @@ Write the image generation prompt:`;
       system, messages: [{ role: 'user', content: msgContent }] })
   });
   const data = await res.json();
+  if (data.error) throw bladOdpowiedzi(data, res.status);
   return (data.content || []).map(b => b.text || '').join('').trim();
 }
 // kolory-eksportu:koniec
@@ -13746,21 +13937,11 @@ async function generateImage() {
 
     if (!imgRes.ok) {
       const err = await imgRes.json().catch(() => ({}));
-      const apiMsg = (err && err.error && err.error.message) ? err.error.message : '';
       const st = imgRes.status;
       // 402 = pakiet: okno pakietu juz wyjasnia, co sie stalo. Drugi komunikat
       // "OpenAI blad 402" tylko by mylil.
       if (st === 402) { const e402 = new Error(''); e402.pakiet = true; throw e402; }
-      let m;
-      if (st === 401 || st === 403) {
-        m = (currentLang === 'en'
-          ? `${st}: OpenAI rejected the key. Check OPENAI_API_KEY (correct and active), billing/credits, and that your organization has access to gpt-image-1.`
-          : `${st}: OpenAI odrzucił klucz. Sprawdź OPENAI_API_KEY (poprawny i aktywny), płatności/środki oraz dostęp organizacji do modelu gpt-image-1.`);
-      } else {
-        m = (currentLang === 'en' ? `OpenAI error ${st}` : `OpenAI błąd ${st}`);
-      }
-      if (apiMsg) m += ` (${apiMsg})`;
-      throw new Error(m);
+      throw bladOdpowiedzi(err, st, 'OpenAI');
     }
 
     const data = await imgRes.json();
@@ -13791,7 +13972,7 @@ async function generateImage() {
   } catch(e) {
     document.getElementById('img-spinner').style.display    = 'none';
     document.getElementById('img-empty').style.display     = 'block';
-    if (!(e && e.pakiet)) powiadomBlad(_t('msg-gen-error') + e.message);
+    powiadomBladApi(e, 'err-no-image', 'grafika', _t('msg-gen-error'));
   }
 
   document.getElementById('img-gen-btn').disabled = false;
@@ -13978,7 +14159,8 @@ async function aivQueryAI(q) {
     body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 1500, system: sys, messages: [{ role: 'user', content: q }], tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] })
   });
   var d = await res.json().catch(function(){ return null; });
-  if (!d || !d.content) throw new Error('no response');
+  if (d && d.error) throw bladOdpowiedzi(d, res.status);
+  if (!d || !d.content) throw new Error(_t('msg-no-api-resp'));
   var text = '', urls = [];
   d.content.forEach(function(b) {
     if (b.type === 'text') text += ' ' + (b.text || '');
@@ -13998,7 +14180,7 @@ async function aivCheckOne(i, btn) {
     q.hist = q.hist || []; q.hist.push({ ts: Date.now(), status: det.status, score: det.score, hits: det.hits, total: det.total });
     if (q.hist.length > 30) q.hist = q.hist.slice(-30);
     aivSave(c); aivRender();
-  } catch(e) { if (btn) { btn.innerHTML = old; btn.disabled = false; } powiadomBlad(ttsErrMsg(e)); return; }
+  } catch(e) { if (btn) { btn.innerHTML = old; btn.disabled = false; } powiadomBladApi(e); return; }
 }
 async function aivCheckAll(btn) {
   if (aivIsGpt()) { powiadomBlad(_t('aiv-gpt-na')); return; }
@@ -14040,15 +14222,6 @@ function voiceSave() { try { magazyn.setItem('cai_voice', JSON.stringify(voiceCf
 
 var ttsState = { playing:false, audio:null, cancel:false, chunkIdx:0, chunkTotal:1, btn:null };
 
-/* czytelny komunikat zamiast gołego "Failed to fetch" */
-function ttsErrMsg(e){
-  var m = (e && e.message) ? e.message : '';
-  if (/failed to fetch|networkerror|load failed|fetch/i.test(m))
-    return currentLang==='en'
-      ? 'Could not reach the audio API. Check the network and API key. Note: OpenAI TTS is blocked by browser CORS and needs the proxy; ElevenLabs works directly from the browser.'
-      : 'Nie udało się połączyć z API audio. Sprawdź sieć i klucz API. Uwaga: OpenAI TTS jest blokowane przez CORS przeglądarki i wymaga proxy; ElevenLabs działa bezpośrednio z przeglądarki.';
-  return m || 'error';
-}
 
 /* ── Mini-player audio: pasek postepu odtwarzania ── */
 function _fmtT(s){ if(!isFinite(s)||s<0)s=0; var m=Math.floor(s/60),x=Math.floor(s%60); return m+':'+(x<10?'0':'')+x; }
@@ -14148,11 +14321,7 @@ async function oaTTS(text, voiceOverride) {
   }) });
   if (!res.ok) {
     var e = await res.json().catch(function(){ return {}; });
-    var st = res.status, m;
-    if (st === 401 || st === 403) m = (currentLang === 'en' ? st + ': OpenAI rejected the key (TTS).' : st + ': OpenAI odrzucił klucz (TTS).');
-    else m = (currentLang === 'en' ? 'OpenAI TTS error ' : 'OpenAI TTS błąd ') + st;
-    if (e.error && e.error.message) m += ' (' + e.error.message + ')';
-    throw new Error(m);
+    throw bladOdpowiedzi(e, res.status, 'OpenAI');
   }
   return await res.blob();
 }
@@ -14179,8 +14348,7 @@ async function elevenTTS(text, voiceOverride) {
   }
   if (!res.ok) {
     var e = await res.json().catch(function(){ return {}; });
-    var det = e.detail ? (typeof e.detail === 'string' ? e.detail : (e.detail.message || '')) : '';
-    throw new Error((currentLang === 'en' ? 'ElevenLabs error ' : 'ElevenLabs błąd ') + res.status + (det ? ' (' + det + ')' : ''));
+    throw bladOdpowiedzi(e, res.status, 'ElevenLabs');
   }
   return await res.blob();
 }
@@ -14210,7 +14378,7 @@ async function pipedSpeak(text, btn, genFn) {
     if (ttsState.cancel) break;
     var blob;
     try { blob = await nextPromise; }
-    catch(e) { ttsState.playing = false; setTtsBtn(btn, 'idle'); audioBarHide(); powiadomBlad(_t('voice-tts-fail') + ' ' + ttsErrMsg(e)); return; }
+    catch(e) { ttsState.playing = false; setTtsBtn(btn, 'idle'); audioBarHide(); powiadomBladApi(e, null, 'audio', _t('voice-tts-fail') + ' '); return; }
     if (i + 1 < chunks.length && !ttsState.cancel) nextPromise = genFn(chunks[i + 1]);
     if (ttsState.cancel) break;
     ttsState.chunkIdx = i;
@@ -14258,7 +14426,7 @@ async function ttsDownloadMp3(btn) {
     if (!(AUDIO.buffer && AUDIO.sig === sig)) { audioInline=false; await audioBuildCore(audioReadUnits(text), sig, false, voiceCfg.engine); }
     else if (!AUDIO.url && AUDIO.blob) { AUDIO.url = URL.createObjectURL(AUDIO.blob); }
     var a = document.createElement('a'); a.href = AUDIO.url; a.download = audioReadFileName(); document.body.appendChild(a); a.click(); a.remove();
-  } catch(e) { if((e&&e.message)!=='cancel'&&(e&&e.message)!=='empty') powiadomBlad(ttsErrMsg(e)); }
+  } catch(e) { if((e&&e.message)!=='cancel'&&(e&&e.message)!=='empty') powiadomBladApi(e, null, 'audio'); }
   btn.innerHTML = old; btn.disabled = false;
 }
 
@@ -14301,7 +14469,7 @@ function startOpenAIDictate(el, btn) {
       var blob = new Blob(sttState.chunks, { type: 'audio/webm' });
       micOff(); if (btn) btn.innerHTML = ikona('loader', 'kreci');
       try { var text = await oaTranscribe(blob); appendToField(el, text); }
-      catch(e) { powiadomBlad((e && e.message) || 'STT error'); }
+      catch(e) { powiadomBladApi(e, 'err-stt', 'audio'); }
       if (btn) btn.innerHTML = ikona('mic');
     };
     micOn(btn); if (btn) btn.innerHTML = ikona('square'); mr.start();
@@ -14324,7 +14492,7 @@ async function oaTranscribe(blob) {
   var res = await fetch(OPENAI_STT_ENDPOINT, { method: 'POST', headers, body: fd });
   if (!res.ok) {
     var e = await res.json().catch(function(){ return {}; });
-    throw new Error((currentLang === 'en' ? 'Transcription error ' : 'Błąd transkrypcji ') + res.status + (e.error && e.error.message ? ' (' + e.error.message + ')' : ''));
+    throw bladOdpowiedzi(e, res.status, 'OpenAI');
   }
   var d = await res.json(); return d.text || '';
 }
@@ -14422,7 +14590,7 @@ async function podcastSpeak(btn) {
   var nextP = podGen(units[0]);
   for (var i = 0; i < units.length; i++) {
     if (ttsState.cancel) break;
-    var blob; try { blob = await nextP; } catch(e) { ttsState.playing = false; setPodBtn(btn, 'idle'); audioBarHide(); powiadomBlad(_t('voice-tts-fail') + ' ' + ttsErrMsg(e)); return; }
+    var blob; try { blob = await nextP; } catch(e) { ttsState.playing = false; setPodBtn(btn, 'idle'); audioBarHide(); powiadomBladApi(e, null, 'audio', _t('voice-tts-fail') + ' '); return; }
     if (i + 1 < units.length && !ttsState.cancel) nextP = podGen(units[i + 1]);
     if (ttsState.cancel) break;
     ttsState.chunkIdx = i;
@@ -14440,7 +14608,7 @@ async function podcastDownload(btn) {
     var url = URL.createObjectURL(full);
     var a = document.createElement('a'); a.href = url; a.download = nazwaPlikuEksportu(tytulEksportu(document.getElementById('article')), 'mp3', '-podcast'); a.click();
     setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
-  } catch(e) { powiadomBlad(ttsErrMsg(e)); }
+  } catch(e) { powiadomBladApi(e, null, 'audio'); }
   btn.innerHTML = old; btn.disabled = false;
 }
 
@@ -14668,7 +14836,7 @@ async function audioGenerate(btn){
   try{
     var res=await apiFetch({ method:'POST', headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}, body: JSON.stringify({ model:MODEL_TRESCI, max_tokens: zRezerwa(getMaxTokens()), system:system, messages:[{role:'user',content:user}] }) });
     var data=await res.json();
-    if(!res.ok || !data.content){ throw new Error((data&&data.error&&(data.error.message||data.error))||('HTTP '+res.status)); }
+    if(!res.ok || !data.content){ throw bladOdpowiedzi(data, res.status); }
     var scriptCost=0; if(data.usage){ try{ scriptCost=kosztOdpowiedzi(data); sessionCost += scriptCost; updateCostDisplay(); }catch(e){} }
     var html=(data.content||[]).map(function(c){return c.text||'';}).join('').trim();
     var sc=document.getElementById('au-script'); html=oczyscHtmlModelu(html); sc.innerHTML=html||'<p>(brak treści)</p>';
@@ -14676,7 +14844,7 @@ async function audioGenerate(btn){
     var sa=document.getElementById('au-script-actions'); if(sa) sa.style.display='flex';
     var ta=document.getElementById('au-trans-actions'); if(ta) ta.style.display='none';
     audioResultType=t; audioHistSave(t, sc.innerHTML, scriptCost);
-  }catch(e){ powiadomBlad((e&&e.message)||'error'); }
+  }catch(e){ powiadomBladApi(e, 'err-audio-skrypt'); }
   window._audioBusy=false; if(sp) sp.textContent=oldsp; if(gIco) gIco.innerHTML=oldIco; btn.disabled=false; btn.classList.remove('btn-working');
 }
 function audioSpokenText(){ var sc=document.getElementById('au-script'); if(!sc) return ''; var cl=sc.cloneNode(true); var hs=cl.querySelectorAll('h1'); for(var i=0;i<hs.length;i++){ if(hs[i].parentNode) hs[i].parentNode.removeChild(hs[i]); } return cl.innerText||''; }
@@ -14737,7 +14905,7 @@ async function audioReadText(btn){
   }
   audioSetPlayBtn(btn,'loading'); ttsState.btn=btn; audioCtx();
   try{ await audioBuildCore(audioReadUnits(text), sig, false, voiceCfg.engine); }
-  catch(e){ audioSetPlayBtn(btn,'idle'); audioBarHide(); if((e&&e.message)!=='cancel'&&(e&&e.message)!=='empty') powiadomBlad(_t('voice-tts-fail')+' '+ttsErrMsg(e)); return; }
+  catch(e){ audioSetPlayBtn(btn,'idle'); audioBarHide(); if((e&&e.message)!=='cancel'&&(e&&e.message)!=='empty') powiadomBladApi(e, null, 'audio', _t('voice-tts-fail')+' '); return; }
   audioBarMode='module'; audioStartSrc(0); audioSetPlayBtn(btn,'playing'); audioBarShow(); audioBarSetIcon('pause'); audioBarTick();
 }
 function audioSetPlayBtn(btn,st){ if(!btn)return;
@@ -14763,7 +14931,7 @@ async function audioPlay(btn){
   }
   audioSetPlayBtn(btn,'loading'); ttsState.btn=btn; audioCtx();
   try{ await audioBuild(); }
-  catch(e){ audioSetPlayBtn(btn,'idle'); audioBarHide(); if((e&&e.message)!=='cancel'&&(e&&e.message)!=='empty') powiadomBlad(ttsErrMsg(e)); return; }
+  catch(e){ audioSetPlayBtn(btn,'idle'); audioBarHide(); if((e&&e.message)!=='cancel'&&(e&&e.message)!=='empty') powiadomBladApi(e, null, 'audio'); return; }
   audioBarMode='module'; audioStartSrc(0); audioSetPlayBtn(btn,'playing'); audioBarShow(); audioBarSetIcon('pause'); audioBarTick();
 }
 // Skrypt audio do Worda (R3-22): ten sam generator co artykul (pwa/lib/docx-natywny.js),
@@ -14785,7 +14953,7 @@ async function audioDownload(btn){
   if(audioEng()==='web'){ powiadomBlad(_t('pod-need-ai')); return; }
   var old=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="au-spin"></span>';
   try{ await audioBuild(); var a=document.createElement('a'); a.href=AUDIO.url; a.download=audioFileName(); document.body.appendChild(a); a.click(); a.remove(); }
-  catch(e){ if((e&&e.message)!=='cancel'&&(e&&e.message)!=='empty') powiadomBlad(ttsErrMsg(e)); }
+  catch(e){ if((e&&e.message)!=='cancel'&&(e&&e.message)!=='empty') powiadomBladApi(e, null, 'audio'); }
   btn.innerHTML=old; btn.disabled=false;
 }
 async function audioTranscribe(btn){
@@ -14797,7 +14965,7 @@ async function audioTranscribe(btn){
     var sa=document.getElementById('au-script-actions'); if(sa) sa.style.display='none';
     var ta=document.getElementById('au-trans-actions'); if(ta) ta.style.display='flex';
     audioResultType='transcription'; audioHistSave('transcription', sc.innerHTML, 0);
-  }catch(e){ powiadomBlad(ttsErrMsg(e)); }
+  }catch(e){ powiadomBladApi(e, null, 'audio'); }
   window._audioBusy=false; if(sp) sp.textContent=oldsp; if(gIco) gIco.innerHTML=oldIco; btn.disabled=false; btn.classList.remove('btn-working');
 }
 function audioTransToKb(){ var sc=document.getElementById('au-script'); var txt=sc?sc.innerText:''; if(typeof openTextModal==='function'){ openTextModal(); var c=document.getElementById('m-content'); var nm=document.getElementById('m-name'); if(c)c.value=txt; if(nm&&!nm.value)nm.value=_t('audio-transcript-name'); } }
@@ -14831,7 +14999,7 @@ async function transcribeMedia(file) {
   var headers = {};
   if (!voiceIsProxy()) headers['Authorization'] = 'Bearer ' + key;
   var res = await fetch(OPENAI_STT_ENDPOINT, { method: 'POST', headers, body: fd });
-  if (!res.ok) { var e = await res.json().catch(function(){ return {}; }); throw new Error((currentLang === 'en' ? 'Transcription error ' : 'Błąd transkrypcji ') + res.status + (e.error && e.error.message ? ' (' + e.error.message + ')' : '')); }
+  if (!res.ok) { var e = await res.json().catch(function(){ return {}; }); throw bladOdpowiedzi(e, res.status, 'OpenAI'); }
   var d = await res.json(); return d.text || '';
 }
 
@@ -14846,7 +15014,7 @@ async function transRun() {
   if (!file) { if (statusEl) statusEl.textContent = _t('trans-pick'); return; }
   if (statusEl) statusEl.textContent = _t('tts-generating');
   try { var text = await transcribeMedia(file); transShowResult(text); if (statusEl) statusEl.textContent = ''; }
-  catch(e) { if (statusEl) statusEl.textContent = (e && e.message) || 'error'; }
+  catch(e) { if (statusEl) statusEl.textContent = komunikatBleduApi(e, 'err-stt', 'audio'); }
 }
 function transShowResult(text) {
   currentText = text;
@@ -14900,7 +15068,7 @@ async function kbAudioTranscribeAndOpen(file) {
       if (c) c.value = text;
       if (n && !n.value) n.value = (_t('trans-kb-name') || 'Transkrypcja') + ' ' + new Date().toLocaleDateString();
     }
-  } catch(e) { powiadomBlad(ttsErrMsg(e)); }
+  } catch(e) { powiadomBladApi(e, null, 'audio'); }
 }
 
 
