@@ -458,7 +458,7 @@ KONTROLE = [
 
     # Nazwa uzytkownika z obcej instalacji WordPressa szla prosto do innerHTML.
     ("F48/wordpress", "nazwa z obcego WordPressa z ucieczka znakow",
-     "zalogowano jako: ${escapeHtml(String(d.name || ''))}", None, ("proxy", "keys", "owner")),
+     "escapeHtml(_t('wp-zalogowano').replace('{name}', String(d.name || '')))", None, ("proxy", "keys", "owner")),
 
     # -- panel kontroli faktow milczal, a wyszukiwanie w sieci bylo nieme --
     # Spinner wlaczal sie DOPIERO po sprawdzeniu odnosnikow, a to potrafi
@@ -703,7 +703,7 @@ KONTROLE = [
      "if (!html || bladGenerowania) {",
      "html.startsWith('<p style=\"color:var(--red)\">')", None),
     ("G/escape", "tresc bledu API escapowana przed wstawieniem",
-     "escapeHtml(komunikatBleduApi(e))", "</strong> ${e.message}</p>", None),
+     "escapeHtml(komunikatBleduApi(e, zapas, kontekst))", "</strong> ${e.message}</p>", None),
     ("G/uciety", "artykul uciety na limicie dlugosci oznaczony ostrzezeniem",
      "artykulUciety = data.stop_reason === 'max_tokens';", None, None),
     ("G/dostep", "przerobki, widocznosc i narracja dzialaja za proxy (bez klucza w przegladarce)",
@@ -726,6 +726,35 @@ KONTROLE = [
      '<meta name="cai-konto" content="WSTAW_TUTAJ_KONTO">', None, ("proxy",)),
     ("G/zrodla", "zrodla sieciowe zerowane na starcie kazdego generowania",
      "  zrodlaSieciowe = [];\n  stanSieci = null;\n  if (API_KEY === 'WSTAW_TUTAJ_KLUCZ_API'", None, None),
+]
+
+# ── runda 3, wykonawca D: komunikaty bledow dostawcow i liczby w jezyku interfejsu ──
+# Osobna lista doklejana do KONTROLE, zeby nie zderzala sie z grupa R3B przy scalaniu.
+KONTROLE += [
+    ("R3D/blad-typ", "blad API niesie typ i status z odpowiedzi (nie sam tekst)",
+     "if (data.error) throw bladOdpowiedzi(data);", "throw new Error(msg || _t('err-api-generic'));", None),
+    ("R3D/rodzaje", "zly klucz, brak srodkow, za dlugi tekst rozpoznane po typie i tresci",
+     "if (/prompt is too long|too many (input )?tokens|context length|maximum context/i.test(m)) return 'za-dlugi';", None, None),
+    ("R3D/ponow", "Sprobuj ponownie tylko przy bledach przejsciowych",
+     "if (ponow && czyPonowic(e)) {", "onclick=\"generate()\">' + ikona('refresh-cw')", None),
+    ("R3D/klucz-keys", "zly klucz prowadzi do okna Klucze API",
+     "if (typeof window.openKeysModal === 'function') window.openKeysModal();", None, ("keys",)),
+    ("R3D/klucz-proxy", "zly klucz prowadzi do kreatora konta",
+     "if (typeof window.startDalej === 'function') window.startDalej();", None, ("proxy",)),
+    ("R3D/panele", "panele ocen i briefu bez surowego e.message",
+     "document.getElementById('seo-content').innerHTML = blokBledu(e,",
+     "${_t('msg-err-prefix')}${escapeHtml(e.message)}", None),
+    ("R3D/strona", "pobieranie strony bez \"Blad:\" na sztywno",
+     "status.textContent = _t('msg-blad-prefiks') + ' ' + komunikatBleduApi(e, 'err-url-extract');", "status.textContent = `Błąd: ${e.message}`;", None),
+    ("R3D/audio", "TTS, STT i skrypt audio przez wspolny komunikat",
+     "powiadomBladApi(e, 'err-stt', 'audio');", "'STT error'", None),
+    ("R3D/grafika", "blad OpenAI przy grafice przez wspolny komunikat",
+     "throw bladOdpowiedzi(err, st, 'OpenAI');", "OpenAI odrzucił klucz. Sprawdź OPENAI_API_KEY", None),
+    ("R3D/cms", "bledy WordPressa i Drupala ze slownika (status na zdanie)",
+     "resEl.innerHTML = htmlBleduCms(r.status, err.message || '', 'wp');", "escapeHtml(err.message || 'błąd')", None),
+    ("R3D/genind", "bez martwego wskaznika _genInd", None, "_genInd", None),
+    ("R3D/liczby", "liczby z ulamkiem w jezyku interfejsu (koszt, srednie pozycje)",
+     "el.textContent = '$' + formatujLiczbe(sessionCost, 3, true);", "sessionCost.toFixed(3)", None),
 ]
 
 
