@@ -175,6 +175,22 @@ async function wariantKeys(b) {
   r = await generuj(s, 'Temat ze wstepem [atrapa:wstep]');
   wynik('keys: zapowiedz wyszukiwania nie trafia nad tytul', !/Wyszukam|I will search/.test(r.poczatek.slice(0, 80)), r.poczatek.slice(0, 60));
 
+  // Samokorekta w menu obok przycisku Wygeneruj: przelacznik nie zamyka menu,
+  // stan widac na przycisku; Dodatkowe wytyczne stoja poza zaawansowanymi.
+  await s.click('#grupa-brief-wrap > .btn-secondary');
+  await s.click('#premium-btn');
+  const sk = await s.evaluate(() => ({
+    otwarte: document.getElementById('grupa-brief-wrap').classList.contains('open') || getComputedStyle(document.getElementById('grupa-brief-menu')).display !== 'none',
+    aria: document.getElementById('premium-btn').getAttribute('aria-checked'),
+    naPrzycisku: document.getElementById('gen-btn').classList.contains('z-samokorekta') && premiumMode === true,
+    wytyczne: !document.getElementById('extra').closest('#brief-zaawansowane'),
+  }));
+  await s.click('#premium-btn');
+  const skWyl = await s.evaluate(() => premiumMode === false && !document.getElementById('gen-btn').classList.contains('z-samokorekta'));
+  await s.keyboard.press('Escape');
+  wynik('keys: samokorekta w menu przelacza sie i pokazuje stan na przycisku', sk.otwarte && sk.aria === 'true' && sk.naPrzycisku && skWyl, JSON.stringify(sk));
+  wynik('keys: dodatkowe wytyczne poza ustawieniami zaawansowanymi', sk.wytyczne, '');
+
   // Ucieta samokorekta (max_tokens przy poprawie) nie zastepuje pelnego artykulu.
   await s.fill('#topic', 'Temat premium [atrapa:ocena=55@ocena-premium] [atrapa:max-tokens@poprawa]');
   await s.evaluate(() => { document.getElementById('use-web').checked = true; premiumMode = true; generate(true); });

@@ -2283,32 +2283,22 @@ body:not(.is-mobile) .placeholder { padding-top: clamp(48px, 12vh, 160px); }
 body:not(.is-mobile) .output-bar { padding-inline: max(var(--s-16), calc((100% - var(--kolumna-wyniku)) / 2)); }
 @media (min-width: 1600px) { body:not(.is-mobile) #tab-history.active { max-width: 1200px; margin-inline: auto; width: 100%; } }
 
-/* R3-02: Samokorekta - wiersz przelacznika (spec marki): etykieta 13/600 i opis 12 px po lewej, przelacznik
-   34x20 jak przy "Szukaj w sieci" po prawej; caly wiersz klikalny (::before przycisku pokrywa wiersz),
-   stan pokazuje sam przelacznik - bez bursztynowego tla wiersza (decyzja koordynatora). */
-.samokorekta-wiersz { position: relative; display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 48px;
-  margin-top: var(--s-4); padding: var(--s-6) calc(34px + var(--s-12) + var(--s-8)) var(--s-6) var(--s-8); border-radius: var(--r-sm);
-  transition: background-color var(--m-1) var(--e-std); }
-.samokorekta-wiersz:hover { background: var(--c-najazd); }
-.samokorekta-wiersz:has(.btn-premium:focus-visible) { outline: 2px solid var(--c-fokus); outline-offset: 2px; }
-.samokorekta-wiersz .btn-premium { position: static; display: block; width: auto; min-height: 0; height: auto; margin: 0; padding: 0; border: 0; background: none;
-  font-size: var(--t-sm); font-weight: var(--g-mocny); line-height: 1.3; color: var(--c-tekst); text-align: left; white-space: normal; }
-.samokorekta-wiersz .btn-premium:hover, .samokorekta-wiersz .btn-premium.active, .samokorekta-wiersz .btn-premium:active { background: none; border: 0; color: var(--c-tekst); font-weight: var(--g-mocny); transform: none; }
-.samokorekta-wiersz .btn-premium:focus-visible { outline: none; }
-/* pole klikniecia: caly wiersz */
-.samokorekta-wiersz .btn-premium::before { content: ""; position: absolute; inset: 0; z-index: 1; width: auto; height: auto; margin: 0; border: 0; border-radius: inherit;
-  background: none; flex: none; }
-/* przelacznik: tor z galka w tle (pozycja galki animowana) */
-.samokorekta-wiersz .btn-premium::after { content: ""; position: absolute; right: var(--s-8); top: 50%; width: 34px; height: 20px; margin-top: -10px; box-sizing: border-box;
-  border: 1px solid var(--c-ramka); border-radius: var(--r-pelny); background-color: var(--c-wcisk);
-  background-image: radial-gradient(circle at center, var(--c-tekst-2) 0 6.5px, transparent 7px); background-size: 18px 18px; background-repeat: no-repeat; background-position: 0 50%;
+/* Samokorekta: przelacznik w menu "Wiecej zadan" obok przycisku Wygeneruj (uwaga Marcina: wiersz nad
+   przyciskiem zajmowal za duzo miejsca). Stan: przelacznik w menu i dopisek "+ samokorekta" na przycisku. */
+.grupa-menu .menu-przelacznik { align-items: center; gap: var(--s-12); text-align: left; white-space: normal; }
+.menu-przelacznik-tekst { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.menu-przelacznik-tekst small { font-size: var(--t-xs); line-height: 1.35; color: var(--c-tekst-3); font-weight: var(--g-normal); }
+.menu-przelacznik-tor { flex: none; width: 34px; height: 20px; box-sizing: border-box; border: 1px solid var(--c-ramka); border-radius: var(--r-pelny);
+  background-color: var(--c-wcisk); background-image: radial-gradient(circle at center, var(--c-tekst-2) 0 6.5px, transparent 7px);
+  background-size: 18px 18px; background-repeat: no-repeat; background-position: 0 50%;
   transition: background-color var(--m-2) var(--e-std), border-color var(--m-2) var(--e-std), background-position var(--m-2) var(--e-std); }
-.samokorekta-wiersz .btn-premium.active::after, :root[data-theme="light"] .samokorekta-wiersz .btn-premium.active::after {
-  background-color: var(--c-przel-wl); border-color: var(--c-przel-wl); background-position: 100% 50%;
+.menu-przelacznik.active .menu-przelacznik-tor { background-color: var(--c-przel-wl); border-color: var(--c-przel-wl); background-position: 100% 50%;
   background-image: radial-gradient(circle at center, var(--c-pole) 0 6.5px, transparent 7px); }
-.samokorekta-opis { font-size: var(--t-xs); line-height: 1.35; color: var(--c-tekst-3); }
-body.is-mobile .samokorekta-wiersz { min-height: 44px; margin-top: 0; }
-@media (prefers-reduced-motion: reduce) { .samokorekta-wiersz .btn-premium::after { transition: none; } }
+.grupa-menu .menu-separator { height: 1px; margin: var(--s-4) 0; background: var(--c-linia); }
+.gen-samokorekta { display: none; margin-left: var(--s-6); font-size: var(--t-xs); font-weight: var(--g-mocny); opacity: .8; white-space: nowrap; }
+#gen-btn.z-samokorekta .gen-samokorekta { display: inline; }
+#gen-btn.z-samokorekta .kbd, #gen-btn:disabled .gen-samokorekta { display: none; }
+@media (prefers-reduced-motion: reduce) { .menu-przelacznik-tor { transition: none; } }
 
 /* R3-04: Generator grafik na telefonie - nic nie wychodzi poza ekran */
 body.is-mobile #img-panel { top: 48px !important; bottom: var(--dol) !important; padding: var(--s-16) var(--s-16) var(--s-24); }
@@ -2956,6 +2946,13 @@ document.addEventListener('DOMContentLoaded', function () {
             </select>
           </div>
 
+          <div class="field">
+            <label for="extra" class="field-label" data-i18n="label-extra">Dodatkowe wytyczne</label>
+            <div class="pole-wiersz pole-wiersz--gora">
+              <textarea rows="3" id="extra" placeholder="np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem…" data-i18n="ph-extra"></textarea>
+              <button type="button" class="mic-btn" onclick="dictate('extra', this)" data-i18n-title="voice-dictate-title" title="Dyktuj"><svg class="ikona" aria-hidden="true"><use href="#i-mic"/></svg></button>
+            </div>
+
           <div class="field zrodla">
             <div class="field-label" data-i18n="zrodla-tytul">Źródła</div>
             <div class="zrodla-karta">
@@ -2988,12 +2985,6 @@ document.addEventListener('DOMContentLoaded', function () {
             </select>
           </div>
 
-          <div class="field">
-            <label for="extra" class="field-label" data-i18n="label-extra">Dodatkowe wytyczne</label>
-            <div class="pole-wiersz pole-wiersz--gora">
-              <textarea rows="3" id="extra" placeholder="np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem…" data-i18n="ph-extra"></textarea>
-              <button type="button" class="mic-btn" onclick="dictate('extra', this)" data-i18n-title="voice-dictate-title" title="Dyktuj"><svg class="ikona" aria-hidden="true"><use href="#i-mic"/></svg></button>
-            </div>
           </div>
 
           <label class="toggle-row" for="use-serp">
@@ -3024,18 +3015,16 @@ document.addEventListener('DOMContentLoaded', function () {
           </details>
 
           <div class="form-actions-sticky">
-            <!-- R3: Samokorekta jako wiersz z przelacznikiem (etykieta + jedno zdanie opisu), nad przyciskiem, wyrownany do niego. -->
-            <div class="samokorekta-wiersz">
-              <button type="button" class="btn-premium" id="premium-btn" onclick="togglePremium()" role="switch" aria-checked="false" aria-describedby="samokorekta-opis" title="Model oceni gotowy tekst i poprawi go według oceny. Generowanie trwa 2-3 razy dłużej i zużywa więcej wywołań modelu z pakietu." data-i18n-title="title-premium-tooltip" data-i18n="btn-premium">Samokorekta</button>
-              <span class="samokorekta-opis" id="samokorekta-opis" data-i18n="premium-opis">Model oceni gotowy tekst i poprawi go (2-3 razy dłużej).</span>
-            </div>
             <div class="generuj-rzad">
-            <button class="btn-generate" onclick="generate()" id="gen-btn"><svg class="ikona" aria-hidden="true"><use href="#i-zap"/></svg><span class="gen-etykieta" data-i18n="btn-generate">Wygeneruj treść</span><span class="kbd">Ctrl ↵</span><span class="gen-trwa"><svg class="ikona kreci" aria-hidden="true"><use href="#i-loader"/></svg><span data-i18n="btn-generuje">Generuję…</span></span></button>
+            <button class="btn-generate" onclick="generate()" id="gen-btn"><svg class="ikona" aria-hidden="true"><use href="#i-zap"/></svg><span class="gen-etykieta" data-i18n="btn-generate">Wygeneruj treść</span><span class="gen-samokorekta" data-i18n="gen-z-samokorekta">+ samokorekta</span><span class="kbd">Ctrl ↵</span><span class="gen-trwa"><svg class="ikona kreci" aria-hidden="true"><use href="#i-loader"/></svg><span data-i18n="btn-generuje">Generuję…</span></span></button>
             <div class="grupa-wrap" id="grupa-brief-wrap">
               <button type="button" class="btn-secondary" aria-haspopup="true" aria-expanded="false" aria-controls="grupa-brief-menu" onclick="przelaczGrupe('brief')" title="Więcej zadań" aria-label="Więcej zadań" data-i18n-title="brief-wiecej" data-i18n-label="brief-wiecej"><svg class="ikona" aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
               <div class="grupa-backdrop" onclick="przelaczGrupe('brief')"></div>
               <div class="grupa-menu" id="grupa-brief-menu">
                 <div class="arkusz-tytul"><span data-i18n="brief-wiecej">Więcej zadań</span><button type="button" class="przycisk-ikona arkusz-zamknij" onclick="zamknijGrupyPaska()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+                <!-- Samokorekta: opcja generowania w menu obok przycisku (nie zajmuje paska); stan widac na przycisku Wygeneruj. -->
+                <button type="button" class="btn-secondary menu-przelacznik" id="premium-btn" onclick="togglePremium()" role="switch" aria-checked="false" aria-describedby="samokorekta-opis" title="Model oceni gotowy tekst i poprawi go według oceny. Generowanie trwa 2-3 razy dłużej i zużywa więcej wywołań modelu z pakietu." data-i18n-title="title-premium-tooltip"><svg class="ikona" aria-hidden="true"><use href="#i-list-checks"/></svg><span class="menu-przelacznik-tekst"><span data-i18n="btn-premium">Samokorekta</span><small id="samokorekta-opis" data-i18n="premium-opis">Model oceni gotowy tekst i poprawi go (2-3 razy dłużej).</small></span><span class="menu-przelacznik-tor" aria-hidden="true"></span></button>
+                <div class="menu-separator" role="separator"></div>
                 <button type="button" class="btn-secondary" onclick="openBriefPanel()" data-ikona="clipboard-list" title="Wygeneruj brief przed artykułem" data-i18n-title="title-brief-tooltip"><svg class="ikona" aria-hidden="true"><use href="#i-clipboard-list"/></svg>Brief</button>
                 <button type="button" class="btn-secondary" onclick="openBulkModal()" data-ikona="layout-grid" title="Generowanie grupowe: wiele artykułów naraz" data-i18n-title="title-bulk-tooltip" data-i18n="btn-bulk"><svg class="ikona" aria-hidden="true"><use href="#i-layout-grid"/></svg>Generuj grupowo</button>
                 <button type="button" class="btn-secondary" onclick="openImproveModal()" data-ikona="pen-line" title="Popraw istniejący artykuł" data-i18n-title="title-improve-art" data-i18n="btn-improve"><svg class="ikona" aria-hidden="true"><use href="#i-pen-line"/></svg>Popraw</button>
@@ -4435,7 +4424,7 @@ var I18N = {
     'opt-aud-auto':'Dopasuj do tematu','opt-aud-b2c':'Klient indywidualny (B2C)','opt-aud-b2b':'Firma (B2B)',
     'btn-brief':'Brief','btn-bulk':'Generuj grupowo','btn-improve':'Popraw','btn-img-short':'Grafika',
     'btn-generate':'Wygeneruj treść','btn-premium':'Samokorekta','btn-premium-active':'Samokorekta',
-    'premium-opis':'Model oceni gotowy tekst i poprawi go (2-3 razy dłużej).',
+    'premium-opis':'Model oceni gotowy tekst i poprawi go (2-3 razy dłużej).','gen-z-samokorekta':'+ samokorekta',
     'out-title':'Wynik','badge-ready':'gotowy do generowania','badge-done':'gotowe',
     'btn-edit':'Edytuj','btn-aio':'Oceń AIO','btn-seo':'Oceń SEO',
     'btn-img-out':'Grafika','btn-titles':'Tytuły',
@@ -5133,7 +5122,7 @@ var I18N = {
     'opt-aud-auto':'Match the topic','opt-aud-b2c':'Individual customer (B2C)','opt-aud-b2b':'Business (B2B)',
     'btn-brief':'Brief','btn-bulk':'Bulk generate','btn-improve':'Improve','btn-img-short':'Image',
     'btn-generate':'Generate content','btn-premium':'Self-review','btn-premium-active':'Self-review',
-    'premium-opis':'The model scores the draft and revises it (takes 2-3 times longer).',
+    'premium-opis':'The model scores the draft and revises it (takes 2-3 times longer).','gen-z-samokorekta':'+ self-review',
     'out-title':'Result','badge-ready':'ready to generate','badge-done':'done',
     'btn-edit':'Edit','btn-aio':'Assess AIO','btn-seo':'Assess SEO',
     'btn-img-out':'Image','btn-titles':'Titles',
@@ -7302,17 +7291,17 @@ function buildSteps(ctype, isPremium) {
 }
 
 // ── Przełącz tryb Premium
-function togglePremium() {
+// Stan Samokorekty widac w dwoch miejscach: przelacznik w menu obok przycisku
+// i dopisek "+ samokorekta" na przycisku Wygeneruj.
+function pokazSamokorekte() {
   const btn = document.getElementById('premium-btn');
+  if (btn) { btn.classList.toggle('active', premiumMode); btn.setAttribute('aria-checked', String(premiumMode)); }
+  const gen = document.getElementById('gen-btn');
+  if (gen) gen.classList.toggle('z-samokorekta', premiumMode);
+}
+function togglePremium() {
   premiumMode = !premiumMode;
-  btn.setAttribute('aria-pressed', String(premiumMode));
-  if (premiumMode) {
-    btn.classList.add('active');
-    ustawTekst(btn, 'btn-premium-active');
-  } else {
-    btn.classList.remove('active');
-    ustawTekst(btn, 'btn-premium');
-  }
+  pokazSamokorekte();
 }
 
 function closePremiumModal() {
@@ -7328,9 +7317,7 @@ function premiumProceed() {
 function premiumSkip() {
   // Użytkownik wybrał normalny tryb - wyłącz premium i generuj
   premiumMode = false;
-  const btn = document.getElementById('premium-btn');
-  btn.classList.remove('active');
-  ustawTekst(btn, 'btn-premium');
+  pokazSamokorekte();
   closePremiumModal();
   generate(true);
 }
@@ -7957,9 +7944,7 @@ ${html}`;
   }
   if (premiumMode) {
     premiumMode = false;
-    const pb = document.getElementById('premium-btn');
-    pb.classList.remove('active');
-    ustawTekst(pb, 'btn-premium');
+    pokazSamokorekte();
   }
 
   document.getElementById('spinner').style.display = 'none';
@@ -12347,7 +12332,7 @@ function odswiezGrupyPaska() {
 document.addEventListener('click', e => {
   // Wybor pozycji tez zamyka menu (onclick pozycji wykonal sie wczesniej,
   // w fazie celu) - wczesniej menu zostawalo otwarte na artykule.
-  if (!e.target.closest('.grupa-wrap') || e.target.closest('.grupa-menu button, .grupa-menu [role="button"]')) zamknijGrupyPaska();
+  if (!e.target.closest('.grupa-wrap') || e.target.closest('.grupa-menu button:not(.menu-przelacznik), .grupa-menu [role="button"]')) zamknijGrupyPaska();
 });
 
 function closeRepurposePanel() {
