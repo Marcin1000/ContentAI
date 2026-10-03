@@ -147,7 +147,9 @@ const KONF = {
   kompresja: process.env.CAI_KOMPRESJA !== '0',
 
   // Formularz "Popros o dostep" ze strony produktowej: skad wolno wysylac.
-  stronaOrigin: lista(process.env.CAI_STRONA_ORIGIN || 'https://content-ai.net'),
+  // Domyslnie apex i www: gdyby www nie przekierowywalo (Caddy), formularz
+  // z www dostawalby 403 bez CORS i pokazywal mylace "sprobuj za chwile".
+  stronaOrigin: lista(process.env.CAI_STRONA_ORIGIN || 'https://content-ai.net,https://www.content-ai.net'),
 };
 
 function liczbaMs(wartosc, domyslnie) {
@@ -456,11 +458,21 @@ function zPetliZwrotnej(adres) {
  * ustawia go z {client_ip}, a ten - przy trusted_proxies dla Cloudflare -
  * jest prawdziwym adresem odwiedzajacego (konfiguracja: serwer/README.md).
  */
+let ostatnieOstrzezenieIp = 0;
 function adresIp(req) {
   const zrodlo = req.socket?.remoteAddress || '';
   if (zPetliZwrotnej(zrodlo)) {
     const realny = req.headers['x-real-ip'];
     if (typeof realny === 'string' && realny.trim()) return realny.trim().slice(0, 64);
+    // Zadanie z petli zwrotnej bez X-Real-IP = Caddy bez `header_up X-Real-IP
+    // {client_ip}`. Wtedy wszyscy maja jeden adres i jeden licznik prob
+    // logowania - blad konfiguracji ma byc widac w logu (raz na godzine).
+    if (Date.now() - ostatnieOstrzezenieIp > 3600_000) {
+      ostatnieOstrzezenieIp = Date.now();
+      console.warn('[adres] zadanie z petli zwrotnej bez naglowka X-Real-IP - w Caddy brakuje '
+        + '`header_up X-Real-IP {client_ip}` (dokumenty/Caddyfile.content-ai). Wszyscy klienci '
+        + 'dziela teraz jeden licznik prob logowania.');
+    }
   }
   return zrodlo || 'nieznany';
 }
@@ -713,15 +725,37 @@ function wyslij(res, status, naglowki, bufor, gotowe) {
   res.end(res.req && res.req.method === 'HEAD' ? undefined : cialo);
 }
 
+/**
+ * Cialo zadania z limitem. Po przekroczeniu limitu NIE zrywamy od razu
+ * polaczenia: wtedy klient nie dostalby zadnej odpowiedzi (formularz pokazalby
+ * "blad sieci"). Odrzucamy z e.status = 413, reszte ciala przepuszczamy w proznie,
+ * zeby odpowiedz 413 mogla dojsc, a polaczenie zamykamy po chwili.
+ */
 function czytajCialo(req, limitBajtow = 25 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
     const kawalki = [];
     let rozmiar = 0;
+    let zaDuze = false;
+    const odrzucZaDuze = () => {
+      zaDuze = true;
+      kawalki.length = 0;
+      const e = new Error('cialo zadania za duze');
+      e.status = 413;
+      reject(e);
+      const t = setTimeout(() => req.destroy(), 2000);
+      if (t.unref) t.unref();
+    };
+    // Zadeklarowana dlugosc ponad limit - nie ma po co czytac.
+    if (Number(req.headers['content-length'] || 0) > limitBajtow) {
+      req.resume();
+      odrzucZaDuze();
+      return;
+    }
     req.on('data', (c) => {
+      if (zaDuze) return;
       rozmiar += c.length;
       if (rozmiar > limitBajtow) {
-        reject(new Error('cialo zadania za duze'));
-        req.destroy();
+        odrzucZaDuze();
         return;
       }
       kawalki.push(c);
@@ -1831,6 +1865,9 @@ function start() {
     console.warn('UWAGA: brak ANTHROPIC_KEY - tresc zadziala tylko dla uzytkownikow z wlasnym kluczem.');
   }
 
+  // Prosby o dostep (dane osobowe) trzymamy najwyzej CAI_PROSBY_DNI dni.
+  try { prosby.sprzataj(); } catch (e) { console.error('[prosby] sprzatanie:', e.message); }
+
   utworzSerwer().listen(KONF.port, KONF.host, () => {
     console.log(`Content AI: http://${KONF.host}:${KONF.port}`);
     console.log(`  dostawca tresci: ${KONF.dostawca}${KONF.dostawca === 'nvidia' ? ' (' + KONF.modelNvidia + ')' : ''}`);
@@ -1853,6 +1890,8 @@ function utworzBrameOpenSeo() {
     kontoSesji,
     maDostepDoOpenSeo: (konto) => konto.rola === 'admin' || plany.maFunkcje(konto, 'openseo'),
     stronaBezPakietu: (req) => logowanie.stronaOpenSeoBezPakietu(jezykZadania(req)),
+    // Strony samej bramy (logowanie, 402, blad) - ten sam zestaw co aplikacja.
+    naglowkiBezpieczenstwa: NAGLOWKI_BEZPIECZENSTWA,
   });
 
   const serwer = http.createServer((req, res) => {
@@ -1892,6 +1931,7 @@ module.exports = {
   // Sesje - wystawione do testow; produkcyjnie wola je tylko router.
   utworzSesje, sesjaZadania, zapiszWylogowanie, wylogowane, PLIK_WYLOGOWANYCH,
   czynnosciTresci, parsujCiasteczka, adresIp, obcePochodzenie, jezykZadania,
+  wyzerujOstrzezenieIp: () => { ostatnieOstrzezenieIp = 0; },
   // Serwer do testow integracyjnych (port 0, bez start()).
   utworzSerwer, utworzBrameOpenSeo, wczytajAplikacje, KONF, DOZWOLONE, CSP,
 };

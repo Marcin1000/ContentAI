@@ -1329,6 +1329,41 @@ async function testyPoprawek() {
     }
   }
 
+  console.log('\n  instrukcje Caddy: jeden blok, adres klienta wszedzie');
+  {
+    // Kod czyta X-Real-IP tylko od Caddy; instrukcja z golym reverse_proxy
+    // dawala wspolny licznik logowania dla wszystkich (runda 2, t13). Pilnujemy
+    // kazdego przykladu w repozytorium.
+    const korzen = path.join(__dirname, '..');
+    const dokumentacja = [
+      'dokumenty/ContentAI_Domena_Cloudflare.md', 'dokumenty/ContentAI_Instalacja_na_serwerze.md',
+      'dokumenty/ContentAI_obok_Cosmosa.md', 'dokumenty/Caddyfile.content-ai', 'serwer/README.md',
+      'brama/Caddyfile.przyklad', 'brama/README.md', 'openseo/Caddyfile.przyklad', 'openseo/README.md',
+    ].filter((f) => fs.existsSync(path.join(korzen, f)));
+    const gole = [];
+    for (const f of dokumentacja) {
+      const linie = fs.readFileSync(path.join(korzen, f), 'utf8').split('\n');
+      linie.forEach((l, i) => {
+        if (/^\s*#/.test(l) && !/^\s*#\s+reverse_proxy/.test(l)) return;
+        if (/reverse_proxy 127\.0\.0\.1:31(00|10)\b/.test(l)
+          && !linie.slice(i, i + 5).some((n) => n.includes('header_up X-Real-IP {client_ip}'))) gole.push(`${f}:${i + 1}`);
+      });
+    }
+    sprawdz(`kazde reverse_proxy do Content AI/bramy ma header_up X-Real-IP (bez: ${gole.join(', ') || 'brak'})`, gole.length === 0);
+    const wzor = path.join(korzen, 'dokumenty', 'Caddyfile.content-ai');
+    if (fs.existsSync(wzor)) {
+      const linie = fs.readFileSync(wzor, 'utf8').split('\n');
+      const blok = linie.slice(linie.indexOf('{'), linie.findIndex((l) => l.startsWith('# Zmienne uslugi'))).join('\n').trim();
+      const rozne = ['dokumenty/ContentAI_Domena_Cloudflare.md', 'dokumenty/ContentAI_obok_Cosmosa.md', 'serwer/README.md']
+        .filter((f) => !fs.readFileSync(path.join(korzen, f), 'utf8').includes(blok));
+      sprawdz(`blok z dokumenty/Caddyfile.content-ai wklejony 1:1 w instrukcjach (rozne: ${rozne.join(', ') || 'brak'})`, rozne.length === 0);
+      sprawdz('wzor Caddy: www przekierowuje, /zrodlo/ zablokowane, HSTS, CSP strony z app.content-ai.net',
+        blok.includes('redir https://content-ai.net{uri} permanent') && blok.includes('respond @zrodlo 404')
+        && blok.includes('Strict-Transport-Security') && /connect-src 'self' https:\/\/app\.content-ai\.net/.test(blok)
+        && blok.includes('client_ip_headers CF-Connecting-IP'));
+    }
+  }
+
   console.log('\n  SERP rozpoznawany po tresci, nie po samym web_search');
   {
     const serp = require('./serp.js');
@@ -1453,6 +1488,10 @@ async function testyPoprawek() {
   await new Promise((r) => atrapa.listen(0, '127.0.0.1', r));
   const portAtrapy = atrapa.address().port;
   const atrapaOpenSeo = http.createServer((req, res) => {
+    if (req.url === '/z-wlasna-csp') {
+      res.writeHead(200, { 'Content-Type': 'text/html', 'Content-Security-Policy': "default-src 'self'", 'X-Frame-Options': 'DENY' });
+      return res.end('<html><head></head><body>KONTENER-OPENSEO</body></html>');
+    }
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end('<html><head></head><body>KONTENER-OPENSEO</body></html>');
   });
@@ -1567,6 +1606,18 @@ async function testyPoprawek() {
       const zObcego = { headers: { 'x-real-ip': '203.0.113.7', 'x-forwarded-for': '1.2.3.4' }, socket: { remoteAddress: '198.51.100.9' } };
       sprawdz('X-Real-IP przyjmowany z petli zwrotnej', srv.adresIp(zPetli) === '203.0.113.7');
       sprawdz('X-Real-IP i X-Forwarded-For ignorowane z innego adresu', srv.adresIp(zObcego) === '198.51.100.9');
+      const ostrzezenia = [];
+      const pierwotnyWarn = console.warn;
+      console.warn = (...a) => ostrzezenia.push(a.join(' '));
+      try {
+        srv.wyzerujOstrzezenieIp();
+        srv.adresIp({ headers: {}, socket: { remoteAddress: '127.0.0.1' } });
+        srv.adresIp({ headers: {}, socket: { remoteAddress: '127.0.0.1' } });
+        srv.adresIp({ headers: { 'x-real-ip': '203.0.113.5' }, socket: { remoteAddress: '127.0.0.1' } });
+        srv.adresIp({ headers: {}, socket: { remoteAddress: '198.51.100.9' } });
+      } finally { console.warn = pierwotnyWarn; }
+      sprawdz('brak X-Real-IP z petli zwrotnej: jedno ostrzezenie w logu (z podpowiedzia header_up), nie przy kazdym zadaniu',
+        ostrzezenia.length === 1 && /X-Real-IP/.test(ostrzezenia[0]) && /header_up X-Real-IP \{client_ip\}/.test(ostrzezenia[0]));
       sprawdz('X-Forwarded-For nie jest juz zrodlem adresu', srv.adresIp({ headers: { 'x-forwarded-for': '1.2.3.4' }, socket: { remoteAddress: '::1' } }) === '::1');
       sprawdz('format loginu: poprawne', ['marcin', 'a.b', 'jan_k-2', 'ab'].every(srv.poprawnyLogin));
       sprawdz('format loginu: odrzucone', ['a', 'Marcin', 'a b', '../x', 'ż', 'x'.repeat(41), ''].every((l) => !srv.poprawnyLogin(l)));
@@ -1723,7 +1774,7 @@ async function testyPoprawek() {
       const wyslijProsbe = (dane, naglowki = {}) => zadanie('/api/prosba-o-dostep', {
         method: 'POST', headers: { 'Content-Type': 'application/json', origin: STRONA, ...naglowki }, body: JSON.stringify(dane),
       });
-      const dobra = { imie: 'Anna', email: 'anna@firma.pl', firma: 'Firma', pakiet: 'standard', wiadomosc: 'Zespol 3 osob', jezyk: 'pl', strona: '' };
+      const dobra = { imie: 'Anna', email: 'anna@firma.pl', firma: 'Firma', pakiet: 'standard', wiadomosc: 'Zespol 3 osob', jezyk: 'pl', strona: '', zgoda: true };
       const pre = await zadanie('/api/prosba-o-dostep', { method: 'OPTIONS', headers: { origin: STRONA, 'access-control-request-method': 'POST', 'access-control-request-headers': 'content-type' } });
       sprawdz('preflight OPTIONS z dozwolonego Origin -> 204 z CORS',
         pre.status === 204 && pre.headers.get('access-control-allow-origin') === STRONA && /POST/.test(pre.headers.get('access-control-allow-methods') || ''));
@@ -1769,6 +1820,24 @@ async function testyPoprawek() {
       sprawdz('prosba zapisana w JSON Lines z czasem, IP i zgoda:true',
         zapis.length === 1 && zapis[0].email === 'anna@firma.pl' && zapis[0].zgoda === true && /^\d{4}-\d\d-\d\dT/.test(zapis[0].czas));
       sprawdz('pola spoza kontraktu nie trafiaja do zapisu', !fs.readFileSync(ENV.CAI_PROSBY, 'utf8').includes('firma2'));
+      const { zgoda: _pominZgode, ...bezZgody } = dobra;
+      const bz = await wyslijProsbe(bezZgody, { 'x-real-ip': '198.51.100.22' });
+      const zapisBez = fs.readFileSync(ENV.CAI_PROSBY, 'utf8').trim().split('\n').map((l) => JSON.parse(l)).filter((p) => p.ip === '198.51.100.22');
+      sprawdz('bez pola zgody: prosba przyjeta, zapisane zgoda:false (nie udajemy zgody)', bz.status === 200 && zapisBez.length === 1 && zapisBez[0].zgoda === false);
+      const duze = await wyslijProsbe({ ...dobra, wiadomosc: 'x'.repeat(20000) }, { 'x-real-ip': '198.51.100.23' });
+      const duzeJson = await duze.json().catch(() => null);
+      sprawdz('cialo ponad 16 kB: 413 z JSON i CORS zamiast zerwanego polaczenia',
+        duze.status === 413 && duzeJson && duzeJson.ok === false && duzeJson.blad === 'za-duze'
+        && duze.headers.get('access-control-allow-origin') === STRONA);
+      const pokaWyslij = await new Promise((r) => {
+        // Cialo bez Content-Length (chunked) tez konczy sie odpowiedzia 413.
+        const z = http.request(ADRES + '/api/prosba-o-dostep', { method: 'POST', headers: { 'Content-Type': 'application/json', origin: STRONA, 'x-real-ip': '198.51.100.24' } }, (o) => {
+          const k = []; o.on('data', (c) => k.push(c)); o.on('end', () => r({ status: o.statusCode, tresc: Buffer.concat(k).toString() }));
+        });
+        z.on('error', (e) => r({ status: 0, tresc: e.message }));
+        z.write('{"imie":"' + 'y'.repeat(10000)); z.write('y'.repeat(10000) + '"}'); z.end();
+      });
+      sprawdz('cialo chunked ponad 16 kB: tez 413 z JSON', pokaWyslij.status === 413 && /za-duze/.test(pokaWyslij.tresc));
       sprawdz('pakiet "nie-wiem" (domyslna opcja formularza) przyjety', (await wyslijProsbe({ ...dobra, pakiet: 'nie-wiem' }, { 'x-real-ip': '198.51.100.21' })).status === 200);
       let ostatni = 0;
       for (let i = 0; i < 5; i++) ostatni = (await wyslijProsbe(dobra, { 'x-real-ip': '198.51.100.30' })).status;
@@ -1780,14 +1849,49 @@ async function testyPoprawek() {
       sprawdz('inny adres ma wlasny limit', (await wyslijProsbe(dobra, { 'x-real-ip': '198.51.100.31' })).status === 200);
       const listaAdmin = await zadanie('/api/admin/prosby', { headers: { cookie: cAdmin } });
       const la = await listaAdmin.json();
-      sprawdz('admin widzi liste prosb, najnowsze pierwsze', listaAdmin.status === 200 && la.prosby.length === 10 && la.prosby[0].ip === '198.51.100.31');
+      sprawdz('admin widzi liste prosb, najnowsze pierwsze', listaAdmin.status === 200 && la.prosby.length === 11 && la.prosby[0].ip === '198.51.100.31');
       sprawdz('zwykle konto nie widzi prosb', (await zadanie('/api/admin/prosby', { headers: { cookie: cStd } })).status === 403);
-      // Limit dobowy: liczniki w pamieci, wiec sprawdzamy funkcje wprost.
+      // Limity dobowe: liczniki w pamieci, wiec sprawdzamy funkcje wprost.
       prosby.wyzerujLimity();
       let przeszlo = 0;
-      for (let i = 0; i < prosby.NA_DOBE + 5; i++) if (prosby.wolno('10.0.' + Math.floor(i / 4) + '.' + (i % 4))) przeszlo += 1;
-      sprawdz('globalny limit dobowy 200', przeszlo === prosby.NA_DOBE);
+      let zFlaga = 0;
+      for (let i = 0; i < prosby.NA_DOBE_TWARDO + 5; i++) {
+        const w = prosby.ocenLimit('10.' + Math.floor(i / 1000) + '.' + Math.floor((i % 1000) / 4) + '.' + (i % 4));
+        if (w.wolno) przeszlo += 1;
+        if (w.ponadLimit) zFlaga += 1;
+      }
+      sprawdz('limit dobowy: do 200 bez flagi, ponad 200 przyjete z flaga ponadLimit, ponad 2000 odmowa',
+        przeszlo === prosby.NA_DOBE_TWARDO && zFlaga === prosby.NA_DOBE_TWARDO - prosby.NA_DOBE);
       prosby.wyzerujLimity();
+      let zSieci = 0;
+      for (let i = 0; i < 30; i++) if (prosby.wolno('203.0.113.' + (i + 1))) zSieci += 1;
+      sprawdz('osobny limit na siec /24: 20 na dobe z jednej sieci, mimo roznych adresow', zSieci === prosby.NA_DOBE_Z_SIECI);
+      sprawdz('inna siec /24 ma wlasny limit', prosby.wolno('203.0.114.1'));
+      sprawdz('siec IPv6 liczona jako /48', prosby.siecAdresu('2001:db8:abcd:12::1') === prosby.siecAdresu('2001:db8:abcd:ffff::9'));
+      prosby.wyzerujLimity();
+      const ponad = Array.from({ length: prosby.NA_DOBE }, (_, i) => prosby.ocenLimit('172.' + (16 + Math.floor(i / 250)) + '.' + Math.floor((i % 250) / 4) + '.' + (i % 4)));
+      sprawdz('pierwsze 200 bez flagi', ponad.every((w) => w.wolno && !w.ponadLimit));
+      const zFlagaHttp = await wyslijProsbe(dobra, { 'x-real-ip': '192.0.2.77' });
+      const linieZFlaga = fs.readFileSync(ENV.CAI_PROSBY, 'utf8').trim().split('\n').map((l) => JSON.parse(l)).filter((p) => p.ip === '192.0.2.77');
+      sprawdz('prosba ponad miekki limit: 200 i zapis z ponadLimit:true', zFlagaHttp.status === 200 && linieZFlaga[0] && linieZFlaga[0].ponadLimit === true);
+      prosby.wyzerujLimity();
+
+      // Okres przechowywania: wpisy starsze niz CAI_PROSBY_DNI wypadaja.
+      const plikSprz = path.join(kat, 'sprzatanie.jsonl');
+      const dzien = 24 * 3600_000;
+      fs.writeFileSync(plikSprz, [
+        JSON.stringify({ czas: new Date(Date.now() - 400 * dzien).toISOString(), email: 'stara@x.pl' }),
+        JSON.stringify({ czas: new Date(Date.now() - 10 * dzien).toISOString(), email: 'nowa@x.pl' }),
+        '{"czas":"uciete',
+      ].join('\n') + '\n');
+      const usuniete = prosby.sprzataj(plikSprz, Date.now(), 365);
+      const poSprz = fs.readFileSync(plikSprz, 'utf8');
+      sprawdz('sprzatanie usuwa prosby starsze niz 365 dni', usuniete === 1 && !poSprz.includes('stara@x.pl') && poSprz.includes('nowa@x.pl'));
+      sprawdz('sprzatanie nie wyrzuca nieczytelnych linii', poSprz.includes('{"czas":"uciete'));
+      sprawdz('bez starych wpisow plik nie jest przepisywany', prosby.sprzataj(plikSprz, Date.now(), 365) === 0);
+      sprawdz('okres przechowywania domyslnie 365 dni', prosby.DNI === 365);
+      sprawdz('CAI_STRONA_ORIGIN domyslnie apex i www',
+        require('node:fs').readFileSync(path.join(__dirname, 'server.js'), 'utf8').includes("'https://content-ai.net,https://www.content-ai.net'"));
     }
 
     console.log('\n  brama OpenSEO sprawdza pakiet');
@@ -1808,6 +1912,25 @@ async function testyPoprawek() {
       sprawdz('admin przechodzi do kontenera', adm.status === 200 && (await adm.text()).includes('KONTENER-OPENSEO'));
       const bez = await fetch(B + '/');
       sprawdz('bez sesji ekran logowania (401)', bez.status === 401 && (await bez.text()).includes('name="login"'));
+      sprawdz('ekran logowania bramy: CSP z frame-ancestors none, X-Frame-Options DENY, nosniff',
+        /frame-ancestors 'none'/.test(bez.headers.get('content-security-policy') || '')
+        && bez.headers.get('x-frame-options') === 'DENY' && bez.headers.get('x-content-type-options') === 'nosniff'
+        && bez.headers.get('referrer-policy') === 'same-origin');
+      sprawdz('strona 402 bramy z pelnym zestawem naglowkow', darm.headers.get('x-frame-options') === 'DENY'
+        && /frame-ancestors 'none'/.test(darm.headers.get('content-security-policy') || ''));
+      const przepuszczona = await fetch(B + '/', { headers: { cookie: cAdmin } });
+      await przepuszczona.text();
+      sprawdz('strona z kontenera: X-Frame-Options SAMEORIGIN, frame-ancestors self, nosniff, Referrer-Policy',
+        przepuszczona.headers.get('x-frame-options') === 'SAMEORIGIN'
+        && przepuszczona.headers.get('content-security-policy') === "frame-ancestors 'self'"
+        && przepuszczona.headers.get('x-content-type-options') === 'nosniff'
+        && przepuszczona.headers.get('referrer-policy') === 'same-origin');
+      const wlasnaCsp = await fetch(B + '/z-wlasna-csp', { headers: { cookie: cAdmin } });
+      await wlasnaCsp.text();
+      sprawdz('naglowek ustawiony przez OpenSEO wygrywa z naszym (nie lamiemy obcej aplikacji)',
+        wlasnaCsp.headers.get('content-security-policy') === "default-src 'self'" && wlasnaCsp.headers.get('x-frame-options') === 'DENY');
+      const logBramy = await fetch(B + '/auth/login', { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'login=darmowy&haslo=zle' });
+      sprawdz('bledne logowanie na bramie: 401 z naglowkami bezpieczenstwa', logBramy.status === 401 && logBramy.headers.get('x-frame-options') === 'DENY');
       const ws = (cookie) => new Promise((r) => {
         const z = http.request({ host: '127.0.0.1', port: brama.address().port, path: '/ws', headers: { cookie, connection: 'Upgrade', upgrade: 'websocket' } });
         z.on('upgrade', (o, g) => { g.destroy(); r('upgrade'); });

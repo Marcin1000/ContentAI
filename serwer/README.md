@@ -127,7 +127,8 @@ Wszystko przez zmienne środowiskowe.
 | `CAI_SEKRET_PLIK` | `serwer/dane/sekret` | plik z sekretem sesji (gdy brak `CAI_SEKRET_SESJI`) |
 | `CAI_WYLOGOWANE` | `serwer/dane/wylogowane.json` | lista sesji wylogowanych ręcznie |
 | `CAI_PROSBY` | `serwer/dane/prosby.jsonl` | prośby o dostęp ze strony produktowej (JSON Lines) |
-| `CAI_STRONA_ORIGIN` | `https://content-ai.net` | skąd wolno wysłać prośbę o dostęp (lista po przecinku) |
+| `CAI_STRONA_ORIGIN` | `https://content-ai.net,https://www.content-ai.net` | skąd wolno wysłać prośbę o dostęp (lista po przecinku) |
+| `CAI_PROSBY_DNI` | `365` | ile dni trzymać prośby o dostęp; starsze wypadają przy starcie i przy zapisie |
 | `CAI_MODELE` | - | modele dopuszczone **oprócz** stałych `MODEL_*` aplikacji (lista po przecinku) |
 | `CAI_MAX_TOKENS` | `32000` | sufit `max_tokens` w `/api` |
 | `CAI_ROZMIARY_GRAFIK` | - | rozmiary grafik **oprócz** `IMG_FORMATS` aplikacji, np. `1792x1024` |
@@ -333,6 +334,13 @@ ciasteczka - po restarcie wszyscy logują się ponownie.
 Token sesji Content AI jest **wycinany** z nagłówka `Cookie` przed przekazaniem żądania
 do kontenera - obca aplikacja go nie widzi.
 
+Brama wysyła też **nagłówki bezpieczeństwa**: jej własne strony (logowanie, 402, błąd
+kontenera) mają ten sam zestaw co aplikacja (CSP z `frame-ancestors 'none'`,
+`X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`), a strony z kontenera minimum,
+które nie łamie obcej aplikacji: `X-Frame-Options: SAMEORIGIN`,
+`Content-Security-Policy: frame-ancestors 'self'`, `nosniff`, `Referrer-Policy: same-origin`.
+Nagłówek ustawiony przez samo OpenSEO wygrywa z naszym.
+
 Brama sprawdza też **pakiet**: kontener nie ma własnego logowania, więc bez tego każde
 konto (także darmowe) miałoby pełne OpenSEO, łącznie z płatnymi badaniami DataForSEO.
 Wchodzi konto z funkcją `openseo` w pakiecie (Premium) albo z rolą admin; reszta dostaje
@@ -504,45 +512,139 @@ objawem byłoby wylogowywanie po każdym restarcie i limity, które nic nie licz
 
 ### Caddy - HTTPS
 
+Jedno źródło prawdy: **`dokumenty/Caddyfile.content-ai`** (strona produktowa
+`content-ai.net`, przekierowanie `www`, aplikacja `app.`, opcjonalnie `seo.`). Ten sam blok
+jest w `dokumenty/ContentAI_Domena_Cloudflare.md` i `dokumenty/ContentAI_obok_Cosmosa.md`;
+wersje z bramą Authelia i z OpenSEO: `brama/Caddyfile.przyklad`, `openseo/Caddyfile.przyklad`.
+
+**Nie nadpisuj `/etc/caddy/Caddyfile`** - na serwerze może stać Cosmos albo inna usługa.
+Zrób kopię, blok globalny `{ servers { ... } }` dopisz na samą górę (Caddy przyjmuje tylko
+jeden, pierwszy w pliku; jeśli już jest, dopisz do niego sekcję `servers`), bloki domen
+Content AI zastąp albo dopisz, potem `caddy validate --config /etc/caddy/Caddyfile
+--adapter caddyfile` i `systemctl reload caddy`. Wymaga Caddy 2.7+.
+
 ```
 {
     servers {
-        # Adresy Cloudflare (gdy stoi przed Caddy). Bez tego {client_ip} to adres
-        # Cloudflare, a licznik prób logowania byłby wspólny dla wielu osób.
-        # Aktualna lista: https://www.cloudflare.com/ips/
+        # Adresy Cloudflare. Tylko z nich Caddy przyjmie adres klienta z naglowka;
+        # od kazdego innego polaczenia {client_ip} to adres samego polaczenia.
+        # Aplikacja (app., szara chmurka) idzie z pominieciem Cloudflare, wiec u niej
+        # {client_ip} to zawsze prawdziwy adres. Aktualna lista: https://www.cloudflare.com/ips/
         trusted_proxies static 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22 2400:cb00::/32 2606:4700::/32 2803:f800::/32 2405:b500::/32 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32
-        client_ip_headers CF-Connecting-IP X-Forwarded-For
+        # Cloudflare zawsze wysyla CF-Connecting-IP; X-Forwarded-For jako zapasowy jest zbedny.
+        client_ip_headers CF-Connecting-IP
     }
 }
 
-contentai.twojadomena.pl {
-    header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+# ── Strona produktowa: jeden adres kanoniczny ───────────────────────────────
+# www przekierowuje na apex: strona ma canonical i hreflang na https://content-ai.net/,
+# a formularz "Popros o dostep" wysyla z jednego pochodzenia (CAI_STRONA_ORIGIN).
+www.content-ai.net {
+    redir https://content-ai.net{uri} permanent
+}
+
+content-ai.net {
     encode zstd gzip
+    root * /srv/contentai/showcase
+
+    # Zrodla generatora strony (szablon.html, teksty.json, czesci/) nie sa strona.
+    @zrodlo path /zrodlo /zrodlo/*
+    respond @zrodlo 404
+
+    # --- Pamiec podreczna ---
+    # HTML: przegladarka zawsze pyta (ETag); krawedz Cloudflare trzyma 10 minut.
+    @html path / /en/ /prywatnosc/ /en/privacy/ *.html
+    header @html Cache-Control "public, max-age=0, must-revalidate"
+    header @html CDN-Cache-Control "max-age=600"
+    # CSS i JS maja w adresie ?v=<skrot tresci> (buduj_strone.py): nowa wersja = nowy adres.
+    @zasoby path /zasoby/*
+    header @zasoby Cache-Control "public, max-age=31536000, immutable"
+    # Fonty maja nazwy bez wersji, wiec 30 dni, nie rok.
+    @fonty path /fonty/*
+    header @fonty Cache-Control "public, max-age=2592000"
+    # Obrazy, ikony, manifest: dzien + tydzien stale-while-revalidate (og-*.png bez wersji w nazwie).
+    @obrazy path /obrazy/* /favicon.ico /favicon.svg /site.webmanifest
+    header @obrazy Cache-Control "public, max-age=86400, stale-while-revalidate=604800"
+    @seo path /robots.txt /sitemap.xml
+    header @seo Cache-Control "public, max-age=3600"
+
+    # --- Bezpieczenstwo ---
+    # Strona nie ma skryptow ani stylow inline i nie laduje nic z obcych serwerow.
+    # connect-src: formularz wysyla POST na https://app.content-ai.net/api/prosba-o-dostep.
+    header {
+        Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://app.content-ai.net; manifest-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+        Cross-Origin-Opener-Policy "same-origin"
+        -Server
+    }
+
+    file_server
+}
+
+# ── Aplikacja ───────────────────────────────────────────────────────────────
+# Logowanie i konta obsluguje sam Content AI - NIE dodawaj tu basic_auth.
+# Naglowki bezpieczenstwa (CSP, X-Frame-Options, nosniff...) wysyla Node; tu tylko HSTS.
+# Bez encode: Node sam pakuje HTML/JS/CSS (brotli albo gzip, wersje spakowane trzyma
+# w pamieci). Jesli wolisz pakowanie w Caddy, dopisz encode zstd gzip i ustaw
+# CAI_KOMPRESJA=0 w /etc/contentai/srodowisko.
+app.content-ai.net {
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        -Server
+    }
     reverse_proxy 127.0.0.1:3100 {
+        # NADPISUJE naglowek od klienta. Bez tej linii X-Real-IP od klienta przechodzi
+        # bez zmian i Node mu ufa (limit prob logowania do ominiecia), a bez naglowka
+        # wszyscy uzytkownicy sa dla Node jednym adresem 127.0.0.1.
         header_up X-Real-IP {client_ip}
     }
 }
+
+# ── OpenSEO (tylko gdy wdrozone, CAI_OPENSEO_PORT=3110) ──────────────────────
+# Port 3110 (brama Content AI), NIGDY 3001 (goly kontener bez logowania).
+# encode ma tu sens: brama oddaje HTML nieskompresowany, bo dokleja do niego motyw.
+#
+# seo.content-ai.net {
+#     encode zstd gzip
+#     header {
+#         Strict-Transport-Security "max-age=31536000; includeSubDomains"
+#         -Server
+#     }
+#     reverse_proxy 127.0.0.1:3110 {
+#         header_up X-Real-IP {client_ip}
+#     }
+# }
 ```
 
-Caddy sam pobierze certyfikat. **Nie dodawaj tu `basicauth`** - logowanie obsługuje
+Caddy sam pobierze certyfikat. **Nie dodawaj tu `basic_auth`** - logowanie obsługuje
 już serwer, a dwa ekrany logowania pod rząd tylko męczą.
 
+- **`header_up X-Real-IP {client_ip}` jest obowiązkowe.** Node czyta `X-Real-IP` tylko
+  wtedy, gdy połączenie przyszło z pętli zwrotnej (Caddy na tej samej maszynie);
+  `X-Forwarded-For` jest ignorowany. Bez tej linii wszyscy użytkownicy są dla Node jednym
+  adresem `127.0.0.1` (8 błędnych prób jednej osoby blokuje logowanie całemu zespołowi),
+  a gołe `reverse_proxy` przepuszcza `X-Real-IP` od klienta, więc da się nim obejść limit.
+  Serwer wypisuje w logu ostrzeżenie, gdy żądanie z pętli zwrotnej przyjdzie bez tego
+  nagłówka (raz na godzinę).
+- **`trusted_proxies` + `client_ip_headers CF-Connecting-IP`**: strona produktowa idzie
+  przez Cloudflare (pomarańczowa chmurka), więc bez tego `{client_ip}` byłby adresem
+  Cloudflare. Aplikacja (`app.`, szara chmurka) łączy się z pominięciem Cloudflare - tam
+  `{client_ip}` to zawsze adres połączenia.
 - **HSTS** ustawia Caddy, bo dotyczy HTTPS, którego Node nie widzi. Bez `preload` na
-  start; `includeSubDomains` obejmuje też `seo.` i stronę produktową, więc wszystkie
-  muszą mieć certyfikat (Caddy robi to sam). Pozostałe nagłówki bezpieczeństwa wysyła
-  Node, więc w Caddy ich nie dubluj.
-- **X-Real-IP**: Node czyta ten nagłówek tylko wtedy, gdy połączenie przyszło z pętli
-  zwrotnej (Caddy na tej samej maszynie). `X-Forwarded-For` jest ignorowany - dawniej
-  inny nagłówek oznaczał nowy licznik prób logowania. `trusted_proxies` sprawia, że
-  `{client_ip}` to prawdziwy adres odwiedzającego, a nie adres Cloudflare. Bez
-  Cloudflare blok globalny `servers` można pominąć - `{client_ip}` to wtedy adres
-  połączenia.
-- **Kompresja**: Node sam pakuje HTML, JS i CSS (brotli albo gzip wg
-  `Accept-Encoding`, z `Vary: Accept-Encoding`). Gdy w Caddy jest `encode zstd gzip`,
-  Caddy nie pakuje drugi raz odpowiedzi, która ma już `Content-Encoding`; żeby nie
-  liczyć tego w Node na darmo, ustaw `CAI_KOMPRESJA=0`.
-- Brama OpenSEO (`seo.twojadomena.pl` → port `CAI_OPENSEO_PORT`) potrzebuje tego samego
-  `header_up X-Real-IP {client_ip}`.
+  start; `includeSubDomains` obejmuje też `seo.` i każdą inną poddomenę, więc wszystkie
+  muszą mieć certyfikat (Caddy robi to sam). Pozostałe nagłówki bezpieczeństwa aplikacji
+  wysyła Node, więc w bloku `app.` ich nie dubluj.
+- **Kompresja**: Node sam pakuje HTML, JS i CSS (brotli albo gzip wg `Accept-Encoding`,
+  z `Vary: Accept-Encoding`, wersje spakowane trzyma w pamięci), więc blok `app.` nie ma
+  `encode`. Jeśli wolisz pakowanie w Caddy, dopisz `encode zstd gzip` i ustaw
+  `CAI_KOMPRESJA=0`.
+- Brama OpenSEO (`seo.` → port `CAI_OPENSEO_PORT`) potrzebuje tego samego
+  `header_up X-Real-IP {client_ip}`; tam `encode` zostaje, bo brama oddaje HTML
+  nieskompresowany.
 
 ### Aktualizacja
 
@@ -550,6 +652,9 @@ już serwer, a dwa ekrany logowania pod rząd tylko męczą.
 cd /srv/contentai && sudo git pull
 sudo systemctl restart contentai
 ```
+
+Gdy wydanie zmienia blok Caddy (`dokumenty/Caddyfile.content-ai`): **najpierw** Caddyfile,
+`caddy validate` i `systemctl reload caddy`, **dopiero potem** `git pull` i restart.
 
 ---
 
@@ -675,10 +780,24 @@ Formularz „Poproś o dostęp" ze strony produktowej. Bez logowania, CORS tylko
 Odpowiedzi (kontrakt formularza `showcase/zasoby/strona.js`): `200 {ok:true}`;
 `400 {ok:false, blad, pole?, komunikat}`, gdzie `blad` to `brak-imienia`, `zly-email`,
 `za-dlugie`, `zly-pakiet`, `zly-jezyk` albo `zle-dane`, a `pole` wskazuje pole formularza;
-`429 {ok:false, blad:'limit'}` (5 próśb na godzinę z jednego adresu, 200 na dobę łącznie).
-`OPTIONS` → 204. Każda odpowiedź na dozwolony `Origin` ma ten sam
-`Access-Control-Allow-Origin`, `Allow-Methods: POST, OPTIONS`, `Allow-Headers: Content-Type`
-i `Vary: Origin`; obcy `Origin` dostaje 403 bez nagłówków CORS. Pola zgody strona nie
-wysyła (wymusza ją przeglądarka), więc rekord ma `zgoda: true` jako fakt wysłania formularza.
-Każda prośba to jedna linia JSON w `CAI_PROSBY` (czas, adres IP, pola formularza).
+`413 {ok:false, blad:'za-duze'}` przy ciele ponad 16 kB (odpowiedź z CORS, a nie zerwane
+połączenie); `429 {ok:false, blad:'limit'}`. `OPTIONS` → 204. Każda odpowiedź na dozwolony
+`Origin` ma ten sam `Access-Control-Allow-Origin`, `Allow-Methods: POST, OPTIONS`,
+`Allow-Headers: Content-Type` i `Vary: Origin`; obcy `Origin` dostaje 403 bez nagłówków CORS.
+
+Limity (liczniki w pamięci procesu):
+
+| Limit | Wartość | Po przekroczeniu |
+|---|---|---|
+| jeden adres | 5 na godzinę | 429 |
+| jedna sieć (`/24` IPv4, `/48` IPv6) | 20 na dobę | 429 |
+| wszystkie prośby, miękki | 200 na dobę | przyjęta z `ponadLimit: true` i ostrzeżeniem w logu - ktoś z wieloma adresami nie zatka formularza wszystkim |
+| wszystkie prośby, twardy | 2000 na dobę | 429 |
+
+Adres to wynik `adresIp()` serwera (`X-Real-IP` tylko od Caddy z pętli zwrotnej,
+`X-Forwarded-For` jest ignorowany). Pole `zgoda` jest opcjonalne: rekord ma `zgoda: true`
+tylko wtedy, gdy formularz je wysłał (`zgoda: true`), w każdym innym razie `false`.
+Każda prośba to jedna linia JSON w `CAI_PROSBY` (czas, adres IP, pola formularza, zgoda,
+pochodzenie). Prośby starsze niż `CAI_PROSBY_DNI` (domyślnie 365 dni) serwer usuwa przy
+starcie i przy zapisie (najwyżej raz na dobę); nieczytelnych linii nie wyrzuca.
 Odczyt: `GET /api/admin/prosby` (rola admin) albo `node serwer/uzytkownicy.js prosby [ile]`.

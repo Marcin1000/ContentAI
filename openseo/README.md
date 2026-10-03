@@ -244,18 +244,29 @@ logują się ponownie. Później już nie.
 
 ## Caddy - HTTPS
 
-Dopisz do `/etc/caddy/Caddyfile` obok wpisu Content AI (pełny wzór: `Caddyfile.przyklad`):
+Dopisz do `/etc/caddy/Caddyfile` obok wpisu Content AI - nie nadpisuj pliku, wpisów innych
+usług nie ruszaj (pełny wzór z blokiem globalnym: `Caddyfile.przyklad`):
 
 ```
 seo.twojadomena.pl {
     encode zstd gzip
-    reverse_proxy 127.0.0.1:3110
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        -Server
+    }
+    reverse_proxy 127.0.0.1:3110 {
+        header_up X-Real-IP {client_ip}
+    }
 }
 ```
 
 ```bash
+caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 sudo systemctl reload caddy
 ```
+
+`header_up X-Real-IP {client_ip}` daje bramie prawdziwy adres klienta do licznika prób
+logowania (ten sam co w Content AI); bez tej linii limit prób da się obejść.
 
 **Port 3110, nie 3001.** 3001 to goły kontener bez logowania; 3110 to brama. To jedyne
 miejsce, w którym łatwo zrobić sobie krzywdę - wpisanie tam 3001 wystawia OpenSEO na świat

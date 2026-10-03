@@ -99,7 +99,12 @@ Wynik wklej do `/srv/authelia/config/users.yml` - wzór w `users.yml.przyklad`.
 
 ### 3. Caddy
 
-Zastąp wpisy Content AI i OpenSEO tym, co jest w `Caddyfile.przyklad`.
+Zastąp wpisy Content AI i OpenSEO tym, co jest w `Caddyfile.przyklad` - **nie nadpisuj
+całego pliku**: wpisy innych usług (np. Cosmosa) zostają, blok globalny `{ servers { ... } }`
+dopisz na samą górę albo do istniejącego bloku globalnego. Potem
+`caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile` i `systemctl reload caddy`.
+Linia `header_up X-Real-IP {client_ip}` jest obowiązkowa także za bramą: daje serwerowi
+prawdziwy adres klienta.
 
 ### 4. Content AI
 

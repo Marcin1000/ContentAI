@@ -124,6 +124,35 @@ function naglowkiWDol(naglowki) {
   return out;
 }
 
+// ─── Naglowki bezpieczenstwa ──────────────────────────────────────────────────
+// Dwa zestawy:
+//   - WLASNE: strony samej bramy (logowanie z haslem, 402, blad kontenera, motyw,
+//     kroje) - ten sam zestaw co aplikacja; wpinajacy podaje go z server.js,
+//   - PRZEPUSZCZANE: strony z kontenera. Pelnej CSP obcej aplikacji nie
+//     narzucamy (moglaby ja polozyc), tylko minimum: zakaz osadzania w obcej
+//     ramce, nosniff i Referrer-Policy. Naglowek ustawiony przez OpenSEO wygrywa
+//     z naszym (writeHead nadpisuje setHeader o tej samej nazwie).
+
+const WLASNE_ZAPASOWE = {
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'same-origin',
+  'Cross-Origin-Opener-Policy': 'same-origin',
+};
+
+const PRZEPUSZCZANE = {
+  'Content-Security-Policy': "frame-ancestors 'self'",
+  'X-Frame-Options': 'SAMEORIGIN',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'same-origin',
+};
+
+function ustawNaglowki(res, zestaw) {
+  for (const k of new Set([...Object.keys(WLASNE_ZAPASOWE), ...Object.keys(PRZEPUSZCZANE)])) res.removeHeader(k);
+  for (const [k, v] of Object.entries(zestaw)) res.setHeader(k, v);
+}
+
 // ─── Przepuszczanie zadan ─────────────────────────────────────────────────────
 
 function przepusc(req, res, konf, adresIp) {
@@ -163,7 +192,9 @@ function przepusc(req, res, konf, adresIp) {
   zadanie.on('error', (e) => {
     console.error('[openseo]', e.message);
     if (!res.headersSent) {
-      res.writeHead(502, { 'Content-Type': 'text/html; charset=utf-8' });
+      // Strona bledu jest nasza, nie kontenera - pelny zestaw naglowkow.
+      ustawNaglowki(res, konf.naglowkiWlasne || WLASNE_ZAPASOWE);
+      res.writeHead(502, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
       res.end(stronaBledu(konf));
     } else {
       res.end();
@@ -265,10 +296,14 @@ function utworz(konf, zaleznosci) {
   } catch (e) {
     console.warn('[openseo] brak app/openseo-motyw.css - strony pojda bez palety Content AI');
   }
-  const pelnaKonf = { ...konf, wersja: motyw ? motyw.length : 0 };
+  const naglowkiWlasne = zaleznosci.naglowkiBezpieczenstwa || WLASNE_ZAPASOWE;
+  const pelnaKonf = { ...konf, wersja: motyw ? motyw.length : 0, naglowkiWlasne };
 
   async function obsluz(req, res) {
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    // Domyslnie wszystko, co odpowiada sama brama, dostaje pelny zestaw;
+    // przed przepuszczeniem do kontenera zamieniamy go na minimum.
+    ustawNaglowki(res, naglowkiWlasne);
 
     // Kroje Content AI dla OpenSEO - te same pliki co aplikacja.
     const kroj = /^\/__cai\/fonty\/([a-z0-9-]+\.woff2)$/.exec(url.pathname);
@@ -312,6 +347,7 @@ function utworz(konf, zaleznosci) {
         .end(stronaBezPakietu(req));
     }
 
+    ustawNaglowki(res, PRZEPUSZCZANE);
     return przepusc(req, res, pelnaKonf, adresIp(req));
   }
 
@@ -332,4 +368,6 @@ module.exports = {
   naglowkiDoGory,
   naglowkiWDol,
   HOP_BY_HOP,
+  WLASNE_ZAPASOWE,
+  PRZEPUSZCZANE,
 };

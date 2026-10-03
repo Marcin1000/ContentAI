@@ -345,18 +345,45 @@ caddyserver.com/docs/install.)
 nano /etc/caddy/Caddyfile
 ```
 
-Usuń **całą** zawartość (przytrzymaj **Ctrl+K**, aż plik będzie pusty) i wpisz:
+**Na świeżo zainstalowanym Caddy** plik zawiera tylko przykład `:80 { ... }` - usuń go
+(przytrzymaj **Ctrl+K**, aż plik będzie pusty). **Jeśli na serwerze działa już coś innego
+przez Caddy (np. Cosmos), niczego nie usuwaj** - postępuj według
+`dokumenty/ContentAI_obok_Cosmosa.md`, sekcja 4.
+
+Wpisz (podmień `contentai.twojadomena.pl` na swój adres):
 
 ```
+{
+    servers {
+        # Tylko gdy przed serwerem stoi Cloudflare z pomarańczową chmurką; bez niego
+        # ten blok niczego nie zmienia. Lista adresów: https://www.cloudflare.com/ips/
+        trusted_proxies static 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22 2400:cb00::/32 2606:4700::/32 2803:f800::/32 2405:b500::/32 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32
+        client_ip_headers CF-Connecting-IP
+    }
+}
+
 contentai.twojadomena.pl {
-    encode zstd gzip
-    reverse_proxy 127.0.0.1:3100
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        -Server
+    }
+    reverse_proxy 127.0.0.1:3100 {
+        # Prawdziwy adres klienta dla licznika prób logowania. NADPISUJE nagłówek
+        # od klienta - bez tej linii limit prób da się obejść, a wszyscy dzielą jeden licznik.
+        header_up X-Real-IP {client_ip}
+    }
 }
 ```
 
-Zapisz: **Ctrl+O**, Enter, **Ctrl+X**. Przeładuj:
+Pełny wariant dla domeny `content-ai.net` (strona produktowa, przekierowanie `www`,
+nagłówki i pamięć podręczna strony) jest w **`dokumenty/Caddyfile.content-ai`**, a jak go
+ustawić z Cloudflare - w `dokumenty/ContentAI_Domena_Cloudflare.md`.
+
+Zapisz: **Ctrl+O**, Enter, **Ctrl+X**. Sprawdź i przeładuj (potrzebny Caddy 2.7 lub nowszy -
+`caddy version`):
 
 ```bash
+caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 systemctl reload caddy
 ```
 
@@ -514,6 +541,10 @@ systemctl restart contentai
 ```
 
 Aktualizacja **nikogo nie wylogowuje** - sesje przeżywają restart.
+
+> Gdy wydanie zmienia konfigurację Caddy (opis zmian albo `dokumenty/Caddyfile.content-ai`),
+> **najpierw** popraw Caddyfile, `caddy validate` i `systemctl reload caddy`, **dopiero potem**
+> `git pull` i restart. Inaczej przez chwilę nowa wersja serwera działa ze starym Caddy.
 
 ### Kopia zapasowa
 

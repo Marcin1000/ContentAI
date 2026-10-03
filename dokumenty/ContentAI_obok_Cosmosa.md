@@ -159,35 +159,155 @@ Najprostszy przypadek. **Nie nadpisuj pliku Caddy - dopisz do niego.**
 nano /etc/caddy/Caddyfile
 ```
 
-Plik ma już wpis Cosmosa. Dopisz **pod nim** kolejne bloki, nie ruszając pierwszego.
+Plik ma już wpis Cosmosa. **Nie ruszasz go** - dopisujesz bloki Content AI, a jeśli
+były już wpisy `content-ai.net` / `app.content-ai.net` z wcześniejszej wersji tej
+instrukcji, **zastępujesz** je nowymi.
 
 Content AI to **dwa adresy**, nie jeden: strona produktowa (zwykłe pliki, żadnej aplikacji)
-i sama aplikacja za logowaniem. Na własnej domenie wygląda to tak:
+i sama aplikacja za logowaniem, plus przekierowanie `www`. Gotowe bloki są w repozytorium:
+**`dokumenty/Caddyfile.content-ai`** (jedno źródło prawdy; ten sam blok jest w
+`ContentAI_Domena_Cloudflare.md` i `serwer/README.md`).
+
+Jak wkleić, żeby nie zepsuć Cosmosa:
+
+1. Kopia: `cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.kopia-$(date +%F)`.
+2. **Blok globalny** (nawiasy `{ }` bez nazwy domeny) może być tylko jeden i musi stać
+   na samej górze pliku. Jeśli Cosmos już go ma, dopisz do niego sekcję `servers { ... }`;
+   jeśli nie - wklej go jako pierwszy, nad wpisem Cosmosa. `trusted_proxies` dotyczy
+   wtedy wszystkich adresów w pliku, także Cosmosa - to bezpieczne: Caddy przyjmie adres
+   klienta z nagłówka wyłącznie od Cloudflare.
+3. Bloki domen Content AI wklej **pod** wpisem Cosmosa.
+
+Układ pliku po zmianie:
 
 ```
+# ── blok globalny: jeden, na samej górze (z dokumenty/Caddyfile.content-ai) ──
+{
+    servers {
+        trusted_proxies static ...adresy Cloudflare...
+        client_ip_headers CF-Connecting-IP
+    }
+}
+
 # ── Cosmos: to, co już masz ──────────────────────────────────────────────────
 cosmos.twojadomena.pl {
     reverse_proxy 127.0.0.1:3000
 }
 
-# ── Content AI: strona produktowa ────────────────────────────────────────────
-# Same pliki z katalogu showcase - nie zajmuje żadnego portu.
-content-ai.net, www.content-ai.net {
+# ── Content AI: www.content-ai.net, content-ai.net, app.content-ai.net ──────
+#    (bloki z dokumenty/Caddyfile.content-ai, w całości)
+```
+
+Pełna treść do wklejenia (blok globalny + bloki Content AI):
+
+```
+{
+    servers {
+        # Adresy Cloudflare. Tylko z nich Caddy przyjmie adres klienta z naglowka;
+        # od kazdego innego polaczenia {client_ip} to adres samego polaczenia.
+        # Aplikacja (app., szara chmurka) idzie z pominieciem Cloudflare, wiec u niej
+        # {client_ip} to zawsze prawdziwy adres. Aktualna lista: https://www.cloudflare.com/ips/
+        trusted_proxies static 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22 2400:cb00::/32 2606:4700::/32 2803:f800::/32 2405:b500::/32 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32
+        # Cloudflare zawsze wysyla CF-Connecting-IP; X-Forwarded-For jako zapasowy jest zbedny.
+        client_ip_headers CF-Connecting-IP
+    }
+}
+
+# ── Strona produktowa: jeden adres kanoniczny ───────────────────────────────
+# www przekierowuje na apex: strona ma canonical i hreflang na https://content-ai.net/,
+# a formularz "Popros o dostep" wysyla z jednego pochodzenia (CAI_STRONA_ORIGIN).
+www.content-ai.net {
+    redir https://content-ai.net{uri} permanent
+}
+
+content-ai.net {
     encode zstd gzip
     root * /srv/contentai/showcase
+
+    # Zrodla generatora strony (szablon.html, teksty.json, czesci/) nie sa strona.
+    @zrodlo path /zrodlo /zrodlo/*
+    respond @zrodlo 404
+
+    # --- Pamiec podreczna ---
+    # HTML: przegladarka zawsze pyta (ETag); krawedz Cloudflare trzyma 10 minut.
+    @html path / /en/ /prywatnosc/ /en/privacy/ *.html
+    header @html Cache-Control "public, max-age=0, must-revalidate"
+    header @html CDN-Cache-Control "max-age=600"
+    # CSS i JS maja w adresie ?v=<skrot tresci> (buduj_strone.py): nowa wersja = nowy adres.
+    @zasoby path /zasoby/*
+    header @zasoby Cache-Control "public, max-age=31536000, immutable"
+    # Fonty maja nazwy bez wersji, wiec 30 dni, nie rok.
+    @fonty path /fonty/*
+    header @fonty Cache-Control "public, max-age=2592000"
+    # Obrazy, ikony, manifest: dzien + tydzien stale-while-revalidate (og-*.png bez wersji w nazwie).
+    @obrazy path /obrazy/* /favicon.ico /favicon.svg /site.webmanifest
+    header @obrazy Cache-Control "public, max-age=86400, stale-while-revalidate=604800"
+    @seo path /robots.txt /sitemap.xml
+    header @seo Cache-Control "public, max-age=3600"
+
+    # --- Bezpieczenstwo ---
+    # Strona nie ma skryptow ani stylow inline i nie laduje nic z obcych serwerow.
+    # connect-src: formularz wysyla POST na https://app.content-ai.net/api/prosba-o-dostep.
+    header {
+        Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://app.content-ai.net; manifest-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+        Cross-Origin-Opener-Policy "same-origin"
+        -Server
+    }
+
     file_server
 }
 
-# ── Content AI: aplikacja ────────────────────────────────────────────────────
+# ── Aplikacja ───────────────────────────────────────────────────────────────
+# Logowanie i konta obsluguje sam Content AI - NIE dodawaj tu basic_auth.
+# Naglowki bezpieczenstwa (CSP, X-Frame-Options, nosniff...) wysyla Node; tu tylko HSTS.
+# Bez encode: Node sam pakuje HTML/JS/CSS (brotli albo gzip, wersje spakowane trzyma
+# w pamieci). Jesli wolisz pakowanie w Caddy, dopisz encode zstd gzip i ustaw
+# CAI_KOMPRESJA=0 w /etc/contentai/srodowisko.
 app.content-ai.net {
-    encode zstd gzip
-    reverse_proxy 127.0.0.1:3100
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        -Server
+    }
+    reverse_proxy 127.0.0.1:3100 {
+        # NADPISUJE naglowek od klienta. Bez tej linii X-Real-IP od klienta przechodzi
+        # bez zmian i Node mu ufa (limit prob logowania do ominiecia), a bez naglowka
+        # wszyscy uzytkownicy sa dla Node jednym adresem 127.0.0.1.
+        header_up X-Real-IP {client_ip}
+    }
 }
+
+# ── OpenSEO (tylko gdy wdrozone, CAI_OPENSEO_PORT=3110) ──────────────────────
+# Port 3110 (brama Content AI), NIGDY 3001 (goly kontener bez logowania).
+# encode ma tu sens: brama oddaje HTML nieskompresowany, bo dokleja do niego motyw.
+#
+# seo.content-ai.net {
+#     encode zstd gzip
+#     header {
+#         Strict-Transport-Security "max-age=31536000; includeSubDomains"
+#         -Server
+#     }
+#     reverse_proxy 127.0.0.1:3110 {
+#         header_up X-Real-IP {client_ip}
+#     }
+# }
 ```
 
+Sprawdź i przeładuj - `validate` wyłapie błąd, zanim zepsuje Cosmosa:
+
 ```bash
+caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 systemctl reload caddy
 ```
+
+> **Kolejność przy aktualizacji: najpierw Caddy, potem kod.** Nowa wersja Content AI
+> ufa nagłówkowi `X-Real-IP` tylko od Caddy (linia `header_up X-Real-IP {client_ip}`).
+> Bez niej wszyscy użytkownicy dzielą jeden licznik prób logowania. Najpierw ten
+> Caddyfile i `reload`, dopiero potem `git pull` i restart `contentai`.
 
 Rekordy DNS, tryb SSL i ustawienia po stronie Cloudflare - w tym dwie pułapki, z których
 każda kończy się błędem nic nie tłumaczącym - opisuje osobno
@@ -226,22 +346,12 @@ apt update && apt install -y caddy
 nano /etc/caddy/Caddyfile
 ```
 
-Zawartość - strona produktowa i aplikacja, Cosmosa nie ruszamy:
-
-```
-content-ai.net, www.content-ai.net {
-    encode zstd gzip
-    root * /srv/contentai/showcase
-    file_server
-}
-
-app.content-ai.net {
-    encode zstd gzip
-    reverse_proxy 127.0.0.1:3100
-}
-```
+Na świeżo zainstalowanym Caddy plik zawiera tylko przykład `:80 { ... }` - usuń go.
+Wklej **całą** treść z `dokumenty/Caddyfile.content-ai` (blok globalny + bloki domen,
+ta sama co w wariancie A). Cosmosa nie dopisujemy.
 
 ```bash
+caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 systemctl reload caddy
 ufw allow 80/tcp && ufw allow 443/tcp
 ```
@@ -351,6 +461,8 @@ Po instalacji sprawdź **obie** aplikacje - nie tylko nową.
 | 6 | `systemctl restart contentai`, odśwież Content AI | **Nadal zalogowany** |
 | 7 | Odśwież Cosmosa | **Nadal zalogowany** - restart Content AI go nie dotknął |
 | 8 | `systemctl status cosmos contentai` | Obie `active (running)` |
+| 9 | Otwórz `www.content-ai.net` | Przekierowanie na `content-ai.net` |
+| 10 | `journalctl -u contentai -n 50 --no-pager \| grep -i x-real-ip` | Pusto - Caddy przekazuje adres klienta |
 
 Punkt 6 sprawdza, czy katalog `serwer/dane` należy do właściwego użytkownika. Jeśli
 wyrzuca do logowania:
@@ -379,6 +491,8 @@ Osobno, bo to osobne repozytoria:
 ```bash
 cd /srv/contentai && git pull && systemctl restart contentai
 cd /opt/cosmos    && git pull && systemctl restart cosmos
+# Gdy wydanie zmienia blok Caddy (patrz dokumenty/Caddyfile.content-ai): NAJPIERW
+# Caddyfile + caddy validate + systemctl reload caddy, dopiero potem te polecenia.
 ```
 
 Aktualizacja Content AI nikogo nie wylogowuje - sesje przeżywają restart.
