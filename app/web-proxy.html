@@ -2296,6 +2296,13 @@ body.is-mobile .form-actions-sticky { border-top-color: transparent; }
 .seo-pusty b { font-size: var(--t-md, 15px); color: var(--c-tekst); }
 .seo-pusty p { margin: 0; font-size: var(--t-sm); line-height: 1.5; color: var(--c-tekst-2); }
 .seo-pusty-akcje { display: flex; flex-wrap: wrap; gap: var(--s-8); margin-top: var(--s-4); }
+/* Ekrany dotykowe: :hover zostaje po dotknieciu na pozycji, przez ktora przeszedl palec (np. "Integracja CMS"
+   w Koncie wygladala na wybrana). Podswietlenie tylko w chwili nacisniecia; fokus z klawiatury bez zmian. */
+@media (hover: none) {
+  .settings-item:hover:not(:focus-visible), .ctx-item:hover:not(:focus-visible),
+  .grupa-menu .btn-secondary:hover:not(:focus-visible), .grupa-menu .repurpose-item:hover:not(:focus-visible) { background: transparent; }
+  .settings-item:active, .ctx-item:active, .grupa-menu .btn-secondary:active, .grupa-menu .repurpose-item:active { background: var(--c-najazd); }
+}
 
 /* R3-04: Generator grafik na telefonie - nic nie wychodzi poza ekran */
 body.is-mobile #img-panel { top: 48px !important; bottom: var(--dol) !important; padding: var(--s-16) var(--s-16) var(--s-24); }
