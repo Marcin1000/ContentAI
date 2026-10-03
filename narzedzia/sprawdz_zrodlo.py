@@ -558,6 +558,32 @@ KONTROLE = [
     ("R2/blokady-pakietu", "Grafika i Audio spoza pakietu oznaczone w menu zadan",
      "document.querySelectorAll('[onclick=\"openAudioPanel()\"]').forEach(", ".btn-module[onclick=", ("proxy",)),
 
+    # ── runda 3: uklad i wyglad (A) ──
+    ("R3/start-srodek", "ekran startowy wysrodkowany w kolumnie wyniku",
+     ".start-ekran { margin-inline: auto; max-width: 720px; }", None, None),
+    ("R3/samokorekta-switch", "Samokorekta jako przelacznik z opisem",
+     'role="switch" aria-checked="false" aria-describedby="samokorekta-opis"', None, None),
+    ("R3/ton-w-briefie", "Ton i Jezyk w glownym briefie, nie w zaawansowanych",
+     '<div class="row2 row2-ton">', None, None),
+    ("R3/tabela-telefon", "tabela w artykule na telefonie przewijana w bok z cieniem",
+     "body.is-mobile .article table { display: block; width: max-content;", None, None),
+    ("R3/wiersz-meta", "telefon: skrot statystyk w wierszu meta, pelna lista w arkuszu",
+     'onclick="przelaczStatystyki()"', None, None),
+    ("R3/paski-czytanie", "telefon: paski chowane przy czytaniu (transform)",
+     "body.is-mobile.paski-ukryte .mobile-nav { transform: translateY(100%); }", None, None),
+    # Drugie dotkniecie "Tworz"/"Wiecej" trafialo w pozycje arkusza i uruchamialo platna akcje.
+    ("R3/arkusz-nad-paskiem", "arkusz menu nad paskiem akcji (przycisk zostaje widoczny)",
+     "body.is-mobile .grupa-menu { bottom: var(--nad-paskami,", None, None),
+    ("R3/blokada-przewijania", "przewijanie w arkuszu nie przewija strony pod spodem",
+     "html:has(body.is-mobile.inspektor-otwarty), html:has(body.is-mobile.inspektor-otwarty) body,", None, None),
+    ("R3/zrodla-zwin", "zrodla zwiniete do 5 z przyciskiem tylko na ekran",
+     "przycisk.setAttribute('data-tylko-ekran', '');", None, None),
+    # Tytul arkusza (R3-14) liczyl sie jako "cos w grupie" - Tworz/Eksport/Wiecej swiecily przed artykulem.
+    ("R3/grupy-bez-tytulu", "tytul arkusza nie pokazuje pustej grupy w pasku",
+     "!e.classList.contains('grupa-sep') && !e.classList.contains('arkusz-tytul')", None, None),
+    ("R3/serp-bez-auto", "panel SERP nie otwiera sie sam po generowaniu",
+     "function renderSerpPanel(pokaz) {", None, None),
+
     # ── warstwa reskinu ──
     # Splash trzymal gotowa aplikacje jeszcze 2,4 s (stale 1900 ms + zanikanie) i zjadal
     # pierwsze dotkniecie. Motyw i jezyk ustawia teraz skrypt w <head>, wiec nie ma czego

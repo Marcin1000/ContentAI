@@ -2246,6 +2246,341 @@ body.is-mobile #audio-bar:not(.inline) { left: var(--s-8); right: var(--s-8); pa
 body:not(.is-mobile) .h-stats { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
 body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; }
 }
+@layer widoki {
+/* ══ RUNDA 3 ══════════════════════════════════════════════════════════════
+   R3-01..R3-14 (AG/runda3/ZLECENIE-R3.md), R3-07 wg specu agencja-ux. */
+
+/* R3-01: komputer - obszar roboczy wysrodkowany w dostepnej kolumnie (start, generowanie,
+   wynik). Przy otwartym panelu kontroli kolumna jest wezsza, srodek liczy sie w niej.
+   Pasek wyniku trzyma sie kolumny artykulu (spec ux R3-01). */
+:root { --kolumna-wyniku: calc(var(--tresc-max) + 2 * var(--s-56, 56px) + 2px); }
+.placeholder { align-items: center; }
+body:not(.is-mobile) .placeholder { padding-top: clamp(48px, 12vh, 160px); }
+.start-ekran { margin-inline: auto; max-width: 720px; }
+body:not(.is-mobile) .output-bar { padding-inline: max(var(--s-16), calc((100% - var(--kolumna-wyniku)) / 2)); }
+@media (min-width: 1600px) { body:not(.is-mobile) #tab-history.active { max-width: 1200px; margin-inline: auto; width: 100%; } }
+
+/* R3-02: Samokorekta - wiersz przelacznika (spec marki): etykieta 13/600 i opis 12 px po lewej, przelacznik
+   34x20 jak przy "Szukaj w sieci" po prawej; caly wiersz klikalny (::before przycisku pokrywa wiersz),
+   stan pokazuje sam przelacznik - bez bursztynowego tla wiersza (decyzja koordynatora). */
+.samokorekta-wiersz { position: relative; display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 48px;
+  margin-top: var(--s-4); padding: var(--s-6) calc(34px + var(--s-12) + var(--s-8)) var(--s-6) var(--s-8); border-radius: var(--r-sm);
+  transition: background-color var(--m-1) var(--e-std); }
+.samokorekta-wiersz:hover { background: var(--c-najazd); }
+.samokorekta-wiersz:has(.btn-premium:focus-visible) { outline: 2px solid var(--c-fokus); outline-offset: 2px; }
+.samokorekta-wiersz .btn-premium { position: static; display: block; width: auto; min-height: 0; height: auto; margin: 0; padding: 0; border: 0; background: none;
+  font-size: var(--t-sm); font-weight: var(--g-mocny); line-height: 1.3; color: var(--c-tekst); text-align: left; white-space: normal; }
+.samokorekta-wiersz .btn-premium:hover, .samokorekta-wiersz .btn-premium.active, .samokorekta-wiersz .btn-premium:active { background: none; border: 0; color: var(--c-tekst); font-weight: var(--g-mocny); transform: none; }
+.samokorekta-wiersz .btn-premium:focus-visible { outline: none; }
+/* pole klikniecia: caly wiersz */
+.samokorekta-wiersz .btn-premium::before { content: ""; position: absolute; inset: 0; z-index: 1; width: auto; height: auto; margin: 0; border: 0; border-radius: inherit;
+  background: none; flex: none; }
+/* przelacznik: tor z galka w tle (pozycja galki animowana) */
+.samokorekta-wiersz .btn-premium::after { content: ""; position: absolute; right: var(--s-8); top: 50%; width: 34px; height: 20px; margin-top: -10px; box-sizing: border-box;
+  border: 1px solid var(--c-ramka); border-radius: var(--r-pelny); background-color: var(--c-wcisk);
+  background-image: radial-gradient(circle at center, var(--c-tekst-2) 0 6.5px, transparent 7px); background-size: 18px 18px; background-repeat: no-repeat; background-position: 0 50%;
+  transition: background-color var(--m-2) var(--e-std), border-color var(--m-2) var(--e-std), background-position var(--m-2) var(--e-std); }
+.samokorekta-wiersz .btn-premium.active::after, :root[data-theme="light"] .samokorekta-wiersz .btn-premium.active::after {
+  background-color: var(--c-przel-wl); border-color: var(--c-przel-wl); background-position: 100% 50%;
+  background-image: radial-gradient(circle at center, var(--c-pole) 0 6.5px, transparent 7px); }
+.samokorekta-opis { font-size: var(--t-xs); line-height: 1.35; color: var(--c-tekst-3); }
+body.is-mobile .samokorekta-wiersz { min-height: 44px; margin-top: 0; }
+@media (prefers-reduced-motion: reduce) { .samokorekta-wiersz .btn-premium::after { transition: none; } }
+
+/* R3-04: Generator grafik na telefonie - nic nie wychodzi poza ekran */
+body.is-mobile #img-panel { top: 48px !important; bottom: var(--dol) !important; padding: var(--s-16) var(--s-16) var(--s-24); }
+#img-ref-empty input, #img-panel input, #img-panel select, #img-panel textarea { min-width: 0; max-width: 100%; }
+body.is-mobile #img-formats { max-height: none !important; }
+body.is-mobile .img-fmt-btn { height: auto; min-height: var(--h-dotyk); padding: var(--s-8) var(--s-12); white-space: normal; text-align: left; line-height: 1.35; }
+body.is-mobile #img-panel-grid > div { min-width: 0; }
+
+/* R3-05: tabele w artykule - liczby i lata w calosci, na telefonie pojemnik przewijany z cieniem przy krawedzi */
+.article table { font-variant-numeric: tabular-nums; }
+.article th, .article td { overflow-wrap: normal; word-break: normal; hyphens: manual; }
+body.is-mobile .article table { display: block; width: max-content; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch; border: 0;
+  background:
+    linear-gradient(to right, var(--c-tlo) 30%, transparent) left center / 32px 100% no-repeat local,
+    linear-gradient(to left, var(--c-tlo) 30%, transparent) right center / 32px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--c-cien-przewijania, rgba(0, 0, 0, .28)), transparent) left center / 12px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, var(--c-cien-przewijania, rgba(0, 0, 0, .28)), transparent) right center / 12px 100% no-repeat scroll; }
+body.is-mobile .article th, body.is-mobile .article td { min-width: 6.5em; max-width: 16em; }
+body.is-mobile .article td { background-color: transparent; }
+
+/* R3-06: pasek statystyk na komputerze zawija sie w wiersze (bez przewijania); na telefonie
+   skrot w wierszu meta i pelna lista w arkuszu "Statystyki" (R3-07) */
+.article-stats { overflow: visible; }
+.arkusz-tytul, .stat-skrot, .statystyki-zaslona { display: none; }
+
+/* R3-10: ikona przy tekscie zawsze z odstepem, takze gdy skrypt pokazuje przycisk przez display:block */
+/* (tekst to wezel tekstowy, wiec :last-child nie odroznia samej ikony - przyciski z sama ikona nie dostaja display:block ze skryptu) */
+:is(button, a, .poz-menu, .panel-akcja, .repurpose-item)[style*="display: block"] > svg.ikona:first-child,
+:is(button, a, .poz-menu, .panel-akcja, .repurpose-item)[style*="display: inline-block"] > svg.ikona:first-child,
+:is(button, a, .poz-menu, .panel-akcja, .repurpose-item)[style*="display:block"] > svg.ikona:first-child { margin-inline-end: var(--s-6); vertical-align: -3px; }
+/* etykiety rodzaju uwagi w Faktach (styl wpisany w skrypcie) - pismo min. 12 px */
+#fakty-wynik [style*="font-size:11px"] { font-size: 12px !important; }
+/* przelaczniki w menu konta (PL | EN, Ciemny | Jasny): pole dotyku 44 px */
+body.is-mobile .settings-menu .segmenty button { min-width: var(--h-dotyk); justify-content: center; }
+
+/* R3-12: zrodla - w aplikacji 5 pozycji i "Pokaz wszystkie (n)"; eksport ma zawsze wszystkie */
+.zrodla-box.zwiniete > ul > li:nth-child(n+6) { display: none; }
+.zrodla-box .zrodla-wiecej { display: inline-flex; margin: var(--s-4) 0 0; font-size: var(--t-sm); }
+.zrodla-box .zrodlo-data { color: var(--c-tekst-3); white-space: nowrap; }
+body.is-mobile .zrodla-box .zrodla-wiecej { min-height: var(--h-dotyk); }
+
+/* ══ TELEFON: ekran wyniku (R3-07, spec agencja-ux; R3-06, R3-08, R3-13) ══ */
+body.is-mobile { --nav-h: 56px; --gora-h: 48px; --meta-h: 44px; }
+/* Paski u gory przyklejone do ekranu: zaden przodek nie moze byc kontenerem przewijania */
+html:has(body.is-mobile), body.is-mobile { overflow-x: clip; overflow-y: visible; }
+html:has(body.is-mobile) { scroll-padding-top: calc(var(--gora-h, 48px) + var(--meta-h, 44px)); scroll-padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
+body.is-mobile .layout, body.is-mobile .gen-split, body.is-mobile .output-col, body.is-mobile .output-scroll { overflow-x: clip; overflow-y: visible; }
+body.is-mobile .layout { height: auto; }
+/* naglowek 48 px: znak 24, nazwa tylko w Briefie i od 390 px, segment Brief | Wynik 36 px (dotyk 44) */
+body.is-mobile .topbar { position: sticky; top: 0; z-index: 320; height: var(--gora-h); padding: 0 var(--s-12); }
+body.is-mobile .topbar .ca-mark svg { width: 24px; height: 24px; }
+body.is-mobile.widok-wynik .topbar-app { display: none; }
+@media (max-width: 389px) { body.is-mobile .topbar-app { display: none; } }
+body.is-mobile .mobilny-widok { padding: 2px; }
+body.is-mobile .mobilny-widok button { position: relative; height: 32px; min-height: 0; padding: 0 var(--s-12); font-size: 13px; font-weight: var(--g-mocny); }
+body.is-mobile .mobilny-widok button::before { content: ""; position: absolute; inset: -6px -1px; }
+/* stan wyniku: kropka przy "Wynik" zamiast odznaki "gotowe" */
+body.is-mobile #widok-wynik::after { content: ""; position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: transparent; }
+body.is-mobile:has(#out-badge.running) #widok-wynik::after { background: var(--c-akcent); animation: kropka-puls 1.2s var(--e-std) infinite; }
+body.is-mobile:has(#out-badge.ready) #widok-wynik::after { background: var(--c-sukces); }
+body.is-mobile:has(#out-badge.uwaga) #widok-wynik::after { background: var(--c-uwaga); }
+@keyframes kropka-puls { 50% { opacity: .35; } }
+/* R3-08: odznaka pakietu wg marki - mala, neutralna (pakiet to stan, nie decyzja); w Wyniku ukryta, zostaje w Koncie */
+body.is-mobile #pakiet-badge { position: relative; height: 24px; min-height: 0; padding: 0 var(--s-8); border: 0; border-radius: var(--r-pelny);
+  background: var(--c-wcisk); color: var(--c-tekst-2); font-size: var(--t-xs); font-weight: var(--g-mocny); line-height: 1; gap: 0; box-shadow: none; }
+body.is-mobile #pakiet-badge::after { content: ""; position: absolute; inset: -10px -6px; }
+body.is-mobile.widok-wynik #pakiet-badge { display: none !important; }
+
+/* wiersz meta 44 px pod naglowkiem: skrot statystyk + przelacznik wersji; "gotowe" tylko dla czytnika */
+body.is-mobile .output-bar { position: sticky; top: var(--gora-h); z-index: 310; min-height: 0; padding: 0; gap: 0; background: transparent; border: 0; }
+body.is-mobile .output-bar .output-bar-left { flex: 1 1 auto; min-width: 0; height: var(--meta-h); padding: 0 var(--s-12); gap: var(--s-8);
+  background: var(--c-panel); border-bottom: 1px solid var(--c-linia); }
+body.is-mobile #out-badge { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; padding: 0; border: 0; }
+body.is-mobile .stat-skrot { position: relative; display: inline-flex; align-items: center; gap: var(--s-4); height: 32px; min-width: 0; padding: 0 var(--s-4); margin-left: calc(var(--s-4) * -1);
+  border: 0; border-radius: var(--r-sm); background: none; color: var(--c-tekst-2); font-family: var(--f-ui); font-size: 13px; font-weight: var(--g-sredni);
+  font-variant-numeric: tabular-nums; white-space: nowrap; cursor: pointer; }
+body.is-mobile .stat-skrot::before { content: ""; position: absolute; inset: -6px 0; }
+body.is-mobile .stat-skrot .ikona { width: 16px; height: 16px; color: var(--c-tekst-3); }
+body.is-mobile:not(:has(#article-stats.show)) .stat-skrot { display: none; }
+body.is-mobile .versions-bar.show { margin-left: auto; align-items: center; height: 32px; flex: none; }
+body.is-mobile .versions-bar .ver-label { display: none; }
+/* podpis "Samokorekta" przed segmentem Przed | Po (od 390 px) */
+.versions-bar .ver-podpis { display: none; }
+@media (min-width: 390px) { body.is-mobile .versions-bar.show.wersje-samokorekty .ver-podpis { display: inline; margin: 0 var(--s-6) 0 var(--s-4); font-size: 12px; color: var(--c-tekst-3); white-space: nowrap; } }
+body.is-mobile .versions-bar .ver-btn { position: relative; height: 28px; min-height: 0; padding: 0 var(--s-10, 10px); font-size: 13px; }
+body.is-mobile .versions-bar .ver-btn::before { content: ""; position: absolute; inset: -8px 0; }
+/* krotkie nazwy wersji na telefonie (pelne w title i aria-label) */
+.versions-bar .ver-krotka { display: none; }
+body.is-mobile .versions-bar .ver-btn .ver-pelna { display: none; }
+body.is-mobile .versions-bar .ver-btn .ver-krotka { display: inline; }
+body.is-mobile .versions-bar { max-width: 66%; }
+body.is-mobile .versions-bar .ver-btn { min-width: var(--h-dotyk); justify-content: center; }
+body.is-mobile .versions-bar .ver-btn:not(:has(.ver-krotka)) { max-width: 9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* podpis stoi przed segmentem, nie w nim: tlo segmentu maja same przyciski */
+body.is-mobile .versions-bar.show { padding: 0; gap: 0; background: transparent; }
+body.is-mobile .versions-bar .ver-btn { background: var(--c-wcisk); border-radius: 0; }
+body.is-mobile .versions-bar .ver-btn:first-of-type { border-radius: var(--r-sm) 0 0 var(--r-sm); padding-left: var(--s-10, 10px); }
+body.is-mobile .versions-bar .ver-btn:last-of-type { border-radius: 0 var(--r-sm) var(--r-sm) 0; }
+body.is-mobile .versions-bar .ver-btn.active { background: var(--c-nad); box-shadow: inset 0 0 0 2px var(--c-wcisk); border-radius: var(--r-sm); }
+
+/* statystyki jako arkusz od dolu (ten sam element #article-stats) */
+body.is-mobile .article-stats.show { display: none; }
+body.is-mobile.statystyki-otwarte .article-stats.show { display: grid; position: fixed; left: 0; right: 0; bottom: 0; z-index: 470; max-width: none; margin: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 var(--s-16); max-height: 72vh; overflow-y: auto; overscroll-behavior: contain;
+  padding: var(--s-16) var(--s-16) calc(var(--s-16) + env(safe-area-inset-bottom, 0px)); background: var(--c-nad); border-radius: var(--r-lg) var(--r-lg) 0 0;
+  box-shadow: var(--cien-3); font-family: var(--f-ui); }
+body.is-mobile.statystyki-otwarte .article-stats .arkusz-tytul { display: block; grid-column: 1 / -1; }
+body.is-mobile.statystyki-otwarte .article-stats .astat { display: flex; align-items: center; gap: var(--s-6); min-height: var(--h-dotyk); border-bottom: 1px solid var(--c-linia);
+  font-size: var(--t-sm); }
+body.is-mobile.statystyki-otwarte .article-stats .astat-sep { display: none; }
+body.is-mobile.statystyki-otwarte .statystyki-zaslona { display: block; position: fixed; inset: 0; z-index: 469; background: var(--c-zaslona); }
+
+/* artykul bez karty, na cala szerokosc; ostatni wiersz nigdy pod paskami */
+body.is-mobile .output-col { padding-bottom: 0; min-height: 0; }
+body.is-mobile .output-scroll { padding: 0; }
+body.is-mobile .article { max-width: none; margin: 0; border: 0; border-radius: 0; box-shadow: none;
+  padding: var(--s-16) var(--s-16) calc(112px + env(safe-area-inset-bottom, 0px) + var(--s-24)); }
+/* start i generowanie w Wyniku: bez paska akcji, na dole tylko nawigacja */
+body.is-mobile .placeholder { padding: var(--s-24) var(--s-16) calc(var(--dol) + var(--s-16)); }
+body.is-mobile .spinner-wrap { padding: var(--s-16) var(--s-16) calc(var(--dol) + var(--s-16)); }
+/* typografia artykulu na telefonie (R3-11, spec marki: liniowo 320-430 px, powyzej maksimum) */
+body.is-mobile .article { background: transparent; }
+body.is-mobile .article h1 { font-size: clamp(20px, calc(8.36px + 3.64vw), 24px); line-height: 1.18; letter-spacing: -0.012em; margin: 0 0 .45em; }
+body.is-mobile .article h2 { font-size: clamp(18px, calc(12.18px + 1.82vw), 20px); line-height: 1.25; margin: 1.5em 0 .4em; }
+body.is-mobile .article h3 { font-size: clamp(17px, calc(14.09px + 0.91vw), 18px); line-height: 1.3; margin: 1.2em 0 .3em; }
+body.is-mobile .article p, body.is-mobile .article li { font-size: clamp(16px, calc(13.09px + 0.91vw), 17px); line-height: 1.6; }
+body.is-mobile .article h1 + p { font-size: clamp(16px, calc(13.09px + 0.91vw), 17px); line-height: 1.55; color: var(--c-tekst-2); margin-bottom: 1.1em; }
+/* brief na telefonie: dol formularza nad przyklejonym przyciskiem i nawigacja (wysokosc liczy paskiDolne) */
+body.is-mobile .form-col { padding-bottom: calc(var(--nad-paskami, 200px) + var(--s-16)); }
+
+/* dol: pasek akcji 56 px nad nawigacja 56 px + safe-area */
+body.is-mobile .mobile-nav { height: var(--dol); }
+body.is-mobile .mobile-nav-btn { min-height: 48px; font-size: 12px; }
+body.is-mobile .pasek-akcje { height: 56px; padding: 0 var(--s-4); box-sizing: border-box; }
+body.is-mobile .pasek-akcje > .btn-secondary, body.is-mobile .pasek-akcje > .grupa-wrap > .btn-secondary { height: 48px; min-height: 48px; font-size: 12px; }
+body.is-mobile .pasek-akcje > .btn-secondary span, body.is-mobile .pasek-akcje > .grupa-wrap > .btn-secondary span { font-size: 12px; }
+
+/* 320-359 px: szesc pozycji paska akcji dzieli szerokosc po rowno (52 px na pozycje) */
+@media (max-width: 359px) {
+  body.is-mobile .pasek-akcje > .btn-secondary, body.is-mobile .pasek-akcje > .grupa-wrap { flex: 1 1 0; min-width: 0; }
+  body.is-mobile .pasek-akcje > .grupa-wrap > .btn-secondary { width: 100%; min-width: 0; }
+}
+/* usuwanie slowa kluczowego: maly krzyzyk, pole dotyku 44 px */
+body.is-mobile .kw-tag button { position: relative; }
+body.is-mobile .kw-tag button::before { content: ""; position: absolute; inset: -13px; }
+
+/* chowanie paskow przy czytaniu: tylko transform, bez zmiany wysokosci (zero CLS) */
+body.is-mobile .topbar, body.is-mobile .output-bar .output-bar-left, body.is-mobile .mobile-nav, body.is-mobile .pasek-akcje { transition: transform var(--m-3) var(--e-std); }
+body.is-mobile.paski-ukryte .topbar { transform: translateY(-100%); }
+body.is-mobile.paski-ukryte .output-bar .output-bar-left { transform: translateY(calc(-100% - var(--gora-h))); }
+body.is-mobile.paski-ukryte .output-bar { pointer-events: none; }
+body.is-mobile.paski-ukryte .output-bar .pasek-akcje { pointer-events: auto; }
+body.is-mobile.paski-ukryte .mobile-nav { transform: translateY(100%); }
+body.is-mobile.paski-ukryte .pasek-akcje { transform: translateY(var(--nav-h)); }
+/* tryb Edytuj: nawigacja schowana na stale, pasek akcji na dole */
+body.is-mobile:has(#article[contenteditable="true"]) .mobile-nav { transform: translateY(100%); }
+body.is-mobile:has(#article[contenteditable="true"]) .pasek-akcje { transform: translateY(var(--nav-h)); }
+@media (prefers-reduced-motion: reduce) {
+  body.is-mobile .topbar, body.is-mobile .output-bar .output-bar-left, body.is-mobile .mobile-nav, body.is-mobile .pasek-akcje { transition: none; }
+  body.is-mobile:has(#out-badge.running) #widok-wynik::after { animation: none; }
+}
+/* telefon poziomo: nawigacja schowana w Wyniku, nizszy pasek akcji */
+@media (max-height: 500px) {
+  body.is-mobile.widok-wynik .mobile-nav { transform: translateY(100%); }
+  body.is-mobile.widok-wynik .pasek-akcje { height: 48px; transform: translateY(var(--nav-h)); }
+}
+
+/* R3-09 i R3-14: arkusze od dolu (spec ux, pomiary it-plynnosc) */
+/* Ocen / Fakty: stala wysokosc (svh: nie zmienia sie, gdy przegladarka chowa paski); "Analizuje..." na srodku tej samej wysokosci */
+body.is-mobile .inspektor { height: 72vh; height: min(72svh, 640px); max-height: none; }
+body.is-mobile .ins-tresc { overscroll-behavior: contain; }
+body.is-mobile .ins-tresc .seo-loading { min-height: 100%; display: grid; place-content: center; text-align: center; }
+body.is-mobile .ins-tresc #gap-panel, body.is-mobile .ins-tresc #fakty-panel { max-height: none; overflow: visible; }
+body.is-mobile .ins-zakl { min-width: var(--h-dotyk); justify-content: center; }
+.ins-zakl .ikona { display: none; }
+/* menu grup (Wiecej zadan, Tworz, Wiecej, Eksport): arkusz NAD paskiem, w ktorym stoi jego przycisk -
+   drugie dotkniecie przycisku zamyka menu zamiast trafic w pozycje (it-plynnosc: platne akcje) */
+body.is-mobile .grupa-menu { bottom: var(--nad-paskami, calc(var(--dol) + 56px)); padding: 0 var(--s-8) var(--s-12); box-shadow: var(--cien-3);
+  max-height: min(560px, calc(100vh - var(--nad-paskami, 112px) - var(--s-48))); max-height: min(560px, calc(100svh - var(--nad-paskami, 112px) - var(--s-48)));
+  overscroll-behavior: contain; touch-action: pan-y; }
+body.is-mobile .grupa-backdrop.show { background: var(--c-zaslona); touch-action: none; }
+body.is-mobile .grupa-menu .btn-secondary, body.is-mobile .grupa-menu .repurpose-item, body.is-mobile .grupa-menu .poz-menu { min-height: 48px; }
+/* tytul arkusza 48 px z zamknieciem 44 px; bez uchwytu (arkusza nie da sie przeciagnac) */
+.arkusz-tytul { display: none; }
+body.is-mobile .grupa-menu > .arkusz-tytul { display: flex; align-items: center; justify-content: space-between; gap: var(--s-8); min-height: 48px;
+  margin: 0 calc(var(--s-8) * -1) var(--s-4); padding: 0 var(--s-4) 0 var(--s-16); border-bottom: 1px solid var(--c-linia);
+  font-family: var(--f-ui); font-size: var(--t-md); font-weight: var(--g-mocny); color: var(--c-tekst); }
+body.is-mobile .arkusz-zamknij { width: var(--h-dotyk); height: var(--h-dotyk); }
+body.is-mobile .grupa-menu::before, body.is-mobile .settings-menu.open::before, body.is-mobile .inspektor::before,
+body.is-mobile .overlay .modal::before, body.is-mobile .okno-tlo > .modal::before { display: none; }
+/* menu konta nad dolna nawigacja: "Konto" zostaje widoczne i przelacza menu */
+body.is-mobile .settings-menu.open { bottom: var(--dol); padding-bottom: var(--s-12); overscroll-behavior: contain; touch-action: pan-y; }
+/* wjazd 260 ms, zjazd 200 ms, tylko transform */
+@keyframes arkusz-wjazd { from { transform: translateY(100%); } }
+@keyframes arkusz-zjazd { to { transform: translateY(110%); } }
+body.is-mobile .inspektor:not([hidden]), body.is-mobile .grupa-menu.open, body.is-mobile .settings-menu.open,
+body.is-mobile.statystyki-otwarte .article-stats.show { animation: arkusz-wjazd 260ms cubic-bezier(.32, .72, 0, 1); }
+body.is-mobile .grupa-menu.zamykanie, body.is-mobile .settings-menu.zamykanie { display: block; position: fixed; left: 0; right: 0; z-index: 460; pointer-events: none;
+  animation: arkusz-zjazd 200ms cubic-bezier(.4, 0, 1, 1) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  body.is-mobile .inspektor, body.is-mobile .grupa-menu, body.is-mobile .settings-menu, body.is-mobile .article-stats { animation: none !important; }
+  body.is-mobile .grupa-menu.zamykanie, body.is-mobile .settings-menu.zamykanie { display: none; }
+}
+/* przewijanie w arkuszu nie przewija strony pod spodem (wariant sprawdzony przez it-plynnosc: 0 px w kazdym gescie) */
+html:has(body.is-mobile.inspektor-otwarty), html:has(body.is-mobile.inspektor-otwarty) body,
+html:has(body.is-mobile .grupa-menu.open), html:has(body.is-mobile .grupa-menu.open) body,
+html:has(body.is-mobile .settings-menu.open), html:has(body.is-mobile .settings-menu.open) body,
+html:has(body.is-mobile.statystyki-otwarte), html:has(body.is-mobile.statystyki-otwarte) body,
+html:has(body.is-mobile .overlay.open), html:has(body.is-mobile .overlay.open) body { overflow: hidden !important; }
+body.is-mobile #inspektor { touch-action: none; }
+body.is-mobile #inspektor .ins-tresc { touch-action: pan-y; }
+body.is-mobile #inspektor .ins-zakladki { touch-action: pan-x; }
+body.is-mobile .ins-zaslona, body.is-mobile .statystyki-zaslona { touch-action: none; }
+body.is-mobile.statystyki-otwarte .article-stats.show { touch-action: pan-y; }
+}
+@layer widoki {
+/* ── RUNDA 3: ustalenia agencja-ux z macierzy (RAPORT-R3.md, pkt 2) ── */
+/* R3-03: ponizej 380 px pary pol briefu w jednej kolumnie (najdluzsze typy tresci) */
+@media (max-width: 379px) { body.is-mobile .form-col .row2 { grid-template-columns: minmax(0, 1fr); } }
+/* typ tresci dostaje cala reszte wiersza (dlugosc ma krotkie opcje) - miesci sie tez przy pismie powiekszonym o 20% */
+@media (min-width: 380px) { body.is-mobile .form-col .row2:has(#ctype) { grid-template-columns: minmax(0, 1fr) max-content; } }
+body.is-mobile select { padding-right: 28px; background-position: right 8px center; }
+/* filtry historii: pole dotyku 44 px */
+body.is-mobile .htag-filter { min-width: var(--h-dotyk); justify-content: center; }
+
+/* ux 3-4: komputer, waska kolumna wyniku (Baza otwarta przy 1100-1439, panel kontroli): pasek akcji z samymi
+   ikonami (podpis zostaje w title i dla czytnika), tabele w artykule przewijane w bok z cieniem przy krawedzi */
+.output-col.wynik-waski .pasek-akcje > .btn-secondary, .output-col.wynik-waski .pasek-akcje > .grupa-wrap > .btn-secondary { font-size: 0; gap: 2px; padding: 0 var(--s-8); }
+.output-col.wynik-waski .pasek-akcje > .btn-secondary .ikona, .output-col.wynik-waski .pasek-akcje > .grupa-wrap > .btn-secondary .ikona { width: 16px; height: 16px; }
+.output-col.wynik-waski .pasek-akcje > .btn-secondary span { font-size: 0; }
+.output-col.wynik-waski .article table { display: block; width: max-content; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain;
+  background:
+    linear-gradient(to right, var(--c-strona) 30%, transparent) left center / 32px 100% no-repeat local,
+    linear-gradient(to left, var(--c-strona) 30%, transparent) right center / 32px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, .28), transparent) left center / 12px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, .28), transparent) right center / 12px 100% no-repeat scroll; }
+.article th, .article td { min-width: 7ch; }
+/* ponizej 1100 px Baza wiedzy jest szuflada nad trescia (nie zjada kolumny wyniku) */
+@media (max-width: 1099px) {
+  body:not(.is-mobile):not(.kb-collapsed) .layout { grid-template-columns: minmax(0, 1fr); }
+  body:not(.is-mobile):not(.kb-collapsed) .sidebar { position: fixed; left: 0; top: var(--pasek-h); bottom: 0; height: auto; width: 320px; z-index: 360; box-shadow: var(--cien-3); }
+  /* zaslona obok szuflady (klikniecie zamyka Baze - JS) */
+  body:not(.is-mobile):not(.kb-collapsed) .sidebar::after { content: ""; position: fixed; left: 320px; top: var(--pasek-h); right: 0; bottom: 0; background: var(--c-zaslona); }
+}
+
+/* ux 5: generator grafik - pola nie rozpychaja kolumny, formaty zawijaja sie (tez na komputerze) */
+#img-panel-grid > div, #img-panel-grid > div * { min-width: 0; }
+#img-panel input:not([type=file]):not([type=checkbox]), #img-panel select, #img-panel textarea { width: 100%; max-width: 100%; }
+#img-ref-empty > div { flex-wrap: wrap; }
+#img-ref-empty > div > input { flex: 1 1 160px; }
+#img-formats { flex-wrap: wrap; max-height: none !important; overflow: visible !important; }
+.img-fmt-btn { height: auto; min-height: var(--h-xs); padding: var(--s-4) var(--s-8); white-space: normal; text-align: left; line-height: 1.35; }
+/* ux 20: panele grafiki i audio od dolnej krawedzi paska (48 px), bez szczeliny nad nimi */
+body:not(.is-mobile) #img-panel, body:not(.is-mobile) #audio-panel { top: var(--pasek-h) !important; }
+body.is-mobile #audio-panel { top: var(--gora-h, 48px) !important; bottom: var(--dol) !important; }
+
+/* ux 12: historia przy 320 px - wpisy i filtr w szerokosci ekranu */
+body.is-mobile .h-list-col { width: 100%; }
+body.is-mobile .h-list-col, body.is-mobile #hist-filter { min-width: 0; max-width: 100%; }
+/* podpowiedz w polu dluzsza niz pole: wielokropek zamiast uciecia */
+input[type="text"], input[type="url"], input[type="search"], input[type="email"], input:not([type]) { text-overflow: ellipsis; }
+/* wynik grafiki: Pobierz / Ponow zawijaja sie */
+#img-result-wrap > div { flex-wrap: wrap; }
+.h-item-topic { overflow-wrap: anywhere; }
+/* ux 13: okna przy 320 px - szablony w jednej kolumnie, rzad przyciskow robots.txt zawija sie */
+@media (max-width: 359px) { .tpl-grid { grid-template-columns: minmax(0, 1fr); } }
+#trk-modal .btn-generate, .modal div[style*="display:flex"] > .btn-generate[style*="width:auto"] { max-width: 100%; white-space: normal; }
+
+/* ux 15: telefon - cele dotyku */
+body.is-mobile .modal .btn-generate { min-height: 48px; }
+body.is-mobile #vc-rate { height: var(--h-dotyk); }
+body.is-mobile .settings-menu .segmenty button { min-width: 48px; }
+body.is-mobile #start-pomin { min-height: var(--h-dotyk); padding: 0 var(--s-8); }
+
+/* ux 16: narzedzia pelnoekranowe jednym wzorem - "<- Wroc" po lewej 44 px, tytul, akcja po prawej */
+.narzedzie-wroc { display: none; }
+body.is-mobile .narzedzie-wroc { display: inline-flex; min-height: var(--h-dotyk); }
+body.is-mobile .narzedzie-zamknij { display: none; }
+body.is-mobile .narzedzie-naglowek { justify-content: flex-start !important; gap: var(--s-12); }
+body.is-mobile .narzedzie-naglowek h3 { font-size: var(--t-md) !important; font-weight: var(--g-mocny); }
+.repurpose-head .narzedzie-wroc { display: inline-flex; }
+
+/* ux 19: drobne podpisy 11 px (glosy w audio, rodzaj uwagi w Faktach) - 12 px, bez wersalikow */
+#au-voices-wrap [style*="font-size:11px"] { font-size: 12px !important; }
+#fakty-wynik [style*="text-transform:uppercase"] { text-transform: none !important; letter-spacing: normal !important; }
+}
+@layer widoki {
+/* Baza wiedzy na telefonie (pelny ekran) nad paskami wyniku i naglowkiem, pod dolna nawigacja (zakladka Baza zostaje widoczna) */
+body.is-mobile .mobile-sidebar-panel { z-index: 325; bottom: var(--dol); padding-bottom: 0; }
+body.is-mobile .mobile-nav { z-index: 330; }
+/* Luki: pozycje do zaznaczenia i "Uzyty prompt" w grafice - pole dotyku 44 px */
+body.is-mobile .gap-miss-item { min-height: var(--h-dotyk); display: flex; align-items: center; }
+body.is-mobile #img-prompt-wrap > .field-label[onclick] { min-height: var(--h-dotyk); display: flex; align-items: center; }
+}
 </style>
 </head>
 <body>
@@ -2478,10 +2813,10 @@ body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; 
                 <option value="Artykuł SEO" data-i18n="opt-seo">Artykuł SEO</option>
                 <option value="Treść AIO" data-i18n="opt-aio">Treść AIO</option>
                 <option value="FAQ page" data-i18n="opt-faq">Strona FAQ</option>
-                <option value="Landing page copy" data-i18n="opt-landing">Tekst strony docelowej (landing page)</option>
+                <option value="Landing page copy" data-i18n="opt-landing">Strona docelowa</option>
                 <option value="Wpis blogowy" data-i18n="opt-blog">Wpis blogowy</option>
                 <option value="Opis produktu/usługi" data-i18n="opt-product">Opis produktu/usługi</option>
-                <option value="Strona kierunkowa (eksport)" data-i18n="opt-directional">Strona kierunkowa (eksport)</option>
+                <option value="Strona kierunkowa (eksport)" data-i18n="opt-directional">Strona kierunkowa</option>
                 <option value="Informacja prasowa" data-i18n="opt-press">Informacja prasowa</option>
               </select>
             </div>
@@ -2494,6 +2829,28 @@ body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; 
                 <option value="custom" data-i18n="opt-custom">Własna…</option>
               </select>
               <input type="number" id="length-custom" aria-label="Własna długość w słowach" data-i18n-label="lbl-length-custom" min="100" max="5000" step="50" placeholder="np. 1200" data-i18n="ph-length-custom" style="display:none;margin-top:6px" />
+            </div>
+          </div>
+
+          <!-- R3: Ton i Jezyk w glownym briefie (obok Typu tresci i Dlugosci), nie w zaawansowanych. -->
+          <div class="row2 row2-ton">
+            <div class="field">
+              <label for="tone" class="field-label" data-i18n="label-tone">Ton</label>
+              <select id="tone">
+                <option data-i18n="opt-prof">Profesjonalny</option>
+                <option data-i18n="opt-expert">Ekspercki</option>
+                <option data-i18n="opt-friendly">Przyjazny</option>
+                <option data-i18n="opt-neutral">Neutralny</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="lang" class="field-label" data-i18n="label-lang-out">Język</label>
+              <select id="lang">
+                <option>Polski</option>
+                <option>English</option>
+                <option>Deutsch</option>
+                <option>Čeština</option>
+              </select>
             </div>
           </div>
 
@@ -2528,27 +2885,6 @@ body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; 
           <details class="zaawansowane" id="brief-zaawansowane">
             <summary><svg class="ikona" aria-hidden="true"><use href="#i-sliders-horizontal"/></svg><span><b data-i18n="zaaw-tytul">Ustawienia zaawansowane</b><small id="zaaw-podsumowanie"></small></span><svg class="ikona zaaw-strzalka" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
             <div class="zaawansowane-tresc">
-          <div class="row2">
-            <div class="field">
-              <label for="tone" class="field-label" data-i18n="label-tone">Ton</label>
-              <select id="tone">
-                <option data-i18n="opt-prof">Profesjonalny</option>
-                <option data-i18n="opt-expert">Ekspercki</option>
-                <option data-i18n="opt-friendly">Przyjazny</option>
-                <option data-i18n="opt-neutral">Neutralny</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="lang" class="field-label" data-i18n="label-lang-out">Język</label>
-              <select id="lang">
-                <option>Polski</option>
-                <option>English</option>
-                <option>Deutsch</option>
-                <option>Čeština</option>
-              </select>
-            </div>
-          </div>
-
           <!-- Odbiorca. Agencja zglosila, ze artykul pisany na podstawie strony
                dla firm mowil do firm, mimo konsumenckiej intencji zapytania.
                Baza wiedzy ma dawac fakty, a nie decydowac, do kogo mowimy. -->
@@ -2597,12 +2933,18 @@ body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; 
           </details>
 
           <div class="form-actions-sticky">
+            <!-- R3: Samokorekta jako wiersz z przelacznikiem (etykieta + jedno zdanie opisu), nad przyciskiem, wyrownany do niego. -->
+            <div class="samokorekta-wiersz">
+              <button type="button" class="btn-premium" id="premium-btn" onclick="togglePremium()" role="switch" aria-checked="false" aria-describedby="samokorekta-opis" title="Model oceni gotowy tekst i poprawi go według oceny. Generowanie trwa 2-3 razy dłużej i zużywa więcej wywołań modelu z pakietu." data-i18n-title="title-premium-tooltip" data-i18n="btn-premium">Samokorekta</button>
+              <span class="samokorekta-opis" id="samokorekta-opis" data-i18n="premium-opis">Model oceni gotowy tekst i poprawi go (2-3 razy dłużej).</span>
+            </div>
             <div class="generuj-rzad">
             <button class="btn-generate" onclick="generate()" id="gen-btn"><svg class="ikona" aria-hidden="true"><use href="#i-zap"/></svg><span class="gen-etykieta" data-i18n="btn-generate">Wygeneruj treść</span><span class="kbd">Ctrl ↵</span><span class="gen-trwa"><svg class="ikona kreci" aria-hidden="true"><use href="#i-loader"/></svg><span data-i18n="btn-generuje">Generuję…</span></span></button>
             <div class="grupa-wrap" id="grupa-brief-wrap">
               <button type="button" class="btn-secondary" aria-haspopup="true" aria-expanded="false" aria-controls="grupa-brief-menu" onclick="przelaczGrupe('brief')" title="Więcej zadań" aria-label="Więcej zadań" data-i18n-title="brief-wiecej" data-i18n-label="brief-wiecej"><svg class="ikona" aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
               <div class="grupa-backdrop" onclick="przelaczGrupe('brief')"></div>
               <div class="grupa-menu" id="grupa-brief-menu">
+                <div class="arkusz-tytul"><span data-i18n="brief-wiecej">Więcej zadań</span><button type="button" class="przycisk-ikona arkusz-zamknij" onclick="zamknijGrupyPaska()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
                 <button type="button" class="btn-secondary" onclick="openBriefPanel()" data-ikona="clipboard-list" title="Wygeneruj brief przed artykułem" data-i18n-title="title-brief-tooltip"><svg class="ikona" aria-hidden="true"><use href="#i-clipboard-list"/></svg>Brief</button>
                 <button type="button" class="btn-secondary" onclick="openBulkModal()" data-ikona="layout-grid" title="Generowanie grupowe: wiele artykułów naraz" data-i18n-title="title-bulk-tooltip" data-i18n="btn-bulk"><svg class="ikona" aria-hidden="true"><use href="#i-layout-grid"/></svg>Generuj grupowo</button>
                 <button type="button" class="btn-secondary" onclick="openImproveModal()" data-ikona="pen-line" title="Popraw istniejący artykuł" data-i18n-title="title-improve-art" data-i18n="btn-improve"><svg class="ikona" aria-hidden="true"><use href="#i-pen-line"/></svg>Popraw</button>
@@ -2611,7 +2953,6 @@ body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; 
               </div>
             </div>
             </div>
-            <button type="button" class="btn-premium" id="premium-btn" onclick="togglePremium()" aria-pressed="false" title="Tryb głębokiej samokorekcji. Generowanie zajmuje 2 do 3 razy więcej czasu, ale artykuł jest weryfikowany i poprawiany automatycznie." data-i18n-title="title-premium-tooltip" data-i18n="btn-premium">Samokorekta</button>
           </div>
         </div>
 
@@ -2621,8 +2962,11 @@ body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; 
             <div class="output-bar-left">
               <span class="output-title" data-i18n="out-title">Wynik</span>
               <span class="badge" id="out-badge" data-i18n="badge-ready">gotowy do generowania</span>
+              <!-- R3: na telefonie statystyki schodza do skrotu "N slow · M min", pelna lista w arkuszu. -->
+              <button type="button" class="stat-skrot" id="stat-skrot" onclick="przelaczStatystyki()" aria-haspopup="dialog" aria-expanded="false" aria-controls="article-stats"><span class="stat-skrot-tekst" id="stat-skrot-tekst"></span><svg class="ikona" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
               <div class="versions-bar" id="versions-bar">
                 <span class="ver-label" data-i18n="versions-label">Warianty:</span>
+                <span class="ver-podpis" data-i18n="btn-premium">Samokorekta</span>
               </div>
             </div>
             <div class="pasek-akcje">
@@ -2656,6 +3000,7 @@ body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; 
               <button type="button" class="btn-secondary" aria-haspopup="true" aria-expanded="false" aria-controls="grupa-tworz-menu" onclick="przelaczGrupe('tworz')" data-i18n="grupa-tworz" data-ikona="palette"><svg class="ikona" aria-hidden="true"><use href="#i-palette"/></svg>Twórz</button>
               <div class="grupa-backdrop" onclick="przelaczGrupe('tworz')"></div>
               <div class="grupa-menu" id="grupa-tworz-menu">
+                <div class="arkusz-tytul"><span data-i18n="grupa-tworz">Twórz</span><button type="button" class="przycisk-ikona arkusz-zamknij" onclick="zamknijGrupyPaska()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
                 <button class="btn-secondary" id="img-btn" style="display:none" onclick="openImgPanelSmart()" title="Generuj grafikę dopasowaną do artykułu" data-i18n-title="title-img-generate" data-i18n="btn-img-out" data-ikona="palette"><svg class="ikona" aria-hidden="true"><use href="#i-palette"/></svg>Grafika</button>
                 <button class="btn-secondary" id="titles-btn" style="display:none" onclick="openTitlesPanel()" data-i18n="btn-titles" data-ikona="lightbulb"><svg class="ikona" aria-hidden="true"><use href="#i-lightbulb"/></svg>Tytuły</button>
                 <!-- Przerobki byly osobnym menu. Menu w menu to o jedno klikniecie
@@ -2679,6 +3024,7 @@ body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; 
               <button type="button" class="btn-secondary" aria-haspopup="true" aria-expanded="false" aria-controls="grupa-wiecej-menu" onclick="przelaczGrupe('wiecej')" data-i18n="grupa-wiecej" data-ikona="ellipsis"><svg class="ikona" aria-hidden="true"><use href="#i-ellipsis"/></svg>Więcej</button>
               <div class="grupa-backdrop" onclick="przelaczGrupe('wiecej')"></div>
               <div class="grupa-menu" id="grupa-wiecej-menu">
+                <div class="arkusz-tytul"><span data-i18n="grupa-wiecej">Więcej</span><button type="button" class="przycisk-ikona arkusz-zamknij" onclick="zamknijGrupyPaska()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
                 <button class="btn-secondary" id="premium-fix-btn" style="display:none" onclick="runPostGenerationPremium()" title="Model oceni gotowy tekst i poprawi go według oceny" data-i18n-title="title-premium-fix-tooltip" data-i18n="btn-premium-fix" data-ikona="list-checks"><svg class="ikona" aria-hidden="true"><use href="#i-list-checks"/></svg>Dopracuj tekst</button>
                 <button class="btn-secondary" id="tts-btn" style="display:none" onclick="speakArticle(this)" data-i18n-title="tts-read" title="Posłuchaj"><svg class="ikona" aria-hidden="true"><use href="#i-volume-2"/></svg><span data-i18n="tts-read">Posłuchaj</span></button>
               </div>
@@ -2689,6 +3035,7 @@ body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; 
               <button type="button" class="btn-secondary" aria-haspopup="true" aria-expanded="false" aria-controls="grupa-pobierz-menu" onclick="przelaczGrupe('pobierz')" data-i18n="grupa-pobierz" data-ikona="download"><svg class="ikona" aria-hidden="true"><use href="#i-download"/></svg>Pobierz</button>
               <div class="grupa-backdrop" onclick="przelaczGrupe('pobierz')"></div>
               <div class="grupa-menu" id="grupa-pobierz-menu">
+                <div class="arkusz-tytul"><span data-i18n="grupa-pobierz">Eksport</span><button type="button" class="przycisk-ikona arkusz-zamknij" onclick="zamknijGrupyPaska()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
                 <button class="btn-secondary" id="dl-btn" style="display:none" onclick="dlTxt()"><svg class="ikona" aria-hidden="true"><use href="#i-file-down"/></svg>TXT</button>
                 <button class="btn-secondary" id="dl-docx-btn" style="display:none" onclick="dlDocx()"><svg class="ikona" aria-hidden="true"><use href="#i-file-down"/></svg>DOCX</button>
                                 <button class="btn-secondary" id="dl-pdf-btn" style="display:none" onclick="dlPdf()"><svg class="ikona" aria-hidden="true"><use href="#i-file-down"/></svg>PDF</button>
@@ -2703,7 +3050,7 @@ body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; 
           <!-- Panel Przeróbek -->
           <div class="repurpose-panel" id="repurpose-panel">
             <div class="repurpose-head">
-              <button class="przycisk-ikona" onclick="closeRepurposePanel()">←</button>
+              <button type="button" class="btn-secondary narzedzie-wroc" onclick="closeRepurposePanel()" data-i18n="img-back" data-ikona="arrow-left"><svg class="ikona" aria-hidden="true"><use href="#i-arrow-left"/></svg>Wróć</button>
               <strong class="tekst-zwykly" id="repurpose-title" data-i18n="rp-strong">Przeróbki artykułu</strong>
               <button class="btn-secondary btn-maly" onclick="copyRepurpose()" style="margin-left:auto" data-i18n="btn-copy">Kopiuj</button>
             </div>
@@ -2741,7 +3088,7 @@ body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; 
 
           <div class="output-scroll" id="out-scroll">
           <!-- Statystyki artykułu -->
-          <div class="article-stats" id="article-stats">
+          <div class="article-stats" id="article-stats" tabindex="-1">
             <div class="astat"><span class="astat-val" id="stat-words">0</span><span data-i18n="stat-words-unit">słów</span></div>
             <div class="astat-sep">·</div>
             <div class="astat"><span class="astat-val" id="stat-read">0</span><span data-i18n="stat-read-unit">min czytania</span></div>
@@ -2766,6 +3113,7 @@ body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; 
             <div class="astat-sep" id="stat-siec-sep" style="display:none">·</div>
             <div class="astat" id="stat-siec-wrap" style="display:none"><span data-i18n="astat-siec">Sieć:</span><span class="astat-val" id="stat-siec">-</span></div>
           </div>
+            <div class="statystyki-zaslona" onclick="przelaczStatystyki(false)"></div>
             <div class="placeholder" id="placeholder">
               <div class="start-ekran">
               <div class="placeholder-box"><svg viewBox="0 0 32 32" width="24" height="24" aria-hidden="true"><path d="M16 1 L19.8 12.2 L18.12 13.88 A3 3 0 0 0 13.88 13.88 L12.2 12.2 Z M31 16 L19.8 19.8 L18.12 18.12 A3 3 0 0 0 18.12 13.88 L19.8 12.2 Z M16 31 L12.2 19.8 L13.88 18.12 A3 3 0 0 0 18.12 18.12 L19.8 19.8 Z M1 16 L12.2 12.2 L13.88 13.88 A3 3 0 0 0 13.88 18.12 L12.2 19.8 Z" fill="currentColor"/></svg></div>
@@ -3992,7 +4340,8 @@ var I18N = {
     'label-audience':'Odbiorca',
     'opt-aud-auto':'Dopasuj do tematu','opt-aud-b2c':'Klient indywidualny (B2C)','opt-aud-b2b':'Firma (B2B)',
     'btn-brief':'Brief','btn-bulk':'Generuj grupowo','btn-improve':'Popraw','btn-img-short':'Grafika',
-    'btn-generate':'Wygeneruj treść','btn-premium':'Samokorekta','btn-premium-active':'Samokorekta (włączona)',
+    'btn-generate':'Wygeneruj treść','btn-premium':'Samokorekta','btn-premium-active':'Samokorekta',
+    'premium-opis':'Model oceni gotowy tekst i poprawi go (2-3 razy dłużej).',
     'out-title':'Wynik','badge-ready':'gotowy do generowania','badge-done':'gotowe',
     'btn-edit':'Edytuj','btn-aio':'Oceń AIO','btn-seo':'Oceń SEO',
     'btn-img-out':'Grafika','btn-titles':'Tytuły',
@@ -4017,6 +4366,7 @@ var I18N = {
     'fakty-rodzaj-konflikt':'Polecenie konkurencji',
     'fakty-linki-czysto':'Odnośniki bez zastrzeżeń.',
     'zrodla-title':'Źródła z sieci',
+    'zrodla-pokaz-wszystkie':'Pokaż wszystkie ({n})','zrodla-zwin':'Zwiń',
     'spin-sub-szukam':'szukam źródeł w sieci i sprawdzam, co da się potwierdzić',
     'fakty-tryb-uzupelniania':'Tekst powstał z włączonym wyszukiwaniem w sieci, więc część zdań nie pochodzi z Twoich dokumentów, tylko ze stron wymienionych pod artykułem. Poniższe uwagi dotyczą zgodności z Twoimi źródłami: zdanie oparte na stronie zewnętrznej też się tu pojawi, bo trzeba sprawdzić, czy ta strona jest wiarygodna.',
     'fakty-rodzaj-link-obcy':'Adres spoza źródeł',
@@ -4153,7 +4503,7 @@ var I18N = {
     'msg-spin-premium-eval':'Samokorekta: oceniam tekst…',
     'msg-spin-premium-deep':'głęboka weryfikacja, może potrwać dłużej niż zwykle',
     'msg-spin-premium-eval2':'Samokorekta: oceniam tekst…','spin-premium-improving':'Samokorekta: poprawiam (wynik {n}/100)…',
-    'msg-spin-premium-fix':'samokorekcja na podstawie wyników oceny',
+    'msg-spin-premium-fix':'samokorekta: poprawiam tekst według oceny',
     'msg-spin-regen-fixes':'regeneruję z uwzględnieniem poprawek',
     'msg-spin-serp':'Analizuję SERP…',
     'msg-spin-serp-sub':'sprawdzam co rankuje dla słowa kluczowego',
@@ -4297,7 +4647,7 @@ var I18N = {
     // ── Tooltips ──
     'title-brief-tooltip':'Wygeneruj brief przed artykułem',
     'title-bulk-tooltip':'Generowanie grupowe: wiele artykułów naraz',
-    'title-premium-tooltip':'Tryb głębokiej samokorekcji. Generowanie zajmuje 2 do 3 razy więcej czasu, ale artykuł jest weryfikowany i poprawiany automatycznie.',
+    'title-premium-tooltip':'Model oceni gotowy tekst i poprawi go według oceny. Generowanie trwa 2-3 razy dłużej i zużywa więcej wywołań modelu z pakietu.',
     'title-premium-fix-tooltip':'Model oceni gotowy tekst i poprawi go według oceny',
     'title-include-kw':'Uwzględnij w generowaniu',
     'title-remove':'Usuń','title-remove-link':'Usuń link',
@@ -4561,7 +4911,8 @@ var I18N = {
     'label-audience':'Audience',
     'opt-aud-auto':'Match the topic','opt-aud-b2c':'Individual customer (B2C)','opt-aud-b2b':'Business (B2B)',
     'btn-brief':'Brief','btn-bulk':'Bulk generate','btn-improve':'Improve','btn-img-short':'Image',
-    'btn-generate':'Generate content','btn-premium':'Self-review','btn-premium-active':'Self-review (on)',
+    'btn-generate':'Generate content','btn-premium':'Self-review','btn-premium-active':'Self-review',
+    'premium-opis':'The model scores the draft and revises it (takes 2-3 times longer).',
     'out-title':'Result','badge-ready':'ready to generate','badge-done':'done',
     'btn-edit':'Edit','btn-aio':'Assess AIO','btn-seo':'Assess SEO',
     'btn-img-out':'Image','btn-titles':'Titles',
@@ -4586,6 +4937,7 @@ var I18N = {
     'fakty-rodzaj-konflikt':'Recommends a competitor',
     'fakty-linki-czysto':'No findings on links.',
     'zrodla-title':'Sources from the web',
+    'zrodla-pokaz-wszystkie':'Show all ({n})','zrodla-zwin':'Show less',
     'spin-sub-szukam':'searching the web and checking what can be confirmed',
     'fakty-tryb-uzupelniania':'This text was written with web search enabled, so some sentences come from the pages listed under the article rather than from your documents. The findings below are about agreement with your own sources: a sentence backed by an external page will still appear here, because someone has to judge whether that page is trustworthy.',
     'fakty-rodzaj-link-obcy':'Address not in the sources',
@@ -4722,7 +5074,7 @@ var I18N = {
     'msg-spin-premium-eval':'Self-review: assessing the draft…',
     'msg-spin-premium-deep':'deep verification, may take longer than usual',
     'msg-spin-premium-eval2':'Self-review: assessing the draft…','spin-premium-improving':'Self-review: improving (score {n}/100)…',
-    'msg-spin-premium-fix':'self-correction based on assessment results',
+    'msg-spin-premium-fix':'self-review: revising the draft based on the score',
     'msg-spin-regen-fixes':'regenerating with fixes applied',
     'msg-spin-serp':'Analyzing SERP…',
     'msg-spin-serp-sub':'checking what ranks for your keyword',
@@ -4867,7 +5219,7 @@ var I18N = {
     // ── Tooltips ──
     'title-brief-tooltip':'Generate brief before article',
     'title-bulk-tooltip':'Bulk generation: many articles at once',
-    'title-premium-tooltip':'Deep self-correction mode. Generation takes 2-3 times longer, but the article is verified and corrected automatically.',
+    'title-premium-tooltip':'The model scores the finished draft and revises it based on the score. Generation takes 2-3 times longer and uses more model calls from your plan.',
     'title-premium-fix-tooltip':'The model scores the finished text and revises it accordingly',
     'title-include-kw':'Include in generation',
     'title-remove':'Remove','title-remove-link':'Remove link',
@@ -8315,7 +8667,9 @@ async function fetchSerpContext(topic, kwText) {
   } catch(e) { serpData = null; return ''; }
 }
 
-function renderSerpPanel() {
+// pokaz=true tylko z przycisku SERP; po generowaniu panel sie nie otwiera sam (R3: na telefonie
+// arkusz zaslanial swiezy artykul), dane czekaja w panelu.
+function renderSerpPanel(pokaz) {
   if (!serpData) return;
   const panel = document.getElementById('serp-panel');
 
@@ -8332,9 +8686,10 @@ function renderSerpPanel() {
   document.getElementById('serp-phrases').innerHTML =
     serpData.phrases.map(p => `<span class="serp-tag" style="font-style:italic">${escapeHtml(p)}</span>`).join('');
 
-  // Zamknij pozostałe panele inline
-  closeAllInlinePanels({ exceptSerp: true });
-  panel.style.display = 'block';
+  if (pokaz) {
+    closeAllInlinePanels({ exceptSerp: true });
+    panel.style.display = 'block';
+  }
 
   // Pokaż przycisk SERP w output barze
   const serpBtn = document.getElementById('serp-toggle-btn');
@@ -8348,7 +8703,7 @@ function toggleSerpPanel() {
   if (isOpen) {
     panel.style.display = 'none';
   } else {
-    if (serpData) renderSerpPanel();
+    if (serpData) renderSerpPanel(true);
   }
 }
 
@@ -9350,7 +9705,7 @@ function odswiezInspektor() {
 // Brief zwija sie do szyny na zyczenie (wiecej miejsca na kartke i inspektor).
 function przelaczBrief(zwin) {
   var b = document.body;
-  if (typeof zwin !== 'boolean') delete b.dataset.briefAuto;
+  if (typeof zwin !== 'boolean') { delete b.dataset.briefAuto; delete b.dataset.briefBaza; }
   var nowy = typeof zwin === 'boolean' ? zwin : !b.classList.contains('brief-zwiniety');
   b.classList.toggle('brief-zwiniety', nowy);
 }
@@ -9370,7 +9725,8 @@ function odswiezLiczniki() {
 function odswiezPodsumowanie() {
   var el = document.getElementById('zaaw-podsumowanie'); if (!el) return;
   var tekst = function (id) { var s = document.getElementById(id); return s && s.selectedIndex >= 0 ? s.options[s.selectedIndex].text : ''; };
-  var czesci = [tekst('tone'), tekst('lang'), tekst('audience')];
+  // Ton i Jezyk stoja w glownym briefie (R3), w podsumowaniu zaawansowanych zostaje reszta.
+  var czesci = [tekst('audience')];
   var serp = document.getElementById('use-serp'), aeo = document.getElementById('use-aeo');
   czesci.push(serp && serp.checked ? _t('zaaw-serp') : _t('zaaw-bez-serp'));
   if (aeo && aeo.checked) czesci.push(_t('zaaw-aeo'));
@@ -9489,6 +9845,218 @@ function otworzKontoMobilne(e) {
     new MutationObserver(zaplanuj).observe(document.body, { attributes: true, attributeFilter: ['class'] });
     window.addEventListener('resize', zaplanuj);
     przelicz();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
+// ── R3: telefon, ekran wyniku (spec agencja-ux R3-07) ───────────────────────
+// Statystyki: na telefonie skrot "N slow · M min" w wierszu meta, pelna lista w arkuszu
+// (ten sam element #article-stats, na komputerze zostaje wierszem nad artykulem).
+function przelaczStatystyki(stan) {
+  const b = document.body, st = document.getElementById('article-stats'), przycisk = document.getElementById('stat-skrot');
+  if (!st) return;
+  const otworz = typeof stan === 'boolean' ? stan : !b.classList.contains('statystyki-otwarte');
+  if (otworz && !b.classList.contains('is-mobile')) return;
+  b.classList.toggle('statystyki-otwarte', otworz);
+  if (przycisk) przycisk.setAttribute('aria-expanded', String(otworz));
+  if (otworz) {
+    st.setAttribute('role', 'dialog'); st.setAttribute('aria-modal', 'true'); st.setAttribute('aria-labelledby', 'statystyki-tytul');
+    st.focus({ preventScroll: true });
+  } else {
+    const wSrodku = st.contains(document.activeElement);
+    st.removeAttribute('role'); st.removeAttribute('aria-modal'); st.removeAttribute('aria-labelledby');
+    if (przycisk && wSrodku) przycisk.focus({ preventScroll: true });
+  }
+}
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && document.body.classList.contains('statystyki-otwarte')) { przelaczStatystyki(false); e.stopPropagation(); }
+}, true);
+
+(function wynikTelefonu() {
+  let wlasneZmiany = false;
+  // Skrot statystyk i jego etykieta dla czytnika ekranu.
+  // Skrot skladany z jednostek paska ("897 slow · 5 min"), bez osobnych kluczy slownika.
+  function skrot() {
+    const sl = ((document.getElementById('stat-words') || {}).textContent || '0').trim();
+    const mi = ((document.getElementById('stat-read') || {}).textContent || '0').trim();
+    const t = sl + ' ' + _t('stat-words-unit') + ' · ' + mi + ' ' + String(_t('stat-read-unit')).split(' ')[0];
+    const el = document.getElementById('stat-skrot-tekst');
+    if (el && el.textContent !== t) el.textContent = t;
+  }
+  // Stan wyniku: odznaka "gotowe" jest na telefonie ukryta wizualnie, stan mowi kropka
+  // przy "Wynik" (CSS) i etykieta przycisku.
+  function status() {
+    const ob = document.getElementById('out-badge'), w = document.getElementById('widok-wynik');
+    if (!ob || !w) return;
+    const stan = /\b(running|uwaga|ready)\b/.test(ob.className) ? (ob.textContent || '').trim() : '';
+    if (stan) w.setAttribute('aria-label', _t('widok-wynik') + ', ' + stan); else w.removeAttribute('aria-label');
+  }
+  // Przelacznik wersji: pelna nazwa w title i aria-label, krotka ("Przed" | "Po") do wyswietlenia na telefonie.
+  function wersje() {
+    // "Przed samokorekta" / "Po samokorekcie" -> "Przed" | "Po" (pierwsze slowo etykiety).
+    const krotkie = {};
+    [_t('ver-before-premium'), _t('ver-after-premium')].forEach(function (n) { krotkie[n] = String(n).split(' ')[0]; });
+    const pasek = document.getElementById('versions-bar');
+    let samokorekta = false;
+    document.querySelectorAll('#versions-bar .ver-btn').forEach(function (b) {
+      const pelna = (b.getAttribute('aria-label') || b.textContent || '').trim();
+      if (!pelna) return;
+      if (b.title !== pelna) b.title = pelna;
+      if (b.getAttribute('aria-label') !== pelna) b.setAttribute('aria-label', pelna);
+      if (krotkie[pelna]) {
+        samokorekta = true;
+        // pelna i krotka nazwa w osobnych elementach; CSS pokazuje jedna z nich
+        if (!b.querySelector('.ver-krotka')) {
+          const pe = document.createElement('span'); pe.className = 'ver-pelna'; pe.textContent = pelna;
+          const kr = document.createElement('span'); kr.className = 'ver-krotka'; kr.textContent = krotkie[pelna];
+          b.textContent = ''; b.append(pe, kr);
+        }
+      }
+      b.setAttribute('aria-pressed', String(b.classList.contains('active')));
+    });
+    if (pasek && pasek.classList.contains('wersje-samokorekty') !== samokorekta) pasek.classList.toggle('wersje-samokorekty', samokorekta);
+  }
+  // Zrodla z sieci (R3-12): w aplikacji 5 pozycji i "Pokaz wszystkie (n)". Przycisk ma
+  // data-tylko-ekran, a zwijanie idzie klasa .zwiniete na .zrodla-box - eksporty, WordPress
+  // i zapis do historii zdejmuja jedno i drugie (umowa z wykonawca logiki, tablica R3).
+  const POKAZ = 5;
+  const rozwiniete = new WeakSet(); // stan rozwiniecia bez atrybutu w DOM (nie trafia do eksportu)
+  function zrodla() {
+    document.querySelectorAll('.article .zrodla-box').forEach(function (box) {
+      const lista = box.querySelectorAll(':scope > ul > li');
+      let przycisk = box.querySelector(':scope > .zrodla-wiecej');
+      if (lista.length <= POKAZ) {
+        if (przycisk) przycisk.remove();
+        box.classList.remove('zwiniete');
+        return;
+      }
+      if (!przycisk) {
+        przycisk = document.createElement('button');
+        przycisk.type = 'button';
+        przycisk.className = 'zrodla-wiecej btn-link';
+        przycisk.setAttribute('data-tylko-ekran', '');
+        przycisk.setAttribute('contenteditable', 'false');
+        box.appendChild(przycisk);
+        if (!rozwiniete.has(box)) box.classList.add('zwiniete');
+      }
+      const zw = box.classList.contains('zwiniete');
+      const t = zw ? _t('zrodla-pokaz-wszystkie').replace('{n}', String(lista.length)) : _t('zrodla-zwin');
+      if (przycisk.textContent !== t) przycisk.textContent = t;
+      przycisk.setAttribute('aria-expanded', String(!zw));
+    });
+  }
+  document.addEventListener('click', function (e) {
+    const p = e.target && e.target.closest && e.target.closest('.zrodla-wiecej');
+    if (!p) return;
+    const box = p.closest('.zrodla-box');
+    if (!box) return;
+    const zw = box.classList.toggle('zwiniete');
+    if (zw) rozwiniete.delete(box); else rozwiniete.add(box);
+    wlasneZmiany = true; zrodla(); wlasneZmiany = false;
+    if (zw) box.scrollIntoView({ block: 'nearest' });
+  });
+  // Samokorekta to przelacznik (role="switch"): aria-checked podaza za klasa .active,
+  // ktora ustawia togglePremium (logika zostaje bez zmian).
+  function samokorekta() {
+    const p = document.getElementById('premium-btn');
+    if (!p) return;
+    const wl = String(p.classList.contains('active'));
+    if (p.getAttribute('aria-checked') !== wl) p.setAttribute('aria-checked', wl);
+  }
+  function wszystko() { if (wlasneZmiany) return; wlasneZmiany = true; try { skrot(); status(); wersje(); zrodla(); samokorekta(); } finally { wlasneZmiany = false; } }
+  function start() {
+    const obserwuj = (el, opcje) => { if (el) new MutationObserver(wszystko).observe(el, opcje); };
+    obserwuj(document.getElementById('stat-words'), { childList: true, characterData: true, subtree: true });
+    obserwuj(document.getElementById('stat-read'), { childList: true, characterData: true, subtree: true });
+    obserwuj(document.getElementById('out-badge'), { attributes: true, attributeFilter: ['class'] });
+    obserwuj(document.getElementById('versions-bar'), { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    obserwuj(document.getElementById('article'), { childList: true });
+    obserwuj(document.getElementById('premium-btn'), { attributes: true, attributeFilter: ['class'] });
+    document.querySelectorAll('.h-preview-col, .mob-hist-modal, #mob-hist-modal').forEach((el) => obserwuj(el, { childList: true, subtree: true }));
+    // zmiana jezyka (applyLang ustawia html[lang]) odswieza napisy skladane tutaj
+    obserwuj(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+    wszystko();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
+// Komputer (R3, ux 3-4): kolumna wyniku ponizej 760 px dostaje klase .wynik-waski (pasek akcji
+// z samymi ikonami, tabele w artykule przewijane w bok). Klasa, nie container query: kontener
+// rozmiaru zmienialby blok zawierajacy dla elementow fixed w kolumnie (pasek akcji, arkusze).
+// Otwarta Baza wiedzy przy 1100-1439 px zwija brief do szyny (wraca, gdy Baza sie zamknie);
+// ponizej 1100 px Baza jest szuflada nad trescia (CSS).
+(function kolumnaWyniku() {
+  function start() {
+    const kol = document.querySelector('.output-col');
+    if (kol && typeof ResizeObserver === 'function') {
+      new ResizeObserver(function (w) {
+        const sz = w[0].contentRect.width;
+        const waski = !document.body.classList.contains('is-mobile') && sz > 0 && sz < 760;
+        if (kol.classList.contains('wynik-waski') !== waski) kol.classList.toggle('wynik-waski', waski);
+      }).observe(kol);
+    }
+    // szuflada Bazy (< 1100 px): klikniecie w zaslone obok (pseudo-element ::after szuflady) zamyka Baze
+    const pasek = document.querySelector('.layout > .sidebar');
+    if (pasek) pasek.addEventListener('click', function (e) {
+      if (e.target !== pasek || document.body.classList.contains('is-mobile') || window.innerWidth >= 1100) return;
+      if (e.clientX > pasek.getBoundingClientRect().right && typeof toggleKbPanel === 'function') toggleKbPanel();
+    });
+    let bylaOtwarta = !document.body.classList.contains('kb-collapsed');
+    new MutationObserver(function () {
+      const b = document.body;
+      const otwarta = !b.classList.contains('kb-collapsed') && !b.classList.contains('is-mobile');
+      if (otwarta === bylaOtwarta) return;
+      bylaOtwarta = otwarta;
+      const sredni = window.innerWidth >= 1100 && window.innerWidth < 1440;
+      if (otwarta && sredni && !b.classList.contains('brief-zwiniety') && typeof przelaczBrief === 'function') { przelaczBrief(true); b.dataset.briefBaza = '1'; }
+      else if (!otwarta && b.dataset.briefBaza === '1') { delete b.dataset.briefBaza; if (typeof przelaczBrief === 'function') przelaczBrief(false); }
+    }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
+// Paski chowane przy czytaniu (R3-07, mechanika uzgodniona z it-plynnosc): tylko transform,
+// nasluch passive + requestAnimationFrame, histereza 16 px ciaglego ruchu, jedna klasa na body.
+(function paskiPrzyCzytaniu() {
+  const PROG = 16, GORA = 92, KONIEC = 64;
+  let ostatnie = window.scrollY, ruch = 0, czeka = false, mozna = false, maks = 0;
+  // Zgoda na chowanie i wysokosc strony liczone poza klatka przewijania (obserwatory),
+  // krok() czyta tylko scrollY - bez wymuszonego przeliczenia stylu w kazdej klatce.
+  function policzZgode() {
+    const b = document.body;
+    const art = document.getElementById('article');
+    mozna = b.classList.contains('is-mobile') && b.classList.contains('widok-wynik')
+      && !b.classList.contains('inspektor-otwarty') && !b.classList.contains('statystyki-otwarte')
+      && !document.querySelector('.grupa-menu.open, .settings-menu.open, .overlay.open, .okno-tlo.open, #mobile-sidebar.open')
+      && !!art && art.style.display !== 'none' && !!art.innerHTML && !art.isContentEditable;
+    maks = document.documentElement.scrollHeight - window.innerHeight;
+    if (!mozna || maks <= GORA * 2) ustaw(false);
+  }
+  function ustaw(ukryj) { if (document.body.classList.contains('paski-ukryte') !== ukryj) document.body.classList.toggle('paski-ukryte', ukryj); }
+  function krok() {
+    czeka = false;
+    const y = window.scrollY, d = y - ostatnie;
+    ostatnie = y;
+    if (!mozna || maks <= GORA * 2) { ruch = 0; return; }
+    if (y < GORA || maks - y < KONIEC) { ruch = 0; ustaw(false); return; }
+    if ((d > 0 && ruch < 0) || (d < 0 && ruch > 0)) ruch = 0;
+    ruch += d;
+    if (ruch > PROG) ustaw(true);
+    else if (ruch < -PROG) ustaw(false);
+  }
+  window.addEventListener('scroll', function () { if (!czeka) { czeka = true; requestAnimationFrame(krok); } }, { passive: true });
+  let planowane = false;
+  function zaplanuj() { if (planowane) return; planowane = true; requestAnimationFrame(function () { planowane = false; policzZgode(); }); }
+  function start() {
+    new MutationObserver(zaplanuj).observe(document.body, { attributes: true, attributeFilter: ['class'], childList: false });
+    document.querySelectorAll('.grupa-menu, .settings-menu, .overlay, #mobile-sidebar').forEach(function (e) { new MutationObserver(zaplanuj).observe(e, { attributes: true, attributeFilter: ['class'] }); });
+    const art = document.getElementById('article');
+    if (art) {
+      new MutationObserver(zaplanuj).observe(art, { attributes: true, attributeFilter: ['style', 'contenteditable'], childList: true });
+      if (typeof ResizeObserver === 'function') new ResizeObserver(zaplanuj).observe(art);
+    }
+    window.addEventListener('resize', zaplanuj);
+    policzZgode();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
@@ -9814,7 +10382,7 @@ function przyciskMenuDla(el) {
 function closeSettingsMenu() {
   const m = document.getElementById('settings-menu');
   if (!m.classList.contains('open')) return;
-  m.classList.remove('open');
+  zamknijArkusz(m);
   document.getElementById('settings-btn')?.setAttribute('aria-expanded', 'false');
   document.getElementById('mnav-konto')?.setAttribute('aria-expanded', 'false');
   if (m.contains(document.activeElement)) { const p = przyciskMenuDla(m); if (p && p.offsetParent !== null) p.focus({ preventScroll: true }); }
@@ -10367,9 +10935,20 @@ function przelaczGrupe(nazwa) {
   if (pierwsza && document.activeElement === przycisk) pierwsza.focus();
 }
 
+// Na telefonie zamykany arkusz dostaje na chwile klase .zamykanie (zjazd w dol, bez klikniec),
+// a .open znika od razu - logika od razu widzi menu zamkniete.
+function zamknijArkusz(m) {
+  if (!m || !m.classList.contains('open')) return;
+  m.classList.remove('open');
+  if (!document.body.classList.contains('is-mobile') || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  m.classList.add('zamykanie');
+  const koniec = function () { m.classList.remove('zamykanie'); m.removeEventListener('animationend', koniec); };
+  m.addEventListener('animationend', koniec);
+  setTimeout(koniec, 400);
+}
 function zamknijGrupyPaska() {
   GRUPY_PASKA.forEach(function(n) {
-    document.getElementById('grupa-' + n + '-menu')?.classList.remove('open');
+    zamknijArkusz(document.getElementById('grupa-' + n + '-menu'));
   });
   document.querySelectorAll('.grupa-backdrop').forEach(function(t) { t.classList.remove('show'); });
   document.querySelectorAll('.grupa-wrap [aria-haspopup]').forEach(function(b) { b.setAttribute('aria-expanded', 'false'); });
@@ -10387,7 +10966,7 @@ function odswiezGrupyPaska() {
     const wrap = document.getElementById('grupa-' + n + '-wrap');
     if (!menu || !wrap) return;
     const cos = [...menu.children].some(function(e) {
-      return e.style.display !== 'none' && !e.classList.contains('grupa-sep');
+      return e.style.display !== 'none' && !e.classList.contains('grupa-sep') && !e.classList.contains('arkusz-tytul');
     });
     wrap.style.display = cos ? 'inline-flex' : 'none';
   });
@@ -14100,9 +14679,10 @@ async function kbAudioTranscribeAndOpen(file) {
 
 <div id="audio-panel" style="display:none;position:fixed;top:56px;right:0;bottom:0;left:0;background:var(--bg);overflow-y:auto;z-index:150;padding:24px 18px 90px">
   <div style="max-width:820px;margin:0 auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+    <div class="narzedzie-naglowek" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <button type="button" class="btn-secondary narzedzie-wroc" onclick="closeAudioPanel()" data-i18n="img-back" data-ikona="arrow-left"><svg class="ikona" aria-hidden="true"><use href="#i-arrow-left"/></svg>Wróć</button>
       <h3 style="margin:0;font-size:18px;color:var(--text)" data-i18n="audio-title">Treści audio</h3>
-      <button class="btn-secondary" onclick="closeAudioPanel()" data-i18n="audio-close">Zamknij</button>
+      <button class="btn-secondary narzedzie-zamknij" onclick="closeAudioPanel()" data-i18n="audio-close">Zamknij</button>
     </div>
 
     <label for="au-type" class="field-label" data-i18n="audio-type">Rodzaj treści audio</label>
