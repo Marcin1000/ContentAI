@@ -228,10 +228,18 @@ async function wariantKeys(b) {
 
   // Szkic i ostatni artykul po odswiezeniu.
   await s.fill('#topic', 'Temat w trakcie pisania');
-  await s.waitForTimeout(600);
+  // Odswiezenie dopiero, gdy szkic i historia sa na pewno w magazynie (zapis szkicu jest
+  // odkladany o 400 ms, a historia po pierwszym malowaniu): bez tego na wolniejszym
+  // CI odswiezenie wyprzedzalo zapis.
+  await krok('szkic zapisany przed odswiezeniem', s.waitForFunction(() => {
+    try { return JSON.parse(magazyn.getItem('cai_szkic') || '{}').topic === 'Temat w trakcie pisania' && JSON.parse(magazyn.getItem('cai_history_v2') || '[]').length > 0
+      && magazyn.getItem('cai_biezacy') !== null; } catch (e) { return false; }
+  }, null, { timeout: 8000 }));
   await s.reload({ waitUntil: 'load' });
   await krok('szkic i artykul po odswiezeniu', s.waitForFunction(() => document.getElementById('topic').value !== '' && getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: 8000 }));
-  const st = await s.evaluate(() => ({ t: document.getElementById('topic').value, art: getComputedStyle(document.getElementById('article')).display }));
+  const st = await s.evaluate(() => ({ t: document.getElementById('topic').value, art: getComputedStyle(document.getElementById('article')).display,
+    // diagnostyka na wypadek bledu: co jest w magazynie po odswiezeniu
+    szkic: (magazyn.getItem('cai_szkic') || '').slice(0, 60), hist: (magazyn.getItem('cai_history_v2') || '').length, biezacy: magazyn.getItem('cai_biezacy') }));
   wynik('keys: szkic formularza i artykul wracaja po odswiezeniu', st.t === 'Temat w trakcie pisania' && st.art === 'block', JSON.stringify(st));
   // Temat, z ktorego powstal ostatni artykul, nie wraca do briefu; start na Briefie.
   await s.evaluate(() => { document.getElementById('topic').value = history[biezacyHist >= 0 ? biezacyHist : 0].topic; zapiszSzkic(); });

@@ -64,7 +64,7 @@ from a knowledge base you control, running on a server and an API key that belon
 
 ![SEO scoring panel with findings](docs/obrazy/screen-scoring.png)
 
-**Eighteen post-generation actions grouped into four menus.**
+**Follow-up actions sit in short menus right above the draft: create, copy, export.**
 
 ![Grouped action menu above the result](docs/obrazy/screen-toolbar.png)
 
