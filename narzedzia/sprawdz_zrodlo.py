@@ -541,6 +541,22 @@ KONTROLE = [
      "if (pub) pub.style.display = ((wpSettings.url || drupalSettings.url) && art", None, None),
     ("R2/cms-https", "CMS pod http:// - komunikat o https zamiast CORS",
      "if (cmsBezHttps(adresCms)) {", None, None),
+    ("R2/skip-link", "odnosnik Przejdz do tresci na poczatku strony",
+     'class="przejdz-do-tresci" onclick="return przejdzDoTresci()"', None, None),
+    # Odznaka miala data-i18n="badge-ready", wiec kazde applyLang (zmiana jezyka, start
+    # po odswiezeniu) cofalo gotowy artykul do "gotowy do generowania".
+    ("R2/odznaka-jezyk", "odznaka wyniku trzyma swoj klucz przy zmianie jezyka",
+     "ustawTekst(document.getElementById('out-badge'), 'badge-historia');", "document.getElementById('out-badge').textContent = _t(", None),
+    ("R2/odmiana", "odmiana liczebnikow w statusie generowania grupowego",
+     "status.textContent = _tn('bulk-gotowe', topics.length);", None, None),
+    ("R2/wczesny-jezyk", "teksty EN podmienione przed reszta skryptu (strona nie czeka ukryta)",
+     "tlumaczStatyczne(I18N[currentLang] || I18N.pl);", None, None),
+    ("R2/tytul-h1", "wariant tytulu mozna wstawic jako H1",
+     "onclick=\"uzyjTytuluJakoH1(${i}, this)\"", None, None),
+    ("R2/koszt-proxy", "bez kosztu sesji w wariancie z serwerem",
+     None, 'id="h-cost"', ("proxy",)),
+    ("R2/blokady-pakietu", "Grafika i Audio spoza pakietu oznaczone w menu zadan",
+     "document.querySelectorAll('[onclick=\"openAudioPanel()\"]').forEach(", ".btn-module[onclick=", ("proxy",)),
 
     # ── warstwa reskinu ──
     # Splash trzymal gotowa aplikacje jeszcze 2,4 s (stale 1900 ms + zanikanie) i zjadal
