@@ -2277,6 +2277,25 @@ body:not(.is-mobile) .output-bar { padding-inline: max(var(--s-16), calc((100% -
 #gen-btn.z-samokorekta .gen-samokorekta { display: inline; }
 #gen-btn.z-samokorekta .kbd, #gen-btn:disabled .gen-samokorekta { display: none; }
 @media (prefers-reduced-motion: reduce) { .menu-przelacznik-tor { transition: none; } }
+/* Pasek Wygeneruj na telefonie: tresc briefu zanika pod nim zamiast byc przecieta w pol pola. */
+body.is-mobile .form-actions-sticky::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 32px; pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--c-panel)); }
+body.is-mobile .form-actions-sticky { border-top-color: transparent; }
+/* Konto: grupy jako kategorie (naglowek z kreska nad soba, ikony w kafelkach), nie jak zwykly tekst. */
+.settings-menu .menu-naglowek { margin: var(--s-8) var(--s-8) var(--s-4); padding: var(--s-12) 0 0; border-top: 1px solid var(--c-linia);
+  font-size: 12px; font-weight: var(--g-mocny); letter-spacing: .08em; text-transform: uppercase; color: var(--c-tekst-3); }
+.settings-menu hr + .menu-naglowek { margin-top: var(--s-4); padding-top: var(--s-8); border-top: 0; }
+.settings-menu .settings-item > span:first-child { width: 36px; height: 36px; border-radius: var(--r-md); background: var(--c-wcisk);
+  align-items: center; justify-content: center; color: var(--c-tekst-2); }
+.settings-menu .settings-item { gap: var(--s-12); }
+/* Frazy z OpenSEO bez projektu albo bez polaczenia */
+.seo-pusty { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-8); padding: var(--s-16); margin-bottom: var(--s-8);
+  border: 1px dashed var(--c-linia-2); border-radius: var(--r-md); }
+.seo-pusty[hidden], #seo-narzedzia[hidden] { display: none; }
+.seo-pusty > .ikona { color: var(--c-tekst-3); }
+.seo-pusty b { font-size: var(--t-md, 15px); color: var(--c-tekst); }
+.seo-pusty p { margin: 0; font-size: var(--t-sm); line-height: 1.5; color: var(--c-tekst-2); }
+.seo-pusty-akcje { display: flex; flex-wrap: wrap; gap: var(--s-8); margin-top: var(--s-4); }
 
 /* R3-04: Generator grafik na telefonie - nic nie wychodzi poza ekran */
 body.is-mobile #img-panel { top: 48px !important; bottom: var(--dol) !important; padding: var(--s-16) var(--s-16) var(--s-24); }
@@ -4678,6 +4697,7 @@ var I18N = {
     'seo-dodaj':'Dodaj zaznaczone','seo-oddaj':'Oddaj frazy tego artykułu do OpenSEO',
     'seo-oddaj-hint':'Zapisuje bieżące frazy z tagiem content-ai, żeby dało się śledzić ich pozycje.',
     'seo-pusto':'Brak zapisanych fraz w tym projekcie.','seo-zamknij':'Zamknij',
+    'seo-pusty-tytul':'Nie ma jeszcze fraz z OpenSEO','seo-pusty-opis':'Załóż projekt w OpenSEO i oznacz w nim frazy. Pojawią się tutaj do dodania jednym kliknięciem. Bez OpenSEO frazy wpisujesz ręcznie w briefie.','seo-pusty-otworz':'Otwórz OpenSEO','seo-pusty-opis-blad':'OpenSEO nie odpowiada albo to konto nie ma do niego dostępu. Frazy możesz wpisać ręcznie w briefie.',
     'seo-wolumen':'wyszukań/mc','seo-trudnosc':'trudność','seo-brak-danych':'brak danych',
     'seo-blad':'Nie udało się połączyć z OpenSEO.','seo-laduje':'Wczytuję…',
     'seo-zapisano':'Zapisano w OpenSEO','seo-nic-nie-zaznaczono':'Najpierw zaznacz frazy.',
@@ -5341,6 +5361,7 @@ var I18N = {
     'seo-dodaj':'Add selected','seo-oddaj':'Send this article\'s keywords to OpenSEO',
     'seo-oddaj-hint':'Saves the current keywords with the content-ai tag so their rankings can be tracked.',
     'seo-pusto':'No saved keywords in this project.','seo-zamknij':'Close',
+    'seo-pusty-tytul':'No OpenSEO keywords yet','seo-pusty-opis':'Create a project in OpenSEO and tag keywords there. They will show up here, ready to add in one click. Without OpenSEO you type keywords into the brief yourself.','seo-pusty-otworz':'Open OpenSEO','seo-pusty-opis-blad':'OpenSEO is not responding or this account has no access to it. You can type keywords into the brief yourself.',
     'seo-wolumen':'searches/mo','seo-trudnosc':'difficulty','seo-brak-danych':'no data',
     'seo-blad':'Could not reach OpenSEO.','seo-laduje':'Loading…',
     'seo-zapisano':'Saved in OpenSEO','seo-nic-nie-zaznaczono':'Select some keywords first.',
@@ -11428,11 +11449,19 @@ function zapiszSzkic() {
   if (!isNaN(ost) && history[ost]) {
     // Temat ze szkicu ma pierwszenstwo przed tematem artykulu - autor mogl
     // juz zaczac nastepny tekst.
+    // Po wejsciu do aplikacji brief jest pusty (nowy tekst), a ostatni artykul
+    // czeka w Wyniku. Temat i frazy, z ktorych ten artykul powstal, nie wracaja do
+    // briefu; zostaje tylko temat nastepnego tekstu, jesli autor zaczal go pisac.
     const pokaz = () => {
       const temat = document.getElementById('topic').value;
+      const tematArtykulu = String(history[ost].topic || '').trim();
       otworzWGeneratorze(ost);
-      if (szkic && szkic.topic) document.getElementById('topic').value = temat;
-      window.scrollTo(0, 0);
+      const nowyTemat = szkic && szkic.topic && szkic.topic.trim() !== tematArtykulu;
+      document.getElementById('topic').value = nowyTemat ? temat : '';
+      if (!nowyTemat) { keywords.length = 0; if (typeof renderKws === 'function') renderKws(); zapiszSzkic(); }
+      // Obserwatory odznaki przelaczaja telefon na Wynik przy gotowym artykule;
+      // przy samym wejsciu zostajemy na Briefie (po nich, stad setTimeout).
+      setTimeout(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); window.scrollTo(0, 0); }, 0);
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pokaz); else setTimeout(pokaz, 0);
   }
@@ -16309,6 +16338,18 @@ async function kbAudioTranscribeAndOpen(file) {
     </div>
     <div class="tekst-maly" style="margin-bottom:16px" data-i18n="seo-desc">Frazy zapisane i otagowane w OpenSEO. Odczyt nie kosztuje kredytów - dane pochodzą z bazy OpenSEO, nie z nowego zapytania.</div>
 
+    <!-- Bez projektu w OpenSEO (albo bez polaczenia) zamiast pustych list jest wyjasnienie i jedna akcja. -->
+    <div id="seo-pusty" class="seo-pusty" hidden>
+      <svg class="ikona ikona-l" aria-hidden="true"><use href="#i-trending-up"/></svg>
+      <b id="seo-pusty-tytul" data-i18n="seo-pusty-tytul">Nie ma jeszcze fraz z OpenSEO</b>
+      <p id="seo-pusty-opis" data-i18n="seo-pusty-opis">Załóż projekt w OpenSEO i oznacz w nim frazy. Pojawią się tutaj do dodania jednym kliknięciem. Bez OpenSEO frazy wpisujesz ręcznie w briefie.</p>
+      <div class="seo-pusty-akcje">
+        <button type="button" class="btn-secondary" id="seo-pusty-otworz" onclick="zamknijFrazySeo(); if (typeof otworzOpenSeo === 'function') otworzOpenSeo();" data-i18n="seo-pusty-otworz">Otwórz OpenSEO</button>
+        <button type="button" class="btn-secondary" onclick="zamknijFrazySeo()" data-i18n="seo-zamknij">Zamknij</button>
+      </div>
+    </div>
+
+    <div id="seo-narzedzia">
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <select id="seo-projekt" aria-label="Projekt" data-i18n-label="lbl-seo-projekt" onchange="odswiezFrazySeo()" style="flex:1;min-width:150px"></select>
       <select id="seo-tag" aria-label="Tag" data-i18n-label="lbl-seo-tag" onchange="odswiezFrazySeo()" style="flex:1;min-width:130px"></select>
@@ -16325,6 +16366,7 @@ async function kbAudioTranscribeAndOpen(file) {
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
       <button class="btn-secondary" onclick="oddajFrazySeo()" style="width:100%" data-i18n="seo-oddaj">Oddaj frazy tego artykułu do OpenSEO</button>
       <div class="tekst-pomoc" style="margin-top:6px" data-i18n="seo-oddaj-hint">Zapisuje bieżące frazy z tagiem content-ai, żeby dało się śledzić ich pozycje.</div>
+    </div>
     </div>
 
     <div class="tekst-maly" id="seo-status" style="margin-top:12px;min-height:16px"></div>
@@ -16369,12 +16411,24 @@ async function kbAudioTranscribeAndOpen(file) {
         return '<option value="' + bezpieczny(p.id) + '">' + bezpieczny(p.nazwa) + '</option>';
       }).join('');
       status('');
-      if (!(dane.projekty || []).length) { el('seo-lista').innerHTML = ''; return; }
+      if (!(dane.projekty || []).length) { pusty(false); return; }
+      pusty(null);
       await odswiezFrazySeo();
     } catch(e){
-      status(tekst('seo-blad', 'Nie udało się połączyć z OpenSEO.'));
+      status('');
+      pusty(true);
     }
   };
+  // null: sa projekty (zwykle okno); false: brak projektow; true: brak polaczenia.
+  function pusty(blad){
+    var p = el('seo-pusty'), n = el('seo-narzedzia');
+    if (!p || !n) return;
+    p.hidden = blad === null; n.hidden = blad !== null;
+    if (blad === null) return;
+    el('seo-pusty-tytul').textContent = blad ? tekst('seo-blad', 'Nie udało się połączyć z OpenSEO.') : tekst('seo-pusty-tytul', 'Nie ma jeszcze fraz z OpenSEO');
+    el('seo-pusty-opis').textContent = blad ? tekst('seo-pusty-opis-blad', 'OpenSEO nie odpowiada albo to konto nie ma do niego dostępu. Frazy możesz wpisać ręcznie w briefie.') : tekst('seo-pusty-opis', '');
+    var otw = el('seo-pusty-otworz'); if (otw) otw.hidden = !!blad;
+  }
 
   window.zamknijFrazySeo = function(){ el('seo-modal').style.display = 'none'; };
 

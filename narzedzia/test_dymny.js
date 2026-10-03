@@ -233,6 +233,13 @@ async function wariantKeys(b) {
   await krok('szkic i artykul po odswiezeniu', s.waitForFunction(() => document.getElementById('topic').value !== '' && getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: 8000 }));
   const st = await s.evaluate(() => ({ t: document.getElementById('topic').value, art: getComputedStyle(document.getElementById('article')).display }));
   wynik('keys: szkic formularza i artykul wracaja po odswiezeniu', st.t === 'Temat w trakcie pisania' && st.art === 'block', JSON.stringify(st));
+  // Temat, z ktorego powstal ostatni artykul, nie wraca do briefu; start na Briefie.
+  await s.evaluate(() => { document.getElementById('topic').value = history[biezacyHist >= 0 ? biezacyHist : 0].topic; zapiszSzkic(); });
+  await s.reload({ waitUntil: 'load' });
+  await krok('artykul po odswiezeniu bez starego tematu', s.waitForFunction(() => getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: 8000 }));
+  await s.waitForTimeout(300);
+  const st2 = await s.evaluate(() => ({ t: document.getElementById('topic').value, kw: keywords.length, wynik: document.body.classList.contains('widok-wynik') }));
+  wynik('keys: po wejsciu brief pusty (temat artykulu nie wraca), widok Brief', st2.t === '' && st2.kw === 0 && !st2.wynik, JSON.stringify(st2));
   wynik('keys: bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow) await zrzut(s, 'keys');
   await k.close();
