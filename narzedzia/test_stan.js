@@ -136,13 +136,13 @@ async function scenariuszStanu(b) {
   await generuj(s, 'Pompy ciepla w domu jednorodzinnym', true);
   await krok('artykul A', czekajNaKoniec(s));
   await s.evaluate(() => { try { inspektorZamknij(); } catch (e) { /* brak panelu */ } przelaczPanelFaktow(); });
-  await s.waitForFunction(() => getComputedStyle(document.getElementById('fakty-loading')).display === 'none', null, { timeout: 30000 }).catch(() => {});
+  await s.waitForFunction(() => getComputedStyle(document.getElementById('fakty-loading')).display === 'none', null, { timeout: 30000 }).catch(() => { throw new Error('nie doczekano: koniec ladowania Faktow'); });
   await s.evaluate(() => {
     const fw = document.getElementById('fakty-wynik');
     if (fw && fw.firstElementChild) fw.firstElementChild.setAttribute('data-test-art', 'A');
     runRepurpose('linkedin');
   });
-  await s.waitForFunction(() => (document.getElementById('repurpose-out').value || '').length > 20, null, { timeout: 30000 }).catch(() => {});
+  await s.waitForFunction(() => (document.getElementById('repurpose-out').value || '').length > 20, null, { timeout: 30000 }).catch(() => { throw new Error('nie doczekano: tresc przerobki'); });
   // Typ Article: headline = H1, wiec z kodu widac, ktorego artykulu dotyczy.
   await s.evaluate(() => { document.getElementById('jsonld-type').value = 'article'; toggleJsonLd(); });
   await s.waitForTimeout(1200);
@@ -173,7 +173,7 @@ async function scenariuszStanu(b) {
 
   // ── Artykul A z historii ──
   await s.evaluate(() => { runRepurpose('linkedin'); });
-  await s.waitForFunction(() => (document.getElementById('repurpose-out').value || '').length > 20, null, { timeout: 30000 }).catch(() => {});
+  await s.waitForFunction(() => (document.getElementById('repurpose-out').value || '').length > 20, null, { timeout: 30000 }).catch(() => { throw new Error('nie doczekano: tresc przerobki'); });
   await s.evaluate(() => otworzWGeneratorze(1));
   await s.waitForTimeout(900);
   const h = await stan(s);
@@ -192,7 +192,7 @@ async function scenariuszStanu(b) {
       if (p && getComputedStyle(p).display !== 'none') przelaczPanelFaktow();
       przelaczPanelFaktow();
     });
-    await s.waitForFunction(() => getComputedStyle(document.getElementById('fakty-loading')).display === 'none', null, { timeout: 30000 }).catch(() => {});
+    await s.waitForFunction(() => getComputedStyle(document.getElementById('fakty-loading')).display === 'none', null, { timeout: 30000 }).catch(() => { throw new Error('nie doczekano: koniec ladowania Faktow'); });
     await s.waitForTimeout(400);
     const f = await s.evaluate(() => {
       const fw = document.getElementById('fakty-wynik');
@@ -259,7 +259,7 @@ async function scenariuszBledow(b) {
   for (const [blad, klucz, ponow] of [['401', 'err-klucz', false], ['529', 'err-overloaded', true]]) {
     st.blad = blad; st.gdzie = 'anthropic';
     await s.evaluate(() => { seoOpen = false; toggleSeoPanel(true); });
-    await s.waitForFunction(() => !!document.querySelector('#seo-content .komunikat-bledu'), null, { timeout: 30000 }).catch(() => {});
+    await s.waitForFunction(() => !!document.querySelector('#seo-content .komunikat-bledu'), null, { timeout: 30000 }).catch(() => { throw new Error('nie doczekano: komunikat bledu w panelu SEO'); });
     const p = await s.evaluate((k) => {
       const kb = document.querySelector('#seo-content .komunikat-bledu');
       return kb ? { ok: kb.innerText.indexOf(_t(k)) !== -1, ponow: !!kb.querySelector('.ponow-generowanie'), tekst: kb.innerText.slice(0, 160) } : null;
@@ -276,7 +276,7 @@ async function scenariuszBledow(b) {
     const c = document.getElementById('img-context'); if (c) c.value = 'Pompa ciepla w ogrodzie';
     generateImage();
   });
-  await s.waitForFunction(() => document.querySelectorAll('.powiadomienie').length > 0, null, { timeout: 30000 }).catch(() => {});
+  await s.waitForFunction(() => document.querySelectorAll('.powiadomienie').length > 0, null, { timeout: 30000 }).catch(() => { throw new Error('nie doczekano: powiadomienie'); });
   const pow = await s.evaluate(() => [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent).join(' | '));
   const wzorKlucza = await s.evaluate(() => _t('err-klucz'));
   wynik('grafika, zly klucz OpenAI: powiadomienie ze slownika', pow.indexOf(wzorKlucza) !== -1 && !SUROWE.test(pow), pow.slice(0, 200));
