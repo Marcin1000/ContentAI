@@ -2350,6 +2350,7 @@ body.is-mobile .settings-menu .segmenty button { min-width: var(--h-dotyk); just
 .zrodla-box .zrodla-wiecej { display: inline-flex; margin: var(--s-4) 0 0; font-size: var(--t-sm); }
 .zrodla-box .zrodlo-data { color: var(--c-tekst-3); white-space: nowrap; }
 body.is-mobile .zrodla-box .zrodla-wiecej { min-height: var(--h-dotyk); }
+body.is-mobile .zrodla-box li > a { display: inline-block; min-height: var(--h-dotyk); padding-block: var(--s-4); }
 
 /* ══ TELEFON: ekran wyniku (R3-07, spec agencja-ux; R3-06, R3-08, R3-13) ══ */
 body.is-mobile { --nav-h: 56px; --gora-h: 48px; --meta-h: 44px; }
@@ -2934,7 +2935,7 @@ document.addEventListener('DOMContentLoaded', function () {
               </select>
             </div>
             <div class="field">
-              <label for="lang" class="field-label" data-i18n="label-lang-out">Język</label>
+              <label for="lang" class="field-label" data-i18n="label-lang-out">Język tekstu</label>
               <select id="lang">
                 <option>Polski</option>
                 <option>English</option>
@@ -4407,7 +4408,7 @@ var I18N = {
     'tematy-kopiuj':'Kopiuj listę','tematy-skopiowano':'Skopiowano',
     'tematy-demo-temat':'Przykładowy temat','tematy-demo-dlaczego':'Tryb demonstracyjny - wpisz klucz API, żeby dostać prawdziwe propozycje.',
     'ph-length-custom':'np. 1200','label-kw':'Słowa kluczowe','ph-kw':'Wpisz frazę kluczową','ph-kw-title':'Enter albo + dodaje frazę',
-    'label-tone':'Ton','label-lang-out':'Język','label-extra':'Dodatkowe wytyczne',
+    'label-tone':'Ton','label-lang-out':'Język tekstu','label-extra':'Dodatkowe wytyczne',
     'ph-extra':'np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem…',
     'astat-siec':'Sieć:',
     'siec-forma-1':'źródło',
@@ -5104,7 +5105,7 @@ var I18N = {
     'tematy-kopiuj':'Copy list','tematy-skopiowano':'Copied',
     'tematy-demo-temat':'Sample topic','tematy-demo-dlaczego':'Demo mode - enter an API key to get real suggestions.',
     'ph-length-custom':'e.g. 1200','label-kw':'Keywords','ph-kw':'Type a keyword','ph-kw-title':'Press Enter or + to add it',
-    'label-tone':'Tone','label-lang-out':'Language','label-extra':'Additional guidelines',
+    'label-tone':'Tone','label-lang-out':'Text language','label-extra':'Additional guidelines',
     'ph-extra':'e.g. Focus on SME segment, include market comparison…',
     'astat-siec':'Web:',
     'siec-forma-1':'source',
