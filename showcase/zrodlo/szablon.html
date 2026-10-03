@@ -698,9 +698,10 @@
 
 {{>stopka}}
 
+{# Telefon: jeden główny przycisk; „Zaloguj się" jest stale w nagłówku. Pasek pojawia się po minięciu hero,
+   chowa się przy przewijaniu w górę (wtedy część przeglądarek pokazuje własny przycisk „do góry"), przy formularzu i stopce. #}
 <div class="pasek-cta" id="pasek-cta" role="region" aria-label="{{a:mob-bar}}" hidden>
-  <a class="btn btn-drugi" href="{{$app}}">{{t:nav-login}}</a>
-  <a class="btn btn-glowny" href="#dostep">{{t:nav-cta}}</a>
+  <a class="btn btn-glowny" href="#dostep">{{t:nav-cta}}<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
 </div>
 </body>
 </html>

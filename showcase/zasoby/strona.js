@@ -39,7 +39,7 @@
     etykietaMotywu();
   }
 
-  /* ---------- nawigacja: tło po przewinięciu, menu na telefonie, aktywna sekcja ---------- */
+  /* ---------- nawigacja: tło po przewinięciu, menu na telefonie i tablecie, aktywna sekcja ---------- */
   var nav = $('#nav');
   var czekaPrzew = false;
   function naPrzewiniecie() {
@@ -67,7 +67,7 @@
     menuBtn.addEventListener('keydown', function (e) { if (e.key === ' ') { e.preventDefault(); ustawMenu(menuPanel.hidden); } });
     $$('a', menuPanel).forEach(function (a) { a.addEventListener('click', function () { ustawMenu(false); }); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menuPanel.hidden) ustawMenu(false, true); });
-    window.addEventListener('resize', function () { if (window.innerWidth > 720 && !menuPanel.hidden) ustawMenu(false); });
+    window.addEventListener('resize', function () { if (window.innerWidth > 1180 && !menuPanel.hidden) ustawMenu(false); });
   }
 
   if (maIO) {
@@ -100,6 +100,8 @@
     setTimeout(raz, spokoj ? 80 : 1400);
   }
   document.addEventListener('click', function (e) {
+    // kliknięcie obsłużone przez skrypt (np. przycisk menu to link do spisu w stopce) - nie przewijamy do jego celu
+    if (e.defaultPrevented) return;
     var a = e.target.closest ? e.target.closest('a[href*="#"]') : null;
     if (!a || a.origin !== location.origin || a.pathname !== location.pathname || !a.hash || a.hash.length < 2) return;
     var cel = document.getElementById(decodeURIComponent(a.hash.slice(1)));
@@ -152,11 +154,14 @@
     var kroki = $$('.ramka-kroki button', ramka);
     var CZAS = [1500, 1400, 2200, 1700, 3400];   // ile trwa każdy krok (ms)
     var krok = 0, zegar = null, wPauzie = false, widoczna = true, wstrzymana = false;
+    // Telefon: makieta statyczna w stanie końcowym (decyzja agencja-strona-projekt D3) - bez pętli, jak przy ograniczonym ruchu.
+    var mqTelefon = window.matchMedia ? matchMedia('(max-width: 720px)') : null;
+    var bezPetli = function () { return spokoj || !!(mqTelefon && mqTelefon.matches); };
     var ustawKlasy = function (n, bezPrzejsc) {
       var k = 'ramka';
       for (var i = 1; i <= n; i++) k += ' k' + i;
       if (wPauzie) k += ' pauza';
-      if (spokoj) k += ' bez-petli';
+      if (bezPetli()) k += ' bez-petli';
       if (bezPrzejsc) k += ' bez-przejsc';
       if (wPauzie || !widoczna || document.hidden) k += ' zatrzymana';
       ramka.className = k;
@@ -169,7 +174,7 @@
     };
     var zatrzymaj = function () { if (zegar) { clearTimeout(zegar); zegar = null; } ramka.classList.add('zatrzymana'); };
     var planuj = function () {
-      if (zegar || wPauzie || wstrzymana || !widoczna || document.hidden || spokoj) return;
+      if (zegar || wPauzie || wstrzymana || !widoczna || document.hidden || bezPetli()) return;
       ramka.classList.remove('zatrzymana');
       zegar = setTimeout(nastepny, krok === 0 ? 400 : CZAS[krok - 1]);
     };
@@ -196,7 +201,12 @@
       krok = 5; ustawKlasy(5, true);
       pauzaBtn.hidden = true;
     } else {
-      ustawKlasy(0, true);
+      if (bezPetli()) { krok = 5; ustawKlasy(5, true); } else ustawKlasy(0, true);
+      if (mqTelefon && mqTelefon.addEventListener) mqTelefon.addEventListener('change', function () {
+        zatrzymaj();
+        if (bezPetli()) { krok = 5; ustawKlasy(5, true); }
+        else if (!wPauzie) { krok = 0; ustawKlasy(0, true); planuj(); }
+      });
       pauzaBtn.addEventListener('click', function () {
         if (!wPauzie && krok < 5) { krok = 5; ustawKlasy(5); }
         ustawPauze(!wPauzie);
@@ -236,6 +246,13 @@
     var mqSzeroki = matchMedia('(min-width: 981px)');
     var aktywny = 0;
     var pokazEkran = function () { ekrany.forEach(function (e, i) { e.classList.toggle('widoczny', i === aktywny); }); };
+    // Na komputerze scena ma wysokość najwyższego ekranu, więc żaden ekran nie jest ucinany przy zmianie tekstów.
+    var wyrownaj = function () {
+      if (!scena.parentNode) { scena.style.height = ''; return; }   // lista do 980 px: każdy ekran w swojej wysokości
+      var max = 0;
+      ekrany.forEach(function (e) { max = Math.max(max, e.offsetHeight); });
+      if (max) scena.style.height = max + 'px';
+    };
     var rozloz = function () {
       if (mqSzeroki.matches) {
         if (!scena.parentNode) { uklad.insertBefore(scena, listaKrokow); ekrany.forEach(function (e) { scena.appendChild(e); }); uklad.classList.add('scena'); }
@@ -244,9 +261,13 @@
         uklad.removeChild(scena); uklad.classList.remove('scena');
       }
       pokazEkran();
+      wyrownaj();
     };
     if (mqSzeroki.addEventListener) mqSzeroki.addEventListener('change', rozloz);
     rozloz();
+    var czekaWyrownanie = null;
+    window.addEventListener('resize', function () { clearTimeout(czekaWyrownanie); czekaWyrownanie = setTimeout(wyrownaj, 150); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(wyrownaj);
     var obsKrok = new IntersectionObserver(function (wpisy) {
       wpisy.forEach(function (w) {
         if (!w.isIntersecting) return;
@@ -449,15 +470,33 @@
     });
   }
 
-  /* ---------- pasek akcji na telefonie: po hero, schowany przy formularzu i stopce ---------- */
+  /* ---------- pasek akcji na telefonie (decyzja agencja-strona-projekt D2): jedna pigułka „Poproś o dostęp" przy prawej
+     krawędzi. Widać ją po minięciu hero, przy przewijaniu w dół; chowa się przy przewijaniu w górę (wtedy przeglądarki,
+     np. Samsung Internet, pokazują na środku dołu swój przycisk „do góry", a nagłówek z „Zaloguj się" i tak wraca),
+     przy formularzu, przy stopce i gdy ktoś pisze w polu. ---------- */
   var pasek = $('#pasek-cta');
   if (pasek && maIO) {
     pasek.hidden = false;
-    var poHero = false, przyKoncu = false, przyStopce = false;
+    var poHero = false, przyKoncu = false, przyStopce = false, wDol = true, pisze = false, ostatniY = window.scrollY, suma = 0, stan = null;
     var odswiezPasek = function () {
-      var w = poHero && !przyKoncu && !przyStopce;
+      var w = poHero && !przyKoncu && !przyStopce && wDol && !pisze;
+      if (w === stan) return;
+      stan = w;
       pasek.classList.toggle('widoczny', w);
     };
+    // kierunek przewijania z progiem 24 px, żeby drobne drgnięcia palca nie migały pigułką
+    window.addEventListener('scroll', function () {
+      var y = window.scrollY, ruch = y - ostatniY;
+      ostatniY = y;
+      if (!ruch) return;
+      if ((ruch > 0) !== (suma > 0)) suma = 0;
+      suma += ruch;
+      if (suma >= 24 && !wDol) { wDol = true; odswiezPasek(); }
+      else if (suma <= -24 && wDol) { wDol = false; odswiezPasek(); }
+    }, { passive: true });
+    var POLA_PISANIA = 'input, select, textarea';
+    document.addEventListener('focusin', function (e) { if (e.target.matches && e.target.matches(POLA_PISANIA)) { pisze = true; odswiezPasek(); } });
+    document.addEventListener('focusout', function (e) { if (e.target.matches && e.target.matches(POLA_PISANIA)) { pisze = false; odswiezPasek(); } });
     var celHero = $('.hero .cta'), celKoniec = $('#dostep'), celStopka = $('.stopka');
     if (celHero) new IntersectionObserver(function (w) { poHero = !w[0].isIntersecting && w[0].boundingClientRect.top < 0; odswiezPasek(); }).observe(celHero);
     if (celKoniec) new IntersectionObserver(function (w) { przyKoncu = w[0].isIntersecting; odswiezPasek(); }).observe(celKoniec);

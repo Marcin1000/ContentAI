@@ -207,7 +207,7 @@ main>section.sekcja,main>section.koniec{content-visibility:auto;contain-intrinsi
 /* --- żywa ramka produktu --- */
 .ramka{position:relative;border-radius:var(--r-2xl);background:var(--w-karta);border:1px solid var(--c-linia-2);box-shadow:var(--cien-3)}
 @media (min-width:1300px){.ramka{margin-right:max(-68px,calc((var(--w-max) - 100vw) / 2 + 24px))}}
-.ramka-pasek{display:flex;align-items:center;gap:var(--s-12);height:44px;padding:0 var(--s-12) 0 var(--s-16);border-bottom:1px solid var(--c-linia);font-size:var(--t-xs);color:var(--c-tekst-3)}
+.ramka-pasek{display:flex;align-items:center;gap:var(--s-12);min-height:44px;padding:0 var(--s-12) 0 var(--s-16);border-bottom:1px solid var(--c-linia);font-size:var(--t-xs);color:var(--c-tekst-3)}
 .kropki{display:flex;gap:6px}
 .kropki i{width:10px;height:10px;border-radius:50%;background:var(--c-linia-2)}
 .ramka-adres{font-family:var(--f-mono);font-size:12px;padding:3px 10px;border-radius:var(--r-sm);background:var(--c-pole);border:1px solid var(--c-linia)}
@@ -219,12 +219,13 @@ main>section.sekcja,main>section.koniec{content-visibility:auto;contain-intrinsi
 .ramka.pauza .ramka-pauza .ik-graj{display:block}
 .ramka.pauza .ramka-pauza .ik-pauza{display:none}
 html:not(.js) .ramka-pauza,html:not(.js) .ramka-kroki{display:none}
-.ramka-tresc{display:grid;grid-template-columns:minmax(0,1fr) 216px;transition:opacity var(--m-4)}
+/* kolumna ocen szersza i gęstsza (C2 strona-frontend): makieta kończy się z treścią, bez pustego dołu karty tekstu */
+.ramka-tresc{display:grid;grid-template-columns:minmax(0,1fr) 248px;transition:opacity var(--m-4)}
 .ramka-glowna{padding:var(--s-20);display:flex;flex-direction:column;gap:var(--s-12);min-width:0}
 .pole{display:flex;align-items:center;gap:var(--s-12);min-height:var(--h-lg);padding:0 var(--s-12);border:1px solid var(--c-ramka);border-radius:var(--r-md);background:var(--c-pole);font-size:var(--t-md);min-width:0}
 .pole-et{font-size:var(--t-xs);color:var(--c-tekst-3);font-weight:600;flex-shrink:0}
-.pole-w{display:flex;align-items:center;min-width:0;overflow:hidden;white-space:nowrap}
-.pisanie{display:inline-block;overflow:hidden;white-space:nowrap}
+.pole-w{display:flex;align-items:center;flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap}
+.pisanie{display:inline-block;min-width:0;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .kursor{display:inline-block;width:1.5px;height:1.05em;background:var(--c-akcent);margin-left:2px;flex-shrink:0}
 html.js .ramka.k1:not(.k2) .kursor{animation:mrug 1s steps(1) infinite}
 @keyframes mrug{50%{opacity:0}}
@@ -240,12 +241,13 @@ html.js .ramka.k1:not(.k2) .kursor{animation:mrug 1s steps(1) infinite}
 .ramka-status{position:absolute;right:var(--s-12);top:-11px;display:flex;align-items:center;gap:6px;padding:2px 9px;border-radius:var(--r-pelny);background:var(--w-karta);border:1px solid var(--c-linia-2);font-family:var(--f-ui);font-size:12px;color:var(--c-tekst-3);opacity:0}
 .kropka-praca{width:6px;height:6px;border-radius:50%;background:var(--c-dowod)}
 .zakr-cel{background:linear-gradient(var(--w-zakr),var(--w-zakr)) no-repeat 0 90%/0% 36%;-webkit-box-decoration-break:clone;box-decoration-break:clone;transition:background-size 700ms var(--e-std)}
-.ramka-margines{border-left:1px solid var(--c-linia);padding:var(--s-20) var(--s-16);display:flex;flex-direction:column;gap:var(--s-12);background:var(--c-panel)}
+.ramka-margines{border-left:1px solid var(--c-linia);padding:var(--s-16);display:flex;flex-direction:column;gap:10px;background:var(--c-panel)}
+.ramka-margines .notka{padding:8px 10px}
 .margines-et{font-family:var(--f-ui);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--c-tekst-3)}
 .wyniki{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-8)}
-.wynik{border:1px solid var(--c-linia-2);border-radius:var(--r-md);padding:8px 10px 9px;background:var(--c-pole)}
+.wynik{border:1px solid var(--c-linia-2);border-radius:var(--r-md);padding:6px 10px 7px;background:var(--c-pole)}
 .w-et{display:block;font-size:12px;font-weight:600;color:var(--c-tekst-3);letter-spacing:.03em}
-.w-liczba{display:block;font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:22px;font-weight:600;line-height:1.2}
+.w-liczba{display:block;font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:20px;font-weight:600;line-height:1.2}
 .w-pasek{display:block;height:3px;border-radius:2px;background:var(--c-linia);margin-top:6px;overflow:hidden}
 .w-pasek i,.frag i b,.trafnosc b{display:block;height:100%;width:100%;transform-origin:left;transform:scaleX(var(--w,0));transition:transform 700ms var(--e-std)}
 .w-pasek i{background:var(--c-sukces)}
@@ -317,7 +319,8 @@ html:not(.js) .zakr-cel{background-size:100% 36%}
 .problem{border:1px solid var(--c-linia-2);border-radius:var(--r-xl);background:var(--w-karta);padding:var(--s-24) var(--s-24) var(--s-32)}
 .problem h3{font-size:var(--t-2xl);line-height:1.25;letter-spacing:var(--k-naglowek);margin-bottom:var(--s-8)}
 .problem p{font-size:16px;line-height:1.6;color:var(--c-tekst-2)}
-.ilu{position:relative;height:132px;margin-bottom:var(--s-24);border-radius:var(--r-lg);background:var(--c-panel);border:1px solid var(--c-linia);overflow:hidden;
+/* wysokości według treści (min-height): przy powiększonym piśmie w przeglądarce telefonu nic się nie ucina */
+.ilu{position:relative;height:auto;min-height:140px;margin-bottom:var(--s-24);border-radius:var(--r-lg);background:var(--c-panel);border:1px solid var(--c-linia);overflow:hidden;
   font-family:var(--f-mono);font-size:12px;color:var(--c-tekst-2)}
 .ilu-1{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px}
 .ilu-1 span{display:flex;align-items:center;justify-content:center;text-align:center;border:1px solid var(--c-linia-2);border-radius:var(--r-md);background:var(--c-pole);padding:4px 8px;line-height:1.25}
@@ -336,7 +339,7 @@ html:not(.js) .zakr-cel{background-size:100% 36%}
 .krok:last-child{min-height:0}
 .krok-ekran{position:sticky;top:calc(var(--nav-h) + 32px)}
 .krok-tekst{position:relative;padding:12vh 0 0 var(--s-32);border-left:1px solid var(--c-linia);transition:opacity var(--m-4)}
-html.js .kroki.ma-aktywny .krok:not(.aktywny) .krok-tekst{opacity:.38}
+html.js .kroki.ma-aktywny .krok:not(.aktywny) .krok-tekst :is(h3,p){color:var(--c-tekst-3)}
 .krok-nr{position:absolute;left:-15px;top:calc(12vh + 2px);display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--w-tlo);border:1px solid var(--c-linia-2);
   font-family:var(--f-mono);font-size:12px;font-weight:600;color:var(--c-tekst-3);transition:border-color var(--m-3),color var(--m-3)}
 .krok.aktywny .krok-nr,html:not(.js) .krok-nr{border-color:var(--c-akcent);color:var(--c-akcent-mocny)}
@@ -345,10 +348,11 @@ html.js .kroki.ma-aktywny .krok:not(.aktywny) .krok-tekst{opacity:.38}
 .krok-tekst .krok-cap{margin-top:var(--s-20);font-family:var(--f-ui);font-size:12px;color:var(--c-tekst-3);letter-spacing:.02em;display:flex;gap:8px;align-items:flex-start}
 .krok-cap::before{content:"";flex-shrink:0;width:6px;height:6px;margin-top:7px;border-radius:50%;background:var(--c-tekst-3)}
 .ekran{border-radius:var(--r-xl);background:var(--w-karta);border:1px solid var(--c-linia-2);box-shadow:var(--cien-2);overflow:hidden}
-.ekran-pasek{display:flex;align-items:center;gap:var(--s-8);height:44px;padding:0 var(--s-16);border-bottom:1px solid var(--c-linia);font-family:var(--f-ui);font-size:12px;color:var(--c-tekst-3)}
+.ekran-pasek{display:flex;align-items:center;gap:var(--s-8);min-height:44px;padding:0 var(--s-16);border-bottom:1px solid var(--c-linia);font-family:var(--f-ui);font-size:12px;color:var(--c-tekst-3)}
 .ekran-pasek .ik{width:16px;height:16px;color:var(--c-tekst-2)}
 .ekran-tresc{padding:var(--s-24);display:flex;flex-direction:column;gap:var(--s-16);min-height:360px}
-.pole-duze{min-height:48px;color:var(--c-tekst-2)}
+.pole-duze{min-height:48px;padding:10px var(--s-12);color:var(--c-tekst-2)}
+.pole-duze .pole-w{display:block;white-space:normal;line-height:1.45}
 .tematy{list-style:none;padding:0;display:grid;gap:var(--s-8)}
 .tematy li{display:grid;gap:2px;padding:10px 14px;border:1px solid var(--c-linia-2);border-radius:var(--r-md);background:var(--c-pole)}
 .tematy li:first-child{border-color:var(--c-akcent-ramka);background:var(--c-akcent-tlo)}
@@ -363,7 +367,8 @@ html.js .kroki.ma-aktywny .krok:not(.aktywny) .krok-tekst{opacity:.38}
 .baza em{font-style:normal;font-family:var(--f-ui);font-size:12px;font-weight:600;color:var(--c-tekst-3);padding:1px 7px;border:1px solid var(--c-linia-2);border-radius:var(--r-pelny)}
 .trafnosc{display:block;height:4px;border-radius:2px;background:var(--c-linia);overflow:hidden}
 .trafnosc b{border-radius:2px;background:var(--c-dowod)}
-.baza-slaby{opacity:.55}
+.baza-slaby span,.baza-slaby em{color:var(--c-tekst-3)}
+.baza-slaby .ik{color:var(--c-tekst-3)}
 .chipy{display:flex;flex-wrap:wrap;gap:var(--s-6)}
 .chipy span{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border:1px solid var(--c-linia-2);border-radius:var(--r-pelny);background:var(--c-pole);font-size:var(--t-sm);font-weight:600;color:var(--c-tekst-2)}
 .chipy .ik{width:13px;height:13px;color:var(--c-tekst-3)}
@@ -389,16 +394,17 @@ html.js .kroki.ma-aktywny .krok:not(.aktywny) .krok-tekst{opacity:.38}
 
 /* scena (JS, szerokie ekrany): jeden przyklejony ekran zmienia stan zamiast pięciu przewijanych */
 .kroki-uklad.scena{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(40px,6vw,96px);align-items:start}
-.kroki-scena{position:sticky;top:max(calc(var(--nav-h) + 24px),calc(50vh - 160px));height:388px}
+.kroki-scena{position:sticky;top:max(calc(var(--nav-h) + 24px),calc(50vh - 200px));height:420px}
 .kroki-scena .krok-ekran{position:absolute;left:0;top:0;width:100%;opacity:0;transform:translateY(14px) scale(.985);transition:opacity var(--m-4) var(--e-wejscie),transform var(--m-4) var(--e-wejscie)}
 .kroki-scena .krok-ekran.widoczny{opacity:1;transform:none}
-.kroki-scena .ekran-tresc{height:344px;min-height:0}
-.kroki-uklad.scena .krok{display:block;min-height:66vh;padding:0}
+.kroki-scena .ekran-tresc{min-height:0}
+/* wysokość kroku z górną granicą (projekt K3): na ekranach 1920/2560 scena nie pływa w pustce */
+.kroki-uklad.scena .krok{display:block;min-height:clamp(440px,62vh,640px);padding:0}
+.kroki-uklad.scena .krok-tekst{padding-top:clamp(72px,16vh,168px);min-height:clamp(440px,62vh,640px)}
+.kroki-uklad.scena .krok-nr{top:calc(clamp(72px,16vh,168px) + 2px)}
 .kroki-uklad.scena .krok:first-child .krok-tekst{padding-top:96px}
-.kroki-uklad.scena .krok-tekst{padding-top:18vh;min-height:66vh}
 .kroki-uklad.scena .krok:first-child .krok-nr{top:98px}
-.kroki-uklad.scena .krok-nr{top:calc(18vh + 2px)}
-.kroki-uklad.scena .krok:last-child,.kroki-uklad.scena .krok:last-child .krok-tekst{min-height:52vh}
+.kroki-uklad.scena .krok:last-child,.kroki-uklad.scena .krok:last-child .krok-tekst{min-height:clamp(360px,48vh,520px)}
 .linie-ramka{margin-top:14px}
 html.js .ramka .linie-ramka{opacity:0;transition:opacity var(--m-5) 1400ms}
 html.js .ramka.k3 .linie-ramka{opacity:1}
@@ -409,7 +415,7 @@ html:not(.js) .zc-1{text-decoration:underline solid var(--c-blad) 1.5px;text-und
 /* ============ 11. Cztery powierzchnie ============ */
 .zakladki{display:inline-flex;gap:var(--s-4);padding:var(--s-4);border:1px solid var(--c-linia-2);border-radius:var(--r-lg);background:var(--w-karta);margin-bottom:var(--s-24)}
 .zakladki button{min-height:var(--h-dotyk);padding:0 var(--s-16);border:0;border-radius:var(--r-md);background:transparent;cursor:pointer;
-  display:flex;align-items:baseline;gap:var(--s-8);font-weight:700;font-size:var(--t-md);color:var(--c-tekst-2);transition:background-color var(--m-2) var(--e-std),color var(--m-2) var(--e-std)}
+  display:flex;align-items:center;justify-content:center;gap:var(--s-8);line-height:1.2;font-weight:700;font-size:var(--t-md);color:var(--c-tekst-2);transition:background-color var(--m-2) var(--e-std),color var(--m-2) var(--e-std)}
 .zakladki small{font-weight:400;font-size:var(--t-sm);color:var(--c-tekst-3)}
 .zakladki button:hover{background:var(--c-najazd);color:var(--c-tekst)}
 .zakladki button[aria-selected="true"]{background:var(--c-akcent-tlo);color:var(--c-tekst);box-shadow:inset 0 0 0 1px var(--c-akcent-ramka)}
@@ -676,8 +682,36 @@ html.js .form-nojs{display:none}
 .dokument-tresc .cta{font-family:var(--f-ui);font-size:16px;padding-top:var(--s-24);border-top:1px solid var(--c-linia);margin-top:0}
 
 /* ============ 23. Responsywność ============ */
+/* tablet poziomo i komputer (R3-36, projekt T1, K1, K2, K4) */
+@media (min-width:981px){
+  /* rytm sekcji: 114 px przy 1280, 125 przy 1440, 136 od 1600 (wcześniej 165-181) */
+  :root{--w-sekcja:clamp(72px,7vw,112px)}
+  .sek-nag{margin-bottom:clamp(32px,4vw,56px)}
+}
+@media (min-width:981px) and (max-width:1100px){
+  /* 1024×768: hero w jednej kolumnie, CTA w jednym rzędzie, makieta nie wyższa niż ekran */
+  .hero-siatka{grid-template-columns:1fr}
+  .hero h1{max-width:13em}
+  .ramka{max-width:760px}
+}
+@media (min-width:1101px) and (max-height:820px){
+  /* niskie ekrany (1280×720, 1366×768): cała makieta i CTA w pierwszym ekranie */
+  :root{--w-sekcja:clamp(64px,6vw,88px)}
+  .hero{padding-top:40px}
+  .ramka-glowna{padding:16px;gap:10px}
+  .ramka-tresc{grid-template-columns:minmax(0,1fr) 216px}
+  .kartka-ramka{padding:16px 20px 18px}
+  .kartka-ramka p{font-size:15px;line-height:1.6}
+}
+/* bardzo szerokie ekrany: kolumna nie wygląda na pomniejszoną */
+@media (min-width:1800px){:root{--w-max:1360px}}
+@media (min-width:2200px){:root{--w-max:1440px}}
 @media (max-width:1180px){
   .nav-linki{display:none}
+  /* bez linków w nagłówku sekcje są w panelu menu (na tablecie też, nie tylko na telefonie) */
+  .menu-btn{display:inline-grid}
+  /* pigułki powierzchni bez podpisów (projekt T2): przy 1024 podpisy zawijały się w 2 linie */
+  .zakladki small{display:none}
   .dowody{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:var(--s-20)}
   .dowody li:nth-child(4){border-left:0;padding-left:0}
   .fk-dodatki{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -694,9 +728,12 @@ html.js .form-nojs{display:none}
   .problemy{grid-template-columns:1fr}
   .krok{grid-template-columns:1fr;min-height:0;gap:var(--s-24);padding-bottom:var(--s-64)}
   .krok-ekran{position:static}
+  /* makiety kroków w swojej wysokości, bez pustego dołu (projekt T3) */
+  .ekran-tresc{min-height:0}
   .krok-tekst{padding:0 0 0 var(--s-32)}
   .krok-nr{top:-2px}
-  html.js .kroki.ma-aktywny .krok:not(.aktywny) .krok-tekst{opacity:1}
+  html.js .kroki.ma-aktywny .krok:not(.aktywny) .krok-tekst :is(h3,p){color:inherit}
+  html.js .kroki.ma-aktywny .krok:not(.aktywny) .krok-tekst p{color:var(--c-tekst-2)}
   .uklad-margines{grid-template-columns:1fr}
   .margines{position:static;padding-left:0;border-left:0}
   .fk-linie{display:none}
@@ -715,15 +752,26 @@ html.js .form-nojs{display:none}
   .rel-tabela tbody th{width:38%}
 }
 @media (max-width:720px){
-  :root{--nav-h:60px}
+  :root{--nav-h:60px;--w-sekcja:56px}
+  .sek-nag{padding-top:var(--s-20);margin-bottom:var(--s-32)}
+  .hero + .sekcja{padding-top:var(--s-32)}
+  .koniec{margin-top:56px;padding:56px 0}
+  /* fokus klawiatury nie ląduje pod paskiem akcji u dołu ekranu */
+  html{scroll-padding-bottom:80px}
   body{font-size:16px}
   .nav-in{gap:var(--s-8)}
   .logo-tekst{width:110px;height:10.9px}
   .logo-znak{width:26px;height:26px}
   .jezyk,.nav-cta{display:none}
-  .zaloguj{padding:0 10px}
+  .zaloguj{padding:0 10px;min-height:var(--h-dotyk)}
+  .logo{min-height:var(--h-dotyk)}
+  .ikona-btn{width:var(--h-dotyk);height:var(--h-dotyk)}
+  .kafel-link{min-height:var(--h-dotyk)}
+  .zgoda{min-height:var(--h-dotyk);align-items:center}
+  .stopka-kol a{min-height:var(--h-dotyk);display:flex;width:100%}
+  .stopka ul{gap:0}
   .menu-btn{display:inline-grid;width:var(--h-dotyk);height:var(--h-dotyk);margin-right:-6px}
-  .hero{padding-top:var(--s-32)}
+  .hero{padding-top:var(--s-24)}
   .hero h1{font-size:clamp(34px,9.4vw,42px);line-height:1.06}
   .lead{margin-top:var(--s-16)}
   .cta{margin-top:var(--s-24)}
@@ -742,13 +790,14 @@ html.js .form-nojs{display:none}
   .kartka-ramka p{font-size:16px}
   .ramka-status{display:none}
   .ramka-margines .notka-uw{display:none}
-  .ramka-kroki{padding:0 var(--s-4)}
-  .ramka-kroki button{flex-direction:column;gap:2px;font-size:12px;min-height:54px}
-  .dowody{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:var(--margines);gap:0;margin-left:calc(-1 * var(--margines));margin-right:calc(-1 * var(--margines));padding:var(--s-20) var(--margines);scrollbar-width:none;overscroll-behavior-x:contain}
-  .dowody::-webkit-scrollbar{display:none}
-  .dowody li{flex:0 0 64%;scroll-snap-align:start;border-left:1px solid var(--c-linia);padding:0 var(--s-16)}
-  .dowody li:first-child{border-left:0;padding-left:0}
-  .dowody li:nth-child(4){border-left:1px solid var(--c-linia);padding-left:var(--s-16)}
+  /* makieta w hero na telefonie statyczna (stan końcowy, jak przy ograniczonym ruchu): bez pętli, paska kroków i pauzy */
+  .ramka-kroki,.ramka-pauza{display:none!important}
+  .dowody{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:0;margin-top:var(--s-32);padding:0;border-bottom:0}
+  .dowody li,.dowody li:first-child,.dowody li:nth-child(4){padding:var(--s-16) var(--s-12) var(--s-16) 0;border-left:0;border-top:1px solid var(--c-linia)}
+  .dowody li:nth-child(-n+2){border-top:0}
+  .dowody li:nth-child(even){padding-left:var(--s-16);border-left:1px solid var(--c-linia)}
+  .dowody li:last-child{grid-column:1 / -1}
+  .dowody b{font-size:22px;white-space:normal;line-height:1.2}
   .ekran-tresc{padding:var(--s-16);min-height:0}
   .baza li{grid-template-columns:16px minmax(0,1fr) 48px}
   .baza em{display:none}
@@ -776,15 +825,16 @@ html.js .form-nojs{display:none}
   .dwa{grid-template-columns:1fr}
   .stopka-siatka{grid-template-columns:1fr}
   .stopka-dol{flex-direction:column;align-items:flex-start;gap:var(--s-12)}
-  /* telefon: kroki jako karuzela przesuwana palcem */
-  .kroki{display:flex;gap:var(--s-12);overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:var(--margines);margin:0 calc(-1 * var(--margines));padding:0 var(--margines) var(--s-8);scrollbar-width:none;overscroll-behavior-x:contain}
-  .kroki::-webkit-scrollbar{display:none}
-  .krok{flex:0 0 86%;scroll-snap-align:start;padding:0;gap:var(--s-20)}
-  .krok-tekst{padding:0 0 0 var(--s-24)}
-  .krok-tekst h3{font-size:24px;margin-bottom:var(--s-8)}
-  .krok-tekst p{font-size:16px}
-  .krok-nr{left:-15px;top:-3px}
-  .ekran-tresc{height:300px;overflow:hidden}
+  /* telefon: kroki jako pionowa oś czasu (decyzja agencja-strona-projekt D1); makiety ekranów ukryte - hero pokazuje te same etapy */
+  .kroki{display:block;overflow:visible;margin:0;padding:0}
+  .krok{display:block;padding:0;min-height:0;gap:0}
+  .krok .krok-ekran{display:none}
+  .krok-tekst{margin-left:15px;padding:0 0 var(--s-32) var(--s-32);border-left:1px solid var(--c-linia-2)}
+  .krok:last-child .krok-tekst{padding-bottom:0;border-left-color:transparent}
+  .krok-nr{left:-15px;top:-2px}
+  .krok-tekst h3{font-size:24px;line-height:1.2;margin-bottom:var(--s-8)}
+  .krok-tekst p{font-size:16px;line-height:1.6}
+  .krok-tekst .krok-cap{margin-top:var(--s-12)}
   /* telefon: mniejsze kafle funkcji bez podglądów */
   .kafel.kb4,.kafel.kb3{display:grid;grid-template-columns:38px 1fr;column-gap:var(--s-16);row-gap:4px;align-items:start}
   .kafel.kb4 .kafel-ik,.kafel.kb3 .kafel-ik{grid-row:1 / span 3;margin:0}
@@ -794,25 +844,34 @@ html.js .form-nojs{display:none}
   .kartka-ramka h3{font-size:17px}
   .linie-ramka{display:none}
   .koniec-nota{display:none}
-  .pasek-cta{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:90;gap:var(--s-8);padding:10px var(--margines) calc(10px + env(safe-area-inset-bottom));
-    background:var(--w-tlo);border-top:1px solid var(--c-linia-2);transform:translateY(110%);visibility:hidden;transition:transform var(--m-3) var(--e-std),visibility 0s linear var(--m-3)}
+  /* telefon: jedno CTA w pigułce przy prawej krawędzi (D2); środek dołu zostaje wolny dla przycisku „do góry" przeglądarki */
+  .pasek-cta{display:flex;position:fixed;left:auto;right:max(16px,env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));z-index:90;
+    padding:0;gap:0;background:none;border:0;opacity:0;transform:translateY(calc(100% + 32px));visibility:hidden;
+    transition:transform var(--m-3) var(--e-std),opacity var(--m-3) var(--e-std),visibility 0s linear var(--m-3)}
   .pasek-cta[hidden]{display:none}
-  .pasek-cta.widoczny{transform:none;visibility:visible;transition:transform var(--m-3) var(--e-std)}
-  .pasek-cta .btn{flex:1;min-height:48px}
-  .stopka{padding-bottom:calc(var(--s-32) + 76px)}
+  .pasek-cta.widoczny{opacity:1;transform:none;visibility:visible;transition:transform var(--m-3) var(--e-std),opacity var(--m-3) var(--e-std)}
+  .pasek-cta .btn{flex:none;min-height:48px;padding:0 var(--s-20);border-radius:var(--r-pelny);
+    box-shadow:0 8px 24px -8px rgba(27,26,23,.45),0 0 0 1px rgba(27,26,23,.08)}
+  .stopka{padding-bottom:calc(var(--s-32) + env(safe-area-inset-bottom))}
 }
 @media (max-width:380px){
+  .dowody b{font-size:20px}
   .nav-akcje{gap:4px}
   .zaloguj{white-space:nowrap;padding:0 8px}
   .logo{gap:8px}
   .logo-tekst{width:92px;height:9.1px}
 }
+/* najmniejszy telefon (320×568): H1 w 4 liniach, główny przycisk w całości w pierwszym ekranie (projekt D6) */
+@media (max-width:359px){.hero h1{font-size:30px}}
 /* 320 px (także powiększenie 400% przy 1280): sam znak zamiast logotypu, żeby menu i „Zaloguj się" zmieściły się w jednej linii */
 @media (max-width:344px){
   .logo-tekst{display:none}
+  .logo{min-width:var(--h-dotyk);justify-content:center}
   .logo-znak{width:26px;height:26px}
 }
-@media (min-width:721px){.menu-panel{display:none!important}}
+/* tablet: język i „Poproś o dostęp" są w nagłówku, więc panel menu ma tylko sekcje */
+@media (min-width:721px){.menu-dol{display:none}}
+@media (min-width:1181px){.menu-panel{display:none!important}}
 
 /* ============ 24. Druk ============ */
 @media print{
