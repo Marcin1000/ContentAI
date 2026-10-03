@@ -2296,6 +2296,16 @@ body.is-mobile .form-actions-sticky { border-top-color: transparent; }
 .seo-pusty b { font-size: var(--t-md, 15px); color: var(--c-tekst); }
 .seo-pusty p { margin: 0; font-size: var(--t-sm); line-height: 1.5; color: var(--c-tekst-2); }
 .seo-pusty-akcje { display: flex; flex-wrap: wrap; gap: var(--s-8); margin-top: var(--s-4); }
+/* Wyjasnienie FOG / KD w arkuszu statystyk na telefonie (zamiast panelu pod zaslona) */
+.stat-opis { display: none; }
+/* Arkusz statystyk: bez maski zanikania z paska przewijanego w poziomie (prawa czesc arkusza byla przezroczysta). */
+body.is-mobile.statystyki-otwarte .article-stats.show { -webkit-mask-image: none; mask-image: none; }
+body.is-mobile.statystyki-otwarte .article-stats.show:focus { outline: none; }
+body.is-mobile.statystyki-otwarte .article-stats .stat-opis { display: block; grid-column: 1 / -1; padding: var(--s-12) 0 var(--s-4); text-align: left;
+  font-family: var(--f-ui); font-size: var(--t-sm); line-height: 1.5; color: var(--c-tekst-2); white-space: normal; }
+body.is-mobile.statystyki-otwarte .article-stats .stat-opis .panel-tytul { margin-bottom: var(--s-4); font-weight: var(--g-mocny); color: var(--c-tekst); }
+/* Kropka przy "Wynik" tylko w trakcie generowania (pulsujaca). Gotowy artykul nie swieci na zielono,
+   bo po wejsciu do aplikacji wygladalo to jak zaznaczona zakladka. */
 /* Ekrany dotykowe: :hover zostaje po dotknieciu na pozycji, przez ktora przeszedl palec (np. "Integracja CMS"
    w Koncie wygladala na wybrana). Podswietlenie tylko w chwili nacisniecia; fokus z klawiatury bez zmian. */
 @media (hover: none) {
@@ -2364,8 +2374,6 @@ body.is-mobile .mobilny-widok button::before { content: ""; position: absolute; 
 /* stan wyniku: kropka przy "Wynik" zamiast odznaki "gotowe" */
 body.is-mobile #widok-wynik::after { content: ""; position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: transparent; }
 body.is-mobile:has(#out-badge.running) #widok-wynik::after { background: var(--c-akcent); animation: kropka-puls 1.2s var(--e-std) infinite; }
-body.is-mobile:has(#out-badge.ready) #widok-wynik::after { background: var(--c-sukces); }
-body.is-mobile:has(#out-badge.uwaga) #widok-wynik::after { background: var(--c-uwaga); }
 @keyframes kropka-puls { 50% { opacity: .35; } }
 /* R3-08: odznaka pakietu wg marki - mala, neutralna (pakiet to stan, nie decyzja); w Wyniku ukryta, zostaje w Koncie */
 body.is-mobile #pakiet-badge { position: relative; height: 24px; min-height: 0; padding: 0 var(--s-8); border: 0; border-radius: var(--r-pelny);
@@ -9771,13 +9779,30 @@ function closeAllInlinePanels({ exceptSerp=false, exceptGap=false, exceptKd=fals
   if (!exceptLinks) { linksOpen = false; document.getElementById('links-panel').style.display = 'none'; }
 }
 
+// Telefon: statystyki sa arkuszem nad zaslona, a panele FOG/KD zyja w panelu kontroli pod nia.
+// Wyjasnienie pokazujemy wiec w samym arkuszu statystyk, pod lista (drugie klikniecie chowa).
+function opisWArkuszuStatystyk(zrodloId) {
+  const b = document.body;
+  if (!b.classList.contains('is-mobile') || !b.classList.contains('statystyki-otwarte')) return false;
+  const st = document.getElementById('article-stats');
+  let opis = document.getElementById('stat-opis');
+  if (opis && opis.dataset.zrodlo === zrodloId) { opis.remove(); return true; }
+  if (!opis) { opis = document.createElement('div'); opis.id = 'stat-opis'; opis.className = 'stat-opis'; st.appendChild(opis); }
+  opis.dataset.zrodlo = zrodloId;
+  opis.innerHTML = document.getElementById(zrodloId).innerHTML;
+  opis.querySelectorAll('[id]').forEach(function (e) { e.removeAttribute('id'); });
+  opis.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  return true;
+}
 function toggleKdPanel() {
+  if (opisWArkuszuStatystyk('kd-panel')) return;
   const p = document.getElementById('kd-panel');
   const isOpen = p.style.display !== 'none';
   closeAllInlinePanels({ exceptKd: true });
   p.style.display = isOpen ? 'none' : 'block';
 }
 function toggleFogInfo() {
+  if (opisWArkuszuStatystyk('fog-panel')) return;
   const p = document.getElementById('fog-panel');
   const isOpen = p.style.display !== 'none';
   closeAllInlinePanels({ exceptFog: true });
@@ -11037,6 +11062,7 @@ function przelaczStatystyki(stan) {
     st.focus({ preventScroll: true });
   } else {
     const wSrodku = st.contains(document.activeElement);
+    document.getElementById('stat-opis')?.remove();
     st.removeAttribute('role'); st.removeAttribute('aria-modal'); st.removeAttribute('aria-label');
     if (przycisk && wSrodku) przycisk.focus({ preventScroll: true });
   }
