@@ -4312,6 +4312,7 @@ var I18N = {
     'tematy-kopiuj':'Kopiuj listę','tematy-skopiowano':'Skopiowano',
     'tematy-demo-temat':'Przykładowy temat','tematy-demo-dlaczego':'Tryb demonstracyjny - wpisz klucz API, żeby dostać prawdziwe propozycje.',
     'ph-length-custom':'np. 1200','label-kw':'Słowa kluczowe','ph-kw':'Wpisz frazę kluczową','ph-kw-title':'Enter albo + dodaje frazę',
+    'statystyki-tytul':'Statystyki tekstu',
     'label-tone':'Ton','label-lang-out':'Język tekstu','label-extra':'Dodatkowe wytyczne',
     'ph-extra':'np. Skup się na segmencie MŚP, uwzględnij porównanie z rynkiem…',
     'astat-siec':'Sieć:',
@@ -4915,6 +4916,7 @@ var I18N = {
     'tematy-kopiuj':'Copy list','tematy-skopiowano':'Copied',
     'tematy-demo-temat':'Sample topic','tematy-demo-dlaczego':'Demo mode - enter an API key to get real suggestions.',
     'ph-length-custom':'e.g. 1200','label-kw':'Keywords','ph-kw':'Type a keyword','ph-kw-title':'Press Enter or + to add it',
+    'statystyki-tytul':'Text statistics',
     'label-tone':'Tone','label-lang-out':'Text language','label-extra':'Additional guidelines',
     'ph-extra':'e.g. Focus on SME segment, include market comparison…',
     'astat-siec':'Web:',
@@ -10827,11 +10829,11 @@ function przelaczStatystyki(stan) {
   b.classList.toggle('statystyki-otwarte', otworz);
   if (przycisk) przycisk.setAttribute('aria-expanded', String(otworz));
   if (otworz) {
-    st.setAttribute('role', 'dialog'); st.setAttribute('aria-modal', 'true'); st.setAttribute('aria-labelledby', 'statystyki-tytul');
+    st.setAttribute('role', 'dialog'); st.setAttribute('aria-modal', 'true'); st.setAttribute('aria-label', _t('statystyki-tytul'));
     st.focus({ preventScroll: true });
   } else {
     const wSrodku = st.contains(document.activeElement);
-    st.removeAttribute('role'); st.removeAttribute('aria-modal'); st.removeAttribute('aria-labelledby');
+    st.removeAttribute('role'); st.removeAttribute('aria-modal'); st.removeAttribute('aria-label');
     if (przycisk && wSrodku) przycisk.focus({ preventScroll: true });
   }
 }
