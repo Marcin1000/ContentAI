@@ -194,7 +194,7 @@ a:hover{text-decoration-thickness:2px}
 .logo{display:inline-flex;align-items:center;gap:10px;color:var(--c-tekst);text-decoration:none}
 .logo-znak{fill:var(--c-akcent);flex:none}
 .logo-napis{font:600 14px/1 var(--f-ui);letter-spacing:.14em}
-.jezyk{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid var(--c-linia-2);
+.jezyk{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border:1px solid var(--c-linia-2);
   border-radius:var(--r-sm);color:var(--c-tekst-2);font:500 13px/1 var(--f-ui);text-decoration:none;
   transition:border-color var(--m-1) var(--e-std),color var(--m-1) var(--e-std)}
 .jezyk:hover{border-color:var(--c-ramka);color:var(--c-tekst)}
@@ -223,7 +223,7 @@ button:active{background:var(--c-akcent-wcisk);transform:translateY(1px)}
 button:focus-visible{outline:2px solid var(--c-fokus);outline-offset:3px}
 button svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .dostep{margin:28px 0 0;padding-top:20px;border-top:1px solid var(--c-linia);color:var(--c-tekst-2);font-size:14px}
-.dostep a{font-weight:600;white-space:nowrap}
+.dostep a{display:inline-flex;align-items:center;min-height:44px;font-weight:600;white-space:nowrap}
 .dol{color:var(--c-tekst-3);font-size:12px;line-height:1.5;text-align:center}
 .wtorny{display:flex;align-items:center;justify-content:center;height:48px;margin-top:12px;border:1px solid var(--c-linia-2);
   border-radius:var(--r-sm);color:var(--c-tekst);font:500 15px/1 var(--f-ui);text-decoration:none}
