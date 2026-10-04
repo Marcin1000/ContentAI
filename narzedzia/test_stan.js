@@ -256,7 +256,7 @@ async function scenariuszR4Logiki(b) {
   await s.keyboard.press('End');
   await s.keyboard.type(' WPISANE1');
   await s.waitForTimeout(1600);
-  const e1 = await s.evaluate(() => ({ edycja: editMode, hist: (history[biezacyHist] || {}).html || '' }));
+  const e1 = await s.evaluate(() => ({ edycja: editMode, hist: (wpisHistorii(biezacyHist) || {}).html || '' }));
   wynik('R4 kod-04: poprawki w historii bez Gotowe (1 s po zmianie)', e1.edycja && /WPISANE1/.test(e1.hist), 'edycja=' + e1.edycja);
   await s.keyboard.type(' WPISANE2');
   await generuj(s, 'Nowy artykul w trakcie edycji', false);
@@ -269,25 +269,25 @@ async function scenariuszR4Logiki(b) {
   wynik('R4 kod-04: nowe generowanie konczy edycje (bez edit-active i paska formatowania)', !e2.klasa && !e2.pasek && !e2.edycja, JSON.stringify({ klasa: e2.klasa, pasek: e2.pasek }));
   wynik('R4 kod-04: poprawki sprzed generowania zapisane w poprzednim wpisie', /WPISANE2/.test(e2.stary));
 
-  // ── kod-05: Dopracuj tekst ──
+  // ── kod-05: Dopracuj tekst (znaczniki atrapy w temacie ARTYKULU: Dopracuj czyta kontekst artykulu, kod-08) ──
   await generuj(s, 'Artykul do dopracowania', false);
   await krok('R4 artykul do dopracowania', czekajNaKoniec(s));
-  const przed = await s.evaluate(() => ({ hist: history[biezacyHist].html, zrodla: !!document.querySelector('#article .zrodla-box') }));
+  const przed = await s.evaluate(() => ({ hist: wpisHistorii(biezacyHist).html, zrodla: !!document.querySelector('#article .zrodla-box') }));
   let od = zapytania.length;
-  await s.evaluate(() => { document.getElementById('topic').value = 'Artykul do dopracowania [atrapa:ocena=55@ocena-premium]'; runPostGenerationPremium(); });
+  await s.evaluate(() => { kontekstArt.temat = 'Artykul do dopracowania [atrapa:ocena=55@ocena-premium]'; runPostGenerationPremium(); });
   await krok('R4 dopracowanie', czekajNaKoniec(s, 30000));
-  const po = await s.evaluate(() => ({ hist: history[biezacyHist].html, art: htmlDoZapisu(document.getElementById('article')), zrodla: !!document.querySelector('#article .zrodla-box'), odz: document.getElementById('out-badge').className }));
+  const po = await s.evaluate(() => ({ hist: wpisHistorii(biezacyHist).html, art: htmlDoZapisu(document.getElementById('article')), zrodla: !!document.querySelector('#article .zrodla-box'), odz: document.getElementById('out-badge').className }));
   const pop = poprawy(od);
   wynik('R4 kod-05: wynik Dopracuj w historii', po.hist !== przed.hist && po.hist === po.art && /ready/.test(po.odz), 'zmieniony=' + (po.hist !== przed.hist) + ' zgodny=' + (po.hist === po.art));
   wynik('R4 kod-05: do modelu bez listy zrodel, zrodla wracaja', pop.length === 1 && !/zrodla-box/.test(pop[0]) && po.zrodla === przed.zrodla, JSON.stringify({ poprawy: pop.length, zrodlaPrzed: przed.zrodla, zrodlaPo: po.zrodla }));
-  await s.evaluate(() => { document.getElementById('topic').value = 'Dlugie dopracowanie [atrapa:opoznienie=8000@ocena-premium]'; runPostGenerationPremium(); });
+  await s.evaluate(() => { kontekstArt.temat = 'Dlugie dopracowanie [atrapa:opoznienie=8000@ocena-premium]'; runPostGenerationPremium(); });
   await s.waitForTimeout(1000);
   await s.click('#spin-stop');
   const przerwane = await krok('R4 Przerwij konczy Dopracuj', czekajNaKoniec(s, 3000));
   wynik('R4 kod-05: Przerwij zatrzymuje Dopracuj tekst', przerwane && await s.evaluate(() => !/ready|running/.test(document.getElementById('out-badge').className) && !!document.querySelector('#article h1')));
   await czekajNaKoniec(s, 15000).catch(() => {});
   await bezPowiadomien();
-  await s.evaluate(() => { document.getElementById('topic').value = 'Blad dopracowania [atrapa:529@ocena-premium]'; runPostGenerationPremium(); });
+  await s.evaluate(() => { kontekstArt.temat = 'Blad dopracowania [atrapa:529@ocena-premium]'; runPostGenerationPremium(); });
   await krok('R4 Dopracuj z bledem', czekajNaKoniec(s, 30000));
   const pw = await powiadomienia();
   const wzorBledu = await s.evaluate(() => _t('msg-premium-blad').trim());
