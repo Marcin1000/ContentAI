@@ -2046,6 +2046,8 @@ body.kb-collapsed:not(.is-mobile) .sidebar { transform: translateX(-100%); visib
 }
 @layer widoki {
 .hstat-val { font-family: var(--f-ui); }
+/* R4: duze liczby w kafelkach Historii cyframi proporcjonalnymi - tabelaryczne wygladaly jak inny kroj */
+.h-stats .hstat-val { font-variant-numeric: normal; }
 .kb-collapse-btn .ikona-l { width: 18px; height: 18px; }
 }
 @layer widoki {
@@ -2271,6 +2273,9 @@ body.is-mobile #audio-bar:not(.inline) { left: var(--s-8); right: var(--s-8); pa
 /* R2: w proxy nie ma kosztu sesji - statystyki historii dziela szerokosc po rowno */
 body:not(.is-mobile) .h-stats { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
 body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; }
+/* ukryty kafel kosztu (konto bez roli admin): Srednia slow na cala szerokosc */
+body.is-mobile .h-stats .hstat:nth-child(3):has(+ .hstat[hidden]) { grid-column: span 2; }
+.hstat[hidden] { display: none; }
 }
 @layer widoki {
 /* ══ RUNDA 3 ══════════════════════════════════════════════════════════════
@@ -3595,8 +3600,12 @@ document.addEventListener('DOMContentLoaded', function () {
           <div class="hstat"><div class="hstat-val" id="h-docs">0</div><div class="hstat-lbl" data-i18n="hist-docs-base">Dokumenty w bazie</div></div>
           <div class="hstat"><div class="hstat-val" id="h-avg">-</div><div class="hstat-lbl" data-i18n="stat-avg-words">Średnia słów</div></div>
 <!--@@IF keys,owner-->
-          <!-- koszt sesji tylko przy wlasnych kluczach; w proxy placi serwer, a licznik stal na $0.000 -->
-          <div class="hstat"><div class="hstat-val" id="h-cost">$0.00</div><div class="hstat-lbl" data-i18n="hist-cost">Est. koszt sesji</div></div>
+          <div class="hstat" id="h-cost-kafel"><div class="hstat-val" id="h-cost">$0.00</div><div class="hstat-lbl" data-i18n="hist-cost">Szac. koszt API</div></div>
+<!--@@ENDIF-->
+<!--@@IF proxy-->
+          <!-- R4: szacunkowy koszt API (narastajaco, z usage odpowiedzi) widzi administrator;
+               klienci pakietow go nie widza - za wywolania placi serwer -->
+          <div class="hstat" id="h-cost-kafel" hidden><div class="hstat-val" id="h-cost">$0.00</div><div class="hstat-lbl" data-i18n="hist-cost">Szac. koszt API</div></div>
 <!--@@ENDIF-->
         </div>
       </div>
@@ -5075,7 +5084,7 @@ var I18N = {
 //@@ELSE
     'nokey-title':'Brak klucza API','nokey-line1':'Otwórz plik w edytorze tekstowym i znajdź linię:','nokey-line2':'Zastąp WSTAW_TUTAJ_NOWY_KLUCZ_API swoim kluczem z console.anthropic.com','badge-nokey':'brak klucza',
 //@@ENDIF
-    'hist-docs-base':'Dokumenty w bazie','hist-cost':'Est. koszt sesji',
+    'hist-docs-base':'Dokumenty w bazie','hist-cost':'Szac. koszt API',
     'hist-filter-all':'Wszystkie','hist-filter-hybrid':'Hybryda',
     'bulk-gen-all-txt':'Generuj wszystkie','improve-action-txt':'Popraw artykuł',
     // ── Spinner generowania ──
@@ -5795,7 +5804,7 @@ var I18N = {
 //@@ELSE
     'nokey-title':'Missing API key','nokey-line1':'Open the file in a text editor and find the line:','nokey-line2':'Replace WSTAW_TUTAJ_NOWY_KLUCZ_API with your key from console.anthropic.com','badge-nokey':'no key',
 //@@ENDIF
-    'hist-docs-base':'Documents in base','hist-cost':'Est. session cost',
+    'hist-docs-base':'Documents in base','hist-cost':'Est. API cost',
     'hist-filter-all':'All','hist-filter-hybrid':'Hybrid',
     'bulk-gen-all-txt':'Generate all','improve-action-txt':'Improve article',
     // ── Spinner ──
@@ -13582,6 +13591,8 @@ async function wczytajMarkeZSerwera() {
     const ja = await (await fetch('/auth/me')).json();
     markaAdmin = ja && ja.rola === 'admin';
   } catch (e) { markaAdmin = false; }
+  const kafelKosztu = document.getElementById('h-cost-kafel');
+  if (kafelKosztu) kafelKosztu.hidden = !markaAdmin;
 }
 
 // Zapis na serwer. Zwraca true, gdy sie udalo - wywolujacy pokazuje wtedy
