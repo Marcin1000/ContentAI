@@ -2023,6 +2023,8 @@ body.kb-collapsed:not(.is-mobile) .sidebar { transform: translateX(-100%); visib
 }
 @layer widoki {
 .hstat-val { font-family: var(--f-ui); }
+/* R4: duze liczby w kafelkach Historii cyframi proporcjonalnymi - tabelaryczne wygladaly jak inny kroj */
+.h-stats .hstat-val { font-variant-numeric: normal; }
 .kb-collapse-btn .ikona-l { width: 18px; height: 18px; }
 }
 @layer widoki {
@@ -2248,6 +2250,9 @@ body.is-mobile #audio-bar:not(.inline) { left: var(--s-8); right: var(--s-8); pa
 /* R2: w proxy nie ma kosztu sesji - statystyki historii dziela szerokosc po rowno */
 body:not(.is-mobile) .h-stats { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
 body.is-mobile .h-stats .hstat:last-child:nth-child(odd) { grid-column: span 2; }
+/* ukryty kafel kosztu (konto bez roli admin): Srednia slow na cala szerokosc */
+body.is-mobile .h-stats .hstat:nth-child(3):has(+ .hstat[hidden]) { grid-column: span 2; }
+.hstat[hidden] { display: none; }
 }
 @layer widoki {
 /* ══ RUNDA 3 ══════════════════════════════════════════════════════════════
@@ -3504,8 +3509,7 @@ body.is-mobile .title-opt > button { flex: 1 1 0; justify-content: center; min-h
           <div class="hstat"><div class="hstat-val" id="h-gen">0</div><div class="hstat-lbl" data-i18n="stat-generated">Wygenerowane</div></div>
           <div class="hstat"><div class="hstat-val" id="h-docs">0</div><div class="hstat-lbl" data-i18n="hist-docs-base">Dokumenty w bazie</div></div>
           <div class="hstat"><div class="hstat-val" id="h-avg">-</div><div class="hstat-lbl" data-i18n="stat-avg-words">Średnia słów</div></div>
-          <!-- koszt sesji tylko przy wlasnych kluczach; w proxy placi serwer, a licznik stal na $0.000 -->
-          <div class="hstat"><div class="hstat-val" id="h-cost">$0.00</div><div class="hstat-lbl" data-i18n="hist-cost">Est. koszt sesji</div></div>
+          <div class="hstat" id="h-cost-kafel"><div class="hstat-val" id="h-cost">$0.00</div><div class="hstat-lbl" data-i18n="hist-cost">Szac. koszt API</div></div>
         </div>
       </div>
       <!-- Split: list + preview -->
@@ -4912,7 +4916,7 @@ var I18N = {
     'out-placeholder-sub-full':'AI przeanalizuje bazę wiedzy i stworzy treść',
     'premium-more-time':'2 do 3 razy więcej czasu',
     'nokey-title':'Brak klucza API','nokey-line1':'Kliknij ikonę ustawień i wybierz Klucze API.','nokey-line2':'Wpisz klucz Anthropic z console.anthropic.com i zapisz.','badge-nokey':'brak klucza',
-    'hist-docs-base':'Dokumenty w bazie','hist-cost':'Est. koszt sesji',
+    'hist-docs-base':'Dokumenty w bazie','hist-cost':'Szac. koszt API',
     'hist-filter-all':'Wszystkie','hist-filter-hybrid':'Hybryda',
     'bulk-gen-all-txt':'Generuj wszystkie','improve-action-txt':'Popraw artykuł',
     // ── Spinner generowania ──
@@ -5546,7 +5550,7 @@ var I18N = {
     'out-placeholder-sub-full':'AI will analyze the knowledge base and create content',
     'premium-more-time':'2-3 times longer',
     'nokey-title':'Missing API key','nokey-line1':'Click the settings icon and choose API keys.','nokey-line2':'Enter your Anthropic key from console.anthropic.com and save.','badge-nokey':'no key',
-    'hist-docs-base':'Documents in base','hist-cost':'Est. session cost',
+    'hist-docs-base':'Documents in base','hist-cost':'Est. API cost',
     'hist-filter-all':'All','hist-filter-hybrid':'Hybrid',
     'bulk-gen-all-txt':'Generate all','improve-action-txt':'Improve article',
     // ── Spinner ──
