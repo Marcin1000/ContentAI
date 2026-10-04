@@ -727,10 +727,15 @@ async function przebieg(b, srod, rozmiar, motyw, jezyk, zbior) {
     const r = await s.evaluate((css) => { const b = [...document.querySelectorAll(css)].find((e) => e.offsetParent !== null); if (!b) return null; const q = b.getBoundingClientRect(); return { x: q.left + q.width / 2, y: q.top + q.height / 2 }; }, przycisk);
     if (!r) return;
     const przed = postApi;
+    // R5: trafienie w pozycje menu nie zawsze wola /api - "Grafika" otwiera panel; liczymy tez otwarte panele i okna
+    const panele = () => s.evaluate(() => ['img-panel', 'audio-panel'].filter((id) => { const e = document.getElementById(id); return e && getComputedStyle(e).display !== 'none'; })
+      .concat([...document.querySelectorAll('.overlay.open, .okno-tlo.open')].map((e) => e.id || e.className)).join(','));
+    const panelePrzed = await panele();
     await s.touchscreen.tap(r.x, r.y);
     await s.waitForTimeout(700);
     const otwarte = await s.evaluate(() => !!document.querySelector('.grupa-menu.open'));
-    if (postApi !== przed || otwarte) ustalenie(ekran, 'drugi-dotyk', przycisk, { postApi: postApi - przed, menuOtwarte: otwarte });
+    const panelePo = await panele();
+    if (postApi !== przed || otwarte || panelePo !== panelePrzed) ustalenie(ekran, 'drugi-dotyk', przycisk, { postApi: postApi - przed, menuOtwarte: otwarte, panel: panelePo !== panelePrzed ? panelePo : '' });
     // nastepny krok testu korzysta z otwartego menu - trzecie dotkniecie tylko wtedy, gdy pod palcem jest nadal przycisk
     // menu (R5: drugie dotkniecie "..." w Briefie otwiera Grafike; trzecie trafialo w jej przyklejone "Wygeneruj grafike")
     const nadal = await s.evaluate(({ x, y, css }) => { const t = document.elementFromPoint(x, y); return !!t && !!t.closest(css); }, { x: r.x, y: r.y, css: przycisk });

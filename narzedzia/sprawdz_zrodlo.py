@@ -680,6 +680,8 @@ KONTROLE = [
      "background-size: 11px; background-repeat: no-repeat; background-position: center; }", None, None),
     ("R5/rzad-pol-w-oknie", "pola obok siebie w oknie (Drupal) wyrownane u gory",
      ".modal .row2 > .field + .field { margin-top: 0; }", None, None),
+    ("R5/wiecej-zadan-nad-paskiem", "telefon: Wiecej zadan nad paskiem z Wygeneruj - drugie dotkniecie ... zamyka menu",
+     "body.is-mobile #grupa-brief-menu { bottom: var(--nad-paskami, calc(var(--dol) + 72px)); }", None, None),
     ("R3/wytyczne-w-briefie", "Dodatkowe wytyczne w glownym briefie, przed Zrodlami (poza zaawansowanymi)",
      "re:id=\"extra\"[\\s\\S]{0,2000}<div class=\"field zrodla\">", None, None),
     ("R3/ton-w-briefie", "Ton i Jezyk w glownym briefie, nie w zaawansowanych",

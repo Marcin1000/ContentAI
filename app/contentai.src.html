@@ -1952,8 +1952,9 @@ body.brief-zwiniety:not(.is-mobile) .brief-szyna { display: flex; flex-direction
 .output-bar { min-height: 52px; padding: var(--s-8) var(--s-16); gap: var(--s-6); flex-wrap: nowrap; background: var(--c-panel); border-bottom: 1px solid var(--c-linia); }
 .output-bar-left { gap: var(--s-8); min-width: 0; }
 /* R5: komputer - plakietka stanu ("z historii", "gotowe") nie kurczy sie pod przyciski akcji;
-   wczesniej min-width: 0 pozwalal jej wejsc pod Edytuj/Gotowe. Odstep 12 px od paska akcji. */
-body:not(.is-mobile) .output-bar { column-gap: var(--s-12); }
+   wczesniej min-width: 0 pozwalal jej wejsc pod Edytuj/Gotowe. Odstep 12 px od paska akcji;
+   gdy miejsca brak (waska kolumna przy otwartym panelu), przyciski schodza do drugiego wiersza. */
+body:not(.is-mobile) .output-bar { column-gap: var(--s-12); row-gap: var(--s-6); flex-wrap: wrap; }
 body:not(.is-mobile) .output-bar .output-bar-left { flex: 1 0 auto; }
 body:not(.is-mobile) #out-badge { flex: none; white-space: nowrap; }
 .output-title { display: none; }
@@ -2236,6 +2237,9 @@ body.is-mobile .spinner-wrap { padding-top: var(--s-16); min-height: 0; }
 @layer widoki {
 /* R2: menu zadan briefu na telefonie jako arkusz od dolu (selektor ID bil regule arkusza) */
 body.is-mobile #grupa-brief-menu, body.is-mobile #grupa-widocznosc-menu { top: auto; bottom: 0; left: 0; right: 0; min-width: 0; width: auto; }
+/* R5: "Wiecej zadan" tez stoi NAD paskiem z Wygeneruj i "..." (jak pozostale menu grup) - bottom: 0
+   z selektora ID zaslanial przycisk, wiec drugie dotkniecie "..." otwieralo Grafike zamiast zamknac menu */
+body.is-mobile #grupa-brief-menu { bottom: var(--nad-paskami, calc(var(--dol) + 72px)); }
 }
 @layer widoki {
 body.is-mobile:has(#audio-panel[style*="block"]) .mobilny-widok, body.is-mobile:has(#img-panel[style*="block"]) .mobilny-widok { display: none; }

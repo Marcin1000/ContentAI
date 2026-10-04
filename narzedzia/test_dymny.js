@@ -327,7 +327,9 @@ async function wariantKeys(b) {
     openWpModal(); switchCmsTab('drupal');
     const t1 = document.getElementById('drupal-ctype').getBoundingClientRect().top, t2 = document.getElementById('drupal-format').getBoundingClientRect().top;
     closeWpModal && closeWpModal();
-    return { odstep: Math.round(e.left - b.right), ptaszek, drupal: Math.round(t2 - t1) };
+    // pasek moze przejsc do drugiego wiersza (waska kolumna) - wtedy Edytuj jest pod plakietka
+    const odstep = e.top >= b.bottom ? 99 : Math.round(e.left - b.right);
+    return { odstep, ptaszek, drupal: Math.round(t2 - t1) };
   });
   wynik('keys: plakietka stanu nie wchodzi pod Edytuj (odstep >= 8 px)', r5.odstep >= 8, JSON.stringify(r5));
   wynik('keys: ptaszek w polu zaznaczenia wysrodkowany, bez powtorzen', /^no-repeat\|50% 50%$/.test(r5.ptaszek), r5.ptaszek);
