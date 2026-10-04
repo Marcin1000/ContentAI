@@ -318,6 +318,22 @@ async function wariantKeys(b) {
   const st5 = await s.evaluate(() => ({ t: document.getElementById('topic').value, kw: keywords.slice(), biez: biezacyHist, ost: history[history.length - 1].id }));
   wynik('keys: R4 kod-02 wpis z Historii nie nadpisuje briefu (takze po odswiezeniu)',
     st4 === 'NOWY TEMAT W TOKU' && st5.t === 'NOWY TEMAT W TOKU' && st5.kw.indexOf('nowa fraza') !== -1 && st5.biez === st5.ost, JSON.stringify({ st4, st5 }));
+  // R5 (komputer): plakietka "z historii" nie wchodzi pod Edytuj, ptaszek w polu zaznaczenia
+  // bez powtorzen, pola Drupala w jednym rzedzie na tej samej wysokosci.
+  const r5 = await s.evaluate(() => {
+    const b = document.getElementById('out-badge').getBoundingClientRect(), e = document.getElementById('edit-btn').getBoundingClientRect();
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'kb-check'; cb.checked = true; document.body.appendChild(cb);
+    const cs = getComputedStyle(cb); const ptaszek = cs.backgroundRepeat + '|' + cs.backgroundPosition; cb.remove();
+    openWpModal(); switchCmsTab('drupal');
+    const t1 = document.getElementById('drupal-ctype').getBoundingClientRect().top, t2 = document.getElementById('drupal-format').getBoundingClientRect().top;
+    closeWpModal && closeWpModal();
+    // pasek moze przejsc do drugiego wiersza (waska kolumna) - wtedy Edytuj jest pod plakietka
+    const odstep = e.top >= b.bottom ? 99 : Math.round(e.left - b.right);
+    return { odstep, ptaszek, drupal: Math.round(t2 - t1) };
+  });
+  wynik('keys: plakietka stanu nie wchodzi pod Edytuj (odstep >= 8 px)', r5.odstep >= 8, JSON.stringify(r5));
+  wynik('keys: ptaszek w polu zaznaczenia wysrodkowany, bez powtorzen', /^no-repeat\|50% 50%$/.test(r5.ptaszek), r5.ptaszek);
+  wynik('keys: pola Drupala w jednym rzedzie na tej samej wysokosci', Math.abs(r5.drupal) <= 1, String(r5.drupal));
   wynik('keys (http): bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow > bledowPrzed) await zrzut(s, 'keys-odswiezenie');
   await k.close();
@@ -444,6 +460,76 @@ async function wariantProxy(b) {
   await s.evaluate(() => saveText());
   await krok('dokument w bazie serwera', s.waitForFunction(() => (window._bazaSerwerLiczba || 0) > 0, null, { timeout: 10000 }));
   wynik('proxy: dokument z panelu trafia do bazy na serwerze', await s.evaluate(() => window._bazaSerwerLiczba === 1 && docs.length === 0));
+
+  // R5: Grafika i Audio na komputerze (1440x900). Przycisk generowania lezy w oknie od otwarcia ekranu i po
+  // wyniku (wczesniej pod krawedzia); generowanie na atrapie, blad dostawcy, historia grafik i audio,
+  // Wczytaj artykul, grafika referencyjna z adresu, podcast na 2 glosy i odtwarzanie skryptu.
+  const wOknie = (id) => s.evaluate((i) => {
+    const b = document.getElementById(i); if (!b) return false;
+    const r = b.getBoundingClientRect(); const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return r.width > 0 && r.top >= 0 && r.left >= 0 && r.bottom <= innerHeight && r.right <= innerWidth && !!t && (t === b || b.contains(t));
+  }, id);
+  await s.evaluate(() => openImgPanelSmart());
+  await s.waitForTimeout(400);
+  const gOkno = await wOknie('img-gen-btn');
+  await s.evaluate(() => { document.getElementById('img-context').value = ''; });
+  await krok('Wczytaj artykul (grafika)', s.click('#img-panel button[onclick="imgLoadFromArticle()"]', { timeout: 3000 }));
+  const gKontekst = await s.evaluate(() => document.getElementById('img-context').value.length);
+  await krok('grafika: Wygeneruj', s.click('#img-gen-btn', { timeout: 3000 }));
+  await krok('grafika 1', s.waitForFunction(() => document.getElementById('img-result-wrap').style.display === 'block' && !document.getElementById('img-gen-btn').disabled, null, { timeout: 30000 }));
+  await krok('format Kwadrat', s.click('#img-formats .img-fmt-btn:nth-child(2)', { timeout: 3000 }));
+  await krok('grafika: Wygeneruj ponownie', s.click('#img-gen-btn', { timeout: 3000 }));
+  await krok('grafika 2', s.waitForFunction(() => document.querySelectorAll('#img-history-grid .img-hist-podglad').length === 2 && !document.getElementById('img-gen-btn').disabled, null, { timeout: 30000 }));
+  await krok('historia grafik: starsza', s.click('#img-history-grid .img-hist-kafel:nth-child(2) .img-hist-podglad', { timeout: 3000 }));
+  const gWynik = await s.evaluate(() => ({ rozmiar: document.getElementById('img-result-size').textContent, info: document.getElementById('img-stopka-info').textContent,
+    aktywna: document.querySelector('#img-history-grid .img-hist-kafel:nth-child(2)').classList.contains('aktywny'), pobierz: document.querySelectorAll('#img-history-grid a.img-hist-pobierz[download]').length }));
+  const gOknoPo = await wOknie('img-gen-btn');
+  wynik('proxy: R5 grafika - Wygeneruj w oknie od otwarcia i po wyniku, kontekst z artykulu, historia dwoch grafik',
+    gOkno && gOknoPo && gKontekst > 20 && /^1536×1024/.test(gWynik.rozmiar) && /^1024×1024/.test(gWynik.info) && gWynik.aktywna && gWynik.pobierz === 2,
+    JSON.stringify({ gOkno, gOknoPo, gKontekst, gWynik }));
+  // grafika referencyjna z adresu: znacznik "dodana" w naglowku zwinietej sekcji, Usun czysci
+  await s.evaluate(() => { document.getElementById('img-ref-zwijka').open = true; });
+  await s.fill('#img-ref-url-input', 'https://example.com/wzor-postaci.png');
+  await krok('grafika referencyjna z adresu', s.click('#img-ref-empty button[onclick="imgLoadReferenceUrl()"]', { timeout: 3000 }));
+  await s.evaluate(() => { document.getElementById('img-ref-zwijka').open = false; });
+  const gRef = await s.evaluate(() => ({ url: imgRefIsUrl, znacznik: getComputedStyle(document.querySelector('#img-ref-zwijka .modul-znacznik')).display !== 'none' }));
+  await s.evaluate(() => imgClearReference());
+  const gRefPo = await s.evaluate(() => !imgRefIsUrl && getComputedStyle(document.querySelector('#img-ref-zwijka .modul-znacznik')).display === 'none');
+  wynik('proxy: R5 grafika referencyjna w zwijce - znacznik "dodana", Usun czysci', gRef.url && gRef.znacznik && gRefPo, JSON.stringify({ gRef, gRefPo }));
+  // blad dostawcy przy promptcie grafiki: pusta ramka wraca, przycisk aktywny, komunikat
+  await s.evaluate(() => { document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()); document.getElementById('img-context').value = 'Grafika z bledem [atrapa:400@prompt-grafiki]'; document.getElementById('img-result-wrap').style.display = 'none'; });
+  await krok('grafika: blad', s.click('#img-gen-btn', { timeout: 3000 }));
+  await krok('grafika: komunikat bledu', s.waitForFunction(() => document.querySelectorAll('.powiadomienie').length > 0 && !document.getElementById('img-gen-btn').disabled, null, { timeout: 30000 }));
+  const gBlad = await s.evaluate(() => ({ pusty: getComputedStyle(document.getElementById('img-empty')).display, spinner: getComputedStyle(document.getElementById('img-spinner')).display }));
+  wynik('proxy: R5 grafika - blad dostawcy wraca do pustej ramki z aktywnym przyciskiem', gBlad.pusty === 'block' && gBlad.spinner === 'none', JSON.stringify(gBlad));
+  await s.evaluate(() => closeImgPanelSmart());
+  // Audio: podcast na 2 glosy
+  await s.evaluate(() => openAudioPanel());
+  await s.waitForTimeout(400);
+  const aOkno = await wOknie('au-gen-btn');
+  await krok('Wczytaj artykul (audio)', s.click('#audio-panel button[onclick="audioLoadArticle()"]', { timeout: 3000 }));
+  const aZrodlo = await s.evaluate(() => document.getElementById('au-source').value.length);
+  await s.fill('#au-source', 'Podcast o pompach ciepla dla domu');
+  const aGlosy = await s.evaluate(() => ({ typ: document.getElementById('au-type').value, n: document.querySelectorAll('#au-voices-picker select').length, skrot: document.getElementById('au-glosy-skrot').textContent }));
+  await krok('audio: Wygeneruj skrypt', s.click('#au-gen-btn', { timeout: 3000 }));
+  await krok('skrypt audio', s.waitForFunction(() => document.getElementById('au-result-wrap').style.display === 'block' && !document.getElementById('au-gen-btn').disabled, null, { timeout: 30000 }));
+  const aWynik = await s.evaluate(() => { const sc = document.getElementById('au-script').innerText || '';
+    return { dlugosc: sc.length, mowcy: /PROWADZĄCY|HOST/.test(sc) && /GOŚĆ|GUEST/.test(sc), hist: document.querySelectorAll('#au-history-wrap button.au-hist-item').length,
+      typ: (document.querySelector('#au-history-wrap .au-hist-meta') || {}).textContent || '', pusty: getComputedStyle(document.getElementById('au-empty')).display }; });
+  const aOknoPo = await wOknie('au-gen-btn');
+  wynik('proxy: R5 audio - Wygeneruj skrypt w oknie, podcast na 2 glosy, skrypt i wpis historii',
+    aOkno && aOknoPo && aZrodlo > 20 && aGlosy.typ === 'podcast' && aGlosy.n === 2 && aGlosy.skrot.length > 5 && aWynik.dlugosc > 50 && aWynik.mowcy && aWynik.hist === 1 && /^Podcast/.test(aWynik.typ) && aWynik.pusty === 'none',
+    JSON.stringify({ aOkno, aOknoPo, aZrodlo, aGlosy, aWynik }));
+  // odtwarzanie: pasek postepu w doku akcji pod skryptem
+  await krok('audio: Odtworz', s.click('#au-play-btn', { timeout: 3000 }));
+  await krok('audio: pasek odtwarzania', s.waitForFunction(() => { const b = document.getElementById('audio-bar'); return b && b.classList.contains('show') && b.parentElement && b.parentElement.id === 'au-odtwarzacz'; }, null, { timeout: 20000 }));
+  await s.evaluate(() => { try { audioBarClose(); } catch (e) { /* brak */ } });
+  // historia: wpis wraca po zmianie rodzaju
+  await s.evaluate(() => { document.getElementById('au-type').value = 'newsletter'; audioSetType(); });
+  await krok('historia audio: wpis', s.click('#au-history-wrap .au-hist-item', { timeout: 3000 }));
+  const aHist = await s.evaluate(() => ({ typ: document.getElementById('au-type').value, wynik: document.getElementById('au-result-wrap').style.display }));
+  wynik('proxy: R5 audio - odtwarzanie w doku pod skryptem, wpis historii wraca z rodzajem', aHist.typ === 'podcast' && aHist.wynik === 'block', JSON.stringify(aHist));
+  await s.evaluate(() => closeAudioPanel());
 
   wynik('proxy: pozycja Wyloguj sie w menu', !!(await s.$('[onclick="wyloguj()"]')));
   await s.evaluate(() => { magazyn.setItem('cai_klucz_anthropic', 'sk-ant-wlasny'); magazyn.setItem('cai-wp', '{"url":"https://x.pl","pass":"tajne"}'); zapiszSzkic(); });

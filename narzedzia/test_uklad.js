@@ -35,13 +35,16 @@
  *   odznaka-duza       telefon: odznaka pakietu wyzsza niz 24 px
  *   panel-otwarty-sam  panel kontroli otwarty po generowaniu bez akcji uzytkownika
  *   tekst-120          412x700 i 360x800: tekst powiekszony o 20% (jak skalowanie tekstu w Samsung Internet) -
- *                      bez poziomego przewijania, wyjscia poza ekran i uciec (brief, generator grafik, wynik)
+ *                      bez poziomego przewijania, wyjscia poza ekran i uciec (brief, generator grafik, audio, wynik)
  *   drugi-dotyk        telefon: drugie dotkniecie przycisku menu (zeby je zamknac) trafia w pozycje menu
  *                      i wysyla zapytanie do /api (platna akcja) albo nie zamyka menu
  *   arkusz-wzor        telefon: arkusz od dolu (okno, menu grup, statystyki, Brief artykulu) bez wspolnego wzoru -
  *                      naglowek 48 px z kreska, tytul 16 px, X 44 px 8 px od prawej krawedzi; pola i przyciski
  *                      w kolumnie arkusza (8 px od krawedzi); opis i pola okna od lewej krawedzi tytulu;
  *                      tekst pozycji menu w jednej linii (R4, agencja-ux UX4-01, 05, 10, 11)
+ *   akcja-poza-ekranem Grafika i Audio: glowny przycisk generowania (Wygeneruj grafike / Wygeneruj skrypt) nie lezy
+ *                      w calosci w oknie od razu po otwarciu ekranu (bez przewijania) albo po wygenerowaniu wyniku,
+ *                      albo jest zasloniety (R5: wczesniej pod krawedzia ekranu na komputerze i telefonie)
  * Miekkie (informacyjne): nachodzi, kontrast (< AA, pelne tla), udzial artykulu, wysrodkowanie.
  *
  * Uzycie (z katalogu repozytorium, po zbudowaniu wariantow):
@@ -71,7 +74,8 @@ const PREFIKS = ARG.prefiks || 'uklad-';
 const TRYB_ZRZUTOW = ARG['zrzuty-tryb'] || (CI && !process.env.CAI_TEST_ZRZUTY ? 'brak' : 'nowe');
 const KONTRAST = ARG.kontrast !== '0';
 const TWARDE = ['panel-otwarty-sam', 'poziome', 'poza-ekran', 'przyciete', 'uciety-tekst', 'pasek-bez-wskazowki', 'fixed-fixed', 'zasloniety', 'ostatni-zasloniety', 'cel-dotyku', 'male-pismo',
-  'slowo-zlamane', 'ikona-przyklejona', 'niewysrodkowany', 'wynik-telefon', 'arkusz-skok', 'arkusz-luka', 'odznaka-duza', 'drugi-dotyk', 'tekst-120', 'pasek-przed-artykulem', 'arkusz-wzor'];
+  'slowo-zlamane', 'ikona-przyklejona', 'niewysrodkowany', 'wynik-telefon', 'arkusz-skok', 'arkusz-luka', 'odznaka-duza', 'drugi-dotyk', 'tekst-120', 'pasek-przed-artykulem', 'arkusz-wzor',
+  'akcja-poza-ekranem'];
 
 let chromium;
 try { ({ chromium } = require('playwright')); }
@@ -90,7 +94,7 @@ function rozwin(lista) { return lista.split(',').flatMap((x) => MACIERZ[x.trim()
 // ekrany: start, brief, wynik po generowaniu z SERP, arkusze, grafika, Baza i Historia. Pelna macierz: bez --ci.
 const ZESTAW_CI = ['320x568', '412x700', '768x1024', '1280x720'];
 const EKRANY_CI = ['start', 'brief-zaawansowane', 'menu-brief', 'wynik', 'wynik-bez-paneli', 'wynik-przewiniety', 'ocen-seo', 'arkusz-wysokosc', 'ocen-aio',
-  'fakty', 'menu-tworz', 'menu-wiecej', 'menu-eksport', 'arkusze', 'grafika', 'wynik-dlugi', 'wynik-dlugi-tabela', 'wynik-dlugi-zrodla', 'baza', 'historia', 'historia-podglad', 'tekst-120'];
+  'fakty', 'menu-tworz', 'menu-wiecej', 'menu-eksport', 'arkusze', 'grafika', 'grafika-wynik', 'audio', 'audio-wynik', 'wynik-dlugi', 'wynik-dlugi-tabela', 'wynik-dlugi-zrodla', 'baza', 'historia', 'historia-podglad', 'tekst-120'];
 const ROZMIARY = rozwin(ARG.rozmiary || (CI ? ZESTAW_CI.join(',') : 'telefon,tablet,komputer'));
 const MOTYWY = (ARG.motywy || (CI ? 'ciemny' : 'ciemny,jasny')).split(',');
 const EN = ARG.en === 'brak' ? [] : rozwin(ARG.en || (CI ? '1920x1080' : '390x844,1440x900'));
@@ -649,6 +653,21 @@ function pomiarArkusza() {
   return { arkusz: (a.id || a.parentElement.id || a.className).toString().slice(0, 40), bledy };
 }
 
+// R5: glowny przycisk ekranu Grafika/Audio w calosci w oknie, widoczny i nie zasloniety - bez przewijania strony
+// ani panelu (pomiar zaraz po otwarciu i po wygenerowaniu wyniku). Zwraca null albo opis odstepstwa.
+function pomiarAkcji(css) {
+  const b = document.querySelector(css);
+  if (!b) return { blad: 'brak przycisku' };
+  const r = b.getBoundingClientRect();
+  const W = document.documentElement.clientWidth || innerWidth, H = innerHeight;
+  const rect = [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)];
+  if (r.width < 1 || r.height < 1 || getComputedStyle(b).visibility === 'hidden') return { blad: 'niewidoczny', rect };
+  if (r.top < -0.5 || r.left < -0.5 || r.bottom > H + 0.5 || r.right > W + 0.5) return { blad: 'poza oknem', rect, okno: [W, H] };
+  const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+  if (!t || (t !== b && !b.contains(t))) return { blad: 'zasloniety', rect, przez: t ? (t.id ? '#' + t.id : t.tagName.toLowerCase() + '.' + [...t.classList].join('.')) : null };
+  return null;
+}
+
 async function uspokoj(s, ms = 250) {
   await s.waitForTimeout(ms);
   await s.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running' || !isFinite(((a.effect && a.effect.getComputedTiming()) || {}).endTime)), null, { timeout: 2500 }).catch(() => {});
@@ -708,14 +727,27 @@ async function przebieg(b, srod, rozmiar, motyw, jezyk, zbior) {
     const r = await s.evaluate((css) => { const b = [...document.querySelectorAll(css)].find((e) => e.offsetParent !== null); if (!b) return null; const q = b.getBoundingClientRect(); return { x: q.left + q.width / 2, y: q.top + q.height / 2 }; }, przycisk);
     if (!r) return;
     const przed = postApi;
+    // R5: trafienie w pozycje menu nie zawsze wola /api - "Grafika" otwiera panel; liczymy tez otwarte panele i okna
+    const panele = () => s.evaluate(() => ['img-panel', 'audio-panel'].filter((id) => { const e = document.getElementById(id); return e && getComputedStyle(e).display !== 'none'; })
+      .concat([...document.querySelectorAll('.overlay.open, .okno-tlo.open')].map((e) => e.id || e.className)).join(','));
+    const panelePrzed = await panele();
     await s.touchscreen.tap(r.x, r.y);
     await s.waitForTimeout(700);
     const otwarte = await s.evaluate(() => !!document.querySelector('.grupa-menu.open'));
-    if (postApi !== przed || otwarte) ustalenie(ekran, 'drugi-dotyk', przycisk, { postApi: postApi - przed, menuOtwarte: otwarte });
-    // nastepny krok testu korzysta z otwartego menu
-    if (!otwarte) { await s.touchscreen.tap(r.x, r.y); await s.waitForTimeout(450); }
+    const panelePo = await panele();
+    if (postApi !== przed || otwarte || panelePo !== panelePrzed) ustalenie(ekran, 'drugi-dotyk', przycisk, { postApi: postApi - przed, menuOtwarte: otwarte, panel: panelePo !== panelePrzed ? panelePo : '' });
+    // nastepny krok testu korzysta z otwartego menu - trzecie dotkniecie tylko wtedy, gdy pod palcem jest nadal przycisk
+    // menu (R5: drugie dotkniecie "..." w Briefie otwiera Grafike; trzecie trafialo w jej przyklejone "Wygeneruj grafike")
+    const nadal = await s.evaluate(({ x, y, css }) => { const t = document.elementFromPoint(x, y); return !!t && !!t.closest(css); }, { x: r.x, y: r.y, css: przycisk });
+    if (!otwarte && nadal) { await s.touchscreen.tap(r.x, r.y); await s.waitForTimeout(450); }
   };
   const tag = `${rozmiar}-${motyw}-${jezyk}`;
+  // R5: akcja-poza-ekranem - przycisk generowania w oknie bez przewijania (komputer i telefon)
+  const akcja = async (ekran, css) => {
+    const m = await s.evaluate(pomiarAkcji, css);
+    if (m) ustalenie(ekran, 'akcja-poza-ekranem', css, m);
+    else console.log(`  ${tag.padEnd(22)} ${ekran.padEnd(22)} akcja w oknie: ${css}`);
+  };
   const wynikiKontekstu = [];
   const widzianeKlucze = zbior.widziane;
 
@@ -894,6 +926,7 @@ async function przebieg(b, srod, rozmiar, motyw, jezyk, zbior) {
   });
   await krok('grafika', async () => {
     await klik(s, '#img-btn', dotyk); await uspokoj(s, 400); await zbadaj('grafika');
+    await akcja('grafika', '#img-gen-btn');
     await s.evaluate(() => { const b = document.getElementById('img-gen-btn'); if (b) b.scrollIntoView({ block: 'center' }); });
     await s.evaluate(() => generateImage());
     await s.waitForFunction(() => { const sp = document.getElementById('img-spinner'); return !sp || getComputedStyle(sp).display === 'none'; }, null, { timeout: 60000 }).catch(() => {});
@@ -901,6 +934,20 @@ async function przebieg(b, srod, rozmiar, motyw, jezyk, zbior) {
     await s.evaluate(() => { const w2 = document.getElementById('img-result-wrap'); if (w2) w2.scrollIntoView({ block: 'start' }); });
     await uspokoj(s, 200);
     await zbadaj('grafika-wynik');
+    await akcja('grafika-wynik', '#img-gen-btn');
+  });
+  await reset();
+  // R5: Tresci audio - formularz i skrypt (podcast, 2 glosy) na atrapie
+  await krok('audio', async () => {
+    await s.evaluate(() => openAudioPanel()); await uspokoj(s, 400); await zbadaj('audio');
+    await akcja('audio', '#au-gen-btn');
+    await s.fill('#au-source', jezyk === 'en' ? 'Why old films look better than new ones' : 'Dlaczego filmy sprzed 30 lat wyglądają lepiej niż teraz');
+    await s.evaluate(() => { const b = document.getElementById('au-gen-btn'); if (b) b.scrollIntoView({ block: 'nearest' }); });
+    await klik(s, '#au-gen-btn', dotyk);
+    await s.waitForFunction(() => { const b = document.getElementById('au-gen-btn'); const w2 = document.getElementById('au-result-wrap'); return b && !b.disabled && w2 && w2.style.display === 'block'; }, null, { timeout: 30000 });
+    await uspokoj(s, 600);
+    await zbadaj('audio-wynik');
+    await akcja('audio-wynik', '#au-gen-btn');
   });
   await reset();
   await krok('tytuly', async () => {
@@ -1036,6 +1083,7 @@ async function przebieg(b, srod, rozmiar, motyw, jezyk, zbior) {
     for (const [ekran, ustaw] of [
       ['brief', async () => { await widok('brief'); await s.evaluate(() => { const d = document.getElementById('brief-zaawansowane'); if (d) d.open = true; }); }],
       ['grafika', async () => { await widok('wynik'); await s.evaluate(() => { if (typeof openImgPanelSmart === 'function') openImgPanelSmart(); }); }],
+      ['audio', async () => { await widok('wynik'); await s.evaluate(() => { if (typeof openAudioPanel === 'function') openAudioPanel(); }); }],
       ['wynik', async () => { await widok('wynik'); await s.evaluate(() => window.scrollTo(0, 0)); }],
     ]) {
       await krok('tekst-120-' + ekran, async () => {
