@@ -2025,7 +2025,7 @@ body.kb-collapsed:not(.is-mobile) .sidebar { transform: translateX(-100%); visib
 .hstat-val { font-family: var(--f-ui); }
 /* R4: duze liczby w kafelkach Historii cyframi proporcjonalnymi - tabelaryczne wygladaly jak inny kroj */
 .h-stats .hstat-val { font-variant-numeric: normal; }
-.hstat-pod { margin-top: var(--s-4); font-size: var(--t-xs); line-height: 1.35; color: var(--c-tekst-3); }
+.hstat-pod { margin-top: var(--s-4); font-size: var(--t-xs); line-height: 1.35; color: var(--c-tekst-3); white-space: pre-line; }
 .hstat-pod:empty { display: none; }
 .kb-collapse-btn .ikona-l { width: 18px; height: 18px; }
 }
@@ -4905,7 +4905,7 @@ var I18N = {
     'out-placeholder-sub-full':'AI przeanalizuje bazę wiedzy i stworzy treść',
     'premium-more-time':'2 do 3 razy więcej czasu',
     'nokey-title':'Brak klucza API','nokey-line1':'Otwórz plik w edytorze tekstowym i znajdź linię:','nokey-line2':'Zastąp WSTAW_TUTAJ_NOWY_KLUCZ_API swoim kluczem z console.anthropic.com','badge-nokey':'brak klucza',
-    'hist-docs-base':'Dokumenty w bazie','hist-cost':'Szac. koszt API','hist-cost-wlasne':'Koszt na Twoich kluczach',
+    'hist-docs-base':'Dokumenty w bazie','hist-cost':'Szac. koszt API','hist-cost-wlasne':'Koszt na Twoich kluczach','hist-cost-wczesniej':'wcześniej',
     'hist-filter-all':'Wszystkie','hist-filter-hybrid':'Hybryda',
     'bulk-gen-all-txt':'Generuj wszystkie','improve-action-txt':'Popraw artykuł',
     // ── Spinner generowania ──
@@ -5530,7 +5530,7 @@ var I18N = {
     'out-placeholder-sub-full':'AI will analyze the knowledge base and create content',
     'premium-more-time':'2-3 times longer',
     'nokey-title':'Missing API key','nokey-line1':'Open the file in a text editor and find the line:','nokey-line2':'Replace WSTAW_TUTAJ_NOWY_KLUCZ_API with your key from console.anthropic.com','badge-nokey':'no key',
-    'hist-docs-base':'Documents in base','hist-cost':'Est. API cost','hist-cost-wlasne':'Cost on your keys',
+    'hist-docs-base':'Documents in base','hist-cost':'Est. API cost','hist-cost-wlasne':'Cost on your keys','hist-cost-wczesniej':'earlier',
     'hist-filter-all':'All','hist-filter-hybrid':'Hybrid',
     'bulk-gen-all-txt':'Generate all','improve-action-txt':'Improve article',
     // ── Spinner ──
@@ -7066,8 +7066,12 @@ function updateCostDisplay() {
   const lbl = document.getElementById('h-cost-lbl');
   if (lbl) lbl.textContent = _t(wszystko ? 'hist-cost' : 'hist-cost-wlasne');
   const pod = document.getElementById('h-cost-pod');
-  if (pod) pod.textContent = Object.keys(NAZWY).filter(function (k) { return mapa[k] > 0; })
-    .map(function (k) { return NAZWY[k] + ' $' + formatujLiczbe(mapa[k], 3, true); }).join(' · ');
+  const czesci = Object.keys(NAZWY).filter(function (k) { return mapa[k] > 0; })
+    .map(function (k) { return NAZWY[k] + ' $' + formatujLiczbe(mapa[k], 3, true); });
+  // Koszt sprzed liczenia po dostawcach (stary licznik) - bez niego suma nie zgadzalaby sie z podzialem.
+  const wczesniej = wszystko ? sessionCost - suma : 0;
+  if (wczesniej >= 0.0005) czesci.push(_t('hist-cost-wczesniej') + ' $' + formatujLiczbe(wczesniej, 3, true));
+  if (pod) pod.textContent = czesci.join('\n');
 }
 function updateSerpWarn() {
   const warn = document.getElementById('serp-kw-warn');
