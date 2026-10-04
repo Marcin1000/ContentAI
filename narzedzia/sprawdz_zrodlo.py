@@ -999,6 +999,49 @@ KONTROLE += [
 ]
 
 
+# ── runda 5, wykonawca D: ekrany Grafika i Audio (dwie kolumny, stopka akcji zawsze w oknie) ──
+# Osobna lista doklejana do KONTROLE, zeby nie zderzala sie z poprawkami koordynatora przy scalaniu.
+KONTROLE += [
+    ("R5/grafika-uklad", "Generator grafik: panel modulu bez stylu w atrybucie (dwie kolumny z CSS)",
+     '<div id="img-panel" class="modul-panel" style="display:none">', '<div id="img-panel" style="display:none;position:fixed;', None),
+    ("R5/audio-uklad", "Tresci audio: ten sam panel modulu zamiast waskiej kolumny 9 pol",
+     '<div id="audio-panel" class="modul-panel" style="display:none">', '<div id="audio-panel" style="display:none;position:fixed;', None),
+    ("R5/stopka-akcji", "komputer: pola przewijane w karcie, stopka z Wygeneruj na dole karty",
+     ".modul-pola { flex: 1 1 auto; min-height: 0; overflow-y: auto;", None, None),
+    ("R5/stopka-telefon", "telefon: stopka z Wygeneruj ostatnia i przyklejona nad dolnym paskiem",
+     "body.is-mobile .modul-stopka { order: 3; position: sticky; bottom: 0;", None, None),
+    ("R5/grafika-dol", "telefon: panel grafiki konczy sie nad dolnym paskiem (bez sztywnych 60 px)",
+     "body.is-mobile #img-panel { padding: 16px 16px 24px; touch-action: pan-y; }", "bottom: 60px !important; touch-action: pan-y;", None),
+    ("R5/panel-nad-przerobkami", "Grafika nad otwartym panelem przerobek (z-index jak Audio)",
+     ".modul-panel { position: fixed; inset: var(--pasek-h) 0 0 0; z-index: 150;", None, None),
+    ("R5/temat-glowny", "Audio: Temat lub tresc zaraz pod rodzajem, pole rosnie na wysokosc kolumny",
+     '<div id="au-source-wrap" class="modul-pole modul-pole-glowne">', None, None),
+    ("R5/audio-display", "Audio: widoczne pola bez sztywnego display:block (uklad z CSS)",
+     "var sw=document.getElementById('au-source-wrap'); if(sw) sw.style.display=(t==='transcription')?'none':'';", None, None),
+    ("R5/formaty-karty", "formaty grafiki jako karty z ksztaltem kadru, nazwa i wymiarem",
+     "btn.innerHTML = '<span class=\"img-fmt-ksztalt\" aria-hidden=\"true\"></span>", "btn.textContent = fmt.labelKey ? _t(fmt.labelKey) : fmt.label;", None),
+    ("R5/grafika-podsumowanie", "stopka grafiki: format, jakosc i zwykly czas; ramka podgladu w proporcjach formatu",
+     "function imgPodsumowanie() {", None, None),
+    ("R5/grafika-historia", "poprzednie grafiki: miniatura jako przycisk, pobieranie obok (bez pisma 9 px)",
+     '<button type="button" class="img-hist-podglad" onclick="imgLoadFromHistory(', "font-size:9px;color:var(--text3)", None),
+    ("R5/glosy-zwijka", "Audio: model i glosy mowcow w zwijce ze skrotem wyboru",
+     "function audioPodsumujGlosy(){", None, None),
+    ("R5/glosy-etykiety", "Audio: glosy mowcow obok siebie z etykieta pola (bez pisma 11 px)",
+     '<label for="au-voice-\'+i+\'" class="au-glos-etykieta">', 'font-size:11px;color:var(--text3);margin:6px 0 4px', None),
+    ("R5/audio-historia", "historia audio: wpis jako przycisk, rodzaj ze slownika zamiast surowej wartosci",
+     "_t('au-typ-'+e.type)", "'<div class=\"au-hist-item\" onclick=\"audioHistLoad('", None),
+    ("R5/odtwarzacz", "pasek odtwarzania w doku akcji pod skryptem",
+     "document.getElementById('au-odtwarzacz')||document.getElementById('au-result-wrap')", None, None),
+    ("R5/audio-telefon", "telefon: po wygenerowaniu skryptu przewiniecie do wyniku pod formularzem",
+     "function audioPokazWynik(){", None, None),
+    ("R5/jakosc-opis", "napis postepu grafiki z nazwa jakosci ze slownika (nie 'medium')",
+     "• jakość ${jakoscOpis}", "• jakość ${quality}", None),
+    ("R5/ref-i18n", "brak podgladu grafiki referencyjnej: komunikat ze slownika",
+     "_t('img-ref-brak-podgladu')", "Podglad niedostepny - URL zostanie uzyty", None),
+    ("R5/spinner-grafiki", "generowanie grafiki: ramka w ksztalcie formatu z widocznym znakiem ladowania",
+     '<div id="img-spinner" class="img-ramka img-ramka-trwa" style="display:none">', None, None),
+]
+
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi
 # do przegladarki bez przetworzenia, kazda z nich jest potrojona -> SyntaxError
 # "Identifier ... has already been declared" wywala caly blok <script> i zabija UI.
