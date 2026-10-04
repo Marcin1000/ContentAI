@@ -587,7 +587,7 @@ KONTROLE = [
     ("R4/edycja-pasek", "telefon: tryb Edytuj ma widoczny pasek pod naglowkiem z Gotowe",
      "body.is-mobile.edit-active .fmt-toolbar { display: flex; }", "    art.focus();\n  }\n}", None),
     ("R4/zrodla-zwarte", "telefon: zwarta lista zrodel, pole dotyku z ::after zamiast min-height",
-     "body.is-mobile .zrodla-box li > a::after { content: \"\"; position: absolute; top: -12px;", "body.is-mobile .zrodla-box li > a { display: inline-block; min-height: var(--h-dotyk)", None),
+     "body.is-mobile .zrodla-box li > a::after { content: \"\"; position: absolute; top: -14px;", "body.is-mobile .zrodla-box li > a { display: inline-block; min-height: var(--h-dotyk)", None),
     ("R4/brief-zapamietany", "Brief artykulu zapamietany dla tematu, Analizuj ponownie wymusza nowa analize",
      "const zapamietany = odswiez ? null : zapamietanyBrief(topic);", None, None),
     ("R4/brief-slow", "liczba slow w briefie bez podwojonego slowa",
