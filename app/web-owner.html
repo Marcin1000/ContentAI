@@ -2275,7 +2275,10 @@ body:not(.is-mobile) .output-bar { padding-inline: max(var(--s-16), calc((100% -
 .menu-przelacznik.active .menu-przelacznik-tor { background-color: var(--c-przel-wl); border-color: var(--c-przel-wl); background-position: 100% 50%;
   background-image: radial-gradient(circle at center, var(--c-pole) 0 6.5px, transparent 7px); }
 .grupa-menu .menu-separator { height: 1px; margin: var(--s-4) 0; background: var(--c-linia); }
-.gen-samokorekta { display: none; margin-left: var(--s-6); font-size: var(--t-xs); font-weight: var(--g-mocny); opacity: .8; white-space: nowrap; }
+/* R4: z samokorekta przycisk mowi jednym, tym samym krojem "Wygeneruj z samokorekta"
+   (wczesniej dopisek "+ samokorekta" mniejszym pismem obok etykiety) */
+.gen-samokorekta { display: none; white-space: nowrap; }
+#gen-btn.z-samokorekta .gen-etykieta { display: none; }
 #gen-btn.z-samokorekta .gen-samokorekta { display: inline; }
 #gen-btn.z-samokorekta .kbd, #gen-btn:disabled .gen-samokorekta { display: none; }
 @media (prefers-reduced-motion: reduce) { .menu-przelacznik-tor { transition: none; } }
@@ -2992,7 +2995,7 @@ body.is-mobile #img-prompt-wrap > .field-label[onclick] { min-height: var(--h-do
 
           <div class="form-actions-sticky">
             <div class="generuj-rzad">
-            <button class="btn-generate" onclick="generate()" id="gen-btn"><svg class="ikona" aria-hidden="true"><use href="#i-zap"/></svg><span class="gen-etykieta" data-i18n="btn-generate">Wygeneruj treść</span><span class="gen-samokorekta" data-i18n="gen-z-samokorekta">+ samokorekta</span><span class="kbd">Ctrl ↵</span><span class="gen-trwa"><svg class="ikona kreci" aria-hidden="true"><use href="#i-loader"/></svg><span data-i18n="btn-generuje">Generuję…</span></span></button>
+            <button class="btn-generate" onclick="generate()" id="gen-btn"><svg class="ikona" aria-hidden="true"><use href="#i-zap"/></svg><span class="gen-etykieta" data-i18n="btn-generate">Wygeneruj treść</span><span class="gen-samokorekta" data-i18n="gen-z-samokorekta">Wygeneruj z samokorektą</span><span class="kbd">Ctrl ↵</span><span class="gen-trwa"><svg class="ikona kreci" aria-hidden="true"><use href="#i-loader"/></svg><span data-i18n="btn-generuje">Generuję…</span></span></button>
             <div class="grupa-wrap" id="grupa-brief-wrap">
               <button type="button" class="btn-secondary" aria-haspopup="true" aria-expanded="false" aria-controls="grupa-brief-menu" onclick="przelaczGrupe('brief')" title="Więcej zadań" aria-label="Więcej zadań" data-i18n-title="brief-wiecej" data-i18n-label="brief-wiecej"><svg class="ikona" aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
               <div class="grupa-backdrop" onclick="przelaczGrupe('brief')"></div>
@@ -4401,7 +4404,7 @@ var I18N = {
     'opt-aud-auto':'Dopasuj do tematu','opt-aud-b2c':'Klient indywidualny (B2C)','opt-aud-b2b':'Firma (B2B)',
     'btn-brief':'Brief','btn-bulk':'Generuj grupowo','btn-improve':'Popraw','btn-img-short':'Grafika',
     'btn-generate':'Wygeneruj treść','btn-premium':'Samokorekta','btn-premium-active':'Samokorekta',
-    'premium-opis':'Model oceni gotowy tekst i poprawi go (2-3 razy dłużej).','gen-z-samokorekta':'+ samokorekta',
+    'premium-opis':'Model oceni gotowy tekst i poprawi go (2-3 razy dłużej).','gen-z-samokorekta':'Wygeneruj z samokorektą',
     'out-title':'Wynik','badge-ready':'gotowy do generowania','badge-done':'gotowe',
     'btn-edit':'Edytuj','btn-aio':'Oceń AIO','btn-seo':'Oceń SEO',
     'btn-img-out':'Grafika','btn-titles':'Tytuły',
@@ -5005,7 +5008,7 @@ var I18N = {
     'opt-aud-auto':'Match the topic','opt-aud-b2c':'Individual customer (B2C)','opt-aud-b2b':'Business (B2B)',
     'btn-brief':'Brief','btn-bulk':'Bulk generate','btn-improve':'Improve','btn-img-short':'Image',
     'btn-generate':'Generate content','btn-premium':'Self-review','btn-premium-active':'Self-review',
-    'premium-opis':'The model scores the draft and revises it (takes 2-3 times longer).','gen-z-samokorekta':'+ self-review',
+    'premium-opis':'The model scores the draft and revises it (takes 2-3 times longer).','gen-z-samokorekta':'Generate with self-review',
     'out-title':'Result','badge-ready':'ready to generate','badge-done':'done',
     'btn-edit':'Edit','btn-aio':'Assess AIO','btn-seo':'Assess SEO',
     'btn-img-out':'Image','btn-titles':'Titles',

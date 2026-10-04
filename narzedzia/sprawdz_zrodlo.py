@@ -600,6 +600,8 @@ KONTROLE = [
      "if (premiumMode && !skipPremiumModal && magazyn.getItem('cai_samokorekta_ok') !== '1') {", None, None),
     ("R4/pusty-pasek", "telefon: bez artykulu nie ma pustego paska statystyk",
      "body.is-mobile:not(:has(#article-stats.show)):not(:has(#versions-bar.show)) .output-bar .output-bar-left { display: none; }", None, None),
+    ("R4/przycisk-samokorekta", "Wygeneruj z samokorekta jednym napisem tym samym krojem (bez dopisku mniejszym pismem)",
+     "#gen-btn.z-samokorekta .gen-etykieta { display: none; }", "'gen-z-samokorekta':'+ samokorekta'", None),
     ("R3/wytyczne-w-briefie", "Dodatkowe wytyczne w glownym briefie, przed Zrodlami (poza zaawansowanymi)",
      "re:id=\"extra\"[\\s\\S]{0,2000}<div class=\"field zrodla\">", None, None),
     ("R3/ton-w-briefie", "Ton i Jezyk w glownym briefie, nie w zaawansowanych",
