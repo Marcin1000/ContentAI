@@ -369,6 +369,20 @@ async function wariantProxy(b) {
   const r = await generuj(s, 'Artykul konta premium');
   wynik('proxy: artykul gotowy', /ready/.test(r.odznaka) && r.h2 >= 3, JSON.stringify(r));
 
+  // Koszt API w Historii: konto bez wlasnych kluczy go nie widzi (placi serwer);
+  // po wpisaniu wlasnego klucza widzi koszt na swoich kluczach z podzialem na dostawcow.
+  const kosztKafel = () => s.evaluate(() => { const k = document.getElementById('h-cost-kafel');
+    return { widoczny: !!k && !k.hidden, wartosc: (document.getElementById('h-cost') || {}).textContent || '',
+      etykieta: (document.getElementById('h-cost-lbl') || {}).textContent || '', pod: (document.getElementById('h-cost-pod') || {}).textContent || '' }; });
+  const k0 = await kosztKafel();
+  wynik('proxy: bez wlasnych kluczy koszt API ukryty', !k0.widoczny, JSON.stringify(k0));
+  await s.evaluate(() => { magazyn.setItem('cai_klucz_anthropic', 'sk-ant-wlasny-test'); API_KEY = 'sk-ant-wlasny-test'; updateCostDisplay(); });
+  await generuj(s, 'Artykul na wlasnym kluczu');
+  const k1 = await kosztKafel();
+  wynik('proxy: wlasny klucz - koszt na Twoich kluczach z podzialem na dostawcow',
+    k1.widoczny && /Twoich|your/i.test(k1.etykieta) && /Anthropic \$0[,.]\d{3}/.test(k1.pod) && !/\$0[,.]000$/.test(k1.wartosc), JSON.stringify(k1));
+  await s.evaluate(() => { magazyn.removeItem('cai_klucz_anthropic'); API_KEY = ''; updateCostDisplay(); });
+
   // Telefon w tle: polaczenie zrywa sie w trakcie generowania (przelaczenie aplikacji),
   // serwer konczy zadanie, a aplikacja po powrocie sieci odbiera wynik zamiast
   // "Brak polaczenia z serwerem" (serwer/zadania.js, fetchZadania w aplikacji).

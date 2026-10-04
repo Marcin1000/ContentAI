@@ -2025,6 +2025,8 @@ body.kb-collapsed:not(.is-mobile) .sidebar { transform: translateX(-100%); visib
 .hstat-val { font-family: var(--f-ui); }
 /* R4: duze liczby w kafelkach Historii cyframi proporcjonalnymi - tabelaryczne wygladaly jak inny kroj */
 .h-stats .hstat-val { font-variant-numeric: normal; }
+.hstat-pod { margin-top: var(--s-4); font-size: var(--t-xs); line-height: 1.35; color: var(--c-tekst-3); }
+.hstat-pod:empty { display: none; }
 .kb-collapse-btn .ikona-l { width: 18px; height: 18px; }
 }
 @layer widoki {
@@ -3505,7 +3507,7 @@ body.is-mobile .title-opt > button { flex: 1 1 0; justify-content: center; min-h
           <div class="hstat"><div class="hstat-val" id="h-gen">0</div><div class="hstat-lbl" data-i18n="stat-generated">Wygenerowane</div></div>
           <div class="hstat"><div class="hstat-val" id="h-docs">0</div><div class="hstat-lbl" data-i18n="hist-docs-base">Dokumenty w bazie</div></div>
           <div class="hstat"><div class="hstat-val" id="h-avg">-</div><div class="hstat-lbl" data-i18n="stat-avg-words">Średnia słów</div></div>
-          <div class="hstat" id="h-cost-kafel"><div class="hstat-val" id="h-cost">$0.00</div><div class="hstat-lbl" data-i18n="hist-cost">Szac. koszt API</div></div>
+          <div class="hstat" id="h-cost-kafel"><div class="hstat-val" id="h-cost">$0.00</div><div class="hstat-lbl" id="h-cost-lbl" data-i18n="hist-cost">Szac. koszt API</div><div class="hstat-pod" id="h-cost-pod"></div></div>
         </div>
       </div>
       <!-- Split: list + preview -->
@@ -4903,7 +4905,7 @@ var I18N = {
     'out-placeholder-sub-full':'AI przeanalizuje bazę wiedzy i stworzy treść',
     'premium-more-time':'2 do 3 razy więcej czasu',
     'nokey-title':'Brak klucza API','nokey-line1':'Otwórz plik w edytorze tekstowym i znajdź linię:','nokey-line2':'Zastąp WSTAW_TUTAJ_NOWY_KLUCZ_API swoim kluczem z console.anthropic.com','badge-nokey':'brak klucza',
-    'hist-docs-base':'Dokumenty w bazie','hist-cost':'Szac. koszt API',
+    'hist-docs-base':'Dokumenty w bazie','hist-cost':'Szac. koszt API','hist-cost-wlasne':'Koszt na Twoich kluczach',
     'hist-filter-all':'Wszystkie','hist-filter-hybrid':'Hybryda',
     'bulk-gen-all-txt':'Generuj wszystkie','improve-action-txt':'Popraw artykuł',
     // ── Spinner generowania ──
@@ -5528,7 +5530,7 @@ var I18N = {
     'out-placeholder-sub-full':'AI will analyze the knowledge base and create content',
     'premium-more-time':'2-3 times longer',
     'nokey-title':'Missing API key','nokey-line1':'Open the file in a text editor and find the line:','nokey-line2':'Replace WSTAW_TUTAJ_NOWY_KLUCZ_API with your key from console.anthropic.com','badge-nokey':'no key',
-    'hist-docs-base':'Documents in base','hist-cost':'Est. API cost',
+    'hist-docs-base':'Documents in base','hist-cost':'Est. API cost','hist-cost-wlasne':'Cost on your keys',
     'hist-filter-all':'All','hist-filter-hybrid':'Hybrid',
     'bulk-gen-all-txt':'Generate all','improve-action-txt':'Improve article',
     // ── Spinner ──
@@ -6045,6 +6047,24 @@ let gapImproveCount = 0;      // licznik poprawek (do numerowania wersji)
 let gapPreviousTopics = [];   // tematy z poprzednich poprawek (zachowane przez Reset)
 
 let sessionCost = 0;          // łączny koszt API w sesji (USD)
+// Szacunkowy koszt API po dostawcach (USD, z usage odpowiedzi i cennikow).
+// "wszystkie" - kazde wywolanie (administrator, wlasne klucze w wariantach keys/owner),
+// "wlasne" - tylko wywolania na wlasnym kluczu uzytkownika (wariant z serwerem):
+// kto wpisal swoj klucz Anthropic, OpenAI albo ElevenLabs, widzi, ile poszlo na nim.
+let kosztyApi = czytajJson('cai_koszty_v1', null) || { wszystkie: {}, wlasne: {} };
+let kontoAdmin = false;
+function naWlasnymKluczu(dostawca) {
+  if (!window.API_ENDPOINT_OVERRIDE) return true;
+  return !!(magazyn.getItem('cai_klucz_' + dostawca) || '').trim();
+}
+function dodajKoszt(dostawca, kwota) {
+  if (!(kwota > 0)) return;
+  sessionCost += kwota;
+  kosztyApi.wszystkie[dostawca] = (kosztyApi.wszystkie[dostawca] || 0) + kwota;
+  if (naWlasnymKluczu(dostawca)) kosztyApi.wlasne[dostawca] = (kosztyApi.wlasne[dostawca] || 0) + kwota;
+  magazyn.setItem('cai_koszty_v1', JSON.stringify(kosztyApi));
+  updateCostDisplay();
+}
 
 // ─── API FETCH Z AUTOMATYCZNYM RETRY (rate limit 429) ─────────────────────────
 // Przekształca wiadomość Anthropic → format OpenAI Chat (obsługa vision)
@@ -6187,8 +6207,7 @@ async function apiFetch(options, maxRetries = 3) {
           const text = (data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
           const inp = (data.usage && data.usage.prompt_tokens)     || 0;
           const out = (data.usage && data.usage.completion_tokens) || 0;
-          sessionCost += (inp * 0.000003) + (out * 0.000015);
-          updateCostDisplay();
+          dodajKoszt('openai', (inp * 0.000003) + (out * 0.000015));
           const conv = { content: [{ type: 'text', text }], usage: { input_tokens: inp, output_tokens: out } };
           return new Response(JSON.stringify(conv), { status: 200, headers: { 'Content-Type': 'application/json' } });
         }
@@ -6199,8 +6218,7 @@ async function apiFetch(options, maxRetries = 3) {
       if (res.ok || res.status < 500) {
         res.clone().json().then(d => {
           if (d.usage) {
-            sessionCost += kosztOdpowiedzi(d);
-            updateCostDisplay();
+            dodajKoszt('anthropic', kosztOdpowiedzi(d));
           }
         }).catch(() => {});
       }
@@ -7036,7 +7054,20 @@ function renderKws() {
 
 function updateCostDisplay() {
   const el = document.getElementById('h-cost');
-  if (el) el.textContent = '$' + formatujLiczbe(sessionCost, 3, true);
+  if (!el) return;
+  const kafel = document.getElementById('h-cost-kafel');
+  const wszystko = !window.API_ENDPOINT_OVERRIDE || kontoAdmin;
+  const mapa = wszystko ? kosztyApi.wszystkie : kosztyApi.wlasne;
+  const NAZWY = { anthropic: 'Anthropic', openai: 'OpenAI', eleven: 'ElevenLabs' };
+  const suma = Object.keys(mapa).reduce(function (s, k) { return s + (mapa[k] || 0); }, 0);
+  const maKlucz = ['anthropic', 'openai', 'eleven'].some(naWlasnymKluczu);
+  if (kafel) kafel.hidden = !(wszystko || maKlucz || suma > 0);
+  el.textContent = '$' + formatujLiczbe(wszystko ? Math.max(suma, sessionCost) : suma, 3, true);
+  const lbl = document.getElementById('h-cost-lbl');
+  if (lbl) lbl.textContent = _t(wszystko ? 'hist-cost' : 'hist-cost-wlasne');
+  const pod = document.getElementById('h-cost-pod');
+  if (pod) pod.textContent = Object.keys(NAZWY).filter(function (k) { return mapa[k] > 0; })
+    .map(function (k) { return NAZWY[k] + ' $' + formatujLiczbe(mapa[k], 3, true); }).join(' · ');
 }
 function updateSerpWarn() {
   const warn = document.getElementById('serp-kw-warn');
@@ -15227,8 +15258,7 @@ async function generateImage() {
 
     // Koszt
     const costMap = { low: 0.01, medium: 0.04, high: 0.12 };
-    sessionCost += (costMap[quality] || 0.04);
-    updateCostDisplay();
+    dodajKoszt('openai', costMap[quality] || 0.04);
 
     // Pokaż prompt
     document.getElementById('img-prompt-text').textContent = aiPrompt;
@@ -16012,7 +16042,7 @@ async function audioBuildCore(units, sig, attach, eng){
   var out=ctx.createBuffer(ch, total, sr);
   for(var c=0;c<ch;c++){ var od=out.getChannelData(c), off=0; for(var k=0;k<bufs.length;k++){ var sb=bufs[k]; var sd=sb.getChannelData(Math.min(c, sb.numberOfChannels-1)); od.set(sd, off); off+=sb.length; } }
   AUDIO.buffer=out; AUDIO.dur=out.duration; AUDIO.sig=sig; AUDIO.offset=0; AUDIO.playing=false;
-  try{ var _ch=0; units.forEach(function(u){ _ch+=((typeof u==='string')?u:(u.text||'')).length; }); var ttsCost=_ch/1000*0.05; sessionCost+=ttsCost; updateCostDisplay(); if(attach) audioHistAttach(out, AUDIO.blob, AUDIO.dur, sig, ttsCost); }catch(e){}
+  try{ var _ch=0; units.forEach(function(u){ _ch+=((typeof u==='string')?u:(u.text||'')).length; }); var ttsCost=_ch/1000*(eng==='eleven'?0.30:0.05); dodajKoszt(eng==='eleven'?'eleven':'openai', ttsCost); if(attach) audioHistAttach(out, AUDIO.blob, AUDIO.dur, sig, ttsCost); }catch(e){}
   return out;
 }
 async function audioBuild(){ return audioBuildCore(audioUnits(), audioSig(), true, audioEng()); }
@@ -16102,7 +16132,7 @@ async function audioGenerate(btn){
     var res=await apiFetch({ method:'POST', headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}, body: JSON.stringify({ model:MODEL_TRESCI, max_tokens: zRezerwa(getMaxTokens()), system:system, messages:[{role:'user',content:user}] }) });
     var data=await res.json();
     if(!res.ok || !data.content){ throw bladOdpowiedzi(data, res.status); }
-    var scriptCost=0; if(data.usage){ try{ scriptCost=kosztOdpowiedzi(data); sessionCost += scriptCost; updateCostDisplay(); }catch(e){} }
+    var scriptCost=0; if(data.usage){ try{ scriptCost=kosztOdpowiedzi(data); /* do sumy dolicza juz apiFetch */ }catch(e){} }
     var html=(data.content||[]).map(function(c){return c.text||'';}).join('').trim();
     var sc=document.getElementById('au-script'); html=oczyscHtmlModelu(html); sc.innerHTML=html||'<p>(brak treści)</p>';
     document.getElementById('au-result-wrap').style.display='block';

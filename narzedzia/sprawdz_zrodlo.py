@@ -670,8 +670,10 @@ KONTROLE = [
      "function tempoUI(x) {", "toFixed(2)+'x'", None),
     ("R4/tytuly-telefon", "Tytuly na telefonie: tytul na cala szerokosc, przyciski pod nim (UX4-16)",
      "body.is-mobile .title-opt-text { flex: 1 1 100%; }", None, None),
-    ("R4/koszt-api", "kafel szacunkowego kosztu API w Historii: w proxy widoczny dla administratora",
-     "if (kafelKosztu) kafelKosztu.hidden = !markaAdmin;", None, ("proxy",)),
+    ("R4/koszt-api", "koszt API w Historii: administrator widzi calosc, wlasne klucze - koszt na swoich kluczach",
+     "kontoAdmin = markaAdmin;\n  updateCostDisplay();", None, ("proxy",)),
+    ("R4/koszt-dostawcy", "koszt API liczony po dostawcach (Anthropic, OpenAI, ElevenLabs), osobno na wlasnych kluczach",
+     "if (naWlasnymKluczu(dostawca)) kosztyApi.wlasne[dostawca] = (kosztyApi.wlasne[dostawca] || 0) + kwota;", "sessionCost += scriptCost;", None),
     ("R3/wytyczne-w-briefie", "Dodatkowe wytyczne w glownym briefie, przed Zrodlami (poza zaawansowanymi)",
      "re:id=\"extra\"[\\s\\S]{0,2000}<div class=\"field zrodla\">", None, None),
     ("R3/ton-w-briefie", "Ton i Jezyk w glownym briefie, nie w zaawansowanych",
@@ -993,7 +995,7 @@ KONTROLE += [
      "resEl.innerHTML = htmlBleduCms(r.status, err.message || '', 'wp');", "escapeHtml(err.message || 'błąd')", None),
     ("R3D/genind", "bez martwego wskaznika _genInd", None, "_genInd", None),
     ("R3D/liczby", "liczby z ulamkiem w jezyku interfejsu (koszt, srednie pozycje)",
-     "el.textContent = '$' + formatujLiczbe(sessionCost, 3, true);", "sessionCost.toFixed(3)", None),
+     "el.textContent = '$' + formatujLiczbe(wszystko ? Math.max(suma, sessionCost) : suma, 3, true);", "sessionCost.toFixed(3)", None),
 ]
 
 
