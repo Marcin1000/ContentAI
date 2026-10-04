@@ -1783,6 +1783,47 @@ async function testyPoprawek() {
       sprawdz('zerwanie przerywa tez wywolanie dostawcy', przerwaneWAtrapie.some((t) => t.includes('WOLNO artykul')));
       const normalne = await zadanie('/api', json(cStd, { model: 'claude-opus-5', max_tokens: 6000, messages: [{ role: 'user', content: 'artykul' }] }, { 'x-cai-czynnosc': 'artykul' }));
       sprawdz('udane zapytanie liczy sie normalnie', normalne.status === 200 && licznik() === przed + 2);
+
+      // Zadanie w tle (X-Zadanie): telefon zrywa polaczenie po 0,8 s, serwer prowadzi
+      // wywolanie dalej, ponowienie z tym samym identyfikatorem odbiera gotowy wynik.
+      const cialoZ = { model: 'claude-opus-5', max_tokens: 6000, messages: [{ role: 'user', content: 'WOLNO artykul w tle' }] };
+      const wTle = (id, signal) => zadanie('/api', { ...json(cStd, cialoZ, { 'x-cai-czynnosc': 'artykul', 'x-zadanie': id }), signal });
+      const ileWywolan = () => zapytaniaAtrapy.filter((z) => z.tekst.includes('WOLNO artykul w tle')).length;
+      const przedZ = licznik();
+      const sterZ = new AbortController();
+      setTimeout(() => sterZ.abort(), 800);
+      let zerwaneZ = false;
+      try { await wTle('zadanie-test-0001', sterZ.signal); } catch { zerwaneZ = true; }
+      sprawdz('zadanie w tle: klient zerwal polaczenie', zerwaneZ);
+      const ponowione = await wTle('zadanie-test-0001');
+      const ponowioneJson = await ponowione.json();
+      sprawdz('zadanie w tle: ponowienie odbiera wynik dokonczony mimo zerwania',
+        ponowione.status === 200 && /Artykul z atrapy/.test(ponowioneJson.content[0].text));
+      sprawdz('zadanie w tle: dostawca wywolany raz, nie przerwany', ileWywolan() === 1 && !przerwaneWAtrapie.some((t) => t.includes('WOLNO artykul w tle')));
+      sprawdz('zadanie w tle: liczone do pakietu raz', licznik() === przedZ + 2);
+      const trzecie = await wTle('zadanie-test-0001');
+      sprawdz('zadanie w tle: kolejne ponowienie nadal z pamieci, bez wywolania', trzecie.status === 200 && ileWywolan() === 1 && licznik() === przedZ + 2);
+      const cudze = await zadanie('/api', { ...json(cAdmin, cialoZ, { 'x-cai-czynnosc': 'artykul', 'x-zadanie': 'zadanie-test-0001' }) });
+      await cudze.text();
+      sprawdz('zadanie w tle: inne konto z tym samym identyfikatorem nie dostaje cudzego wyniku', ileWywolan() === 2);
+
+      // Przerwij: zadanie w tle konczy sie na serwerze i nie liczy sie do pakietu.
+      const przedA = licznik();
+      const sterA = new AbortController();
+      const anulowane = wTle('zadanie-test-0002', sterA.signal).catch(() => 'zerwane');
+      await new Promise((r) => setTimeout(r, 500));
+      sterA.abort();
+      await anulowane;
+      const anuluj = await zadanie('/api/zadanie/anuluj', json(cStd, { id: 'zadanie-test-0002' }));
+      const anulujJson = await anuluj.json();
+      await new Promise((r) => setTimeout(r, 300));
+      sprawdz('Przerwij: /api/zadanie/anuluj konczy zadanie w tle', anuluj.status === 200 && anulujJson.anulowane === true);
+      sprawdz('Przerwij: dostawca przerwany, pakiet bez zmian',
+        przerwaneWAtrapie.filter((t) => t.includes('WOLNO artykul w tle')).length === 1 && licznik() === przedA);
+      const poAnulowaniu = await wTle('zadanie-test-0002');
+      sprawdz('Przerwij: ponowienie przerwanego zadania -> 409, bez nowego wywolania', poAnulowaniu.status === 409 && ileWywolan() === 3);
+      const zlyId = await zadanie('/api/zadanie/anuluj', json(cStd, { id: '../x' }));
+      sprawdz('anuluj z niepoprawnym identyfikatorem -> 200, nic nie przerwane', zlyId.status === 200 && (await zlyId.json()).anulowane === false);
     }
 
     console.log('\n  kompresja i pamiec podreczna plikow');

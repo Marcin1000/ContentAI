@@ -19,6 +19,7 @@
  * Wlasne endpointy serwera (poza kontraktem workera):
  *   POST /api/prosba-o-dostep -> formularz strony produktowej (bez logowania, CORS) - prosby.js
  *   GET  /api/admin/prosby    -> lista prosb o dostep (admin)
+ *   POST /api/zadanie/anuluj  -> Przerwij dla zadania w tle (X-Zadanie) - zadania.js
  *   oraz /api/baza, /api/strona, /api/odnosniki, /api/marka, /api/pakiet, /api/seo/* - opis w README
  *
  * Konfiguracja przez zmienne srodowiskowe - patrz serwer/README.md.
@@ -27,6 +28,7 @@
 'use strict';
 
 const http = require('node:http');
+const { Readable } = require('node:stream');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -41,6 +43,7 @@ const openseoMcp = require('./openseo-mcp.js');
 const plany = require('./plany.js');
 const strona = require('./strona.js');
 const marka = require('./marka.js');
+const zadaniaWTle = require('./zadania.js');
 
 const KATALOG = __dirname;
 const APP = path.join(KATALOG, '..', 'app');
@@ -762,6 +765,9 @@ function czytajCialo(req, limitBajtow = 25 * 1024 * 1024) {
     });
     req.on('end', () => resolve(Buffer.concat(kawalki)));
     req.on('error', reject);
+    // Klient zerwal polaczenie w trakcie wysylania ciala: bez tego obietnica
+    // wisialaby bez konca (a z nia zadanie w tle czekajace na cialo).
+    req.on('close', () => { if (req.complete === false) reject(new Error('zerwane wysylanie zadania')); });
   });
 }
 
@@ -1673,7 +1679,26 @@ async function obsluz(req, res) {
   // Proxy - kazde wywolanie kosztuje, wiec przechodzi przez limit pakietu.
   // Czynnosc jest liczona dopiero po udanej odpowiedzi dostawcy: gdy generowanie
   // padnie na bledzie API, uzytkownik nie traci sztuki z pakietu.
-  if (req.method === 'POST') {
+  // Przerwij w aplikacji konczy zadanie w tle (serwer/zadania.js) - bez tego
+  // generowanie trwaloby dalej i liczylo sie do pakietu.
+  if (sciezka === '/api/zadanie/anuluj' && req.method === 'POST') {
+    let dane = {};
+    try { dane = JSON.parse((await czytajCialo(req, 4096)).toString('utf8')); } catch { /* puste cialo */ }
+    const id = /^[A-Za-z0-9_-]{8,64}$/.test(String(dane.id || '')) ? String(dane.id) : '';
+    return odpowiedzJson(res, 200, { ok: true, anulowane: zadaniaWTle.anuluj(sesja.login, id) });
+  }
+
+  const PROXY = new Set(['/api', '/api/images', '/api/tts', '/api/eleven-tts', '/api/transcribe']);
+  if (req.method === 'POST' && PROXY.has(sciezka)) {
+    // Ponowienie zadania po zerwanym polaczeniu (telefon w tle): wynik z pamieci
+    // albo czekanie na trwajace wywolanie - bez drugiego wywolania i liczenia.
+    const idZadania = zadaniaWTle.idZNaglowka(req);
+    const bylo = zadaniaWTle.znajdz(sesja.login, idZadania);
+    if (bylo) {
+      req.resume();
+      return zadaniaWTle.odbierz(bylo, res);
+    }
+
     const CZYNNOSCI = {
       '/api/images': 'grafika',
       '/api/tts': 'audio',
@@ -1688,27 +1713,45 @@ async function obsluz(req, res) {
       if (odmowa) return odpowiedzJson(res, 402, odmowa);
     }
 
-    try {
-      if (sciezka === '/api') return await proxyTresc(req, res, sesja, czynnosci);
-      if (sciezka === '/api/images') return await proxyGrafika(req, res, sesja);
-      if (sciezka === '/api/tts') return await proxyOpenAiJson(req, res, KONF.urlOpenai + '/audio/speech', sesja, 'audio', KONF.czasy.audio);
-      if (sciezka === '/api/transcribe') return await proxyTranskrypcja(req, res, sesja);
-      if (sciezka === '/api/eleven-tts') return await proxyEleven(req, res, sesja);
-    } catch (e) {
-      if (e instanceof KlientOdszedl) {
-        // Przegladarka zamknela polaczenie - wywolanie dostawcy przerwane,
-        // nic nie liczymy i nie ma komu odpowiadac.
-        console.log(`[proxy] ${sciezka}: klient odszedl, wywolanie dostawcy przerwane`);
+    const wykonaj = async (cel, zad = req) => {
+      try {
+        if (sciezka === '/api') return await proxyTresc(zad, cel, sesja, czynnosci);
+        if (sciezka === '/api/images') return await proxyGrafika(zad, cel, sesja);
+        if (sciezka === '/api/tts') return await proxyOpenAiJson(zad, cel, KONF.urlOpenai + '/audio/speech', sesja, 'audio', KONF.czasy.audio);
+        if (sciezka === '/api/transcribe') return await proxyTranskrypcja(zad, cel, sesja);
+        if (sciezka === '/api/eleven-tts') return await proxyEleven(zad, cel, sesja);
+      } catch (e) {
+        if (e instanceof KlientOdszedl) {
+          // Przegladarka zamknela polaczenie (albo Przerwij przy zadaniu w tle) -
+          // wywolanie dostawcy przerwane, nic nie liczymy i nie ma komu odpowiadac.
+          console.log(`[proxy] ${sciezka}: klient odszedl, wywolanie dostawcy przerwane`);
+          return undefined;
+        }
+        if (e instanceof BladCzasu) {
+          console.error(`[proxy] ${sciezka}: ${e.message}`);
+          return odpowiedzCzasu(cel, e);
+        }
+        if (e instanceof pliki.BladDanych) throw e;
+        console.error(`[proxy] ${sciezka}:`, e.message);
+        return odpowiedzJson(cel, 502, { error: 'Błąd połączenia z dostawcą API' });
+      }
+      return undefined;
+    };
+    // Z identyfikatorem zadanie idzie w tle: konczy sie mimo zerwanego polaczenia.
+    // Cialo czytamy najpierw w calosci - zadanie zapisujemy dopiero, gdy doszlo cale,
+    // zeby urwane wysylanie nie zostawilo w pamieci zlego wyniku dla ponowienia.
+    if (idZadania) {
+      let cialo;
+      try {
+        cialo = await czytajCialo(req);
+      } catch (e) {
+        if (e.status === 413) return odpowiedzJson(res, 413, { error: 'Za duże zapytanie' });
         return undefined;
       }
-      if (e instanceof BladCzasu) {
-        console.error(`[proxy] ${sciezka}: ${e.message}`);
-        return odpowiedzCzasu(res, e);
-      }
-      if (e instanceof pliki.BladDanych) throw e;
-      console.error(`[proxy] ${sciezka}:`, e.message);
-      return odpowiedzJson(res, 502, { error: 'Błąd połączenia z dostawcą API' });
+      const kopia = Object.assign(Readable.from([cialo]), { headers: req.headers, method: req.method, url: req.url, socket: req.socket });
+      return zadaniaWTle.odbierz(zadaniaWTle.uruchom(sesja.login, idZadania, kopia, (cel) => wykonaj(cel, kopia)), res);
     }
+    return wykonaj(res);
   }
 
   // Aplikacja i pliki statyczne

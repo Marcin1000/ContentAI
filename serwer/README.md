@@ -26,11 +26,25 @@ Serwer odtwarza kontrakt `app/worker.js`, więc **aplikacja działa bez żadnych
 | `POST /api/tts` | synteza mowy |
 | `POST /api/transcribe` | transkrypcja |
 | `POST /api/eleven-tts` | synteza ElevenLabs |
+| `POST /api/zadanie/anuluj` | przerwanie zadania w tle (`{"id": "..."}`) - przycisk Przerwij |
 | `GET /api/status` | stan serwera - **tylko rola admin** |
 | `GET /api/marka` | konfiguracja marki; zapis `POST` **tylko rola admin** |
 | `POST /auth/login`, `GET /auth/logout`, `GET /auth/me` | logowanie |
 
 Wszystko poza logowaniem wymaga aktywnej sesji.
+
+### Zadania w tle (telefon w tle, zerwane połączenie)
+
+Aplikacja wysyła przy każdym wywołaniu dostawcy (`/api`, `/api/images`, `/api/tts`,
+`/api/eleven-tts`, `/api/transcribe`) nagłówek `X-Zadanie` z losowym identyfikatorem.
+Serwer prowadzi takie wywołanie do końca, nawet gdy przeglądarka zerwie połączenie
+(przełączenie aplikacji na telefonie, wygaszony ekran), i trzyma wynik przez 15 minut
+(`serwer/zadania.js`, do 8 zadań na konto). Aplikacja po powrocie ponawia to samo zadanie
+i dostaje gotową odpowiedź: bez drugiego wywołania dostawcy i bez drugiego liczenia do
+pakietu. Identyfikator jest przypisany do konta, więc inne konto go nie odczyta.
+Przerwij w aplikacji woła `POST /api/zadanie/anuluj`, co kończy wywołanie dostawcy
+i nie liczy się do pakietu. Wywołanie bez nagłówka działa jak dawniej (zerwanie
+przerywa dostawcę).
 
 ---
 

@@ -191,6 +191,42 @@ async function wariantKeys(b) {
   wynik('keys: samokorekta w menu przelacza sie i pokazuje stan na przycisku', sk.otwarte && sk.aria === 'true' && sk.naPrzycisku && skWyl, JSON.stringify(sk));
   wynik('keys: dodatkowe wytyczne poza ustawieniami zaawansowanymi', sk.wytyczne, '');
 
+  // Brief artykulu zapamietany dla tematu: drugie otwarcie bez nowego zapytania,
+  // "Analizuj ponownie" pyta jeszcze raz; liczba slow bez podwojonego "slow".
+  let briefZapytan = 0;
+  const liczBrief = (z) => { if (z.method() === 'POST' && /Analyze the topic and knowledge base/.test(z.postData() || '')) briefZapytan++; };
+  s.on('request', liczBrief);
+  await s.fill('#topic', 'Temat do briefu');
+  await s.evaluate(() => openBriefPanel());
+  await krok('brief artykulu', s.waitForFunction(() => !!document.getElementById('brief-kw-list'), null, { timeout: 15000 }));
+  await s.evaluate(() => closeBriefPanel());
+  await s.evaluate(() => openBriefPanel());
+  await s.waitForTimeout(300);
+  const br = await s.evaluate(() => ({ zapamietany: !!document.querySelector('#brief-content .brief-zapamietany'),
+    tekst: document.getElementById('brief-content').textContent }));
+  const pierwszy = briefZapytan;
+  await s.evaluate(() => openBriefPanel(true));
+  await krok('brief ponownie', s.waitForFunction(() => !!document.getElementById('brief-kw-list') && !document.querySelector('#brief-content .brief-zapamietany'), null, { timeout: 15000 }));
+  wynik('keys: brief zapamietany dla tematu, Analizuj ponownie pyta jeszcze raz',
+    pierwszy === 1 && br.zapamietany && briefZapytan === 2, JSON.stringify({ pierwszy, razem: briefZapytan, zapamietany: br.zapamietany }));
+  wynik('keys: liczba slow w briefie bez podwojonego slowa', !/(słów|words)\s+(słów|words)/.test(br.tekst), br.tekst.slice(-60));
+  s.off('request', liczBrief);
+  await s.evaluate(() => closeBriefPanel());
+
+  // R4 (UX4-04, UX4-07): przelaczniki SERP i AEO w tresci ustawien zaawansowanych (z odstepami),
+  // Zrodla i ustawienia nie siedza w polu Dodatkowe wytyczne; skrot statystyk odmienia "slowo" jak arkusz.
+  const uklad = await s.evaluate(async () => {
+    const tresc = document.querySelector('#brief-zaawansowane > .zaawansowane-tresc');
+    const w = { serp: !!(tresc && tresc.contains(document.getElementById('use-serp'))), aeo: !!(tresc && tresc.contains(document.getElementById('use-aeo'))),
+      zrodla: !document.querySelector('.field.zrodla').parentElement.closest('.field'), szczegoly: !document.getElementById('brief-zaawansowane').parentElement.closest('.field') };
+    const el = document.getElementById('stat-words'), przed = el.textContent;
+    for (const n of [833, 851, 1]) { ustawLiczbeStatystyki('stat-words', n); await new Promise((r) => setTimeout(r, 30)); w[n] = document.getElementById('stat-skrot-tekst').textContent.split(' · ')[0]; }
+    ustawLiczbeStatystyki('stat-words', przed);
+    return w;
+  });
+  wynik('keys: SERP i AEO w tresci ustawien zaawansowanych, Zrodla poza polem wytycznych', uklad.serp && uklad.aeo && uklad.zrodla && uklad.szczegoly, JSON.stringify(uklad));
+  wynik('keys: skrot statystyk z odmiana jak w arkuszu (833 słowa)', uklad[833] === '833 słowa' && uklad[851] === '851 słów' && uklad[1] === '1 słowo', JSON.stringify(uklad));
+
   // Ucieta samokorekta (max_tokens przy poprawie) nie zastepuje pelnego artykulu.
   await s.fill('#topic', 'Temat premium [atrapa:ocena=55@ocena-premium] [atrapa:max-tokens@poprawa]');
   await s.evaluate(() => { document.getElementById('use-web').checked = true; premiumMode = true; generate(true); });
@@ -255,12 +291,33 @@ async function wariantKeys(b) {
     ls: (() => { try { return localStorage.length; } catch (e) { return e.name; } })() }));
   wynik('keys: szkic formularza i artykul wracaja po odswiezeniu', st.t === 'Temat w trakcie pisania' && st.art === 'block', JSON.stringify(st));
   // Temat, z ktorego powstal ostatni artykul, nie wraca do briefu; start na Briefie.
-  await s.evaluate(() => { document.getElementById('topic').value = history[biezacyHist >= 0 ? biezacyHist : 0].topic; zapiszSzkic(); });
+  await s.evaluate(() => { document.getElementById('topic').value = (wpisHistorii(biezacyHist) || history[0]).topic; zapiszSzkic(); });
   await s.goto(adres, { waitUntil: 'load' });
   await krok('artykul po odswiezeniu bez starego tematu', s.waitForFunction(() => getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: 8000 }));
   await s.waitForTimeout(300);
   const st2 = await s.evaluate(() => ({ t: document.getElementById('topic').value, kw: keywords.length, wynik: document.body.classList.contains('widok-wynik') }));
   wynik('keys: po wejsciu brief pusty (temat artykulu nie wraca), widok Brief', st2.t === '' && st2.kw === 0 && !st2.wynik, JSON.stringify(st2));
+  // R4 kod-15: Dodatkowe wytyczne poprzedniego artykulu nie przechodza na nastepny tekst.
+  await s.fill('#extra', 'Wspomnij o promocji -20% WYTYCZNA-STARA');
+  await generuj(s, 'Artykul z wytyczna');
+  await krok('szkic z wytyczna zapisany', s.waitForFunction(() => { try { return JSON.parse(magazyn.getItem('cai_szkic') || '{}').extra.indexOf('WYTYCZNA-STARA') !== -1; } catch (e) { return false; } }, null, { timeout: 8000 }));
+  await s.goto(adres, { waitUntil: 'load' });
+  await krok('artykul z wytyczna po odswiezeniu', s.waitForFunction(() => getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: 8000 }));
+  await s.waitForTimeout(300);
+  const st3 = await s.evaluate(() => ({ t: document.getElementById('topic').value, extra: document.getElementById('extra').value }));
+  wynik('keys: R4 kod-15 po wejsciu wytyczne poprzedniego artykulu wyczyszczone', st3.t === '' && st3.extra === '', JSON.stringify(st3));
+  // R4 kod-02: otwarcie starszego wpisu z Historii (jak dotkniecie na telefonie) nie kasuje
+  // rozpoczetego briefu, takze po odswiezeniu.
+  await s.fill('#topic', 'NOWY TEMAT W TOKU');
+  await s.evaluate(() => { keywords.push('nowa fraza'); renderKws(); otworzWGeneratorze(history[history.length - 1].id); });
+  await s.waitForTimeout(600);
+  const st4 = await s.evaluate(() => document.getElementById('topic').value);
+  await s.goto(adres, { waitUntil: 'load' });
+  await krok('brief po historii i odswiezeniu', s.waitForFunction(() => getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: 8000 }));
+  await s.waitForTimeout(300);
+  const st5 = await s.evaluate(() => ({ t: document.getElementById('topic').value, kw: keywords.slice(), biez: biezacyHist, ost: history[history.length - 1].id }));
+  wynik('keys: R4 kod-02 wpis z Historii nie nadpisuje briefu (takze po odswiezeniu)',
+    st4 === 'NOWY TEMAT W TOKU' && st5.t === 'NOWY TEMAT W TOKU' && st5.kw.indexOf('nowa fraza') !== -1 && st5.biez === st5.ost, JSON.stringify({ st4, st5 }));
   wynik('keys (http): bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow > bledowPrzed) await zrzut(s, 'keys-odswiezenie');
   await k.close();
@@ -311,6 +368,56 @@ async function wariantProxy(b) {
   let s = await zaloguj(k, 'premium');
   const r = await generuj(s, 'Artykul konta premium');
   wynik('proxy: artykul gotowy', /ready/.test(r.odznaka) && r.h2 >= 3, JSON.stringify(r));
+
+  // Telefon w tle: polaczenie zrywa sie w trakcie generowania (przelaczenie aplikacji),
+  // serwer konczy zadanie, a aplikacja po powrocie sieci odbiera wynik zamiast
+  // "Brak polaczenia z serwerem" (serwer/zadania.js, fetchZadania w aplikacji).
+  const histPrzedZ = await s.evaluate(() => history.length);
+  // Zapytanie o artykul dochodzi do serwera, ale odpowiedz nie wraca do przegladarki:
+  // route.fetch() wysyla je naprawde, route.abort() zrywa polaczenie po stronie strony.
+  let zerwij = true;
+  await s.route(/\/api$/, async (route) => {
+    const z = route.request();
+    if (zerwij && z.method() === 'POST' && z.headers()['x-cai-czynnosc'] === 'artykul' && /Artykul w tle/.test(z.postData() || '')) {
+      zerwij = false;
+      route.fetch().catch(() => {});
+      await new Promise((r) => setTimeout(r, 500));
+      return route.abort('connectionreset');
+    }
+    return route.continue();
+  });
+  await s.fill('#topic', 'Artykul w tle [atrapa:opoznienie=2500@artykul]');
+  await s.evaluate(() => { document.getElementById('use-web').checked = true; generate(); });
+  await krok('generowanie po zerwanym polaczeniu', czekajNaKoniec(s, 40000));
+  const zt = await s.evaluate(() => ({ h: history.length, odz: document.getElementById('out-badge').className,
+    art: getComputedStyle(document.getElementById('article')).display, blad: (document.querySelector('#output-area .error-box, .blad-generowania') || {}).textContent || '' }));
+  wynik('proxy: zerwane polaczenie w trakcie generowania - wynik odebrany po powrocie', zt.h === histPrzedZ + 1 && /ready/.test(zt.odz) && zt.art === 'block', JSON.stringify(zt));
+  wynik('proxy: polaczenie naprawde zerwane w tescie', !zerwij);
+  await s.unroute(/\/api$/);
+
+  // Zatrzymaj w Generuj grupowo przerywa biezacy artykul takze na serwerze
+  // (anulowanie zadania w tle) i nie startuje kolejnych tematow (kod-03).
+  const grupowe = { anuluj: 0, artykuly: 0 };
+  const liczGrupowe = (z) => {
+    if (z.method() !== 'POST') return;
+    if (/\/api\/zadanie\/anuluj$/.test(z.url())) grupowe.anuluj++;
+    else if (/\/api$/.test(z.url()) && z.headers()['x-cai-czynnosc'] === 'artykul') grupowe.artykuly++;
+  };
+  s.on('request', liczGrupowe);
+  await s.evaluate(() => {
+    openBulkModal();
+    document.getElementById('bulk-topics').value = 'Dlugi grupowy [atrapa:opoznienie=6000@artykul]\nDrugi grupowy';
+    updateBulkCount();
+    startBulkGenerate();
+  });
+  await s.waitForTimeout(1500);
+  await krok('Zatrzymaj w kolejce grupowej', s.click('#bulk-stop', { timeout: 3000 }));
+  await krok('kolejka grupowa zatrzymana', s.waitForFunction(() => !bulkRunning, null, { timeout: 5000 }));
+  await s.waitForTimeout(800);
+  s.off('request', liczGrupowe);
+  await s.evaluate(() => closeBulkModal());
+  wynik('proxy: Zatrzymaj w Generuj grupowo anuluje zadanie na serwerze i nie startuje kolejnych', grupowe.anuluj >= 1 && grupowe.artykuly === 1, JSON.stringify(grupowe));
+
   await s.evaluate(() => runRepurpose('linkedin'));
   await krok('przerobka LinkedIn', s.waitForFunction(() => { const o = document.getElementById('repurpose-out'); return o && o.value && o.value.length > 20; }, null, { timeout: 30000 }));
   const rp = await s.evaluate(() => (document.getElementById('repurpose-out') || {}).value || '');
