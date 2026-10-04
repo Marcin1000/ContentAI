@@ -28,6 +28,7 @@
 'use strict';
 
 const http = require('node:http');
+const { Readable } = require('node:stream');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -764,6 +765,9 @@ function czytajCialo(req, limitBajtow = 25 * 1024 * 1024) {
     });
     req.on('end', () => resolve(Buffer.concat(kawalki)));
     req.on('error', reject);
+    // Klient zerwal polaczenie w trakcie wysylania ciala: bez tego obietnica
+    // wisialaby bez konca (a z nia zadanie w tle czekajace na cialo).
+    req.on('close', () => { if (req.complete === false) reject(new Error('zerwane wysylanie zadania')); });
   });
 }
 
@@ -1709,13 +1713,13 @@ async function obsluz(req, res) {
       if (odmowa) return odpowiedzJson(res, 402, odmowa);
     }
 
-    const wykonaj = async (cel) => {
+    const wykonaj = async (cel, zad = req) => {
       try {
-        if (sciezka === '/api') return await proxyTresc(req, cel, sesja, czynnosci);
-        if (sciezka === '/api/images') return await proxyGrafika(req, cel, sesja);
-        if (sciezka === '/api/tts') return await proxyOpenAiJson(req, cel, KONF.urlOpenai + '/audio/speech', sesja, 'audio', KONF.czasy.audio);
-        if (sciezka === '/api/transcribe') return await proxyTranskrypcja(req, cel, sesja);
-        if (sciezka === '/api/eleven-tts') return await proxyEleven(req, cel, sesja);
+        if (sciezka === '/api') return await proxyTresc(zad, cel, sesja, czynnosci);
+        if (sciezka === '/api/images') return await proxyGrafika(zad, cel, sesja);
+        if (sciezka === '/api/tts') return await proxyOpenAiJson(zad, cel, KONF.urlOpenai + '/audio/speech', sesja, 'audio', KONF.czasy.audio);
+        if (sciezka === '/api/transcribe') return await proxyTranskrypcja(zad, cel, sesja);
+        if (sciezka === '/api/eleven-tts') return await proxyEleven(zad, cel, sesja);
       } catch (e) {
         if (e instanceof KlientOdszedl) {
           // Przegladarka zamknela polaczenie (albo Przerwij przy zadaniu w tle) -
@@ -1734,7 +1738,19 @@ async function obsluz(req, res) {
       return undefined;
     };
     // Z identyfikatorem zadanie idzie w tle: konczy sie mimo zerwanego polaczenia.
-    if (idZadania) return zadaniaWTle.odbierz(zadaniaWTle.uruchom(sesja.login, idZadania, req, wykonaj), res);
+    // Cialo czytamy najpierw w calosci - zadanie zapisujemy dopiero, gdy doszlo cale,
+    // zeby urwane wysylanie nie zostawilo w pamieci zlego wyniku dla ponowienia.
+    if (idZadania) {
+      let cialo;
+      try {
+        cialo = await czytajCialo(req);
+      } catch (e) {
+        if (e.status === 413) return odpowiedzJson(res, 413, { error: 'Za duże zapytanie' });
+        return undefined;
+      }
+      const kopia = Object.assign(Readable.from([cialo]), { headers: req.headers, method: req.method, url: req.url, socket: req.socket });
+      return zadaniaWTle.odbierz(zadaniaWTle.uruchom(sesja.login, idZadania, kopia, (cel) => wykonaj(cel, kopia)), res);
+    }
     return wykonaj(res);
   }
 

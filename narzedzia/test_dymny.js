@@ -191,6 +191,28 @@ async function wariantKeys(b) {
   wynik('keys: samokorekta w menu przelacza sie i pokazuje stan na przycisku', sk.otwarte && sk.aria === 'true' && sk.naPrzycisku && skWyl, JSON.stringify(sk));
   wynik('keys: dodatkowe wytyczne poza ustawieniami zaawansowanymi', sk.wytyczne, '');
 
+  // Brief artykulu zapamietany dla tematu: drugie otwarcie bez nowego zapytania,
+  // "Analizuj ponownie" pyta jeszcze raz; liczba slow bez podwojonego "slow".
+  let briefZapytan = 0;
+  const liczBrief = (z) => { if (z.method() === 'POST' && /Analyze the topic and knowledge base/.test(z.postData() || '')) briefZapytan++; };
+  s.on('request', liczBrief);
+  await s.fill('#topic', 'Temat do briefu');
+  await s.evaluate(() => openBriefPanel());
+  await krok('brief artykulu', s.waitForFunction(() => !!document.getElementById('brief-kw-list'), null, { timeout: 15000 }));
+  await s.evaluate(() => closeBriefPanel());
+  await s.evaluate(() => openBriefPanel());
+  await s.waitForTimeout(300);
+  const br = await s.evaluate(() => ({ zapamietany: !!document.querySelector('#brief-content .brief-zapamietany'),
+    tekst: document.getElementById('brief-content').textContent }));
+  const pierwszy = briefZapytan;
+  await s.evaluate(() => openBriefPanel(true));
+  await krok('brief ponownie', s.waitForFunction(() => !!document.getElementById('brief-kw-list') && !document.querySelector('#brief-content .brief-zapamietany'), null, { timeout: 15000 }));
+  wynik('keys: brief zapamietany dla tematu, Analizuj ponownie pyta jeszcze raz',
+    pierwszy === 1 && br.zapamietany && briefZapytan === 2, JSON.stringify({ pierwszy, razem: briefZapytan, zapamietany: br.zapamietany }));
+  wynik('keys: liczba slow w briefie bez podwojonego slowa', !/(słów|words)\s+(słów|words)/.test(br.tekst), br.tekst.slice(-60));
+  s.off('request', liczBrief);
+  await s.evaluate(() => closeBriefPanel());
+
   // Ucieta samokorekta (max_tokens przy poprawie) nie zastepuje pelnego artykulu.
   await s.fill('#topic', 'Temat premium [atrapa:ocena=55@ocena-premium] [atrapa:max-tokens@poprawa]');
   await s.evaluate(() => { document.getElementById('use-web').checked = true; premiumMode = true; generate(true); });
