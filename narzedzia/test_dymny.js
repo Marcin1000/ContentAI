@@ -318,6 +318,20 @@ async function wariantKeys(b) {
   const st5 = await s.evaluate(() => ({ t: document.getElementById('topic').value, kw: keywords.slice(), biez: biezacyHist, ost: history[history.length - 1].id }));
   wynik('keys: R4 kod-02 wpis z Historii nie nadpisuje briefu (takze po odswiezeniu)',
     st4 === 'NOWY TEMAT W TOKU' && st5.t === 'NOWY TEMAT W TOKU' && st5.kw.indexOf('nowa fraza') !== -1 && st5.biez === st5.ost, JSON.stringify({ st4, st5 }));
+  // R5 (komputer): plakietka "z historii" nie wchodzi pod Edytuj, ptaszek w polu zaznaczenia
+  // bez powtorzen, pola Drupala w jednym rzedzie na tej samej wysokosci.
+  const r5 = await s.evaluate(() => {
+    const b = document.getElementById('out-badge').getBoundingClientRect(), e = document.getElementById('edit-btn').getBoundingClientRect();
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'kb-check'; cb.checked = true; document.body.appendChild(cb);
+    const cs = getComputedStyle(cb); const ptaszek = cs.backgroundRepeat + '|' + cs.backgroundPosition; cb.remove();
+    openWpModal(); switchCmsTab('drupal');
+    const t1 = document.getElementById('drupal-ctype').getBoundingClientRect().top, t2 = document.getElementById('drupal-format').getBoundingClientRect().top;
+    closeWpModal && closeWpModal();
+    return { odstep: Math.round(e.left - b.right), ptaszek, drupal: Math.round(t2 - t1) };
+  });
+  wynik('keys: plakietka stanu nie wchodzi pod Edytuj (odstep >= 8 px)', r5.odstep >= 8, JSON.stringify(r5));
+  wynik('keys: ptaszek w polu zaznaczenia wysrodkowany, bez powtorzen', /^no-repeat\|50% 50%$/.test(r5.ptaszek), r5.ptaszek);
+  wynik('keys: pola Drupala w jednym rzedzie na tej samej wysokosci', Math.abs(r5.drupal) <= 1, String(r5.drupal));
   wynik('keys (http): bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow > bledowPrzed) await zrzut(s, 'keys-odswiezenie');
   await k.close();

@@ -1491,6 +1491,8 @@ body:not(.kb-collapsed) .kb-tab { --b-tlo: var(--c-akcent-tlo); --b-kol: var(--c
 .modal-head .modal-close { margin: -6px -10px 0 0; }
 .modal p, .okno-opis { font-size: var(--t-md); line-height: 1.55; color: var(--c-tekst-2); margin: 0 0 var(--s-16); }
 .modal .field + .field { margin-top: var(--s-12); }
+/* R5: pola obok siebie w jednym rzedzie (Drupal: Typ tresci | Format tekstu) bez odstepu z gory - drugie lezalo 12 px nizej */
+.modal .row2 > .field + .field { margin-top: 0; }
 .modal-footer { display: flex; justify-content: flex-end; align-items: center; gap: var(--s-8); flex-wrap: wrap;
   margin: var(--s-20) 0 0; padding-top: var(--s-16); border-top: 1px solid var(--c-linia); }
 .modal-footer .btn-generate, .modal .btn-generate { width: auto; min-height: var(--h-md); padding: 0 var(--s-16); font-size: var(--t-sm); }
@@ -1564,7 +1566,9 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 .kb-check:hover { border-color: var(--c-ramka-najazd); }
 .kb-check:checked { background-color: var(--c-przel-wl); border-color: var(--c-przel-wl);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231C1303' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
-  background-size: 11px; }
+  background-size: 11px; background-repeat: no-repeat; background-position: center; }
+/* R5: skrot "background" wyzej zerowal powtarzanie i polozenie - ptaszek lezal w rogu
+   i powtarzal sie (biale punkty przy krawedziach) */
 :root[data-theme="light"] .kb-check:checked {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); }
 .kb-select-bar { background: var(--c-akcent-tlo); border-bottom: 1px solid var(--c-akcent-ramka); color: var(--c-akcent-mocny); font-size: var(--t-xs); }
@@ -1923,6 +1927,11 @@ body.brief-zwiniety:not(.is-mobile) .brief-szyna { display: flex; flex-direction
 .output-col { background: var(--c-tlo); }
 .output-bar { min-height: 52px; padding: var(--s-8) var(--s-16); gap: var(--s-6); flex-wrap: nowrap; background: var(--c-panel); border-bottom: 1px solid var(--c-linia); }
 .output-bar-left { gap: var(--s-8); min-width: 0; }
+/* R5: komputer - plakietka stanu ("z historii", "gotowe") nie kurczy sie pod przyciski akcji;
+   wczesniej min-width: 0 pozwalal jej wejsc pod Edytuj/Gotowe. Odstep 12 px od paska akcji. */
+body:not(.is-mobile) .output-bar { column-gap: var(--s-12); }
+body:not(.is-mobile) .output-bar .output-bar-left { flex: 1 0 auto; }
+body:not(.is-mobile) #out-badge { flex: none; white-space: nowrap; }
 .output-title { display: none; }
 .output-bar .btn-secondary, .output-bar .grupa-wrap > button { min-height: var(--h-md); }
 .pasek-sep { display: none; width: 1px; height: 20px; background: var(--c-linia-2); margin: 0 var(--s-2); flex: none; }
