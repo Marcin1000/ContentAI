@@ -217,6 +217,164 @@ async function scenariuszStanu(b) {
   await k.close();
 }
 
+// ── Runda 4, logika generowania (wykonawca A) ──────────────────────────────
+// kod-01 pasek wyniku z Historii i po bledzie, kod-03 Generuj grupowo, kod-04 edycja,
+// kod-05 Dopracuj tekst, kod-07 jedno generowanie naraz i Popraw, kod-16 spinner i jezyk.
+async function scenariuszR4Logiki(b) {
+  const { k, s, bledyJs } = await nowaStrona(b, 'pl', {});
+  const zapytania = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /anthropic\.com/.test(z.url())) zapytania.push(z.postData() || ''); });
+  const artykuly = (od) => zapytania.slice(od).filter((t) => /Keywords to include naturally/.test(t));
+  const ocenyPremium = (od) => zapytania.slice(od).filter((t) => /strict hybrid SEO\+AIO content evaluator|"AIO evaluator\.|"SEO content evaluator\./.test(t));
+  const poprawy = (od) => zapytania.slice(od).filter((t) => /You are an? (hybrid SEO\+AIO|SEO|AIO) editor\. Fix only/.test(t));
+  const powiadomienia = () => s.evaluate(() => [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent).join(' | '));
+  const bezPowiadomien = () => s.evaluate(() => document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()));
+  const przyciski = () => s.evaluate(() => {
+    const ids = ['fakty-btn', 'aeo-btn', 'geo-btn', 'tts-btn', 'premium-fix-btn', 'repurpose-wrap', 'jsonld-btn', 'seo-btn', 'copy-btn', 'edit-btn'];
+    const brak = ids.filter((id) => { const el = document.getElementById(id); return !el || el.style.display === 'none'; });
+    const wiecej = (document.getElementById('grupa-wiecej-wrap') || {}).style || {};
+    return { brak, wiecej: wiecej.display };
+  });
+
+  // ── kod-01: ten sam pasek po generowaniu, z Historii i po bledzie ──
+  await generuj(s, 'Artykul do paska wyniku', false);
+  await krok('R4 artykul do paska', czekajNaKoniec(s));
+  await s.evaluate(() => otworzWGeneratorze(0));
+  await s.waitForTimeout(400);
+  let p = await przyciski();
+  wynik('R4 kod-01: z Historii pasek ma Fakty, AEO, GEO, Posluchaj, Dopracuj, przerobki, JSON-LD i Wiecej', !p.brak.length && p.wiecej === 'inline-flex', JSON.stringify(p));
+  await generuj(s, 'Blad przed historia [atrapa:529@artykul]', false);
+  await krok('R4 blad generowania', czekajNaKoniec(s));
+  await s.evaluate(() => otworzWGeneratorze(0));
+  await s.waitForTimeout(400);
+  p = await przyciski();
+  wynik('R4 kod-01: po bledzie artykul z Historii ma pelny pasek', !p.brak.length && p.wiecej === 'inline-flex', JSON.stringify(p));
+
+  // ── kod-04: zapis poprawek w trakcie edycji, nowe generowanie konczy edycje ──
+  await s.evaluate(() => toggleEdit());
+  await s.click('#article p');
+  await s.keyboard.press('End');
+  await s.keyboard.type(' WPISANE1');
+  await s.waitForTimeout(1600);
+  const e1 = await s.evaluate(() => ({ edycja: editMode, hist: (history[biezacyHist] || {}).html || '' }));
+  wynik('R4 kod-04: poprawki w historii bez Gotowe (1 s po zmianie)', e1.edycja && /WPISANE1/.test(e1.hist), 'edycja=' + e1.edycja);
+  await s.keyboard.type(' WPISANE2');
+  await generuj(s, 'Nowy artykul w trakcie edycji', false);
+  await krok('R4 generowanie po edycji', czekajNaKoniec(s));
+  const e2 = await s.evaluate(() => ({
+    klasa: document.body.classList.contains('edit-active'),
+    pasek: document.getElementById('fmt-toolbar').classList.contains('show'),
+    edycja: editMode, stary: (history[1] || {}).html || '',
+  }));
+  wynik('R4 kod-04: nowe generowanie konczy edycje (bez edit-active i paska formatowania)', !e2.klasa && !e2.pasek && !e2.edycja, JSON.stringify({ klasa: e2.klasa, pasek: e2.pasek }));
+  wynik('R4 kod-04: poprawki sprzed generowania zapisane w poprzednim wpisie', /WPISANE2/.test(e2.stary));
+
+  // ── kod-05: Dopracuj tekst ──
+  await generuj(s, 'Artykul do dopracowania', false);
+  await krok('R4 artykul do dopracowania', czekajNaKoniec(s));
+  const przed = await s.evaluate(() => ({ hist: history[biezacyHist].html, zrodla: !!document.querySelector('#article .zrodla-box') }));
+  let od = zapytania.length;
+  await s.evaluate(() => { document.getElementById('topic').value = 'Artykul do dopracowania [atrapa:ocena=55@ocena-premium]'; runPostGenerationPremium(); });
+  await krok('R4 dopracowanie', czekajNaKoniec(s, 30000));
+  const po = await s.evaluate(() => ({ hist: history[biezacyHist].html, art: htmlDoZapisu(document.getElementById('article')), zrodla: !!document.querySelector('#article .zrodla-box'), odz: document.getElementById('out-badge').className }));
+  const pop = poprawy(od);
+  wynik('R4 kod-05: wynik Dopracuj w historii', po.hist !== przed.hist && po.hist === po.art && /ready/.test(po.odz), 'zmieniony=' + (po.hist !== przed.hist) + ' zgodny=' + (po.hist === po.art));
+  wynik('R4 kod-05: do modelu bez listy zrodel, zrodla wracaja', pop.length === 1 && !/zrodla-box/.test(pop[0]) && po.zrodla === przed.zrodla, JSON.stringify({ poprawy: pop.length, zrodlaPrzed: przed.zrodla, zrodlaPo: po.zrodla }));
+  await s.evaluate(() => { document.getElementById('topic').value = 'Dlugie dopracowanie [atrapa:opoznienie=8000@ocena-premium]'; runPostGenerationPremium(); });
+  await s.waitForTimeout(1000);
+  await s.click('#spin-stop');
+  const przerwane = await krok('R4 Przerwij konczy Dopracuj', czekajNaKoniec(s, 3000));
+  wynik('R4 kod-05: Przerwij zatrzymuje Dopracuj tekst', przerwane && await s.evaluate(() => !/ready|running/.test(document.getElementById('out-badge').className) && !!document.querySelector('#article h1')));
+  await czekajNaKoniec(s, 15000).catch(() => {});
+  await bezPowiadomien();
+  await s.evaluate(() => { document.getElementById('topic').value = 'Blad dopracowania [atrapa:529@ocena-premium]'; runPostGenerationPremium(); });
+  await krok('R4 Dopracuj z bledem', czekajNaKoniec(s, 30000));
+  const pw = await powiadomienia();
+  const wzorBledu = await s.evaluate(() => _t('msg-premium-blad').trim());
+  wynik('R4 kod-05: blad Dopracuj widoczny, odznaka bez "gotowe"', pw.indexOf(wzorBledu) !== -1 && await s.evaluate(() => !/ready/.test(document.getElementById('out-badge').className)), pw.slice(0, 160));
+
+  // ── kod-16: zmiana jezyka w trakcie nie cofa napisu spinnera ──
+  await generuj(s, 'Jezyk w trakcie [atrapa:opoznienie=6000@artykul]', false);
+  await s.waitForTimeout(3000);
+  const sp = await s.evaluate(() => { applyLang('en'); const t = document.getElementById('spin-label').textContent; applyLang('pl');
+    return { t, etap1: I18N.en['spin-knowledge'], pisanie: [I18N.en['spin-generating'], I18N.en['spin-generating-seo-aio']] }; });
+  wynik('R4 kod-16: spinner po zmianie jezyka zostaje na etapie pisania', sp.t !== sp.etap1 && sp.pisanie.indexOf(sp.t) !== -1, JSON.stringify(sp));
+
+  // ── kod-07: drugie generowanie w trakcie pierwszego ──
+  od = zapytania.length;
+  await s.evaluate(() => {
+    openImproveModal();
+    document.getElementById('improve-input').value = 'TEKST-W-TRAKCIE do poprawy';
+    runImprove();
+    generujZSzyny();
+  });
+  await s.waitForTimeout(500);
+  const dwa = { artykuly: artykuly(od).length, pow: await powiadomienia() };
+  wynik('R4 kod-07: Popraw i Ctrl+Enter w trakcie nie startuja drugiego generowania', dwa.artykuly === 0 && /trwa|already running/.test(dwa.pow), JSON.stringify(dwa).slice(0, 200));
+  await krok('R4 koniec generowania', czekajNaKoniec(s));
+  await s.evaluate(() => closeImproveModal());
+
+  // ── kod-07: Popraw z samokorekta nie gubi wklejonego tekstu ──
+  od = zapytania.length;
+  await s.evaluate(() => {
+    magazyn.removeItem('cai_samokorekta_ok');
+    premiumMode = true;
+    openImproveModal();
+    document.getElementById('improve-input').value = 'MOJ-STARY-TEKST o rowerach miejskich i ich serwisie.';
+    runImprove();
+  });
+  await s.waitForTimeout(400);
+  await krok('R4 Popraw z samokorekta', czekajNaKoniec(s));
+  const pt = await s.evaluate(() => { const o = document.getElementById('premium-modal').classList.contains('open'); closePremiumModal(); premiumMode = false; pokazSamokorekte();
+    return { okno: o, tymczasowy: docs.some((d) => /MOJ-STARY-TEKST/.test(d.content || '')) }; });
+  wynik('R4 kod-07: Popraw z samokorekta wysyla wklejony tekst', artykuly(od).some((t) => /MOJ-STARY-TEKST/.test(t)) && !pt.okno && !pt.tymczasowy, JSON.stringify(pt));
+
+  // ── kod-03 / UX4-03: Generuj grupowo ──
+  await bezPowiadomien();
+  od = zapytania.length;
+  const histPrzed = await s.evaluate(() => history.length);
+  await s.evaluate(() => {
+    keywords.length = 0; keywords.push('ludowe stroje krakowskie'); renderKws();
+    document.getElementById('topic').value = 'Temat z briefu';
+    magazyn.setItem('cai_samokorekta_ok', '1');
+    premiumMode = true; pokazSamokorekte();
+    openBulkModal();
+    document.getElementById('bulk-topics').value = 'Rowery miejskie\nPompy ciepla [atrapa:529@artykul]\nKawa w biurze';
+    updateBulkCount();
+    startBulkGenerate();
+  });
+  await krok('R4 kolejka grupowa', s.waitForFunction(() => !bulkRunning, null, { timeout: 90000 }));
+  const g = await s.evaluate(() => ({ temat: document.getElementById('topic').value, status: document.getElementById('bulk-status').textContent,
+    ponow: !!document.getElementById('bulk-ponow') && document.getElementById('bulk-ponow').style.display !== 'none', hist: history.length }));
+  const art = artykuly(od);
+  wynik('R4 kod-03: tematy z kolejki bez fraz z briefu', art.length === 3 && !art.some((t) => /ludowe stroje/.test(t)) && !zapytania.slice(od).some((t) => /"zapytanie":"ludowe/.test(t)), 'artykulow=' + art.length);
+  wynik('R4 kod-03: samokorekta dla calej kolejki', ocenyPremium(od).length === 2, 'ocen premium=' + ocenyPremium(od).length);
+  wynik('R4 UX4-03: brief nie podmieniony na temat z kolejki', g.temat === 'Temat z briefu', g.temat);
+  wynik('R4 UX4-03: licznik liczy tylko udane, jest Ponow nieudane', /2 z 3/.test(g.status) && g.ponow && g.hist === histPrzed + 2, JSON.stringify(g));
+  await s.evaluate(() => { keywords.length = 0; renderKws(); });
+
+  // ── kod-03: Escape w trakcie zatrzymuje kolejke ──
+  od = zapytania.length;
+  const histStop = await s.evaluate(() => history.length);
+  await s.evaluate(() => {
+    openBulkModal();
+    document.getElementById('bulk-topics').value = 'Dlugi temat [atrapa:opoznienie=8000@artykul]\nDrugi temat\nTrzeci temat';
+    updateBulkCount();
+    startBulkGenerate();
+  });
+  await s.waitForTimeout(1200);
+  await s.keyboard.press('Escape');
+  const zamkniete = await s.evaluate(() => !document.getElementById('bulk-modal').classList.contains('open'));
+  const koniec = await krok('R4 kolejka zatrzymana', s.waitForFunction(() => !bulkRunning && getComputedStyle(document.getElementById('spinner')).display === 'none', null, { timeout: 5000 }));
+  await s.waitForTimeout(1200);
+  const hs = await s.evaluate(() => history.length);
+  wynik('R4 kod-03: Escape zamyka okno i zatrzymuje kolejke (bez kolejnych tematow)', zamkniete && koniec && artykuly(od).length === 1 && hs === histStop, JSON.stringify({ zamkniete, artykuly: artykuly(od).length, hist: hs - histStop }));
+
+  wynik('R4 logika: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r4-logika');
+  await k.close();
+}
+
 async function scenariuszBledow(b) {
   const st = {};
   const { k, s, bledyJs } = await nowaStrona(b, 'pl', st);
@@ -310,6 +468,7 @@ async function scenariuszBledow(b) {
   try {
     b = await chromium.launch(process.env.CAI_CHROMIUM ? { executablePath: process.env.CAI_CHROMIUM } : {});
     await scenariuszStanu(b);
+    await scenariuszR4Logiki(b);
     await scenariuszBledow(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));

@@ -359,6 +359,30 @@ async function wariantProxy(b) {
   wynik('proxy: zerwane polaczenie w trakcie generowania - wynik odebrany po powrocie', zt.h === histPrzedZ + 1 && /ready/.test(zt.odz) && zt.art === 'block', JSON.stringify(zt));
   wynik('proxy: polaczenie naprawde zerwane w tescie', !zerwij);
   await s.unroute(/\/api$/);
+
+  // Zatrzymaj w Generuj grupowo przerywa biezacy artykul takze na serwerze
+  // (anulowanie zadania w tle) i nie startuje kolejnych tematow (kod-03).
+  const grupowe = { anuluj: 0, artykuly: 0 };
+  const liczGrupowe = (z) => {
+    if (z.method() !== 'POST') return;
+    if (/\/api\/zadanie\/anuluj$/.test(z.url())) grupowe.anuluj++;
+    else if (/\/api$/.test(z.url()) && z.headers()['x-cai-czynnosc'] === 'artykul') grupowe.artykuly++;
+  };
+  s.on('request', liczGrupowe);
+  await s.evaluate(() => {
+    openBulkModal();
+    document.getElementById('bulk-topics').value = 'Dlugi grupowy [atrapa:opoznienie=6000@artykul]\nDrugi grupowy';
+    updateBulkCount();
+    startBulkGenerate();
+  });
+  await s.waitForTimeout(1500);
+  await krok('Zatrzymaj w kolejce grupowej', s.click('#bulk-stop', { timeout: 3000 }));
+  await krok('kolejka grupowa zatrzymana', s.waitForFunction(() => !bulkRunning, null, { timeout: 5000 }));
+  await s.waitForTimeout(800);
+  s.off('request', liczGrupowe);
+  await s.evaluate(() => closeBulkModal());
+  wynik('proxy: Zatrzymaj w Generuj grupowo anuluje zadanie na serwerze i nie startuje kolejnych', grupowe.anuluj >= 1 && grupowe.artykuly === 1, JSON.stringify(grupowe));
+
   await s.evaluate(() => runRepurpose('linkedin'));
   await krok('przerobka LinkedIn', s.waitForFunction(() => { const o = document.getElementById('repurpose-out'); return o && o.value && o.value.length > 20; }, null, { timeout: 30000 }));
   const rp = await s.evaluate(() => (document.getElementById('repurpose-out') || {}).value || '');

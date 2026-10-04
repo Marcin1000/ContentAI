@@ -3928,9 +3928,9 @@ document.addEventListener('DOMContentLoaded', function () {
 </div>
 
 <!-- BULK GENERATION MODAL -->
-<div class="overlay" id="bulk-modal" onclick="if(event.target===this&&!bulkRunning)closeBulkModal()">
+<div class="overlay" id="bulk-modal" onclick="if(event.target===this)closeBulkModal()">
   <div class="modal" style="width:560px">
-    <div class="modal-head"><h3 data-i18n="bulk-modal-title">Generowanie grupowe</h3><button class="modal-close" onclick="if(!bulkRunning)closeBulkModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+    <div class="modal-head"><h3 data-i18n="bulk-modal-title">Generowanie grupowe</h3><button class="modal-close" onclick="closeBulkModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
     <div id="bulk-input-area">
       <p data-i18n="bulk-modal-desc">Wpisz tematy artykułów - jeden temat w każdej linii. Aplikacja wygeneruje wszystkie po kolei z aktualnymi ustawieniami formularza.</p>
       <textarea id="bulk-topics" aria-label="Tematy artykułów, jeden w linii" data-i18n-label="lbl-bulk-topics" placeholder="Jak działa [produkt]&#10;Ekspansja na rynek [kraj]&#10;[Usługa] - przewodnik" data-i18n="bulk-ph" style="width:100%;resize:vertical;box-sizing:border-box"></textarea>
@@ -3946,6 +3946,10 @@ document.addEventListener('DOMContentLoaded', function () {
       <ul class="bulk-queue" id="bulk-queue"></ul>
       <div style="margin-top:12px;height:4px;background:var(--surface2);border-radius:2px"><div class="bulk-bar" id="bulk-bar" style="width:0%"></div></div>
       <div class="tekst-pomoc" id="bulk-status" style="margin-top:8px;text-align:center"></div>
+      <div style="display:flex;justify-content:center;gap:8px;margin-top:12px">
+        <button type="button" class="btn-secondary" id="bulk-stop" style="display:none" onclick="zatrzymajGrupowe()" data-i18n="bulk-zatrzymaj" data-ikona="square"><svg class="ikona" aria-hidden="true"><use href="#i-square"/></svg>Zatrzymaj</button>
+        <button type="button" class="btn-secondary" id="bulk-ponow" style="display:none" onclick="ponowNieudaneGrupowe()" data-i18n="bulk-ponow" data-ikona="refresh-cw"><svg class="ikona" aria-hidden="true"><use href="#i-refresh-cw"/></svg>Ponów nieudane</button>
+      </div>
     </div>
   </div>
 </div>
@@ -4359,6 +4363,8 @@ function usunSekretyKonta() {
   } catch (e) { console.warn('[wyloguj] nie usunieto sekretow:', e && e.name); }
 }
 function wyloguj() {
+  // Poprawki z trybu Edytuj do historii, zanim strona zniknie (kod-04).
+  if (editMode) toggleEdit();
   usunSekretyKonta();
   // POST, nie przejscie pod adres: wylogowania nie da sie wywolac obrazkiem
   // ani linkiem z obcej strony.
@@ -4797,6 +4803,7 @@ var I18N = {
     'lbl-repurpose-out':'Gotowa przeróbka',
     'lbl-length-custom':'Własna długość w słowach',
     'bulk-gotowe-1':'Gotowe. Wygenerowano {n} artykuł. Sprawdź Historię.','bulk-gotowe-2':'Gotowe. Wygenerowano {n} artykuły. Sprawdź Historię.','bulk-gotowe-5':'Gotowe. Wygenerowano {n} artykułów. Sprawdź Historię.',
+    'bulk-gotowe-czesc':'Gotowe. Wygenerowano {ok} z {n}, nie powiodło się: {bad}. Sprawdź Historię.','bulk-zatrzymano':'Zatrzymano. Wygenerowano {ok} z {n}. Sprawdź Historię.','bulk-zatrzymuje':'Zatrzymuję...','bulk-zatrzymaj':'Zatrzymaj','bulk-ponow':'Ponów nieudane','msg-generowanie-trwa':'Generowanie już trwa. Poczekaj na koniec albo je przerwij.','msg-premium-blad':'Dopracowanie tekstu nie powiodło się: ',
     'tematy-slowo-1':'temat','tematy-slowo-2':'tematy','tematy-slowo-5':'tematów',
     'skip-link':'Przejdź do treści',
     'btn-uzyj-h1':'Użyj jako H1','msg-tytul-ustawiony':'Ustawiony','msg-tytul-h1':'Tytuł artykułu zmieniony. Ocena SEO policzy się od nowa.',
@@ -5496,6 +5503,7 @@ var I18N = {
     'lbl-repurpose-out':'Repurposed content',
     'lbl-length-custom':'Custom length in words',
     'bulk-gotowe-1':'Done. Generated {n} article. Check History.','bulk-gotowe-2':'Done. Generated {n} articles. Check History.','bulk-gotowe-5':'Done. Generated {n} articles. Check History.',
+    'bulk-gotowe-czesc':'Done. Generated {ok} of {n}, failed: {bad}. Check History.','bulk-zatrzymano':'Stopped. Generated {ok} of {n}. Check History.','bulk-zatrzymuje':'Stopping...','bulk-zatrzymaj':'Stop','bulk-ponow':'Retry failed','msg-generowanie-trwa':'Generation is already running. Wait for it to finish or stop it.','msg-premium-blad':'Polishing the text failed: ',
     'tematy-slowo-1':'topic','tematy-slowo-2':'topics','tematy-slowo-5':'topics',
     'skip-link':'Skip to content',
     'btn-uzyj-h1':'Use as H1','msg-tytul-ustawiony':'Set','msg-tytul-h1':'Article title changed. The SEO score will be recalculated.',
@@ -5798,11 +5806,30 @@ function _tn(klucz, n) {
 
 // Teksty statyczne strony (data-i18n*, opcje selectow, tytul karty). Bez zaleznosci od
 // reszty aplikacji, wiec wolno je wywolac zaraz po slowniku - patrz wczesny jezyk nizej.
+function spinnerPracuje() {
+  const sp = document.getElementById('spinner');
+  return !!sp && getComputedStyle(sp).display !== 'none';
+}
+// Klucz slownika dla tekstu w dowolnym jezyku interfejsu (albo null).
+function kluczTekstuInterfejsu(tekst) {
+  for (const jezyk in I18N) {
+    const slownik = I18N[jezyk];
+    for (const k in slownik) if (slownik[k] === tekst) return k;
+  }
+  return null;
+}
 function tlumaczStatyczne(T) {
   // 1. Elementy z data-i18n - textContent lub placeholder
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     const val = T[key]; if (!val) return;
+    // Napis spinnera w trakcie pracy opisuje biezacy etap: data-i18n cofal go do
+    // 1. etapu (kod-16). Tlumaczymy tekst etapu, a nieznany zostaje do nastepnego.
+    if ((el.id === 'spin-label' || el.id === 'spin-sub') && spinnerPracuje()) {
+      const etap = kluczTekstuInterfejsu(el.textContent);
+      if (etap && T[etap]) el.textContent = T[etap];
+      return;
+    }
     const tag = el.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA') el.placeholder = val;
     else el.innerHTML = (el.hasAttribute('data-ikona') ? ikona(el.getAttribute('data-ikona')) : '') + val;
@@ -6167,6 +6194,8 @@ function gptTransformMsg(m) {
 // Biezace generowanie (AbortController) albo null. Ustawia je generate().
 let przerwanieGenerowania = null;
 function przerwijGenerowanie() {
+  // Przerwij w spinnerze w trakcie Generuj grupowo zatrzymuje cala kolejke.
+  if (bulkRunning) bulkZatrzymaj = true;
   if (przerwanieGenerowania) przerwanieGenerowania.abort();
 }
 // Zamkniecie albo odswiezenie karty w trakcie gubilo artykul, ktory i tak
@@ -7467,6 +7496,9 @@ function premiumSkip() {
 
 // ── Samokorekcja po generowaniu (gdy kliknięto premium po wygenerowaniu artykułu)
 async function runPostGenerationPremium() {
+  if (generowanieTrwa()) { ostrzezGenerowanieTrwa(); return; }
+  // Dopracowanie pracuje na tym, co widac: reczne poprawki najpierw do historii.
+  if (editMode) toggleEdit();
   const art = document.getElementById('article');
   const existingHtml = art.innerHTML;
   if (!existingHtml || existingHtml.trim().length < 100) return;
@@ -7474,6 +7506,14 @@ async function runPostGenerationPremium() {
   const topic   = document.getElementById('topic').value.trim() || 'artykuł';
   const kwText  = keywords.length ? keywords.join(', ') : 'brak';
   const ctype   = document.getElementById('ctype').value;
+
+  // Do modelu idzie artykul bez listy zrodel i bez elementow tylko ekranowych:
+  // model przepisywal albo gubil bibliografie. Zrodla wracaja po poprawie (kod-05).
+  const przedHtml = htmlDoZapisu(art);
+  const kopia = uporzadkujZrodla(czyscKopie(art.cloneNode(true)));
+  const zrodlaBox = kopia.querySelector('.zrodla-box');
+  if (zrodlaBox) zrodlaBox.remove();
+  const doModelu = kopia.innerHTML;
 
   // Pokaż spinner z komunikatem premium
   art.style.display = 'none';
@@ -7483,31 +7523,53 @@ async function runPostGenerationPremium() {
   document.getElementById('gen-btn').disabled = true;
   ustawTekst(document.getElementById('out-badge'), 'badge-premium');
   document.getElementById('out-badge').className = 'badge running';
+  pokazPrzyciskiWyniku(false);
+  // Wlasny AbortController jak w generate(): Przerwij w spinnerze naprawde
+  // zatrzymuje, a apiFetch konczy tez zadanie na serwerze.
+  przerwanieGenerowania = new AbortController();
+  let stan = 'gotowe';
 
   try {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = existingHtml;
-    const articleText = tmp.innerText || '';
-
-    const improved = oczyscHtmlModelu(await doPremiumCorrection(existingHtml, articleText, topic, kwText, ctype));
-
-    art.innerHTML = improved || existingHtml;
-    uporzadkujArtykul(art);
-    currentText = tekstBlokami(art);
-    showArticleStats(art.innerHTML);
-
-    if (improved && improved !== existingHtml) {
-      addVersion(improved, _t('ver-after-premium'));
+    const articleText = kopia.innerText || kopia.textContent || '';
+    const surowy = await doPremiumCorrection(doModelu, articleText, topic, kwText, ctype);
+    const improved = surowy && surowy !== doModelu ? oczyscHtmlModelu(surowy) : '';
+    if (improved) {
+      art.innerHTML = wstawBlokZrodel(improved, zrodlaBox ? zrodlaBox.outerHTML : '');
+      uporzadkujArtykul(art);
+      // Artykul z Historii nie ma wersji: "przed" zostaje jako wariant do porownania.
+      if (!versions.length) addVersion(przedHtml, _t('ver-before-premium'));
+      addVersion(htmlDoZapisu(art), _t('ver-after-premium'));
+      // Wynik do biezacej wersji i do historii - po odswiezeniu wracala wersja
+      // sprzed dopracowania.
+      zapiszRecznePoprawki();
     }
   } catch(e) {
     art.innerHTML = existingHtml;
+    stan = e && e.name === 'AbortError' ? 'przerwane' : 'blad';
+    if (stan === 'blad') powiadomBladApi(e, null, null, _t('msg-premium-blad'));
   }
+  przerwanieGenerowania = null;
+  currentText = tekstBlokami(art);
+  showArticleStats(art.innerHTML);
 
   document.getElementById('spinner').style.display = 'none';
   art.style.display = 'block';
   document.getElementById('gen-btn').disabled = false;
-  ustawTekst(document.getElementById('out-badge'), 'badge-done');
-  document.getElementById('out-badge').className = 'badge ready';
+  pokazPrzyciskiWyniku(true);
+  ustawTekst(document.getElementById('out-badge'), stan === 'gotowe' ? 'badge-done' : stan === 'przerwane' ? 'badge-przerwane' : 'badge-error');
+  document.getElementById('out-badge').className = stan === 'gotowe' ? 'badge ready' : 'badge';
+}
+
+// Blok zrodel (HTML) z powrotem w artykule: przed meta description, jak w dolaczZrodla().
+function wstawBlokZrodel(html, blok) {
+  if (!blok) return html;
+  const pojemnik = document.createElement('div');
+  pojemnik.innerHTML = html;
+  pojemnik.querySelectorAll('.zrodla-box').forEach(function (el) { el.remove(); });
+  const meta = pojemnik.querySelector('.meta-box');
+  if (meta) meta.insertAdjacentHTML('beforebegin', blok);
+  else pojemnik.insertAdjacentHTML('beforeend', blok);
+  return pojemnik.innerHTML;
 }
 
 // ── Właściwa logika samokorekcji - wywołana z generate() i runPostGenerationPremium()
@@ -7536,10 +7598,16 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
       })
     });
     const evalData = await evalRes.json();
+    if (evalData.error) throw bladOdpowiedzi(evalData);
     // Ucieta ocena to niepelna lista uwag - lepiej nie poprawiac niz poprawiac po polowie.
     if (evalData.stop_reason === 'max_tokens') { console.warn('[premium] ocena ucieta na limicie'); return originalHtml; }
     evalResult = parsujJsonModelu((evalData.content||[]).map(b=>b.text||'').join(''));
-  } catch(e) { console.warn('[premium] ocena nie powiodla sie:', e && e.message); }
+  } catch(e) {
+    // Blad i Przerwij ida do wolajacego: wczesniej odznaka mowila "gotowe",
+    // a artykul zostawal bez zmian i bez slowa wyjasnienia (kod-05).
+    console.warn('[premium] ocena nie powiodla sie:', e && e.message);
+    throw e;
+  }
 
   if (!evalResult || evalResult.score >= 82 || !evalResult.issues?.length) {
     // Artykuł już jest dobry - nie poprawiaj
@@ -7573,6 +7641,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
       })
     });
     const impData = await impRes.json();
+    if (impData.error) throw bladOdpowiedzi(impData);
     // Poprawka ucieta na limicie dlugosci jest krotsza od oryginalu (bez meta, bez konca) -
     // zostaje oryginal, a autor dostaje informacje, zamiast cicho gubic pol tekstu.
     if (impData.stop_reason === 'max_tokens') {
@@ -7580,13 +7649,55 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
       return originalHtml;
     }
     improved = (impData.content||[]).map(b=>b.text||'').join('').replace(/```html\s*/i,'').replace(/```\s*$/i,'').trim();
-  } catch(e) { console.warn('[premium] poprawa nie powiodla sie:', e && e.message); }
+  } catch(e) { console.warn('[premium] poprawa nie powiodla sie:', e && e.message); throw e; }
 
   return improved || originalHtml;
 }
 
-async function generate(skipPremiumModal = false) {
-  const topic = document.getElementById('topic').value.trim();
+// Przyciski paska wyniku gotowego artykulu: jedna lista dla generowania, bledu,
+// Historii i odswiezenia strony. Wczesniej Historia znala 11 z 18 i po odswiezeniu
+// znikaly Fakty, AEO, GEO, Posluchaj, Dopracuj, przerobki i JSON-LD (kod-01).
+const PRZYCISKI_WYNIKU = ['edit-btn', 'copy-btn', 'dl-btn', 'dl-docx-btn', 'dl-pdf-btn', 'jsonld-btn',
+  'fakty-btn', 'seo-btn', 'aio-btn', 'aeo-btn', 'geo-btn', 'links-btn', 'gap-btn',
+  'img-btn', 'titles-btn', 'repurpose-wrap', 'premium-fix-btn', 'tts-btn'];
+function pokazPrzyciskiWyniku(widoczne, typ) {
+  PRZYCISKI_WYNIKU.forEach(function (id) {
+    const el = document.getElementById(id);
+    // Przerobki to pion pozycji w menu Tworz, nie przycisk w pasku.
+    if (el) el.style.display = widoczne ? (id === 'repurpose-wrap' ? 'block' : 'flex') : 'none';
+  });
+  const podcast = widoczne && typeof isPodcastType === 'function' && isPodcastType(typ || document.getElementById('ctype').value);
+  ['pod-audio-btn', 'pod-dl-btn'].forEach(function (id) { const el = document.getElementById(id); if (el) el.style.display = podcast ? 'flex' : 'none'; });
+  // SERP tylko z danymi tego artykulu, publikacja tylko przy ustawionym CMS.
+  const serp = document.getElementById('serp-toggle-btn');
+  if (serp) serp.style.display = widoczne && serpData ? 'flex' : 'none';
+  const wp = document.getElementById('wp-pub-btn');
+  if (wp) wp.style.display = widoczne && (wpSettings.url || drupalSettings.url) ? 'flex' : 'none';
+  const tk = document.getElementById('trans-tokb-btn');
+  if (tk) tk.style.display = 'none';
+  const eb = document.getElementById('edit-btn');
+  if (eb && widoczne && !editMode) eb.innerHTML = ikona('pencil') + _t('btn-edit');
+  if (!widoczne) {
+    if (typeof voiceStop === 'function') voiceStop();
+    document.getElementById('jsonld-box').classList.remove('show');
+  }
+}
+
+// Drugie generowanie w trakcie pierwszego (Popraw, Ctrl+Enter, Generuj grupowo,
+// przerwa miedzy tematami kolejki) dzielilo stan wersji i Przerwij (kod-07).
+function generowanieTrwa(zKolejki) {
+  return !!przerwanieGenerowania || (!zKolejki && bulkRunning);
+}
+function ostrzezGenerowanieTrwa() {
+  pokazPowiadomienie(_t('msg-generowanie-trwa'), 'uwaga');
+}
+
+async function generate(skipPremiumModal = false, opcje = null) {
+  if (generowanieTrwa(opcje && opcje.zKolejki)) { ostrzezGenerowanieTrwa(); return false; }
+  // Kolejka grupowa podaje temat i frazy wprost: pole Temat w briefie zostaje
+  // nietkniete, a frazy z briefu nie trafiaja do cudzych tematow (kod-03).
+  const topic = (opcje && opcje.temat) || document.getElementById('topic').value.trim();
+  const frazy = (opcje && opcje.frazy) || keywords;
   const ctype = document.getElementById('ctype').value;
   const length = getLengthLabel();
   const tone = document.getElementById('tone').value;
@@ -7621,15 +7732,14 @@ async function generate(skipPremiumModal = false) {
   }
   if (skipSourceCheck) skipSourceCheck = false;
 
+  // Nowe generowanie w trakcie edycji najpierw konczy edycje: poprawki trafiaja do
+  // historii, a klasa edit-active i pasek formatowania nie zostaja na nowym
+  // artykule (martwe linki, kod-04).
+  if (editMode) toggleEdit();
   document.getElementById('placeholder').style.display = 'none';
   document.getElementById('article').style.display = 'none';
   document.getElementById('spinner').style.display = 'flex';
-  document.getElementById('premium-fix-btn').style.display = 'none';
-  document.getElementById('img-btn').style.display = 'none';
-  document.getElementById('copy-btn').style.display = 'none';
-  document.getElementById('dl-btn').style.display = 'none'; document.getElementById('dl-docx-btn').style.display = 'none'; document.getElementById('dl-pdf-btn').style.display = 'none'; document.getElementById('titles-btn').style.display = 'none'; document.getElementById('links-btn').style.display = 'none'; document.getElementById('gap-btn').style.display = 'none'; { const fb=document.getElementById('fakty-btn'); if(fb)fb.style.display='none'; } document.getElementById('serp-toggle-btn').style.display = 'none'; document.getElementById('edit-btn').style.display = 'none'; document.getElementById('seo-btn').style.display = 'none'; document.getElementById('aio-btn').style.display = 'none'; document.getElementById('aeo-btn').style.display = 'none'; document.getElementById('geo-btn').style.display = 'none'; document.getElementById('tts-btn').style.display='none'; if(typeof voiceStop==='function')voiceStop(); var _pa=document.getElementById('pod-audio-btn'); if(_pa)_pa.style.display='none'; var _pd=document.getElementById('pod-dl-btn'); if(_pd)_pd.style.display='none'; var _tk=document.getElementById('trans-tokb-btn'); if(_tk)_tk.style.display='none';
-  document.getElementById('repurpose-wrap').style.display = 'none'; document.getElementById('wp-pub-btn').style.display = 'none'; document.getElementById('jsonld-btn').style.display = 'none';
-  document.getElementById('jsonld-box').classList.remove('show');
+  pokazPrzyciskiWyniku(false);
   ustawTekst(document.getElementById('out-badge'), 'badge-generating');
   document.getElementById('out-badge').className = 'badge running';
   document.getElementById('gen-btn').disabled = true;
@@ -7715,7 +7825,7 @@ async function generate(skipPremiumModal = false) {
 //@@IF proxy
     // Wiedza z serwerowej bazy: dobierane sa tylko fragmenty pasujace do tematu,
     // zamiast wklejania calych dokumentow. Dokumenty z tego okna dzialaja jak dotad.
-    ostatniaWiedzaSerwera = await wiedzaZSerwera(keywords.length ? keywords.join(', ') : topic);
+    ostatniaWiedzaSerwera = await wiedzaZSerwera(frazy.length ? frazy.join(', ') : topic);
     kbContext += ostatniaWiedzaSerwera;
 //@@ENDIF
     if (files.length)  kbContext += `## DOKUMENTY FIRMOWE\n${files.map(d => `### ${d.name}\n${d.content}`).join('\n\n---\n\n')}\n\n`;
@@ -7723,8 +7833,8 @@ async function generate(skipPremiumModal = false) {
     if (texts.length)  kbContext += `## TEKST RĘCZNY\n${texts.map(d => `### ${d.name}\n${d.content}`).join('\n\n---\n\n')}\n\n`;
 
     // SERP analysis - zapytanie: pierwsza fraza kluczowa lub temat artykułu (nigdy 'brak')
-    const kwText   = keywords.length ? keywords.join(', ') : 'brak';
-    const serpQuery = keywords.length ? keywords[0] : topic;   // główna fraza lub temat
+    const kwText   = frazy.length ? frazy.join(', ') : 'brak';
+    const serpQuery = frazy.length ? frazy[0] : topic;   // główna fraza lub temat
     const serpContext = await fetchSerpContext(topic, serpQuery);
 
     const langMap = { 'Polski':'Polish','English':'English','Deutsch':'German','Čeština':'Czech' };
@@ -7952,7 +8062,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
         });
         const d = await r.json();
         seoResult = parsujJsonModelu((d.content||[]).map(b=>b.text||'').join(''));
-      } catch(e) {}
+      } catch(e) { if (e && e.name === 'AbortError') throw e; }
     }
 
     // ── Ocena AIO (dla AIO i hybrydy)
@@ -7970,7 +8080,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
         });
         const d = await r.json();
         aioResult = parsujJsonModelu((d.content||[]).map(b=>b.text||'').join(''));
-      } catch(e) {}
+      } catch(e) { if (e && e.name === 'AbortError') throw e; }
     }
 
     // ── Krok 3: Poprawa jeśli wynik < 70
@@ -8034,7 +8144,7 @@ ${html}`;
             html = improvedFinal;
           }
         }
-      } catch(e) {}
+      } catch(e) { if (e && e.name === 'AbortError') throw e; }
     }
 
     // ── Krok Premium: samokorekcja (jeśli tryb Premium aktywny)
@@ -8043,7 +8153,11 @@ ${html}`;
       document.getElementById('spin-sub').textContent = _t('msg-spin-premium-deep');
       const tmp0p = document.createElement('div'); tmp0p.innerHTML = html;
       const articleTextP = tmp0p.innerText || '';
-      const premiumHtml = oczyscHtmlModelu(await doPremiumCorrection(html, articleTextP, topic, kwText, ctype));
+      // Blad samokorekty nie kasuje gotowego artykulu, ale autor musi o nim wiedziec
+      // (wczesniej odznaka mowila "gotowe" bez slowa). Przerwij konczy cale generowanie.
+      let premiumHtml = html;
+      try { premiumHtml = oczyscHtmlModelu(await doPremiumCorrection(html, articleTextP, topic, kwText, ctype)); }
+      catch (e) { if (e && e.name === 'AbortError') throw e; powiadomBladApi(e, null, null, _t('msg-premium-blad')); }
       if (premiumHtml && premiumHtml !== html) {
         const origLabel = _t('ver-before-premium');
         const premLabel = _t('ver-after-premium');
@@ -8101,12 +8215,7 @@ ${html}`;
     art.style.display = 'block';
     ustawTekst(document.getElementById('out-badge'), przerwano ? 'badge-przerwane' : 'badge-error');
     document.getElementById('out-badge').className = 'badge';
-    document.getElementById('premium-fix-btn').style.display = 'none';
-  document.getElementById('img-btn').style.display = 'none';
-  document.getElementById('copy-btn').style.display = 'none';
-    document.getElementById('dl-btn').style.display = 'none'; document.getElementById('dl-docx-btn').style.display = 'none'; document.getElementById('dl-pdf-btn').style.display = 'none'; document.getElementById('titles-btn').style.display = 'none'; document.getElementById('links-btn').style.display = 'none'; document.getElementById('gap-btn').style.display = 'none'; { const fb=document.getElementById('fakty-btn'); if(fb)fb.style.display='none'; } document.getElementById('serp-toggle-btn').style.display = 'none'; document.getElementById('edit-btn').style.display = 'none'; document.getElementById('seo-btn').style.display = 'none'; document.getElementById('aio-btn').style.display = 'none'; document.getElementById('aeo-btn').style.display = 'none'; document.getElementById('geo-btn').style.display = 'none'; document.getElementById('tts-btn').style.display='none'; if(typeof voiceStop==='function')voiceStop(); var _pa=document.getElementById('pod-audio-btn'); if(_pa)_pa.style.display='none'; var _pd=document.getElementById('pod-dl-btn'); if(_pd)_pd.style.display='none'; var _tk=document.getElementById('trans-tokb-btn'); if(_tk)_tk.style.display='none';
-  document.getElementById('repurpose-wrap').style.display = 'none'; document.getElementById('wp-pub-btn').style.display = 'none'; document.getElementById('jsonld-btn').style.display = 'none';
-  document.getElementById('jsonld-box').classList.remove('show');
+    pokazPrzyciskiWyniku(false);
     return false;
   }
 
@@ -8139,26 +8248,8 @@ ${html}`;
     ob.className = artykulUciety ? 'badge uwaga' : 'badge ready';
     ob.title = artykulUciety ? _t('msg-artykul-uciety') : '';
   }
-  document.getElementById('premium-fix-btn').style.display = 'flex';
-  document.getElementById('img-btn').style.display = 'flex';
-  document.getElementById('copy-btn').style.display = 'flex';
-  document.getElementById('tts-btn').style.display = 'flex';
-  { var _ip = (typeof isPodcastType==='function') && isPodcastType(document.getElementById('ctype').value); var _pa=document.getElementById('pod-audio-btn'); if(_pa)_pa.style.display=_ip?'flex':'none'; var _pd=document.getElementById('pod-dl-btn'); if(_pd)_pd.style.display=_ip?'flex':'none'; }
-  document.getElementById('dl-btn').style.display = 'flex';
-  document.getElementById('dl-docx-btn').style.display = 'flex';
-  document.getElementById('dl-pdf-btn').style.display = 'flex';
-  document.getElementById('titles-btn').style.display = 'flex';
-  document.getElementById('links-btn').style.display = 'flex';
-  document.getElementById('gap-btn').style.display = 'flex';
-  document.getElementById('fakty-btn').style.display = 'flex';
-  if (serpData) document.getElementById('serp-toggle-btn').style.display = 'flex';
-  { const eb = document.getElementById('edit-btn'); if(eb){ eb.style.display='flex'; eb.innerHTML=ikona('pencil')+_t('btn-edit'); } }
-  document.getElementById('seo-btn').style.display = 'flex'; document.getElementById('aio-btn').style.display = 'flex'; document.getElementById('aeo-btn').style.display = 'flex'; document.getElementById('geo-btn').style.display = 'flex';
-  // 'block', nie 'inline-flex': przerobki to teraz pion pozycji w menu "Tworz",
-  // a nie osobny przycisk w pasku.
-  document.getElementById('repurpose-wrap').style.display = 'block';
-  if (wpSettings.url || drupalSettings.url) document.getElementById('wp-pub-btn').style.display = 'flex';
-  document.getElementById('jsonld-btn').style.display = 'flex'; document.getElementById('jsonld-code').textContent = '';
+  pokazPrzyciskiWyniku(true, ctype);
+  document.getElementById('jsonld-code').textContent = '';
 
   showArticleStats(html);
 
@@ -8278,12 +8369,9 @@ function previewHistory(i) {
     if (ph) ph.style.display = 'none';
     ustawTekst(document.getElementById('out-badge'), 'badge-historia');
     document.getElementById('out-badge').className = 'badge ready';
-    ['copy-btn','dl-btn','dl-docx-btn','dl-pdf-btn','titles-btn','links-btn','gap-btn','edit-btn','seo-btn','aio-btn','img-btn'].forEach(id => {
-      const el = document.getElementById(id); if (el) el.style.display = 'flex';
-    });
     // SERP nie nalezy do wpisu historii: dane w pamieci opisuja inny artykul.
     serpData = null;
-    { const sb = document.getElementById('serp-toggle-btn'); if (sb) sb.style.display = 'none'; }
+    pokazPrzyciskiWyniku(true, h.type);
     // Reset panelu linków
     linksOpen = false;
     const lp = document.getElementById('links-panel');
@@ -10791,6 +10879,25 @@ function toggleEdit() {
   }
 }
 
+// Reczne poprawki zapisuja sie w trakcie edycji (1 s po ostatniej zmianie) i przy
+// wyjsciu z karty. Wczesniej trafialy do historii dopiero po Gotowe, a telefon
+// zamyka karte w tle bez pytania (kod-04).
+let licznikPoprawek = null;
+function zapiszPoprawkiTeraz() {
+  clearTimeout(licznikPoprawek);
+  licznikPoprawek = null;
+  if (editMode) zapiszRecznePoprawki();
+}
+document.getElementById('article')?.addEventListener('input', function () {
+  if (!editMode) return;
+  clearTimeout(licznikPoprawek);
+  licznikPoprawek = setTimeout(zapiszPoprawkiTeraz, 1000);
+});
+window.addEventListener('pagehide', zapiszPoprawkiTeraz);
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'hidden') zapiszPoprawkiTeraz();
+});
+
 // ─── VERSIONS ─────────────────────────────────────────────────────────────────
 let versions = [];
 let activeVersion = 0;
@@ -12709,7 +12816,27 @@ function openBulkModal() {
   updateBulkCount();
   document.getElementById('bulk-modal').classList.add('open');
 }
-function closeBulkModal() { if (!bulkRunning) document.getElementById('bulk-modal').classList.remove('open'); }
+// X, Escape i tlo dzialaja takze w trakcie: zamkniecie okna zatrzymuje kolejke
+// (wczesniej 20 tematow = kilkanascie minut bez wyjscia, kod-03).
+function closeBulkModal() {
+  if (bulkRunning) zatrzymajGrupowe();
+  document.getElementById('bulk-modal').classList.remove('open');
+}
+// Zatrzymaj: przerywa biezacy artykul (takze zadanie na serwerze) i nie startuje kolejnych.
+let bulkZatrzymaj = false;
+function zatrzymajGrupowe() {
+  if (!bulkRunning) return;
+  bulkZatrzymaj = true;
+  przerwijGenerowanie();
+  const st = document.getElementById('bulk-status');
+  if (st) st.textContent = _t('bulk-zatrzymuje');
+}
+function ponowNieudaneGrupowe() {
+  document.getElementById('bulk-topics').value = (ponowNieudaneGrupowe.tematy || []).join('\n');
+  document.getElementById('bulk-input-area').style.display = 'block';
+  document.getElementById('bulk-progress-area').style.display = 'none';
+  updateBulkCount();
+}
 
 function updateBulkCount() {
   const topics = document.getElementById('bulk-topics').value.split('\n').map(t=>t.trim()).filter(Boolean);
@@ -12735,35 +12862,64 @@ document.addEventListener('DOMContentLoaded', () => {
 async function startBulkGenerate() {
   const topics = document.getElementById('bulk-topics').value.split('\n').map(t=>t.trim()).filter(Boolean);
   if (!topics.length) return;
+  if (generowanieTrwa()) { ostrzezGenerowanieTrwa(); return; }
 
   bulkRunning = true;
+  bulkZatrzymaj = false;
+  // Samokorekta wlaczona przed startem dotyczy calej kolejki: generate() zdejmuje
+  // ja po kazdym artykule, wiec wczesniej dostawal ja tylko 1. temat (kod-03).
+  const premiumKolejki = premiumMode;
   document.getElementById('bulk-input-area').style.display = 'none';
   document.getElementById('bulk-progress-area').style.display = 'block';
+  document.getElementById('bulk-stop').style.display = '';
+  document.getElementById('bulk-ponow').style.display = 'none';
   const queue = document.getElementById('bulk-queue');
   const bar = document.getElementById('bulk-bar');
   const status = document.getElementById('bulk-status');
+  bar.style.width = '0%';
 
   queue.innerHTML = topics.map((t,i) => `<li class="bulk-item" id="bulk-item-${i}"><span class="bulk-icon">${ikona('clock')}</span><span>${escapeHtml(t)}</span></li>`).join('');
 
+  let udane = 0;
+  const bezArtykulu = [];
   for (let i = 0; i < topics.length; i++) {
     const item = document.getElementById(`bulk-item-${i}`);
+    if (bulkZatrzymaj) {
+      item.querySelector('.bulk-icon').innerHTML = ikona('minus');
+      bezArtykulu.push(topics[i]);
+      continue;
+    }
     item.querySelector('.bulk-icon').innerHTML = ikona('loader', 'kreci');
     status.textContent = (currentLang==='en'?'Generating ':'Generuję ') + (i+1) + (currentLang==='en'?' of ':' z ') + topics.length + '...';
 
-    document.getElementById('topic').value = topics[i];
+    // Temat i frazy wprost do generate(): pole Temat w briefie zostaje takie, jak
+    // je zostawil autor, a frazy z briefu nie trafiaja do kazdego tematu.
+    premiumMode = premiumKolejki;
+    let ok = false;
     try {
       skipSourceCheck = true;
-      const ok = await generate(true);
-      item.querySelector('.bulk-icon').innerHTML = ok ? ikona('circle-check', 'ok') : ikona('circle-x', 'blad');
+      ok = await generate(true, { temat: topics[i], frazy: [], zKolejki: true });
     } catch(e) {
-      item.querySelector('.bulk-icon').innerHTML = ikona('circle-x', 'blad');
+      ok = false;
     }
+    if (ok) udane++; else bezArtykulu.push(topics[i]);
+    item.querySelector('.bulk-icon').innerHTML = ok ? ikona('circle-check', 'ok') : ikona('circle-x', 'blad');
     bar.style.width = `${((i+1)/topics.length)*100}%`;
-    await new Promise(r => setTimeout(r, 800));
+    if (!bulkZatrzymaj && i < topics.length - 1) await new Promise(r => setTimeout(r, 800));
   }
 
   bulkRunning = false;
-  status.textContent = _tn('bulk-gotowe', topics.length);
+  premiumMode = false;
+  pokazSamokorekte();
+  document.getElementById('bulk-stop').style.display = 'none';
+  // Licznik mowi o udanych, nie o liczbie tematow (UX4-03).
+  status.textContent = bulkZatrzymaj
+    ? _t('bulk-zatrzymano').replace('{ok}', udane).replace('{n}', topics.length)
+    : bezArtykulu.length
+    ? _t('bulk-gotowe-czesc').replace('{ok}', udane).replace('{n}', topics.length).replace('{bad}', bezArtykulu.length)
+    : _tn('bulk-gotowe', udane);
+  ponowNieudaneGrupowe.tematy = bezArtykulu;
+  document.getElementById('bulk-ponow').style.display = bezArtykulu.length ? '' : 'none';
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -12778,6 +12934,7 @@ function closeImproveModal() { document.getElementById('improve-modal').classLis
 async function runImprove() {
   const existing = document.getElementById('improve-input').value.trim();
   if (!existing) return;
+  if (generowanieTrwa()) { ostrzezGenerowanieTrwa(); return; }
   closeImproveModal();
 
   const ctype = document.getElementById('ctype').value;
@@ -12790,11 +12947,16 @@ async function runImprove() {
   docs.unshift(tempDoc);
 
   document.getElementById('topic').value = document.getElementById('topic').value || _t('improve-topic-default');
-  await generate();
-
-  // Przywróć bazę bez temp doca
-  docs.shift();
-  renderDocs();
+  try {
+    // true: okno samokorekty konczylo generate() od razu, a wklejony tekst znikal
+    // z bazy, zanim ktokolwiek go uzyl (kod-07). Popraw to swiadomy wybor.
+    await generate(true);
+  } finally {
+    // Przywróć bazę bez temp doca (po tozsamosci: lista mogla sie zmienic w trakcie)
+    const k = docs.indexOf(tempDoc);
+    if (k !== -1) docs.splice(k, 1);
+    renderDocs();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -14646,7 +14808,6 @@ document.addEventListener('keydown', e => {
     while (stos.length && !widoczny(stos[stos.length - 1])) poZamknieciu(stos[stos.length - 1]);
     const okno = stos[stos.length - 1];
     if (!okno) return false;
-    if (okno.id === 'bulk-modal' && typeof bulkRunning !== 'undefined' && bulkRunning) return true;
     const f = ZAMKNIJ[okno.id];
     if (f && typeof window[f] === 'function') window[f]();
     // Okna .overlay zamykaja sie kliknieciem w tlo - ta sama sciezka co mysza.
