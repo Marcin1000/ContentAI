@@ -141,7 +141,7 @@ async function zrzut(s, nazwa) {
 // ── Wariant keys: plik z dysku, dostawcy przechwyceni w przegladarce ─────────
 async function wariantKeys(b) {
   const plik = 'file://' + path.join(REPO, 'app', 'web-keys.html');
-  async function strona(zly) {
+  async function strona(zly, adres = plik) {
     const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 } });
     await k.addInitScript(PRZED_STARTEM);
     await k.route(/api\.anthropic\.com|api\.openai\.com|api\.elevenlabs\.io/, async (route) => {
@@ -159,7 +159,7 @@ async function wariantKeys(b) {
     const bledy = [];
     s.on('pageerror', (e) => bledy.push(e.message));
     s.on('dialog', (d) => d.accept());
-    await s.goto(plik, { waitUntil: 'load' });
+    await s.goto(adres, { waitUntil: 'load' });
     await s.waitForTimeout(600);
     return { k, s, bledy };
   }
@@ -226,7 +226,19 @@ async function wariantKeys(b) {
   const po = await s.evaluate(() => ({ odz: document.getElementById('out-badge').className, h: history.length, temat: document.getElementById('topic').value }));
   wynik('keys: Przerwij konczy generowanie bez wpisu w historii', po.h === histPrzed && /Dlugie/.test(po.temat) && !/ready/.test(po.odz), JSON.stringify(po));
 
-  // Szkic i ostatni artykul po odswiezeniu.
+  wynik('keys: bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+  if (bledow) await zrzut(s, 'keys');
+  await k.close();
+
+  // Szkic i ostatni artykul po odswiezeniu. Ten scenariusz idzie z adresu http, nie
+  // z file://: Chromium 153 (headless shell w CI) daje nowemu dokumentowi z file://
+  // w okolo 40% przebiegow pusty localStorage (zostaja tylko klucze z PRZED_STARTEM),
+  // i to zarowno po reload, jak i po ponownym wejsciu. To cecha przegladarki dla
+  // plikow z dysku; uzytkownicy otwieraja aplikacje z serwera.
+  const adres = 'http://127.0.0.1:' + PORT_PLIKOW + '/web-keys.html';
+  const bledowPrzed = bledow;
+  ({ k, s, bledy } = await strona(false, adres));
+  await generuj(s, 'Artykul przed odswiezeniem');
   await s.fill('#topic', 'Temat w trakcie pisania');
   // Odswiezenie dopiero, gdy szkic i historia sa na pewno w magazynie (zapis szkicu jest
   // odkladany o 400 ms, a historia po pierwszym malowaniu): bez tego na wolniejszym
@@ -235,21 +247,22 @@ async function wariantKeys(b) {
     try { return JSON.parse(magazyn.getItem('cai_szkic') || '{}').topic === 'Temat w trakcie pisania' && JSON.parse(magazyn.getItem('cai_history_v2') || '[]').length > 0
       && magazyn.getItem('cai_biezacy') !== null; } catch (e) { return false; }
   }, null, { timeout: 8000 }));
-  await s.reload({ waitUntil: 'load' });
+  await s.goto(adres, { waitUntil: 'load' });
   await krok('szkic i artykul po odswiezeniu', s.waitForFunction(() => document.getElementById('topic').value !== '' && getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: 8000 }));
   const st = await s.evaluate(() => ({ t: document.getElementById('topic').value, art: getComputedStyle(document.getElementById('article')).display,
     // diagnostyka na wypadek bledu: co jest w magazynie po odswiezeniu
-    szkic: (magazyn.getItem('cai_szkic') || '').slice(0, 60), hist: (magazyn.getItem('cai_history_v2') || '').length, biezacy: magazyn.getItem('cai_biezacy') }));
+    szkic: (magazyn.getItem('cai_szkic') || '').slice(0, 60), hist: (magazyn.getItem('cai_history_v2') || '').length, biezacy: magazyn.getItem('cai_biezacy'),
+    ls: (() => { try { return localStorage.length; } catch (e) { return e.name; } })() }));
   wynik('keys: szkic formularza i artykul wracaja po odswiezeniu', st.t === 'Temat w trakcie pisania' && st.art === 'block', JSON.stringify(st));
   // Temat, z ktorego powstal ostatni artykul, nie wraca do briefu; start na Briefie.
   await s.evaluate(() => { document.getElementById('topic').value = history[biezacyHist >= 0 ? biezacyHist : 0].topic; zapiszSzkic(); });
-  await s.reload({ waitUntil: 'load' });
+  await s.goto(adres, { waitUntil: 'load' });
   await krok('artykul po odswiezeniu bez starego tematu', s.waitForFunction(() => getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: 8000 }));
   await s.waitForTimeout(300);
   const st2 = await s.evaluate(() => ({ t: document.getElementById('topic').value, kw: keywords.length, wynik: document.body.classList.contains('widok-wynik') }));
   wynik('keys: po wejsciu brief pusty (temat artykulu nie wraca), widok Brief', st2.t === '' && st2.kw === 0 && !st2.wynik, JSON.stringify(st2));
-  wynik('keys: bez bledow JavaScript', !bledy.length, bledy.join(' | '));
-  if (bledow) await zrzut(s, 'keys');
+  wynik('keys (http): bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+  if (bledow > bledowPrzed) await zrzut(s, 'keys-odswiezenie');
   await k.close();
 
   ({ k, s, bledy } = await strona(true));
@@ -327,8 +340,26 @@ async function wariantProxy(b) {
   await k.close();
 }
 
+// Pliki z app/ pod http://127.0.0.1 - dla scenariuszy, ktore z file:// sa w CI niestabilne.
+let PORT_PLIKOW;
+const TYPY = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml',
+  '.png': 'image/png', '.woff2': 'font/woff2', '.json': 'application/json', '.webmanifest': 'application/manifest+json' };
+async function uruchomSerwerPlikow() {
+  const kat = path.join(REPO, 'app');
+  PORT_PLIKOW = await wolnyPort();
+  const srv = http.createServer((zad, odp) => {
+    const sciezka = path.normalize(path.join(kat, decodeURIComponent(zad.url.split('?')[0])));
+    if (!sciezka.startsWith(kat + path.sep) || !fs.existsSync(sciezka) || !fs.statSync(sciezka).isFile()) { odp.writeHead(404); return odp.end(); }
+    odp.writeHead(200, { 'Content-Type': TYPY[path.extname(sciezka)] || 'application/octet-stream' });
+    fs.createReadStream(sciezka).pipe(odp);
+  });
+  await new Promise((ok) => srv.listen(PORT_PLIKOW, '127.0.0.1', ok));
+  return srv;
+}
+
 (async () => {
   await przygotujPorty();
+  const serwerPlikow = await uruchomSerwerPlikow();
   const serwerAtrapy = atrapa.uruchom();
   const kat = przygotujDane();
   const serwer = uruchomSerwer(kat);
@@ -345,6 +376,7 @@ async function wariantProxy(b) {
     if (b) await b.close();
     serwer.kill();
     serwerAtrapy.close();
+    serwerPlikow.close();
     fs.rmSync(kat, { recursive: true, force: true });
   }
   console.log(bledow ? '\nBLEDOW: ' + bledow : '\nWszystkie scenariusze przeszly.');
