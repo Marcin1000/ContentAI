@@ -311,6 +311,32 @@ async function wariantProxy(b) {
   let s = await zaloguj(k, 'premium');
   const r = await generuj(s, 'Artykul konta premium');
   wynik('proxy: artykul gotowy', /ready/.test(r.odznaka) && r.h2 >= 3, JSON.stringify(r));
+
+  // Telefon w tle: polaczenie zrywa sie w trakcie generowania (przelaczenie aplikacji),
+  // serwer konczy zadanie, a aplikacja po powrocie sieci odbiera wynik zamiast
+  // "Brak polaczenia z serwerem" (serwer/zadania.js, fetchZadania w aplikacji).
+  const histPrzedZ = await s.evaluate(() => history.length);
+  // Zapytanie o artykul dochodzi do serwera, ale odpowiedz nie wraca do przegladarki:
+  // route.fetch() wysyla je naprawde, route.abort() zrywa polaczenie po stronie strony.
+  let zerwij = true;
+  await s.route(/\/api$/, async (route) => {
+    const z = route.request();
+    if (zerwij && z.method() === 'POST' && z.headers()['x-cai-czynnosc'] === 'artykul' && /Artykul w tle/.test(z.postData() || '')) {
+      zerwij = false;
+      route.fetch().catch(() => {});
+      await new Promise((r) => setTimeout(r, 500));
+      return route.abort('connectionreset');
+    }
+    return route.continue();
+  });
+  await s.fill('#topic', 'Artykul w tle [atrapa:opoznienie=2500@artykul]');
+  await s.evaluate(() => { document.getElementById('use-web').checked = true; generate(); });
+  await krok('generowanie po zerwanym polaczeniu', czekajNaKoniec(s, 40000));
+  const zt = await s.evaluate(() => ({ h: history.length, odz: document.getElementById('out-badge').className,
+    art: getComputedStyle(document.getElementById('article')).display, blad: (document.querySelector('#output-area .error-box, .blad-generowania') || {}).textContent || '' }));
+  wynik('proxy: zerwane polaczenie w trakcie generowania - wynik odebrany po powrocie', zt.h === histPrzedZ + 1 && /ready/.test(zt.odz) && zt.art === 'block', JSON.stringify(zt));
+  wynik('proxy: polaczenie naprawde zerwane w tescie', !zerwij);
+  await s.unroute(/\/api$/);
   await s.evaluate(() => runRepurpose('linkedin'));
   await krok('przerobka LinkedIn', s.waitForFunction(() => { const o = document.getElementById('repurpose-out'); return o && o.value && o.value.length > 20; }, null, { timeout: 30000 }));
   const rp = await s.evaluate(() => (document.getElementById('repurpose-out') || {}).value || '');

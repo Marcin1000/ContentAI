@@ -1738,6 +1738,9 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 }
 @layer komponenty {
 span > .ikona:first-child, div.ctx-item > .ikona:first-child { margin-right: var(--s-6); }
+/* R4: ikona sama w kafelku (Konto, menu, dolna nawigacja, pusty stan) - bez odstepu
+   przeznaczonego dla tekstu obok; wczesniej przesuwal ja o 3 px w lewo */
+.settings-item > span:first-child > .ikona, span.nav-icon > .ikona, span.kb-empty-icon > .ikona { margin-right: 0; }
 .btn-generate > span > .ikona:first-child, .btn-secondary > span > .ikona:first-child { margin-right: var(--s-6); }
 }
 @layer komponenty {
@@ -2353,7 +2356,17 @@ body.is-mobile .settings-menu .segmenty button { min-width: var(--h-dotyk); just
 .zrodla-box .zrodla-wiecej { display: inline-flex; margin: var(--s-4) 0 0; font-size: var(--t-sm); }
 .zrodla-box .zrodlo-data { color: var(--c-tekst-3); white-space: nowrap; }
 body.is-mobile .zrodla-box .zrodla-wiecej { min-height: var(--h-dotyk); }
-body.is-mobile .zrodla-box li > a { display: inline-block; min-height: var(--h-dotyk); padding-block: var(--s-4); }
+/* R4: brief zapamietany dla tematu - data i "Analizuj ponownie" nad frazami */
+.brief-zapamietany { display: flex; align-items: center; justify-content: space-between; gap: var(--s-12); flex-wrap: wrap;
+  padding: var(--s-8) var(--s-16); border-bottom: 1px solid var(--c-linia); font-size: var(--t-sm); color: var(--c-tekst-3); }
+body.is-mobile .brief-zapamietany .btn-link { min-height: var(--h-dotyk); }
+/* R4: zwarta lista zrodel - tytul i data plyna jednym wierszem; pole dotyku 44 px daje
+   ::after odnosnika (wczesniej inline-block z min-height rozpychal liste i spychal date nizej) */
+body.is-mobile .zrodla-box ul { margin: var(--s-8) 0 0; padding-left: 1.1em; }
+body.is-mobile .zrodla-box li { margin: 0; padding: 7px 0; line-height: 1.5; }
+body.is-mobile .zrodla-box li > a { position: relative; display: inline; }
+body.is-mobile .zrodla-box li > a::after { content: ""; position: absolute; top: -12px; bottom: -12px; left: -8px; right: -8px; }
+body.is-mobile .zrodla-box .zrodlo-data { font-size: var(--t-xs); }
 
 /* ══ TELEFON: ekran wyniku (R3-07, spec agencja-ux; R3-06, R3-08, R3-13) ══ */
 body.is-mobile { --nav-h: 56px; --gora-h: 48px; --meta-h: 44px; }
@@ -2391,6 +2404,8 @@ body.is-mobile .stat-skrot { position: relative; display: inline-flex; align-ite
 body.is-mobile .stat-skrot::before { content: ""; position: absolute; inset: -6px 0; }
 body.is-mobile .stat-skrot .ikona { width: 16px; height: 16px; color: var(--c-tekst-3); }
 body.is-mobile:not(:has(#article-stats.show)) .stat-skrot { display: none; }
+/* R4: bez artykulu (generowanie, blad, pusty stan) pasek statystyk jest pusty - nie zostawiamy bialego pasa */
+body.is-mobile:not(:has(#article-stats.show)):not(:has(#versions-bar.show)) .output-bar .output-bar-left { display: none; }
 body.is-mobile .versions-bar.show { margin-left: auto; align-items: center; height: 32px; flex: none; }
 body.is-mobile .versions-bar .ver-label { display: none; }
 /* podpis "Samokorekta" przed segmentem Przed | Po (od 390 px) */
@@ -2457,6 +2472,10 @@ body.is-mobile .pasek-akcje > .btn-secondary span, body.is-mobile .pasek-akcje >
 /* usuwanie slowa kluczowego: maly krzyzyk, pole dotyku 44 px */
 body.is-mobile .kw-tag button { position: relative; }
 body.is-mobile .kw-tag button::before { content: ""; position: absolute; inset: -13px; }
+/* R4: dluga fraza zawija sie w chipie z normalnym odstepem linii (wczesniej stala wysokosc sciskala dwa wiersze) */
+.kw-tag { height: auto; min-height: var(--h-xs); padding-block: 3px; line-height: 1.3; }
+/* R4: Samokorekta w menu ⋯ - opis w dwoch liniach miesci sie w wierszu, z oddechem od kreski pod tytulem */
+.grupa-menu .menu-przelacznik { height: auto; padding-block: var(--s-12); }
 
 /* chowanie paskow przy czytaniu: tylko transform, bez zmiany wysokosci (zero CLS) */
 body.is-mobile .topbar, body.is-mobile .output-bar .output-bar-left, body.is-mobile .mobile-nav, body.is-mobile .pasek-akcje { transition: transform var(--m-3) var(--e-std); }
@@ -2469,6 +2488,23 @@ body.is-mobile.paski-ukryte .pasek-akcje { transform: translateY(var(--nav-h)); 
 /* tryb Edytuj: nawigacja schowana na stale, pasek akcji na dole */
 body.is-mobile:has(#article[contenteditable="true"]) .mobile-nav { transform: translateY(100%); }
 body.is-mobile:has(#article[contenteditable="true"]) .pasek-akcje { transform: translateY(var(--nav-h)); }
+/* R4: tryb Edytuj na telefonie - pasek edycji w miejscu paska statystyk, ramka tekstu.
+   Wczesniej pasek narzedzi lezal na koncu strony (sticky w body) i nikt go nie widzial. */
+.fmt-etykieta, .fmt-gotowe { display: none; }
+body.is-mobile .fmt-toolbar { position: fixed; top: var(--gora-h); left: 0; right: 0; width: auto; height: var(--meta-h); z-index: 330;
+  padding: 0 var(--s-8) 0 var(--s-12); gap: 2px; border: 0; border-bottom: 1px solid var(--c-linia); border-radius: 0; background: var(--c-nad); box-shadow: var(--cien-1); }
+body.is-mobile.edit-active .fmt-toolbar { display: flex; }
+body.is-mobile .fmt-toolbar .fmt-btn { width: 40px; height: 40px; min-width: 0; padding: 0; justify-content: center; color: var(--c-tekst); border-radius: var(--r-sm); }
+body.is-mobile .fmt-toolbar .fmt-btn.active { background: var(--c-akcent-tlo); color: var(--c-tekst); }
+body.is-mobile .fmt-toolbar .fmt-sep { background: var(--c-linia); }
+body.is-mobile .fmt-toolbar .fmt-close-btn, body.is-mobile .fmt-toolbar .fmt-close-sep { display: none; }
+body.is-mobile .fmt-etykieta { display: inline-flex; align-items: center; gap: var(--s-8); margin-right: auto; font-size: 13px; font-weight: var(--g-mocny); color: var(--c-tekst); white-space: nowrap; }
+body.is-mobile .fmt-etykieta::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--c-akcent); }
+body.is-mobile .fmt-gotowe { display: inline-flex; align-items: center; gap: 6px; height: 34px; margin-left: var(--s-4); padding: 0 var(--s-12); border: 0; border-radius: var(--r-sm);
+  background: var(--c-akcent); color: var(--c-na-akcencie); font: inherit; font-size: 13px; font-weight: var(--g-mocny); cursor: pointer; }
+body.is-mobile.edit-active .output-bar .output-bar-left { visibility: hidden; }
+body.is-mobile.edit-active.paski-ukryte .topbar { transform: none; }
+body.is-mobile #article[contenteditable="true"] { box-shadow: inset 3px 0 0 var(--c-akcent); background: var(--c-nad); }
 @media (prefers-reduced-motion: reduce) {
   body.is-mobile .topbar, body.is-mobile .output-bar .output-bar-left, body.is-mobile .mobile-nav, body.is-mobile .pasek-akcje { transition: none; }
   body.is-mobile:has(#out-badge.running) #widok-wynik::after { animation: none; }
@@ -2624,7 +2660,7 @@ body.is-mobile #img-prompt-wrap > .field-label[onclick] { min-height: var(--h-do
 </script>
 <a href="#tresc-glowna" class="przejdz-do-tresci" onclick="return przejdzDoTresci()" data-i18n="skip-link">Przejdź do treści</a>
 <!-- Ikony: Lucide v1 (ISC, lucide.dev), tylko uzyte w aplikacji. -->
-<svg id="cai-ikony" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:none"><symbol id="i-arrow-left" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m12 19-7-7 7-7" /> <path vector-effect="non-scaling-stroke" d="M19 12H5" /></symbol><symbol id="i-bot" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 8V4H8" /> <rect vector-effect="non-scaling-stroke" width="16" height="12" x="4" y="8" rx="2" /> <path vector-effect="non-scaling-stroke" d="M2 14h2" /> <path vector-effect="non-scaling-stroke" d="M20 14h2" /> <path vector-effect="non-scaling-stroke" d="M15 13v2" /> <path vector-effect="non-scaling-stroke" d="M9 13v2" /></symbol><symbol id="i-briefcase" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /> <rect vector-effect="non-scaling-stroke" width="20" height="14" x="2" y="6" rx="2" /></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="13" r="3" /></symbol><symbol id="i-chart-column" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 3v16a2 2 0 0 0 2 2h16" /> <path vector-effect="non-scaling-stroke" d="M18 17V9" /> <path vector-effect="non-scaling-stroke" d="M13 17V5" /> <path vector-effect="non-scaling-stroke" d="M8 17v-3" /></symbol><symbol id="i-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 6 9 17l-5-5" /></symbol><symbol id="i-chevron-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m6 9 6 6 6-6" /></symbol><symbol id="i-circle-check" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol><symbol id="i-circle-dot" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /></symbol><symbol id="i-circle-question-mark" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /> <path vector-effect="non-scaling-stroke" d="M12 17h.01" /></symbol><symbol id="i-circle-x" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m15 9-6 6" /> <path vector-effect="non-scaling-stroke" d="m9 9 6 6" /></symbol><symbol id="i-clipboard-list" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="8" height="4" x="8" y="2" rx="1" ry="1" /> <path vector-effect="non-scaling-stroke" d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M12 11h4" /> <path vector-effect="non-scaling-stroke" d="M12 16h4" /> <path vector-effect="non-scaling-stroke" d="M8 11h.01" /> <path vector-effect="non-scaling-stroke" d="M8 16h.01" /></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 6v6l4 2" /></symbol><symbol id="i-cloud" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" /></symbol><symbol id="i-compass" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" /></symbol><symbol id="i-copy" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="14" height="14" x="8" y="8" rx="2" ry="2" /> <path vector-effect="non-scaling-stroke" d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></symbol><symbol id="i-download" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 15V3" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <path vector-effect="non-scaling-stroke" d="m7 10 5 5 5-5" /></symbol><symbol id="i-ellipsis" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="19" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="5" cy="12" r="1" /></symbol><symbol id="i-file" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /></symbol><symbol id="i-file-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M12 18v-6" /> <path vector-effect="non-scaling-stroke" d="m9 15 3 3 3-3" /></symbol><symbol id="i-file-text" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M10 9H8" /> <path vector-effect="non-scaling-stroke" d="M16 13H8" /> <path vector-effect="non-scaling-stroke" d="M16 17H8" /></symbol><symbol id="i-flag" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528" /></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" /></symbol><symbol id="i-folder-open" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></symbol><symbol id="i-gauge" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m12 14 4-4" /> <path vector-effect="non-scaling-stroke" d="M3.34 19a10 10 0 1 1 17.32 0" /></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /> <path vector-effect="non-scaling-stroke" d="M2 12h20" /></symbol><symbol id="i-headphones" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" /></symbol><symbol id="i-history" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /> <path vector-effect="non-scaling-stroke" d="M3 3v5h5" /> <path vector-effect="non-scaling-stroke" d="M12 7v5l4 2" /></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" ry="2" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="9" r="2" /> <path vector-effect="non-scaling-stroke" d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 16v-4" /> <path vector-effect="non-scaling-stroke" d="M12 8h.01" /></symbol><symbol id="i-key-round" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle vector-effect="non-scaling-stroke" cx="16.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-languages" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m5 8 6 6" /> <path vector-effect="non-scaling-stroke" d="m4 14 6-6 2-3" /> <path vector-effect="non-scaling-stroke" d="M2 5h12" /> <path vector-effect="non-scaling-stroke" d="M7 2h1" /> <path vector-effect="non-scaling-stroke" d="m22 22-5-10-5 10" /> <path vector-effect="non-scaling-stroke" d="M14 18h6" /></symbol><symbol id="i-layout-grid" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="7" height="7" x="3" y="3" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="14" y="3" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="14" y="14" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="3" y="14" rx="1" /></symbol><symbol id="i-library" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 6 4 14" /> <path vector-effect="non-scaling-stroke" d="M12 6v14" /> <path vector-effect="non-scaling-stroke" d="M8 8v12" /> <path vector-effect="non-scaling-stroke" d="M4 4v16" /></symbol><symbol id="i-lightbulb" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" /> <path vector-effect="non-scaling-stroke" d="M9 18h6" /> <path vector-effect="non-scaling-stroke" d="M10 22h4" /></symbol><symbol id="i-link" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /> <path vector-effect="non-scaling-stroke" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></symbol><symbol id="i-link-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9 17H7A5 5 0 0 1 7 7h2" /> <path vector-effect="non-scaling-stroke" d="M15 7h2a5 5 0 1 1 0 10h-2" /> <line vector-effect="non-scaling-stroke" x1="8" x2="16" y1="12" y2="12" /></symbol><symbol id="i-list-checks" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13 5h8" /> <path vector-effect="non-scaling-stroke" d="M13 12h8" /> <path vector-effect="non-scaling-stroke" d="M13 19h8" /> <path vector-effect="non-scaling-stroke" d="m3 17 2 2 4-4" /> <path vector-effect="non-scaling-stroke" d="m3 7 2 2 4-4" /></symbol><symbol id="i-list-ordered" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 5h10" /> <path vector-effect="non-scaling-stroke" d="M11 12h10" /> <path vector-effect="non-scaling-stroke" d="M11 19h10" /> <path vector-effect="non-scaling-stroke" d="M4 4h1v5" /> <path vector-effect="non-scaling-stroke" d="M4 9h2" /> <path vector-effect="non-scaling-stroke" d="M6.5 20H3.4c0-1 2.6-1.925 2.6-3.5a1.5 1.5 0 0 0-2.6-1.02" /></symbol><symbol id="i-loader" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 2v4" /> <path vector-effect="non-scaling-stroke" d="m16.2 7.8 2.9-2.9" /> <path vector-effect="non-scaling-stroke" d="M18 12h4" /> <path vector-effect="non-scaling-stroke" d="m16.2 16.2 2.9 2.9" /> <path vector-effect="non-scaling-stroke" d="M12 18v4" /> <path vector-effect="non-scaling-stroke" d="m4.9 19.1 2.9-2.9" /> <path vector-effect="non-scaling-stroke" d="M2 12h4" /> <path vector-effect="non-scaling-stroke" d="m4.9 4.9 2.9 2.9" /></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path vector-effect="non-scaling-stroke" d="M7 11V7a5 5 0 0 1 10 0v4" /></symbol><symbol id="i-log-out" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 17 5-5-5-5" /> <path vector-effect="non-scaling-stroke" d="M21 12H9" /> <path vector-effect="non-scaling-stroke" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /></symbol><symbol id="i-mail" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /> <rect vector-effect="non-scaling-stroke" x="2" y="4" width="20" height="16" rx="2" /></symbol><symbol id="i-megaphone" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" /> <path vector-effect="non-scaling-stroke" d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14" /> <path vector-effect="non-scaling-stroke" d="M8 6v8" /></symbol><symbol id="i-mic" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 19v3" /> <path vector-effect="non-scaling-stroke" d="M19 10v2a7 7 0 0 1-14 0v-2" /> <rect vector-effect="non-scaling-stroke" x="9" y="2" width="6" height="13" rx="3" /></symbol><symbol id="i-minus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></symbol><symbol id="i-notebook-pen" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4" /> <path vector-effect="non-scaling-stroke" d="M2 6h4" /> <path vector-effect="non-scaling-stroke" d="M2 10h4" /> <path vector-effect="non-scaling-stroke" d="M2 14h4" /> <path vector-effect="non-scaling-stroke" d="M2 18h4" /> <path vector-effect="non-scaling-stroke" d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /></symbol><symbol id="i-octagon-alert" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 16h.01" /> <path vector-effect="non-scaling-stroke" d="M12 8v4" /> <path vector-effect="non-scaling-stroke" d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z" /></symbol><symbol id="i-package" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /> <path vector-effect="non-scaling-stroke" d="M12 22V12" /> <polyline vector-effect="non-scaling-stroke" points="3.29 7 12 12 20.71 7" /> <path vector-effect="non-scaling-stroke" d="m7.5 4.27 9 5.15" /></symbol><symbol id="i-palette" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" /> <circle vector-effect="non-scaling-stroke" cx="13.5" cy="6.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="17.5" cy="10.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="6.5" cy="12.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="8.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-panel-left" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /> <path vector-effect="non-scaling-stroke" d="M9 3v18" /></symbol><symbol id="i-paperclip" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551" /></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" x="14" y="3" width="5" height="18" rx="1" /> <rect vector-effect="non-scaling-stroke" x="5" y="3" width="5" height="18" rx="1" /></symbol><symbol id="i-pen-line" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13 21h8" /> <path vector-effect="non-scaling-stroke" d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /> <path vector-effect="non-scaling-stroke" d="m15 5 4 4" /></symbol><symbol id="i-play" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" /></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /> <path vector-effect="non-scaling-stroke" d="M12 5v14" /></symbol><symbol id="i-puzzle" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z" /></symbol><symbol id="i-radio-tower" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9" /> <path vector-effect="non-scaling-stroke" d="M7.8 4.7a6.14 6.14 0 0 0-.8 7.5" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="9" r="2" /> <path vector-effect="non-scaling-stroke" d="M16.2 4.8c2 2 2.26 5.11.8 7.47" /> <path vector-effect="non-scaling-stroke" d="M19.1 1.9a9.96 9.96 0 0 1 0 14.1" /> <path vector-effect="non-scaling-stroke" d="M9.5 18h5" /> <path vector-effect="non-scaling-stroke" d="m8 22 4-11 4 11" /></symbol><symbol id="i-refresh-cw" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path vector-effect="non-scaling-stroke" d="M21 3v5h-5" /> <path vector-effect="non-scaling-stroke" d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path vector-effect="non-scaling-stroke" d="M8 16H3v5" /></symbol><symbol id="i-rocket" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /> <path vector-effect="non-scaling-stroke" d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" /> <path vector-effect="non-scaling-stroke" d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" /> <path vector-effect="non-scaling-stroke" d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" /></symbol><symbol id="i-save" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /> <path vector-effect="non-scaling-stroke" d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" /> <path vector-effect="non-scaling-stroke" d="M7 3v4a1 1 0 0 0 1 1h7" /></symbol><symbol id="i-scale" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v18" /> <path vector-effect="non-scaling-stroke" d="m19 8 3 8a5 5 0 0 1-6 0zV7" /> <path vector-effect="non-scaling-stroke" d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1" /> <path vector-effect="non-scaling-stroke" d="m5 8 3 8a5 5 0 0 1-6 0zV7" /> <path vector-effect="non-scaling-stroke" d="M7 21h10" /></symbol><symbol id="i-scan-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 7V5a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M17 3h2a2 2 0 0 1 2 2v2" /> <path vector-effect="non-scaling-stroke" d="M21 17v2a2 2 0 0 1-2 2h-2" /> <path vector-effect="non-scaling-stroke" d="M7 21H5a2 2 0 0 1-2-2v-2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /> <path vector-effect="non-scaling-stroke" d="m16 16-1.9-1.9" /></symbol><symbol id="i-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m21 21-4.34-4.34" /> <circle vector-effect="non-scaling-stroke" cx="11" cy="11" r="8" /></symbol><symbol id="i-settings" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /></symbol><symbol id="i-shield-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /> <path vector-effect="non-scaling-stroke" d="m9 12 2 2 4-4" /></symbol><symbol id="i-sliders-horizontal" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 5H3" /> <path vector-effect="non-scaling-stroke" d="M12 19H3" /> <path vector-effect="non-scaling-stroke" d="M14 3v4" /> <path vector-effect="non-scaling-stroke" d="M16 17v4" /> <path vector-effect="non-scaling-stroke" d="M21 12h-9" /> <path vector-effect="non-scaling-stroke" d="M21 19h-5" /> <path vector-effect="non-scaling-stroke" d="M21 5h-7" /> <path vector-effect="non-scaling-stroke" d="M8 10v4" /> <path vector-effect="non-scaling-stroke" d="M8 12H3" /></symbol><symbol id="i-smile" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15 10V9" /> <path vector-effect="non-scaling-stroke" d="M16.472 15a6 6 0 01-8.943 0" /> <path vector-effect="non-scaling-stroke" d="M9 10V9" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /></symbol><symbol id="i-square" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /></symbol><symbol id="i-square-check" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol><symbol id="i-square-pen" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /> <path vector-effect="non-scaling-stroke" d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" /></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="4" /> <path vector-effect="non-scaling-stroke" d="M12 2v2" /> <path vector-effect="non-scaling-stroke" d="M12 20v2" /> <path vector-effect="non-scaling-stroke" d="m4.93 4.93 1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="m17.66 17.66 1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="M2 12h2" /> <path vector-effect="non-scaling-stroke" d="M20 12h2" /> <path vector-effect="non-scaling-stroke" d="m6.34 17.66-1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="m19.07 4.93-1.41 1.41" /></symbol><symbol id="i-tag" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" /> <circle vector-effect="non-scaling-stroke" cx="7.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="6" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="2" /></symbol><symbol id="i-ticket" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" /> <path vector-effect="non-scaling-stroke" d="M13 5v2" /> <path vector-effect="non-scaling-stroke" d="M13 17v2" /> <path vector-effect="non-scaling-stroke" d="M13 11v2" /></symbol><symbol id="i-trash-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 11v6" /> <path vector-effect="non-scaling-stroke" d="M14 11v6" /> <path vector-effect="non-scaling-stroke" d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /> <path vector-effect="non-scaling-stroke" d="M3 6h18" /> <path vector-effect="non-scaling-stroke" d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></symbol><symbol id="i-trending-up" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 7h6v6" /> <path vector-effect="non-scaling-stroke" d="m22 7-8.5 8.5-5-5L2 17" /></symbol><symbol id="i-triangle-alert" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path vector-effect="non-scaling-stroke" d="M12 9v4" /> <path vector-effect="non-scaling-stroke" d="M12 17h.01" /></symbol><symbol id="i-unlink" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71" /> <path vector-effect="non-scaling-stroke" d="m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71" /> <line vector-effect="non-scaling-stroke" x1="8" x2="8" y1="2" y2="5" /> <line vector-effect="non-scaling-stroke" x1="2" x2="5" y1="8" y2="8" /> <line vector-effect="non-scaling-stroke" x1="16" x2="16" y1="19" y2="22" /> <line vector-effect="non-scaling-stroke" x1="19" x2="22" y1="16" y2="16" /></symbol><symbol id="i-upload" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v12" /> <path vector-effect="non-scaling-stroke" d="m17 8-5-5-5 5" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></symbol><symbol id="i-user" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="7" r="4" /></symbol><symbol id="i-users" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path vector-effect="non-scaling-stroke" d="M16 3.128a4 4 0 0 1 0 7.744" /> <path vector-effect="non-scaling-stroke" d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="7" r="4" /></symbol><symbol id="i-volume-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /> <path vector-effect="non-scaling-stroke" d="M16 9a5 5 0 0 1 0 6" /> <path vector-effect="non-scaling-stroke" d="M19.364 18.364a9 9 0 0 0 0-12.728" /></symbol><symbol id="i-x" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M18 6 6 18" /> <path vector-effect="non-scaling-stroke" d="m6 6 12 12" /></symbol><symbol id="i-zap" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol></svg>
+<svg id="cai-ikony" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:none"><symbol id="i-arrow-left" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m12 19-7-7 7-7" /> <path vector-effect="non-scaling-stroke" d="M19 12H5" /></symbol><symbol id="i-bot" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 8V4H8" /> <rect vector-effect="non-scaling-stroke" width="16" height="12" x="4" y="8" rx="2" /> <path vector-effect="non-scaling-stroke" d="M2 14h2" /> <path vector-effect="non-scaling-stroke" d="M20 14h2" /> <path vector-effect="non-scaling-stroke" d="M15 13v2" /> <path vector-effect="non-scaling-stroke" d="M9 13v2" /></symbol><symbol id="i-briefcase" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /> <rect vector-effect="non-scaling-stroke" width="20" height="14" x="2" y="6" rx="2" /></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="13" r="3" /></symbol><symbol id="i-chart-column" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 3v16a2 2 0 0 0 2 2h16" /> <path vector-effect="non-scaling-stroke" d="M18 17V9" /> <path vector-effect="non-scaling-stroke" d="M13 17V5" /> <path vector-effect="non-scaling-stroke" d="M8 17v-3" /></symbol><symbol id="i-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 6 9 17l-5-5" /></symbol><symbol id="i-chevron-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m6 9 6 6 6-6" /></symbol><symbol id="i-circle-check" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol><symbol id="i-circle-dot" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /></symbol><symbol id="i-circle-question-mark" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /> <path vector-effect="non-scaling-stroke" d="M12 17h.01" /></symbol><symbol id="i-circle-x" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m15 9-6 6" /> <path vector-effect="non-scaling-stroke" d="m9 9 6 6" /></symbol><symbol id="i-clipboard-list" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="8" height="4" x="8" y="2" rx="1" ry="1" /> <path vector-effect="non-scaling-stroke" d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M12 11h4" /> <path vector-effect="non-scaling-stroke" d="M12 16h4" /> <path vector-effect="non-scaling-stroke" d="M8 11h.01" /> <path vector-effect="non-scaling-stroke" d="M8 16h.01" /></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 6v6l4 2" /></symbol><symbol id="i-cloud" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" /></symbol><symbol id="i-compass" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" /></symbol><symbol id="i-copy" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="14" height="14" x="8" y="8" rx="2" ry="2" /> <path vector-effect="non-scaling-stroke" d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></symbol><symbol id="i-download" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 15V3" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <path vector-effect="non-scaling-stroke" d="m7 10 5 5 5-5" /></symbol><symbol id="i-ellipsis" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="19" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="5" cy="12" r="1" /></symbol><symbol id="i-file" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /></symbol><symbol id="i-file-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M12 18v-6" /> <path vector-effect="non-scaling-stroke" d="m9 15 3 3 3-3" /></symbol><symbol id="i-file-text" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M10 9H8" /> <path vector-effect="non-scaling-stroke" d="M16 13H8" /> <path vector-effect="non-scaling-stroke" d="M16 17H8" /></symbol><symbol id="i-flag" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528" /></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" /></symbol><symbol id="i-folder-open" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></symbol><symbol id="i-gauge" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m12 14 4-4" /> <path vector-effect="non-scaling-stroke" d="M3.34 19a10 10 0 1 1 17.32 0" /></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /> <path vector-effect="non-scaling-stroke" d="M2 12h20" /></symbol><symbol id="i-headphones" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" /></symbol><symbol id="i-history" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /> <path vector-effect="non-scaling-stroke" d="M3 3v5h5" /> <path vector-effect="non-scaling-stroke" d="M12 7v5l4 2" /></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" ry="2" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="9" r="2" /> <path vector-effect="non-scaling-stroke" d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 16v-4" /> <path vector-effect="non-scaling-stroke" d="M12 8h.01" /></symbol><symbol id="i-key-round" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle vector-effect="non-scaling-stroke" cx="16.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-languages" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m5 8 6 6" /> <path vector-effect="non-scaling-stroke" d="m4 14 6-6 2-3" /> <path vector-effect="non-scaling-stroke" d="M2 5h12" /> <path vector-effect="non-scaling-stroke" d="M7 2h1" /> <path vector-effect="non-scaling-stroke" d="m22 22-5-10-5 10" /> <path vector-effect="non-scaling-stroke" d="M14 18h6" /></symbol><symbol id="i-layout-grid" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="7" height="7" x="3" y="3" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="14" y="3" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="14" y="14" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="3" y="14" rx="1" /></symbol><symbol id="i-library" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 6 4 14" /> <path vector-effect="non-scaling-stroke" d="M12 6v14" /> <path vector-effect="non-scaling-stroke" d="M8 8v12" /> <path vector-effect="non-scaling-stroke" d="M4 4v16" /></symbol><symbol id="i-lightbulb" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" /> <path vector-effect="non-scaling-stroke" d="M9 18h6" /> <path vector-effect="non-scaling-stroke" d="M10 22h4" /></symbol><symbol id="i-link" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /> <path vector-effect="non-scaling-stroke" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></symbol><symbol id="i-link-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9 17H7A5 5 0 0 1 7 7h2" /> <path vector-effect="non-scaling-stroke" d="M15 7h2a5 5 0 1 1 0 10h-2" /> <line vector-effect="non-scaling-stroke" x1="8" x2="16" y1="12" y2="12" /></symbol><symbol id="i-list-checks" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13 5h8" /> <path vector-effect="non-scaling-stroke" d="M13 12h8" /> <path vector-effect="non-scaling-stroke" d="M13 19h8" /> <path vector-effect="non-scaling-stroke" d="m3 17 2 2 4-4" /> <path vector-effect="non-scaling-stroke" d="m3 7 2 2 4-4" /></symbol><symbol id="i-list-ordered" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 5h10" /> <path vector-effect="non-scaling-stroke" d="M11 12h10" /> <path vector-effect="non-scaling-stroke" d="M11 19h10" /> <path vector-effect="non-scaling-stroke" d="M4 4h1v5" /> <path vector-effect="non-scaling-stroke" d="M4 9h2" /> <path vector-effect="non-scaling-stroke" d="M6.5 20H3.4c0-1 2.6-1.925 2.6-3.5a1.5 1.5 0 0 0-2.6-1.02" /></symbol><symbol id="i-loader" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 2v4" /> <path vector-effect="non-scaling-stroke" d="m16.2 7.8 2.9-2.9" /> <path vector-effect="non-scaling-stroke" d="M18 12h4" /> <path vector-effect="non-scaling-stroke" d="m16.2 16.2 2.9 2.9" /> <path vector-effect="non-scaling-stroke" d="M12 18v4" /> <path vector-effect="non-scaling-stroke" d="m4.9 19.1 2.9-2.9" /> <path vector-effect="non-scaling-stroke" d="M2 12h4" /> <path vector-effect="non-scaling-stroke" d="m4.9 4.9 2.9 2.9" /></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path vector-effect="non-scaling-stroke" d="M7 11V7a5 5 0 0 1 10 0v4" /></symbol><symbol id="i-log-out" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 17 5-5-5-5" /> <path vector-effect="non-scaling-stroke" d="M21 12H9" /> <path vector-effect="non-scaling-stroke" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /></symbol><symbol id="i-mail" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /> <rect vector-effect="non-scaling-stroke" x="2" y="4" width="20" height="16" rx="2" /></symbol><symbol id="i-megaphone" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" /> <path vector-effect="non-scaling-stroke" d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14" /> <path vector-effect="non-scaling-stroke" d="M8 6v8" /></symbol><symbol id="i-mic" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 19v3" /> <path vector-effect="non-scaling-stroke" d="M19 10v2a7 7 0 0 1-14 0v-2" /> <rect vector-effect="non-scaling-stroke" x="9" y="2" width="6" height="13" rx="3" /></symbol><symbol id="i-minus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></symbol><symbol id="i-notebook-pen" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4" /> <path vector-effect="non-scaling-stroke" d="M2 6h4" /> <path vector-effect="non-scaling-stroke" d="M2 10h4" /> <path vector-effect="non-scaling-stroke" d="M2 14h4" /> <path vector-effect="non-scaling-stroke" d="M2 18h4" /> <path vector-effect="non-scaling-stroke" d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /></symbol><symbol id="i-octagon-alert" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 16h.01" /> <path vector-effect="non-scaling-stroke" d="M12 8v4" /> <path vector-effect="non-scaling-stroke" d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z" /></symbol><symbol id="i-package" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /> <path vector-effect="non-scaling-stroke" d="M12 22V12" /> <polyline vector-effect="non-scaling-stroke" points="3.29 7 12 12 20.71 7" /> <path vector-effect="non-scaling-stroke" d="m7.5 4.27 9 5.15" /></symbol><symbol id="i-palette" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" /> <circle vector-effect="non-scaling-stroke" cx="13.5" cy="6.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="17.5" cy="10.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="6.5" cy="12.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="8.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-panel-left" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /> <path vector-effect="non-scaling-stroke" d="M9 3v18" /></symbol><symbol id="i-paperclip" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551" /></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" x="14" y="3" width="5" height="18" rx="1" /> <rect vector-effect="non-scaling-stroke" x="5" y="3" width="5" height="18" rx="1" /></symbol><symbol id="i-pen-line" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13 21h8" /> <path vector-effect="non-scaling-stroke" d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /> <path vector-effect="non-scaling-stroke" d="m15 5 4 4" /></symbol><symbol id="i-play" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" /></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /> <path vector-effect="non-scaling-stroke" d="M12 5v14" /></symbol><symbol id="i-puzzle" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z" /></symbol><symbol id="i-radio-tower" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9" /> <path vector-effect="non-scaling-stroke" d="M7.8 4.7a6.14 6.14 0 0 0-.8 7.5" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="9" r="2" /> <path vector-effect="non-scaling-stroke" d="M16.2 4.8c2 2 2.26 5.11.8 7.47" /> <path vector-effect="non-scaling-stroke" d="M19.1 1.9a9.96 9.96 0 0 1 0 14.1" /> <path vector-effect="non-scaling-stroke" d="M9.5 18h5" /> <path vector-effect="non-scaling-stroke" d="m8 22 4-11 4 11" /></symbol><symbol id="i-refresh-cw" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path vector-effect="non-scaling-stroke" d="M21 3v5h-5" /> <path vector-effect="non-scaling-stroke" d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path vector-effect="non-scaling-stroke" d="M8 16H3v5" /></symbol><symbol id="i-rocket" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /> <path vector-effect="non-scaling-stroke" d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" /> <path vector-effect="non-scaling-stroke" d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" /> <path vector-effect="non-scaling-stroke" d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" /></symbol><symbol id="i-save" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /> <path vector-effect="non-scaling-stroke" d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" /> <path vector-effect="non-scaling-stroke" d="M7 3v4a1 1 0 0 0 1 1h7" /></symbol><symbol id="i-scale" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v18" /> <path vector-effect="non-scaling-stroke" d="m19 8 3 8a5 5 0 0 1-6 0zV7" /> <path vector-effect="non-scaling-stroke" d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1" /> <path vector-effect="non-scaling-stroke" d="m5 8 3 8a5 5 0 0 1-6 0zV7" /> <path vector-effect="non-scaling-stroke" d="M7 21h10" /></symbol><symbol id="i-scan-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 7V5a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M17 3h2a2 2 0 0 1 2 2v2" /> <path vector-effect="non-scaling-stroke" d="M21 17v2a2 2 0 0 1-2 2h-2" /> <path vector-effect="non-scaling-stroke" d="M7 21H5a2 2 0 0 1-2-2v-2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /> <path vector-effect="non-scaling-stroke" d="m16 16-1.9-1.9" /></symbol><symbol id="i-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m21 21-4.34-4.34" /> <circle vector-effect="non-scaling-stroke" cx="11" cy="11" r="8" /></symbol><symbol id="i-settings" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /></symbol><symbol id="i-shield-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /> <path vector-effect="non-scaling-stroke" d="m9 12 2 2 4-4" /></symbol><symbol id="i-sliders-horizontal" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 5H3" /> <path vector-effect="non-scaling-stroke" d="M12 19H3" /> <path vector-effect="non-scaling-stroke" d="M14 3v4" /> <path vector-effect="non-scaling-stroke" d="M16 17v4" /> <path vector-effect="non-scaling-stroke" d="M21 12h-9" /> <path vector-effect="non-scaling-stroke" d="M21 19h-5" /> <path vector-effect="non-scaling-stroke" d="M21 5h-7" /> <path vector-effect="non-scaling-stroke" d="M8 10v4" /> <path vector-effect="non-scaling-stroke" d="M8 12H3" /></symbol><symbol id="i-smile" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15 10V9" /> <path vector-effect="non-scaling-stroke" d="M16.472 15a6 6 0 01-8.943 0" /> <path vector-effect="non-scaling-stroke" d="M9 10V9" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /></symbol><symbol id="i-square" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /></symbol><symbol id="i-square-check" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol><symbol id="i-square-pen" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /> <path vector-effect="non-scaling-stroke" d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" /></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="4" /> <path vector-effect="non-scaling-stroke" d="M12 2v2" /> <path vector-effect="non-scaling-stroke" d="M12 20v2" /> <path vector-effect="non-scaling-stroke" d="m4.93 4.93 1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="m17.66 17.66 1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="M2 12h2" /> <path vector-effect="non-scaling-stroke" d="M20 12h2" /> <path vector-effect="non-scaling-stroke" d="m6.34 17.66-1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="m19.07 4.93-1.41 1.41" /></symbol><symbol id="i-tag" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" /> <circle vector-effect="non-scaling-stroke" cx="7.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="6" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="2" /></symbol><symbol id="i-ticket" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" /> <path vector-effect="non-scaling-stroke" d="M13 5v2" /> <path vector-effect="non-scaling-stroke" d="M13 17v2" /> <path vector-effect="non-scaling-stroke" d="M13 11v2" /></symbol><symbol id="i-trash-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 11v6" /> <path vector-effect="non-scaling-stroke" d="M14 11v6" /> <path vector-effect="non-scaling-stroke" d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /> <path vector-effect="non-scaling-stroke" d="M3 6h18" /> <path vector-effect="non-scaling-stroke" d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></symbol><symbol id="i-trending-up" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 7h6v6" /> <path vector-effect="non-scaling-stroke" d="m22 7-8.5 8.5-5-5L2 17" /></symbol><symbol id="i-triangle-alert" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path vector-effect="non-scaling-stroke" d="M12 9v4" /> <path vector-effect="non-scaling-stroke" d="M12 17h.01" /></symbol><symbol id="i-undo-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9 14 4 9l5-5" /> <path vector-effect="non-scaling-stroke" d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" /></symbol><symbol id="i-unlink" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71" /> <path vector-effect="non-scaling-stroke" d="m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71" /> <line vector-effect="non-scaling-stroke" x1="8" x2="8" y1="2" y2="5" /> <line vector-effect="non-scaling-stroke" x1="2" x2="5" y1="8" y2="8" /> <line vector-effect="non-scaling-stroke" x1="16" x2="16" y1="19" y2="22" /> <line vector-effect="non-scaling-stroke" x1="19" x2="22" y1="16" y2="16" /></symbol><symbol id="i-upload" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v12" /> <path vector-effect="non-scaling-stroke" d="m17 8-5-5-5 5" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></symbol><symbol id="i-user" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="7" r="4" /></symbol><symbol id="i-users" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path vector-effect="non-scaling-stroke" d="M16 3.128a4 4 0 0 1 0 7.744" /> <path vector-effect="non-scaling-stroke" d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="7" r="4" /></symbol><symbol id="i-volume-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /> <path vector-effect="non-scaling-stroke" d="M16 9a5 5 0 0 1 0 6" /> <path vector-effect="non-scaling-stroke" d="M19.364 18.364a9 9 0 0 0 0-12.728" /></symbol><symbol id="i-x" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M18 6 6 18" /> <path vector-effect="non-scaling-stroke" d="m6 6 12 12" /></symbol><symbol id="i-zap" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol></svg>
 
 <div class="topbar">
   <div class="topbar-logo">
@@ -3905,13 +3941,16 @@ body.is-mobile #img-prompt-wrap > .field-label[onclick] { min-height: var(--h-do
 </div>
 
 <!-- RICH TEXT FORMAT TOOLBAR -->
-<div class="fmt-toolbar" id="fmt-toolbar">
+<div class="fmt-toolbar" id="fmt-toolbar" role="toolbar" aria-label="Edycja tekstu" data-i18n-label="edit-pasek">
   <div class="fmt-arrow"></div>
+  <span class="fmt-etykieta" data-i18n="edit-etykieta">Edycja</span>
   <button class="fmt-btn" id="fmt-bold" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault()" onclick="fmtExec('bold')" title="Pogrub (Ctrl+B)"><b>B</b></button>
   <button class="fmt-btn" id="fmt-italic" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault()" onclick="fmtExec('italic')" title="Pochyl (Ctrl+I)"><em style="font-style:italic">I</em></button>
   <div class="fmt-sep"></div>
   <button class="fmt-btn" onmousedown="event.preventDefault()" ontouchstart="saveLinkRange(event)" ontouchend="openLinkDialogMobile(event)" onclick="openLinkDialog()" title="Dodaj / edytuj link (Ctrl+K)"><svg class="ikona" aria-hidden="true"><use href="#i-link"/></svg></button>
   <button class="fmt-btn" id="fmt-unlink" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault()" onclick="fmtExec('unlink')" title="Usuń link" style="display:none"><svg class="ikona" aria-hidden="true"><use href="#i-unlink"/></svg></button>
+  <button class="fmt-btn fmt-cofnij" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault()" onclick="fmtExec('undo')" title="Cofnij" aria-label="Cofnij" data-i18n-label="edit-cofnij"><svg class="ikona" aria-hidden="true"><use href="#i-undo-2"/></svg></button>
+  <button class="fmt-gotowe" onclick="toggleEdit()"><svg class="ikona" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="editor-done">Gotowe</span></button>
   <div class="fmt-sep fmt-close-sep" style="display:none"></div>
   <button class="fmt-btn fmt-close-btn" id="fmt-close" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault()" onclick="hideMobileToolbar()" title="Zamknij" style="display:none">×</button>
 </div>
@@ -4410,7 +4449,7 @@ var I18N = {
     'rp-linkedin':'Post na LinkedIn','rp-facebook':'Post na Facebooku','rp-email':'Newsletter e-mail',
     'rp-faq':'Strona FAQ','rp-landing':'Wstęp strony docelowej',
     'rp-panel-title':'Przeróbki artykułu','rp-copy':'Kopiuj','rp-loading':'Tworzę przeróbkę…',
-    'brief-title':'Brief artykułu','brief-use-kw':'Użyj słów kluczowych','brief-loading':'Analizuję temat i bazę wiedzy…',
+    'brief-title':'Brief artykułu','brief-zapamietany':'Zapisany brief z {czas}','brief-odswiez':'Analizuj ponownie','brief-use-kw':'Użyj słów kluczowych','brief-loading':'Analizuję temat i bazę wiedzy…',
     'jsonld-title':'{ } Schematy JSON-LD','jsonld-copy':'Kopiuj kod','jsonld-type-label':'Typ schematu',
     'sidebar-title':'Baza wiedzy - źródła','sidebar-docs':'Dokumenty','sidebar-words':'Słowa',
     'sidebar-gen':'Wygenerowane','sidebar-click':'Kliknij, aby wybrać pliki','sidebar-types':'PDF, DOCX, XLSX, PPTX, TXT, CSV',
@@ -4720,7 +4759,7 @@ var I18N = {
     'spin-sub-model':'model przetwarza temat i bazę wiedzy','spin-sub-hybrid2':'optymalizuję jednocześnie pod SEO, AIO i czytelnika',
     'link-suggest-prefix':'Rozważ link do','link-suggest-at':'przy słowach:',
     'gap-still-missing':'Nadal brakujące tematy',
-    'editor-done':'Gotowe','kb-words-suffix':'słów','kb-tag-text':'Tekst','kb-tag-file':'Plik','hist-words-suffix':'słów',
+    'editor-done':'Gotowe','edit-etykieta':'Edycja','edit-cofnij':'Cofnij','edit-pasek':'Edycja tekstu','edit-podpowiedz':'Tryb edycji: dotknij tekstu, aby go zmienić. Gotowe zapisuje zmiany.','kb-words-suffix':'słów','kb-tag-text':'Tekst','kb-tag-file':'Plik','hist-words-suffix':'słów',
     'url-fetch-done':'Gotowe - strona dodana do bazy!',
     'url-demo-connect':'Łączę ze stroną…','url-demo-fetch':'Pobieram treść…','url-demo-process':'Przetwarzam…','upload-processing':'Przetwarzam: {name}','url-demo-done':'Gotowe!',
     'img-style-minimal':'Minimalistyczne',
@@ -4830,7 +4869,7 @@ var I18N = {
     'msg-no-api-resp':'Brak odpowiedzi z API. Sprawdź klucz API i połączenie.',
     'kb-na-serwerze':'Na serwerze','kb-wspolna':'Baza wspólna zespołu','kb-prywatna':'Twoja baza prywatna','kb-fragm':'fragm.','kb-lokalnie':'Tylko w tej przeglądarce','kb-przenies':'Przenieś na serwer','kb-dodano':'Dodano do bazy wiedzy na serwerze','kb-zostaje-lokalnie':'Dokument zapisano tylko w tej przeglądarce.','kb-przeniesiono':'Przeniesiono na serwer',
     'pakiet-zostalo':'Zostało {n} z {m}','pakiet-zostalo-krotko':'zostało {n}','pakiet-od-standard':'Dostępne od pakietu Standard','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f}: poza pakietem {p}','pakiet-niedostepne':'niedostępne',
-    'btn-przerwij':'Przerwij','msg-przerwano':'Generowanie przerwane. Formularz jest bez zmian: możesz poprawić brief i spróbować ponownie.','badge-przerwane':'przerwane','spin-ponawiam-za':'Dostawca AI ogranicza zapytania: ponawiam za {s} s','spin-proba':'próba {n} z {m}','spin-ponawiam':'Ponawiam zapytanie…',
+    'btn-przerwij':'Przerwij','msg-przerwano':'Generowanie przerwane. Formularz jest bez zmian: możesz poprawić brief i spróbować ponownie.','badge-przerwane':'przerwane','spin-ponawiam-za':'Dostawca AI ogranicza zapytania: ponawiam za {s} s','spin-proba':'próba {n} z {m}','spin-ponawiam':'Ponawiam zapytanie…','spin-wznawiam':'Połączenie było przerwane. Odbieram wynik z serwera…',
     'badge-historia':'z historii','hist-otworz':'Otwórz w generatorze',
     'msg-blad-prefiks':'Błąd:','menu-wyloguj':'Wyloguj się','menu-wyloguj-sub':'zakończ sesję na tym urządzeniu',
     'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Część dokumentów z bazy nie przetrwa odświeżenia - przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
@@ -5014,7 +5053,7 @@ var I18N = {
     'rp-linkedin':'LinkedIn post','rp-facebook':'Facebook post','rp-email':'Email newsletter',
     'rp-faq':'FAQ page','rp-landing':'Landing page intro',
     'rp-panel-title':'Content repurpose','rp-copy':'Copy','rp-loading':'Creating repurpose…',
-    'brief-title':'Article brief','brief-use-kw':'Use keywords','brief-loading':'Analyzing topic and knowledge base…',
+    'brief-title':'Article brief','brief-zapamietany':'Saved brief from {czas}','brief-odswiez':'Analyse again','brief-use-kw':'Use keywords','brief-loading':'Analyzing topic and knowledge base…',
     'jsonld-title':'{ } JSON-LD schemas','jsonld-copy':'Copy code','jsonld-type-label':'Schema type',
     'sidebar-title':'Knowledge base - sources','sidebar-docs':'Documents','sidebar-words':'Words',
     'sidebar-gen':'Generated','sidebar-click':'Click to select files','sidebar-types':'PDF, DOCX, XLSX, PPTX, TXT, CSV',
@@ -5293,7 +5332,7 @@ var I18N = {
     'msg-no-api-resp':'No response from API. Check your API key and connection.',
     'kb-na-serwerze':'On the server','kb-wspolna':'Shared team base','kb-prywatna':'Your private base','kb-fragm':'passages','kb-lokalnie':'Only in this browser','kb-przenies':'Move to server','kb-dodano':'Added to the server knowledge base','kb-zostaje-lokalnie':'The document was saved only in this browser.','kb-przeniesiono':'Moved to the server',
     'pakiet-zostalo':'{n} of {m} left','pakiet-zostalo-krotko':'{n} left','pakiet-od-standard':'Available from the Standard plan','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f}: not included in the {p} plan','pakiet-niedostepne':'not available',
-    'btn-przerwij':'Stop','msg-przerwano':'Generation stopped. The form is unchanged, so you can adjust the brief and try again.','badge-przerwane':'stopped','spin-ponawiam-za':'The AI provider is limiting requests: retrying in {s} s','spin-proba':'attempt {n} of {m}','spin-ponawiam':'Retrying the request…',
+    'btn-przerwij':'Stop','msg-przerwano':'Generation stopped. The form is unchanged, so you can adjust the brief and try again.','badge-przerwane':'stopped','spin-ponawiam-za':'The AI provider is limiting requests: retrying in {s} s','spin-proba':'attempt {n} of {m}','spin-ponawiam':'Retrying the request…','spin-wznawiam':'The connection dropped. Collecting the result from the server…',
     'badge-historia':'from history','hist-otworz':'Open in generator',
     'msg-blad-prefiks':'Error:','menu-wyloguj':'Sign out','menu-wyloguj-sub':'end the session on this device',
     'msg-magazyn-pelny':'Browser storage is full. Some knowledge base documents will not survive a refresh - move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
@@ -5340,7 +5379,7 @@ var I18N = {
     'img-download-btn':'Download PNG','img-copy-btn-lbl':'Copy',
     'img-step1-noref':'Step 1 of 2: creating image prompt',
     'img-prompt-used':'Used prompt',
-    'editor-done':'Done','kb-words-suffix':'words','kb-tag-text':'Text','kb-tag-file':'File','hist-words-suffix':'words',
+    'editor-done':'Done','edit-etykieta':'Editing','edit-cofnij':'Undo','edit-pasek':'Text editing','edit-podpowiedz':'Editing mode: tap the text to change it. Done saves your changes.','kb-words-suffix':'words','kb-tag-text':'Text','kb-tag-file':'File','hist-words-suffix':'words',
     'url-fetch-done':'Done - page added to knowledge base!',
     'url-demo-connect':'Connecting to page…','url-demo-fetch':'Fetching content…','url-demo-process':'Processing…','upload-processing':'Processing: {name}','url-demo-done':'Done!',
     'img-style-minimal':'Minimalistic',
@@ -5812,6 +5851,70 @@ window.addEventListener('beforeunload', function (e) {
   if (przerwanieGenerowania) { e.preventDefault(); e.returnValue = ''; }
 });
 
+// ─── Zadania w tle (wariant z serwerem) ──────────────────────────────────────
+// Telefon zrywa polaczenie, gdy w trakcie generowania przelaczysz aplikacje albo
+// zgasisz ekran. Wczesniej konczylo sie to "Brak polaczenia z serwerem" i praca
+// przepadala. Teraz kazde wywolanie ma identyfikator (X-Zadanie): serwer prowadzi
+// je do konca (serwer/zadania.js), a my po powrocie pytamy o to samo zadanie
+// i dostajemy gotowy wynik, bez drugiego wywolania i drugiego liczenia do pakietu.
+function noweIdZadania() {
+  try { if (window.crypto && crypto.randomUUID) return crypto.randomUUID().replace(/-/g, ''); } catch (e) { /* starsza przegladarka */ }
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+}
+// Czeka, az aplikacja wroci na ekran i bedzie internet (albo na Przerwij).
+function czekajNaPowrot(sygnal) {
+  return new Promise(function (ok, zle) {
+    if (sygnal && sygnal.aborted) { zle(new DOMException('Przerwano', 'AbortError')); return; }
+    var t = 0;
+    var sprzatnij = function () {
+      document.removeEventListener('visibilitychange', sprawdz);
+      window.removeEventListener('online', sprawdz);
+      clearInterval(t);
+      if (sygnal) sygnal.removeEventListener('abort', przerwij);
+    };
+    var sprawdz = function () {
+      if (document.visibilityState === 'visible' && navigator.onLine !== false) { sprzatnij(); setTimeout(ok, 400); }
+    };
+    var przerwij = function () { sprzatnij(); zle(new DOMException('Przerwano', 'AbortError')); };
+    document.addEventListener('visibilitychange', sprawdz);
+    window.addEventListener('online', sprawdz);
+    if (sygnal) sygnal.addEventListener('abort', przerwij);
+    t = setInterval(sprawdz, 1500);
+    sprawdz();
+  });
+}
+function anulujZadanieWTle(id) {
+  fetch('/api/zadanie/anuluj', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }), keepalive: true }).catch(function () {});
+}
+// fetch do serwera aplikacji odporny na zerwane polaczenie. `id` podaje wolajacy,
+// ktory sam ponawia (grafika): kolejna proba dolacza wtedy do tego samego zadania.
+// `anuluj`: przerwanie przez uzytkownika konczy tez zadanie na serwerze.
+async function fetchZadania(url, opcje, id, anuluj) {
+  if (!window.API_ENDPOINT_OVERRIDE || !/^\/api(\/|$)/.test(String(url))) return fetch(url, opcje);
+  id = id || noweIdZadania();
+  const o = Object.assign({}, opcje, { headers: Object.assign({}, opcje && opcje.headers, { 'X-Zadanie': id }) });
+  const przerwane = (e) => e && (e.name === 'AbortError' || (o.signal && o.signal.aborted));
+  for (let proba = 0; ; proba++) {
+    try {
+      return await fetch(url, o);
+    } catch (e) {
+      if (przerwane(e) || proba >= 5) {
+        if (przerwane(e) && anuluj) anulujZadanieWTle(id);
+        throw e;
+      }
+      const sub = document.getElementById('spin-sub');
+      if (sub) sub.textContent = _t('spin-wznawiam');
+      try {
+        await czekajNaPowrot(o.signal);
+        await new Promise(r => setTimeout(r, Math.min(4000, 600 * (proba + 1))));
+      } catch (e2) {
+        if (anuluj) anulujZadanieWTle(id);
+        throw e2;
+      }
+    }
+  }
+}
+
 async function apiFetch(options, maxRetries = 3) {
   const WAIT_STEPS = [20, 40, 60]; // sekundy oczekiwania między próbami
   let endpoint = API_ENDPOINT;
@@ -5852,7 +5955,7 @@ async function apiFetch(options, maxRetries = 3) {
   const sygnal = options.signal || (przerwanieGenerowania && przerwanieGenerowania.signal) || null;
   if (sygnal && !options.signal) options = Object.assign({}, options, { signal: sygnal });
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const res = await fetch(endpoint, options);
+    const res = await fetchZadania(endpoint, options, null, true);
     if (res.status !== 429) {
       // Tryb GPT: przekształć odpowiedź OpenAI → format Anthropic, by reszta kodu działała bez zmian
       if (gptMode) {
@@ -6978,6 +7081,9 @@ function pokazSamokorekte() {
 }
 function togglePremium() {
   premiumMode = !premiumMode;
+  // Przelacznik w menu ma juz opis "2-3 razy dluzej": wlaczenie go to swiadoma
+  // decyzja, wiec okno "Tryb samokorekty" przy Wygeneruj nie pyta drugi raz.
+  if (premiumMode) magazyn.setItem('cai_samokorekta_ok', '1');
   pokazSamokorekte();
 }
 
@@ -6987,6 +7093,7 @@ function closePremiumModal() {
 
 function premiumProceed() {
   // Użytkownik potwierdził premium - zamknij modal i generuj
+  magazyn.setItem('cai_samokorekta_ok', '1');
   closePremiumModal();
   generate(true);  // true = pomiń ponowny check modalu
 }
@@ -7136,7 +7243,7 @@ async function generate(skipPremiumModal = false) {
   }
 
   // ── Jeśli premium aktywne i nie pominięto modalu - pokaż ostrzeżenie
-  if (premiumMode && !skipPremiumModal) {
+  if (premiumMode && !skipPremiumModal && magazyn.getItem('cai_samokorekta_ok') !== '1') {
     document.getElementById('premium-modal').classList.add('open');
     return false;
   }
@@ -8152,7 +8259,8 @@ function uporzadkujArtykul(korzen, jezyk) {
 function blokZrodel(zrodla) {
   if (!zrodla || !zrodla.length) return '';
   const pozycje = zrodla.map(function (z) {
-    const nazwa = z.tytul || z.url;
+    // "Krakowskie mamuty - ciekawe.org - ciekawe.org": powtorzona koncowka tytulu strony.
+    const nazwa = String(z.tytul || '').replace(/(\s[-|\u2022\u00b7]\s[^-|\u2022\u00b7]+)\1+$/, '$1').trim() || z.url;
     const data = /^\d{4}-\d{2}-\d{2}$/.test(z.data || '') ? znacznikDatyZrodla(z.data) : '';
     return '<li><a href="' + escapeHtml(z.url) + '" target="_blank" rel="noopener">'
       + escapeHtml(nazwa) + '</a>' + data + '</li>';
@@ -10298,8 +10406,11 @@ function toggleEdit() {
     seoCache = null; aioCache = null;
     zapiszRecznePoprawki();
   } else if (isMobile) {
+    // Pasek edycji pod naglowkiem mowi, ze tekst mozna zmieniac; klawiatura
+    // otwiera sie dopiero po dotknieciu akapitu (wczesniej fokus od razu
+    // zaslanial pol ekranu, a jedynym sladem trybu byl migajacy kursor).
     toolbar.classList.add('show');
-    art.focus();
+    pokazPowiadomienie(_t('edit-podpowiedz'), 'info', 4000);
   }
 }
 
@@ -11751,12 +11862,31 @@ function closeBriefPanel() {
   document.getElementById('brief-overlay').classList.remove('show');
 }
 
-async function openBriefPanel() {
+// Brief zapamietany dla tematu (i jezyka): ponowne otwarcie pokazuje ten sam
+// wynik od razu, zamiast za kazdym razem analizowac od nowa (i dawac inne frazy).
+// "Analizuj ponownie" wymusza nowa analize.
+const BRIEFY_MAX = 20;
+function kluczBriefu(temat) { return (currentLang || 'pl') + ':' + String(temat).trim().toLowerCase().replace(/\s+/g, ' '); }
+function zapamietanyBrief(temat) {
+  const wpis = (czytajJson('cai_briefy', {}) || {})[kluczBriefu(temat)];
+  return wpis && wpis.b ? wpis : null;
+}
+function zapamietajBrief(temat, b) {
+  const wszystkie = czytajJson('cai_briefy', {}) || {};
+  wszystkie[kluczBriefu(temat)] = { b: b, czas: Date.now() };
+  const klucze = Object.keys(wszystkie).sort(function (x, y) { return (wszystkie[y].czas || 0) - (wszystkie[x].czas || 0); });
+  klucze.slice(BRIEFY_MAX).forEach(function (k) { delete wszystkie[k]; });
+  magazyn.setItem('cai_briefy', JSON.stringify(wszystkie));
+}
+
+async function openBriefPanel(odswiez) {
   const topic = document.getElementById('topic').value.trim();
   if (!topic) { document.getElementById('topic').focus(); return; }
   const panel = document.getElementById('brief-panel');
   panel.classList.add('show');
   document.getElementById('brief-overlay').classList.add('show');
+  const zapamietany = odswiez ? null : zapamietanyBrief(topic);
+  if (zapamietany) { showBrief(zapamietany.b, zapamietany.czas); return; }
   document.getElementById('brief-content').innerHTML = '<div class="seo-loading">' + _t('msg-loading-brief') + '</div>';
   briefKeywords = [];
 
@@ -11785,9 +11915,11 @@ async function openBriefPanel() {
     const d = await res.json();
     if (d.error) throw bladOdpowiedzi(d, res.status);
     const raw = (d.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
-    showBrief(parsujJsonModelu(raw));
+    const brief = parsujJsonModelu(raw);
+    zapamietajBrief(topic, brief);
+    showBrief(brief);
   } catch(e) {
-    document.getElementById('brief-content').innerHTML = blokBledu(e, 'openBriefPanel()');
+    document.getElementById('brief-content').innerHTML = blokBledu(e, 'openBriefPanel(true)');
   }
 }
 
@@ -11799,11 +11931,23 @@ function renderBriefKwsHtml() {
   return '<div class="brief-section"><h4>' + _t('brief-kw-section') + '</h4><div id="brief-kw-list"></div></div>';
 }
 
+// Fraza "taka sama" jak juz dodana: bez wielkosci liter i spojnikow
+// ("folklor a nauka" = "folklor i nauka"), zeby brief nie dublowal listy.
+function rdzenFrazy(k) {
+  return String(k || '').toLowerCase().split(/[\s,.;:\-]+/)
+    .filter(function (w) { return w && ['a', 'i', 'w', 'z', 'o', 'oraz', 'na', 'do', 'and', 'the', 'of', 'in', 'for', 'to'].indexOf(w) === -1; })
+    .sort().join(' ');
+}
+function frazaJuzJest(k) {
+  var r = rdzenFrazy(k);
+  return keywords.some(function (x) { return x === k || rdzenFrazy(x) === r; });
+}
+
 function refreshBriefKwList() {
   var el = document.getElementById('brief-kw-list');
   if (!el) return;
   el.innerHTML = briefKeywords.map(function(k, i) {
-    var added = keywords.includes(k);
+    var added = frazaJuzJest(k);
     // Fraza zweryfikowana w OpenSEO dostaje wolumen i obramowanie w kolorze
     // akcentu. Bez tego uzytkownik nie odroznilby faktu od domyslu modelu.
     var wolumen = (typeof window.briefZSeo === 'object' && window.briefZSeo) ? window.briefZSeo[k] : undefined;
@@ -11820,22 +11964,29 @@ function refreshBriefKwList() {
   }).join('');
 }
 
-function showBrief(b) {
+function showBrief(b, zapamietanyCzas) {
   briefState = b;
   briefKeywords = b.keywords || [];
+  // Liczba slow bez podwojonego "slow" - model czesto oddaje "1400-1900 słów".
+  const slowa = String(b.words || '800-1000').replace(/\s*(słów|slow|words?)\.?\s*$/i, '');
+  const naglowekZapamietanego = zapamietanyCzas
+    ? '<div class="brief-zapamietany"><span>' + escapeHtml(_t('brief-zapamietany').replace('{czas}', new Date(zapamietanyCzas).toLocaleString(currentLang === 'en' ? 'en-GB' : 'pl-PL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))) + '</span>'
+      + '<button type="button" class="btn-link" onclick="openBriefPanel(true)">' + ikona('refresh-cw') + escapeHtml(_t('brief-odswiez')) + '</button></div>'
+    : '';
   document.getElementById('brief-content').innerHTML =
+    naglowekZapamietanego +
     renderBriefKwsHtml() +
     '<div class="brief-section"><h4>' + _t('brief-h2-section') + '</h4>' +
     (b.h2||[]).map(function(h,i){ return '<div class="brief-h2-item"><span class="brief-num">'+(i+1)+'</span>'+escapeHtml(h)+'</div>'; }).join('') +
     '</div><div class="brief-section"><h4>' + _t('brief-gap-section') + '</h4>' +
     '<p style="font-size:12px;color:var(--text2);margin:0">'+escapeHtml(b.gap || (currentLang === 'en' ? 'No data' : 'Brak danych'))+'</p></div>' +
     '<div class="brief-section"><h4>' + _t('brief-words-section') + '</h4>' +
-    '<p style="font-size:12px;color:var(--text2);margin:0">'+escapeHtml(b.words||'800-1000')+' ' + _t('brief-words-suffix') + '</p></div>';
+    '<p style="font-size:12px;color:var(--text2);margin:0">'+escapeHtml(slowa)+' ' + _t('brief-words-suffix') + '</p></div>';
   refreshBriefKwList();
 }
 
 function addKeywordFromBrief(kw) {
-  if (!keywords.includes(kw)) { keywords.push(kw); renderKws(); }
+  if (!frazaJuzJest(kw)) { keywords.push(kw); renderKws(); }
   refreshBriefKwList();
 }
 function addKeywordFromBriefIdx(i) {
@@ -11843,7 +11994,7 @@ function addKeywordFromBriefIdx(i) {
   if (kw != null) addKeywordFromBrief(kw);
 }
 function applyBriefKeywords() {
-  briefKeywords.forEach(k => { if(!keywords.includes(k)) keywords.push(k); });
+  briefKeywords.forEach(k => { if (!frazaJuzJest(k)) keywords.push(k); });
   renderKws();
   closeBriefPanel();
 }
@@ -13697,9 +13848,6 @@ document.addEventListener('selectionchange', () => {
   if (isMobile) {
     if (art.contentEditable !== 'true') { toolbar.classList.remove('show'); return; }
     toolbar.classList.add('show');
-    // Show close button always on mobile
-    document.getElementById('fmt-close').style.display = 'flex';
-    document.querySelector('.fmt-close-sep').style.display = 'flex';
     // Save selection while it's non-empty (before tap clears it)
     if (sel && sel.rangeCount && !sel.isCollapsed) {
       const container = sel.getRangeAt(0).commonAncestorContainer;
@@ -14489,6 +14637,9 @@ async function generateImage() {
     const IMG_MAX_RETRIES = 2;      // 1 oryginalna próba + 2 ponowienia = 3 łącznie
     let imgRes = null;
     let lastErr = null;
+    // Jedno zadanie na serwerze dla wszystkich prob: ponowienie po zerwanym
+    // polaczeniu odbiera grafike, ktora serwer zdazyl juz zrobic.
+    const idZadaniaGrafiki = noweIdZadania();
     for (let attempt = 0; attempt <= IMG_MAX_RETRIES; attempt++) {
       const ctrl   = new AbortController();
       const tStart = Date.now();
@@ -14499,7 +14650,7 @@ async function generateImage() {
       }, 1000);
       const tOut = setTimeout(() => ctrl.abort(), IMG_TIMEOUT_MS);
       try {
-        imgRes = await fetch(imgEndpoint, { method:'POST', headers: imgHeaders, body: imgBody, signal: ctrl.signal });
+        imgRes = await fetchZadania(imgEndpoint, { method:'POST', headers: imgHeaders, body: imgBody, signal: ctrl.signal }, idZadaniaGrafiki);
         clearTimeout(tOut); clearInterval(tInt);
         // 5xx -> retry; pozostałe statusy -> wyjdź z pętli
         if (imgRes.status >= 500 && imgRes.status < 600 && attempt < IMG_MAX_RETRIES) {
@@ -14919,7 +15070,7 @@ async function oaTTS(text, voiceOverride) {
   if (!voiceIsProxy() && !key) { powiadomBlad(_t('voice-no-key')); throw new Error('no key'); }
   var headers = { 'Content-Type': 'application/json' };
   if (!voiceIsProxy()) headers['Authorization'] = 'Bearer ' + key;
-  var res = await fetch(OPENAI_TTS_ENDPOINT, { method:'POST', headers, body: JSON.stringify({
+  var res = await fetchZadania(OPENAI_TTS_ENDPOINT, { method:'POST', headers, body: JSON.stringify({
     model: voiceCfg.oaModel || 'gpt-4o-mini-tts', voice: voiceOverride || voiceCfg.oaVoice || 'alloy',
     input: text, response_format: 'mp3', speed: voiceCfg.rate || 1.0, instructions: voiceInstr()
   }) });
@@ -14946,7 +15097,7 @@ async function elevenTTS(text, voiceOverride) {
   }
   var res, _att=0;
   for(;;){
-    res = await fetch(url, { method:'POST', headers, body });
+    res = await fetchZadania(url, { method:'POST', headers, body });
     if (res.status === 429 && _att < 4 && !ttsState.cancel) { _att++; await new Promise(function(r){ setTimeout(r, 700*Math.pow(2,_att-1)); }); continue; }
     break;
   }

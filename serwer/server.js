@@ -19,6 +19,7 @@
  * Wlasne endpointy serwera (poza kontraktem workera):
  *   POST /api/prosba-o-dostep -> formularz strony produktowej (bez logowania, CORS) - prosby.js
  *   GET  /api/admin/prosby    -> lista prosb o dostep (admin)
+ *   POST /api/zadanie/anuluj  -> Przerwij dla zadania w tle (X-Zadanie) - zadania.js
  *   oraz /api/baza, /api/strona, /api/odnosniki, /api/marka, /api/pakiet, /api/seo/* - opis w README
  *
  * Konfiguracja przez zmienne srodowiskowe - patrz serwer/README.md.
@@ -41,6 +42,7 @@ const openseoMcp = require('./openseo-mcp.js');
 const plany = require('./plany.js');
 const strona = require('./strona.js');
 const marka = require('./marka.js');
+const zadaniaWTle = require('./zadania.js');
 
 const KATALOG = __dirname;
 const APP = path.join(KATALOG, '..', 'app');
@@ -1673,7 +1675,26 @@ async function obsluz(req, res) {
   // Proxy - kazde wywolanie kosztuje, wiec przechodzi przez limit pakietu.
   // Czynnosc jest liczona dopiero po udanej odpowiedzi dostawcy: gdy generowanie
   // padnie na bledzie API, uzytkownik nie traci sztuki z pakietu.
-  if (req.method === 'POST') {
+  // Przerwij w aplikacji konczy zadanie w tle (serwer/zadania.js) - bez tego
+  // generowanie trwaloby dalej i liczylo sie do pakietu.
+  if (sciezka === '/api/zadanie/anuluj' && req.method === 'POST') {
+    let dane = {};
+    try { dane = JSON.parse((await czytajCialo(req, 4096)).toString('utf8')); } catch { /* puste cialo */ }
+    const id = /^[A-Za-z0-9_-]{8,64}$/.test(String(dane.id || '')) ? String(dane.id) : '';
+    return odpowiedzJson(res, 200, { ok: true, anulowane: zadaniaWTle.anuluj(sesja.login, id) });
+  }
+
+  const PROXY = new Set(['/api', '/api/images', '/api/tts', '/api/eleven-tts', '/api/transcribe']);
+  if (req.method === 'POST' && PROXY.has(sciezka)) {
+    // Ponowienie zadania po zerwanym polaczeniu (telefon w tle): wynik z pamieci
+    // albo czekanie na trwajace wywolanie - bez drugiego wywolania i liczenia.
+    const idZadania = zadaniaWTle.idZNaglowka(req);
+    const bylo = zadaniaWTle.znajdz(sesja.login, idZadania);
+    if (bylo) {
+      req.resume();
+      return zadaniaWTle.odbierz(bylo, res);
+    }
+
     const CZYNNOSCI = {
       '/api/images': 'grafika',
       '/api/tts': 'audio',
@@ -1688,27 +1709,33 @@ async function obsluz(req, res) {
       if (odmowa) return odpowiedzJson(res, 402, odmowa);
     }
 
-    try {
-      if (sciezka === '/api') return await proxyTresc(req, res, sesja, czynnosci);
-      if (sciezka === '/api/images') return await proxyGrafika(req, res, sesja);
-      if (sciezka === '/api/tts') return await proxyOpenAiJson(req, res, KONF.urlOpenai + '/audio/speech', sesja, 'audio', KONF.czasy.audio);
-      if (sciezka === '/api/transcribe') return await proxyTranskrypcja(req, res, sesja);
-      if (sciezka === '/api/eleven-tts') return await proxyEleven(req, res, sesja);
-    } catch (e) {
-      if (e instanceof KlientOdszedl) {
-        // Przegladarka zamknela polaczenie - wywolanie dostawcy przerwane,
-        // nic nie liczymy i nie ma komu odpowiadac.
-        console.log(`[proxy] ${sciezka}: klient odszedl, wywolanie dostawcy przerwane`);
-        return undefined;
+    const wykonaj = async (cel) => {
+      try {
+        if (sciezka === '/api') return await proxyTresc(req, cel, sesja, czynnosci);
+        if (sciezka === '/api/images') return await proxyGrafika(req, cel, sesja);
+        if (sciezka === '/api/tts') return await proxyOpenAiJson(req, cel, KONF.urlOpenai + '/audio/speech', sesja, 'audio', KONF.czasy.audio);
+        if (sciezka === '/api/transcribe') return await proxyTranskrypcja(req, cel, sesja);
+        if (sciezka === '/api/eleven-tts') return await proxyEleven(req, cel, sesja);
+      } catch (e) {
+        if (e instanceof KlientOdszedl) {
+          // Przegladarka zamknela polaczenie (albo Przerwij przy zadaniu w tle) -
+          // wywolanie dostawcy przerwane, nic nie liczymy i nie ma komu odpowiadac.
+          console.log(`[proxy] ${sciezka}: klient odszedl, wywolanie dostawcy przerwane`);
+          return undefined;
+        }
+        if (e instanceof BladCzasu) {
+          console.error(`[proxy] ${sciezka}: ${e.message}`);
+          return odpowiedzCzasu(cel, e);
+        }
+        if (e instanceof pliki.BladDanych) throw e;
+        console.error(`[proxy] ${sciezka}:`, e.message);
+        return odpowiedzJson(cel, 502, { error: 'Błąd połączenia z dostawcą API' });
       }
-      if (e instanceof BladCzasu) {
-        console.error(`[proxy] ${sciezka}: ${e.message}`);
-        return odpowiedzCzasu(res, e);
-      }
-      if (e instanceof pliki.BladDanych) throw e;
-      console.error(`[proxy] ${sciezka}:`, e.message);
-      return odpowiedzJson(res, 502, { error: 'Błąd połączenia z dostawcą API' });
-    }
+      return undefined;
+    };
+    // Z identyfikatorem zadanie idzie w tle: konczy sie mimo zerwanego polaczenia.
+    if (idZadania) return zadaniaWTle.odbierz(zadaniaWTle.uruchom(sesja.login, idZadania, req, wykonaj), res);
+    return wykonaj(res);
   }
 
   // Aplikacja i pliki statyczne
