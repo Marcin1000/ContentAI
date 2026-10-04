@@ -305,12 +305,285 @@ async function scenariuszBledow(b) {
   await e.k.close();
 }
 
+// ── Runda 4, wykonawca B: historia z trwalym id, kontekst artykulu, funkcje wyniku ──
+// Tresci zapytan do dostawcy zbierane, zeby sprawdzic, z jakiego kontekstu korzysta
+// funkcja: z artykulu czy z briefu.
+function zbieraczZapytan(s) {
+  const lista = [];
+  s.on('request', (r) => {
+    if (r.method() !== 'POST' || !/api\.anthropic\.com/.test(r.url())) return;
+    try { lista.push(r.postData() || ''); } catch (e) { /* bez ciala */ }
+  });
+  return {
+    lista,
+    ostatnie: (re) => [...lista].reverse().find((t) => re.test(t)) || '',
+    wyczysc: () => { lista.length = 0; },
+  };
+}
+async function czekajNaZapytanie(s, z, re, ms) {
+  const koniec = Date.now() + (ms || 20000);
+  while (Date.now() < koniec) { if (z.ostatnie(re)) return z.ostatnie(re); await s.waitForTimeout(150); }
+  throw new Error('nie doczekano zapytania ' + re);
+}
+
+async function scenariuszHistoriiR4(b) {
+  const { k, s, bledyJs } = await nowaStrona(b, 'pl', {});
+  const z = zbieraczZapytan(s);
+  const RE_TYT = /SEO title specialist/;
+
+  // ── kod-06: odznaczone dokumenty bazy nie ida do artykulu ──
+  await s.evaluate(() => {
+    addDoc('Notatka odznaczona', 'ZNACZNIK-ODZNACZONY-1 tresc dokumentu, ktorego autor nie chce w artykule.', '📄');
+    docs.forEach((d) => { d.selected = false; });
+    renderDocs();
+    keywords.length = 0; keywords.push('fraza-artykulu-a'); renderKws();
+    document.getElementById('extra').value = 'WYTYCZNA-A';
+  });
+  z.wyczysc();
+  await generuj(s, 'Pompy ciepla AAA', false);
+  await krok('R4 artykul A', czekajNaKoniec(s));
+  const artA = z.ostatnie(/expert content strategist|SEO and content writer/);
+  wynik('R4 kod-06: odznaczony dokument nie trafia do promptu artykulu', !!artA && artA.indexOf('ZNACZNIK-ODZNACZONY-1') === -1, artA ? 'znacznik w promptcie' : 'brak zapytania');
+  const etykieta = await s.evaluate(() => [(document.getElementById('kb-select-label') || {}).textContent || '', _t('sidebar-none-selected')]);
+  wynik('R4 kod-06: panel mowi, ze nic nie zaznaczone nie zostanie uzyte', etykieta[0] === etykieta[1], etykieta[0]);
+  const wpisA = await s.evaluate(() => ({ id: biezacyHist, mag: magazyn.getItem('cai_biezacy'), k: history[0].kontekst, ts: history[0].ts }));
+  wynik('R4 kod-09: wpis ma trwale id, cai_biezacy to id', typeof wpisA.id === 'string' && wpisA.id === wpisA.mag && !!wpisA.ts, JSON.stringify(wpisA).slice(0, 200));
+  wynik('R4 kod-08: wpis niesie kontekst artykulu (frazy, typ, jezyk, wytyczne)',
+    !!wpisA.k && (wpisA.k.frazy || []).join() === 'fraza-artykulu-a' && wpisA.k.jezyk === 'Polski' && !!wpisA.k.typ && wpisA.k.extra === 'WYTYCZNA-A', JSON.stringify(wpisA.k));
+
+  // ── kod-11: kontekst grafiki z artykulu A (tak jak przy otwarciu Grafiki) ──
+  await s.evaluate(() => { toggleImgPanel(); toggleImgPanel(); });
+  const grafA = await s.evaluate(() => document.getElementById('img-context').value);
+
+  // ── kod-08: brief opisuje juz nastepny tekst; Tytuly, SEO i AIO biora artykul ──
+  await s.evaluate(() => {
+    document.getElementById('topic').value = 'NOWY TEMAT W TOKU';
+    keywords.length = 0; keywords.push('nowa-fraza-briefu'); renderKws();
+    document.getElementById('lang').value = 'English';
+  });
+  z.wyczysc();
+  await s.evaluate(() => { openTitlesPanel(); });
+  const tyt = await czekajNaZapytanie(s, z, RE_TYT);
+  wynik('R4 kod-08: Tytuly z tematu i frazy artykulu, nie z briefu',
+    /Topic: Pompy ciepla AAA/.test(tyt) && /Main keyword: fraza-artykulu-a/.test(tyt) && !/NOWY TEMAT|nowa-fraza-briefu/.test(tyt) && /in Polish/.test(tyt), tyt.slice(0, 300));
+  await s.waitForTimeout(600);
+  await s.evaluate(() => closeTitlesModal());
+  await s.evaluate(() => { seoOpen = false; toggleSeoPanel(true); });
+  const seo = await czekajNaZapytanie(s, z, /content SEO expert evaluating/);
+  wynik('R4 kod-08: ocena SEO z tematu i fraz artykulu', /Temat: Pompy ciepla AAA/.test(seo) && /fraza-artykulu-a/.test(seo) && !/NOWY TEMAT/.test(seo), seo.slice(0, 200));
+  await s.evaluate(() => { aioOpen = false; toggleAioPanel(true); });
+  const aio = await czekajNaZapytanie(s, z, /AIO \(AI Overview Optimization\) expert/);
+  wynik('R4 kod-08: ocena AIO z tematu artykulu', /Pompy ciepla AAA/.test(aio) && !/NOWY TEMAT/.test(aio), aio.slice(0, 200));
+  await s.waitForTimeout(600);
+  await s.evaluate(() => { document.getElementById('lang').value = 'Polski'; });
+
+  // ── kod-08: napis ladowania Tytulow po bledzie wraca do "Generuje warianty" ──
+  const ladowanie = await s.evaluate(() => {
+    document.getElementById('titles-loading').textContent = 'STARY BLAD';
+    openTitlesPanel();
+    return [document.getElementById('titles-loading').textContent, _t('titles-loading')];
+  });
+  wynik('R4 kod-08: Tytuly przy otwarciu pokazuja napis ladowania, nie stary blad', ladowanie[0] === ladowanie[1], ladowanie[0]);
+  await s.waitForTimeout(800);
+  await s.evaluate(() => closeTitlesModal());
+
+  // ── kod-12: przerobka z calego artykulu, bez zrodel i meta; bez wyscigu ──
+  // LinkedIn odpowiada wolno, FAQ szybko: stara odpowiedz nie moze nadpisac nowej.
+  await s.route(/api\.anthropic\.com/, async (route) => {
+    const cialo = route.request().postData() || '';
+    if (/content repurposing specialist/.test(cialo) && /LinkedIn/.test(cialo)) await new Promise((ok) => setTimeout(ok, 2500));
+    return route.fallback();
+  });
+  const metaA = await s.evaluate(() => {
+    const art = document.getElementById('article');
+    const p = document.createElement('p'); p.textContent = 'dlugi tekst '.repeat(500) + ' ZNACZNIK-KONCA-ARTYKULU';
+    const meta = art.querySelector('.meta-box'); art.insertBefore(p, meta || null);
+    return ((art.querySelector('.meta-box p') || {}).textContent || '').trim();
+  });
+  z.wyczysc();
+  await s.evaluate(() => { runRepurpose('linkedin'); });
+  await s.waitForTimeout(300);
+  await s.evaluate(() => { runRepurpose('faq'); });
+  await s.waitForTimeout(4000);
+  const rp = await s.evaluate(() => ({ tytul: document.getElementById('repurpose-title').textContent, tekst: document.getElementById('repurpose-out').value }));
+  wynik('R4 kod-12: spozniona przerobka LinkedIn nie nadpisuje FAQ', /Q:/.test(rp.tekst), rp.tytul + ' | ' + rp.tekst.slice(0, 120));
+  const rpZap = z.ostatnie(/content repurposing specialist/);
+  wynik('R4 kod-12: przerobka dostaje koniec dlugiego artykulu, bez opisu meta',
+    rpZap.indexOf('ZNACZNIK-KONCA-ARTYKULU') !== -1 && (!metaA || rpZap.indexOf(metaA.slice(0, 60)) === -1) && /temat: Pompy ciepla AAA/.test(rpZap), rpZap.length + ' znakow');
+  await s.unroute(/api\.anthropic\.com/);
+
+  // ── Artykul B; kod-11: kontekst grafiki A nie przechodzi na B ──
+  await s.evaluate(() => { keywords.length = 0; renderKws(); document.getElementById('extra').value = ''; });
+  await generuj(s, 'Rowery elektryczne BBB', false);
+  await krok('R4 artykul B', czekajNaKoniec(s));
+  const grafPoB = await s.evaluate(() => document.getElementById('img-context').value);
+  await s.evaluate(() => { toggleImgPanel(); toggleImgPanel(); });
+  const grafB = await s.evaluate(() => document.getElementById('img-context').value);
+  wynik('R4 kod-11: grafika po nowym artykule nie opisuje poprzedniego', grafA.length > 20 && grafPoB === '' && /rower/i.test(grafB),
+    JSON.stringify({ a: grafA.slice(0, 40), poB: grafPoB.slice(0, 40), b: grafB.slice(0, 40) }));
+  z.wyczysc();
+  // Artykul angielski: prompt grafiki nie moze mowic "Article content (Polish".
+  await s.evaluate(() => { const j = jezykArtykulu; jezykArtykulu = 'en'; const o = imgBuildAIPrompt('Heat pumps at home', 'photo', '', 1024, 1024); jezykArtykulu = j; return o.then(() => '', () => ''); });
+  const graf = await czekajNaZapytanie(s, z, /expert art director/).catch(() => '');
+  wynik('R4 kod-11: prompt grafiki z jezykiem artykulu, nie na sztywno "Polish"', /Article content \(English/.test(graf), graf.slice(0, 200));
+
+  // ── kod-02: otwarcie A z Historii nie rusza briefu; kontekst A w Tytulach ──
+  await s.evaluate(() => { document.getElementById('topic').value = 'NOWY TEMAT W TOKU'; });
+  const idA = wpisA.id;
+  await s.evaluate((id) => otworzWGeneratorze(id), idA);
+  await s.waitForTimeout(500);
+  const poHist = await s.evaluate(() => ({ t: document.getElementById('topic').value, h1: ((document.querySelector('#article h1') || {}).textContent || ''), biez: biezacyHist }));
+  wynik('R4 kod-02: otwarcie wpisu z Historii nie nadpisuje tematu w briefie', poHist.t === 'NOWY TEMAT W TOKU' && /pomp|fraza-artykulu-a/i.test(poHist.h1) && poHist.biez === idA, JSON.stringify(poHist));
+  z.wyczysc();
+  await s.evaluate(() => { openTitlesPanel(); });
+  const tytA = await czekajNaZapytanie(s, z, RE_TYT);
+  wynik('R4 kod-08: Tytuly artykulu z Historii z jego tematu i frazy', /Topic: Pompy ciepla AAA/.test(tytA) && /fraza-artykulu-a/.test(tytA), tytA.slice(0, 200));
+  await s.waitForTimeout(600);
+  await s.evaluate(() => closeTitlesModal());
+
+  // ── kod-17: wybrana wersja w historii, osobne wyniki ocen, hash z calego tekstu ──
+  const wersja = await s.evaluate(() => {
+    const art = document.getElementById('article');
+    addVersion(htmlDoZapisu(art), 'A');
+    const kopia = art.cloneNode(true); kopia.querySelector('h1').textContent = 'WERSJA-DRUGA';
+    addVersion(kopia.innerHTML, 'B');
+    activeVersion = 0; // na ekranie jest wersja A
+    switchVersion(1);
+    const poB = wpisHistorii(biezacyHist).html.indexOf('WERSJA-DRUGA') !== -1;
+    seoCache = { articleHash: 1, result: {} };
+    switchVersion(0);
+    return { poB, poA: wpisHistorii(biezacyHist).html.indexOf('WERSJA-DRUGA') === -1, cache: seoCache,
+      hash: simpleHash('x'.repeat(600) + 'a') !== simpleHash('x'.repeat(600) + 'b'),
+      zapis: JSON.parse(magazyn.getItem('cai_history_v2')).find((h) => h.id === biezacyHist).html.indexOf('WERSJA-DRUGA') === -1 };
+  });
+  wynik('R4 kod-17: wybrana wersja trafia do wpisu historii i magazynu', wersja.poB && wersja.poA && wersja.zapis, JSON.stringify(wersja));
+  wynik('R4 kod-17: przelaczenie wersji zeruje cache ocen, hash z calego tekstu', wersja.cache === null && wersja.hash, JSON.stringify(wersja));
+
+  // ── kod-09: podglad na komputerze nie kasuje wersji; "Otworz" otwiera wlasciwy wpis ──
+  const idB = await s.evaluate(() => history[0].id);
+  await s.evaluate(() => { switchTab('history', document.querySelector('.tab[onclick*="history"]')); });
+  await s.evaluate((id) => previewHistory(id), idB);
+  const podglad = await s.evaluate(() => ({ wersje: versions.length, pasek: document.getElementById('versions-bar').classList.contains('show') }));
+  wynik('R4 kod-09: podglad Historii nie kasuje wersji artykulu w generatorze', podglad.wersje === 2 && podglad.pasek, JSON.stringify(podglad));
+  await s.evaluate((id) => previewHistory(id), idA);
+  await s.evaluate(() => { switchTab('generator', document.querySelector('.tab[onclick*="generator"]')); });
+  await generuj(s, 'Kawa w biurze CCC', false);
+  await krok('R4 artykul C', czekajNaKoniec(s));
+  await s.evaluate(() => document.getElementById('h-preview-otworz').click());
+  await s.waitForTimeout(500);
+  const otw = await s.evaluate(() => ({ h1: ((document.querySelector('#article h1') || {}).textContent || ''), biez: biezacyHist }));
+  wynik('R4 kod-09: "Otworz w generatorze" po nowym artykule otwiera podgladany wpis', otw.biez === idA && /pomp|fraza-artykulu-a/i.test(otw.h1), JSON.stringify(otw));
+
+  // ── kod-17: data we wpisie i usuwanie z potwierdzeniem ──
+  await s.evaluate(() => { switchTab('history', document.querySelector('.tab[onclick*="history"]')); renderHistory(); });
+  const meta = await s.evaluate(() => [(document.querySelector('#h-list-inner .h-item .h-item-meta') || {}).textContent || '', new Date().toLocaleString('pl-PL', { month: 'short' })]);
+  wynik('R4 kod-17: wpis historii pokazuje date, nie tylko godzine', meta[0].indexOf(meta[1]) !== -1 && /\d{2}:\d{2}/.test(meta[0]), meta[0]);
+  const przed = await s.evaluate(() => history.length);
+  await s.click('#h-list-inner .h-item[data-id="' + idA + '"] .h-usun');
+  await s.waitForTimeout(300);
+  const usun = await s.evaluate((id) => ({ n: history.length, jest: !!wpisHistorii(id), mag: JSON.parse(magazyn.getItem('cai_history_v2')).some((h) => h.id === id), biez: biezacyHist }), idA);
+  wynik('R4 kod-17: usuniecie wpisu (po potwierdzeniu) z listy i magazynu', usun.n === przed - 1 && !usun.jest && !usun.mag && usun.biez === null, JSON.stringify(usun));
+
+  // ── kod-10: bez obcinania dlugiego artykulu i dokumentu; pelny magazyn - komunikat ──
+  const zapis = await s.evaluate(() => {
+    history[0].html = '<h1>Dlugi</h1><p>' + 'slowo '.repeat(8000) + 'KONIEC-ARTYKULU</p>';
+    addDoc('Dlugi dokument', 'tekst '.repeat(12000) + 'KONIEC-DOKUMENTU', '📄');
+    saveState();
+    const h = JSON.parse(magazyn.getItem('cai_history_v2'))[0];
+    const d = JSON.parse(magazyn.getItem('cai_docs_v2')).find((x) => x.name === 'Dlugi dokument');
+    return { h: h.html.indexOf('KONIEC-ARTYKULU') !== -1, jezyk: h.jezyk, d: !!d && d.content.indexOf('KONIEC-DOKUMENTU') !== -1 };
+  });
+  wynik('R4 kod-10: dlugi artykul i dokument zapisane w calosci, z jezykiem wpisu', zapis.h && zapis.d && zapis.jezyk === 'pl', JSON.stringify(zapis));
+  const pelny = await s.evaluate(() => {
+    document.querySelectorAll('.powiadomienie').forEach((p) => p.remove());
+    for (let i = 0; i < 6; i++) history.push(Object.assign({}, history[0], { id: 'stary' + i, topic: 'Stary ' + i }));
+    const n = history.length;
+    const oryg = magazyn.setItem;
+    // Atrapa pelnego magazynu: historia miesci sie najwyzej w 3 wpisach.
+    magazyn.setItem = function (klucz, v) { if (klucz === 'cai_history_v2' && JSON.parse(v).length > 3) return false; return oryg.call(magazyn, klucz, v); };
+    try { saveState(); } finally { magazyn.setItem = oryg; }
+    return { przed: n, po: history.length, zapis: JSON.parse(magazyn.getItem('cai_history_v2')).length,
+      pow: [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent).join(' | ') };
+  });
+  wynik('R4 kod-10: pelny magazyn - najstarsze wpisy usuniete i komunikat', pelny.po === 3 && pelny.zapis === 3 && /historii/.test(pelny.pow), JSON.stringify(pelny));
+
+  // ── kod-14: wklejanie w Edytuj bez obcych stylow; zapis bez stylow ──
+  await s.evaluate(() => { switchTab('generator', document.querySelector('.tab[onclick*="generator"]')); otworzWGeneratorze(history[0].id); });
+  await s.waitForTimeout(300);
+  await s.evaluate(() => { if (!editMode) toggleEdit(); });
+  const wklej = await s.evaluate(() => {
+    const art = document.getElementById('article');
+    const p = art.querySelector('p');
+    const r = document.createRange(); r.selectNodeContents(p); r.collapse(false);
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    const dt = new DataTransfer();
+    dt.setData('text/html', '<span style="color:rgb(255,255,255);background-color:rgb(32,33,36);font-family:Comic Sans MS;font-size:28px">WKLEJONE-Z-PRZEGLADARKI</span><font color="red">CZERWONE</font><img src="https://obcy.example/x.png">');
+    dt.setData('text/plain', 'WKLEJONE-Z-PRZEGLADARKI CZERWONE');
+    p.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+    const wynikWklejenia = { jest: art.textContent.indexOf('WKLEJONE-Z-PRZEGLADARKI') !== -1, styl: art.querySelectorAll('[style]').length, font: art.querySelectorAll('font, img').length };
+    const sp = document.createElement('span'); sp.setAttribute('style', 'font-size: 17px; color: rgb(27, 26, 23)'); sp.textContent = 'STYL-PRZEGLADARKI';
+    p.appendChild(sp);
+    wynikWklejenia.zapisStyl = /style=/.test(htmlDoZapisu(art));
+    return wynikWklejenia;
+  });
+  wynik('R4 kod-14: wklejony HTML bez stylow, font i obrazkow z obcych stron', wklej.jest && !wklej.styl && !wklej.font, JSON.stringify(wklej));
+  wynik('R4 kod-14: zapis do historii i eksportu bez atrybutow style', !wklej.zapisStyl, JSON.stringify(wklej));
+  await s.evaluate(() => { if (editMode) toggleEdit(); });
+
+  // ── kod-13: szablony ustawiaja typ, ton i dlugosc (takze wlasna) ──
+  const szab = await s.evaluate(() => {
+    const st = () => ({ typ: document.getElementById('ctype').value, ton: document.getElementById('tone').value, dl: document.getElementById('length').value, wl: document.getElementById('length-custom').value });
+    applyTemplate(3); const landing = st();
+    applyLang('en'); applyTemplate(2); const faqEn = st(); applyLang('pl');
+    templates.push({ name: 'Stary EN', desc: '', topic: 'T', type: 'FAQ page', length: '~1200 words', tone: 'Expert' });
+    applyTemplate(templates.length - 1); const stary = st();
+    templates.pop();
+    return { landing, faqEn, stary };
+  });
+  wynik('R4 kod-13: szablon Landing page ustawia typ i ton (PL)', szab.landing.typ === 'Landing page copy' && szab.landing.ton === 'Ekspercki', JSON.stringify(szab.landing));
+  wynik('R4 kod-13: szablon FAQ w EN ustawia typ i ton', szab.faqEn.typ === 'FAQ page' && szab.faqEn.ton === 'Przyjazny', JSON.stringify(szab.faqEn));
+  wynik('R4 kod-13: wlasny szablon zapisany w EN ustawia ton i dlugosc wlasna w PL',
+    szab.stary.typ === 'FAQ page' && szab.stary.ton === 'Ekspercki' && szab.stary.dl === 'custom' && szab.stary.wl === '1200', JSON.stringify(szab.stary));
+
+  // ── UX4-10: Popraw bierze temat z okna (albo domyslny), nie stary temat briefu ──
+  await s.evaluate(() => {
+    document.getElementById('topic').value = 'STARY TEMAT BRIEFU';
+    openImproveModal();
+    document.getElementById('improve-input').value = 'Tekst ze strony firmy do poprawy. '.repeat(20);
+    document.getElementById('improve-topic').value = 'Temat z okna Popraw';
+  });
+  z.wyczysc();
+  await s.evaluate(() => { runImprove(); });
+  await krok('R4 Popraw', czekajNaKoniec(s));
+  const pop = z.ostatnie(/expert content strategist|SEO and content writer/);
+  const popBrief = await s.evaluate(() => document.getElementById('topic').value);
+  wynik('R4 UX4-10: Popraw pisze pod temat z okna, brief zostaje', /Temat z okna Popraw/.test(pop) && !/STARY TEMAT BRIEFU/.test(pop) && popBrief === 'STARY TEMAT BRIEFU',
+    popBrief + ' | ' + ((pop.match(/about: [^\\]{0,60}/) || [])[0] || ''));
+
+  wynik('R4 historia i kontekst: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r4-historia');
+  await k.close();
+
+  // ── UX4-06: interfejs EN przy pierwszym uruchomieniu - jezyk tekstu English ──
+  const e = await nowaStrona(b, 'en', {});
+  const jezykEn = await e.s.evaluate(() => document.getElementById('lang').value);
+  const wybor = await e.s.evaluate(() => {
+    const l = document.getElementById('lang'); l.value = 'Deutsch'; l.dispatchEvent(new Event('change'));
+    applyLang('pl'); applyLang('en');
+    return l.value;
+  });
+  wynik('R4 UX4-06: interfejs EN - jezyk tekstu English, wybor autora zostaje', jezykEn === 'English' && wybor === 'Deutsch', jezykEn + ' / ' + wybor);
+  wynik('R4 UX4-06: bez bledow JavaScript', !e.bledyJs.length, e.bledyJs.join(' | '));
+  await e.k.close();
+}
+
 (async () => {
   let b;
   try {
     b = await chromium.launch(process.env.CAI_CHROMIUM ? { executablePath: process.env.CAI_CHROMIUM } : {});
     await scenariuszStanu(b);
     await scenariuszBledow(b);
+    await scenariuszHistoriiR4(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
   } finally {

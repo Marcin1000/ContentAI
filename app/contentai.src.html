@@ -2635,6 +2635,11 @@ input[type="text"], input[type="url"], input[type="search"], input[type="email"]
 /* wynik grafiki: Pobierz / Ponow zawijaja sie */
 #img-result-wrap > div { flex-wrap: wrap; }
 .h-item-topic { overflow-wrap: anywhere; }
+/* R4 (kod-17): usuwanie wpisu historii - przycisk po prawej, pole dotyku 44 px. */
+#h-list-inner .h-item { position: relative; padding-right: 52px; }
+.h-usun { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); width: var(--h-dotyk, 44px); height: var(--h-dotyk, 44px); display: inline-flex; align-items: center; justify-content: center; padding: 0; background: none; border: 0; border-radius: var(--r-sm); color: var(--c-tekst-3); cursor: pointer; }
+.h-usun:focus-visible { color: var(--c-blad); background: var(--c-najazd); }
+@media (hover: hover) { .h-usun:hover { color: var(--c-blad); background: var(--c-najazd); } }
 /* ux 13: okna przy 320 px - szablony w jednej kolumnie, rzad przyciskow robots.txt zawija sie */
 @media (max-width: 359px) { .tpl-grid { grid-template-columns: minmax(0, 1fr); } }
 #trk-modal .btn-generate, .modal div[style*="display:flex"] > .btn-generate[style*="width:auto"] { max-width: 100%; white-space: normal; }
@@ -2988,10 +2993,10 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="field">
               <label for="tone" class="field-label" data-i18n="label-tone">Ton</label>
               <select id="tone">
-                <option data-i18n="opt-prof">Profesjonalny</option>
-                <option data-i18n="opt-expert">Ekspercki</option>
-                <option data-i18n="opt-friendly">Przyjazny</option>
-                <option data-i18n="opt-neutral">Neutralny</option>
+                <option value="Profesjonalny" data-i18n="opt-prof">Profesjonalny</option>
+                <option value="Ekspercki" data-i18n="opt-expert">Ekspercki</option>
+                <option value="Przyjazny" data-i18n="opt-friendly">Przyjazny</option>
+                <option value="Neutralny" data-i18n="opt-neutral">Neutralny</option>
               </select>
             </div>
             <div class="field">
@@ -3504,7 +3509,7 @@ document.addEventListener('DOMContentLoaded', function () {
           <div id="h-preview-placeholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--text3)">
             <div class="tekst-zwykly" data-i18n="history-select">Wybierz artykuł z listy</div>
           </div>
-          <div class="h-preview-akcje"><button type="button" class="btn-secondary" id="h-preview-otworz" hidden onclick="otworzWGeneratorze(Number(this.dataset.idx))" data-i18n="hist-otworz">Otwórz w generatorze</button></div>
+          <div class="h-preview-akcje"><button type="button" class="btn-secondary" id="h-preview-otworz" hidden onclick="otworzWGeneratorze(this.dataset.id)" data-i18n="hist-otworz">Otwórz w generatorze</button></div>
           <div class="article" id="h-preview-article" style="display:none"></div>
         </div>
       </div>
@@ -3957,6 +3962,9 @@ document.addEventListener('DOMContentLoaded', function () {
     <div style="padding:0 20px 14px;overflow-y:auto;flex:1">
       <p data-i18n="improve-modal-desc">Wklej istniejący artykuł ze strony firmy. Aplikacja przepisze go pod kątem SEO+AIO zachowując wszystkie fakty i informacje firmowe.</p>
       <textarea class="improve-textarea" id="improve-input" aria-label="Wklej tutaj treść artykułu do poprawy…" data-i18n-label="improve-ph" placeholder="Wklej tutaj treść artykułu do poprawy…" data-i18n="improve-ph" style="width:100%;resize:vertical;box-sizing:border-box"></textarea>
+      <!-- R4: temat poprawy podaje autor; brief moze opisywac zupelnie inny tekst. -->
+      <label for="improve-topic" class="field-label" style="display:block;margin-top:12px" data-i18n="improve-topic-label">Temat (opcjonalnie)</label>
+      <input type="text" id="improve-topic" placeholder="Poprawa artykułu" data-i18n="improve-topic-ph" style="width:100%;box-sizing:border-box" />
       <div style="display:flex;margin-top:10px">
         <button class="btn-generate" style="width:100%;justify-content:center" onclick="runImprove()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
@@ -4750,6 +4758,10 @@ var I18N = {
     'img-close':'Zamknij','img-remove-ref':'Usuń',
     // ── Sidebar status ──
     'sidebar-selected':'zaznaczonych - AI użyje tylko tych',
+    'sidebar-none-selected':'Nic nie zaznaczono - dokumenty z tej przeglądarki nie zostaną użyte',
+    'hist-usun':'Usuń wpis','hist-usun-pytanie':'Usunąć z historii artykuł "{t}"? Tego nie da się cofnąć.','hist-usuniety':'Wpis usunięty z historii.',
+    'msg-historia-przycieta':'Pamięć przeglądarki jest pełna. Usunięte najstarsze wpisy historii: {n}.',
+    'improve-topic-label':'Temat (opcjonalnie)','improve-topic-ph':'Poprawa artykułu',
     'sidebar-of':'z',
     'sidebar-add-link':'Dodaj link / URL',
     'sidebar-add-text':'Dodaj tekst ręcznie',
@@ -5063,7 +5075,7 @@ var I18N = {
     'btn-przerwij':'Przerwij','msg-przerwano':'Generowanie przerwane. Formularz jest bez zmian: możesz poprawić brief i spróbować ponownie.','badge-przerwane':'przerwane','spin-ponawiam-za':'Dostawca AI ogranicza zapytania: ponawiam za {s} s','spin-proba':'próba {n} z {m}','spin-ponawiam':'Ponawiam zapytanie…','spin-wznawiam':'Połączenie było przerwane. Odbieram wynik z serwera…',
     'badge-historia':'z historii','hist-otworz':'Otwórz w generatorze',
     'msg-blad-prefiks':'Błąd:','menu-wyloguj':'Wyloguj się','menu-wyloguj-sub':'zakończ sesję na tym urządzeniu',
-    'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Część dokumentów z bazy nie przetrwa odświeżenia - przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
+    'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Te dokumenty zapisano skrócone i po odświeżeniu będą krótsze: {lista}. Przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
     'ver-poprawiony-hybryda':'Poprawiony SEO+AIO','ver-poprawiony-aio':'Poprawiony AIO','ver-poprawiony-seo':'Poprawiony SEO','ver-wariant':'Wariant',
     'msg-artykul-uciety':'Tekst został ucięty na limicie długości. Zmniejsz długość albo wygeneruj ponownie.',
     'msg-cms-https':'Adres CMS musi zaczynać się od https://. Przeglądarka nie wysyła danych z tej aplikacji na adres http://.',
@@ -5449,6 +5461,10 @@ var I18N = {
     'img-close':'Close','img-remove-ref':'Remove',
     // ── Sidebar status ──
     'sidebar-selected':'selected - AI will use only these',
+    'sidebar-none-selected':'Nothing selected - documents from this browser will not be used',
+    'hist-usun':'Delete entry','hist-usun-pytanie':'Delete the article "{t}" from history? This cannot be undone.','hist-usuniety':'Entry deleted from history.',
+    'msg-historia-przycieta':'Browser storage is full. Oldest history entries removed: {n}.',
+    'improve-topic-label':'Topic (optional)','improve-topic-ph':'Article improvement',
     'sidebar-of':'of',
     'sidebar-add-link':'Add link / URL',
     'sidebar-add-text':'Add text manually',
@@ -5602,7 +5618,7 @@ var I18N = {
     'btn-przerwij':'Stop','msg-przerwano':'Generation stopped. The form is unchanged, so you can adjust the brief and try again.','badge-przerwane':'stopped','spin-ponawiam-za':'The AI provider is limiting requests: retrying in {s} s','spin-proba':'attempt {n} of {m}','spin-ponawiam':'Retrying the request…','spin-wznawiam':'The connection dropped. Collecting the result from the server…',
     'badge-historia':'from history','hist-otworz':'Open in generator',
     'msg-blad-prefiks':'Error:','menu-wyloguj':'Sign out','menu-wyloguj-sub':'end the session on this device',
-    'msg-magazyn-pelny':'Browser storage is full. Some knowledge base documents will not survive a refresh - move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
+    'msg-magazyn-pelny':'Browser storage is full. These documents were saved shortened and will be shorter after a refresh: {lista}. Move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
     'ver-poprawiony-hybryda':'Improved SEO+AIO','ver-poprawiony-aio':'Improved AIO','ver-poprawiony-seo':'Improved SEO','ver-wariant':'Variant',
     'msg-artykul-uciety':'The text was cut off at the length limit. Reduce the length or generate again.',
     'msg-cms-https':'The CMS address must start with https://. The browser does not send data from this app to an http:// address.',
@@ -5876,6 +5892,7 @@ function applyLang(lang) {
   try { if (typeof renderDocsMobile === 'function') renderDocsMobile(); } catch(e) {}
   try { if (typeof updateStats === 'function') updateStats(); } catch(e) {}
   try { if (typeof renderHistory === 'function') renderHistory(); } catch(e) {}
+  try { if (typeof ustawJezykTekstuDomyslny === 'function') ustawJezykTekstuDomyslny(); } catch(e) {}
   try { if (typeof updateSelectedInfo === 'function') updateSelectedInfo(); } catch(e) {}
   try { if (typeof renderHistoryFilters === 'function') renderHistoryFilters(); } catch(e) {}
   // Podpisy generatora grafik (ustawiane dynamicznie, bez data-i18n) - przetlumacz na biezacy jezyk
@@ -6110,6 +6127,67 @@ let history = [];
 // Wpis historii, ktory jest teraz w #article - tam trafiaja reczne poprawki
 // autora po wyjsciu z edycji. null = artykul spoza historii.
 let biezacyHist = null;
+// R4 (kod-09): wpisy historii maja trwale id. Indeks tablicy przesuwal sie po kazdym
+// nowym artykule, wiec podglad, "Otworz w generatorze" i reczne poprawki trafialy
+// w inny wpis. biezacyHist i cai_biezacy trzymaja id wpisu.
+function noweIdWpisu() {
+  return 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+// Liczba to dawny indeks tablicy (starsze wywolania i cai_biezacy sprzed zmiany).
+function wpisHistorii(id) {
+  if (id == null || id === '') return null;
+  if (typeof id === 'number') return history[id] || null;
+  return history.find(function (h) { return h.id === id; }) || null;
+}
+// Czas wpisu z data: same godziny nie odrozniaja wpisow z roznych dni (kod-17).
+function czasWpisu(h) {
+  if (!h || !h.ts) return (h && h.time) || '';
+  const d = new Date(h.ts), teraz = new Date();
+  const opcje = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
+  if (d.getFullYear() !== teraz.getFullYear()) opcje.year = 'numeric';
+  return d.toLocaleString(currentLang === 'en' ? 'en-GB' : 'pl-PL', opcje);
+}
+// R4 (kod-08): kontekst ARTYKULU (temat, frazy, typ, jezyk, ton, dlugosc, wytyczne)
+// zapisany przy generowaniu i we wpisie historii. Tytuly, oceny, przerobki, Dopracuj
+// i Luki czytaja go zamiast pol briefu: brief moze juz opisywac nastepny tekst albo
+// byc pusty po odswiezeniu. null = w generatorze nie ma artykulu.
+let kontekstArt = null;
+function nazwaJezykaZKodu(kod) {
+  return Object.keys(KODY_JEZYKOW).find(function (n) { return KODY_JEZYKOW[n] === kod; }) || '';
+}
+function kontekstZWpisu(h) {
+  const k = (h && h.kontekst) || {};
+  return {
+    temat: k.temat || (h && h.topic) || '', frazy: Array.isArray(k.frazy) ? k.frazy.slice() : [],
+    typ: k.typ || (h && h.type) || '', jezyk: k.jezyk || nazwaJezykaZKodu(h && h.jezyk),
+    ton: k.ton || '', dlugosc: k.dlugosc || '', extra: typeof k.extra === 'string' ? k.extra : null,
+  };
+}
+function kontekstArtykulu() {
+  const art = document.getElementById('article');
+  const h1El = art && art.querySelector('h1');
+  const h1 = h1El ? h1El.textContent.replace(/\s+/g, ' ').trim() : '';
+  const pole = function (id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  const k = kontekstArt;
+  if (!k) return { temat: pole('topic') || h1, h1: h1, frazy: keywords.slice(), typ: pole('ctype'), jezyk: pole('lang') || 'Polski', ton: pole('tone') };
+  return {
+    temat: k.temat || h1, h1: h1, frazy: (k.frazy || []).slice(), typ: k.typ || pole('ctype'),
+    jezyk: k.jezyk || nazwaJezykaZKodu(kodJezykaArtykulu()) || 'Polski', ton: k.ton || pole('tone'),
+  };
+}
+function jezykDlaModelu(nazwa) {
+  return ({ 'Polski': 'Polish', 'English': 'English', 'Deutsch': 'German', 'Čeština': 'Czech' })[nazwa] || 'Polish';
+}
+// Tekst artykulu dla modelu (przerobki): bez listy zrodel, opisu meta i elementow
+// tylko ekranowych, z rozsadnym limitem zamiast pierwszych 4000 znakow (kod-12).
+function tekstArtykuluDlaModelu(limit) {
+  const art = document.getElementById('article');
+  if (!art) return '';
+  const kopia = art.cloneNode(true);
+  kopia.querySelectorAll('.zrodla-box, .meta-box, [data-tylko-ekran]').forEach(function (el) { el.remove(); });
+  const tekst = tekstBlokami(kopia);
+  return limit && tekst.length > limit ? tekst.slice(0, limit) : tekst;
+}
 // Fragmenty bazy na serwerze, ktore dostal model przy pisaniu biezacego
 // artykulu. Kontrola faktow i linkow musi widziec te same zrodla co model.
 let ostatniaWiedzaSerwera = '';
@@ -7060,9 +7138,10 @@ function clearSelection() {
   renderDocs();
 }
 
+// R4 (kod-06): tylko zaznaczone. Wczesniej "nic nie zaznaczone" znaczylo "wszystkie",
+// wiec odznaczone dokumenty i tak szly do artykulu, Faktow i kontroli linkow.
 function getSelectedDocs() {
-  const anySelected = docs.some(d => d.selected);
-  return anySelected ? docs.filter(d => d.selected) : docs;
+  return docs.filter(d => d.selected);
 }
 
 // Dokumenty z obu miejsc: z tej przegladarki i (za serwerem) z bazy na
@@ -7082,7 +7161,7 @@ function renderDocs() {
   const label = document.getElementById('kb-select-label');
   if (docs.length > 0 && selectedCount < docs.length) {
     bar.classList.add('show');
-    label.textContent = selectedCount + ' ' + _t('sidebar-of') + ' ' + docs.length + ' ' + _t('sidebar-selected');
+    label.textContent = selectedCount ? selectedCount + ' ' + _t('sidebar-of') + ' ' + docs.length + ' ' + _t('sidebar-selected') : _t('sidebar-none-selected');
   } else {
     bar.classList.remove('show');
   }
@@ -7471,9 +7550,10 @@ async function runPostGenerationPremium() {
   const existingHtml = art.innerHTML;
   if (!existingHtml || existingHtml.trim().length < 100) return;
 
-  const topic   = document.getElementById('topic').value.trim() || 'artykuł';
-  const kwText  = keywords.length ? keywords.join(', ') : 'brak';
-  const ctype   = document.getElementById('ctype').value;
+  const ka      = kontekstArtykulu(); // kod-08: kontekst artykulu, nie briefu
+  const topic   = ka.temat || 'artykuł';
+  const kwText  = ka.frazy.length ? ka.frazy.join(', ') : 'brak';
+  const ctype   = ka.typ;
 
   // Pokaż spinner z komunikatem premium
   art.style.display = 'none';
@@ -7705,7 +7785,7 @@ async function generate(skipPremiumModal = false) {
   }
 
   try {
-    // Użyj tylko zaznaczonych źródeł (jeśli żadne nie zaznaczone - użyj wszystkich)
+    // Tylko zaznaczone zrodla (kod-06): nic nie zaznaczone = bez dokumentow z tej przegladarki.
     const activeDocs = getSelectedDocs();
     const files  = activeDocs.filter(d => d.icon !== '🔗' && d.icon !== '✏️');
     const urls   = activeDocs.filter(d => d.icon === '🔗');
@@ -8207,8 +8287,11 @@ ${html}`;
   const wordCount = currentText.split(/\s+/).filter(Boolean).length;
   // Do historii idzie artykul tak, jak go widac (ze zrodlami), bez elementow tylko ekranowych.
   history.unshift({ topic: topic || _t('hist-default-name'), type: ctype, words: wordCount, time: new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}), html: htmlDoZapisu(art), jezyk: KODY_JEZYKOW[lang] || '' });
-  biezacyHist = 0;
-  magazyn.setItem('cai_biezacy', '0');
+  // R4 (kod-08, kod-09, kod-17): trwale id, czas z data i kontekst artykulu we wpisie.
+  kontekstArt = { temat: topic, frazy: keywords.slice(0, 50), typ: ctype, jezyk: lang, ton: tone, dlugosc: length, extra: extra };
+  Object.assign(history[0], { id: noweIdWpisu(), ts: Date.now(), kontekst: kontekstArt });
+  biezacyHist = history[0].id;
+  magazyn.setItem('cai_biezacy', biezacyHist);
   // Lista historii i zapis po pierwszym malowaniu artykulu: w tym samym zadaniu
   // wydluzaly blokade watku na telefonie. Wpis i biezacyHist sa juz ustawione,
   // wiec nic po drodze nie czyta starego stanu.
@@ -8220,6 +8303,29 @@ ${html}`;
 function otworzWGeneratorze(i) {
   previewHistory._doGeneratora = true;
   previewHistory(i);
+}
+
+// R4 (kod-17): usuwanie wpisu historii po potwierdzeniu. Artykul otwarty w generatorze
+// zostaje na ekranie, ale reczne poprawki nie maja juz dokad trafic.
+function usunWpisHistorii(id) {
+  const h = wpisHistorii(id);
+  if (!h) return;
+  if (!window.confirm(_t('hist-usun-pytanie').replace('{t}', h.topic || ''))) return;
+  history = history.filter(function (x) { return x !== h; });
+  if (biezacyHist === h.id) { biezacyHist = null; magazyn.removeItem('cai_biezacy'); }
+  if (previewHistory._podglad === h.id) {
+    previewHistory._podglad = null;
+    const artEl = document.getElementById('h-preview-article');
+    const ph = document.getElementById('h-preview-placeholder');
+    const otw = document.getElementById('h-preview-otworz');
+    if (artEl) { artEl.innerHTML = ''; artEl.style.display = 'none'; }
+    if (ph) ph.style.display = 'flex';
+    if (otw) otw.hidden = true;
+  }
+  renderHistory();
+  saveState();
+  if (typeof odswiezUklad === 'function') odswiezUklad();
+  pokazPowiadomienie(_t('hist-usuniety'), 'ok');
 }
 
 function renderHistory() {
@@ -8239,9 +8345,10 @@ function renderHistory() {
     return;
   }
   inner.innerHTML = filtered.map((h, i) => `
-    <div class="h-item" data-idx="${h.origIdx}" onclick="previewHistory(${h.origIdx})">
+    <div class="h-item${h.id === previewHistory._podglad ? ' active' : ''}" data-id="${h.id}" onclick="previewHistory('${h.id}')">
       <div class="h-item-topic">${escapeHtml(h.topic)}</div>
-      <div class="h-item-meta">${escapeHtml(nazwaTypu(h.type))} · ~${h.words} ${_t('hist-words-suffix')} · ${h.time}</div>
+      <div class="h-item-meta">${escapeHtml(nazwaTypu(h.type))} · ~${h.words} ${_t('hist-words-suffix')} · ${escapeHtml(czasWpisu(h))}</div>
+      <button type="button" class="h-usun" onclick="event.stopPropagation();usunWpisHistorii('${h.id}')" title="${_t('hist-usun')}" aria-label="${_t('hist-usun')}">${ikona('trash-2', 'ikona-s')}</button>
     </div>`).join('');
   // Nie auto-ładuj artykułu przy zmianie filtra - użytkownik klika sam
 }
@@ -8249,10 +8356,12 @@ function renderHistory() {
 function previewHistory(i) {
   // Oznacz aktywny element na liście
   document.querySelectorAll('.h-item').forEach(el => el.classList.remove('active'));
-  const activeEl = document.querySelector(`.h-item[data-idx="${i}"]`);
-  if (activeEl) activeEl.classList.add('active');
-  const h = history[i];
+  const h = wpisHistorii(i);
   if (!h) return;
+  i = h.id;
+  previewHistory._podglad = i;
+  const activeEl = [...document.querySelectorAll('.h-item')].find(el => el.dataset.id === i);
+  if (activeEl) activeEl.classList.add('active');
 
   if (document.body.classList.contains('is-mobile') || previewHistory._doGeneratora) {
     previewHistory._doGeneratora = false;
@@ -8260,7 +8369,7 @@ function previewHistory(i) {
     // Tylko artykul zaladowany do generatora przyjmuje reczne poprawki - podglad
     // na komputerze nie moze zmieniac wpisu, ktorego autor nie edytuje.
     biezacyHist = i;
-    magazyn.setItem('cai_biezacy', String(i));
+    magazyn.setItem('cai_biezacy', i);
     // Na mobile: załaduj artykuł bezposrednio w zakladce Generator
     if (document.body.classList.contains('is-mobile')) switchMobileTab('generator');
     else switchTab('generator', document.querySelector('.tab[onclick*="generator"]'));
@@ -8271,6 +8380,8 @@ function previewHistory(i) {
     art.innerHTML = h.html ? oczyscHtmlModelu(h.html) : '<p style="color:var(--text3)">' + _t('msg-no-content') + '</p>';
     // Wpisy sprzed zapisu jezyka: jezyk rozpoznany z tresci.
     jezykArtykulu = h.jezyk || wykryjJezykTekstu(art.textContent);
+    // Kontekst tego artykulu dla Tytulow, ocen i przerobek (kod-08); brief zostaje nietkniety.
+    kontekstArt = kontekstZWpisu(h);
     uporzadkujArtykul(art);
     art.style.display = 'block';
     art.contentEditable = 'false';
@@ -8312,8 +8423,8 @@ function previewHistory(i) {
     activeVersion = -1;
     document.getElementById('versions-bar').classList.remove('show');
     document.getElementById('versions-bar').querySelectorAll('.ver-btn').forEach(el => el.remove());
-    const topicEl = document.getElementById('topic');
-    if (topicEl) topicEl.value = h.topic || '';
+    // R4 (kod-02): pole tematu zostaje - autor mogl juz zaczac brief nastepnego tekstu.
+    // Temat tego artykulu jest w kontekstArt.
     currentText = tekstBlokami(art);
     showArticleStats(h.html || '');
     seoCache = null; aioCache = null;
@@ -8338,28 +8449,10 @@ function previewHistory(i) {
   artEl.innerHTML = h.html ? oczyscHtmlModelu(h.html) : '<p style="color:var(--text3)">' + _t('msg-no-content') + '</p>';
   uporzadkujArtykul(artEl);
   const otw = document.getElementById('h-preview-otworz');
-  if (otw) { otw.hidden = false; otw.dataset.idx = String(i); }
-  // Zamknij panele SEO/AIO z poprzedniego artykułu (desktop i mobile)
-  seoOpen = false; aioOpen = false;
-  document.getElementById('seo-panel')?.classList.remove('show');
-  document.getElementById('aio-panel')?.classList.remove('show');
-  // Reset panelu linków
-  linksOpen = false;
-  const lpD = document.getElementById('links-panel');
-  if (lpD) lpD.style.display = 'none';
-  gapOpen = false;
-  const gpD = document.getElementById('gap-panel');
-  if (gpD) gpD.style.display = 'none';
-  gapCache = null;
-  gapBaseline = null;
-  gapSelectedTopics = [];
-  gapImproveCount = 0;
-  gapPreviousTopics = [];
-  // Reset wersji - historia ma tylko jedną wersję artykułu
-  versions = [];
-  activeVersion = -1;
-  document.getElementById('versions-bar').classList.remove('show');
-  document.getElementById('versions-bar').querySelectorAll('.ver-btn').forEach(el => el.remove());
+  if (otw) { otw.hidden = false; otw.dataset.id = i; }
+  // R4 (kod-09): podglad na komputerze nie dotyka generatora. Wczesniej zerowal tu
+  // wersje (pasek Oryginal/Poprawiony znikal), panele ocen, linkow i luk artykulu,
+  // ktory dalej czekal w zakladce Pisz. Stan generatora zmienia dopiero "Otworz w generatorze".
 }
 
 // ─── WYSZUKIWANIE W SIECI ────────────────────────────────────────────────────
@@ -9192,6 +9285,12 @@ function wyczyscStatystyki() {
 // generowania i przy wczytaniu wpisu z historii do generatora.
 function wyczyscStanArtykulu() {
   wyczyscStatystyki();
+  // R4: kontekst ustawia nowy artykul (kod-08); spozniona przerobka poprzedniego
+  // nie trafi do panelu (kod-12); kontekst grafiki wpisany z poprzedniego artykulu
+  // znika, wlasny tekst autora zostaje (kod-11).
+  kontekstArt = null;
+  if (typeof runRepurpose === 'function') runRepurpose.nr = (runRepurpose.nr || 0) + 1;
+  { const ic = document.getElementById('img-context'); if (ic && ic.value && ic.value === kontekstGrafiki.auto) ic.value = ''; kontekstGrafiki.auto = ''; }
   try { inspektorZamknij(); } catch (e) {}
   try { closeRepurposePanel(); } catch (e) {}
   const przerobka = document.getElementById('repurpose-out');
@@ -9338,11 +9437,32 @@ function czyscKopie(kopia) {
     box.querySelectorAll('[hidden]').forEach(function (el) { el.removeAttribute('hidden'); });
   });
   kopia.querySelectorAll('[contenteditable]').forEach(function (el) { el.removeAttribute('contenteditable'); });
+  // R4 (kod-14): wszystkie style poza tabelami - wklejone z innej strony (kolor, kroj,
+  // rozmiar) i doklejane przez przegladarke przy edycji szly do historii i eksportu.
   kopia.querySelectorAll('[style]').forEach(function (el) {
-    if (/var\(--/.test(el.getAttribute('style') || '')) el.removeAttribute('style');
+    if (/var\(--/.test(el.getAttribute('style') || '') || !el.closest('table')) el.removeAttribute('style');
   });
+  kopia.querySelectorAll('font').forEach(function (el) { el.replaceWith.apply(el, Array.from(el.childNodes)); });
   return kopia;
 }
+
+// R4 (kod-14): wklejanie w trybie Edytuj. Schowek z przegladarki niosl style strony
+// zrodlowej (kolor, tlo, kroj, rozmiar), znaczniki font i obrazki z obcych adresow.
+// HTML przechodzi przez ten sam filtr co odpowiedz modelu, a bez HTML idzie sam tekst.
+// Style, ktore przegladarka dokleja przy wstawianiu, zdejmujemy z nowych elementow.
+document.addEventListener('paste', function (e) {
+  const art = document.getElementById('article');
+  if (!art || !editMode || !e.target || !art.contains(e.target.nodeType === 1 ? e.target : e.target.parentNode)) return;
+  const dane = e.clipboardData;
+  if (!dane) return;
+  e.preventDefault();
+  const html = dane.getData('text/html');
+  const zStylem = new Set(art.querySelectorAll('[style]'));
+  if (html) document.execCommand('insertHTML', false, oczyscHtmlModelu(html));
+  else document.execCommand('insertText', false, dane.getData('text/plain') || '');
+  art.querySelectorAll('[style]').forEach(function (el) { if (!zStylem.has(el)) el.removeAttribute('style'); });
+  art.querySelectorAll('font').forEach(function (el) { el.replaceWith.apply(el, Array.from(el.childNodes)); });
+}, true);
 
 // Tresc artykulu do zapisu w historii i wersjach. Notatki autora (p[data-brak])
 // zostaja: to jego kopia robocza.
@@ -9916,15 +10036,18 @@ let _titlesCache = [];
 async function openTitlesPanel() {
   document.getElementById('titles-modal').classList.add('open');
   document.getElementById('titles-loading').style.display = 'block';
+  // Po bledzie zostawal tu komunikat poprzedniej proby (kod-08).
+  document.getElementById('titles-loading').textContent = _t('titles-loading');
   const listEl = document.getElementById('titles-list');
   listEl.style.display = 'none';
   listEl.innerHTML = '';
 
-  const topic   = document.getElementById('topic').value.trim() || 'temat';
-  const kwText  = keywords.length ? keywords.join(', ') : topic;
-  const ctype   = document.getElementById('ctype').value;
-  const langMap = { 'Polski':'Polish', 'English':'English', 'Deutsch':'German', 'Čeština':'Czech' };
-  const outLang = langMap[document.getElementById('lang')?.value] || 'Polish';
+  // R4 (kod-08): temat, frazy, typ i jezyk ARTYKULU, nie pol briefu.
+  const ka      = kontekstArtykulu();
+  const topic   = ka.temat || ka.h1 || 'temat';
+  const kwText  = ka.frazy.length ? ka.frazy.join(', ') : topic;
+  const ctype   = ka.typ;
+  const outLang = jezykDlaModelu(ka.jezyk);
 
   try {
     const res = await apiFetch({
@@ -9932,7 +10055,7 @@ async function openTitlesPanel() {
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 600,
         system: `You are an SEO title specialist. Generate exactly 5 H1 title variants in ${outLang} (write all titles in ${outLang} regardless of the language of the topic). Each title: under 65 chars, contains the main keyword naturally, targets a different search intent (informational, commercial, how-to, listicle, definition). Respond ONLY with a JSON array of 5 strings, no markdown.${blokDaty()}`,
-        messages: [{ role: 'user', content: `Topic: ${topic}\nMain keyword: ${kwText}\nContent type: ${ctype}\nOutput language: ${outLang}\n\nGenerate 5 H1 title variants in ${outLang}.` }]
+        messages: [{ role: 'user', content: `Topic: ${topic}\nMain keyword: ${kwText}\nContent type: ${ctype}\n${ka.h1 ? 'Current H1: ' + ka.h1 + '\n' : ''}Output language: ${outLang}\n\nGenerate 5 H1 title variants in ${outLang}.` }]
       })
     });
     const data = await res.json();
@@ -10432,7 +10555,8 @@ async function runGapAnalysis() {
 
   const articleText = (art.innerText || '').substring(0, 3000);
   const serpTopics  = [...serpData.topics, ...serpData.phrases].join(', ');
-  const kwText      = keywords.length ? keywords.join(', ') : document.getElementById('topic').value;
+  const kaLuki      = kontekstArtykulu();
+  const kwText      = kaLuki.frazy.length ? kaLuki.frazy.join(', ') : kaLuki.temat;
 
   try {
     const res = await apiFetch({
@@ -10495,10 +10619,10 @@ async function improveFromGaps() {
   ).filter(Boolean);
 
   const btn    = document.getElementById('gap-improve-btn');
-  const topic  = document.getElementById('topic').value.trim() || 'artykuł';
-  const kwText = keywords.length ? keywords.join(', ') : topic;
-  const langMap = { 'Polski':'Polish', 'English':'English', 'Deutsch':'German', 'Čeština':'Czech' };
-  const outLang = langMap[document.getElementById('lang')?.value] || 'Polish';
+  const ka     = kontekstArtykulu();
+  const topic  = ka.temat || 'artykuł';
+  const kwText = ka.frazy.length ? ka.frazy.join(', ') : topic;
+  const outLang = jezykDlaModelu(ka.jezyk);
   const kwSectionName = { 'Polish':'Kluczowe wnioski', 'English':'Key takeaways', 'German':'Wichtigste Erkenntnisse', 'Czech':'Klíčové poznatky' }[outLang];
 
   if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><span class="progress-spinner" style="display:inline-block"></span><span>' + _t('msg-spin-sections').replace('⏳','').trim() + '</span></span>'; }
@@ -10823,9 +10947,10 @@ function zapiszRecznePoprawki() {
   if (!art) return;
   const h = htmlDoZapisu(art);
   if (versions[activeVersion]) versions[activeVersion].html = h;
-  if (biezacyHist != null && history[biezacyHist]) {
-    history[biezacyHist].html = h;
-    history[biezacyHist].words = (art.innerText || '').split(/\s+/).filter(Boolean).length;
+  const wpis = wpisHistorii(biezacyHist);
+  if (wpis) {
+    wpis.html = h;
+    wpis.words = (art.innerText || '').split(/\s+/).filter(Boolean).length;
     saveState();
   }
 }
@@ -10840,6 +10965,10 @@ function switchVersion(i) {
   currentText = tekstBlokami(art);
   showArticleStats(versions[i].html);
   renderVersionsBar();
+  // R4 (kod-17): wybrana wersja trafia do wpisu historii (po odswiezeniu wraca ta sama),
+  // a oceny nie biora wyniku "(cache)" innej wersji.
+  seoCache = null; aioCache = null;
+  zapiszRecznePoprawki();
 }
 
 // ─── SEO ASSESSMENT ───────────────────────────────────────────────────────────
@@ -10857,7 +10986,8 @@ let aioCache = null;
 
 function simpleHash(str) {
   let h = 0;
-  for (let i = 0; i < Math.min(str.length, 500); i++) {
+  // Caly tekst (kod-17): dwie wersje z tym samym wstepem mialy wspolny wynik z cache.
+  for (let i = 0; i < str.length; i++) {
     h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
   }
   return h;
@@ -10881,8 +11011,9 @@ async function toggleSeoPanel(forceRefresh = false) {
   const metaElSeo = art.querySelector('.meta-box p');
   const metaText  = metaElSeo ? metaElSeo.innerText.trim() : '';
   const articleText = fullText + (metaText ? `\n\nMeta description: ${metaText}` : '');
-  const topic = document.getElementById('topic').value.trim();
-  const kwText = keywords.length ? keywords.join(', ') : 'brak - oceniaj ogólną jakość treści';
+  const ka = kontekstArtykulu();
+  const topic = ka.temat;
+  const kwText = ka.frazy.length ? ka.frazy.join(', ') : 'brak - oceniaj ogólną jakość treści';
 
   // Użyj cache jeśli artykuł się nie zmienił
   const currentHash = simpleHash(fullText);
@@ -10981,8 +11112,9 @@ async function toggleAioPanel(forceRefresh = false) {
 
   const art = document.getElementById('article');
   const articleText = art.innerText || '';
-  const topic = document.getElementById('topic').value.trim();
-  const kwText = keywords.length ? keywords.join(', ') : 'brak';
+  const ka = kontekstArtykulu();
+  const topic = ka.temat;
+  const kwText = ka.frazy.length ? ka.frazy.join(', ') : 'brak';
 
   // Użyj cache jeśli artykuł się nie zmienił
   const currentHashAio = simpleHash(articleText);
@@ -11075,16 +11207,33 @@ function openTemplates() {
 }
 function closeTplModal() { document.getElementById('tpl-modal').classList.remove('open'); document.getElementById('tpl-save-name').value=''; }
 
+// R4 (kod-13): typ, ton i dlugosc po wartosci opcji, nie po tlumaczonym tekscie.
+// Szablony zapisane wczesniej moga miec tekst w PL albo EN - te tez pasuja.
+function opcjaSzablonu(sel, wartosc) {
+  if (!sel || !wartosc) return null;
+  return [...sel.options].find(function (opt) {
+    const k = opt.getAttribute('data-i18n');
+    return opt.value === wartosc || (k && (I18N.pl[k] === wartosc || I18N.en[k] === wartosc));
+  }) || null;
+}
 function applyTemplate(i) {
   const t = templates[i];
   document.getElementById('topic').value = t.topic;
   const ctSel = document.getElementById('ctype');
-  for (const opt of ctSel.options) { if (opt.text === t.type) { ctSel.value = opt.value; break; } }
+  const ctOpt = opcjaSzablonu(ctSel, t.type);
+  if (ctOpt) { ctSel.value = ctOpt.value; if (typeof onContentTypeChange === 'function') onContentTypeChange(); }
   const lenSel = document.getElementById('length');
-  const targetWords = t.length.replace(/[^0-9]/g,'');
-  for (const opt of lenSel.options) { if (opt.value.includes(targetWords)) { lenSel.value = opt.value; break; } }
+  const targetWords = String(t.lengthCustom || t.length || '').replace(/[^0-9]/g, '');
+  const lenOpt = [...lenSel.options].find(function (opt) { return opt.value.replace(/[^0-9]/g, '') === targetWords; });
+  if (lenOpt) lenSel.value = lenOpt.value;
+  else if (targetWords) { lenSel.value = 'custom'; document.getElementById('length-custom').value = targetWords; }
+  // Bez toggleCustomLength: jego fokus na liczbie slow zabieralby fokus tematowi.
+  document.getElementById('length-custom').style.display = lenSel.value === 'custom' ? 'block' : 'none';
   const toneSel = document.getElementById('tone');
-  for (const opt of toneSel.options) { if (opt.text === t.tone) { toneSel.value = opt.value; break; } }
+  const toneOpt = opcjaSzablonu(toneSel, t.tone);
+  if (toneOpt) toneSel.value = toneOpt.value;
+  // Szkic briefu: zmiany z szablonu nie wywoluja zdarzen pol.
+  if (typeof zapiszSzkic === 'function') zapiszSzkic();
   closeTplModal();
   document.getElementById('topic').focus();
   document.getElementById('topic').select();
@@ -11094,6 +11243,8 @@ function saveTemplate() {
   const name = document.getElementById('tpl-save-name').value.trim();
   if (!name) return;
   const t = { name, desc:'Szablon niestandardowy', topic:document.getElementById('topic').value.trim()||'Temat', type:document.getElementById('ctype').value, length:getLengthLabel(), tone:document.getElementById('tone').value };
+  // Dlugosc wlasna jako liczba slow (kod-13): etykieta "~1200 words" zalezy od jezyka.
+  if (document.getElementById('length').value === 'custom') t.lengthCustom = parseInt(document.getElementById('length-custom').value, 10) || 800;
   templates.push(t);
   try { magazyn.setItem('cai-templates', JSON.stringify(templates.slice(DEFAULT_TEMPLATES.length))); } catch(e) {}
   openTemplates();
@@ -11249,9 +11400,9 @@ function rysujStartEkran() {
   kroki.hidden = ma; ost.hidden = !ma;
   if (!ma) { lista.innerHTML = ''; return; }
   lista.innerHTML = history.slice(0, 3).map(function (h, i) {
-    return '<button type="button" class="start-poz" onclick="otworzWGeneratorze(' + i + ')">' + ikona('file-text')
+    return '<button type="button" class="start-poz" onclick="otworzWGeneratorze(\'' + h.id + '\')">' + ikona('file-text')
       + '<span class="start-poz-temat">' + escapeHtml(h.topic || '') + '</span>'
-      + '<span class="start-poz-meta">' + escapeHtml(nazwaTypu(h.type)) + ' · ~' + (h.words || 0) + ' ' + _t('hist-words-suffix') + ' · ' + escapeHtml(h.time || '') + '</span></button>';
+      + '<span class="start-poz-meta">' + escapeHtml(nazwaTypu(h.type)) + ' · ~' + (h.words || 0) + ' ' + _t('hist-words-suffix') + ' · ' + escapeHtml(czasWpisu(h)) + '</span></button>';
   }).join('');
 }
 function odswiezUklad() { odswiezLiczniki(); odswiezPodsumowanie(); odswiezInspektor(); podpiszPasek(); rysujStartEkran(); }
@@ -11600,11 +11751,7 @@ function switchMobileTab(name) {
 
   if (name === 'image') {
     // Auto-load artykułu do kontekstu grafiki
-    const _art = document.getElementById('article');
-    const _ctx = document.getElementById('img-context');
-    if (_art && _art.innerText.trim() && _ctx && !_ctx.value) {
-      _ctx.value = _art.innerText.trim().substring(0, 800);
-    }
+    kontekstGrafiki(false);
     // Zamknij sidebar, SEO/AIO
     document.getElementById('mobile-sidebar').classList.remove('open');
     seoOpen = false; aioOpen = false;
@@ -11695,26 +11842,54 @@ function saveState() {
   // bazy) nie moze po cichu zablokowac zapisu artykulow. Wczesniej jeden
   // wspolny try konczyl sie na dokumentach i historia przepadala przy
   // odswiezeniu.
-  const historyToSave = history.slice(0, 30).map(h => ({
-    topic: h.topic, type: h.type, words: h.words, time: h.time,
-    html: (h.html || '').substring(0, 30000)
-  }));
-  let ok = magazyn.setItem(LS.HISTORY, JSON.stringify(historyToSave));
+  // R4 (kod-10): bez cichego obcinania. Wpis idzie w calosci (z jezykiem, id, data
+  // i kontekstem artykulu), dokument bazy tez. Gdy magazyn przegladarki jest pelny,
+  // wypadaja najstarsze wpisy historii - z komunikatem, ile ich bylo.
+  const wpisDoZapisu = h => ({
+    id: h.id, ts: h.ts, topic: h.topic, type: h.type, words: h.words, time: h.time,
+    html: h.html || '', jezyk: h.jezyk || '', kontekst: h.kontekst || null
+  });
+  const zapiszHistorie = (n) => magazyn.setItem(LS.HISTORY, JSON.stringify(history.slice(0, n).map(wpisDoZapisu)));
+  const mniej = (n, min) => Math.max(min, n - Math.max(1, Math.ceil(n / 10)));
+  let n = history.length;
+  let ok = zapiszHistorie(n);
+  while (!ok && n > 1) { n = mniej(n, 1); ok = zapiszHistorie(n); }
   magazyn.setItem(LS.GENCOUNT, String(genCount));
   magazyn.setItem(LS.COST, String(sessionCost));
   const docsToSave = docs.map(d => ({
-    name: d.name, icon: d.icon, words: d.words, selected: d.selected,
-    content: (d.content || '').substring(0, 50000) // max 50k znaków na dokument
+    name: d.name, icon: d.icon, words: d.words, selected: d.selected, url: d.url || null,
+    content: d.content || ''
   }));
-  if (!magazyn.setItem(LS.DOCS, JSON.stringify(docsToSave))) {
-    ok = false;
-    // Gdy pelne tresci sie nie mieszcza, zachowujemy chociaz liste dokumentow
-    // z krotszymi tresciami - lepsze to niz pusta baza po odswiezeniu.
-    magazyn.setItem(LS.DOCS, JSON.stringify(docsToSave.map(d => Object.assign({}, d, { content: d.content.substring(0, 4000) }))));
+  const zapiszDokumenty = (lista) => magazyn.setItem(LS.DOCS, JSON.stringify(lista));
+  let docsOk = zapiszDokumenty(docsToSave);
+  // Dokumenty sie nie mieszcza: miejsce zwalniaja najpierw najstarsze wpisy historii
+  // (5 najnowszych zostaje).
+  while (!docsOk && n > 5) { n = mniej(n, 5); zapiszHistorie(n); docsOk = zapiszDokumenty(docsToSave); }
+  if (n < history.length) {
+    const usuniete = history.length - n;
+    history = history.slice(0, n);
+    if (biezacyHist != null && !wpisHistorii(biezacyHist)) { biezacyHist = null; magazyn.removeItem('cai_biezacy'); }
+    try { renderHistory(); } catch (e) {}
+    pokazPowiadomienie(_t('msg-historia-przycieta').replace('{n}', usuniete), 'uwaga');
   }
-  if (!ok && !saveState._ostrzezono) {
-    saveState._ostrzezono = true;
-    pokazPowiadomienie(_t('msg-magazyn-pelny'), 'uwaga');
+  if (!docsOk) {
+    // Ostatecznosc: krotsze tresci, ale z komunikatem (ktore dokumenty) i z licznikiem
+    // slow tego, co naprawde zapisano. Do konca tej sesji dokument zostaje pelny.
+    let skrocone = [];
+    for (const limit of [20000, 4000]) {
+      skrocone = [];
+      const lista = docsToSave.map(d => {
+        if (d.content.length <= limit) return d;
+        skrocone.push(d.name);
+        const c = d.content.slice(0, limit);
+        return Object.assign({}, d, { content: c, words: c.split(/\s+/).filter(Boolean).length, skrocony: true });
+      });
+      if (zapiszDokumenty(lista)) break;
+    }
+    if (!saveState._ostrzezono) {
+      saveState._ostrzezono = true;
+      pokazPowiadomienie(_t('msg-magazyn-pelny').replace('{lista}', skrocone.join(', ') || '-'), 'uwaga', 12000);
+    }
   }
 }
 
@@ -11724,7 +11899,8 @@ function loadState() {
     if (savedDocs) {
       const parsed = JSON.parse(savedDocs);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        docs = parsed;
+        // Dokument bez pola selected (zapis sprzed zaznaczania) jest zaznaczony (kod-06).
+        docs = parsed.map(d => (d && d.selected === undefined) ? Object.assign(d, { selected: true }) : d);
         renderDocs();
       }
     }
@@ -11733,6 +11909,16 @@ function loadState() {
       const parsed = JSON.parse(savedHistory);
       if (Array.isArray(parsed) && parsed.length > 0) {
         history = parsed;
+        // R4 (kod-09): wpisy sprzed trwalych id dostaja id, cai_biezacy z indeksu na id.
+        // Zapis od razu - inaczej po nastepnym odswiezeniu id bylyby inne.
+        let noweId = false;
+        history.forEach(h => { if (h && !h.id) { h.id = noweIdWpisu(); noweId = true; } });
+        const ost = magazyn.getItem('cai_biezacy');
+        if (ost != null && /^\d+$/.test(ost) && !wpisHistorii(ost)) {
+          const w = history[parseInt(ost, 10)];
+          if (w) magazyn.setItem('cai_biezacy', w.id); else magazyn.removeItem('cai_biezacy');
+        }
+        if (noweId) magazyn.setItem(LS.HISTORY, JSON.stringify(history));
         genCount = parseInt(magazyn.getItem(LS.GENCOUNT) || '0');
         sessionCost = parseFloat(magazyn.getItem(LS.COST) || '0');
         updateCostDisplay();
@@ -11777,8 +11963,8 @@ function zapiszSzkic() {
     if (el) { el.addEventListener('input', plan); el.addEventListener('change', plan); }
   });
   window.addEventListener('pagehide', zapiszSzkic);
-  const ost = parseInt(magazyn.getItem('cai_biezacy'), 10);
-  if (!isNaN(ost) && history[ost]) {
+  const ost = wpisHistorii(magazyn.getItem('cai_biezacy'));
+  if (ost) {
     // Temat ze szkicu ma pierwszenstwo przed tematem artykulu - autor mogl
     // juz zaczac nastepny tekst.
     // Po wejsciu do aplikacji brief jest pusty (nowy tekst), a ostatni artykul
@@ -11786,11 +11972,19 @@ function zapiszSzkic() {
     // briefu; zostaje tylko temat nastepnego tekstu, jesli autor zaczal go pisac.
     const pokaz = () => {
       const temat = document.getElementById('topic').value;
-      const tematArtykulu = String(history[ost].topic || '').trim();
-      otworzWGeneratorze(ost);
+      const tematArtykulu = String(ost.topic || '').trim();
+      otworzWGeneratorze(ost.id);
       const nowyTemat = szkic && szkic.topic && szkic.topic.trim() !== tematArtykulu;
       document.getElementById('topic').value = nowyTemat ? temat : '';
-      if (!nowyTemat) { keywords.length = 0; if (typeof renderKws === 'function') renderKws(); zapiszSzkic(); }
+      if (!nowyTemat) {
+        // R4 (kod-15): frazy i Dodatkowe wytyczne, z ktorych powstal ten artykul, tez nie
+        // przechodza na nastepny. Zmienione juz po generowaniu (nowa praca) zostaja.
+        const k = ost.kontekst;
+        const ex = document.getElementById('extra');
+        if (!k || !Array.isArray(k.frazy) || k.frazy.join('\n') === keywords.join('\n')) { keywords.length = 0; if (typeof renderKws === 'function') renderKws(); }
+        if (ex && (!k || typeof k.extra !== 'string' || k.extra === ex.value.trim())) ex.value = '';
+        zapiszSzkic();
+      }
       // Obserwatory odznaki przelaczaja telefon na Wynik przy gotowym artykule;
       // przy samym wejsciu zostajemy na Briefie (po nich, stad setTimeout).
       setTimeout(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); window.scrollTo(0, 0); }, 0);
@@ -11798,6 +11992,20 @@ function zapiszSzkic() {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pokaz); else setTimeout(pokaz, 0);
   }
 })();
+
+// R4 (UX4-06): jezyk tekstu idzie za jezykiem interfejsu, dopoki autor sam go nie
+// wybierze. Interfejs EN pokazywal "Polski" (pierwsza opcja) i nowy uzytkownik
+// dostawal artykul po polsku. cai_lang_tekstu: '1' = wybor autora, 'auto' = ustawione tutaj.
+function ustawJezykTekstuDomyslny() {
+  const sel = document.getElementById('lang');
+  const stan = magazyn.getItem('cai_lang_tekstu');
+  if (!sel || stan === '1') return;
+  // Bez znacznika (zapis sprzed tej zmiany): inny jezyk niz Polski wybral autor.
+  if (stan !== 'auto' && sel.value !== 'Polski') { magazyn.setItem('cai_lang_tekstu', '1'); return; }
+  sel.value = currentLang === 'en' ? 'English' : 'Polski';
+  magazyn.setItem('cai_lang_tekstu', 'auto');
+}
+{ const selJezyka = document.getElementById('lang'); if (selJezyka) selJezyka.addEventListener('change', function () { magazyn.setItem('cai_lang_tekstu', '1'); }); }
 
 // Automatyczny zapis po każdej zmianie
 // (saveState() wywoływane bezpośrednio w addDoc i delDoc poniżej)
@@ -12568,11 +12776,15 @@ async function runRepurpose(format) {
   out.style.display = 'none';
   out.value = '';
 
-  const art = document.getElementById('article');
-  const articleText = art.innerText.substring(0, 4000);
-  const topic = document.getElementById('topic').value.trim();
+  // R4 (kod-12): caly artykul bez zrodel i meta (limit 20 000 znakow zamiast 4000);
+  // numer zadania - odpowiedz starszej przerobki nie nadpisze nowszej.
+  const nrPrzerobki = ++runRepurpose.nr;
+  const articleText = tekstArtykuluDlaModelu(20000);
+  // R4 (kod-08): temat i jezyk artykulu, nie briefu.
+  const kaRp = kontekstArtykulu();
+  const topic = kaRp.temat;
 
-  const _rpLang = ({ 'Polski':'Polish','English':'English','Deutsch':'German','Čeština':'Czech' })[document.getElementById('lang')?.value] || 'Polish';
+  const _rpLang = jezykDlaModelu(kaRp.jezyk);
   const prompts = {
     linkedin: `Napisz angażujący post na LinkedIn (max 1200 znaków) na podstawie artykułu.
 
@@ -12661,7 +12873,7 @@ WAŻNE: Zwróć TYLKO tekst landing page, gotowy do wklejenia.`
 
   const noKey = !maDostepDoApi();
   if (noKey) {
-    setTimeout(() => showRepurpose(_t('rp-source-missing')), 800);
+    setTimeout(() => { if (nrPrzerobki === runRepurpose.nr) showRepurpose(_t('rp-source-missing')); }, 800);
     return;
   }
 
@@ -12676,11 +12888,14 @@ WAŻNE: Zwróć TYLKO tekst landing page, gotowy do wklejenia.`
     });
     const d = await res.json();
     if (d.error) throw bladOdpowiedzi(d, res.status);
+    if (nrPrzerobki !== runRepurpose.nr) return;
     showRepurpose((d.content||[]).map(b=>b.text||'').join('').trim());
   } catch(e) {
+    if (nrPrzerobki !== runRepurpose.nr) return;
     showRepurpose(_t('msg-blad-prefiks') + ' ' + komunikatBleduApi(e));
   }
 }
+runRepurpose.nr = 0;
 
 function showRepurpose(text) {
   document.getElementById('repurpose-loading').style.display = 'none';
@@ -12771,6 +12986,7 @@ async function startBulkGenerate() {
 // ═══════════════════════════════════════════════════════════════════════
 function openImproveModal() {
   document.getElementById('improve-input').value = '';
+  { const it = document.getElementById('improve-topic'); if (it) it.value = ''; }
   document.getElementById('improve-modal').classList.add('open');
 }
 function closeImproveModal() { document.getElementById('improve-modal').classList.remove('open'); }
@@ -12789,8 +13005,13 @@ async function runImprove() {
   const tempDoc = { name: 'Istniejący artykuł do poprawy', content: existing, icon: '✍️', words: existing.split(/\s+/).length, selected: true };
   docs.unshift(tempDoc);
 
-  document.getElementById('topic').value = document.getElementById('topic').value || _t('improve-topic-default');
+  // R4 (UX4-10, kod-08): temat z okna Popraw albo domyslny, nie stary temat briefu.
+  // Temat briefu wraca po generowaniu (generate() czyta pole na starcie).
+  const tematBriefu = document.getElementById('topic').value;
+  document.getElementById('topic').value = (document.getElementById('improve-topic')?.value || '').trim() || _t('improve-topic-default');
   await generate();
+  // Okno samokorekty czeka na potwierdzenie i wtedy generate() czyta pole jeszcze raz.
+  if (!document.getElementById('premium-modal').classList.contains('open')) document.getElementById('topic').value = tematBriefu;
 
   // Przywróć bazę bez temp doca
   docs.shift();
@@ -14864,8 +15085,19 @@ function imgInit() {
 function imgLoadFromArticle() {
   const art = document.getElementById('article');
   if (!art || !art.innerText.trim()) { powiadomBlad(_t('msg-no-article')); return; }
-  document.getElementById('img-context').value = art.innerText.trim().substring(0, 800);
+  kontekstGrafiki(true);
 }
+
+// R4 (kod-11): kontekst grafiki z BIEZACEGO artykulu. Zapamietany tekst pozwala
+// wyczyscic pole przy nastepnym artykule (wyczyscStanArtykulu), gdy autor go nie zmienil -
+// wczesniej grafika do artykulu B opisywala artykul A.
+function kontekstGrafiki(wymus) {
+  const art = document.getElementById('article');
+  const ctx = document.getElementById('img-context');
+  if (!art || !ctx || !art.innerText.trim() || (ctx.value && !wymus)) return;
+  ctx.value = kontekstGrafiki.auto = tekstArtykuluDlaModelu().substring(0, 800);
+}
+kontekstGrafiki.auto = '';
 
 function openImgPanelSmart() {
   if (document.body.classList.contains('is-mobile')) {
@@ -14899,11 +15131,7 @@ function toggleImgPanel() {
   }
   if (!isOpen) {
     // Auto-load article context
-    const art = document.getElementById('article');
-    const ctx = document.getElementById('img-context');
-    if (art && art.innerText.trim() && ctx && !ctx.value) {
-      ctx.value = art.innerText.trim().substring(0, 800);
-    }
+    kontekstGrafiki(false);
   }
 }
 
@@ -15028,7 +15256,8 @@ async function imgBuildAIPrompt(context, brand, extra, w, h) {
     '- Keep under 250 words\n' +
     '- Output ONLY the prompt, no explanation';
 
-  const userMsg = `Article content (Polish, summarize visually):
+  const jezykKontekstu = jezykDlaModelu(nazwaJezykaZKodu(kodJezykaArtykulu()));
+  const userMsg = `Article content (${jezykKontekstu}, summarize visually):
 ${context.substring(0, 600)}
 
 Brand style: ${brandInstructions[brand] || brandInstructions.brand_color}

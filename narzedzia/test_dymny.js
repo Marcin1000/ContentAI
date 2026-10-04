@@ -277,12 +277,33 @@ async function wariantKeys(b) {
     ls: (() => { try { return localStorage.length; } catch (e) { return e.name; } })() }));
   wynik('keys: szkic formularza i artykul wracaja po odswiezeniu', st.t === 'Temat w trakcie pisania' && st.art === 'block', JSON.stringify(st));
   // Temat, z ktorego powstal ostatni artykul, nie wraca do briefu; start na Briefie.
-  await s.evaluate(() => { document.getElementById('topic').value = history[biezacyHist >= 0 ? biezacyHist : 0].topic; zapiszSzkic(); });
+  await s.evaluate(() => { document.getElementById('topic').value = (wpisHistorii(biezacyHist) || history[0]).topic; zapiszSzkic(); });
   await s.goto(adres, { waitUntil: 'load' });
   await krok('artykul po odswiezeniu bez starego tematu', s.waitForFunction(() => getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: 8000 }));
   await s.waitForTimeout(300);
   const st2 = await s.evaluate(() => ({ t: document.getElementById('topic').value, kw: keywords.length, wynik: document.body.classList.contains('widok-wynik') }));
   wynik('keys: po wejsciu brief pusty (temat artykulu nie wraca), widok Brief', st2.t === '' && st2.kw === 0 && !st2.wynik, JSON.stringify(st2));
+  // R4 kod-15: Dodatkowe wytyczne poprzedniego artykulu nie przechodza na nastepny tekst.
+  await s.fill('#extra', 'Wspomnij o promocji -20% WYTYCZNA-STARA');
+  await generuj(s, 'Artykul z wytyczna');
+  await krok('szkic z wytyczna zapisany', s.waitForFunction(() => { try { return JSON.parse(magazyn.getItem('cai_szkic') || '{}').extra.indexOf('WYTYCZNA-STARA') !== -1; } catch (e) { return false; } }, null, { timeout: 8000 }));
+  await s.goto(adres, { waitUntil: 'load' });
+  await krok('artykul z wytyczna po odswiezeniu', s.waitForFunction(() => getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: 8000 }));
+  await s.waitForTimeout(300);
+  const st3 = await s.evaluate(() => ({ t: document.getElementById('topic').value, extra: document.getElementById('extra').value }));
+  wynik('keys: R4 kod-15 po wejsciu wytyczne poprzedniego artykulu wyczyszczone', st3.t === '' && st3.extra === '', JSON.stringify(st3));
+  // R4 kod-02: otwarcie starszego wpisu z Historii (jak dotkniecie na telefonie) nie kasuje
+  // rozpoczetego briefu, takze po odswiezeniu.
+  await s.fill('#topic', 'NOWY TEMAT W TOKU');
+  await s.evaluate(() => { keywords.push('nowa fraza'); renderKws(); otworzWGeneratorze(history[history.length - 1].id); });
+  await s.waitForTimeout(600);
+  const st4 = await s.evaluate(() => document.getElementById('topic').value);
+  await s.goto(adres, { waitUntil: 'load' });
+  await krok('brief po historii i odswiezeniu', s.waitForFunction(() => getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: 8000 }));
+  await s.waitForTimeout(300);
+  const st5 = await s.evaluate(() => ({ t: document.getElementById('topic').value, kw: keywords.slice(), biez: biezacyHist, ost: history[history.length - 1].id }));
+  wynik('keys: R4 kod-02 wpis z Historii nie nadpisuje briefu (takze po odswiezeniu)',
+    st4 === 'NOWY TEMAT W TOKU' && st5.t === 'NOWY TEMAT W TOKU' && st5.kw.indexOf('nowa fraza') !== -1 && st5.biez === st5.ost, JSON.stringify({ st4, st5 }));
   wynik('keys (http): bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow > bledowPrzed) await zrzut(s, 'keys-odswiezenie');
   await k.close();
