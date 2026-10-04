@@ -38,6 +38,10 @@
  *                      bez poziomego przewijania, wyjscia poza ekran i uciec (brief, generator grafik, wynik)
  *   drugi-dotyk        telefon: drugie dotkniecie przycisku menu (zeby je zamknac) trafia w pozycje menu
  *                      i wysyla zapytanie do /api (platna akcja) albo nie zamyka menu
+ *   arkusz-wzor        telefon: arkusz od dolu (okno, menu grup, statystyki, Brief artykulu) bez wspolnego wzoru -
+ *                      naglowek 48 px z kreska, tytul 16 px, X 44 px 8 px od prawej krawedzi; pola i przyciski
+ *                      w kolumnie arkusza (8 px od krawedzi); opis i pola okna od lewej krawedzi tytulu;
+ *                      tekst pozycji menu w jednej linii (R4, agencja-ux UX4-01, 05, 10, 11)
  * Miekkie (informacyjne): nachodzi, kontrast (< AA, pelne tla), udzial artykulu, wysrodkowanie.
  *
  * Uzycie (z katalogu repozytorium, po zbudowaniu wariantow):
@@ -67,7 +71,7 @@ const PREFIKS = ARG.prefiks || 'uklad-';
 const TRYB_ZRZUTOW = ARG['zrzuty-tryb'] || (CI && !process.env.CAI_TEST_ZRZUTY ? 'brak' : 'nowe');
 const KONTRAST = ARG.kontrast !== '0';
 const TWARDE = ['panel-otwarty-sam', 'poziome', 'poza-ekran', 'przyciete', 'uciety-tekst', 'pasek-bez-wskazowki', 'fixed-fixed', 'zasloniety', 'ostatni-zasloniety', 'cel-dotyku', 'male-pismo',
-  'slowo-zlamane', 'ikona-przyklejona', 'niewysrodkowany', 'wynik-telefon', 'arkusz-skok', 'arkusz-luka', 'odznaka-duza', 'drugi-dotyk', 'tekst-120', 'pasek-przed-artykulem'];
+  'slowo-zlamane', 'ikona-przyklejona', 'niewysrodkowany', 'wynik-telefon', 'arkusz-skok', 'arkusz-luka', 'odznaka-duza', 'drugi-dotyk', 'tekst-120', 'pasek-przed-artykulem', 'arkusz-wzor'];
 
 let chromium;
 try { ({ chromium } = require('playwright')); }
@@ -86,7 +90,7 @@ function rozwin(lista) { return lista.split(',').flatMap((x) => MACIERZ[x.trim()
 // ekrany: start, brief, wynik po generowaniu z SERP, arkusze, grafika, Baza i Historia. Pelna macierz: bez --ci.
 const ZESTAW_CI = ['320x568', '412x700', '768x1024', '1280x720'];
 const EKRANY_CI = ['start', 'brief-zaawansowane', 'menu-brief', 'wynik', 'wynik-bez-paneli', 'wynik-przewiniety', 'ocen-seo', 'arkusz-wysokosc', 'ocen-aio',
-  'fakty', 'menu-tworz', 'menu-wiecej', 'menu-eksport', 'grafika', 'wynik-dlugi', 'wynik-dlugi-tabela', 'wynik-dlugi-zrodla', 'baza', 'historia', 'historia-podglad', 'tekst-120'];
+  'fakty', 'menu-tworz', 'menu-wiecej', 'menu-eksport', 'arkusze', 'grafika', 'wynik-dlugi', 'wynik-dlugi-tabela', 'wynik-dlugi-zrodla', 'baza', 'historia', 'historia-podglad', 'tekst-120'];
 const ROZMIARY = rozwin(ARG.rozmiary || (CI ? ZESTAW_CI.join(',') : 'telefon,tablet,komputer'));
 const MOTYWY = (ARG.motywy || (CI ? 'ciemny' : 'ciemny,jasny')).split(',');
 const EN = ARG.en === 'brak' ? [] : rozwin(ARG.en || (CI ? '1920x1080' : '390x844,1440x900'));
@@ -599,6 +603,52 @@ const FIKSTURA_ZRODLA = [
   ['https://www.serwis-kulturalny.pl/rekonstrukcja-cyfrowa-klasyki', 'Rekonstrukcja cyfrowa klasyki: co zyskujemy, a co tracimy', 'June 12, 2025'],
 ];
 
+// R4 (UX4-01, 05, 10, 11): otwarty arkusz na telefonie jednym wzorem. Zwraca liste odstepstw.
+function pomiarArkusza() {
+  const vis = (e) => !!e && e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden' && getComputedStyle(e).display !== 'none';
+  const tekstX = (e) => {
+    const w = document.createTreeWalker(e, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.textContent.trim() ? 1 : 2) });
+    const n = w.nextNode(); if (!n) return null;
+    const r = document.createRange(); r.selectNodeContents(n); return r.getBoundingClientRect().left;
+  };
+  const opis = (e) => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + ' "' + (e.innerText || e.placeholder || '').trim().slice(0, 24) + '"';
+  const a = [...document.querySelectorAll('.grupa-menu.open, .overlay.open > .modal, .overlay[style*="flex"] > .modal, .brief-panel.show, body.statystyki-otwarte #article-stats')].filter(vis).pop();
+  if (!a) return { arkusz: null, bledy: ['brak otwartego arkusza'] };
+  const A = a.getBoundingClientRect(), bledy = [];
+  const glowa = a.querySelector(':scope > .arkusz-tytul, :scope > .modal-head, :scope > .brief-panel-glowa');
+  let tytulX = null;
+  if (!glowa || !vis(glowa)) bledy.push('brak naglowka z tytulem i X');
+  else {
+    const G = glowa.getBoundingClientRect();
+    if (Math.abs(G.height - 48) > 1) bledy.push('naglowek ' + Math.round(G.height) + ' px (48)');
+    if (parseFloat(getComputedStyle(glowa).borderBottomWidth) < 1) bledy.push('naglowek bez kreski');
+    const t = glowa.querySelector('h3, strong, span');
+    const fs = t ? parseFloat(getComputedStyle(t).fontSize) : 0;
+    if (fs !== 16) bledy.push('tytul ' + fs + ' px (16)');
+    tytulX = t ? tekstX(t) : null;
+    const x = glowa.querySelector('button');
+    if (!x) bledy.push('brak X');
+    else {
+      const X = x.getBoundingClientRect(), wc = A.right - X.right;
+      if (X.width < 44 || X.height < 44 || wc < 7 || wc > 10) bledy.push('X ' + Math.round(X.width) + 'x' + Math.round(X.height) + ' px, ' + Math.round(wc) + ' px od prawej (8)');
+    }
+  }
+  const poza = [...a.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]), textarea, select, button, a[href], p')]
+    .filter((e) => vis(e) && !(glowa && glowa.contains(e)))
+    .filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && (r.right > A.right - 7.5 || r.left < A.left + 7.5); });
+  for (const e of poza.slice(0, 3)) { const r = e.getBoundingClientRect(); bledy.push('poza kolumna: ' + opis(e) + ' ' + Math.round(r.left) + '..' + Math.round(r.right) + ' w ' + Math.round(A.left) + '..' + Math.round(A.right)); }
+  if (a.classList.contains('modal') && tytulX !== null) {
+    const wciete = [...a.querySelectorAll('p, textarea')].filter((e) => vis(e) && !e.closest('.tpl-card, .title-opt, .toggle-row, .rozwijka, [id$="-wynik"]'))
+      .filter((e) => Math.abs(e.getBoundingClientRect().left - tytulX) > 1.5);
+    for (const e of wciete.slice(0, 2)) bledy.push('lewa krawedz ' + opis(e) + ' ' + Math.round(e.getBoundingClientRect().left) + ', tytul ' + Math.round(tytulX));
+  }
+  if (a.classList.contains('grupa-menu')) {
+    const xs = [...a.querySelectorAll('button, .repurpose-item, .poz-menu')].filter((e) => vis(e) && !e.closest('.arkusz-tytul')).map(tekstX).filter((x) => x !== null);
+    if (xs.length > 1 && Math.max(...xs) - Math.min(...xs) > 1.5) bledy.push('tekst pozycji menu od ' + Math.round(Math.min(...xs)) + ' do ' + Math.round(Math.max(...xs)) + ' px');
+  }
+  return { arkusz: (a.id || a.parentElement.id || a.className).toString().slice(0, 40), bledy };
+}
+
 async function uspokoj(s, ms = 250) {
   await s.waitForTimeout(ms);
   await s.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running' || !isFinite(((a.effect && a.effect.getComputedTiming()) || {}).endTime)), null, { timeout: 2500 }).catch(() => {});
@@ -895,6 +945,34 @@ async function przebieg(b, srod, rozmiar, motyw, jezyk, zbior) {
     await drugiDotyk('menu-eksport', `.pasek-akcje button[onclick="przelaczGrupe('pobierz')"]`);
   });
   await reset();
+  // R4: arkusze od dolu jednym wzorem (naglowek, X, kolumna tresci) - okna z Briefu i Konta, menu grup, statystyki
+  if (telefon) {
+    await krok('arkusze', async () => {
+      const sprawdz = async (nazwa) => {
+        await uspokoj(s, 350);
+        const m = await s.evaluate(pomiarArkusza);
+        if (m.bledy.length) ustalenie('arkusze', 'arkusz-wzor', nazwa, { arkusz: m.arkusz, bledy: m.bledy });
+        else console.log(`  ${tag.padEnd(22)} ${'arkusze'.padEnd(22)} ${nazwa}: wzor ok`);
+        await s.evaluate(() => { try { closeVoiceSettings(); } catch (e) { /* brak */ } });
+        await reset();
+      };
+      await widok('brief');
+      for (const [nazwa, fn] of [['szablony', 'openTemplates'], ['tematy', 'otworzTematy'], ['grupowe', 'openBulkModal'], ['popraw', 'openImproveModal'],
+        ['glos-marki', 'openBvModal'], ['cms', 'openWpModal'], ['asystent', 'openVoiceSettings']]) {
+        await s.evaluate((f) => { try { if (typeof window[f] === 'function') window[f](); } catch (e) { /* brak w wariancie */ } }, fn);
+        await sprawdz(nazwa);
+      }
+      await klik(s, '#grupa-brief-wrap > button', dotyk); await sprawdz('menu-brief');
+      await s.evaluate(() => { try { openBriefPanel(); } catch (e) { /* brak */ } });
+      await s.waitForFunction(() => !document.querySelector('#brief-content .seo-loading'), null, { timeout: 30000 }).catch(() => {});
+      await sprawdz('brief-artykulu');
+      await widok('wynik');
+      for (const g of ['tworz', 'pobierz', 'wiecej']) { await klik(s, `.pasek-akcje button[onclick="przelaczGrupe('${g}')"]`, dotyk); await sprawdz('menu-' + g); }
+      await s.evaluate(() => { try { przelaczStatystyki(true); } catch (e) { /* brak */ } }); await sprawdz('statystyki');
+      await s.evaluate(() => { try { przelaczStatystyki(false); } catch (e) { /* brak */ } });
+    });
+    await reset();
+  }
   // dlugi artykul z tabela i 12 zrodlami (przez historie i "Otworz w generatorze")
   await krok('wynik-dlugi', async () => {
     await s.evaluate(({ extra, zr }) => {

@@ -213,6 +213,20 @@ async function wariantKeys(b) {
   s.off('request', liczBrief);
   await s.evaluate(() => closeBriefPanel());
 
+  // R4 (UX4-04, UX4-07): przelaczniki SERP i AEO w tresci ustawien zaawansowanych (z odstepami),
+  // Zrodla i ustawienia nie siedza w polu Dodatkowe wytyczne; skrot statystyk odmienia "slowo" jak arkusz.
+  const uklad = await s.evaluate(async () => {
+    const tresc = document.querySelector('#brief-zaawansowane > .zaawansowane-tresc');
+    const w = { serp: !!(tresc && tresc.contains(document.getElementById('use-serp'))), aeo: !!(tresc && tresc.contains(document.getElementById('use-aeo'))),
+      zrodla: !document.querySelector('.field.zrodla').parentElement.closest('.field'), szczegoly: !document.getElementById('brief-zaawansowane').parentElement.closest('.field') };
+    const el = document.getElementById('stat-words'), przed = el.textContent;
+    for (const n of [833, 851, 1]) { ustawLiczbeStatystyki('stat-words', n); await new Promise((r) => setTimeout(r, 30)); w[n] = document.getElementById('stat-skrot-tekst').textContent.split(' · ')[0]; }
+    ustawLiczbeStatystyki('stat-words', przed);
+    return w;
+  });
+  wynik('keys: SERP i AEO w tresci ustawien zaawansowanych, Zrodla poza polem wytycznych', uklad.serp && uklad.aeo && uklad.zrodla && uklad.szczegoly, JSON.stringify(uklad));
+  wynik('keys: skrot statystyk z odmiana jak w arkuszu (833 słowa)', uklad[833] === '833 słowa' && uklad[851] === '851 słów' && uklad[1] === '1 słowo', JSON.stringify(uklad));
+
   // Ucieta samokorekta (max_tokens przy poprawie) nie zastepuje pelnego artykulu.
   await s.fill('#topic', 'Temat premium [atrapa:ocena=55@ocena-premium] [atrapa:max-tokens@poprawa]');
   await s.evaluate(() => { document.getElementById('use-web').checked = true; premiumMode = true; generate(true); });
