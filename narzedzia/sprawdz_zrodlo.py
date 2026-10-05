@@ -1163,6 +1163,20 @@ KONTROLE += [
      "akapitPdf.unbreakable = true;", None, None),
     ("R6-F/regula-frazy", "E-19: fraza kluczowa nie jako sztuczny podmiot zdania (generowanie i poprawa samokorekty)",
      "system: editorSysPelny + '\\n' + REGULA_FRAZY_PODMIOTU,", None, None),
+    # R7-H (runda 7, wykonawca H): pasek wyniku na komputerze w jednym wierszu, bez plakietki na pustym ekranie.
+    ("R7-H/pasek-jeden-wiersz", "komputer: pasek wyniku nie zawija sie do drugiego wiersza",
+     "body:not(.is-mobile) .output-bar { flex-wrap: nowrap; }", None, None),
+    ("R7-H/ikony-po-kolei", "brak miejsca: przyciski paska traca podpisy po jednym, od najmniej waznego (nie wszystkie ponizej 1280 px)",
+     "const ZWIJANE = ['#copy-btn', '#grupa-tworz-wrap > .btn-secondary', '#grupa-ocen-wrap > .btn-secondary',",
+     "body:not(.is-mobile) .pasek-akcje > .btn-secondary span { font-size: 0; }", None),
+    ("R7-H/pasek-jak-kartka", "krawedzie paska wyniku na krawedziach kartki artykulu",
+     "html.style.setProperty('--kolumna-paska', kol);", None, None),
+    ("R7-H/bez-plakietki-pusty", "pusty ekran bez 'gotowy do generowania' i bez pustego paska wyniku",
+     'body:not(.is-mobile) #out-badge[data-i18n="badge-ready"] { display: none; }', None, None),
+    ("R7-H/plakietka-kropka", "plakietka tylko dla stanow wartych uwagi (generowanie, blad, przerwane) z kropka; gotowe dla czytnika",
+     'body:not(.is-mobile) #out-badge:is(.ready, [data-i18n="badge-done"]) { position: absolute;', None, None),
+    ("R7-H/wersje-komputer", "komputer: dwie wersje jako Przed | Po, od trzech lista wyboru (#ver-select jak na telefonie)",
+     "body:not(.is-mobile) .versions-bar.wiele-wersji .ver-wybor {", None, None),
 ]
 
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi

@@ -2487,6 +2487,9 @@ body.is-mobile .ver-wybor:has(select:focus-visible) { box-shadow: 0 0 0 2px var(
 /* ── R7-H: komputer, pasek wyniku w jednym wierszu (Marcin: wersje i plakietka w jednym wierszu, przyciski
    w drugim; na pustym ekranie samotne "gotowy do generowania"). Telefon bez zmian (wiersz meta R3-07). ── */
 body:not(.is-mobile) .output-bar { flex-wrap: nowrap; }
+/* krawedzie paska na krawedziach kartki: --kolumna-wyniku w ch liczyla sie drobniejszym pismem paska,
+   wiec pasek byl o ok. 90 px wezszy od kartki (--kolumna-paska = szerokosc kartki, pasekWJednymWierszu) */
+body:not(.is-mobile) .output-bar { padding-inline: max(var(--s-16), calc((100% - var(--kolumna-paska, var(--kolumna-wyniku))) / 2)); }
 body:not(.is-mobile) .pasek-akcje { flex: 0 1 auto; }
 /* plakietka: "gotowy do generowania" nie ma jej wcale, a pusty pasek (przed generowaniem, po Nowym artykule)
    nie zajmuje miejsca. "gotowe" i "z historii" tylko dla czytnika - artykul pod paskiem mowi to sam. */
@@ -2498,12 +2501,10 @@ body:not(.is-mobile) #out-badge::before { content: ""; flex: none; width: 6px; h
 body:not(.is-mobile) #out-badge.running::before { animation: kropka-puls 1.2s var(--e-std) infinite; }
 body:not(.is-mobile) #out-badge:is([data-i18n="badge-error"], [data-i18n="badge-nokey"]) { background: var(--c-blad-tlo); color: var(--c-blad); border-color: var(--c-blad-ramka); }
 @media (prefers-reduced-motion: reduce) { body:not(.is-mobile) #out-badge.running::before { animation: none; } }
-/* dwie wersje samokorekty: zwarty segment "Przed | Po" z podpisem (pelna nazwa w title i aria-label, wynikTelefonu) */
+/* dwie wersje samokorekty: zwarty segment "Przed | Po" (pelna nazwa w title i aria-label, wynikTelefonu) */
 body:not(.is-mobile) .versions-bar.show { flex: none; align-items: center; }
 body:not(.is-mobile) .versions-bar .ver-btn .ver-pelna { display: none; }
 body:not(.is-mobile) .versions-bar .ver-btn .ver-krotka { display: inline; }
-body:not(.is-mobile) .output-bar:not(.bez-podpisu-wersji) .versions-bar.wersje-samokorekty:not(.wiele-wersji) .ver-podpis { display: inline; padding: 0 var(--s-6) 0 var(--s-8);
-  font-size: var(--t-xs); color: var(--c-tekst-3); white-space: nowrap; }
 body:not(.is-mobile) .versions-bar .ver-btn { white-space: nowrap; }
 /* od trzech wersji: przycisk z nazwa biezacej wersji, wybor w systemowej liscie (ten sam #ver-select co na telefonie) */
 body:not(.is-mobile) .versions-bar.show.wiele-wersji { padding: 0; background: transparent; }
@@ -12659,9 +12660,9 @@ document.addEventListener('keydown', function (e) {
 })();
 
 // R7-H: komputer - pasek wyniku zawsze w jednym wierszu. Gdy wersje i przyciski sie nie mieszcza,
-// najpierw znika podpis "Samokorekta" przy "Przed | Po", potem przyciski traca podpisy po jednym,
-// od najmniej waznego (Kopiuj, Tworz, Ocen, Wiecej, Eksport, Edytuj). Podpis zostaje w title i dla
-// czytnika. Liczone z pomiaru, nie z progow szerokosci: brief, inspektor, Baza i jezyk zmieniaja miejsce.
+// przyciski traca podpisy po jednym, od najmniej waznego (Kopiuj, Tworz, Ocen, Wiecej, Eksport,
+// Edytuj). Podpis zostaje w title i dla czytnika. Liczone z pomiaru, nie z progow szerokosci:
+// brief, inspektor, Baza i jezyk zmieniaja miejsce.
 (function pasekWJednymWierszu() {
   const ZWIJANE = ['#copy-btn', '#grupa-tworz-wrap > .btn-secondary', '#grupa-ocen-wrap > .btn-secondary',
     '#grupa-wiecej-wrap > .btn-secondary', '#grupa-pobierz-wrap > .btn-secondary', '#edit-btn'];
@@ -12672,14 +12673,16 @@ document.addEventListener('keydown', function (e) {
     const wersje = document.getElementById('versions-bar');
     if (!akcje || !wersje) return;
     pasek.querySelectorAll('.tylko-ikona').forEach((e) => e.classList.remove('tylko-ikona'));
-    pasek.classList.remove('bez-podpisu-wersji');
+    // szerokosc kartki artykulu (max-width w ch jej pisma) jako szerokosc paska; styl <html> nie jest obserwowany
+    const art = document.getElementById('article'), kol = art ? getComputedStyle(art).maxWidth : '';
+    const html = document.documentElement;
+    if (/px$/.test(kol) && html.style.getPropertyValue('--kolumna-paska') !== kol) html.style.setProperty('--kolumna-paska', kol);
     const wyb = wersje.querySelector('.ver-wybor'), napis = document.getElementById('ver-wybor-tekst');
     if (wyb) wyb.title = napis && napis.textContent ? _t('ver-wybor') + ': ' + napis.textContent : '';
     if (document.body.classList.contains('is-mobile') || !pasek.offsetWidth) return;
     // pasek nie zawija sie (nowrap), wiec brak miejsca widac jako tresc szersza od paska akcji
     const ciasno = () => akcje.scrollWidth > akcje.clientWidth + 1 || pasek.scrollWidth > pasek.clientWidth + 1;
     if (!ciasno()) return;
-    if (wersje.classList.contains('wersje-samokorekty')) pasek.classList.add('bez-podpisu-wersji');
     for (const css of ZWIJANE) {
       if (!ciasno()) break;
       const b = document.querySelector(css);
@@ -12695,8 +12698,7 @@ document.addEventListener('keydown', function (e) {
     if (!pasek) return;
     if (typeof ResizeObserver === 'function') new ResizeObserver(zaplanuj).observe(pasek);
     // pokazanie i schowanie przyciskow (style), nowe wersje, napisy (jezyk, Edytuj/Gotowe), stan plakietki;
-    // wlasne klasy (.tylko-ikona na przyciskach, .bez-podpisu-wersji na pasku) nie sa obserwowane,
-    // wiec dopasuj() nie budzi sie od wlasnych zmian
+    // wlasna klasa .tylko-ikona nie jest obserwowana, wiec dopasuj() nie budzi sie od wlasnych zmian
     new MutationObserver(zaplanuj).observe(pasek, { attributes: true, attributeFilter: ['style'], childList: true, characterData: true, subtree: true });
     ['versions-bar', 'out-badge', 'article-stats'].forEach((id) => { const el = document.getElementById(id); if (el) new MutationObserver(zaplanuj).observe(el, { attributes: true, attributeFilter: ['class'] }); });
     new MutationObserver(zaplanuj).observe(document.body, { attributes: true, attributeFilter: ['class'] });

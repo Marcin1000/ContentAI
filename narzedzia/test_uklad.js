@@ -45,6 +45,8 @@
  *   akcja-poza-ekranem Grafika i Audio: glowny przycisk generowania (Wygeneruj grafike / Wygeneruj skrypt) nie lezy
  *                      w calosci w oknie od razu po otwarciu ekranu (bez przewijania) albo po wygenerowaniu wyniku,
  *                      albo jest zasloniety (R5: wczesniej pod krawedzia ekranu na komputerze i telefonie)
+ *   pasek-wyniku-wiersz komputer: przelacznik wersji, plakietka i przyciski paska wyniku nie w jednym wierszu
+ *                      (gorna krawedz +-4 px), poza paskiem albo z przewijaniem w bok (R7-H: wczesniej dwa wiersze)
  * Miekkie (informacyjne): nachodzi, kontrast (< AA, pelne tla), udzial artykulu, wysrodkowanie.
  *
  * Uzycie (z katalogu repozytorium, po zbudowaniu wariantow):
@@ -75,7 +77,7 @@ const TRYB_ZRZUTOW = ARG['zrzuty-tryb'] || (CI && !process.env.CAI_TEST_ZRZUTY ?
 const KONTRAST = ARG.kontrast !== '0';
 const TWARDE = ['panel-otwarty-sam', 'poziome', 'poza-ekran', 'przyciete', 'uciety-tekst', 'pasek-bez-wskazowki', 'fixed-fixed', 'zasloniety', 'ostatni-zasloniety', 'cel-dotyku', 'male-pismo',
   'slowo-zlamane', 'ikona-przyklejona', 'niewysrodkowany', 'wynik-telefon', 'arkusz-skok', 'arkusz-luka', 'odznaka-duza', 'drugi-dotyk', 'tekst-120', 'pasek-przed-artykulem', 'arkusz-wzor',
-  'akcja-poza-ekranem'];
+  'akcja-poza-ekranem', 'pasek-wyniku-wiersz'];
 
 let chromium;
 try { ({ chromium } = require('playwright')); }
@@ -668,6 +670,25 @@ function pomiarAkcji(css) {
   return null;
 }
 
+// R7-H: komputer - przelacznik wersji, plakietka stanu i przyciski paska wyniku w jednym wierszu (gorna krawedz
+// +-4 px albo wspolna os pionowa), bez wyjscia poza pasek i bez przewijania paska w bok. Zwraca null albo opis.
+function pomiarPaskaWyniku() {
+  if (document.body.classList.contains('is-mobile')) return null;
+  const pasek = document.querySelector('.output-bar');
+  if (!pasek || !pasek.offsetWidth) return null;
+  const widoczny = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2 && getComputedStyle(e).visibility !== 'hidden'; };
+  const el = [document.getElementById('versions-bar'), document.getElementById('out-badge'),
+    ...pasek.querySelectorAll('.pasek-akcje > .btn-secondary, .pasek-akcje > .grupa-wrap')].filter((e) => e && widoczny(e));
+  if (el.length < 2) return null;
+  const r = el.map((e) => { const q = e.getBoundingClientRect(); return { id: e.id || e.className.split(' ')[0], t: Math.round(q.top), s: Math.round(q.top + q.height / 2), l: Math.round(q.left), p: Math.round(q.right) }; });
+  const t = r.map((x) => x.t), s2 = r.map((x) => x.s);
+  const jeden = Math.max(...t) - Math.min(...t) <= 4 || Math.max(...s2) - Math.min(...s2) <= 4;
+  const b = pasek.getBoundingClientRect();
+  const poza = r.filter((x) => x.l < b.left - 1 || x.p > b.right + 1).map((x) => x.id);
+  if (jeden && !poza.length && pasek.scrollWidth <= pasek.clientWidth + 1) return null;
+  return { wiersze: [...new Set(t)].length, elementy: r.map((x) => x.id + '@' + x.t), poza, przewijanie: pasek.scrollWidth - pasek.clientWidth };
+}
+
 async function uspokoj(s, ms = 250) {
   await s.waitForTimeout(ms);
   await s.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running' || !isFinite(((a.effect && a.effect.getComputedTiming()) || {}).endTime)), null, { timeout: 2500 }).catch(() => {});
@@ -848,9 +869,13 @@ async function przebieg(b, srod, rozmiar, motyw, jezyk, zbior) {
     await s.evaluate(() => { window.scrollTo(0, 0); const o = document.getElementById('out-scroll'); if (o) o.scrollTop = 0; });
     await uspokoj(s, 300);
     await zbadaj('wynik', { inspektorPoGenerowaniu: true });
+    // R7-H: pasek wyniku w jednym wierszu (z panelem kontroli i bez)
+    const paskiR7 = async (ekran) => { if (telefon || !chce(ekran)) return; const m = await s.evaluate(pomiarPaskaWyniku); if (m) ustalenie(ekran, 'pasek-wyniku-wiersz', '.output-bar', m); };
+    await paskiR7('wynik');
     await s.evaluate(() => { try { inspektorZamknij(); } catch (e) { /* brak */ } });
     await uspokoj(s, 300);
     await zbadaj('wynik-bez-paneli');
+    await paskiR7('wynik-bez-paneli');
     if (telefon && chce('wynik-bez-paneli')) {
       const m = await s.evaluate(pomiarWyniku);
       const scisle = ['412x700', '320x568'].includes(rozmiar);

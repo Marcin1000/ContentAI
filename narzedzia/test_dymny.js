@@ -1139,6 +1139,59 @@ async function wariantR6F(b) {
   await k.close();
 }
 
+// R7-H (runda 7, wykonawca H): komputer 1280x720 - pusty ekran bez plakietki "gotowy do generowania"
+// i bez pustego paska; po generowaniu z samokorekta (2 wersje) i po trzeciej wersji pasek wyniku w jednym
+// wierszu; od trzech wersji wybor z listy przelacza artykul; to samo przy 1024 px z rozwinietym briefem.
+// Kazdy scenariusz pada na a8a2e18 (main przed runda 7).
+async function wariantR7H(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 720 }, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); if (!localStorage.getItem('cai_lang')) localStorage.setItem('cai_lang', 'pl'); localStorage.setItem('cai_samokorekta_ok', '1'); } catch (e) { /* bez magazynu */ } });
+  const bledy = [];
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  const s = await zaloguj(k, 'premium');
+  const pasek = () => s.evaluate(() => {
+    const widoczny = (e) => { if (!e) return false; const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2 && getComputedStyle(e).visibility !== 'hidden'; };
+    const p = document.querySelector('.output-bar'), o = document.getElementById('out-badge');
+    const el = [document.getElementById('versions-bar'), ...p.querySelectorAll('.pasek-akcje > .btn-secondary, .pasek-akcje > .grupa-wrap')].filter(widoczny);
+    const gory = el.map((e) => Math.round(e.getBoundingClientRect().top));
+    const przyciete = [...p.querySelectorAll('button, .ver-wybor')].filter(widoczny).filter((e) => e.scrollWidth > e.clientWidth + 1).map((e) => e.id || e.className);
+    return { wysokosc: p.offsetHeight, plakietka: widoczny(o) ? o.textContent : '', elementy: el.length, wiersz: gory.length > 1 && Math.max(...gory) - Math.min(...gory) <= 4,
+      gory, przyciete, wBok: p.scrollWidth - p.clientWidth, wersjeWidoczne: [...document.querySelectorAll('#versions-bar .ver-btn')].filter(widoczny).map((e) => e.innerText.trim()),
+      lista: widoczny(document.querySelector('.ver-wybor')) };
+  });
+  const p0 = await pasek();
+  wynik('komputer: R7-H pusty ekran bez plakietki "gotowy do generowania" i bez pustego paska wyniku', !p0.plakietka && p0.wysokosc === 0, JSON.stringify(p0));
+  await s.fill('#topic', 'Jak wybrać pompę ciepła');
+  await s.evaluate(() => { document.getElementById('use-web').checked = true; if (!premiumMode) togglePremium(); generate(true); });
+  await krok('R7-H artykul z samokorekta', s.waitForFunction(() => versions.length >= 2 && /ready/.test(document.getElementById('out-badge').className) && !document.getElementById('gen-btn').disabled, null, { timeout: 90000 }));
+  await s.waitForTimeout(400);
+  const p1 = await pasek();
+  wynik('komputer: R7-H po samokorekcie (2 wersje) pasek wyniku w jednym wierszu, "Przed | Po", bez przycietych napisow',
+    p1.wiersz && p1.elementy >= 5 && !p1.przyciete.length && p1.wBok <= 1 && p1.wersjeWidoczne.join('|') === 'Przed|Po' && !p1.plakietka, JSON.stringify(p1));
+  await s.evaluate(() => { addVersion(versions[versions.length - 1].html, _t('ver-serp')); });
+  await s.waitForTimeout(400);
+  const p2 = await pasek();
+  wynik('komputer: R7-H trzecia wersja - pasek w jednym wierszu, wersje jako lista wyboru', p2.wiersz && p2.lista && !p2.wersjeWidoczne.length && !p2.przyciete.length && p2.wBok <= 1, JSON.stringify(p2));
+  const wybrano = await krok('R7-H wybor wersji z listy', s.selectOption('#ver-select', '0', { timeout: 3000 }));
+  await s.waitForTimeout(300);
+  const w = await s.evaluate(() => ({ aktywna: activeVersion, napis: (document.getElementById('ver-wybor-tekst') || {}).textContent, pierwsza: versions[0].label }));
+  wynik('komputer: R7-H wybor wersji z listy przelacza artykul', wybrano && w.aktywna === 0 && w.napis === w.pierwsza, JSON.stringify(w));
+  await s.setViewportSize({ width: 1024, height: 768 });
+  await s.evaluate(() => { if (document.body.classList.contains('brief-zwiniety')) przelaczBrief(false); });
+  await s.waitForTimeout(500);
+  const p3 = await pasek();
+  wynik('komputer: R7-H 1024 px z rozwinietym briefem - pasek w jednym wierszu (podpisy zwiniete do ikon, w title)',
+    p3.wiersz && p3.wBok <= 1 && await s.evaluate(() => [...document.querySelectorAll('.pasek-akcje .tylko-ikona')].every((e) => !!e.title)), JSON.stringify(p3));
+  await s.setViewportSize({ width: 1280, height: 720 });
+  await s.evaluate(() => nowyArtykul());
+  await s.waitForTimeout(400);
+  const p4 = await pasek();
+  wynik('komputer: R7-H po "Nowy artykul" bez plakietki i bez pustego paska', !p4.plakietka && p4.wysokosc === 0, JSON.stringify(p4));
+  wynik('komputer: R7-H bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+  if (bledow) await zrzut(s, 'komputer-r7h');
+  await k.close();
+}
+
 // Pliki z app/ pod http://127.0.0.1 - dla scenariuszy, ktore z file:// sa w CI niestabilne.
 let PORT_PLIKOW;
 const TYPY = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml',
@@ -1172,6 +1225,7 @@ async function uruchomSerwerPlikow() {
     await wariantTelefonR6Luki(b);
     await wariantNowyArtykul(b);
     await wariantR6F(b);
+    await wariantR7H(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));
