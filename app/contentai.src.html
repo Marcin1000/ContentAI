@@ -3047,6 +3047,19 @@ body.is-mobile #au-script-actions > #au-play-btn { flex: 1 1 100%; min-height: 4
 body.is-mobile #au-script-actions > .btn-secondary { flex: 1 1 0; justify-content: center; }
 body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-content: center; }
 }
+@layer widoki {
+/* ══ RUNDA 6, wykonawca F ══ */
+/* R6-F (E-12): zakladka bez danych (SERP bez analizy) i ocena niedostepna znikaja naprawde - display
+   z .ins-zakl i .segmenty button wygrywal z atrybutem hidden, a dotkniecie pustej zakladki zamykalo inspektor */
+.ins-zakl[hidden], .ins-oceny [data-ins-ocena][hidden] { display: none; }
+/* R6-F (E-17): telefon - "Popraw artykul pod brakujace tematy" przyklejony do dolu arkusza (przy osmiu
+   tematach lezal pod zgieciem). Pas tla arkusza nad przyciskiem nie przyjmuje dotyku, a po przewinieciu
+   do konca listy przycisk stoi na swoim miejscu, wiec niczego nie zaslania. */
+body.is-mobile .ins-tresc #gap-improve-btn { position: sticky; bottom: 0; z-index: 1; box-shadow: 0 var(--s-6) 0 var(--s-6) var(--c-panel); }
+body.is-mobile .ins-tresc #gap-missing-wrap { padding-bottom: var(--s-12); }
+body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: absolute; left: calc(var(--s-12) * -1); right: calc(var(--s-12) * -1); bottom: 100%;
+  height: var(--s-16); pointer-events: none; background: linear-gradient(to bottom, transparent, var(--c-panel)); }
+}
 </style>
 </head>
 <body>
@@ -4948,6 +4961,7 @@ var I18N = {
     'zrodla-pokaz-wszystkie':'Pokaż wszystkie ({n})','zrodla-zwin':'Zwiń',
     'spin-sub-szukam':'szukam źródeł w sieci i sprawdzam, co da się potwierdzić',
     'fakty-tryb-uzupelniania':'Tekst powstał z włączonym wyszukiwaniem w sieci, więc część zdań nie pochodzi z Twoich dokumentów, tylko ze stron wymienionych pod artykułem. Poniższe uwagi dotyczą zgodności z Twoimi źródłami: zdanie oparte na stronie zewnętrznej też się tu pojawi, bo trzeba sprawdzić, czy ta strona jest wiarygodna.',
+    'fakty-wzgledem-sieci':'Sprawdzono względem stron z sieci: Baza wiedzy jest pusta, więc artykuł porównano z fragmentami stron, które cytował przy pisaniu. Zdania o Twojej firmie nie mają tu potwierdzenia.',
     'fakty-rodzaj-link-obcy':'Adres spoza źródeł',
     'fakty-rodzaj-link-sciezka':'Znana domena, nieznana podstrona',
     'fakty-rodzaj-link-martwy':'Adres nie odpowiada',
@@ -5060,18 +5074,22 @@ var I18N = {
     'ocena-skala':'/100','ocena-podpis':'Ocena {x}','ocena-aria':'Ocena {x}: {n} na 100',
     'meta-etykieta':'Opis meta (SEO)',
     'eksport-zrodla':'Źródła',
-    'eksport-pominiete-luki':'Sekcje bez pokrycia w źródłach pominięte w eksporcie: {n}. Jeśli mają zostać, uzupełnij je w edycji.',
+    'eksport-pominiete-luki':'Sekcje bez pokrycia w źródłach pominięte w eksporcie: {n}. Usuń notatkę albo wpisz w jej miejsce treść (Edytuj).',
     'eksport-znak-1':'znak','eksport-znak-24':'znaki','eksport-znak-5':'znaków',
-    'aeo-definicja':'Definicja na start: pierwszy akapit {n} słów (cel 25-50)',
+    'aeo-definicja-1':'Definicja na start: pierwszy akapit {n} słowo (cel 25-50)',
+    'aeo-definicja-2':'Definicja na start: pierwszy akapit {n} słowa (cel 25-50)',
+    'aeo-definicja-5':'Definicja na start: pierwszy akapit {n} słów (cel 25-50)',
     'aeo-liczba':'Liczba, data lub procent w pierwszym akapicie',
-    'aeo-faq':'FAQ: {n} nagłówków-pytań (cel 5-7)',
+    'aeo-faq-1':'FAQ: {n} nagłówek-pytanie (cel 5-7)',
+    'aeo-faq-2':'FAQ: {n} nagłówki-pytania (cel 5-7)',
+    'aeo-faq-5':'FAQ: {n} nagłówków-pytań (cel 5-7)',
     'aeo-lista':'Co najmniej jedna krótka lista 3-7 pozycji',
     'aeo-pytania-h2':'H2 w formie pytań: {n}% (cel 50%+)',
     'aeo-dlugie-akapity':'Akapity dłuższe niż 80 słów: {n}',
     'aeo-linie':'Wzmiankowane linie','aeo-linie-brak':'brak','aeo-linie-sprawdz':'sprawdź rozróżnienie linii',
-    'geo-skladnik-aeo':'Format AEO','geo-skladnik-struktura':'Struktura i schemat JSON-LD','geo-skladnik-marka':'Marka i linie biznesowe',
+    'geo-skladnik-aeo':'Format AEO','geo-skladnik-struktura':'Struktura: H1, sekcje H2, pytania, lista','geo-skladnik-marka':'Marka i linie biznesowe',
     'geo-waga':'waga',
-    'geo-faq':'Sekcja FAQ pasująca do schematu FAQPage','geo-linie':'Linie biznesowe nie są pomylone','geo-aeo-ok':'Wymogi formatu AEO spełnione',
+    'geo-faq':'Co najmniej 3 nagłówki H2 w formie pytań','geo-linie':'Linie biznesowe nie są pomylone','geo-aeo-ok':'Wymogi formatu AEO spełnione',
     // GAP dynamic messages
     'gap-msg-excellent':'Świetnie! Artykuł pokrywa wszystkie istotne tematy z SERP.',
     'gap-msg-good':'Dobre pokrycie. Można uzupełnić kilka brakujących tematów.',
@@ -5662,6 +5680,7 @@ var I18N = {
     'zrodla-pokaz-wszystkie':'Show all ({n})','zrodla-zwin':'Show less',
     'spin-sub-szukam':'searching the web and checking what can be confirmed',
     'fakty-tryb-uzupelniania':'This text was written with web search enabled, so some sentences come from the pages listed under the article rather than from your documents. The findings below are about agreement with your own sources: a sentence backed by an external page will still appear here, because someone has to judge whether that page is trustworthy.',
+    'fakty-wzgledem-sieci':'Checked against web pages: the knowledge base is empty, so the article was compared with the passages it cited while writing. Statements about your company have no confirmation here.',
     'fakty-rodzaj-link-obcy':'Address not in the sources',
     'fakty-rodzaj-link-sciezka':'Known domain, unknown page',
     'fakty-rodzaj-link-martwy':'Address does not respond',
@@ -5774,18 +5793,22 @@ var I18N = {
     'ocena-skala':'/100','ocena-podpis':'{x} score','ocena-aria':'{x} score: {n} out of 100',
     'meta-etykieta':'Meta description (SEO)',
     'eksport-zrodla':'Sources',
-    'eksport-pominiete-luki':'Sections without coverage in your sources were left out of the export: {n}. To keep them, fill them in while editing.',
+    'eksport-pominiete-luki':'Sections without coverage in your sources were left out of the export: {n}. Delete the note or type your text in its place (Edit).',
     'eksport-znak-1':'character','eksport-znak-24':'characters','eksport-znak-5':'characters',
-    'aeo-definicja':'Definition box: first paragraph {n} words (target 25-50)',
+    'aeo-definicja-1':'Definition box: first paragraph {n} word (target 25-50)',
+    'aeo-definicja-2':'Definition box: first paragraph {n} words (target 25-50)',
+    'aeo-definicja-5':'Definition box: first paragraph {n} words (target 25-50)',
     'aeo-liczba':'Number, date or percentage in the first paragraph',
-    'aeo-faq':'FAQ: {n} question headings (target 5-7)',
+    'aeo-faq-1':'FAQ: {n} question heading (target 5-7)',
+    'aeo-faq-2':'FAQ: {n} question headings (target 5-7)',
+    'aeo-faq-5':'FAQ: {n} question headings (target 5-7)',
     'aeo-lista':'At least one short list of 3-7 items',
     'aeo-pytania-h2':'Question-form H2: {n}% (target 50%+)',
     'aeo-dlugie-akapity':'Paragraphs over 80 words: {n}',
     'aeo-linie':'Lines mentioned','aeo-linie-brak':'none','aeo-linie-sprawdz':'verify line disambiguation',
-    'geo-skladnik-aeo':'AEO format','geo-skladnik-struktura':'Structure and JSON-LD schema','geo-skladnik-marka':'Brand and business lines',
+    'geo-skladnik-aeo':'AEO format','geo-skladnik-struktura':'Structure: H1, H2 sections, questions, list','geo-skladnik-marka':'Brand and business lines',
     'geo-waga':'weight',
-    'geo-faq':'FAQ section that fits the FAQPage schema','geo-linie':'Business lines are not mixed up','geo-aeo-ok':'AEO format requirements met',
+    'geo-faq':'At least 3 H2 headings phrased as questions','geo-linie':'Business lines are not mixed up','geo-aeo-ok':'AEO format requirements met',
     // GAP dynamic messages
     'gap-msg-excellent':'Excellent! The article covers all important topics from SERP.',
     'gap-msg-good':'Good coverage. You can supplement a few missing topics.',
@@ -7406,6 +7429,13 @@ function blokFraz() {
     + 'sentence first, keyword second.';
 }
 
+// R6-F (E-19): fraza kluczowa wcisnieta jako podmiot zdania ("Dlatego kino dawniej i dzis rozni
+// sie glownie liczba decyzji...") - zdanie jest niejasne, a redaktor od razu je zaznacza.
+// Jedna regula w prompcie generowania i w ocenie oraz poprawie samokorekty.
+const REGULA_FRAZY_PODMIOTU = 'KEYWORD AS SUBJECT: Never make a keyword phrase the grammatical subject of a '
+  + 'sentence just to place it ("Kino dawniej i dziś różni się głównie..."). Use the phrase in its natural form '
+  + 'inside a sentence about a real subject, or leave it out.';
+
 // Kotwice: agencja zglosila monotonie stylu, a linkowanie jest tego czescia.
 // Piec razy "dowiedz sie wiecej" w jednym tekscie czyta sie tak samo zle jak
 // piec akapitow tej samej dlugosci, a dodatkowo nic nie mowi wyszukiwarce.
@@ -8136,7 +8166,8 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 500,
-        system: evalSys,
+        // R6-F (E-19): fraza jako sztuczny podmiot zdania to uwaga do poprawy.
+        system: evalSys + '\n' + REGULA_FRAZY_PODMIOTU + ' Report such a sentence as an issue.',
         messages: [{ role: 'user', content: `Topic: ${topic}\nKeywords: ${kwText}\n\nArticle:\n${articleText}` }]
       })
     });
@@ -8180,7 +8211,8 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(premiumMaxTokens),
-        system: editorSysPelny,
+        // R6-F (E-19): przy poprawie fraza wraca do naturalnej formy, nie zostaje podmiotem.
+        system: editorSysPelny + '\n' + REGULA_FRAZY_PODMIOTU,
         messages: [{ role: 'user', content: `Fix ONLY these issues in the article: ${issuesList}\n\nDo NOT change factual content. Keep the same language and tone. IMPORTANT: keep the meta description block (class="meta-box") at the end if present. Keywords: ${kwText}.\nReturn ONLY the improved HTML, no markdown, no preamble.\n\nArticle:\n${originalHtml}` }]
       })
     });
@@ -8442,6 +8474,7 @@ Add an H2 titled "${kwName}" followed by a SINGLE <ul> with 4-6 <li> bullets. Ea
 
 CONTENT QUALITY RULES (applied to every paragraph):
 ✗ ANTI-FLUFF: Cut any sentence that only restates the previous one or praises without saying anything ("rosnaca popularnosc", "dynamiczny rozwoj", "nowoczesne rozwiazanie"). Replace it with something the sources actually say, or delete it. Do NOT rescue such a sentence by attaching a number to it.
+✗ ${REGULA_FRAZY_PODMIOTU}
 ✗ ANTI-GENERIC: Never write a vague category label (e.g. "the industry", "providers") when you mean a specific company. Use the exact brand name every time.
 ✓ SALIENCE: Mention the main brand/product by exact name at least once in every H2 section (not just in the headline).
 ✓ BLUF: The first paragraph answers the question asked in the title, in two or three sentences. Open with a figure ONLY if the sources contain one that answers it; otherwise open with the substantive answer in words. Never open with a vague introduction.
@@ -8463,6 +8496,7 @@ ${useWeb
 ${(ctype !== 'FAQ page' && !isPress) ? `- MANDATORY: End the article, immediately before the meta description, with an H2 titled "${kwName}" followed by a SINGLE <ul> of 4-6 <li> bullets, each with at least one specific number, percentage or comparison. This section contains ONLY the H2 and the <ul>: no <p> inside it, between the bullets, or after it. Nothing follows it except the meta description.` : ''}
 - BLUF: The first paragraph answers the question in the title, in two or three sentences. Lead with a figure only if the sources contain one; otherwise lead with the answer in words. Never start with a vague introduction.
 - ANTI-FLUFF: Cut sentences that only restate the previous one or praise without content ("rosnąca popularność", "dynamiczny rozwój"). Delete them; do not repair them by adding a number.
+- ${REGULA_FRAZY_PODMIOTU}
 - ANTI-GENERIC: Use exact brand/product names, never generic "branża" when referring to a specific company.
 - SALIENCE: Mention the main brand by exact name at least once per H2 section.
 - TABLES: One dataset per table. Every cell comes from the sources. Omit a column rather than inventing its values. A table of periods or rates needs every row documented; a gap-toothed series of months means you are assembling data, not reporting it.
@@ -8841,7 +8875,8 @@ ${html}`;
   genCount++;
   updateStats();
 
-  const wordCount = currentText.split(/\s+/).filter(Boolean).length;
+  // R6-F (E-14): liczba slow wpisu jak w pasku statystyk (bez zrodel i meta), nie z calego tekstu.
+  const wordCount = liczbaSlowArtykulu(art);
   // Do historii idzie artykul tak, jak go widac (ze zrodlami), bez elementow tylko ekranowych.
   history.unshift({ topic: topic || _t('hist-default-name'), type: ctype, words: wordCount, time: new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}), html: htmlDoZapisu(art), jezyk: KODY_JEZYKOW[lang] || '' });
   // R4 (kod-08, kod-09, kod-17): trwale id, czas z data i kontekst artykulu we wpisie.
@@ -9079,7 +9114,7 @@ function zrodlaZOdpowiedzi(dane) {
     // PDF i WordPressa jako odnosniki.
     if (!url || !/^https?:\/\//i.test(String(url))) return null;
     data = dataZrodla(data, teraz);
-    if (!mapa[url]) mapa[url] = { url: url, tytul: tytul || '', data: data || '', cytowan: 0 };
+    if (!mapa[url]) mapa[url] = { url: url, tytul: tytul || '', data: data || '', cytowan: 0, fragmenty: [] };
     if (!mapa[url].tytul && tytul) mapa[url].tytul = tytul;
     if (!mapa[url].data && data) mapa[url].data = data;
     return mapa[url];
@@ -9093,7 +9128,14 @@ function zrodlaZOdpowiedzi(dane) {
     for (const c of (blok.citations || [])) {
       if (c && c.url) {
         const wpis = dodaj(c.url, c.title, '');
-        if (wpis) wpis.cytowan += 1;
+        if (wpis) {
+          wpis.cytowan += 1;
+          // R6-F (E-07): cytowany fragment strony - jedyny czytelny tekst ze strony (wyniki
+          // wyszukiwania sa zaszyfrowane). Kontrola faktow porownuje z nim artykul, gdy Baza
+          // jest pusta. Nowe pole: url, tytul i data zostaja jak byly (blok zrodel ich uzywa).
+          const frag = String(c.cited_text || '').replace(/\s+/g, ' ').trim().slice(0, 600);
+          if (frag && wpis.fragmenty.length < 8 && wpis.fragmenty.indexOf(frag) < 0) wpis.fragmenty.push(frag);
+        }
       }
     }
   }
@@ -9484,6 +9526,11 @@ let faktySygnatura = '';        // dla jakiego artykulu (i jakich zrodel) policz
 // Stan idzie razem z wynikiem do kazdego rysowania - wczesniej ponowne otwarcie
 // panelu gubilo go i pusta lista uwag wygladala jak zielone "bez zastrzezen".
 let faktyStan = '';
+// R6-F (E-07): wynik policzony wzgledem samych stron z sieci (Baza pusta) - panel to mowi.
+let faktyWzgledemSieci = false;
+// R6-F (E-10): kontrola w toku { przebieg, sygnatura }. Powrot na zakladke Fakty w trakcie
+// czeka na nia zamiast wysylac drugie zapytanie (cala Baza i myslenie, wiec drogie).
+let faktyWToku = null;
 
 // Wynik kontroli to zlozony HTML skladany z wielu kluczy, wiec nie da sie go
 // oznaczyc jednym data-i18n. Przy zmianie jezyka skladamy go po prostu jeszcze
@@ -9581,9 +9628,18 @@ async function uruchomKontroleFaktow(wymus) {
   // Zrodla wchodza do sygnatury: po zaznaczeniu ich w bazie panel nie moze
   // pokazac zapamietanego wyniku "brak zrodel".
   const zrodla = zrodlaDoKontroli();
-  const sygnatura = String(tekstArtykulu.length) + ':' + tekstArtykulu.slice(0, 120) + '|' + zrodla.length;
+  // R6-F (E-07): strony z sieci, z ktorych powstal tekst, z cytowanymi fragmentami. Przy pustej
+  // Bazie kontrola porownuje artykul z nimi (wczesniej: zawsze "Brak zrodel do porownania").
+  const sieciowe = zrodlaSieciowe.filter(function (z) { return z && z.url; });
+  const sygnatura = String(tekstArtykulu.length) + ':' + tekstArtykulu.slice(0, 120) + '|' + zrodla.length + '|' + sieciowe.length;
   if (!wymus && faktyWynik && faktySygnatura === sygnatura) {
     pokazWynikFaktow(faktyWynik, faktyStan);
+    return;
+  }
+  // R6-F (E-10): ta sama kontrola juz trwa (wyjscie z zakladki i powrot) - panel zostaje
+  // z jej ladowaniem, a wynik narysuje ten przebieg. Bez drugiego zapytania.
+  if (!wymus && faktyWToku && faktyWToku.przebieg === faktyPrzebieg && faktyWToku.sygnatura === sygnatura) {
+    ladowanie.style.display = 'block';
     return;
   }
 
@@ -9592,6 +9648,8 @@ async function uruchomKontroleFaktow(wymus) {
   // gdy witryna za CDN-em nie odpowiada - przez ten czas panel byl otwarty
   // i zupelnie pusty, wiec wygladal na zepsuty.
   const moj = ++faktyPrzebieg;
+  faktyWToku = { przebieg: moj, sygnatura: sygnatura };
+  const koniecWToku = function () { if (faktyWToku && faktyWToku.przebieg === moj) faktyWToku = null; };
   wynikEl.innerHTML = '';
   odswiez.style.display = 'none';
   etapFaktow('fakty-etap-linki');
@@ -9609,18 +9667,21 @@ async function uruchomKontroleFaktow(wymus) {
     return u;
   })();
 
-  if (!zrodla.trim()) {
+  if (!zrodla.trim() && !sieciowe.length) {
     // Bez zrodel nie ma z czym zestawiac tresci. Sam model nie wystarczy -
     // ocena "z pamieci" byla by zgadywaniem. Kontrola odnosnikow dziala
     // niezaleznie od tego, wiec jej wynik i tak pokazujemy.
     const uwagiLinkow = await obietnicaLinkow;
+    koniecWToku();
     if (moj !== faktyPrzebieg) return;
     faktyWynik = uwagiLinkow;
     faktySygnatura = sygnatura;
     faktyStan = 'brak-zrodel';
+    faktyWzgledemSieci = false;
     pokazWynikFaktow(uwagiLinkow, faktyStan);
     return;
   }
+  const tylkoSiec = !zrodla.trim();
 
   // Wynik odnosnikow pokazujemy, gdy tylko przyjdzie - nie czekajac na model.
   // Przy dlugim sprawdzaniu tresci uzytkownik ma juz wtedy polowe odpowiedzi.
@@ -9680,12 +9741,15 @@ async function uruchomKontroleFaktow(wymus) {
         max_tokens: zRezerwa(2000),
         system: system,
         messages: [{ role: 'user', content:
-          'SOURCES:\n' + zrodla.slice(0, 120000)
-          + (zrodlaSieciowe.length
-              ? '\n\n---\n\nWEB SOURCES the article was allowed to draw on:\n'
-                + zrodlaSieciowe.map(function (z) {
-                    return '- ' + z.url + (z.tytul ? ' (' + z.tytul + ')' : '');
-                  }).join('\n')
+          'SOURCES:\n' + (tylkoSiec
+            ? '(no knowledge base documents for this article: compare it with the web sources and the passages they were cited for)'
+            : zrodla.slice(0, 120000))
+          + (sieciowe.length
+              ? '\n\n---\n\nWEB SOURCES the article was allowed to draw on (with the passages it cited):\n'
+                + sieciowe.map(function (z) {
+                    return '- ' + z.url + (z.tytul ? ' (' + z.tytul + ')' : '')
+                      + (z.fragmenty || []).map(function (f) { return '\n  > "' + f + '"'; }).join('');
+                  }).join('\n').slice(0, 40000)
               : '')
           + '\n\n---\n\nARTICLE:\n' + tekstArtykulu.slice(0, 40000) }]
       })
@@ -9700,6 +9764,7 @@ async function uruchomKontroleFaktow(wymus) {
     faktyWynik = uwagiLinkow.concat(Array.isArray(odczyt.uwagi) ? odczyt.uwagi : []);
     faktySygnatura = sygnatura;
     faktyStan = 'gotowe';
+    faktyWzgledemSieci = tylkoSiec;
     pokazWynikFaktow(faktyWynik, faktyStan);
   } catch (e) {
     // Nawet gdy model nie odpowiedzial, kontrola odnosnikow ma swoj wynik.
@@ -9710,8 +9775,10 @@ async function uruchomKontroleFaktow(wymus) {
     faktyWynik = uwagiLinkow;
     faktySygnatura = sygnatura;
     faktyStan = 'blad';
+    faktyWzgledemSieci = false;
     pokazWynikFaktow(uwagiLinkow, faktyStan);
   } finally {
+    koniecWToku();
     if (moj === faktyPrzebieg) ladowanie.style.display = 'none';
   }
 }
@@ -9755,7 +9822,11 @@ function pokazWynikFaktow(uwagi, stan) {
   // jest gorszy - znaczy, ze czesc zdan pochodzi z pamieci modelu, a nie
   // z dokumentow. Autor musi wiedziec, ktora to sytuacja. Wynik czesciowy
   // nie ma tej stopki - kontrola tresci jeszcze nie skonczyla.
-  if (stan === 'gotowe' && trybUzupelniania) {
+  // R6-F (E-07): bez Bazy porownanie szlo ze stronami z sieci - mowimy to wprost.
+  if (stan === 'gotowe' && faktyWzgledemSieci) {
+    stopka += '<div class="fakty-wzgledem-sieci" style="color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
+      + escapeHtml(_t('fakty-wzgledem-sieci')) + '</div>';
+  } else if (stan === 'gotowe' && trybUzupelniania) {
     stopka += '<div style="color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
       + escapeHtml(_t('fakty-tryb-uzupelniania')) + '</div>';
   }
@@ -9904,18 +9975,33 @@ function wyczyscStanArtykulu() {
   if (jsonKod) jsonKod.textContent = '';
 }
 
+// R6-F (E-14): tresc do statystyk = to, co wyjdzie w pliku dla klienta: bez listy zrodel, ramki
+// meta, elementow tylko ekranowych i notatek o lukach (z naglowkiem, pod ktorym nic nie zostaje -
+// ta sama regula co w eksporcie). Ekran pokazywal 1265 slow i 15 sekcji, a PDF mial 1091 slow
+// i 7 sekcji. Jedno zrodlo dla paska, skrotu "N slow · M min", FOG, KD i liczby slow w Historii.
+function kopiaDoStatystyk(zrodlo) {
+  const kopia = zrodlo.cloneNode(true);
+  kopia.querySelectorAll('[data-tylko-ekran]').forEach(function (el) { el.remove(); });
+  usunNotatkiLuk(kopia);
+  kopia.querySelectorAll('.zrodla-box, .meta-box').forEach(function (el) { el.remove(); });
+  return kopia;
+}
+// Liczone blokami: innerText odlaczonego elementu sklejal akapity ("akapit.Nastepny").
+function liczbaSlowArtykulu(zrodlo) {
+  return tekstBlokami(kopiaDoStatystyk(zrodlo)).split(/\s+/).filter(Boolean).length;
+}
+
 function showArticleStats(html) {
   const tmp = document.createElement('div');
   tmp.innerHTML = html;
-  // Bibliografia nie jest trescia artykulu - nie wlicza sie do liczby slow
-  // ani do czasu czytania, tak samo jak meta description.
-  const _zr = tmp.querySelector('.zrodla-box');
-  if (_zr) _zr.remove();
-  const text = tmp.innerText || tmp.textContent || '';
+  // Bibliografia, meta description i notatki o lukach nie sa trescia artykulu - nie wliczaja
+  // sie do liczby slow, sekcji, czasu czytania, FOG ani KD (R6-F, E-14).
+  const tresc = kopiaDoStatystyk(tmp);
+  const text = tekstBlokami(tresc);
   const words = text.split(/\s+/).filter(Boolean).length;
   const readMin = Math.max(1, Math.ceil(words / 200));
-  const h2count = tmp.querySelectorAll('h2').length;
-  const h3count = tmp.querySelectorAll('h3').length;
+  const h2count = tresc.querySelectorAll('h2').length;
+  const h3count = tresc.querySelectorAll('h3').length;
   const metaEl = tmp.querySelector('.meta-box p');
   const metaLen = metaEl ? metaEl.textContent.trim().length : 0;
   ustawLiczbeStatystyki('stat-words', words);
@@ -9944,7 +10030,7 @@ function showArticleStats(html) {
   // sie do zdania nastepujacego po nich i sztucznie podnosily srednia dlugosc
   // zdania. Przy osmiu naglowkach po kilka slow to juz widoczna roznica.
   // Meta description tez odpada - to nie jest tresc artykulu.
-  const fog = calcFog(tekstProzy(tmp));
+  const fog = calcFog(tekstProzy(tresc));
   const fogEl = document.getElementById('stat-fog');
   if (fog !== null) {
     ustawLiczbeDziesietna(fogEl, fog);
@@ -10098,10 +10184,28 @@ function niewidoczneWArtykule(zrodlo) {
   return wynik;
 }
 
+// R6-F (E-02): notatka o luce to akapit p[data-brak], ktorego tekst nadal brzmi jak
+// notatka (PL albo EN) albo jest pusty. Akapit, w ktory autor wpisal swoj tekst (takze
+// nowy akapit z Entera, ktory dziedziczy atrybut), jest juz trescia artykulu.
+function tekstNotatkiLuki(t) {
+  return String(t || '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+function czyNotatkaLuki(p) {
+  const t = tekstNotatkiLuki(p.textContent);
+  return !t || t === tekstNotatkiLuki(tekstWJezyku('gap-brak-pokrycia', 'pl'))
+    || t === tekstNotatkiLuki(tekstWJezyku('gap-brak-pokrycia', 'en'));
+}
+// Akapit, ktory przestal byc notatka, traci data-brak (wyglad notatki i pomijanie w eksporcie).
+function zdejmijNotatkiZTekstem(korzen) {
+  korzen.querySelectorAll('p[data-brak]').forEach(function (p) { if (!czyNotatkaLuki(p)) p.removeAttribute('data-brak'); });
+}
+
 // Notatka autora z uzupelniania luk ("Brak pokrycia w zaznaczonych zrodlach...")
 // nie jest trescia dla klienta. Usuwamy ja, a naglowek sekcji razem z nia, gdy pod
 // nim nic wiecej nie ma. Zwraca liczbe usunietych notatek.
 function usunNotatkiLuk(kopia) {
+  // R6-F (E-02): tekst autora wpisany w notatke zostaje w pliku (bez data-brak).
+  zdejmijNotatkiZTekstem(kopia);
   const notatki = kopia.querySelectorAll('p[data-brak]');
   notatki.forEach(function (p) {
     const naglowek = p.previousElementSibling;
@@ -10114,6 +10218,30 @@ function usunNotatkiLuk(kopia) {
     if (pusta) naglowek.remove();
   });
   return notatki.length;
+}
+
+// R6-F (E-18): polski sklad w plikach dla klienta (PDF, DOCX, TXT): twarda spacja po wyrazie
+// jednoliterowym (a, i, o, u, w, z, takze wielkie), zeby nie zostawal sam na koncu linii
+// ("zrezygnuj z / ustawien"). Tylko kopia eksportu, tylko wezly tekstowe (adresy i atrybuty
+// bez zmian), tylko artykul po polsku. Ekran, historia, schowek i CMS bez zmian.
+function twardeSpacjePl(korzen) {
+  if (!korzen || kodJezykaArtykulu() !== 'pl') return korzen;
+  const w = document.createTreeWalker(korzen, NodeFilter.SHOW_TEXT);
+  let blokPoprz = null, poprzedni = ' ';
+  for (let n = w.nextNode(); n; n = w.nextNode()) {
+    const rodzic = n.parentElement;
+    if (!rodzic || rodzic.closest('pre, code, script, style')) { poprzedni = ' '; continue; }
+    // Poczatek bloku (akapit, punkt, komorka, naglowek) liczy sie jak spacja przed wyrazem.
+    const blok = rodzic.closest('p, li, td, th, h1, h2, h3, h4, h5, h6, blockquote, dd, dt, caption, figcaption');
+    if (blok !== blokPoprz) { blokPoprz = blok; poprzedni = ' '; }
+    let t = poprzedni + n.nodeValue, przed;
+    // Kilka przebiegow: w "a i o" kazdy wyraz potrzebuje znaku przed soba, a ten zjada poprzednie dopasowanie.
+    do { przed = t; t = t.replace(/([\s(„"«])([aiouwzAIOUWZ]) /g, '$1$2 '); } while (t !== przed);
+    t = t.slice(1);
+    if (t !== n.nodeValue) n.nodeValue = t;
+    if (n.nodeValue) poprzedni = n.nodeValue.slice(-1);
+  }
+  return korzen;
 }
 
 // Kopia dla klienta (PDF, DOCX, TXT, schowek, WordPress, Drupal): jak do historii,
@@ -10138,7 +10266,8 @@ function kopiaDoEksportu(zrodlo) {
     }
   });
   const luki = usunNotatkiLuk(kopia);
-  if (luki) pokazPowiadomienie(_t('eksport-pominiete-luki').replace('{n}', String(luki)), 'info');
+  // R6-F (E-02, E-17): pominieta tresc to ostrzezenie, nie informacja.
+  if (luki) pokazPowiadomienie(_t('eksport-pominiete-luki').replace('{n}', String(luki)), 'uwaga');
   const j = jezykEtykiet();
   uporzadkujArtykul(kopia, j);
   kopia.querySelectorAll('.zrodla-box > .zrodla-label').forEach(function (l) { l.textContent = tekstWJezyku('eksport-zrodla', j); });
@@ -10215,7 +10344,8 @@ function formaZnakow(n, jezyk) {
 // tabele, ramka meta i zrodla z adresami.
 function tekstEksportu(korzen) {
   const linie = [];
-  const tekst = function (el) { return (el.textContent || '').replace(/\s+/g, ' ').trim(); };
+  // Twarda spacja zostaje (R6-F, E-18: polski sklad takze w naglowkach i ramce meta).
+  const tekst = function (el) { return (el.textContent || '').replace(/[^\S ]+/g, ' ').trim(); };
   const akapit = function (t) { if (t) { linie.push(t); linie.push(''); } };
   function inline(el) {
     let t = '';
@@ -10560,7 +10690,16 @@ function trescPdf(korzen) {
     if (tag === 'H1') { const t = tekstPdf(el); if (t.length) { out.push({ text: t, style: 'h1' }); poTytule = true; } return; }
     if (tag === 'H2') { out.push({ text: tekstPdf(el), style: 'h2', headlineLevel: 1 }); return; }
     if (/^H[3-6]$/.test(tag)) { out.push({ text: tekstPdf(el), style: 'h3', headlineLevel: 1 }); return; }
-    if (tag === 'P') { const t = tekstPdf(el); if (t.length) out.push({ text: t, style: byloPoTytule ? ['p', 'lead'] : 'p' }); return; }
+    if (tag === 'P') {
+      const t = tekstPdf(el);
+      if (!t.length) return;
+      const akapitPdf = { text: t, style: byloPoTytule ? ['p', 'lead'] : 'p' };
+      // R6-F (E-18): krotki akapit (do ok. 4 linii) w calosci na jednej stronie - bez
+      // pojedynczej linii poprzedniego akapitu na gorze nastepnej strony. Dluzsze sie lamia.
+      if (t.reduce(function (n, c) { return n + String(c.text || '').length; }, 0) <= 320) akapitPdf.unbreakable = true;
+      out.push(akapitPdf);
+      return;
+    }
     if (tag === 'UL' || tag === 'OL') { out.push(lista(el)); return; }
     if (tag === 'TABLE') { const t = tabela(el); if (t) out.push(t); return; }
     if (tag === 'BLOCKQUOTE') {
@@ -10586,7 +10725,7 @@ function trescPdf(korzen) {
   // Ramka meta description na samym koncu, w calosci na jednej stronie.
   if (meta) {
     const p = meta.querySelector('p');
-    const tekst = (p ? p.textContent : '').replace(/\s+/g, ' ').trim();
+    const tekst = (p ? p.textContent : '').replace(/[^\S ]+/g, ' ').trim();
     if (tekst) {
       out.push({ unbreakable: true, margin: [0, 20, 0, 0],
         table: { widths: ['*'], body: [[{ fillColor: DRUK.tloMeta, margin: [12, 10, 12, 10], stack: [
@@ -10621,6 +10760,8 @@ function dlPdf() {
     const czysta = document.createElement('div');
     czysta.innerHTML = oczyscHtmlModelu(kopia.innerHTML);
     const tytul = tytulEksportu(kopia);
+    // R6-F (E-18): twarde spacje w tresci strony, metadane (tytul, opis) bez zmian.
+    twardeSpacjePl(czysta);
     const dd = dokumentPdf(trescPdf(czysta), tytul, metaEksportu(kopia), jezykDokumentu());
     ustawKrojePdf();
     pdfMake.createPdf(dd).download(nazwaPlikuEksportu(tytul, 'pdf'));
@@ -11497,6 +11638,14 @@ function buildLinkSuggestions() {
     }
     return d;
   }).filter(d => d.url);
+  // R6-F (E-13): takze strony z Bazy na serwerze (w wariancie z serwerem trafia tam wszystko
+  // z panelu, wiec bez tego zakladka Linki byla zawsze pusta). Lista serwera ma nazwe i adres
+  // bez tresci - dopasowanie idzie po slowach nazwy i adresu.
+  (window._bazaSerwer || []).forEach(function (d) {
+    if (d && d.url && !urlDocs.some(function (x) { return kluczAdresu(x.url) === kluczAdresu(d.url); })) {
+      urlDocs.push({ name: d.nazwa || d.url, url: d.url, content: '' });
+    }
+  });
   if (!urlDocs.length) {
     listEl.innerHTML = '<span style="color:var(--text3)">' + _t('msg-no-urls') + '</span>';
     return;
@@ -11662,6 +11811,9 @@ function zapiszPoprawkiTeraz() {
 }
 document.getElementById('article')?.addEventListener('input', function () {
   if (!editMode) return;
+  // R6-F (E-02): notatka o luce, w ktora autor wpisal tekst (albo akapit z Entera pod nia),
+  // przestaje byc notatka - wczesniej znikala z eksportu razem z naglowkiem sekcji.
+  zdejmijNotatkiZTekstem(this);
   clearTimeout(licznikPoprawek);
   licznikPoprawek = setTimeout(zapiszPoprawkiTeraz, 1000);
 });
@@ -11731,7 +11883,8 @@ function zapiszRecznePoprawki() {
   const wpis = wpisHistorii(biezacyHist);
   if (wpis) {
     wpis.html = h;
-    wpis.words = (art.innerText || '').split(/\s+/).filter(Boolean).length;
+    // R6-F (E-14): ta sama liczba slow co w pasku statystyk (wczesniej ze zrodlami i meta).
+    wpis.words = liczbaSlowArtykulu(art);
     saveState();
   }
 }
@@ -11779,6 +11932,21 @@ let aioCache = null;
 // calego tekstu). Przelaczanie Przed / Po / Poprawa SERP przy otwartym panelu pokazuje ocene
 // danej wersji bez ponownego wywolania; wersja jeszcze nieoceniona jest oceniana jak przy otwarciu.
 const ocenyWersji = { seo: new Map(), aio: new Map() };
+// R6-F (E-10): ocena w toku pamietana per skrot tekstu. Powrot na zakladke w trakcie (SEO -> AIO
+// -> SEO) pokazuje ladowanie i czeka na to samo zapytanie - wczesniej szly dwie platne oceny.
+// Numer przebiegu: wynik rysuje tylko ostatnie otwarcie panelu, wiec spozniona ocena innej
+// wersji tekstu nie nadpisze biezacej.
+const ocenyWToku = { seo: new Map(), aio: new Map() };
+let seoPrzebieg = 0, aioPrzebieg = 0;
+function ocenaWToku(rodzaj, skrot, zapytaj) {
+  let obietnica = ocenyWToku[rodzaj].get(skrot);
+  if (obietnica) return obietnica;
+  obietnica = zapytaj();
+  ocenyWToku[rodzaj].set(skrot, obietnica);
+  const sprzataj = function () { if (ocenyWToku[rodzaj].get(skrot) === obietnica) ocenyWToku[rodzaj].delete(skrot); };
+  obietnica.then(sprzataj, sprzataj);
+  return obietnica;
+}
 
 function simpleHash(str) {
   let h = 0;
@@ -11833,7 +12001,10 @@ async function toggleSeoPanel(forceRefresh = false) {
     ]}), 1500);
     return;
   }
-  try {
+  // R6-F (E-10): ta sama ocena juz trwa - czekamy na nia (forceRefresh to swiadomie nowa ocena).
+  const moj = ++seoPrzebieg;
+  if (forceRefresh) ocenyWToku.seo.delete(currentHash);
+  const zapytaj = async () => {
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
@@ -11845,12 +12016,18 @@ async function toggleSeoPanel(forceRefresh = false) {
     const data = await res.json();
     if (data.error) throw bladOdpowiedzi(data, res.status);
     const raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
-    const result = parsujJsonModelu(raw);
-    seoCache = { articleHash: currentHash, result };
-    ocenyWersji.seo.set(currentHash, seoCache);
-    showSeoResult(result);
+    const ocena = { articleHash: currentHash, result: parsujJsonModelu(raw) };
+    ocenyWersji.seo.set(currentHash, ocena);
+    return ocena;
+  };
+  try {
+    const wpis = await ocenaWToku('seo', currentHash, zapytaj);
+    if (moj !== seoPrzebieg) return;
+    seoCache = wpis;
+    showSeoResult(wpis.result);
     updateSeoHeader(false);
   } catch(e) {
+    if (moj !== seoPrzebieg) return;
     document.getElementById('seo-content').innerHTML = blokBledu(e, 'seoOpen=false;toggleSeoPanel(true)');
   }
 }
@@ -11940,7 +12117,10 @@ async function toggleAioPanel(forceRefresh = false) {
     return;
   }
 
-  try {
+  // R6-F (E-10): jak w SEO - ta sama ocena w toku jest wspolna, rysuje ostatnie otwarcie panelu.
+  const moj = ++aioPrzebieg;
+  if (forceRefresh) ocenyWToku.aio.delete(currentHashAio);
+  const zapytaj = async () => {
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
@@ -11961,12 +12141,18 @@ The 6 criteria to evaluate (give one item per criterion):
     const data = await res.json();
     if (data.error) throw bladOdpowiedzi(data, res.status);
     const raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
-    const result = parsujJsonModelu(raw);
-    aioCache = { articleHash: currentHashAio, result };
-    ocenyWersji.aio.set(currentHashAio, aioCache);
-    showAioResult(result);
+    const ocena = { articleHash: currentHashAio, result: parsujJsonModelu(raw) };
+    ocenyWersji.aio.set(currentHashAio, ocena);
+    return ocena;
+  };
+  try {
+    const wpis = await ocenaWToku('aio', currentHashAio, zapytaj);
+    if (moj !== aioPrzebieg) return;
+    aioCache = wpis;
+    showAioResult(wpis.result);
     updateAioHeader(false);
   } catch(e) {
+    if (moj !== aioPrzebieg) return;
     document.getElementById('aio-content').innerHTML = blokBledu(e, 'aioOpen=false;toggleAioPanel(true)');
   }
 }
@@ -12069,8 +12255,10 @@ function dlTxt() {
   const art = document.getElementById('article');
   if (!art || !art.innerHTML.trim()) return;
   const kopia = kopiaDoEksportu(art);
-  const blob = new Blob([tekstEksportu(kopia)], { type: 'text/plain;charset=utf-8' });
-  pobierzPlik(blob, nazwaPlikuEksportu(tytulEksportu(kopia), 'txt'));
+  const nazwa = nazwaPlikuEksportu(tytulEksportu(kopia), 'txt');
+  // R6-F (E-18): polski sklad w pliku (twarde spacje po wyrazach jednoliterowych).
+  const blob = new Blob([tekstEksportu(twardeSpacjePl(kopia))], { type: 'text/plain;charset=utf-8' });
+  pobierzPlik(blob, nazwa);
 }
 
 // DOCX to prawdziwy dokument Worda (pwa/lib/docx-natywny.js), nie HTML w opakowaniu:
@@ -12083,7 +12271,9 @@ async function dlDocx() {
   if (btn) { btn.innerHTML = _t('msg-loading-docx'); btn.disabled = true; }
   try {
     const kopia = kopiaDoEksportu(art);
-    await pobierzDocx(kopia, opcjeDocxArtykulu(kopia), nazwaPlikuEksportu(tytulEksportu(kopia), 'docx'));
+    // R6-F (E-18): metadane (tytul, opis) przed twardymi spacjami, tresc dokumentu po nich.
+    const opcje = opcjeDocxArtykulu(kopia), nazwa = nazwaPlikuEksportu(tytulEksportu(kopia), 'docx');
+    await pobierzDocx(twardeSpacjePl(kopia), opcje, nazwa);
   } catch (e) {
     // Bez surowego komunikatu wyjatku w interfejsie (angielski, techniczny) - szczegol w konsoli.
     console.error('[docx]', e);
@@ -12515,6 +12705,73 @@ document.addEventListener('keydown', function (e) {
     }
     window.addEventListener('resize', zaplanuj);
     policzZgode();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
+// R6-F (E-04): telefon - gest albo przycisk Wstecz przy otwartym arkuszu (inspektor, Baza,
+// statystyki, menu grup, Konto) zamyka arkusz. Wczesniej przegladarka cofala strone: aplikacja
+// ladowala sie od nowa, a przelacznik wersji i wyniki inspektora przepadaly (w PWA Wstecz
+// wychodzil z aplikacji). Otwarcie arkusza dokłada wpis historii przegladarki {cai:'arkusz'},
+// Wstecz go zdejmuje i zamyka arkusz, a zamkniecie krzyzykiem, zaslona albo Escape cofa nasz wpis
+// (history.back), zeby nastepne Wstecz dzialalo zwyczajnie. Arkusze otwiera i zamyka wiele miejsc
+// w kodzie, wiec stan czytamy z klas (obserwator), nie z kazdej funkcji osobno. Zmienna history
+// w tym pliku to lista artykulow - stad window.history.
+(function arkuszeIWstecz() {
+  const H = window.history;
+  let otwarty = false;          // stan z ostatniego sprawdzenia
+  let zPopstate = false;        // zamykamy po Wstecz: wpisu juz nie ma, bez history.back()
+  let czekamNaCofniecie = 0;    // nasze history.back(), ktore jeszcze nie wrocily jako popstate
+  function nasz(st) { return !!(st && st.cai === 'arkusz'); }
+  function jestOtwarty() {
+    const b = document.body;
+    return b.classList.contains('inspektor-otwarty') || b.classList.contains('statystyki-otwarte')
+      || !!document.querySelector('#mobile-sidebar.open, .grupa-menu.open, #settings-menu.open');
+  }
+  function zamknijArkusze() {
+    if (document.body.classList.contains('inspektor-otwarty')) inspektorZamknij();
+    if (document.body.classList.contains('statystyki-otwarte')) przelaczStatystyki(false);
+    closeMobileSidebar();
+    zamknijGrupyPaska();
+    closeSettingsMenu();
+  }
+  function sprawdz() {
+    const teraz = jestOtwarty();
+    if (teraz === otwarty) return;
+    otwarty = teraz;
+    if (teraz) {
+      // Arkusz otwarty, zanim wrocilo nasze history.back(): wpis dochodzi w popstate.
+      if (!document.body.classList.contains('is-mobile') || czekamNaCofniecie || nasz(H.state)) return;
+      H.pushState({ cai: 'arkusz' }, '');
+    } else if (zPopstate) {
+      zPopstate = false;
+    } else if (nasz(H.state)) {
+      czekamNaCofniecie++;
+      H.back();
+    }
+  }
+  window.addEventListener('popstate', function () {
+    if (czekamNaCofniecie) {
+      czekamNaCofniecie--;
+      if (!czekamNaCofniecie && otwarty && document.body.classList.contains('is-mobile') && !nasz(H.state)) H.pushState({ cai: 'arkusz' }, '');
+      return;
+    }
+    // Wstecz bez otwartego arkusza: przegladarka robi swoje.
+    if (!jestOtwarty()) return;
+    zPopstate = true;
+    zamknijArkusze();
+    sprawdz();
+    zPopstate = false;
+  });
+  function start() {
+    // Odswiezenie strony z otwartym arkuszem: arkusza juz nie ma, wpis przestaje byc nasz.
+    if (nasz(H.state)) H.replaceState(null, '');
+    const obs = new MutationObserver(sprawdz);
+    obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    document.querySelectorAll('#mobile-sidebar, .grupa-menu, #settings-menu').forEach(function (e) {
+      obs.observe(e, { attributes: true, attributeFilter: ['class'] });
+    });
+    otwarty = jestOtwarty();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
@@ -15254,9 +15511,10 @@ function renderAeoCheck() {
 
   // Teksty ze slownika: panel przelacza sie z jezykiem (przerysujOceny).
   const items = [];
-  items.push({ ok: firstWords >= 25 && firstWords <= 50, text: _t('aeo-definicja').replace('{n}', firstWords) });
+  // R6-F (E-17): odmiana przez liczbe ("32 słowa", "3 nagłówki-pytania", "1 nagłówek-pytanie").
+  items.push({ ok: firstWords >= 25 && firstWords <= 50, text: _tn('aeo-definicja', firstWords) });
   items.push({ ok: /\d/.test(firstP), text: _t('aeo-liczba') });
-  items.push({ ok: qH2.length >= 5 && qH2.length <= 7, text: _t('aeo-faq').replace('{n}', qH2.length) });
+  items.push({ ok: qH2.length >= 5 && qH2.length <= 7, text: _tn('aeo-faq', qH2.length) });
   const goodList = lists.some(l => { const n = l.querySelectorAll('li').length; return n >= 3 && n <= 7; });
   items.push({ ok: goodList, text: _t('aeo-lista') });
   const ratio = h2s.length ? qH2.length / h2s.length : 0;
@@ -17803,11 +18061,12 @@ async function kbAudioTranscribeAndOpen(file) {
   }
   window.rysujBazeWPanelu = rysujBazeWPanelu;
 
-  async function wyslijDoBazy(nazwa, tresc){
+  // R6-F (E-13): adres strony idzie osobnym polem (serwer zwraca go w liscie dla Linkow).
+  async function wyslijDoBazy(nazwa, tresc, url){
     try {
       var odp = await fetch('/api/baza', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ zakres: 'prywatna', nazwa: nazwa, tresc: tresc })
+        body: JSON.stringify({ zakres: 'prywatna', nazwa: nazwa, tresc: tresc, url: url || '' })
       });
       var dane = {}; try { dane = await odp.json(); } catch(e){}
       return { ok: odp.ok, status: odp.status, blad: dane.error || '' };
@@ -17823,7 +18082,7 @@ async function kbAudioTranscribeAndOpen(file) {
   window.addDoc = function(name, content, icon, url){
     if (icon === '⚠️' || !content) return dodajLokalnie(name, content, icon, url);
     var tresc = url ? ('Źródło: ' + url + '\n\n' + content) : content;
-    wyslijDoBazy(name, tresc).then(function(w){
+    wyslijDoBazy(name, tresc, url).then(function(w){
       if (w.ok) {
         pokazPowiadomienie(tekst('kb-dodano','Dodano do bazy wiedzy na serwerze') + ': ' + name, 'ok');
         odswiezListeBazy();
@@ -17841,7 +18100,7 @@ async function kbAudioTranscribeAndOpen(file) {
     for (var i = 0; i < doPrzeniesienia.length; i++) {
       var d = doPrzeniesienia[i];
       if (d.icon === '⚠️') continue;
-      var w = await wyslijDoBazy(d.name, d.url ? ('Źródło: ' + d.url + '\n\n' + d.content) : d.content);
+      var w = await wyslijDoBazy(d.name, d.url ? ('Źródło: ' + d.url + '\n\n' + d.content) : d.content, d.url);
       if (!w.ok) { odmowa = w.blad || tekst('bazas-blad','Nie udało się połączyć z serwerem.'); break; }
       var idx = docs.indexOf(d); if (idx >= 0) docs.splice(idx, 1);
       przeniesione++;
