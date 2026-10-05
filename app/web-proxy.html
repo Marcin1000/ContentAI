@@ -12673,13 +12673,15 @@ document.addEventListener('keydown', function (e) {
     const wersje = document.getElementById('versions-bar');
     if (!akcje || !wersje) return;
     pasek.querySelectorAll('.tylko-ikona').forEach((e) => e.classList.remove('tylko-ikona'));
+    // telefon: wlasny uklad (wiersz meta i pasek akcji na dole); tu tez zmienia sie klasa body przy przewijaniu
+    if (document.body.classList.contains('is-mobile')) return;
     // szerokosc kartki artykulu (max-width w ch jej pisma) jako szerokosc paska; styl <html> nie jest obserwowany
     const art = document.getElementById('article'), kol = art ? getComputedStyle(art).maxWidth : '';
     const html = document.documentElement;
     if (/px$/.test(kol) && html.style.getPropertyValue('--kolumna-paska') !== kol) html.style.setProperty('--kolumna-paska', kol);
     const wyb = wersje.querySelector('.ver-wybor'), napis = document.getElementById('ver-wybor-tekst');
     if (wyb) wyb.title = napis && napis.textContent ? _t('ver-wybor') + ': ' + napis.textContent : '';
-    if (document.body.classList.contains('is-mobile') || !pasek.offsetWidth) return;
+    if (!pasek.offsetWidth) return;
     // pasek nie zawija sie (nowrap), wiec brak miejsca widac jako tresc szersza od paska akcji
     const ciasno = () => akcje.scrollWidth > akcje.clientWidth + 1 || pasek.scrollWidth > pasek.clientWidth + 1;
     if (!ciasno()) return;
