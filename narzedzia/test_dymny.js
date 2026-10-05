@@ -589,13 +589,17 @@ async function wariantTelefonR6(b) {
     const art = document.getElementById('article');
     const h = [...art.querySelectorAll('h2')].find((x) => /Kluczowe wnioski|Key takeaways/.test(x.textContent));
     const x = [...document.querySelectorAll('#gap-all-topics .gap-topic-row')].filter((r) => r.querySelector('use[href="#i-circle-x"]'));
+    const wpis = wpisHistorii(biezacyHist), tmp = document.createElement('div');
+    tmp.innerHTML = (wpis && wpis.html) || '';
     return { zrodla: art.querySelectorAll('.zrodla-box li').length, brak: art.querySelectorAll('[data-brak]').length,
+      h2: art.querySelectorAll('h2').length, h2Historii: tmp.querySelectorAll('h2').length,
       wnioski: h && h.nextElementSibling ? h.nextElementSibling.querySelectorAll('li').length : 0,
       wynik: document.getElementById('gap-delta-after').textContent, bezZnacznika: x.length,
       info: (document.getElementById('gap-info') || { hidden: true }).hidden ? '' : document.getElementById('gap-info').textContent };
   });
   wynik('telefon: R6 Popraw pod luki - zrodla zostaja, bez pustych sekcji, wnioski do 8 punktow',
     przed > 0 && po.zrodla >= przed && po.brak === 0 && po.wnioski > 0 && po.wnioski <= 8, JSON.stringify(Object.assign({ przed }, po)));
+  wynik('telefon: R6 Popraw pod luki - nowe sekcje od razu we wpisie historii', po.h2 > 0 && po.h2Historii === po.h2, JSON.stringify({ h2: po.h2, h2Historii: po.h2Historii }));
   wynik('telefon: R6 Popraw pod luki - temat bez zrodla nie podbija wyniku i jest opisany w panelu',
     !/^100/.test(po.wynik) && po.bezZnacznika >= 1 && /: 1\b/.test(po.info), JSON.stringify(po));
 
@@ -612,6 +616,21 @@ async function wariantTelefonR6(b) {
   await krok('R6 wybor wersji z listy', s.selectOption('#ver-select', '0', { timeout: 3000 }));
   wynik('telefon: R6 wybor wersji z listy przelacza artykul', await s.evaluate(() => activeVersion === 0 && document.getElementById('ver-wybor-tekst').textContent === versions[0].label));
   await s.selectOption('#ver-select', '2').catch(() => {});
+
+  // Ocena po przelaczeniu wersji: otwarty panel AEO liczy sie dla wybranej wersji
+  // (wczesniej zostawal wynik poprzedniej, az do ponownego otwarcia panelu).
+  const aeo = await s.evaluate(() => {
+    const tekst = () => (document.getElementById('aeo-content').innerText || '').replace(/\s+/g, ' ').trim();
+    inspektorPokaz('aeo');
+    const v2 = tekst();
+    switchVersion(0);
+    const poPrzelaczeniu = tekst();
+    inspektorZamknij(); inspektorPokaz('aeo');
+    const ponownie = tekst();
+    switchVersion(2); inspektorZamknij();
+    return { rozne: v2 !== ponownie, aktualny: poPrzelaczeniu === ponownie, v2: v2.slice(0, 60), poPrzelaczeniu: poPrzelaczeniu.slice(0, 60), ponownie: ponownie.slice(0, 60) };
+  });
+  wynik('telefon: R6 ocena AEO po przelaczeniu wersji dotyczy wybranej wersji', aeo.rozne && aeo.aktualny, JSON.stringify(aeo));
 
   // SERP: srednie czolowki obok liczb artykulu; nowa zakladka otwiera sie od gory.
   await s.evaluate(() => inspektorPokaz('luki'));
@@ -634,6 +653,14 @@ async function wariantTelefonR6(b) {
   });
   wynik('telefon: R6 cudzyslowy w polskim artykule', cudz.pl === 'Hasło „poprawi się później” i „wariant premium” oraz „dobry” i „angielski” obok ekranu 27".'
     && /"quick"/.test(cudz.en), JSON.stringify(cudz));
+
+  // Poprawa SERP trafia do historii: po odswiezeniu wraca artykul z nowymi sekcjami (wczesniej wracal sprzed poprawy).
+  const naEkranie = await s.evaluate(() => document.querySelectorAll('#article h2').length);
+  await s.reload({ waitUntil: 'load' });
+  await krok('R6 artykul po odswiezeniu', s.waitForFunction(() => getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: 10000 }));
+  await s.waitForTimeout(300);
+  const poOdsw = await s.evaluate(() => ({ h2: document.querySelectorAll('#article h2').length, zrodla: document.querySelectorAll('#article .zrodla-box li').length }));
+  wynik('telefon: R6 poprawa pod luki zapisana w historii (po odswiezeniu)', poOdsw.h2 === naEkranie && poOdsw.zrodla > 0, JSON.stringify({ naEkranie, poOdsw }));
   wynik('telefon: R6 bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow) await zrzut(s, 'telefon-r6');
   await k.close();

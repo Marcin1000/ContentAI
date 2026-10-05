@@ -7948,6 +7948,7 @@ async function generate(skipPremiumModal = false, opcje = null) {
   document.getElementById('versions-bar').querySelectorAll('.ver-btn').forEach(el => el.remove());
   seoCache = null;
   aioCache = null;
+  ocenyWersji.seo.clear(); ocenyWersji.aio.clear();
   serpData = null;
   document.getElementById('serp-toggle-btn').style.display = 'none';
   // Statystyki, panele i wyniki poprzedniego artykulu nie przeciekaja do nowego (R3-20).
@@ -8623,6 +8624,7 @@ function previewHistory(i) {
     currentText = tekstBlokami(art);
     showArticleStats(h.html || '');
     seoCache = null; aioCache = null;
+    ocenyWersji.seo.clear(); ocenyWersji.aio.clear();
     // Zamknij panele SEO/AIO z poprzedniego artykułu
     seoOpen = false; aioOpen = false;
     document.getElementById('seo-panel')?.classList.remove('show');
@@ -11167,7 +11169,7 @@ function buildLinkSuggestions() {
 
   listEl.innerHTML = suggestions.map(s => `
     <div class="link-sug">
-      <span class="link-sug-icon">' + ikona('link') + '</span>
+      <span class="link-sug-icon">${ikona('link')}</span>
       <div>
         <!-- Nazwa dokumentu bierze sie z tytulu pobranej strony, a wiec
              z tresci obcej witryny. Bez ucieczki znakow strona mogla by
@@ -11375,6 +11377,17 @@ function switchVersion(i) {
   // a oceny nie biora wyniku "(cache)" innej wersji.
   seoCache = null; aioCache = null;
   zapiszRecznePoprawki();
+  odswiezOtwarteOceny();
+}
+
+// R6: otwarty panel oceny pokazywal po przelaczeniu wersji wynik poprzedniej (SEO 64 przy "Po",
+// AEO liczone dla "Przed"). AEO i GEO licza sie w przegladarce od razu, SEO i AIO biora wynik
+// tej wersji z pamieci albo oceniaja ja tak, jak przy otwarciu panelu.
+function odswiezOtwarteOceny() {
+  if (aeoOpen) renderAeoCheck();
+  if (geoOpen) renderGeoCheck();
+  if (seoOpen) { seoOpen = false; toggleSeoPanel(); }
+  if (aioOpen) { aioOpen = false; toggleAioPanel(); }
 }
 
 // ─── SEO ASSESSMENT ───────────────────────────────────────────────────────────
@@ -11389,6 +11402,10 @@ function regulaJezykaUwag() {
 // Cache wyników oceny - stabilny wynik dla tego samego artykułu
 let seoCache = null; // { articleHash, result }
 let aioCache = null;
+// R6: wyniki ocen modelu zapamietane dla kazdej wersji tekstu tego artykulu (klucz: skrot
+// calego tekstu). Przelaczanie Przed / Po / Poprawa SERP przy otwartym panelu pokazuje ocene
+// danej wersji bez ponownego wywolania; wersja jeszcze nieoceniona jest oceniana jak przy otwarciu.
+const ocenyWersji = { seo: new Map(), aio: new Map() };
 
 function simpleHash(str) {
   let h = 0;
@@ -11423,7 +11440,9 @@ async function toggleSeoPanel(forceRefresh = false) {
 
   // Użyj cache jeśli artykuł się nie zmienił
   const currentHash = simpleHash(fullText);
-  if (!forceRefresh && seoCache && seoCache.articleHash === currentHash) {
+  const seoZPamieci = forceRefresh ? null : (seoCache && seoCache.articleHash === currentHash ? seoCache : ocenyWersji.seo.get(currentHash));
+  if (seoZPamieci) {
+    seoCache = seoZPamieci;
     showSeoResult(seoCache.result);
     updateSeoHeader(true);
     return;
@@ -11455,6 +11474,7 @@ async function toggleSeoPanel(forceRefresh = false) {
     const raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     const result = parsujJsonModelu(raw);
     seoCache = { articleHash: currentHash, result };
+    ocenyWersji.seo.set(currentHash, seoCache);
     showSeoResult(result);
     updateSeoHeader(false);
   } catch(e) {
@@ -11524,7 +11544,9 @@ async function toggleAioPanel(forceRefresh = false) {
 
   // Użyj cache jeśli artykuł się nie zmienił
   const currentHashAio = simpleHash(articleText);
-  if (!forceRefresh && aioCache && aioCache.articleHash === currentHashAio) {
+  const aioZPamieci = forceRefresh ? null : (aioCache && aioCache.articleHash === currentHashAio ? aioCache : ocenyWersji.aio.get(currentHashAio));
+  if (aioZPamieci) {
+    aioCache = aioZPamieci;
     showAioResult(aioCache.result);
     updateAioHeader(true);
     return;
@@ -11568,6 +11590,7 @@ The 6 criteria to evaluate (give one item per criterion):
     const raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     const result = parsujJsonModelu(raw);
     aioCache = { articleHash: currentHashAio, result };
+    ocenyWersji.aio.set(currentHashAio, aioCache);
     showAioResult(result);
     updateAioHeader(false);
   } catch(e) {
@@ -12310,6 +12333,8 @@ function loadState() {
       if (Array.isArray(parsed) && parsed.length > 0) {
         // Dokument bez pola selected (zapis sprzed zaznaczania) jest zaznaczony (kod-06).
         docs = parsed.map(d => (d && d.selected === undefined) ? Object.assign(d, { selected: true }) : d);
+        // R6: wpis bez liczby slow (stary albo uszkodzony zapis) wywracal liste bazy i statystyki przy generowaniu
+        docs.forEach(d => { if (d && !Number.isFinite(d.words)) d.words = String(d.content || '').split(/\s+/).filter(Boolean).length; });
         renderDocs();
       }
     }
