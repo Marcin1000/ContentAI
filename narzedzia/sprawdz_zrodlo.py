@@ -1090,6 +1090,53 @@ KONTROLE += [
      '<div id="img-spinner" class="img-ramka img-ramka-trwa" style="display:none">', None, None),
 ]
 
+# R6-F: runda 6, wykonawca F - poprawki z audytu E poza Lukami (notatki o lukach, Wstecz na telefonie,
+# Fakty ze stronami z sieci, zapytania w toku, statystyki = eksport, polski sklad, regula frazy).
+# Osobna lista doklejana do KONTROLE, zeby nie zderzala sie z podpisami koordynatora przy scalaniu.
+KONTROLE += [
+    ("R6-F/notatka-z-tekstem", "E-02: notatka o luce z tekstem autora zostaje w eksporcie (bez data-brak)",
+     "  // R6-F (E-02): tekst autora wpisany w notatke zostaje w pliku (bez data-brak).\n  zdejmijNotatkiZTekstem(kopia);", None, None),
+    ("R6-F/notatka-edycja", "E-02: w trybie Edytuj akapit, ktory przestal byc notatka (takze z Entera), traci data-brak",
+     "  zdejmijNotatkiZTekstem(this);\n  clearTimeout(licznikPoprawek);", None, None),
+    ("R6-F/notatka-komunikat", "E-02/E-17: komunikat o pominietych notatkach jako ostrzezenie, z instrukcja",
+     "pokazPowiadomienie(_t('eksport-pominiete-luki').replace('{n}', String(luki)), 'uwaga');",
+     "pokazPowiadomienie(_t('eksport-pominiete-luki').replace('{n}', String(luki)), 'info');", None),
+    ("R6-F/wstecz-arkusz", "E-04: telefon - Wstecz przy otwartym arkuszu zamyka arkusz zamiast cofac strone",
+     "H.pushState({ cai: 'arkusz' }, '');", None, None),
+    ("R6-F/fakty-siec", "E-07: Fakty przy pustej Bazie porownuja artykul ze stronami z sieci",
+     "if (!zrodla.trim() && !sieciowe.length) {", None, None),
+    ("R6-F/fakty-fragmenty", "E-07: cytowane fragmenty stron zapamietane przy zrodle (bez duplikatow, z limitem)",
+     "if (frag && wpis.fragmenty.length < 8 && wpis.fragmenty.indexOf(frag) < 0) wpis.fragmenty.push(frag);", None, None),
+    ("R6-F/fakty-dopisek", "E-07: panel Fakty mowi, ze sprawdzono wzgledem stron z sieci",
+     "if (stan === 'gotowe' && faktyWzgledemSieci) {", None, None),
+    ("R6-F/fakty-w-toku", "E-10: powrot na Fakty w trakcie kontroli czeka na nia (bez drugiego zapytania)",
+     "if (!wymus && faktyWToku && faktyWToku.przebieg === faktyPrzebieg && faktyWToku.sygnatura === sygnatura) {", None, None),
+    ("R6-F/oceny-w-toku", "E-10: SEO i AIO - ta sama ocena w toku wspolna (jedna platna ocena)",
+     "const wpis = await ocenaWToku('seo', currentHash, zapytaj);", None, None),
+    ("R6-F/zakladka-hidden", "E-12: zakladka inspektora z hidden naprawde znika (SERP bez danych)",
+     ".ins-zakl[hidden], .ins-oceny [data-ins-ocena][hidden] { display: none; }", None, None),
+    ("R6-F/linki-baza-serwer", "E-13: sugestie linkow biora adresy takze z Bazy na serwerze",
+     "(window._bazaSerwer || []).forEach(function (d) {", None, None),
+    ("R6-F/baza-url", "E-13: adres strony wysylany osobnym polem do /api/baza",
+     "body: JSON.stringify({ zakres: 'prywatna', nazwa: nazwa, tresc: tresc, url: url || '' })", None, ("proxy",)),
+    ("R6-F/statystyki-eksport", "E-14: statystyki, FOG i KD liczone z tego, co wyjdzie w pliku (bez notatek, zrodel, meta)",
+     "const fog = calcFog(tekstProzy(tresc));", "const fog = calcFog(tekstProzy(tmp));", None),
+    ("R6-F/historia-slowa", "E-14: liczba slow wpisu Historii jak w pasku statystyk",
+     "wpis.words = liczbaSlowArtykulu(art);", "wpis.words = (art.innerText || '').split(/\\s+/).filter(Boolean).length;", None),
+    ("R6-F/aeo-odmiana", "E-17: AEO z odmiana liczebnika (naglowki-pytania, slowa)",
+     "text: _tn('aeo-faq', qH2.length)", "_t('aeo-faq').replace('{n}', qH2.length)", None),
+    ("R6-F/geo-etykiety", "E-17: etykiety GEO opisuja to, co computeGeo liczy (bez JSON-LD i FAQPage)",
+     "'geo-skladnik-struktura':'Struktura: H1, sekcje H2, pytania, lista'", "'geo-faq':'Sekcja FAQ pasująca do schematu FAQPage'", None),
+    ("R6-F/popraw-lepki", "E-17: telefon - Popraw pod brakujace tematy przyklejony do dolu arkusza",
+     "body.is-mobile .ins-tresc #gap-improve-btn { position: sticky; bottom: 0;", None, None),
+    ("R6-F/twarde-spacje", "E-18: polski sklad - twarda spacja po wyrazach jednoliterowych w PDF, DOCX i TXT",
+     "await pobierzDocx(twardeSpacjePl(kopia), opcje, nazwa);", None, None),
+    ("R6-F/pdf-krotkie-akapity", "E-18: krotkie akapity PDF w calosci na jednej stronie",
+     "akapitPdf.unbreakable = true;", None, None),
+    ("R6-F/regula-frazy", "E-19: fraza kluczowa nie jako sztuczny podmiot zdania (generowanie i poprawa samokorekty)",
+     "system: editorSysPelny + '\\n' + REGULA_FRAZY_PODMIOTU,", None, None),
+]
+
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi
 # do przegladarki bez przetworzenia, kazda z nich jest potrojona -> SyntaxError
 # "Identifier ... has already been declared" wywala caly blok <script> i zabija UI.
