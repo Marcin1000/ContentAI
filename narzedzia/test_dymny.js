@@ -687,8 +687,9 @@ async function wariantTelefonR6(b) {
 // (Fakty wzgledem stron z sieci), potem strona z adresem w Bazie na serwerze (Linki). Na koncu
 // Wstecz, bo ostatni krok naprawde opuszcza strone. Kazdy scenariusz pada na 52ad6c5.
 async function wariantR6F(b) {
-  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, acceptDownloads: true });
-  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); } catch (e) { /* bez magazynu */ } });
+  // Interfejs i artykul po polsku (komunikaty, odmiana i polski sklad w eksporcie sa sprawdzane po polsku).
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, acceptDownloads: true, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); if (!localStorage.getItem('cai_lang')) localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
   const bledy = [];
   k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
   const s = await zaloguj(k, 'standard');
@@ -773,9 +774,11 @@ async function wariantR6F(b) {
   // krotkie akapity PDF w calosci na jednej stronie.
   const txt = (await pobierzPlik(() => dlTxt())).toString('utf8');
   const toast = await s.evaluate(() => [...document.querySelectorAll('.powiadomienie')].map((p) => p.className + '|' + p.textContent).join(' || '));
+  // Twarde spacje z E-18 (po "w") porownujemy jak zwykle.
+  const txtZw = txt.replace(/\u00a0/g, ' ');
   wynik('telefon: R6-F E-02 tekst autora i naglowki sekcji w pliku, sama notatka pominieta',
-    /Tekst autora wpisany w sekcji jeden/.test(txt) && /Akapit autora pod notatka w sekcji dwa/.test(txt) && /Sekcja R6F jeden/.test(txt) && /Sekcja R6F dwa/.test(txt)
-    && txt.indexOf(NOTATKA.slice(0, 30)) < 0, txt.slice(0, 200));
+    /Tekst autora wpisany w sekcji jeden/.test(txtZw) && /Akapit autora pod notatka w sekcji dwa/.test(txtZw) && /Sekcja R6F jeden/.test(txtZw) && /Sekcja R6F dwa/.test(txtZw)
+    && txtZw.indexOf(NOTATKA.slice(0, 30)) < 0, txtZw.slice(0, 200));
   wynik('telefon: R6-F E-02/E-17 komunikat eksportu jako ostrzezenie z instrukcja (usun notatke albo wpisz tresc)',
     /powiadomienie-uwaga\|[^|]*pominięte w eksporcie: 1[^|]*Usuń notatkę albo wpisz w jej miejsce treść/.test(toast), toast);
   const JEDNA = /(^|[\s(„"])[aiouwzAIOUWZ] /m, TWARDA = /(^|[\s(„" ])[aiouwzAIOUWZ] /;
