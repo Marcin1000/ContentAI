@@ -1163,6 +1163,19 @@ KONTROLE += [
      "akapitPdf.unbreakable = true;", None, None),
     ("R6-F/regula-frazy", "E-19: fraza kluczowa nie jako sztuczny podmiot zdania (generowanie i poprawa samokorekty)",
      "system: editorSysPelny + '\\n' + REGULA_FRAZY_PODMIOTU,", None, None),
+    # Runda 7 (koordynator): Luki, adresat tekstu, tytuly zrodel
+    ("R7/luki-wynik-od-razu", "wynik Luk po poprawie od razu, bez ponownej analizy calego tekstu",
+     "const wynikPo = { msg: _t('gap-po-poprawie'), present: [], missing: [] };", None, None),
+    ("R7/luki-blokada-wyboru", "zaznaczenia tematow zablokowane na czas poprawy",
+     "const blokuj = (tak) => document.querySelectorAll('#gap-missing .gap-miss-check, #gap-missing-wrap .btn-maly')", None, None),
+    ("R7/luki-konkurencja", "tematy o marce konkurencji domyslnie odznaczone, z plakietka",
+     "gapKonkurencja = dopasujDoSerp(odp.competitors, tematy);", None, None),
+    ("R7/luki-dlugosc-sekcji", "nowe sekcje zwiezle (120-200 slow), artykul nie puchnie ponad czolowke",
+     "Keep each new section concise: about 120-200 words", None, None),
+    ("R7/jeden-adresat", "jeden adresat w calym tekscie (wlasciciel sklepu albo klient, nie na zmiane)",
+     "- Keep ONE addressee for the whole text", None, None),
+    ("R7/tytul-zrodla", "tytul zrodla bez \"Strona 1 z 7\" z naglowka PDF",
+     ".replace(/^\\s*(?:strona|page|seite)\\s+\\d+\\s+(?:z|of|von)\\s+\\d+\\s*[-:|]?\\s*/i, '')", None, None),
 ]
 
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi

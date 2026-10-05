@@ -871,6 +871,51 @@ async function wariantNowyArtykul(b) {
 // R6-F (wykonawca F, runda 6, audyt E poza Lukami). Telefon 412x915, konto standard: pusta Baza
 // (Fakty wzgledem stron z sieci), potem strona z adresem w Bazie na serwerze (Linki). Na koncu
 // Wstecz, bo ostatni krok naprawde opuszcza strone. Kazdy scenariusz pada na 52ad6c5.
+// Runda 7 (koordynator): Luki - temat konkurencji odznaczony, wybor zablokowany w trakcie poprawy,
+// wynik po poprawie od razu (bez drugiej analizy calego tekstu); tytul zrodla bez "Strona 1 z 7".
+async function wariantR7Luki(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); if (!localStorage.getItem('cai_lang')) localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  const bledy = [];
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  const s = await zaloguj(k, 'premium');
+  const luki = [];
+  s.on('request', (r) => { if (r.method() === 'POST' && /\/api$/.test(r.url()) && /semantic SEO expert/.test(r.postData() || '')) luki.push(Date.now()); });
+  await s.evaluate(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); });
+  await s.fill('#topic', 'Punkt odbioru paczek w sklepie');
+  await s.evaluate(() => { document.getElementById('use-web').checked = true; document.getElementById('use-serp').checked = true; premiumMode = false; generate(true); });
+  await s.waitForFunction(() => !document.getElementById('gen-btn').disabled && getComputedStyle(document.getElementById('spinner')).display === 'none', null, { timeout: 60000 });
+  const konk = 'Oferta Konkurent Alfa';
+  await s.evaluate((t) => { serpData.topics.push(t); gapCache = null; inspektorPokaz('luki'); }, konk);
+  await krok('R7L analiza luk', s.waitForFunction(() => document.querySelectorAll('#gap-missing .gap-miss-check').length > 1, null, { timeout: 30000 }));
+  const lista = await s.evaluate(() => [...document.querySelectorAll('#gap-missing .gap-miss-item')].map((el) => ({
+    tekst: el.querySelector('.gap-miss-text').textContent, zazn: el.querySelector('.gap-miss-check').checked, konk: !!el.querySelector('.gap-konk') })));
+  const wiersz = lista.find((x) => x.tekst.indexOf(konk) === 0) || {};
+  wynik('telefon: R7L temat o konkurencji oznaczony i domyslnie odznaczony, reszta zaznaczona',
+    wiersz.konk === true && wiersz.zazn === false && lista.filter((x) => x !== wiersz).every((x) => x.zazn && !x.konk), JSON.stringify(lista));
+
+  const przed = luki.length;
+  await s.evaluate(() => { kontekstArt.temat = 'Punkt odbioru paczek w sklepie [atrapa:opoznienie=2000@luki-sekcje]'; improveFromGaps(); });
+  await s.waitForTimeout(400);
+  const wTrakcie = await s.evaluate(() => [...document.querySelectorAll('#gap-missing .gap-miss-check')].map((c) => c.disabled));
+  wynik('telefon: R7L zaznaczenia tematow zablokowane w trakcie poprawy', wTrakcie.length > 0 && wTrakcie.every(Boolean), JSON.stringify(wTrakcie));
+  await krok('R7L poprawa pod luki', s.waitForFunction(() => versions.length >= 2 && !przerwanieGenerowania, null, { timeout: 60000 }));
+  const poKoncu = Date.now();
+  await s.waitForTimeout(800);
+  const po = await s.evaluate(() => ({ delta: document.getElementById('gap-delta').style.display,
+    ladowanie: getComputedStyle(document.getElementById('gap-loading')).display, przed: document.getElementById('gap-delta-before').textContent,
+    poPkt: document.getElementById('gap-delta-after').textContent, wolne: [...document.querySelectorAll('#gap-missing .gap-miss-check')].every((c) => !c.disabled) }));
+  wynik('telefon: R7L wynik po poprawie od razu, bez ponownej analizy calego tekstu',
+    po.delta === 'block' && po.ladowanie === 'none' && luki.length === przed && parseInt(po.poPkt, 10) > parseInt(po.przed, 10) && po.wolne,
+    JSON.stringify({ po, zapytan: luki.length - przed, poKoncu: luki.filter((t) => t >= poKoncu).length }));
+
+  const zrodla = await s.evaluate(() => blokZrodel([{ url: 'https://example.com/regulamin.pdf', tytul: 'Strona 1 z 7 Regulamin usługi odbioru', data: '' },
+    { url: 'https://example.com/terms.pdf', tytul: 'Page 2 of 9 - Service terms', data: '' }]));
+  wynik('telefon: R7L tytul zrodla z PDF bez numeru strony', /Regulamin usługi odbioru/.test(zrodla) && /Service terms/.test(zrodla) && !/Strona 1 z 7|Page 2 of 9/.test(zrodla), zrodla.replace(/<[^>]+>/g, ' ').slice(0, 200));
+  wynik('telefon: R7L bez bledow strony', bledy.length === 0, bledy.join(' | '));
+  await k.close();
+}
+
 async function wariantR6F(b) {
   // Interfejs i artykul po polsku (komunikaty, odmiana i polski sklad w eksporcie sa sprawdzane po polsku).
   const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, acceptDownloads: true, locale: 'pl-PL' });
@@ -1172,6 +1217,7 @@ async function uruchomSerwerPlikow() {
     await wariantTelefonR6Luki(b);
     await wariantNowyArtykul(b);
     await wariantR6F(b);
+    await wariantR7Luki(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));

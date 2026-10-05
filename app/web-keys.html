@@ -1715,6 +1715,8 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 .gap-info.uwaga { border-color: var(--c-akcent-ramka); background: var(--c-akcent-tlo); color: var(--c-tekst); }
 .gap-info.blad { border-color: var(--c-blad); color: var(--c-blad); }
 .gap-info[hidden] { display: none; }
+/* R7: temat o konkurencji w Lukach */
+.gap-konk { display: inline-block; margin-left: var(--s-6); padding: 0 var(--s-6); border-radius: var(--r-sm); background: var(--c-wcisk); color: var(--c-tekst-2); font-size: var(--t-xs); font-weight: var(--g-mocny); vertical-align: 1px; }
 /* R6: SERP - czolowka Google obok artykulu */
 .serp-stats { margin-bottom: var(--s-12); padding-bottom: var(--s-12); border-bottom: 1px solid var(--c-linia); }
 .serp-porownanie { display: grid; gap: 0; border: 1px solid var(--c-linia-2); border-radius: var(--r-md); overflow: hidden; background: var(--c-pole); }
@@ -5237,7 +5239,7 @@ var I18N = {
     'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','nowy-artykul':'Nowy artykuł','nowy-artykul-title':'Wyczyść temat, słowa kluczowe i wytyczne, żeby zacząć kolejny artykuł. Poprzedni zostaje w Historii.','nowy-artykul-gotowe':'Możesz pisać nowy artykuł. Poprzedni jest w Historii.','nowy-brief-wyczyszczony':'Brief wyczyszczony.','nowy-cofnij':'Cofnij','ustawienia-domyslne':'Przywróć ustawienia domyślne','ustawienia-domyslne-gotowe':'Przywrócono ustawienia domyślne: typ, długość, ton, język, źródła i opcje zaawansowane.','msg-dopracuj-bez-zmian':'Tekst ma już {n}/100, samokorekta nie znalazła nic do poprawy. Zostaje bez zmian.','ver-serp':'Poprawa SERP','ver-wybor':'Wersja artykułu',
     'spin-sub-model':'model przetwarza temat i bazę wiedzy','spin-sub-hybrid2':'optymalizuję jednocześnie pod SEO, AIO i czytelnika',
     'link-suggest-prefix':'Rozważ link do','link-suggest-at':'przy słowach:',
-    'gap-still-missing':'Nadal brakujące tematy','gap-szukam':'Szukam źródeł i piszę sekcje…','gap-bez-zrodel':'Nowe sekcje potrzebują źródeł. Baza wiedzy jest pusta, a wyszukiwanie w sieci wyłączone, więc tych tematów nie da się opisać bez zmyślania.','gap-wlacz-siec':'Włącz wyszukiwanie w sieci i popraw','gap-inny-artykul':'Poprawa dotyczyła poprzedniego artykułu, więc jej wynik nie został wstawiony.','gap-pusto':'Model nie zwrócił nowych sekcji. Spróbuj ponownie.','gap-dopisane':'Dopisano sekcje: {n}. Wynik w zakładce Luki.','gap-serp-blad':'Analiza SERP nie powiodła się przy generowaniu, więc nie ma z czym porównać tekstu. Wygeneruj artykuł ponownie z włączoną analizą SERP.','serp-blad-toast':'Analiza SERP nie powiodła się. Artykuł powstaje bez niej.','gap-pkt':'pkt','gap-bez-zrodel-baza':'Tematy bez pokrycia w zaznaczonych dokumentach: {n}. Nie dodano dla nich pustych sekcji. Włącz wyszukiwanie w sieci albo dodaj materiał do bazy wiedzy.','gap-bez-zrodel-siec':'Tematy bez źródła: {n}. Nie dodano dla nich pustych sekcji, zostają na liście brakujących. Dodaj materiał do bazy wiedzy i spróbuj ponownie.',
+    'gap-still-missing':'Nadal brakujące tematy','gap-szukam':'Szukam źródeł i piszę sekcje…','gap-bez-zrodel':'Nowe sekcje potrzebują źródeł. Baza wiedzy jest pusta, a wyszukiwanie w sieci wyłączone, więc tych tematów nie da się opisać bez zmyślania.','gap-wlacz-siec':'Włącz wyszukiwanie w sieci i popraw','gap-konkurencja':'konkurencja','gap-konkurencja-title':'Temat o marce lub produkcie konkurencji. Domyślnie odznaczony: w tekście marki to Twoja decyzja.','gap-po-poprawie':'Wynik z dopisanych sekcji. Odśwież, jeśli model ma ocenić cały tekst od nowa.','gap-inny-artykul':'Poprawa dotyczyła poprzedniego artykułu, więc jej wynik nie został wstawiony.','gap-pusto':'Model nie zwrócił nowych sekcji. Spróbuj ponownie.','gap-dopisane':'Dopisano sekcje: {n}. Wynik w zakładce Luki.','gap-serp-blad':'Analiza SERP nie powiodła się przy generowaniu, więc nie ma z czym porównać tekstu. Wygeneruj artykuł ponownie z włączoną analizą SERP.','serp-blad-toast':'Analiza SERP nie powiodła się. Artykuł powstaje bez niej.','gap-pkt':'pkt','gap-bez-zrodel-baza':'Tematy bez pokrycia w zaznaczonych dokumentach: {n}. Nie dodano dla nich pustych sekcji. Włącz wyszukiwanie w sieci albo dodaj materiał do bazy wiedzy.','gap-bez-zrodel-siec':'Tematy bez źródła: {n}. Nie dodano dla nich pustych sekcji, zostają na liście brakujących. Dodaj materiał do bazy wiedzy i spróbuj ponownie.',
     'editor-done':'Gotowe','edit-etykieta':'Edycja','edit-cofnij':'Cofnij','edit-pasek':'Edycja tekstu','edit-podpowiedz':'Tryb edycji: dotknij tekstu, aby go zmienić. Gotowe zapisuje zmiany.','kb-words-suffix':'słów','kb-tag-text':'Tekst','kb-tag-file':'Plik','hist-words-suffix':'słów',
     'url-fetch-done':'Gotowe - strona dodana do bazy!',
     'url-demo-connect':'Łączę ze stroną…','url-demo-fetch':'Pobieram treść…','url-demo-process':'Przetwarzam…','upload-processing':'Przetwarzam: {name}','url-demo-done':'Gotowe!',
@@ -5883,7 +5885,7 @@ var I18N = {
     'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','nowy-artykul':'New article','nowy-artykul-title':'Clear the topic, keywords and guidelines to start the next article. The previous one stays in History.','nowy-artykul-gotowe':'Ready for a new article. The previous one is in History.','nowy-brief-wyczyszczony':'Brief cleared.','nowy-cofnij':'Undo','ustawienia-domyslne':'Restore default settings','ustawienia-domyslne-gotowe':'Default settings restored: type, length, tone, language, sources and advanced options.','msg-dopracuj-bez-zmian':'The text already scores {n}/100, self-review found nothing to improve. It stays as it is.','ver-serp':'SERP improvement','ver-wybor':'Article version',
     'spin-sub-model':'model processes topic and knowledge base','spin-sub-hybrid2':'optimizing for SEO, AIO and readability simultaneously',
     'link-suggest-prefix':'Consider linking','link-suggest-at':'at words:',
-    'gap-still-missing':'Still missing topics','gap-szukam':'Finding sources and writing sections…','gap-bez-zrodel':'New sections need sources. The knowledge base is empty and web search is off, so these topics cannot be covered without inventing facts.','gap-wlacz-siec':'Turn on web search and improve','gap-inny-artykul':'The improvement was for the previous article, so its result was not inserted.','gap-pusto':'The model returned no new sections. Please try again.','gap-dopisane':'Sections added: {n}. See the Gaps tab for the result.','gap-serp-blad':'The SERP analysis failed during generation, so there is nothing to compare the text with. Generate the article again with SERP analysis on.','serp-blad-toast':'The SERP analysis failed. The article is being written without it.','gap-pkt':'pts','gap-bez-zrodel-baza':'Topics not covered by the selected documents: {n}. No empty sections were added. Turn on web search or add material to the knowledge base.','gap-bez-zrodel-siec':'Topics without a source: {n}. No empty sections were added; they stay on the missing list. Add material to the knowledge base and try again.',
+    'gap-still-missing':'Still missing topics','gap-szukam':'Finding sources and writing sections…','gap-bez-zrodel':'New sections need sources. The knowledge base is empty and web search is off, so these topics cannot be covered without inventing facts.','gap-wlacz-siec':'Turn on web search and improve','gap-konkurencja':'competitor','gap-konkurencja-title':'A topic about a competing brand or product. Unchecked by default: in brand content this is your call.','gap-po-poprawie':'Score from the added sections. Refresh if the model should rate the whole text again.','gap-inny-artykul':'The improvement was for the previous article, so its result was not inserted.','gap-pusto':'The model returned no new sections. Please try again.','gap-dopisane':'Sections added: {n}. See the Gaps tab for the result.','gap-serp-blad':'The SERP analysis failed during generation, so there is nothing to compare the text with. Generate the article again with SERP analysis on.','serp-blad-toast':'The SERP analysis failed. The article is being written without it.','gap-pkt':'pts','gap-bez-zrodel-baza':'Topics not covered by the selected documents: {n}. No empty sections were added. Turn on web search or add material to the knowledge base.','gap-bez-zrodel-siec':'Topics without a source: {n}. No empty sections were added; they stay on the missing list. Add material to the knowledge base and try again.',
     'img-download-btn':'Download PNG','img-copy-btn-lbl':'Copy',
     'img-step1-noref':'Step 1 of 2: creating image prompt',
     'img-prompt-used':'Used prompt',
@@ -7049,7 +7051,11 @@ function blokRytmu() {
     + 'same time, so shorten both. Split any sentence over 25 words.\n'
     + '- Do not begin consecutive paragraphs with the same construction.\n'
     + '- Take a position where the sources allow it. State which option suits which '
-    + 'situation instead of listing options with equal weight.';
+    + 'situation instead of listing options with equal weight.\n'
+    // R7: tekst dla sklepu mowil raz do wlasciciela ("Twoj klient"), raz do odbiorcy paczki ("odbierzesz").
+    + '- Keep ONE addressee for the whole text: the reader the brief targets. If that reader is a business '
+    + '(e.g. a shop owner), speak to them and refer to their customers in the third person; never switch to '
+    + 'addressing the end customer (e.g. "you will pick up your parcel") in the same text.';
 }
 
 // UWAGA 7: "Zadna z wersji tekstu nie ma rozbudowanej struktury naglowkow,
@@ -8517,6 +8523,7 @@ ${html}`;
   gapBaseline = null;
   gapSelectedTopics = [];
   gapBezPokrycia = [];
+  gapKonkurencja = [];
   gapImproveCount = 0;
   gapPreviousTopics = [];
   document.getElementById('gap-panel').style.display = 'none';
@@ -8683,6 +8690,7 @@ function previewHistory(i) {
     gapBaseline = null;
     gapSelectedTopics = [];
     gapBezPokrycia = [];
+    gapKonkurencja = [];
     gapImproveCount = 0;
     gapPreviousTopics = [];
     // Reset wersji - historia ma tylko jedną wersję artykułu
@@ -9035,7 +9043,9 @@ function blokZrodel(zrodla) {
   if (!zrodla || !zrodla.length) return '';
   const pozycje = zrodla.map(function (z) {
     // "Krakowskie mamuty - ciekawe.org - ciekawe.org": powtorzona koncowka tytulu strony.
-    const nazwa = String(z.tytul || '').replace(/(\s[-|\u2022\u00b7]\s[^-|\u2022\u00b7]+)\1+$/, '$1').trim() || z.url;
+    // R7: tytul z naglowka strony PDF ("Strona 1 z 7 Regulamin...", "Page 2 of 9 ...") bez numeru strony.
+    const nazwa = String(z.tytul || '').replace(/(\s[-|\u2022\u00b7]\s[^-|\u2022\u00b7]+)\1+$/, '$1')
+      .replace(/^\s*(?:strona|page|seite)\s+\d+\s+(?:z|of|von)\s+\d+\s*[-:|]?\s*/i, '').trim() || z.url;
     const data = /^\d{4}-\d{2}-\d{2}$/.test(z.data || '') ? znacznikDatyZrodla(z.data) : '';
     return '<li><a href="' + escapeHtml(z.url) + '" target="_blank" rel="noopener">'
       + escapeHtml(nazwa) + '</a>' + data + '</li>';
@@ -10816,6 +10826,7 @@ function _gapResetPanels() {
   document.getElementById('gap-no-serp').style.display = 'none';
 }
 
+let gapKonkurencja = [];
 function _buildMissingHtml(topics) {
   const btn = document.getElementById('gap-improve-btn');
   if (btn) btn.style.display = 'block';
@@ -10827,11 +10838,13 @@ function _buildMissingHtml(topics) {
     const prevBadge = isPrev
       ? '<span style="font-size:10px;color:var(--c-uwaga);background:var(--c-akcent-tlo);border-radius:4px;padding:1px 5px;margin-left:5px">' + _t('ver-previously-improved') + '</span>'
       : '';
+    const konk = gapKonkurencja.includes(t);
+    const konkBadge = konk ? '<span class="gap-konk" title="' + escapeHtml(_t('gap-konkurencja-title')) + '">' + escapeHtml(_t('gap-konkurencja')) + '</span>' : '';
     return '<div class="gap-miss-item" onclick="gapToggleItem(' + i + ')">' +
-      '<input type="checkbox" class="gap-miss-check" id="gap-chk-' + i + '" checked ' +
+      '<input type="checkbox" class="gap-miss-check" id="gap-chk-' + i + '"' + (konk ? '' : ' checked') + ' ' +
       'onchange="updateGapBtn()" onclick="event.stopPropagation()">' +
       '<div class="gap-miss-dot" style="margin-top:5px"></div>' +
-      '<div class="gap-miss-text">' + escapeHtml(t) + prevBadge + '</div></div>';
+      '<div class="gap-miss-text">' + escapeHtml(t) + prevBadge + konkBadge + '</div></div>';
   }).join('');
 }
 
@@ -11035,7 +11048,7 @@ async function runGapAnalysis() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 900,
-        system: 'You are a semantic SEO expert. Compare an article to SERP topics and return ONLY valid JSON (no markdown): {"missing":["topic",...],"present":["topic",...],"msg":"one sentence assessment in ' + (currentLang === 'en' ? 'English' : 'Polish') + '"}. Copy each topic name exactly as listed and put EVERY listed topic in exactly one of the two lists. A topic is present only when the article actually discusses it, not when it merely mentions a word from it.',
+        system: 'You are a semantic SEO expert. Compare an article to SERP topics and return ONLY valid JSON (no markdown): {"missing":["topic",...],"present":["topic",...],"competitors":["topic",...],"msg":"one sentence assessment in ' + (currentLang === 'en' ? 'English' : 'Polish') + '"}. Copy each topic name exactly as listed and put EVERY listed topic in exactly one of the two lists. A topic is present only when the article actually discusses it, not when it merely mentions a word from it. "competitors" lists the topics (from either list) that are about another company\'s brand, product or service rather than the article\'s own subject.',
         messages: [{ role: 'user', content: 'Keyword: ' + kwText + '\nSERP topics (full list): ' + tematy.join(', ') + '\n\nArticle:\n' + articleText }]
       })
     });
@@ -11048,6 +11061,9 @@ async function runGapAnalysis() {
     const present = dopasujDoSerp(odp.present, tematy);
     const parsed = { present, missing: tematy.filter((t) => !present.includes(t)), msg: odp.msg || '',
       score: Math.round(present.length / tematy.length * 100) };
+    // R7: tematy o konkurencji (np. "Porownanie z InPost i Allegro One Box" w tekscie DHL) sa oznaczone
+    // i domyslnie odznaczone - w tekscie marki to swiadoma decyzja autora, nie domyslna luka.
+    gapKonkurencja = dopasujDoSerp(odp.competitors, tematy);
 
     if (gapBaseline && gapSelectedTopics.length) {
       // Po poprawce - delta z tematami, dla ktorych sekcja naprawde powstala
@@ -11134,6 +11150,9 @@ async function improveFromGaps() {
   const przerwanie = przerwanieGenerowania = new AbortController();
   const ustawPrzycisk = (tekst) => { if (btn) btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><span class="progress-spinner" style="display:inline-block"></span><span>' + escapeHtml(tekst) + '</span></span>'; };
   if (btn) btn.disabled = true;
+  // R7: w trakcie poprawy wybor tematow jest zablokowany (zmiana i tak niczego juz nie zmienia)
+  const blokuj = (tak) => document.querySelectorAll('#gap-missing .gap-miss-check, #gap-missing-wrap .btn-maly').forEach((el) => { el.disabled = tak; });
+  blokuj(true);
   ustawPrzycisk(_t(zSiecia ? 'gap-szukam' : 'msg-spin-sections').replace('⏳', '').trim());
   // R6 (E-08): odliczanie przed ponowieniem po 429 w przycisku Luk, nie w ukrytym spinnerze generowania
   komunikatPonawiania = (sek, n, m) => ustawPrzycisk(_t('spin-ponawiam-za').replace('{s}', sek) + ', ' + _t('spin-proba').replace('{n}', n).replace('{m}', m));
@@ -11186,6 +11205,7 @@ async function improveFromGaps() {
       '\nOutput language: ' + outLang +
       '\n\nSOURCES (knowledge base' + (zSiecia ? '; you may also search the web' : ', the only material you may draw facts from') + '):\n' + zrodlaDoKontroli().slice(0, 100000) +
       '\n\nExisting article (context/tone - do NOT repeat):\n' + articlePlainText + spis +
+      '\n\nKeep each new section concise: about 120-200 words, no longer than the existing sections; do not pad.' +
       '\n\nWrite new HTML sections in ' + outLang + ' (each: <h2>Heading</h2><p>...</p><p>...</p>) for:\n' + topicsList +
       (hasKw
         ? '\n\nAfter the new sections, write an updated <h2>' + kwSectionName + '</h2><ul><li>...</li></ul> with 5 to 8 bullet points that sum up the WHOLE article, including the new sections. Merge related points; do not list every paragraph.'
@@ -11333,13 +11353,20 @@ async function improveFromGaps() {
     // R6 (E-11): panel Luk odswieza sie tylko wtedy, gdy jest na wierzchu. Wczesniej otwieral
     // sie sam (takze nad innym artykulem i obok innej zakladki), teraz w innym razie komunikat.
     const lukiNaWierzchu = gapOpen && panelWidoczny('gap-panel') && !document.getElementById('inspektor').hidden;
-    if (lukiNaWierzchu) runGapAnalysis();
-    else pokazPowiadomienie(_t('gap-dopisane').replace('{n}', String(pokryteTeraz.length)), 'ok');
+    // R7: wynik po poprawie od razu. Liczy sie z tematow, dla ktorych sekcja naprawde powstala, wiec
+    // ponowna analiza calego tekstu (dluga przy dluzszym artykule) nic by tu nie zmienila; robi ja Odswiez.
+    if (gapBaseline) {
+      const wynikPo = { msg: _t('gap-po-poprawie'), present: [], missing: [] };
+      gapCache = { snapshot: getArticleSnapshot(), result: wynikPo, baseline: gapBaseline, selected: gapSelectedTopics, isDelta: true };
+      if (lukiNaWierzchu) renderGapDelta(gapBaseline, wynikPo, gapSelectedTopics);
+    } else if (lukiNaWierzchu) runGapAnalysis();
+    if (!lukiNaWierzchu) pokazPowiadomienie(_t('gap-dopisane').replace('{n}', String(pokryteTeraz.length)), 'ok');
   } catch (e) {
     if (nrArt === numerArtykulu && !(e && e.name === 'AbortError')) pokazBladLuk(komunikatBleduApi(e, 'gap-blad'));
   } finally {
     komunikatPonawiania = null;
     if (przerwanieGenerowania === przerwanie) przerwanieGenerowania = null;
+    blokuj(false);
     document.getElementById('gap-gen-indicator')?.remove();
     if (btn) { btn.disabled = false; updateGapBtn(); }
   }
@@ -11689,7 +11716,7 @@ function switchVersion(i) {
 function zapiszStanLuk(v) {
   if (!v) return;
   v.luki = { cache: gapCache, baseline: gapBaseline, wybrane: gapSelectedTopics.slice(),
-    bez: gapBezPokrycia.slice(), bezSiec: gapBezPokryciaSiec };
+    bez: gapBezPokrycia.slice(), bezSiec: gapBezPokryciaSiec, konk: gapKonkurencja.slice() };
 }
 function wczytajStanLuk(v) {
   const l = v && v.luki;
@@ -11698,6 +11725,7 @@ function wczytajStanLuk(v) {
   gapSelectedTopics = l ? l.wybrane.slice() : [];
   gapBezPokrycia = l ? l.bez.slice() : [];
   gapBezPokryciaSiec = l ? l.bezSiec : false;
+  gapKonkurencja = l && l.konk ? l.konk.slice() : [];
 }
 
 // R6: otwarty panel oceny pokazywal po przelaczeniu wersji wynik poprzedniej (SEO 64 przy "Po",
@@ -12836,7 +12864,7 @@ function wyczyscWynik() {
   seoCache = null; aioCache = null;
   ocenyWersji.seo.clear(); ocenyWersji.aio.clear();
   serpData = null; serpBlad = false;
-  gapOpen = false; gapCache = null; gapBaseline = null; gapSelectedTopics = []; gapBezPokrycia = [];
+  gapOpen = false; gapCache = null; gapBaseline = null; gapSelectedTopics = []; gapBezPokrycia = []; gapKonkurencja = [];
   gapImproveCount = 0; gapPreviousTopics = [];
   const gp = document.getElementById('gap-panel'); if (gp) gp.style.display = 'none';
   zrodlaSieciowe = []; stanSieci = null; ostatniaWiedzaSerwera = ''; trybUzupelniania = false;
