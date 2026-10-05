@@ -2710,6 +2710,8 @@ body.is-mobile .narzedzie-naglowek .modul-tytul { font-size: var(--t-lg) !import
 /* ux 19: drobne podpisy 11 px (glosy w audio, rodzaj uwagi w Faktach) - 12 px, bez wersalikow */
 #au-voices-wrap [style*="font-size:11px"] { font-size: 12px !important; }
 #fakty-wynik [style*="text-transform:uppercase"] { text-transform: none !important; letter-spacing: normal !important; }
+/* R7-I: adres w uwadze Faktow jako link (host i skrocona sciezka), jak odnosniki w artykule */
+#fakty-wynik .fakty-adres a { color: var(--c-dowod); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; overflow-wrap: anywhere; }
 }
 @layer widoki {
 /* Baza wiedzy na telefonie (pelny ekran) nad paskami wyniku i naglowkiem, pod dolna nawigacja (zakladka Baza zostaje widoczna) */
@@ -4906,11 +4908,14 @@ var I18N = {
     'fakty-rodzaj-zakres':'Twierdzenie szersze niż źródło',
     'fakty-rodzaj-sprzecznosc':'Sprzeczność wewnątrz artykułu',
     'fakty-rodzaj-konflikt':'Polecenie konkurencji',
+    'fakty-rodzaj-strona':'Sprawdź na stronie',
     'fakty-linki-czysto':'Odnośniki bez zastrzeżeń.',
     'zrodla-title':'Źródła z sieci',
     'zrodla-pokaz-wszystkie':'Pokaż wszystkie ({n})','zrodla-zwin':'Zwiń',
     'spin-sub-szukam':'szukam źródeł w sieci i sprawdzam, co da się potwierdzić',
     'fakty-tryb-uzupelniania':'Tekst powstał z włączonym wyszukiwaniem w sieci, więc część zdań nie pochodzi z Twoich dokumentów, tylko ze stron wymienionych pod artykułem. Poniższe uwagi dotyczą zgodności z Twoimi źródłami: zdanie oparte na stronie zewnętrznej też się tu pojawi, bo trzeba sprawdzić, czy ta strona jest wiarygodna.',
+    'fakty-siec-bez-szukania':'Przełącznik wyszukiwania był włączony, ale model nie szukał w sieci, więc porównanie dotyczy tylko Twoich dokumentów.',
+    'fakty-siec-bez-stron':'Przełącznik wyszukiwania był włączony, ale żadne zdanie nie opiera się na stronie z sieci, więc porównanie dotyczy tylko Twoich dokumentów.',
     'fakty-wzgledem-sieci':'Sprawdzono względem stron z sieci: Baza wiedzy jest pusta, więc artykuł porównano z fragmentami stron, które cytował przy pisaniu. Zdania o Twojej firmie nie mają tu potwierdzenia.',
     'fakty-rodzaj-link-obcy':'Adres spoza źródeł',
     'fakty-rodzaj-link-sciezka':'Znana domena, nieznana podstrona',
@@ -5589,11 +5594,14 @@ var I18N = {
     'fakty-rodzaj-zakres':'Claim wider than the source',
     'fakty-rodzaj-sprzecznosc':'Contradiction inside the article',
     'fakty-rodzaj-konflikt':'Recommends a competitor',
+    'fakty-rodzaj-strona':'Check on the page',
     'fakty-linki-czysto':'No findings on links.',
     'zrodla-title':'Sources from the web',
     'zrodla-pokaz-wszystkie':'Show all ({n})','zrodla-zwin':'Show less',
     'spin-sub-szukam':'searching the web and checking what can be confirmed',
     'fakty-tryb-uzupelniania':'This text was written with web search enabled, so some sentences come from the pages listed under the article rather than from your documents. The findings below are about agreement with your own sources: a sentence backed by an external page will still appear here, because someone has to judge whether that page is trustworthy.',
+    'fakty-siec-bez-szukania':'Web search was switched on, but the model did not search the web, so the comparison covers only your documents.',
+    'fakty-siec-bez-stron':'Web search was switched on, but no sentence is based on a web page, so the comparison covers only your documents.',
     'fakty-wzgledem-sieci':'Checked against web pages: the knowledge base is empty, so the article was compared with the passages it cited while writing. Statements about your company have no confirmation here.',
     'fakty-rodzaj-link-obcy':'Address not in the sources',
     'fakty-rodzaj-link-sciezka':'Known domain, unknown page',
@@ -9470,7 +9478,9 @@ async function uruchomKontroleFaktow(wymus) {
     return;
   }
 
-  const tekstArtykulu = art.innerText || art.textContent || '';
+  // R7-I: do kontroli idzie sama tresc artykulu - bez listy zrodel (tytuly i daty stron, np.
+  // "Regulamin ... (2 gru 2024)", wracaly jako "liczba bez pokrycia"), ramki meta i notatek o lukach.
+  const tekstArtykulu = tekstBlokami(kopiaDoStatystyk(art));
   // Zrodla wchodza do sygnatury: po zaznaczeniu ich w bazie panel nie moze
   // pokazac zapamietanego wyniku "brak zrodel".
   const zrodla = zrodlaDoKontroli();
@@ -9478,14 +9488,16 @@ async function uruchomKontroleFaktow(wymus) {
   // Bazie kontrola porownuje artykul z nimi (wczesniej: zawsze "Brak zrodel do porownania").
   const sieciowe = zrodlaSieciowe.filter(function (z) { return z && z.url; });
   const sygnatura = String(tekstArtykulu.length) + ':' + tekstArtykulu.slice(0, 120) + '|' + zrodla.length + '|' + sieciowe.length;
-  if (!wymus && faktyWynik && faktySygnatura === sygnatura) {
-    pokazWynikFaktow(faktyWynik, faktyStan);
-    return;
-  }
   // R6-F (E-10): ta sama kontrola juz trwa (wyjscie z zakladki i powrot) - panel zostaje
   // z jej ladowaniem, a wynik narysuje ten przebieg. Bez drugiego zapytania.
+  // R7-I: sprawdzane przed zapamietanym wynikiem - po "Sprawdz ponownie" powrot na zakladke
+  // pokazywal stara liste w trakcie nowej kontroli.
   if (!wymus && faktyWToku && faktyWToku.przebieg === faktyPrzebieg && faktyWToku.sygnatura === sygnatura) {
     ladowanie.style.display = 'block';
+    return;
+  }
+  if (!wymus && faktyWynik && faktySygnatura === sygnatura) {
+    pokazWynikFaktow(faktyWynik, faktyStan);
     return;
   }
 
@@ -9527,18 +9539,23 @@ async function uruchomKontroleFaktow(wymus) {
   }
   const tylkoSiec = !zrodla.trim();
 
-  // Wynik odnosnikow pokazujemy, gdy tylko przyjdzie - nie czekajac na model.
-  // Przy dlugim sprawdzaniu tresci uzytkownik ma juz wtedy polowe odpowiedzi.
-  obietnicaLinkow.then(function (u) {
-    if (moj !== faktyPrzebieg) return;
-    etapFaktow('fakty-loading');
-    if (u.length) pokazWynikFaktow(u, 'czesciowe');
-  });
+  // R7-I: jeden stan ladowania do konca kontroli. Wczesniej gotowe odnosniki rysowaly sie
+  // od razu jako "Do sprawdzenia: 1" pod napisem "Zestawiam artykul ze zrodlami...", a po
+  // chwili lista podmieniala sie na pelna. Teraz zmienia sie tylko napis etapu; licznik
+  // i lista pojawiaja sie z kompletem (odnosniki i tresc).
+  let trescGotowa = false, linkiGotowe = false;
+  obietnicaLinkow.then(function () {
+    linkiGotowe = true;
+    if (moj === faktyPrzebieg && !trescGotowa) etapFaktow('fakty-loading');
+  }, function () {});
 
   const jezykUwag = currentLang === 'en' ? 'English' : 'Polish';
+  // R7-I: tryb "z siecia" tylko wtedy, gdy byly strony z sieci. Przelacznik wlaczony, a model
+  // nie szukal (pasek "Siec: bez wyszukiwania") = porownanie z samymi dokumentami.
+  const zSiecia = trybUzupelniania && sieciowe.length > 0;
   const system = 'You are a fact checker reviewing an article against the sources it was '
     + 'written from. You are not an editor: do not rewrite anything, do not praise anything.\n'
-    + 'Report ONLY problems, in these four categories:\n'
+    + 'Report ONLY problems, in these ' + (sieciowe.length ? 'five' : 'four') + ' categories:\n'
     + '  "liczba"    - a number, price, rate, date, deadline, weight or dimension that '
     + 'does not appear in the sources, or appears there with a different value.\n'
     + '  "zakres"    - a claim that stretches a source fact beyond what it says: a '
@@ -9548,7 +9565,18 @@ async function uruchomKontroleFaktow(wymus) {
     + 'paragraph and a table giving different values for the same thing).\n'
     + '  "konflikt"  - the article recommends a competitor, a comparison site, an '
     + 'aggregator or a marketplace over what the sources offer.\n'
-    + (trybUzupelniania
+    // R7-I: cytowane fragmenty stron sa krotkie i urwane. Brak szczegolu we fragmencie to nie
+    // dowod, ze strona go nie podaje - wtedy "strona" (sprawdz na stronie), nie "liczba".
+    + (sieciowe.length
+        ? '  "strona"    - the claim most likely comes from one of the numbered WEB SOURCES (the '
+          + 'same page, product or topic), but the passage quoted for that page is cut off or does '
+          + 'not cover this detail. The passages are SHORT EXCERPTS, often cut mid-sentence, not '
+          + 'whole pages: a detail missing from an excerpt is NOT evidence that the page lacks it. '
+          + 'Give "strona": the number of that web source. Use "liczba" or "zakres" only when '
+          + 'neither the knowledge base nor any web source deals with the claim at all, or when a '
+          + 'source states a different value.\n'
+        : '')
+    + (zSiecia
         ? 'MODE: the article was written with WEB SEARCH enabled. The pages it drew on are '
           + 'listed below under WEB SOURCES. A claim traceable to one of those pages is '
           + 'expected and is NOT a finding on its own - say so only if the page looks '
@@ -9564,9 +9592,10 @@ async function uruchomKontroleFaktow(wymus) {
     + 'Common-knowledge statements with no figures are not findings. If everything checks '
     + 'out, return an empty list - an empty list is a valid and expected answer.\n'
     + 'Respond ONLY with valid JSON, no markdown, no preamble:\n'
-    + '{"uwagi":[{"rodzaj":"liczba|zakres|sprzecznosc|konflikt","cytat":"the exact '
-    + 'fragment from the article, max 120 characters","powod":"one sentence in '
-    + jezykUwag + ', max 140 characters"}]}\n'
+    + '{"uwagi":[{"rodzaj":"liczba|zakres|sprzecznosc|konflikt' + (sieciowe.length ? '|strona' : '')
+    + '","cytat":"the exact fragment from the article, max 120 characters","powod":"one sentence in '
+    + jezykUwag + ', max 140 characters"' + (sieciowe.length ? ',"strona":1' : '') + '}]}\n'
+    + (sieciowe.length ? 'The "strona" field only for rodzaj "strona".\n' : '')
     + 'Max 12 findings, most serious first.';
 
   try {
@@ -9589,9 +9618,10 @@ async function uruchomKontroleFaktow(wymus) {
             ? '(no knowledge base documents for this article: compare it with the web sources and the passages they were cited for)'
             : zrodla.slice(0, 120000))
           + (sieciowe.length
-              ? '\n\n---\n\nWEB SOURCES the article was allowed to draw on (with the passages it cited):\n'
-                + sieciowe.map(function (z) {
-                    return '- ' + z.url + (z.tytul ? ' (' + z.tytul + ')' : '')
+              ? '\n\n---\n\nWEB SOURCES the article was allowed to draw on (with the passages it cited; '
+                + 'the passages are short excerpts, not the whole page):\n'
+                + sieciowe.map(function (z, i) {
+                    return '[' + (i + 1) + '] ' + z.url + (z.tytul ? ' (' + z.tytul + ')' : '')
                       + (z.fragmenty || []).map(function (f) { return '\n  > "' + f + '"'; }).join('');
                   }).join('\n').slice(0, 40000)
               : '')
@@ -9599,13 +9629,16 @@ async function uruchomKontroleFaktow(wymus) {
       })
     });
     const dane = await res.json();
+    // R7-I: tresc sprawdzona, odnosniki jeszcze nie - napis etapu mowi, na co czekamy.
+    trescGotowa = true;
+    if (moj === faktyPrzebieg && !linkiGotowe) etapFaktow('fakty-etap-linki');
     const uwagiLinkow = await obietnicaLinkow;
     if (moj !== faktyPrzebieg) return;
     if (dane.error) throw new Error(dane.error.message || '');
     const odczyt = parsujJsonModelu((dane.content || []).map(function (b) { return b.text || ''; }).join(''));
     // Uwagi policzone maszynowo ida na poczet listy: sa pewne, a uwagi
-    // modelu sa oceną.
-    faktyWynik = uwagiLinkow.concat(Array.isArray(odczyt.uwagi) ? odczyt.uwagi : []);
+    // modelu sa oceną. R7-I: "strona" dostaje adres z listy stron (albo wraca do twardej kategorii).
+    faktyWynik = uwagiLinkow.concat(uwagiZeStronami(Array.isArray(odczyt.uwagi) ? odczyt.uwagi : [], sieciowe));
     faktySygnatura = sygnatura;
     faktyStan = 'gotowe';
     faktyWzgledemSieci = tylkoSiec;
@@ -9628,27 +9661,78 @@ async function uruchomKontroleFaktow(wymus) {
 }
 
 const IKONY_UWAG = {
-  liczba: '🔢', zakres: '↔️', sprzecznosc: '⚠️', konflikt: '🏳️',
+  liczba: '🔢', zakres: '↔️', sprzecznosc: '⚠️', konflikt: '🏳️', strona: '🌐',
   'link-obcy': '🔗', 'link-sciezka': '🔗', 'link-martwy': '💀', 'link-niesprawdzony': '❔',
   'link-kotwica': '✍️', 'link-powtorka': '✍️', 'link-pusty': '✍️',
 };
+// R7-I: kolejnosc wagi. Twarde uwagi (liczba bez pokrycia, sprzecznosc, martwy adres...) na gorze
+// w kolejnosci, w jakiej przyszly; na koniec to, co trzeba tylko obejrzec samemu: "Sprawdz na
+// stronie" i adres, ktorego nie udalo sie sprawdzic. To przypomnienia, nie zarzuty.
+const WAGA_UWAG = { strona: 1, 'link-niesprawdzony': 2 };
+function uwagiWedlugWagi(uwagi) {
+  return uwagi.map(function (u, i) { return { u: u, i: i, w: WAGA_UWAG[String((u && u.rodzaj) || '').toLowerCase()] || 0 }; })
+    .sort(function (a, b) { return (a.w - b.w) || (a.i - b.i); })
+    .map(function (x) { return x.u; });
+}
 
-// stan: 'gotowe' | 'brak-zrodel' | 'blad' | 'czesciowe' (odnosniki juz sa,
-// kontrola tresci jeszcze trwa). Zielone "bez zastrzezen" tylko przy 'gotowe':
+// R7-I: uwaga "strona" (model: twierdzenie pochodzi ze strony z sieci, ale cytowany fragment jest
+// urwany) dostaje adres tej strony WYLACZNIE z listy stron, z ktorych powstal tekst (numer z promptu,
+// ewentualnie ten sam adres lub host). Bez strony z listy nie ma czego otworzyc - uwaga wraca do
+// twardej kategorii ("liczba", gdy cytat ma cyfry, inaczej "zakres").
+function uwagiZeStronami(uwagi, strony) {
+  strony = (strony || []).filter(function (z) { return z && /^https?:\/\//i.test(String(z.url || '')); });
+  return uwagi.map(function (u) {
+    if (!u || String(u.rodzaj || '').toLowerCase() !== 'strona') return u;
+    const nr = parseInt(u.strona, 10);
+    let z = nr >= 1 && nr <= strony.length ? strony[nr - 1] : null;
+    const podany = typeof u.strona === 'string' && /^https?:\/\//i.test(u.strona) ? u.strona : (u.url || '');
+    if (!z && podany) {
+      const k = kluczAdresu(podany), host = k.split('/')[0];
+      z = strony.find(function (s) { return kluczAdresu(s.url) === k; })
+        || strony.find(function (s) { return kluczAdresu(s.url).split('/')[0] === host; }) || null;
+    }
+    const kopia = Object.assign({}, u);
+    if (z) { kopia.rodzaj = 'strona'; kopia.adres = z.url; kopia.tytulStrony = z.tytul || ''; }
+    else kopia.rodzaj = /\d/.test(String(u.cytat || '')) ? 'liczba' : 'zakres';
+    return kopia;
+  });
+}
+
+// R7-I: adres w uwadze jako link, nie caly URL kursywa w cudzyslowie. Na ekranie host i skrocona
+// sciezka ("dhl.com/pl-pl/…/dhl-ecommerce-ma-juz-9-tys…"), pelny adres w title i w href.
+function krotkiAdres(adres) {
+  try {
+    const u = new URL(adres);
+    const host = u.host.replace(/^www\./i, '');
+    const czesci = u.pathname.split('/').filter(Boolean);
+    let sciezka = czesci.length ? '/' + czesci.join('/') : '';
+    if (sciezka.length > 30) {
+      let ost = czesci[czesci.length - 1];
+      if (ost.length > 26) ost = ost.slice(0, 25) + '…';
+      sciezka = czesci.length > 1 ? '/' + (czesci[0].length > 12 ? '…' : czesci[0]) + '/…/' + ost : '/' + ost;
+    }
+    return host + sciezka;
+  } catch (e) {
+    return String(adres || '').slice(0, 48);
+  }
+}
+function linkUwagi(adres, tytul) {
+  if (!/^https?:\/\//i.test(String(adres || ''))) return '';
+  return '<a href="' + escapeHtml(adres) + '" target="_blank" rel="noopener" title="' + escapeHtml(tytul || adres) + '">'
+    + escapeHtml(krotkiAdres(adres)) + '</a>';
+}
+
+// stan: 'gotowe' | 'brak-zrodel' | 'blad'. Zielone "bez zastrzezen" tylko przy 'gotowe':
 // bez zrodel tresci nie sprawdzalismy, wiec pusta lista nic o niej nie mowi.
+// R7-I: bez stanu 'czesciowe' - lista rysuje sie dopiero z kompletem (patrz uruchomKontroleFaktow).
 function pokazWynikFaktow(uwagi, stan) {
   const wynikEl = document.getElementById('fakty-wynik');
   const odswiez = document.getElementById('fakty-refresh-btn');
-  const czesciowe = stan === 'czesciowe';
   const brakZrodel = stan === 'brak-zrodel';
-  uwagi = Array.isArray(uwagi) ? uwagi : [];
-  // Przy wyniku czesciowym spinner zostaje: kontrola tresci jeszcze trwa,
-  // a pusta lista nie znaczylaby wtedy "artykul jest w porzadku".
-  if (!czesciowe) {
-    document.getElementById('fakty-loading').style.display = 'none';
-    // "Sprawdz ponownie" ma sens tylko wtedy, gdy jest co sprawdzac.
-    odswiez.style.display = (!brakZrodel || saZrodlaDoKontroli()) ? 'inline-block' : 'none';
-  }
+  uwagi = uwagiWedlugWagi(Array.isArray(uwagi) ? uwagi : []);
+  document.getElementById('fakty-loading').style.display = 'none';
+  // "Sprawdz ponownie" ma sens tylko wtedy, gdy jest co sprawdzac.
+  odswiez.style.display = (!brakZrodel || saZrodlaDoKontroli()) ? 'inline-block' : 'none';
 
   // Stan pusty: tytul, co robi kontrola i jedna akcja - bez zielonego OK.
   const pusty = brakZrodel
@@ -9664,21 +9748,23 @@ function pokazWynikFaktow(uwagi, stan) {
     : '';
   // Przy wlaczonym uzupelnianiu lista bywa dluzsza i to nie znaczy, ze tekst
   // jest gorszy - znaczy, ze czesc zdan pochodzi z pamieci modelu, a nie
-  // z dokumentow. Autor musi wiedziec, ktora to sytuacja. Wynik czesciowy
-  // nie ma tej stopki - kontrola tresci jeszcze nie skonczyla.
+  // z dokumentow. Autor musi wiedziec, ktora to sytuacja.
   // R6-F (E-07): bez Bazy porownanie szlo ze stronami z sieci - mowimy to wprost.
+  // R7-I: notka mowi prawde o sieci - "z wyszukiwaniem" tylko wtedy, gdy byly strony z sieci
+  // (ta sama liczba co w pasku "Siec: N zrodel"). Przelacznik wlaczony bez stron: osobny wariant.
+  const stronZSieci = zrodlaSieciowe.filter(function (z) { return z && z.url; }).length;
   if (stan === 'gotowe' && faktyWzgledemSieci) {
     stopka += '<div class="fakty-wzgledem-sieci" style="color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
       + escapeHtml(_t('fakty-wzgledem-sieci')) + '</div>';
-  } else if (stan === 'gotowe' && trybUzupelniania) {
-    stopka += '<div style="color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
+  } else if (stan === 'gotowe' && trybUzupelniania && stronZSieci > 0) {
+    stopka += '<div class="fakty-tryb-sieci" style="color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
       + escapeHtml(_t('fakty-tryb-uzupelniania')) + '</div>';
+  } else if (stan === 'gotowe' && trybUzupelniania) {
+    stopka += '<div class="fakty-siec-bez-stron" style="color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
+      + escapeHtml(_t(stanSieci && stanSieci.szukan > 0 ? 'fakty-siec-bez-stron' : 'fakty-siec-bez-szukania')) + '</div>';
   }
 
   if (!uwagi.length) {
-    // Przy wyniku czesciowym nie ma czego pokazac - spinner mowi wiecej niz
-    // "brak uwag" przy kontroli, ktora jeszcze trwa.
-    if (czesciowe) return;
     wynikEl.innerHTML = stan === 'gotowe'
       ? '<div style="color:var(--c-sukces);font-weight:600">' + escapeHtml(_t('fakty-czysto')) + '</div>'
         + '<div style="color:var(--text3);margin-top:6px">' + escapeHtml(_t('fakty-czysto-opis')) + '</div>' + stopka
@@ -9691,11 +9777,19 @@ function pokazWynikFaktow(uwagi, stan) {
     + escapeHtml(_t('fakty-znaleziono').replace('{n}', String(uwagi.length))) + '</div>'
     + uwagi.map(function (u) {
       const rodzaj = String(u.rodzaj || '').toLowerCase();
-      return '<div style="border-left:3px solid var(--border);padding:6px 0 6px 10px;margin-bottom:8px">'
+      const cytat = String(u.cytat || '');
+      // R7-I: odnosnik (cytat to sam adres) jako link; "Sprawdz na stronie" - cytat z artykulu
+      // i link do strony z listy zrodel.
+      const adresWCytacie = /^link-/.test(rodzaj) && /^https?:\/\/\S+$/i.test(cytat.trim());
+      const linkStrony = rodzaj === 'strona' ? linkUwagi(u.adres, u.tytulStrony) : '';
+      return '<div class="fakty-uwaga" data-rodzaj="' + escapeHtml(rodzaj) + '" style="border-left:3px solid var(--border);padding:6px 0 6px 10px;margin-bottom:8px">'
         + '<div style="font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text3)">'
         + ikonaZEmoji(IKONY_UWAG[rodzaj] || '⚠') + ' ' + escapeHtml(_t('fakty-rodzaj-' + rodzaj) || rodzaj) + '</div>'
-        + '<div style="margin:3px 0;font-style:italic;color:var(--text2);overflow-wrap:anywhere">"' + escapeHtml(String(u.cytat || '')) + '"</div>'
+        + (adresWCytacie
+          ? '<div class="fakty-adres" style="margin:3px 0">' + linkUwagi(cytat.trim()) + '</div>'
+          : '<div style="margin:3px 0;font-style:italic;color:var(--text2);overflow-wrap:anywhere">"' + escapeHtml(cytat) + '"</div>')
         + '<div>' + escapeHtml(String(u.powod || '') || _t('fakty-powod-' + rodzaj) || '') + '</div>'
+        + (linkStrony ? '<div class="fakty-adres" style="margin-top:4px">' + linkStrony + '</div>' : '')
         + '</div>';
     }).join('') + stopka;
 }
