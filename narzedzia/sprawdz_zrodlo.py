@@ -261,7 +261,7 @@ KONTROLE = [
     # Uzupelnianie luk pisalo nowe sekcje, majac temat i frazy, ale zadnych
     # zrodel - czyli musialo je wymyslic.
     ("F31/luki", "uzupelnianie luk dostaje zrodla",
-     "SOURCES (the only material you may draw facts from)", None, None),
+     "'\\n\\nSOURCES (knowledge base' + (zSiecia ? '; you may also search the web'", None, None),
     ("F31/bezwymyslania", "luka bez pokrycia oznaczana, nie wypelniana",
      "A GAP IS NOT A LICENCE TO INVENT", None, None),
 
@@ -347,8 +347,18 @@ KONTROLE = [
      "blokFaktow(opcje.uzupelnia)", None, None),
     ("F38/pamiec", "pamiec modelu nie jest zrodlem takze przy wyszukiwaniu",
      "YOUR OWN MEMORY IS STILL NOT A SOURCE", None, None),
-    ("F38/luki", "uzupelnianie luk zawsze tylko ze zrodel",
-     "blokFaktow(false)", None, None),
+    # R6: luki jak glowne generowanie - baza, a przy artykule z siecia (albo wlaczonym przelaczniku)
+    # takze wyszukiwanie z przypisami. Sama baza przy pustej bazie dawala tylko "brak pokrycia".
+    ("F38/luki", "uzupelnianie luk: zrodla jak przy generowaniu (baza + wyszukiwanie z przypisami)",
+     "blokFaktow(zSiecia) + blokZakresu()", None, None),
+    ("R6/luki-zrodla", "uzupelnianie luk nie gubi listy zrodel (zrodla wyjete przed cieciem na wnioski)",
+     "robocze.querySelectorAll('.zrodla-box').forEach((el) => el.remove());", None, None),
+    ("R6/luki-wynik", "wynik pokrycia tylko z napisanych sekcji, bez pustych sekcji 'brak pokrycia' w artykule",
+     "gapSelectedTopics = [...new Set([...gapSelectedTopics, ...pokryteTeraz])];", "gapSelectedTopics = [...new Set([...gapSelectedTopics, ...selectedNow])];", None),
+    ("R6/luki-ikony", "ikony tematow w Lukach jako SVG (emoji w kontenerze font-size 0 byly niewidoczne)",
+     "ikona('circle-check', 'ok') + '</span>'", "<span class=\"gap-topic-icon\">\\u2705</span>", None),
+    ("R6/luki-strzalka", "strzalka miedzy wynikami pokrycia jako ikona na srodku",
+     '<span class="gap-delta-arrow" aria-hidden="true"><svg class="ikona"><use href="#i-arrow-right"/></svg></span>', None, None),
 
     # Kontrola faktow musi wiedziec, w jakim trybie powstal tekst - inaczej
     # nazywa dozwolone uzupelnienie tak samo jak naciagniecie zrodla.
@@ -682,6 +692,25 @@ KONTROLE = [
      ".modal .row2 > .field + .field { margin-top: 0; }", None, None),
     ("R5/wiecej-zadan-nad-paskiem", "telefon: Wiecej zadan nad paskiem z Wygeneruj - drugie dotkniecie ... zamyka menu",
      "body.is-mobile #grupa-brief-menu { bottom: var(--nad-paskami, calc(var(--dol) + 72px)); }", None, None),
+    ("R6/wybierz-baze", "Wybierz przy Bazie wiedzy otwiera baze (telefon: arkusz, komputer: panel)",
+     'onclick="otworzBazeWiedzy()" data-i18n="zrodla-wybierz"', None, None),
+    ("R6/wersje-telefon", "telefon, od trzech wersji: lista wyboru zamiast segmentu, ktory wchodzil na statystyki",
+     "bar.classList.toggle('wiele-wersji', versions.length >= 3);", None, None),
+    ("R6/cudzyslowy", "polski artykul: cudzyslowy ujednolicone na „...” (ekran, historia, eksport)",
+     "  cudzyslowyPolskie(korzen);\n  return korzen;", None, None),
+    ("R6/luki-caly-temat", "Luki: temat porownywany w calosci, nie po 20 pierwszych znakach",
+     "const stillMissing = (baseline.missing || []).filter(t => !addrLC2.includes(t.toLowerCase().trim()));",
+     "a.substring(0,20) === t.toLowerCase().trim().substring(0,20)", None),
+    ("R6/luki-wnioski", "uzupelnianie luk: wnioski nie puchna ponad 8 punktow",
+     "ileLi(updatedKw) <= 8 || !originalKw", None, None),
+    ("R6/luki-bez-zrodla", "Luki: komunikat o tematach bez zrodla zalezy od trybu (baza / siec)",
+     "gapBezPokrycia = bezPokrycia; gapBezPokryciaSiec = zSiecia;", None, None),
+    ("R6/inspektor-od-gory", "nowa zakladka inspektora otwiera sie od gory",
+     "if (tr) tr.scrollTop = 0;", None, None),
+    ("R6/podpis-generowania", "podpis pod Generuje tresc wysrodkowany",
+     ".spinner-wrap #spin-label, .spinner-sub { text-align: center; text-wrap: balance; max-width: 36em; }", None, None),
+    ("R6/serp-porownanie", "SERP: srednie czolowki obok liczb artykulu, z podpisem",
+     "tabela = '<div class=\"serp-porownanie\">", None, None),
     ("R3/wytyczne-w-briefie", "Dodatkowe wytyczne w glownym briefie, przed Zrodlami (poza zaawansowanymi)",
      "re:id=\"extra\"[\\s\\S]{0,2000}<div class=\"field zrodla\">", None, None),
     ("R3/ton-w-briefie", "Ton i Jezyk w glownym briefie, nie w zaawansowanych",

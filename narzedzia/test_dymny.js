@@ -547,6 +547,98 @@ async function wariantProxy(b) {
   await k.close();
 }
 
+// R6 (telefon 412x915, konto premium): przeplyw wlasciciela z rundy 6 - Wybierz przy bazie, artykul
+// z siecia, SERP i samokorekta, Luki, "Popraw pod brakujace tematy", trzy wersje, SERP, cudzyslowy.
+async function wariantTelefonR6(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); } catch (e) { /* bez magazynu */ } });
+  const bledy = [];
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  const s = await zaloguj(k, 'premium');
+  const brief = () => s.evaluate(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); });
+
+  // "Wybierz" przy Bazie wiedzy: na telefonie zwijal niewidoczny panel komputera i nic sie nie dzialo.
+  await brief();
+  await krok('R6 Wybierz przy bazie', s.click('.zrodla-baza button', { timeout: 3000 }));
+  await s.waitForTimeout(300);
+  wynik('telefon: R6 Wybierz przy Bazie wiedzy otwiera arkusz bazy', await s.evaluate(() => document.getElementById('mobile-sidebar').classList.contains('open')));
+  await s.evaluate(() => closeMobileSidebar());
+
+  await brief();
+  await s.fill('#topic', 'Jak wybrać pompę ciepła');
+  await s.evaluate(() => { document.getElementById('use-web').checked = true; document.getElementById('use-serp').checked = true; premiumMode = true; generate(true); });
+  await krok('R6 artykul z siecia, SERP i samokorekta', s.waitForFunction(() => versions.length === 2 && !document.getElementById('gen-btn').disabled
+    && getComputedStyle(document.getElementById('spinner')).display === 'none', null, { timeout: 60000 }));
+  wynik('telefon: R6 podpis pod "Generuje tresc" wysrodkowany', await s.evaluate(() => getComputedStyle(document.getElementById('spin-sub')).textAlign === 'center'));
+
+  // Luki: pokryte tematy jako wiersze z widocznym znacznikiem (emoji w kontenerze font-size 0 znikaly).
+  await s.evaluate(() => inspektorPokaz('luki'));
+  await krok('R6 analiza luk', s.waitForFunction(() => document.querySelectorAll('#gap-missing .gap-miss-check').length > 0, null, { timeout: 30000 }));
+  const l1 = await s.evaluate(() => { const w = [...document.querySelectorAll('#gap-present .gap-topic-row')];
+    return { w: w.length, ikony: w.filter((r) => { const i = r.querySelector('.gap-topic-icon svg'); return i && i.getBoundingClientRect().width >= 12; }).length }; });
+  wynik('telefon: R6 Luki - pokryte tematy z widocznym znacznikiem', l1.w > 0 && l1.ikony === l1.w, JSON.stringify(l1));
+
+  // Popraw pod brakujace tematy: atrapa nie ma zrodla dla ostatniego tematu (data-brak) i dopisuje
+  // punkt wnioskow za kazda sekcje. Lista zrodel zostaje, pusta sekcja nie trafia do artykulu,
+  // wynik liczy tylko napisane sekcje, wnioski nie puchna, panel mowi, ktorego tematu brakuje.
+  const przed = await s.evaluate(() => document.querySelectorAll('#article .zrodla-box li').length);
+  await s.evaluate(() => { document.querySelectorAll('.gap-miss-check').forEach((c) => { c.checked = true; }); updateGapBtn(); improveFromGaps(); });
+  await krok('R6 poprawa pod luki', s.waitForFunction(() => versions.length === 3 && document.getElementById('gap-delta').style.display === 'block', null, { timeout: 60000 }));
+  await s.waitForTimeout(300);
+  const po = await s.evaluate(() => {
+    const art = document.getElementById('article');
+    const h = [...art.querySelectorAll('h2')].find((x) => /Kluczowe wnioski|Key takeaways/.test(x.textContent));
+    const x = [...document.querySelectorAll('#gap-all-topics .gap-topic-row')].filter((r) => r.querySelector('use[href="#i-circle-x"]'));
+    return { zrodla: art.querySelectorAll('.zrodla-box li').length, brak: art.querySelectorAll('[data-brak]').length,
+      wnioski: h && h.nextElementSibling ? h.nextElementSibling.querySelectorAll('li').length : 0,
+      wynik: document.getElementById('gap-delta-after').textContent, bezZnacznika: x.length,
+      info: (document.getElementById('gap-info') || { hidden: true }).hidden ? '' : document.getElementById('gap-info').textContent };
+  });
+  wynik('telefon: R6 Popraw pod luki - zrodla zostaja, bez pustych sekcji, wnioski do 8 punktow',
+    przed > 0 && po.zrodla >= przed && po.brak === 0 && po.wnioski > 0 && po.wnioski <= 8, JSON.stringify(Object.assign({ przed }, po)));
+  wynik('telefon: R6 Popraw pod luki - temat bez zrodla nie podbija wyniku i jest opisany w panelu',
+    !/^100/.test(po.wynik) && po.bezZnacznika >= 1 && /: 1\b/.test(po.info), JSON.stringify(po));
+
+  // Trzy wersje: segment Przed | Po | Poprawa SERP wchodzil na "N slow · M min".
+  await s.evaluate(() => { inspektorZamknij(); window.scrollTo(0, 0); });
+  await s.waitForTimeout(300);
+  const w = await s.evaluate(() => {
+    const r = (e) => { const x = e ? e.getBoundingClientRect() : { left: 0, right: 0, width: 0, height: 0 }; return { l: Math.round(x.left), r: Math.round(x.right), w: Math.round(x.width), h: Math.round(x.height) }; };
+    return { skrot: r(document.getElementById('stat-skrot')), wybor: r(document.querySelector('.ver-wybor')), select: r(document.getElementById('ver-select')),
+      przyciski: [...document.querySelectorAll('#versions-bar .ver-btn')].filter((x) => x.getBoundingClientRect().width > 0).length };
+  });
+  wynik('telefon: R6 trzy wersje - lista wyboru obok statystyk, bez nachodzenia, cel 44 px',
+    w.wybor.w > 0 && w.przyciski === 0 && w.skrot.w > 0 && w.skrot.r <= w.wybor.l && w.wybor.r <= 412 && w.select.h >= 44, JSON.stringify(w));
+  await krok('R6 wybor wersji z listy', s.selectOption('#ver-select', '0', { timeout: 3000 }));
+  wynik('telefon: R6 wybor wersji z listy przelacza artykul', await s.evaluate(() => activeVersion === 0 && document.getElementById('ver-wybor-tekst').textContent === versions[0].label));
+  await s.selectOption('#ver-select', '2').catch(() => {});
+
+  // SERP: srednie czolowki obok liczb artykulu; nowa zakladka otwiera sie od gory.
+  await s.evaluate(() => inspektorPokaz('luki'));
+  await s.waitForTimeout(200);
+  await s.evaluate(() => { const t = document.querySelector('#inspektor .ins-tresc'); if (t) t.scrollTop = 400; inspektorPokaz('serp'); });
+  await s.waitForTimeout(300);
+  const sp = await s.evaluate(() => ({ wiersze: document.querySelectorAll('#serp-stats .serp-por-wiersz').length, przew: (document.querySelector('#inspektor .ins-tresc') || {}).scrollTop }));
+  wynik('telefon: R6 SERP - porownanie z artykulem, zakladka od gory', sp.wiersze === 2 && sp.przew === 0, JSON.stringify(sp));
+  await s.evaluate(() => inspektorZamknij());
+
+  // Cudzyslowy w polskim tekscie: proste i angielskie na „...” (jezyk z tresci, nie z interfejsu);
+  // tekst angielski bez zmian.
+  const cudz = await s.evaluate(() => {
+    const pl = document.createElement('div');
+    pl.innerHTML = '<h2>Jak wybrać pompę ciepła do starszego domu</h2><p>Hasło "poprawi się później" i <strong>"wariant</strong> premium" oraz „dobry” i “angielski” obok ekranu 27".</p>';
+    const en = document.createElement('div');
+    en.innerHTML = '<p>The "quick" fix and the "slow" one are both fine for this simple English text sample.</p>';
+    uporzadkujArtykul(pl); uporzadkujArtykul(en);
+    return { pl: pl.querySelector('p').textContent, en: en.textContent };
+  });
+  wynik('telefon: R6 cudzyslowy w polskim artykule', cudz.pl === 'Hasło „poprawi się później” i „wariant premium” oraz „dobry” i „angielski” obok ekranu 27".'
+    && /"quick"/.test(cudz.en), JSON.stringify(cudz));
+  wynik('telefon: R6 bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+  if (bledow) await zrzut(s, 'telefon-r6');
+  await k.close();
+}
+
 // Pliki z app/ pod http://127.0.0.1 - dla scenariuszy, ktore z file:// sa w CI niestabilne.
 let PORT_PLIKOW;
 const TYPY = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml',
@@ -576,6 +668,7 @@ async function uruchomSerwerPlikow() {
     b = await chromium.launch(process.env.CAI_CHROMIUM ? { executablePath: process.env.CAI_CHROMIUM } : {});
     await wariantKeys(b);
     await wariantProxy(b);
+    await wariantTelefonR6(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));

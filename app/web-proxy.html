@@ -1532,6 +1532,8 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 @keyframes ramie { 0%, 100% { opacity: .22; } 20%, 45% { opacity: 1; } }
 .spinner-label { font-size: var(--t-lg); font-weight: var(--g-mocny); color: var(--c-tekst); }
 .spinner-sub { font-size: var(--t-sm); color: var(--c-tekst-3); }
+/* R6: dluzszy opis etapu ("szukam zrodel w sieci i sprawdzam...") zawija sie wysrodkowany, jak tytul nad nim */
+.spinner-wrap #spin-label, .spinner-sub { text-align: center; text-wrap: balance; max-width: 36em; }
 .spinner-czas { font-family: var(--f-mono); font-size: var(--t-xs); color: var(--c-tekst-3); margin-top: 0; }
 .spinner-stop { margin-top: var(--s-8); }
 .cin-progress { display: none; }
@@ -1703,6 +1705,27 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 .gap-topic-text.newly { color: var(--c-sukces); }
 .gap-miss-dot { background: var(--c-akcent); }
 .gap-delta-bar { background: var(--c-pole); border-color: var(--c-linia-2); border-radius: var(--r-md); }
+/* R6: strzalka miedzy wynikami jako ikona na srodku linii liczb (znak "→" siedzial na linii bazowej, nizej niz liczby) */
+.gap-delta-arrow { display: inline-flex; align-items: center; color: var(--c-tekst-3); }
+.gap-delta-arrow .ikona { width: 20px; height: 20px; }
+.gap-topic-icon .ikona { width: 16px; height: 16px; }
+.gap-topic-icon .ikona.ok { color: var(--c-sukces); } .gap-topic-icon .ikona.uwaga { color: var(--c-tekst-3); }
+.gap-info { margin: var(--s-8) 0; padding: var(--s-12); border-radius: var(--r-md); border: 1px solid var(--c-linia-2); background: var(--c-pole);
+  font-size: var(--t-sm); line-height: 1.45; color: var(--c-tekst-2); }
+.gap-info p { margin: 0 0 var(--s-8); } .gap-info p:last-child { margin-bottom: 0; }
+.gap-info.uwaga { border-color: var(--c-akcent-ramka); background: var(--c-akcent-tlo); color: var(--c-tekst); }
+.gap-info.blad { border-color: var(--c-blad); color: var(--c-blad); }
+.gap-info[hidden] { display: none; }
+/* R6: SERP - czolowka Google obok artykulu */
+.serp-stats { margin-bottom: var(--s-12); padding-bottom: var(--s-12); border-bottom: 1px solid var(--c-linia); }
+.serp-porownanie { display: grid; gap: 0; border: 1px solid var(--c-linia-2); border-radius: var(--r-md); overflow: hidden; background: var(--c-pole); }
+.serp-por-glowa, .serp-por-wiersz { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-8); align-items: baseline; padding: var(--s-8) var(--s-12); }
+.serp-por-glowa { font-size: var(--t-xs); color: var(--c-tekst-3); font-weight: var(--g-mocny); border-bottom: 1px solid var(--c-linia-2); }
+.serp-por-wiersz + .serp-por-wiersz { border-top: 1px solid var(--c-linia); }
+.serp-por-wiersz span { font-size: var(--t-sm); color: var(--c-tekst-2); }
+.serp-por-wiersz strong { font-size: var(--t-lg); font-weight: var(--g-mocny); color: var(--c-tekst); font-variant-numeric: normal; }
+.serp-por-glowa span:nth-child(n+2), .serp-por-wiersz strong { text-align: right; }
+.serp-por-opis { margin: var(--s-8) 0 0; font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
 .link-sug { border-bottom-color: var(--c-linia); }
 .bulk-item { border-bottom-color: var(--c-linia); }
 }
@@ -2451,6 +2474,16 @@ body.is-mobile .versions-bar .ver-btn { background: var(--c-wcisk); border-radiu
 body.is-mobile .versions-bar .ver-btn:first-of-type { border-radius: var(--r-sm) 0 0 var(--r-sm); padding-left: var(--s-10, 10px); }
 body.is-mobile .versions-bar .ver-btn:last-of-type { border-radius: 0 var(--r-sm) var(--r-sm) 0; }
 body.is-mobile .versions-bar .ver-btn.active { background: var(--c-nad); box-shadow: inset 0 0 0 2px var(--c-wcisk); border-radius: var(--r-sm); }
+/* R6: od trzech wersji zamiast segmentu jeden przycisk z nazwa biezacej wersji (odswiezWyborWersji) */
+.versions-bar .ver-wybor { display: none; }
+body.is-mobile .versions-bar.show.wiele-wersji .ver-btn, body.is-mobile .versions-bar.show.wiele-wersji .ver-podpis { display: none; }
+body.is-mobile .versions-bar.wiele-wersji .ver-wybor { position: relative; display: inline-flex; align-items: center; gap: var(--s-4); min-width: 0; max-width: 100%; height: 32px;
+  padding: 0 var(--s-6) 0 var(--s-10, 10px); border-radius: var(--r-sm); background: var(--c-wcisk); color: var(--c-tekst); font-size: 13px; font-weight: var(--g-mocny); }
+body.is-mobile .ver-wybor-tekst { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.is-mobile .ver-wybor .ikona { flex: none; width: 16px; height: 16px; margin: 0; color: var(--c-tekst-3); }
+body.is-mobile .ver-wybor select { position: absolute; top: -6px; left: 0; width: 100%; height: var(--h-dotyk); min-height: 0; margin: 0; padding: 0; border: 0;
+  opacity: 0; font-size: 16px; cursor: pointer; }
+body.is-mobile .ver-wybor:has(select:focus-visible) { box-shadow: 0 0 0 2px var(--c-fokus); }
 
 /* statystyki jako arkusz od dolu (ten sam element #article-stats) */
 body.is-mobile .article-stats.show { display: none; }
@@ -3010,7 +3043,7 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
 </script>
 <a href="#tresc-glowna" class="przejdz-do-tresci" onclick="return przejdzDoTresci()" data-i18n="skip-link">Przejdź do treści</a>
 <!-- Ikony: Lucide v1 (ISC, lucide.dev), tylko uzyte w aplikacji. -->
-<svg id="cai-ikony" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:none"><symbol id="i-arrow-left" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m12 19-7-7 7-7" /> <path vector-effect="non-scaling-stroke" d="M19 12H5" /></symbol><symbol id="i-bot" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 8V4H8" /> <rect vector-effect="non-scaling-stroke" width="16" height="12" x="4" y="8" rx="2" /> <path vector-effect="non-scaling-stroke" d="M2 14h2" /> <path vector-effect="non-scaling-stroke" d="M20 14h2" /> <path vector-effect="non-scaling-stroke" d="M15 13v2" /> <path vector-effect="non-scaling-stroke" d="M9 13v2" /></symbol><symbol id="i-braces" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1" /> <path vector-effect="non-scaling-stroke" d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1" /></symbol><symbol id="i-briefcase" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /> <rect vector-effect="non-scaling-stroke" width="20" height="14" x="2" y="6" rx="2" /></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="13" r="3" /></symbol><symbol id="i-chart-column" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 3v16a2 2 0 0 0 2 2h16" /> <path vector-effect="non-scaling-stroke" d="M18 17V9" /> <path vector-effect="non-scaling-stroke" d="M13 17V5" /> <path vector-effect="non-scaling-stroke" d="M8 17v-3" /></symbol><symbol id="i-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 6 9 17l-5-5" /></symbol><symbol id="i-chevron-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m6 9 6 6 6-6" /></symbol><symbol id="i-circle-check" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol><symbol id="i-circle-dot" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /></symbol><symbol id="i-circle-question-mark" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /> <path vector-effect="non-scaling-stroke" d="M12 17h.01" /></symbol><symbol id="i-circle-x" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m15 9-6 6" /> <path vector-effect="non-scaling-stroke" d="m9 9 6 6" /></symbol><symbol id="i-clipboard-list" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="8" height="4" x="8" y="2" rx="1" ry="1" /> <path vector-effect="non-scaling-stroke" d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M12 11h4" /> <path vector-effect="non-scaling-stroke" d="M12 16h4" /> <path vector-effect="non-scaling-stroke" d="M8 11h.01" /> <path vector-effect="non-scaling-stroke" d="M8 16h.01" /></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 6v6l4 2" /></symbol><symbol id="i-cloud" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" /></symbol><symbol id="i-compass" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" /></symbol><symbol id="i-copy" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="14" height="14" x="8" y="8" rx="2" ry="2" /> <path vector-effect="non-scaling-stroke" d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></symbol><symbol id="i-download" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 15V3" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <path vector-effect="non-scaling-stroke" d="m7 10 5 5 5-5" /></symbol><symbol id="i-ellipsis" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="19" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="5" cy="12" r="1" /></symbol><symbol id="i-file" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /></symbol><symbol id="i-file-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M12 18v-6" /> <path vector-effect="non-scaling-stroke" d="m9 15 3 3 3-3" /></symbol><symbol id="i-file-text" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M10 9H8" /> <path vector-effect="non-scaling-stroke" d="M16 13H8" /> <path vector-effect="non-scaling-stroke" d="M16 17H8" /></symbol><symbol id="i-flag" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528" /></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" /></symbol><symbol id="i-folder-open" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></symbol><symbol id="i-gauge" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m12 14 4-4" /> <path vector-effect="non-scaling-stroke" d="M3.34 19a10 10 0 1 1 17.32 0" /></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /> <path vector-effect="non-scaling-stroke" d="M2 12h20" /></symbol><symbol id="i-headphones" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" /></symbol><symbol id="i-history" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /> <path vector-effect="non-scaling-stroke" d="M3 3v5h5" /> <path vector-effect="non-scaling-stroke" d="M12 7v5l4 2" /></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" ry="2" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="9" r="2" /> <path vector-effect="non-scaling-stroke" d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 16v-4" /> <path vector-effect="non-scaling-stroke" d="M12 8h.01" /></symbol><symbol id="i-key-round" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle vector-effect="non-scaling-stroke" cx="16.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-languages" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m5 8 6 6" /> <path vector-effect="non-scaling-stroke" d="m4 14 6-6 2-3" /> <path vector-effect="non-scaling-stroke" d="M2 5h12" /> <path vector-effect="non-scaling-stroke" d="M7 2h1" /> <path vector-effect="non-scaling-stroke" d="m22 22-5-10-5 10" /> <path vector-effect="non-scaling-stroke" d="M14 18h6" /></symbol><symbol id="i-layout-grid" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="7" height="7" x="3" y="3" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="14" y="3" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="14" y="14" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="3" y="14" rx="1" /></symbol><symbol id="i-library" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 6 4 14" /> <path vector-effect="non-scaling-stroke" d="M12 6v14" /> <path vector-effect="non-scaling-stroke" d="M8 8v12" /> <path vector-effect="non-scaling-stroke" d="M4 4v16" /></symbol><symbol id="i-lightbulb" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" /> <path vector-effect="non-scaling-stroke" d="M9 18h6" /> <path vector-effect="non-scaling-stroke" d="M10 22h4" /></symbol><symbol id="i-link" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /> <path vector-effect="non-scaling-stroke" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></symbol><symbol id="i-link-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9 17H7A5 5 0 0 1 7 7h2" /> <path vector-effect="non-scaling-stroke" d="M15 7h2a5 5 0 1 1 0 10h-2" /> <line vector-effect="non-scaling-stroke" x1="8" x2="16" y1="12" y2="12" /></symbol><symbol id="i-list-checks" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13 5h8" /> <path vector-effect="non-scaling-stroke" d="M13 12h8" /> <path vector-effect="non-scaling-stroke" d="M13 19h8" /> <path vector-effect="non-scaling-stroke" d="m3 17 2 2 4-4" /> <path vector-effect="non-scaling-stroke" d="m3 7 2 2 4-4" /></symbol><symbol id="i-list-ordered" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 5h10" /> <path vector-effect="non-scaling-stroke" d="M11 12h10" /> <path vector-effect="non-scaling-stroke" d="M11 19h10" /> <path vector-effect="non-scaling-stroke" d="M4 4h1v5" /> <path vector-effect="non-scaling-stroke" d="M4 9h2" /> <path vector-effect="non-scaling-stroke" d="M6.5 20H3.4c0-1 2.6-1.925 2.6-3.5a1.5 1.5 0 0 0-2.6-1.02" /></symbol><symbol id="i-loader" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 2v4" /> <path vector-effect="non-scaling-stroke" d="m16.2 7.8 2.9-2.9" /> <path vector-effect="non-scaling-stroke" d="M18 12h4" /> <path vector-effect="non-scaling-stroke" d="m16.2 16.2 2.9 2.9" /> <path vector-effect="non-scaling-stroke" d="M12 18v4" /> <path vector-effect="non-scaling-stroke" d="m4.9 19.1 2.9-2.9" /> <path vector-effect="non-scaling-stroke" d="M2 12h4" /> <path vector-effect="non-scaling-stroke" d="m4.9 4.9 2.9 2.9" /></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path vector-effect="non-scaling-stroke" d="M7 11V7a5 5 0 0 1 10 0v4" /></symbol><symbol id="i-log-out" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 17 5-5-5-5" /> <path vector-effect="non-scaling-stroke" d="M21 12H9" /> <path vector-effect="non-scaling-stroke" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /></symbol><symbol id="i-mail" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /> <rect vector-effect="non-scaling-stroke" x="2" y="4" width="20" height="16" rx="2" /></symbol><symbol id="i-megaphone" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" /> <path vector-effect="non-scaling-stroke" d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14" /> <path vector-effect="non-scaling-stroke" d="M8 6v8" /></symbol><symbol id="i-mic" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 19v3" /> <path vector-effect="non-scaling-stroke" d="M19 10v2a7 7 0 0 1-14 0v-2" /> <rect vector-effect="non-scaling-stroke" x="9" y="2" width="6" height="13" rx="3" /></symbol><symbol id="i-minus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></symbol><symbol id="i-notebook-pen" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4" /> <path vector-effect="non-scaling-stroke" d="M2 6h4" /> <path vector-effect="non-scaling-stroke" d="M2 10h4" /> <path vector-effect="non-scaling-stroke" d="M2 14h4" /> <path vector-effect="non-scaling-stroke" d="M2 18h4" /> <path vector-effect="non-scaling-stroke" d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /></symbol><symbol id="i-octagon-alert" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 16h.01" /> <path vector-effect="non-scaling-stroke" d="M12 8v4" /> <path vector-effect="non-scaling-stroke" d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z" /></symbol><symbol id="i-package" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /> <path vector-effect="non-scaling-stroke" d="M12 22V12" /> <polyline vector-effect="non-scaling-stroke" points="3.29 7 12 12 20.71 7" /> <path vector-effect="non-scaling-stroke" d="m7.5 4.27 9 5.15" /></symbol><symbol id="i-palette" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" /> <circle vector-effect="non-scaling-stroke" cx="13.5" cy="6.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="17.5" cy="10.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="6.5" cy="12.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="8.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-panel-left" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /> <path vector-effect="non-scaling-stroke" d="M9 3v18" /></symbol><symbol id="i-paperclip" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551" /></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" x="14" y="3" width="5" height="18" rx="1" /> <rect vector-effect="non-scaling-stroke" x="5" y="3" width="5" height="18" rx="1" /></symbol><symbol id="i-pen-line" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13 21h8" /> <path vector-effect="non-scaling-stroke" d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /> <path vector-effect="non-scaling-stroke" d="m15 5 4 4" /></symbol><symbol id="i-play" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" /></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /> <path vector-effect="non-scaling-stroke" d="M12 5v14" /></symbol><symbol id="i-puzzle" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z" /></symbol><symbol id="i-radio-tower" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9" /> <path vector-effect="non-scaling-stroke" d="M7.8 4.7a6.14 6.14 0 0 0-.8 7.5" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="9" r="2" /> <path vector-effect="non-scaling-stroke" d="M16.2 4.8c2 2 2.26 5.11.8 7.47" /> <path vector-effect="non-scaling-stroke" d="M19.1 1.9a9.96 9.96 0 0 1 0 14.1" /> <path vector-effect="non-scaling-stroke" d="M9.5 18h5" /> <path vector-effect="non-scaling-stroke" d="m8 22 4-11 4 11" /></symbol><symbol id="i-refresh-cw" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path vector-effect="non-scaling-stroke" d="M21 3v5h-5" /> <path vector-effect="non-scaling-stroke" d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path vector-effect="non-scaling-stroke" d="M8 16H3v5" /></symbol><symbol id="i-rocket" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /> <path vector-effect="non-scaling-stroke" d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" /> <path vector-effect="non-scaling-stroke" d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" /> <path vector-effect="non-scaling-stroke" d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" /></symbol><symbol id="i-save" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /> <path vector-effect="non-scaling-stroke" d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" /> <path vector-effect="non-scaling-stroke" d="M7 3v4a1 1 0 0 0 1 1h7" /></symbol><symbol id="i-scale" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v18" /> <path vector-effect="non-scaling-stroke" d="m19 8 3 8a5 5 0 0 1-6 0zV7" /> <path vector-effect="non-scaling-stroke" d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1" /> <path vector-effect="non-scaling-stroke" d="m5 8 3 8a5 5 0 0 1-6 0zV7" /> <path vector-effect="non-scaling-stroke" d="M7 21h10" /></symbol><symbol id="i-scan-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 7V5a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M17 3h2a2 2 0 0 1 2 2v2" /> <path vector-effect="non-scaling-stroke" d="M21 17v2a2 2 0 0 1-2 2h-2" /> <path vector-effect="non-scaling-stroke" d="M7 21H5a2 2 0 0 1-2-2v-2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /> <path vector-effect="non-scaling-stroke" d="m16 16-1.9-1.9" /></symbol><symbol id="i-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m21 21-4.34-4.34" /> <circle vector-effect="non-scaling-stroke" cx="11" cy="11" r="8" /></symbol><symbol id="i-settings" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /></symbol><symbol id="i-shield-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /> <path vector-effect="non-scaling-stroke" d="m9 12 2 2 4-4" /></symbol><symbol id="i-sliders-horizontal" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 5H3" /> <path vector-effect="non-scaling-stroke" d="M12 19H3" /> <path vector-effect="non-scaling-stroke" d="M14 3v4" /> <path vector-effect="non-scaling-stroke" d="M16 17v4" /> <path vector-effect="non-scaling-stroke" d="M21 12h-9" /> <path vector-effect="non-scaling-stroke" d="M21 19h-5" /> <path vector-effect="non-scaling-stroke" d="M21 5h-7" /> <path vector-effect="non-scaling-stroke" d="M8 10v4" /> <path vector-effect="non-scaling-stroke" d="M8 12H3" /></symbol><symbol id="i-smile" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15 10V9" /> <path vector-effect="non-scaling-stroke" d="M16.472 15a6 6 0 01-8.943 0" /> <path vector-effect="non-scaling-stroke" d="M9 10V9" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /></symbol><symbol id="i-square" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /></symbol><symbol id="i-square-check" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol><symbol id="i-square-pen" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /> <path vector-effect="non-scaling-stroke" d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" /></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="4" /> <path vector-effect="non-scaling-stroke" d="M12 2v2" /> <path vector-effect="non-scaling-stroke" d="M12 20v2" /> <path vector-effect="non-scaling-stroke" d="m4.93 4.93 1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="m17.66 17.66 1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="M2 12h2" /> <path vector-effect="non-scaling-stroke" d="M20 12h2" /> <path vector-effect="non-scaling-stroke" d="m6.34 17.66-1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="m19.07 4.93-1.41 1.41" /></symbol><symbol id="i-tag" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" /> <circle vector-effect="non-scaling-stroke" cx="7.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="6" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="2" /></symbol><symbol id="i-ticket" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" /> <path vector-effect="non-scaling-stroke" d="M13 5v2" /> <path vector-effect="non-scaling-stroke" d="M13 17v2" /> <path vector-effect="non-scaling-stroke" d="M13 11v2" /></symbol><symbol id="i-trash-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 11v6" /> <path vector-effect="non-scaling-stroke" d="M14 11v6" /> <path vector-effect="non-scaling-stroke" d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /> <path vector-effect="non-scaling-stroke" d="M3 6h18" /> <path vector-effect="non-scaling-stroke" d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></symbol><symbol id="i-trending-up" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 7h6v6" /> <path vector-effect="non-scaling-stroke" d="m22 7-8.5 8.5-5-5L2 17" /></symbol><symbol id="i-triangle-alert" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path vector-effect="non-scaling-stroke" d="M12 9v4" /> <path vector-effect="non-scaling-stroke" d="M12 17h.01" /></symbol><symbol id="i-undo-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9 14 4 9l5-5" /> <path vector-effect="non-scaling-stroke" d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" /></symbol><symbol id="i-unlink" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71" /> <path vector-effect="non-scaling-stroke" d="m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71" /> <line vector-effect="non-scaling-stroke" x1="8" x2="8" y1="2" y2="5" /> <line vector-effect="non-scaling-stroke" x1="2" x2="5" y1="8" y2="8" /> <line vector-effect="non-scaling-stroke" x1="16" x2="16" y1="19" y2="22" /> <line vector-effect="non-scaling-stroke" x1="19" x2="22" y1="16" y2="16" /></symbol><symbol id="i-upload" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v12" /> <path vector-effect="non-scaling-stroke" d="m17 8-5-5-5 5" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></symbol><symbol id="i-user" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="7" r="4" /></symbol><symbol id="i-users" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path vector-effect="non-scaling-stroke" d="M16 3.128a4 4 0 0 1 0 7.744" /> <path vector-effect="non-scaling-stroke" d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="7" r="4" /></symbol><symbol id="i-volume-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /> <path vector-effect="non-scaling-stroke" d="M16 9a5 5 0 0 1 0 6" /> <path vector-effect="non-scaling-stroke" d="M19.364 18.364a9 9 0 0 0 0-12.728" /></symbol><symbol id="i-x" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M18 6 6 18" /> <path vector-effect="non-scaling-stroke" d="m6 6 12 12" /></symbol><symbol id="i-zap" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol></svg>
+<svg id="cai-ikony" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:none"><symbol id="i-arrow-right" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /> <path vector-effect="non-scaling-stroke" d="m12 5 7 7-7 7" /></symbol><symbol id="i-arrow-left" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m12 19-7-7 7-7" /> <path vector-effect="non-scaling-stroke" d="M19 12H5" /></symbol><symbol id="i-bot" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 8V4H8" /> <rect vector-effect="non-scaling-stroke" width="16" height="12" x="4" y="8" rx="2" /> <path vector-effect="non-scaling-stroke" d="M2 14h2" /> <path vector-effect="non-scaling-stroke" d="M20 14h2" /> <path vector-effect="non-scaling-stroke" d="M15 13v2" /> <path vector-effect="non-scaling-stroke" d="M9 13v2" /></symbol><symbol id="i-braces" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1" /> <path vector-effect="non-scaling-stroke" d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1" /></symbol><symbol id="i-briefcase" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /> <rect vector-effect="non-scaling-stroke" width="20" height="14" x="2" y="6" rx="2" /></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="13" r="3" /></symbol><symbol id="i-chart-column" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 3v16a2 2 0 0 0 2 2h16" /> <path vector-effect="non-scaling-stroke" d="M18 17V9" /> <path vector-effect="non-scaling-stroke" d="M13 17V5" /> <path vector-effect="non-scaling-stroke" d="M8 17v-3" /></symbol><symbol id="i-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 6 9 17l-5-5" /></symbol><symbol id="i-chevron-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m6 9 6 6 6-6" /></symbol><symbol id="i-circle-check" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol><symbol id="i-circle-dot" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /></symbol><symbol id="i-circle-question-mark" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /> <path vector-effect="non-scaling-stroke" d="M12 17h.01" /></symbol><symbol id="i-circle-x" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m15 9-6 6" /> <path vector-effect="non-scaling-stroke" d="m9 9 6 6" /></symbol><symbol id="i-clipboard-list" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="8" height="4" x="8" y="2" rx="1" ry="1" /> <path vector-effect="non-scaling-stroke" d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M12 11h4" /> <path vector-effect="non-scaling-stroke" d="M12 16h4" /> <path vector-effect="non-scaling-stroke" d="M8 11h.01" /> <path vector-effect="non-scaling-stroke" d="M8 16h.01" /></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 6v6l4 2" /></symbol><symbol id="i-cloud" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" /></symbol><symbol id="i-compass" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" /></symbol><symbol id="i-copy" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="14" height="14" x="8" y="8" rx="2" ry="2" /> <path vector-effect="non-scaling-stroke" d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></symbol><symbol id="i-download" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 15V3" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <path vector-effect="non-scaling-stroke" d="m7 10 5 5 5-5" /></symbol><symbol id="i-ellipsis" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="19" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="5" cy="12" r="1" /></symbol><symbol id="i-file" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /></symbol><symbol id="i-file-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M12 18v-6" /> <path vector-effect="non-scaling-stroke" d="m9 15 3 3 3-3" /></symbol><symbol id="i-file-text" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M10 9H8" /> <path vector-effect="non-scaling-stroke" d="M16 13H8" /> <path vector-effect="non-scaling-stroke" d="M16 17H8" /></symbol><symbol id="i-flag" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528" /></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" /></symbol><symbol id="i-folder-open" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></symbol><symbol id="i-gauge" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m12 14 4-4" /> <path vector-effect="non-scaling-stroke" d="M3.34 19a10 10 0 1 1 17.32 0" /></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /> <path vector-effect="non-scaling-stroke" d="M2 12h20" /></symbol><symbol id="i-headphones" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" /></symbol><symbol id="i-history" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /> <path vector-effect="non-scaling-stroke" d="M3 3v5h5" /> <path vector-effect="non-scaling-stroke" d="M12 7v5l4 2" /></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" ry="2" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="9" r="2" /> <path vector-effect="non-scaling-stroke" d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 16v-4" /> <path vector-effect="non-scaling-stroke" d="M12 8h.01" /></symbol><symbol id="i-key-round" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle vector-effect="non-scaling-stroke" cx="16.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-languages" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m5 8 6 6" /> <path vector-effect="non-scaling-stroke" d="m4 14 6-6 2-3" /> <path vector-effect="non-scaling-stroke" d="M2 5h12" /> <path vector-effect="non-scaling-stroke" d="M7 2h1" /> <path vector-effect="non-scaling-stroke" d="m22 22-5-10-5 10" /> <path vector-effect="non-scaling-stroke" d="M14 18h6" /></symbol><symbol id="i-layout-grid" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="7" height="7" x="3" y="3" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="14" y="3" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="14" y="14" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="3" y="14" rx="1" /></symbol><symbol id="i-library" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 6 4 14" /> <path vector-effect="non-scaling-stroke" d="M12 6v14" /> <path vector-effect="non-scaling-stroke" d="M8 8v12" /> <path vector-effect="non-scaling-stroke" d="M4 4v16" /></symbol><symbol id="i-lightbulb" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" /> <path vector-effect="non-scaling-stroke" d="M9 18h6" /> <path vector-effect="non-scaling-stroke" d="M10 22h4" /></symbol><symbol id="i-link" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /> <path vector-effect="non-scaling-stroke" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></symbol><symbol id="i-link-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9 17H7A5 5 0 0 1 7 7h2" /> <path vector-effect="non-scaling-stroke" d="M15 7h2a5 5 0 1 1 0 10h-2" /> <line vector-effect="non-scaling-stroke" x1="8" x2="16" y1="12" y2="12" /></symbol><symbol id="i-list-checks" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13 5h8" /> <path vector-effect="non-scaling-stroke" d="M13 12h8" /> <path vector-effect="non-scaling-stroke" d="M13 19h8" /> <path vector-effect="non-scaling-stroke" d="m3 17 2 2 4-4" /> <path vector-effect="non-scaling-stroke" d="m3 7 2 2 4-4" /></symbol><symbol id="i-list-ordered" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 5h10" /> <path vector-effect="non-scaling-stroke" d="M11 12h10" /> <path vector-effect="non-scaling-stroke" d="M11 19h10" /> <path vector-effect="non-scaling-stroke" d="M4 4h1v5" /> <path vector-effect="non-scaling-stroke" d="M4 9h2" /> <path vector-effect="non-scaling-stroke" d="M6.5 20H3.4c0-1 2.6-1.925 2.6-3.5a1.5 1.5 0 0 0-2.6-1.02" /></symbol><symbol id="i-loader" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 2v4" /> <path vector-effect="non-scaling-stroke" d="m16.2 7.8 2.9-2.9" /> <path vector-effect="non-scaling-stroke" d="M18 12h4" /> <path vector-effect="non-scaling-stroke" d="m16.2 16.2 2.9 2.9" /> <path vector-effect="non-scaling-stroke" d="M12 18v4" /> <path vector-effect="non-scaling-stroke" d="m4.9 19.1 2.9-2.9" /> <path vector-effect="non-scaling-stroke" d="M2 12h4" /> <path vector-effect="non-scaling-stroke" d="m4.9 4.9 2.9 2.9" /></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path vector-effect="non-scaling-stroke" d="M7 11V7a5 5 0 0 1 10 0v4" /></symbol><symbol id="i-log-out" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 17 5-5-5-5" /> <path vector-effect="non-scaling-stroke" d="M21 12H9" /> <path vector-effect="non-scaling-stroke" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /></symbol><symbol id="i-mail" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /> <rect vector-effect="non-scaling-stroke" x="2" y="4" width="20" height="16" rx="2" /></symbol><symbol id="i-megaphone" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" /> <path vector-effect="non-scaling-stroke" d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14" /> <path vector-effect="non-scaling-stroke" d="M8 6v8" /></symbol><symbol id="i-mic" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 19v3" /> <path vector-effect="non-scaling-stroke" d="M19 10v2a7 7 0 0 1-14 0v-2" /> <rect vector-effect="non-scaling-stroke" x="9" y="2" width="6" height="13" rx="3" /></symbol><symbol id="i-minus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></symbol><symbol id="i-notebook-pen" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4" /> <path vector-effect="non-scaling-stroke" d="M2 6h4" /> <path vector-effect="non-scaling-stroke" d="M2 10h4" /> <path vector-effect="non-scaling-stroke" d="M2 14h4" /> <path vector-effect="non-scaling-stroke" d="M2 18h4" /> <path vector-effect="non-scaling-stroke" d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /></symbol><symbol id="i-octagon-alert" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 16h.01" /> <path vector-effect="non-scaling-stroke" d="M12 8v4" /> <path vector-effect="non-scaling-stroke" d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z" /></symbol><symbol id="i-package" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /> <path vector-effect="non-scaling-stroke" d="M12 22V12" /> <polyline vector-effect="non-scaling-stroke" points="3.29 7 12 12 20.71 7" /> <path vector-effect="non-scaling-stroke" d="m7.5 4.27 9 5.15" /></symbol><symbol id="i-palette" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" /> <circle vector-effect="non-scaling-stroke" cx="13.5" cy="6.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="17.5" cy="10.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="6.5" cy="12.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="8.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-panel-left" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /> <path vector-effect="non-scaling-stroke" d="M9 3v18" /></symbol><symbol id="i-paperclip" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551" /></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" x="14" y="3" width="5" height="18" rx="1" /> <rect vector-effect="non-scaling-stroke" x="5" y="3" width="5" height="18" rx="1" /></symbol><symbol id="i-pen-line" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13 21h8" /> <path vector-effect="non-scaling-stroke" d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /> <path vector-effect="non-scaling-stroke" d="m15 5 4 4" /></symbol><symbol id="i-play" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" /></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /> <path vector-effect="non-scaling-stroke" d="M12 5v14" /></symbol><symbol id="i-puzzle" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z" /></symbol><symbol id="i-radio-tower" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9" /> <path vector-effect="non-scaling-stroke" d="M7.8 4.7a6.14 6.14 0 0 0-.8 7.5" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="9" r="2" /> <path vector-effect="non-scaling-stroke" d="M16.2 4.8c2 2 2.26 5.11.8 7.47" /> <path vector-effect="non-scaling-stroke" d="M19.1 1.9a9.96 9.96 0 0 1 0 14.1" /> <path vector-effect="non-scaling-stroke" d="M9.5 18h5" /> <path vector-effect="non-scaling-stroke" d="m8 22 4-11 4 11" /></symbol><symbol id="i-refresh-cw" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path vector-effect="non-scaling-stroke" d="M21 3v5h-5" /> <path vector-effect="non-scaling-stroke" d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path vector-effect="non-scaling-stroke" d="M8 16H3v5" /></symbol><symbol id="i-rocket" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /> <path vector-effect="non-scaling-stroke" d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" /> <path vector-effect="non-scaling-stroke" d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" /> <path vector-effect="non-scaling-stroke" d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" /></symbol><symbol id="i-save" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /> <path vector-effect="non-scaling-stroke" d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" /> <path vector-effect="non-scaling-stroke" d="M7 3v4a1 1 0 0 0 1 1h7" /></symbol><symbol id="i-scale" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v18" /> <path vector-effect="non-scaling-stroke" d="m19 8 3 8a5 5 0 0 1-6 0zV7" /> <path vector-effect="non-scaling-stroke" d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1" /> <path vector-effect="non-scaling-stroke" d="m5 8 3 8a5 5 0 0 1-6 0zV7" /> <path vector-effect="non-scaling-stroke" d="M7 21h10" /></symbol><symbol id="i-scan-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 7V5a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M17 3h2a2 2 0 0 1 2 2v2" /> <path vector-effect="non-scaling-stroke" d="M21 17v2a2 2 0 0 1-2 2h-2" /> <path vector-effect="non-scaling-stroke" d="M7 21H5a2 2 0 0 1-2-2v-2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /> <path vector-effect="non-scaling-stroke" d="m16 16-1.9-1.9" /></symbol><symbol id="i-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m21 21-4.34-4.34" /> <circle vector-effect="non-scaling-stroke" cx="11" cy="11" r="8" /></symbol><symbol id="i-settings" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /></symbol><symbol id="i-shield-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /> <path vector-effect="non-scaling-stroke" d="m9 12 2 2 4-4" /></symbol><symbol id="i-sliders-horizontal" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 5H3" /> <path vector-effect="non-scaling-stroke" d="M12 19H3" /> <path vector-effect="non-scaling-stroke" d="M14 3v4" /> <path vector-effect="non-scaling-stroke" d="M16 17v4" /> <path vector-effect="non-scaling-stroke" d="M21 12h-9" /> <path vector-effect="non-scaling-stroke" d="M21 19h-5" /> <path vector-effect="non-scaling-stroke" d="M21 5h-7" /> <path vector-effect="non-scaling-stroke" d="M8 10v4" /> <path vector-effect="non-scaling-stroke" d="M8 12H3" /></symbol><symbol id="i-smile" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15 10V9" /> <path vector-effect="non-scaling-stroke" d="M16.472 15a6 6 0 01-8.943 0" /> <path vector-effect="non-scaling-stroke" d="M9 10V9" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /></symbol><symbol id="i-square" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /></symbol><symbol id="i-square-check" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol><symbol id="i-square-pen" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /> <path vector-effect="non-scaling-stroke" d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" /></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="4" /> <path vector-effect="non-scaling-stroke" d="M12 2v2" /> <path vector-effect="non-scaling-stroke" d="M12 20v2" /> <path vector-effect="non-scaling-stroke" d="m4.93 4.93 1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="m17.66 17.66 1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="M2 12h2" /> <path vector-effect="non-scaling-stroke" d="M20 12h2" /> <path vector-effect="non-scaling-stroke" d="m6.34 17.66-1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="m19.07 4.93-1.41 1.41" /></symbol><symbol id="i-tag" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" /> <circle vector-effect="non-scaling-stroke" cx="7.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="6" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="2" /></symbol><symbol id="i-ticket" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" /> <path vector-effect="non-scaling-stroke" d="M13 5v2" /> <path vector-effect="non-scaling-stroke" d="M13 17v2" /> <path vector-effect="non-scaling-stroke" d="M13 11v2" /></symbol><symbol id="i-trash-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 11v6" /> <path vector-effect="non-scaling-stroke" d="M14 11v6" /> <path vector-effect="non-scaling-stroke" d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /> <path vector-effect="non-scaling-stroke" d="M3 6h18" /> <path vector-effect="non-scaling-stroke" d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></symbol><symbol id="i-trending-up" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 7h6v6" /> <path vector-effect="non-scaling-stroke" d="m22 7-8.5 8.5-5-5L2 17" /></symbol><symbol id="i-triangle-alert" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path vector-effect="non-scaling-stroke" d="M12 9v4" /> <path vector-effect="non-scaling-stroke" d="M12 17h.01" /></symbol><symbol id="i-undo-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9 14 4 9l5-5" /> <path vector-effect="non-scaling-stroke" d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" /></symbol><symbol id="i-unlink" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71" /> <path vector-effect="non-scaling-stroke" d="m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71" /> <line vector-effect="non-scaling-stroke" x1="8" x2="8" y1="2" y2="5" /> <line vector-effect="non-scaling-stroke" x1="2" x2="5" y1="8" y2="8" /> <line vector-effect="non-scaling-stroke" x1="16" x2="16" y1="19" y2="22" /> <line vector-effect="non-scaling-stroke" x1="19" x2="22" y1="16" y2="16" /></symbol><symbol id="i-upload" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v12" /> <path vector-effect="non-scaling-stroke" d="m17 8-5-5-5 5" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></symbol><symbol id="i-user" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="7" r="4" /></symbol><symbol id="i-users" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path vector-effect="non-scaling-stroke" d="M16 3.128a4 4 0 0 1 0 7.744" /> <path vector-effect="non-scaling-stroke" d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="7" r="4" /></symbol><symbol id="i-volume-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /> <path vector-effect="non-scaling-stroke" d="M16 9a5 5 0 0 1 0 6" /> <path vector-effect="non-scaling-stroke" d="M19.364 18.364a9 9 0 0 0 0-12.728" /></symbol><symbol id="i-x" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M18 6 6 18" /> <path vector-effect="non-scaling-stroke" d="m6 6 12 12" /></symbol><symbol id="i-zap" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol></svg>
 
 <div class="topbar">
   <div class="topbar-logo">
@@ -3309,7 +3342,7 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
           <div class="field zrodla">
             <div class="field-label" data-i18n="zrodla-tytul">Źródła</div>
             <div class="zrodla-karta">
-              <div class="zrodla-baza"><svg class="ikona" aria-hidden="true"><use href="#i-library"/></svg><div><b data-i18n="zrodla-baza">Baza wiedzy</b><span id="zrodla-baza-opis"></span></div><button type="button" class="btn-link" onclick="toggleKbPanel()" data-i18n="zrodla-wybierz">Wybierz</button></div>
+              <div class="zrodla-baza"><svg class="ikona" aria-hidden="true"><use href="#i-library"/></svg><div><b data-i18n="zrodla-baza">Baza wiedzy</b><span id="zrodla-baza-opis"></span></div><button type="button" class="btn-link" onclick="otworzBazeWiedzy()" data-i18n="zrodla-wybierz">Wybierz</button></div>
               <label class="toggle-row" for="use-web">
             <div class="toggle-info">
               <span class="toggle-label" data-i18n="toggle-web">Szukaj w sieci i podaj źródła</span>
@@ -3398,6 +3431,8 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
               <div class="versions-bar" id="versions-bar">
                 <span class="ver-label" data-i18n="versions-label">Warianty:</span>
                 <span class="ver-podpis" data-i18n="btn-premium">Samokorekta</span>
+                <!-- R6: telefon, od trzech wersji: nazwa biezacej wersji, wybor w systemowej liscie -->
+                <span class="ver-wybor"><span class="ver-wybor-tekst" id="ver-wybor-tekst"></span><svg class="ikona" aria-hidden="true"><use href="#i-chevron-down"/></svg><select id="ver-select" aria-label="Wersja artykułu" data-i18n-label="ver-wybor" onchange="switchVersion(Number(this.value))"></select></span>
               </div>
             </div>
             <div class="pasek-akcje">
@@ -3614,7 +3649,7 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
               <span class="panel-tytul" data-i18n="serp-data-title">Dane SERP: top wyniki Google</span>
               <button type="button" class="seo-close panel-zamknij" onclick="closeSerpPanel()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
             </div>
-            <div id="serp-stats" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)"></div>
+            <div id="serp-stats" class="serp-stats"></div>
             <div id="serp-topics-wrap" style="margin-bottom:8px">
               <div class="panel-podtytul" data-i18n="gap-title-topics">Tematy w top wynikach</div>
               <div id="serp-topics" style="display:flex;flex-wrap:wrap;gap:5px"></div>
@@ -3660,7 +3695,7 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
                   <div class="tekst-pomoc" style="margin-bottom:2px" data-i18n="gap-coverage">Pokrycie SERP</div>
                   <div style="display:flex;align-items:center;gap:8px">
                     <span id="gap-delta-before" class="gap-delta-score"></span>
-                    <span class="gap-delta-arrow">→</span>
+                    <span class="gap-delta-arrow" aria-hidden="true"><svg class="ikona"><use href="#i-arrow-right"/></svg></span>
                     <span id="gap-delta-after" class="gap-delta-score"></span>
                     <span class="tekst-maly" id="gap-delta-diff"></span>
                   </div>
@@ -3688,11 +3723,12 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
                 </div>
               </div>
               <div id="gap-missing"></div>
+              <div id="gap-info" class="gap-info" role="status" hidden></div>
               <button type="button" id="gap-improve-btn" class="btn-secondary btn-pelny" onclick="improveFromGaps()" data-i18n="improve-by-gaps" data-ikona="pen-line"><svg class="ikona" aria-hidden="true"><use href="#i-pen-line"/></svg>Popraw artykuł pod brakujące tematy</button>
             </div>
             <div id="gap-present-wrap" style="display:none;margin-top:8px">
               <div class="panel-podtytul" data-i18n="gap-covered">Pokryte tematy</div>
-              <div id="gap-present" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+              <div id="gap-present"></div>
             </div>
             <div id="gap-no-serp" style="display:none;color:var(--text3)" data-i18n="gap-no-serp">Włącz Analizę SERP przed generowaniem, aby korzystać z analizy luk semantycznych.</div>
           </div>
@@ -5233,10 +5269,10 @@ var I18N = {
     'url-label':'Adres URL',
     'bv-modal-full-title':'Głos marki (brand voice)',
     'bv-modal-desc-full':'Wklej 2-5 istniejących artykułów firmowych (lub innych tekstów). Aplikacja wyekstrahuje profil stylu i zastosuje go do wszystkich przyszłych generowań.',
-    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','ver-serp':'Poprawa SERP',
+    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','ver-serp':'Poprawa SERP','ver-wybor':'Wersja artykułu',
     'spin-sub-model':'model przetwarza temat i bazę wiedzy','spin-sub-hybrid2':'optymalizuję jednocześnie pod SEO, AIO i czytelnika',
     'link-suggest-prefix':'Rozważ link do','link-suggest-at':'przy słowach:',
-    'gap-still-missing':'Nadal brakujące tematy',
+    'gap-still-missing':'Nadal brakujące tematy','gap-szukam':'Szukam źródeł i piszę sekcje…','gap-bez-zrodel':'Nowe sekcje potrzebują źródeł. Baza wiedzy jest pusta, a wyszukiwanie w sieci wyłączone, więc tych tematów nie da się opisać bez zmyślania.','gap-wlacz-siec':'Włącz wyszukiwanie w sieci i popraw','gap-bez-zrodel-baza':'Tematy bez pokrycia w zaznaczonych dokumentach: {n}. Nie dodano dla nich pustych sekcji. Włącz wyszukiwanie w sieci albo dodaj materiał do bazy wiedzy.','gap-bez-zrodel-siec':'Tematy bez źródła: {n}. Nie dodano dla nich pustych sekcji, zostają na liście brakujących. Dodaj materiał do bazy wiedzy i spróbuj ponownie.',
     'editor-done':'Gotowe','edit-etykieta':'Edycja','edit-cofnij':'Cofnij','edit-pasek':'Edycja tekstu','edit-podpowiedz':'Tryb edycji: dotknij tekstu, aby go zmienić. Gotowe zapisuje zmiany.','kb-words-suffix':'słów','kb-tag-text':'Tekst','kb-tag-file':'Plik','hist-words-suffix':'słów',
     'url-fetch-done':'Gotowe - strona dodana do bazy!',
     'url-demo-connect':'Łączę ze stroną…','url-demo-fetch':'Pobieram treść…','url-demo-process':'Przetwarzam…','upload-processing':'Przetwarzam: {name}','url-demo-done':'Gotowe!',
@@ -5256,7 +5292,7 @@ var I18N = {
     // ── Retry messages ──
     // ── Bulk generation ──
     // ── SERP stats ──
-    'serp-avg-words':'śr. słów','serp-avg-h2':'śr. sekcji H2',
+    'serp-avg-words':'śr. słów','serp-avg-h2':'śr. sekcji H2','serp-por-top':'Top Google (śr.)','serp-por-artykul':'Twój artykuł','serp-por-slowa':'Słowa','serp-por-h2':'Sekcje H2','serp-por-opis':'Średnie z czołowych wyników Google dla tej frazy: punkt odniesienia, nie cel do skopiowania.','serp-w-czolowce':'W czołówce: {t} i frazy kluczowe ({f}), lista poniżej.',
     // ── Version labels ──
     'ver-original':'Oryginał','ver-previously-improved':'wcześniej poprawiany',
     // ── Templates ──
@@ -5924,10 +5960,10 @@ var I18N = {
     'url-label':'URL',
     'bv-modal-full-title':'Brand voice',
     'bv-modal-desc-full':'Paste 2-5 existing company articles (or other texts). The app will extract the style profile and apply it to all future generations.',
-    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','ver-serp':'SERP improvement',
+    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','ver-serp':'SERP improvement','ver-wybor':'Article version',
     'spin-sub-model':'model processes topic and knowledge base','spin-sub-hybrid2':'optimizing for SEO, AIO and readability simultaneously',
     'link-suggest-prefix':'Consider linking','link-suggest-at':'at words:',
-    'gap-still-missing':'Still missing topics',
+    'gap-still-missing':'Still missing topics','gap-szukam':'Finding sources and writing sections…','gap-bez-zrodel':'New sections need sources. The knowledge base is empty and web search is off, so these topics cannot be covered without inventing facts.','gap-wlacz-siec':'Turn on web search and improve','gap-bez-zrodel-baza':'Topics not covered by the selected documents: {n}. No empty sections were added. Turn on web search or add material to the knowledge base.','gap-bez-zrodel-siec':'Topics without a source: {n}. No empty sections were added; they stay on the missing list. Add material to the knowledge base and try again.',
     'img-download-btn':'Download PNG','img-copy-btn-lbl':'Copy',
     'img-step1-noref':'Step 1 of 2: creating image prompt',
     'img-prompt-used':'Used prompt',
@@ -5950,7 +5986,7 @@ var I18N = {
     // ── Retry ──
     // ── Bulk ──
     // ── SERP ──
-    'serp-avg-words':'avg. words','serp-avg-h2':'avg. H2 sections',
+    'serp-avg-words':'avg. words','serp-avg-h2':'avg. H2 sections','serp-por-top':'Top Google (avg.)','serp-por-artykul':'Your article','serp-por-slowa':'Words','serp-por-h2':'H2 sections','serp-por-opis':'Averages of the top Google results for this phrase: a benchmark, not a target to copy.','serp-w-czolowce':'At the top: {t} and key phrases ({f}), listed below.',
     // ── Version labels ──
     'ver-original':'Original','ver-previously-improved':'previously improved',
     // ── Templates ──
@@ -8579,6 +8615,7 @@ ${html}`;
   gapCache = null;
   gapBaseline = null;
   gapSelectedTopics = [];
+  gapBezPokrycia = [];
   gapImproveCount = 0;
   gapPreviousTopics = [];
   document.getElementById('gap-panel').style.display = 'none';
@@ -8742,6 +8779,7 @@ function previewHistory(i) {
     gapCache = null;
     gapBaseline = null;
     gapSelectedTopics = [];
+    gapBezPokrycia = [];
     gapImproveCount = 0;
     gapPreviousTopics = [];
     // Reset wersji - historia ma tylko jedną wersję artykułu
@@ -9038,7 +9076,44 @@ function uporzadkujArtykul(korzen, jezyk) {
   uporzadkujZrodla(korzen, jezyk);
   const t = tekstWJezyku('meta-etykieta', jezyk || currentLang);
   korzen.querySelectorAll('.meta-box > .meta-label').forEach(function (l) { if (l.textContent !== t) l.textContent = t; });
+  cudzyslowyPolskie(korzen);
   return korzen;
+}
+
+// R6: model miesza w polskim tekscie proste cudzyslowy z drukarskimi ("poprawi sie pozniej"
+// obok „...”), tak szly tez do PDF i DOCX. W polskim artykule (jezyk z tresci, bo tak samo
+// trafia tu podglad z historii i kopia do eksportu) ujednolicamy je na „...”: prosty albo angielski
+// cudzyslow po spacji lub na poczatku akapitu otwiera, nastepny zamyka. Stan cytatu liczony
+// w obrebie akapitu, bo cytat przechodzi przez <strong> albo <a>. Bez zmian: lista zrodel
+// (tytuly stron), kod, cytat w cytacie i samotny cudzyslow po cyfrze (cale: 27").
+function cudzyslowyPolskie(korzen) {
+  const BLOK = 'p,li,h1,h2,h3,h4,h5,h6,td,th,blockquote,figcaption,caption,dt,dd,div';
+  if (!korzen || !korzen.ownerDocument || !/["“]/.test(korzen.textContent || '')) return;
+  if (wykryjJezykTekstu(korzen.textContent) !== 'pl') return;
+  const tw = korzen.ownerDocument.createTreeWalker(korzen, NodeFilter.SHOW_TEXT);
+  let blok = null, otwarty = false, wewn = false, poprz = '';
+  for (let n = tw.nextNode(); n; n = tw.nextNode()) {
+    const el = n.parentElement;
+    if (!el || el.closest('.zrodla-box, code, pre, [data-tylko-ekran]')) continue;
+    const b = el.closest(BLOK);
+    if (b !== blok) { blok = b; otwarty = false; wewn = false; poprz = ''; }
+    const t = n.data;
+    let w = '';
+    for (const z of t) {
+      let c = z;
+      const granica = !poprz || /[\s([{/\u2013-]/.test(poprz);
+      if (z === '„') otwarty = true;
+      else if (z === '"' || z === '“' || z === '”') {
+        if (wewn) wewn = false;
+        else if (otwarty && granica && z !== '”') wewn = true;
+        else if (otwarty) { c = '”'; otwarty = false; }
+        else if (granica && z !== '”') { c = '„'; otwarty = true; }
+      }
+      w += c;
+      poprz = z;
+    }
+    if (w !== t) n.data = w;
+  }
 }
 
 // Lista zrodel doklejana do artykulu przed blokiem meta description, zeby
@@ -10600,13 +10675,31 @@ function renderSerpPanel(pokaz) {
   if (!serpData) return;
   const panel = document.getElementById('serp-panel');
 
+  // R6: "900 sr. slow" to srednia czolowki Google, nie dane artykulu - bez porownania wygladalo
+  // jak blad. Tabela: czolowka obok artykulu, z podpisem; bez kropek, ktore wisialy na koncu linii.
   const statsEl = document.getElementById('serp-stats');
-  const statItems = [];
-  if (serpData.avgWords) statItems.push(`<span class="serp-stat"><strong>${serpData.avgWords}</strong>${_t('serp-avg-words')}</span>`);
-  if (serpData.avgH2)    statItems.push(`<span class="serp-stat"><strong>${serpData.avgH2}</strong>${_t('serp-avg-h2')}</span>`);
-  if (serpData.topics.length) statItems.push('<span class="serp-stat"><strong>' + serpData.topics.length + '</strong>' + _tn('tematy-slowo', serpData.topics.length) + '</span>');
-  if (serpData.phrases.length) statItems.push(`<span class="serp-stat"><strong>${serpData.phrases.length}</strong>${_t('serp-phrases')}</span>`);
-  statsEl.innerHTML = statItems.join('<span style="color:var(--border2)">·</span>');
+  const art = document.getElementById('article');
+  let slowaArt = 0, h2Art = 0;
+  if (art && getComputedStyle(art).display !== 'none' && art.textContent.trim()) {
+    const k = art.cloneNode(true);
+    k.querySelectorAll('.zrodla-box, .meta-box, [data-tylko-ekran], [data-brak]').forEach((e) => e.remove());
+    slowaArt = ((k.textContent || '').trim().match(/\S+/g) || []).length;
+    h2Art = k.querySelectorAll('h2').length;
+  }
+  const wiersz = (etykieta, top, wlasny) => '<div class="serp-por-wiersz"><span>' + escapeHtml(etykieta) + '</span><strong>'
+    + (top ? formatujLiczbe(top, 0) : '-') + '</strong><strong>' + (wlasny ? formatujLiczbe(wlasny, 0) : '-') + '</strong></div>';
+  let tabela = '';
+  if (serpData.avgWords || serpData.avgH2) {
+    tabela = '<div class="serp-porownanie"><div class="serp-por-glowa"><span></span><span>' + escapeHtml(_t('serp-por-top')) + '</span><span>'
+      + escapeHtml(_t('serp-por-artykul')) + '</span></div>'
+      + (serpData.avgWords ? wiersz(_t('serp-por-slowa'), serpData.avgWords, slowaArt) : '')
+      + (serpData.avgH2 ? wiersz(_t('serp-por-h2'), serpData.avgH2, h2Art) : '')
+      + '</div><p class="serp-por-opis">' + escapeHtml(_t('serp-por-opis')) + '</p>';
+  }
+  const ileT = serpData.topics.length, ileF = serpData.phrases.length;
+  const czolowka = (ileT || ileF) ? '<p class="serp-por-opis">' + escapeHtml(_t('serp-w-czolowce')
+    .replace('{t}', ileT + ' ' + _tn('tematy-slowo', ileT)).replace('{f}', String(ileF))) + '</p>' : '';
+  statsEl.innerHTML = tabela + czolowka;
 
   document.getElementById('serp-topics').innerHTML =
     serpData.topics.map(t => `<span class="serp-tag">${escapeHtml(t)}</span>`).join('');
@@ -10708,9 +10801,11 @@ function _gapResetPanels() {
 function _buildMissingHtml(topics) {
   const btn = document.getElementById('gap-improve-btn');
   if (btn) btn.style.display = 'block';
-  const prevLC = gapPreviousTopics.map(t => t.toLowerCase().trim().substring(0, 25));
+  // R6: temat porownywany w calosci. Po 20 znakach "Jak wybrac pompe ciepla krok po kroku"
+  // rownal sie "Jak wybrac pompe ciepla cena" - frazy z SERP zwykle zaczynaja sie tak samo.
+  const prevLC = gapPreviousTopics.map(t => t.toLowerCase().trim());
   return topics.map((t, i) => {
-    const isPrev = prevLC.some(p => t.toLowerCase().trim().substring(0, 25).startsWith(p.substring(0, 20)) || p.startsWith(t.toLowerCase().trim().substring(0, 20)));
+    const isPrev = prevLC.includes(t.toLowerCase().trim());
     const prevBadge = isPrev
       ? '<span style="font-size:10px;color:var(--c-uwaga);background:var(--c-akcent-tlo);border-radius:4px;padding:1px 5px;margin-left:5px">' + _t('ver-previously-improved') + '</span>'
       : '';
@@ -10746,8 +10841,10 @@ function renderGapResult(parsed) {
   }
   const presWrap = document.getElementById('gap-present-wrap');
   if (parsed.present && parsed.present.length) {
+    // R6: pokryte tematy jako lista ze znacznikiem (wczesniej chipy bez ikony wygladaly jak przyciski)
     document.getElementById('gap-present').innerHTML = parsed.present.map(t =>
-      '<span class="serp-tag" style="color:var(--text)">' + escapeHtml(t) + '</span>'
+      '<div class="gap-topic-row"><span class="gap-topic-icon">' + ikona('circle-check') + '</span>' +
+      '<span class="gap-topic-text">' + escapeHtml(t) + '</span></div>'
     ).join('');
     presWrap.style.display = 'block';
   }
@@ -10769,9 +10866,8 @@ function renderGapDelta(baseline, newResult, selectedTopics) {
   // scoreAfter: syntetyzuj z baseline + pokrytych tematów (zawsze >= scoreBefore)
   const _addressed = selectedTopics || [];
   const _addrLC = _addressed.map(t => t.toLowerCase().trim());
-  const _newlyCovered = (baseline.missing || []).filter(t =>
-    _addrLC.some(a => a === t.toLowerCase().trim() || a.substring(0, 20) === t.toLowerCase().trim().substring(0, 20))
-  ).length;
+  // R6: caly temat, nie 20 pierwszych znakow (patrz _buildMissingHtml)
+  const _newlyCovered = (baseline.missing || []).filter(t => _addrLC.includes(t.toLowerCase().trim())).length;
   const _newPresentCount = (baseline.present?.length || 0) + _newlyCovered;
   const scoreAfter = _bTotal > 0
     ? Math.round(_newPresentCount / _bTotal * 100)
@@ -10815,7 +10911,7 @@ function renderGapDelta(baseline, newResult, selectedTopics) {
   const newlyWrap = document.getElementById('gap-delta-newly-wrap');
   if (addressed.length) {
     document.getElementById('gap-delta-newly').innerHTML = addressed.map(t =>
-      '<div class="gap-topic-row"><span class="gap-topic-icon">\u2705</span>' +
+      '<div class="gap-topic-row"><span class="gap-topic-icon">' + ikona('circle-check', 'ok') + '</span>' +
       '<span class="gap-topic-text newly">' + escapeHtml(t) + '</span></div>'
     ).join('');
     newlyWrap.style.display = 'block';
@@ -10834,9 +10930,10 @@ function renderGapDelta(baseline, newResult, selectedTopics) {
     document.getElementById('gap-all-topics').innerHTML = allBaseline.map(t => {
       const tLC     = t.toLowerCase().trim();
       const wasPresent = (baseline.present || []).some(p => p.toLowerCase().trim() === tLC);
-      const isAddressed = addrLC.some(a => a === tLC || a.substring(0,20) === tLC.substring(0,20));
+      const isAddressed = addrLC.includes(tLC);
       const covered = wasPresent || isAddressed;
-      const icon    = covered ? '\u2705' : '\u274c';
+      // R6: ikony SVG - emoji w .gap-topic-icon (font-size: 0) byly niewidoczne
+      const icon    = covered ? ikona('circle-check', isAddressed && !wasPresent ? 'ok' : '') : ikona('circle-x', 'uwaga');
       const cls     = covered ? (isAddressed && !wasPresent ? 'newly' : 'covered') : '';
       return '<div class="gap-topic-row">' +
         '<span class="gap-topic-icon">' + icon + '</span>' +
@@ -10847,9 +10944,7 @@ function renderGapDelta(baseline, newResult, selectedTopics) {
 
   // Nadal brakujące = baseline.missing MINUS addressed (bez względu na nową analizę AI)
   const addrLC2 = addressed.map(t => t.toLowerCase().trim());
-  const stillMissing = (baseline.missing || []).filter(t =>
-    !addrLC2.some(a => a === t.toLowerCase().trim() || a.substring(0,20) === t.toLowerCase().trim().substring(0,20))
-  );
+  const stillMissing = (baseline.missing || []).filter(t => !addrLC2.includes(t.toLowerCase().trim()));
 
   const missWrap = document.getElementById('gap-missing-wrap');
   const hdrDiv   = missWrap ? missWrap.querySelector('div:first-child div:first-child') : null;
@@ -10863,6 +10958,10 @@ function renderGapDelta(baseline, newResult, selectedTopics) {
     document.getElementById('gap-improve-btn').style.display = 'none';
     missWrap.style.display = 'none';
   }
+  const info = document.getElementById('gap-info');
+  if (info) info.hidden = true;
+  const bezZrodla = gapBezPokrycia.filter((t) => stillMissing.includes(t));
+  if (bezZrodla.length) pokazBrakZrodelLuk(bezZrodla, gapBezPokryciaSiec);
 }
 
 async function runGapAnalysis() {
@@ -10928,21 +11027,54 @@ async function runGapAnalysis() {
   }
 }
 
+// Temat z SERP-a a naglowek sekcji, ktory napisal model: 1 = ten sam, 0.95 = jeden zawiera
+// poczatek drugiego, dalej udzial wspolnych slow (model lubi dopisac nawias albo zmienic szyk).
+// Frazy z SERP zaczynaja sie zwykle tak samo ("pompa ciepla cena", "pompa ciepla opinie"),
+// wiec temat dostaje sekcje NAJLEPIEJ pasujaca, nie pierwsza podobna.
+function podobienstwoTematu(a, b) {
+  const n = (t) => String(t || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+  const x = n(a), y = n(b);
+  if (!x || !y) return 0;
+  if (x === y) return 1;
+  if (x.indexOf(y) === 0 || y.indexOf(x) === 0) return 0.95;
+  const sx = x.split(' ').filter((w) => w.length > 2), sy = new Set(y.split(' ').filter((w) => w.length > 2));
+  if (!sx.length || !sy.size) return 0;
+  const wspolne = sx.filter((w) => sy.has(w)).length;
+  return wspolne / Math.max(sx.length, sy.size);
+}
+
 async function improveFromGaps() {
+  if (generowanieTrwa()) { ostrzezGenerowanieTrwa(); return; }
   const art = document.getElementById('article');
   if (!art || !serpData) return;
-  const originalHtml = art.innerHTML;
-
-  // Zachowaj meta description
-  const tmpPre = document.createElement('div'); tmpPre.innerHTML = originalHtml;
-  const metaBoxEl = tmpPre.querySelector('.meta-box');
-  const savedMeta = metaBoxEl ? metaBoxEl.outerHTML : '';
+  if (editMode) toggleEdit();
 
   const checkedEls = Array.from(document.querySelectorAll('.gap-miss-check:checked'));
   if (!checkedEls.length) return;
   const selectedNow = checkedEls.map(c =>
     (c.closest('.gap-miss-item')?.querySelector('.gap-miss-text')?.textContent?.trim() || '')
   ).filter(Boolean);
+
+  // R6: lista zrodel wychodzi z artykulu PRZED cieciem na czesci. Wczesniej siedziala
+  // miedzy "Kluczowymi wnioskami" a opisem meta, regex wnioskow zabieral ja razem z nimi,
+  // a podmiana wnioskow kasowala zrodla - PDF i DOCX wychodzily bez zrodel.
+  const robocze = document.createElement('div');
+  robocze.innerHTML = art.innerHTML;
+  const boxZrodelEl = robocze.querySelector('.zrodla-box');
+  const staryBox = boxZrodelEl ? boxZrodelEl.outerHTML : '';
+  robocze.querySelectorAll('.zrodla-box').forEach((el) => el.remove());
+  const originalHtml = robocze.innerHTML;
+
+  // Zachowaj meta description
+  const metaBoxEl = robocze.querySelector('.meta-box');
+  const savedMeta = metaBoxEl ? metaBoxEl.outerHTML : '';
+
+  // R6: nowe sekcje potrzebuja zrodel. Artykul pisany z wyszukiwaniem (ma liste zrodel z sieci)
+  // albo wlaczony przelacznik = szukamy w sieci tak jak przy generowaniu. Bez bazy i bez sieci
+  // nie wolamy modelu: wyszlyby same sekcje "brak pokrycia", a wynik i tak pokazalby 100 pkt.
+  const zSiecia = !!(document.getElementById('use-web') && document.getElementById('use-web').checked) || !!staryBox;
+  const zaznaczoneDok = docs.some((d) => d.selected) || (window._bazaSerwerLiczba || 0) > 0;
+  if (!zSiecia && !zaznaczoneDok) { pokazBrakZrodelLuk(); return; }
 
   const btn    = document.getElementById('gap-improve-btn');
   const ka     = kontekstArtykulu();
@@ -10951,8 +11083,10 @@ async function improveFromGaps() {
   const outLang = jezykDlaModelu(ka.jezyk);
   const kwSectionName = { 'Polish':'Kluczowe wnioski', 'English':'Key takeaways', 'German':'Wichtigste Erkenntnisse', 'Czech':'Klíčové poznatky' }[outLang];
 
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><span class="progress-spinner" style="display:inline-block"></span><span>' + _t('msg-spin-sections').replace('⏳','').trim() + '</span></span>'; }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><span class="progress-spinner" style="display:inline-block"></span><span>' + _t(zSiecia ? 'gap-szukam' : 'msg-spin-sections').replace('⏳','').trim() + '</span></span>'; }
   // status generowania sekcji tylko na gorze (przycisk); bez dolnego wskaznika i skoku na dol
+  const info = document.getElementById('gap-info');
+  if (info) info.hidden = true;
 
   // Wyciągnij i usuń sekcję "Kluczowe wnioski" z oryginalnego HTML
   // - musi zawsze być na końcu, przed meta-box
@@ -10965,99 +11099,179 @@ async function improveFromGaps() {
   const tmpCtx = document.createElement('div'); tmpCtx.innerHTML = htmlWithoutKw;
   const metaInCtx = tmpCtx.querySelector('.meta-box');
   if (metaInCtx) metaInCtx.remove();
-  const articlePlainText = (tmpCtx.innerText || '').trim();
+  const articlePlainText = (tmpCtx.innerText || tmpCtx.textContent || '').trim();
 
-  const maxNewTokens = Math.min(8000, selectedNow.length * 600 + 1200);
+  const maxNewTokens = Math.min(9000, selectedNow.length * 650 + 1400);
   const topicsList = selectedNow.map((t, i) => `${i + 1}. ${t}`).join('\n');
   const hasKw = !!originalKw;
 
-  try {
-    const res = await apiFetch({
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({
-        model: MODEL_TRESCI,
-        max_tokens: zRezerwa(maxNewTokens),
-        // Ta sciezka dostawala wczesniej temat, frazy i gotowy artykul, ale
-        // ZADNYCH zrodel. Model musial wiec wymyslic tresc nowych sekcji -
-        // luki semantyczne z SERP-a to przeciez tematy, ktorych w artykule
-        // nie ma, a czesto nie ma ich rowniez w bazie wiedzy. Przycisk
-        // "Uzupelnij luki" byl przez to najkrotsza droga do halucynacji
-        // w tekscie, ktory poza tym trzymal sie zrodel. Teraz dostaje te
-        // same zrodla i te same reguly co glowne generowanie, a luke bez
-        // pokrycia ma pominac zamiast wypelnic.
-        system: `You are an SEO editor. Write ALL new content in ${outLang} (regardless of the language of the topic or keywords). Write ONLY the new HTML sections requested, then (if instructed) an updated summary section. No markdown fences, no preamble, no repetition of existing content.`
-          + blokFaktow(false) + blokZakresu() + blokKonfliktu() + blokRytmu() + blokTonu(tonKanoniczny())
-          + '\n\nA GAP IS NOT A LICENCE TO INVENT. These topics come from search results, '
-          + 'not from the sources. Write a section only for a topic the sources below '
-          + 'actually cover. For every other topic write exactly one line:\n'
-          + '<h2>TOPIC</h2><p data-brak="1">' + tekstWJezyku('gap-brak-pokrycia', jezykEtykiet()) + '</p>\n'
-          + 'so the author can see what is missing and decide whether to add a source.',
-        messages: [{ role: 'user', content:
-          'Article topic: ' + topic + '\nKeywords: ' + kwText +
-          '\nOutput language: ' + outLang +
-          '\n\nSOURCES (the only material you may draw facts from):\n' + zrodlaDoKontroli().slice(0, 100000) +
-          '\n\nExisting article (context/tone - do NOT repeat):\n' + articlePlainText +
-          '\n\nWrite new HTML sections in ' + outLang + ' (each: <h2>Heading</h2><p>...</p><p>...</p>) for:\n' + topicsList +
-          (hasKw
-            ? '\n\nAfter the new sections, write an updated <h2>' + kwSectionName + '</h2><ul><li>...</li></ul> that includes key points from BOTH the existing article AND the new sections above. Keep all original bullet points, add new ones for the new topics.'
-            : '') +
-          '\n\nReturn ONLY the HTML blocks. No preamble.'
-        }]
-      })
-    });
-    const data = await res.json();
-    const aiOutput = (data.content || []).map(x => x.text || '').join('')
-      .replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim();
+  const naglowki = { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
+  const cialo = {
+    model: MODEL_TRESCI,
+    max_tokens: zRezerwa(maxNewTokens),
+    // Te same zrodla i reguly co glowne generowanie. Luka z SERP-a to temat, ktorego
+    // w artykule nie ma; bez zrodla model by go zmyslil, wiec temat bez pokrycia pomija.
+    system: `You are an SEO editor. Write ALL new content in ${outLang} (regardless of the language of the topic or keywords). Write ONLY the new HTML sections requested, then (if instructed) an updated summary section. No markdown fences, no preamble, no repetition of existing content.`
+      + blokFaktow(zSiecia) + blokZakresu() + blokKonfliktu() + blokRytmu() + blokTonu(tonKanoniczny())
+      + '\n\nA GAP IS NOT A LICENCE TO INVENT. These topics come from search results, not from the sources. '
+      + (zSiecia
+        ? 'Use the knowledge base first; where it is silent, SEARCH the web for the topic and write the section from what you find, so every fact can be traced to a page. '
+        : 'Write a section only for a topic the sources below actually cover. ')
+      + 'Only for a topic that neither the sources' + (zSiecia ? ' nor a search' : '') + ' cover, write exactly one line:\n'
+      + '<h2>TOPIC</h2><p data-brak="1">' + tekstWJezyku('gap-brak-pokrycia', jezykEtykiet()) + '</p>\n'
+      + 'Never pad such a section with general statements.',
+    messages: [{ role: 'user', content:
+      'Article topic: ' + topic + '\nKeywords: ' + kwText +
+      '\nOutput language: ' + outLang +
+      '\n\nSOURCES (knowledge base' + (zSiecia ? '; you may also search the web' : ', the only material you may draw facts from') + '):\n' + zrodlaDoKontroli().slice(0, 100000) +
+      '\n\nExisting article (context/tone - do NOT repeat):\n' + articlePlainText +
+      '\n\nWrite new HTML sections in ' + outLang + ' (each: <h2>Heading</h2><p>...</p><p>...</p>) for:\n' + topicsList +
+      (hasKw
+        ? '\n\nAfter the new sections, write an updated <h2>' + kwSectionName + '</h2><ul><li>...</li></ul> with 5 to 8 bullet points that sum up the WHOLE article, including the new sections. Merge related points; do not list every paragraph.'
+        : '') +
+      '\n\nReturn ONLY the HTML blocks. No preamble.'
+    }]
+  };
+  if (zSiecia) cialo.tools = [narzedzieWyszukiwania()];
 
-    if (!aiOutput || aiOutput.length < 50) {
-      document.getElementById('gap-gen-indicator')?.remove();
-      if (btn) { btn.disabled = false; updateGapBtn(); }
-      return;
-    }
+  try {
+    const data = zSiecia
+      ? await wywolajZWyszukiwaniem(cialo, naglowki)
+      : await (await apiFetch({ method: 'POST', headers: naglowki, body: JSON.stringify(cialo) })).json();
+    if (!data || data.error) throw bladOdpowiedzi(data || {});
+    // Tekst po ostatnim wyniku wyszukiwania (zapowiedz "Wyszukam..." nie trafia do artykulu).
+    const bloki = data.content || [];
+    let od = 0;
+    bloki.forEach((b, i) => { if (b && b.type === 'web_search_tool_result') od = i + 1; });
+    let aiOutput = bloki.slice(od).map((x) => x.text || '').join('').trim() || bloki.map((x) => x.text || '').join('');
+    aiOutput = aiOutput.replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim();
+    if (outLang === 'Polish') aiOutput = aiOutput.replace(/[—–]/g, '-');
+    aiOutput = aiOutput.replace(/<a\s+href=/gi, '<a target="_blank" rel="noopener" href=').replace(/target="_blank"\s+target="_blank"/gi, 'target="_blank"');
 
     // Rozdziel odpowiedź AI na nowe sekcje i zaktualizowane KW
     const newKwRegex = /(<h2[^>]*>\s*(?:Kluczowe wnioski|Key takeaways|Wichtigste Erkenntnisse|Klíčové poznatky)\s*<\/h2>[\s\S]*)/i;
     const newKwMatch = aiOutput.match(newKwRegex);
-    const updatedKw      = newKwMatch ? newKwMatch[1].trimEnd() : null;
-    const newSectionsOnly = newKwMatch
-      ? aiOutput.slice(0, newKwMatch.index).trimEnd()
-      : aiOutput;
+    const updatedKw = newKwMatch ? newKwMatch[1].trimEnd() : null;
+    const surowe = newKwMatch ? aiOutput.slice(0, newKwMatch.index).trimEnd() : aiOutput;
 
-    // Zbuduj końcowy HTML: [artykuł bez KW i bez meta] + [nowe sekcje] + [KW] + [meta]
-    const baseHtml = htmlWithoutKw
-      .replace(savedMeta, '').trimEnd();     // usuń meta-box z bazy
+    // R6: sekcje "brak pokrycia" nie trafiaja do artykulu. Wczesniej osiem pustych naglowkow
+    // z ramka "Brak pokrycia..." wygladalo jak blad, a wynik pokrycia rosl do 100 pkt.
+    // Temat bez zrodla zostaje na liscie "Nadal brakujace" z wyjasnieniem w panelu.
+    const nowe = document.createElement('div');
+    nowe.innerHTML = oczyscHtmlModelu(surowe);
+    const sekcje = [];
+    nowe.querySelectorAll('h2').forEach((h) => {
+      const czesci = [h];
+      let n = h.nextElementSibling;
+      while (n && n.tagName !== 'H2') { czesci.push(n); n = n.nextElementSibling; }
+      const pusta = czesci.some((el) => el.matches('[data-brak]') || el.querySelector('[data-brak]'));
+      const tresc = czesci.slice(1).map((el) => (el.textContent || '').trim()).join(' ');
+      sekcje.push({ tytul: h.textContent.trim(), czesci, ok: !pusta && tresc.length > 60 });
+    });
+    sekcje.filter((x) => !x.ok).forEach((x) => x.czesci.forEach((el) => el.remove()));
+    const pokryteTeraz = [], bezPokrycia = [];
+    const rowno = sekcje.length === selectedNow.length;
+    selectedNow.forEach((t, i) => {
+      let s = null, best = 0;
+      sekcje.forEach((x, j) => {
+        const p = podobienstwoTematu(x.tytul, t) + (rowno && j === i ? 0.01 : 0);
+        if (p > best) { best = p; s = x; }
+      });
+      if (best < 0.6) s = rowno ? sekcje[i] : null;
+      (s && s.ok ? pokryteTeraz : bezPokrycia).push(t);
+    });
+    const newSectionsOnly = nowe.innerHTML.trim();
 
-    const kwBlock   = updatedKw || originalKw || '';
-    const metaBlock = savedMeta || '';
+    if (!pokryteTeraz.length || !newSectionsOnly) {
+      pokazBrakZrodelLuk(bezPokrycia.length ? bezPokrycia : selectedNow, zSiecia);
+      return;
+    }
 
-    const updatedHtml = oczyscHtmlModelu(baseHtml
-      + (newSectionsOnly ? '\n' + newSectionsOnly : '')
-      + (kwBlock         ? '\n' + kwBlock         : '')
-      + (metaBlock       ? '\n' + metaBlock        : ''));
+    // Zrodla: dotychczasowe + nowe z wyszukiwania (bez powtorzen adresow).
+    const noweZrodla = zSiecia ? zrodlaZOdpowiedzi(data) : [];
+    const box = document.createElement('div');
+    box.innerHTML = staryBox || (noweZrodla.length ? blokZrodel(noweZrodla) : '');
+    const ul = box.querySelector('.zrodla-box ul');
+    if (ul && staryBox) {
+      const sa = new Set([...ul.querySelectorAll('a[href]')].map((a) => kluczAdresu(a.getAttribute('href'))));
+      const brakujace = noweZrodla.filter((z) => !sa.has(kluczAdresu(z.url)));
+      if (brakujace.length) {
+        const tmpUl = document.createElement('div');
+        tmpUl.innerHTML = blokZrodel(brakujace);
+        tmpUl.querySelectorAll('li').forEach((li) => ul.appendChild(li));
+      }
+    }
+    if (noweZrodla.length) {
+      const znane = new Set(zrodlaSieciowe.map((z) => kluczAdresu(z.url)));
+      zrodlaSieciowe = zrodlaSieciowe.concat(noweZrodla.filter((z) => !znane.has(kluczAdresu(z.url))));
+    }
+
+    // Zbuduj końcowy HTML: [artykuł bez KW i bez meta] + [nowe sekcje] + [KW] + [zrodla] + [meta]
+    const baseHtml = htmlWithoutKw.replace(savedMeta, '').trimEnd();
+    // Wnioski maja 5-8 punktow. Gdy model mimo to dopisze punkt za kazda nowa sekcje
+    // (wczesniej 16 punktow), zostaja dotychczasowe wnioski.
+    const ileLi = (h) => ((h || '').match(/<li[\s>]/gi) || []).length;
+    const kwBlock = (updatedKw && (ileLi(updatedKw) <= 8 || !originalKw || ileLi(updatedKw) <= ileLi(originalKw)) ? updatedKw : originalKw) || '';
+    let updatedHtml = oczyscHtmlModelu(baseHtml + '\n' + newSectionsOnly
+      + (kwBlock ? '\n' + kwBlock : '')
+      + (savedMeta ? '\n' + savedMeta : ''));
+    updatedHtml = wstawBlokZrodel(updatedHtml, box.innerHTML);
 
     art.innerHTML = updatedHtml;
     uporzadkujArtykul(art);
-    currentText   = tekstBlokami(art);
-    showArticleStats(updatedHtml);
+    currentText = tekstBlokami(art);
+    showArticleStats(art.innerHTML);
+    if (zSiecia) pokazStanSieci(stanSieci || { szukan: 1, cytowan: 0 }, zrodlaSieciowe.length);
 
     gapImproveCount++;
     const verLabel = gapImproveCount === 1 ? _t('ver-serp') : _t('ver-serp') + ' ' + gapImproveCount;
-    addVersion(updatedHtml, verLabel);
+    addVersion(art.innerHTML, verLabel);
+    if (typeof zapiszRecznePoprawki === 'function') zapiszRecznePoprawki();
 
-    gapSelectedTopics = [...new Set([...gapSelectedTopics, ...selectedNow])];
+    // Do wyniku "pokryte" ida tylko tematy z napisana sekcja.
+    gapSelectedTopics = [...new Set([...gapSelectedTopics, ...pokryteTeraz])];
+    gapBezPokrycia = bezPokrycia; gapBezPokryciaSiec = zSiecia;
     gapCache = null;
 
     document.getElementById('gap-panel').style.display = 'block';
     gapOpen = true;
     runGapAnalysis();
-
-  } catch(e) {
-    // apiFetch obsługuje błędy w UI
+  } catch (e) {
+    const info2 = document.getElementById('gap-info');
+    if (info2) { info2.textContent = komunikatBleduApi(e, 'gap-blad'); info2.className = 'gap-info blad'; info2.hidden = false; }
+  } finally {
+    document.getElementById('gap-gen-indicator')?.remove();
+    if (btn) { btn.disabled = false; updateGapBtn(); }
   }
+}
 
-  document.getElementById('gap-gen-indicator')?.remove();
-  if (btn) { btn.disabled = false; updateGapBtn(); }
+// Tematy, dla ktorych nie bylo zrodla: komunikat w panelu Luk zamiast pustych sekcji w artykule.
+// Bez listy tematow = nie bylo zadnych zrodel; z lista = zrodla byly (baza albo siec), ale tematow nie opisuja.
+let gapBezPokrycia = [], gapBezPokryciaSiec = false;
+function pokazBrakZrodelLuk(tematy, zSiecia) {
+  const info = document.getElementById('gap-info');
+  if (!info) return;
+  const n = (tematy || []).length;
+  info.className = 'gap-info uwaga';
+  info.innerHTML = '';
+  const p = document.createElement('p');
+  p.textContent = zSiecia
+    ? _t('gap-bez-zrodel-siec').replace('{n}', n)
+    : (tematy ? _t('gap-bez-zrodel-baza').replace('{n}', n) : _t('gap-bez-zrodel'));
+  info.appendChild(p);
+  if (!zSiecia) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn-secondary btn-pelny';
+    b.innerHTML = ikona('globe') + '<span>' + escapeHtml(_t('gap-wlacz-siec')) + '</span>';
+    b.onclick = function () {
+      const w = document.getElementById('use-web');
+      if (w) { w.checked = true; w.dispatchEvent(new Event('change', { bubbles: true })); }
+      improveFromGaps();
+    };
+    info.appendChild(b);
+  }
+  info.hidden = false;
 }
 
 // ─── FEATURE: SUGESTIE LINKÓW WEWNĘTRZNYCH ─────────────────────────────────────
@@ -11273,6 +11487,7 @@ function addVersion(html, label) {
 
 function renderVersionsBar() {
   const bar = document.getElementById('versions-bar');
+  odswiezWyborWersji(bar);
   if (versions.length < 2) { bar.classList.remove('show'); return; }
   bar.classList.add('show');
   bar.querySelectorAll('.ver-btn').forEach(el => el.remove());
@@ -11283,6 +11498,24 @@ function renderVersionsBar() {
     btn.onclick = () => switchVersion(i);
     bar.appendChild(btn);
   });
+}
+
+// R6: Przed | Po | Poprawa SERP nie miescily sie na telefonie obok "N slow · M min" i wchodzily
+// na nie. Od trzech wersji telefon pokazuje nazwe biezacej wersji, a wybor idzie przez systemowa
+// liste (select przykryty przezroczyscie, 16 px - iOS nie powieksza strony). Komputer bez zmian.
+function odswiezWyborWersji(bar) {
+  const sel = document.getElementById('ver-select'), napis = document.getElementById('ver-wybor-tekst');
+  bar.classList.toggle('wiele-wersji', versions.length >= 3);
+  if (!sel) return;
+  sel.innerHTML = '';
+  versions.forEach((v, i) => {
+    const o = document.createElement('option');
+    o.value = String(i);
+    o.textContent = v.label;
+    sel.appendChild(o);
+  });
+  if (versions[activeVersion]) sel.value = String(activeVersion);
+  if (napis) napis.textContent = versions[activeVersion] ? versions[activeVersion].label : '';
 }
 
 // Reczne poprawki trafiaja do biezacej wersji i do wpisu historii, inaczej
@@ -11659,7 +11892,13 @@ function przyciskDostepny(id) { var b = document.getElementById(id); return !!b 
 function inspektorPokaz(k) {
   if (!k) k = przyciskDostepny('seo-btn') ? 'seo' : (przyciskDostepny('fakty-btn') ? 'fakty' : 'seo');
   Object.keys(INSPEKTOR).forEach(function (n) { if (n !== k && panelWidoczny(INSPEKTOR[n].el)) INSPEKTOR[n].zamknij(); });
-  if (!panelWidoczny(INSPEKTOR[k].el)) INSPEKTOR[k].otworz();
+  if (!panelWidoczny(INSPEKTOR[k].el)) {
+    INSPEKTOR[k].otworz();
+    // R6: nowa zakladka od gory. Arkusz zostawal przewiniety jak poprzednia zakladka,
+    // wiec SERP otwieral sie z tabela ucieta pod zakladkami.
+    var tr = document.querySelector('#inspektor .ins-tresc');
+    if (tr) tr.scrollTop = 0;
+  }
   odswiezInspektor();
 }
 function inspektorZamknij() {
@@ -16498,7 +16737,20 @@ async function podcastDownload(btn) {
 }
 
 /* ═══════════════════════ MODUŁ TREŚCI AUDIO ═══════════════════════ */
-function toggleKbPanel(){ document.body.classList.toggle('kb-collapsed'); try{ magazyn.setItem('cai_kb_collapsed', document.body.classList.contains('kb-collapsed')?'1':'0'); }catch(e){} }
+function toggleKbPanel(){
+  // R6: na telefonie panelu bocznego nie ma - baza otwiera sie jako arkusz (jak "Baza" w nawigacji).
+  // Wczesniej przycisk zwijal niewidoczny panel komputera, wiec "Wybierz" w briefie nic nie robil.
+  if (document.body.classList.contains('is-mobile')) { openMobileSidebar(); return; }
+  document.body.classList.toggle('kb-collapsed'); try{ magazyn.setItem('cai_kb_collapsed', document.body.classList.contains('kb-collapsed')?'1':'0'); }catch(e){}
+}
+// "Wybierz" przy Bazie wiedzy: otwiera baze (nie przelacza - na komputerze klikniecie przy
+// otwartym panelu zwijalo go) i przenosi do listy dokumentow.
+function otworzBazeWiedzy(){
+  if (document.body.classList.contains('is-mobile')) { openMobileSidebar(); return; }
+  if (document.body.classList.contains('kb-collapsed')) toggleKbPanel();
+  const cel = document.querySelector('#kb-list .kb-check, #kb-list button, #kb-empty button, .kb-add-btn');
+  if (cel && cel.offsetParent) cel.focus({ preventScroll: false });
+}
 var _piiCb=null; var _piiAck=false;
 function piiConfirm(cb){ if(_piiAck){ if(typeof cb==='function') cb(); return; } _piiCb=(typeof cb==='function')?cb:null; var o=document.getElementById('pii-overlay'), m=document.getElementById('pii-modal'); if(o)o.classList.add('show'); if(m)m.classList.add('show'); if(m)m.style.pointerEvents='none'; if(o)o.style.pointerEvents='none'; setTimeout(function(){ if(m)m.style.pointerEvents=''; if(o)o.style.pointerEvents=''; }, 450); }
 function piiClose(){ var o=document.getElementById('pii-overlay'), m=document.getElementById('pii-modal'); if(o)o.classList.remove('show'); if(m)m.classList.remove('show'); _piiCb=null; }
