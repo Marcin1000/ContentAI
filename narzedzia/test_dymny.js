@@ -927,6 +927,19 @@ async function wariantR6F(b) {
   await s.waitForTimeout(400);
   const w2 = await stanWstecz().catch((e) => ({ blad: String(e) }));
   wynik('telefon: R6-F E-04 Wstecz zamyka menu Konto bez przeladowania', w2.znacznik === true && w2.konto === false, JSON.stringify(w2));
+  // Arkusz statystyk i menu grupy (Eksport) tak samo; liczba wpisow historii nie rosnie (bez petli).
+  const arkusze = [];
+  for (const otworz of [() => przelaczStatystyki(true), () => przelaczGrupe('pobierz')]) {
+    await s.evaluate(otworz).catch(() => {});
+    await s.waitForTimeout(300);
+    const przed = await s.evaluate(() => ({ otwarty: document.body.classList.contains('statystyki-otwarte') || !!document.querySelector('.grupa-menu.open'), dl: window.history.length })).catch((e) => ({ blad: String(e) }));
+    await krok('R6-F Wstecz przy arkuszu', s.goBack({ timeout: 5000 }));
+    await s.waitForTimeout(400);
+    const po = await s.evaluate(() => ({ znacznik: window.__bezPrzeladowania === 1, otwarty: document.body.classList.contains('statystyki-otwarte') || !!document.querySelector('.grupa-menu.open'), dl: window.history.length })).catch((e) => ({ blad: String(e) }));
+    arkusze.push({ przed, po });
+  }
+  wynik('telefon: R6-F E-04 Wstecz zamyka arkusz statystyk i menu grupy, bez nowych wpisow historii',
+    arkusze.every((a) => a.przed.otwarty && a.po.znacznik === true && a.po.otwarty === false && a.po.dl === a.przed.dl), JSON.stringify(arkusze));
   await s.evaluate(() => { window.__bezPrzeladowania = 1; openMobileSidebar(); }).catch(() => {});
   await s.waitForTimeout(300);
   await krok('R6-F krzyzyk Bazy', s.click('#mobile-sidebar .przycisk-ikona', { timeout: 3000 }));
