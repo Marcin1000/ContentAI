@@ -9809,8 +9809,9 @@ function niewidoczneWArtykule(zrodlo) {
 // R6-F (E-02): notatka o luce to akapit p[data-brak], ktorego tekst nadal brzmi jak
 // notatka (PL albo EN) albo jest pusty. Akapit, w ktory autor wpisal swoj tekst (takze
 // nowy akapit z Entera, ktory dziedziczy atrybut), jest juz trescia artykulu.
+// Porownanie bez interpunkcji i cudzyslowow: model i typografia potrafia zmienic kropke albo spacje.
 function tekstNotatkiLuki(t) {
-  return String(t || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  return String(t || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 }
 function czyNotatkaLuki(p) {
   const t = tekstNotatkiLuki(p.textContent);
