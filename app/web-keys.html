@@ -5197,7 +5197,7 @@ var I18N = {
     'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','msg-dopracuj-bez-zmian':'Tekst ma już {n}/100, samokorekta nie znalazła nic do poprawy. Zostaje bez zmian.','ver-serp':'Poprawa SERP','ver-wybor':'Wersja artykułu',
     'spin-sub-model':'model przetwarza temat i bazę wiedzy','spin-sub-hybrid2':'optymalizuję jednocześnie pod SEO, AIO i czytelnika',
     'link-suggest-prefix':'Rozważ link do','link-suggest-at':'przy słowach:',
-    'gap-still-missing':'Nadal brakujące tematy','gap-szukam':'Szukam źródeł i piszę sekcje…','gap-bez-zrodel':'Nowe sekcje potrzebują źródeł. Baza wiedzy jest pusta, a wyszukiwanie w sieci wyłączone, więc tych tematów nie da się opisać bez zmyślania.','gap-wlacz-siec':'Włącz wyszukiwanie w sieci i popraw','gap-bez-zrodel-baza':'Tematy bez pokrycia w zaznaczonych dokumentach: {n}. Nie dodano dla nich pustych sekcji. Włącz wyszukiwanie w sieci albo dodaj materiał do bazy wiedzy.','gap-bez-zrodel-siec':'Tematy bez źródła: {n}. Nie dodano dla nich pustych sekcji, zostają na liście brakujących. Dodaj materiał do bazy wiedzy i spróbuj ponownie.',
+    'gap-still-missing':'Nadal brakujące tematy','gap-szukam':'Szukam źródeł i piszę sekcje…','gap-bez-zrodel':'Nowe sekcje potrzebują źródeł. Baza wiedzy jest pusta, a wyszukiwanie w sieci wyłączone, więc tych tematów nie da się opisać bez zmyślania.','gap-wlacz-siec':'Włącz wyszukiwanie w sieci i popraw','gap-inny-artykul':'Poprawa dotyczyła poprzedniego artykułu, więc jej wynik nie został wstawiony.','gap-pusto':'Model nie zwrócił nowych sekcji. Spróbuj ponownie.','gap-dopisane':'Dopisano sekcje: {n}. Wynik w zakładce Luki.','gap-serp-blad':'Analiza SERP nie powiodła się przy generowaniu, więc nie ma z czym porównać tekstu. Wygeneruj artykuł ponownie z włączoną analizą SERP.','serp-blad-toast':'Analiza SERP nie powiodła się. Artykuł powstaje bez niej.','gap-pkt':'pkt','gap-bez-zrodel-baza':'Tematy bez pokrycia w zaznaczonych dokumentach: {n}. Nie dodano dla nich pustych sekcji. Włącz wyszukiwanie w sieci albo dodaj materiał do bazy wiedzy.','gap-bez-zrodel-siec':'Tematy bez źródła: {n}. Nie dodano dla nich pustych sekcji, zostają na liście brakujących. Dodaj materiał do bazy wiedzy i spróbuj ponownie.',
     'editor-done':'Gotowe','edit-etykieta':'Edycja','edit-cofnij':'Cofnij','edit-pasek':'Edycja tekstu','edit-podpowiedz':'Tryb edycji: dotknij tekstu, aby go zmienić. Gotowe zapisuje zmiany.','kb-words-suffix':'słów','kb-tag-text':'Tekst','kb-tag-file':'Plik','hist-words-suffix':'słów',
     'url-fetch-done':'Gotowe - strona dodana do bazy!',
     'url-demo-connect':'Łączę ze stroną…','url-demo-fetch':'Pobieram treść…','url-demo-process':'Przetwarzam…','upload-processing':'Przetwarzam: {name}','url-demo-done':'Gotowe!',
@@ -5838,7 +5838,7 @@ var I18N = {
     'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','msg-dopracuj-bez-zmian':'The text already scores {n}/100, self-review found nothing to improve. It stays as it is.','ver-serp':'SERP improvement','ver-wybor':'Article version',
     'spin-sub-model':'model processes topic and knowledge base','spin-sub-hybrid2':'optimizing for SEO, AIO and readability simultaneously',
     'link-suggest-prefix':'Consider linking','link-suggest-at':'at words:',
-    'gap-still-missing':'Still missing topics','gap-szukam':'Finding sources and writing sections…','gap-bez-zrodel':'New sections need sources. The knowledge base is empty and web search is off, so these topics cannot be covered without inventing facts.','gap-wlacz-siec':'Turn on web search and improve','gap-bez-zrodel-baza':'Topics not covered by the selected documents: {n}. No empty sections were added. Turn on web search or add material to the knowledge base.','gap-bez-zrodel-siec':'Topics without a source: {n}. No empty sections were added; they stay on the missing list. Add material to the knowledge base and try again.',
+    'gap-still-missing':'Still missing topics','gap-szukam':'Finding sources and writing sections…','gap-bez-zrodel':'New sections need sources. The knowledge base is empty and web search is off, so these topics cannot be covered without inventing facts.','gap-wlacz-siec':'Turn on web search and improve','gap-inny-artykul':'The improvement was for the previous article, so its result was not inserted.','gap-pusto':'The model returned no new sections. Please try again.','gap-dopisane':'Sections added: {n}. See the Gaps tab for the result.','gap-serp-blad':'The SERP analysis failed during generation, so there is nothing to compare the text with. Generate the article again with SERP analysis on.','serp-blad-toast':'The SERP analysis failed. The article is being written without it.','gap-pkt':'pts','gap-bez-zrodel-baza':'Topics not covered by the selected documents: {n}. No empty sections were added. Turn on web search or add material to the knowledge base.','gap-bez-zrodel-siec':'Topics without a source: {n}. No empty sections were added; they stay on the missing list. Add material to the knowledge base and try again.',
     'img-download-btn':'Download PNG','img-copy-btn-lbl':'Copy',
     'img-step1-noref':'Step 1 of 2: creating image prompt',
     'img-prompt-used':'Used prompt',
@@ -6362,6 +6362,7 @@ function tekstBlokami(el) {
 }
 let premiumMode = false;       // tryb Jakość Premium - samokorekcja po generowaniu
 let serpData    = null;        // dane SERP z ostatniego fetchSerpContext
+let serpBlad    = false;       // R6 (E-08): analiza SERP przy generowaniu sie nie udala
 let gapOpen     = false;       // panel luk semantycznych otwarty
 let gapCache    = null;        // { snapshot, result } - cache wyników analizy luk
 let gapBaseline = null;        // { score, missing[], present[] } - wynik pierwszej analizy
@@ -6481,6 +6482,9 @@ async function fetchZadania(url, opcje, id, anuluj) {
   }
 }
 
+// R6 (E-08): odliczanie przed ponowieniem po 429 trafia tez tam, gdzie patrzy autor (np. przycisk
+// Luk) - spinner generowania jest wtedy ukryty. Funkcja (sekundy, proba, z ilu) albo null.
+let komunikatPonawiania = null;
 async function apiFetch(options, maxRetries = 3) {
   const WAIT_STEPS = [20, 40, 60]; // sekundy oczekiwania między próbami
   let endpoint = API_ENDPOINT;
@@ -6557,6 +6561,7 @@ async function apiFetch(options, maxRetries = 3) {
       if (sygnal && sygnal.aborted) throw new DOMException('Przerwano', 'AbortError');
       if (spinLabel) spinLabel.textContent = _t('spin-ponawiam-za').replace('{s}', s);
       if (spinSub)   spinSub.textContent   = _t('spin-proba').replace('{n}', attempt + 2).replace('{m}', maxRetries + 1);
+      if (typeof komunikatPonawiania === 'function') komunikatPonawiania(s, attempt + 2, maxRetries + 1);
       await new Promise(r => setTimeout(r, 1000));
     }
     if (spinLabel) spinLabel.textContent = _t('spin-ponawiam');
@@ -7957,6 +7962,7 @@ async function generate(skipPremiumModal = false, opcje = null) {
   aioCache = null;
   ocenyWersji.seo.clear(); ocenyWersji.aio.clear();
   serpData = null;
+  serpBlad = false;
   document.getElementById('serp-toggle-btn').style.display = 'none';
   // Statystyki, panele i wyniki poprzedniego artykulu nie przeciekaja do nowego (R3-20).
   wyczyscStanArtykulu();
@@ -8596,6 +8602,7 @@ function previewHistory(i) {
     document.getElementById('out-badge').className = 'badge ready';
     // SERP nie nalezy do wpisu historii: dane w pamieci opisuja inny artykul.
     serpData = null;
+    serpBlad = false;
     pokazPrzyciskiWyniku(true, h.type);
     // Reset panelu linków
     linksOpen = false;
@@ -9531,6 +9538,7 @@ function wyczyscStanArtykulu() {
   // nie trafi do panelu (kod-12); kontekst grafiki wpisany z poprzedniego artykulu
   // znika, wlasny tekst autora zostaje (kod-11).
   kontekstArt = null;
+  numerArtykulu++;
   if (typeof runRepurpose === 'function') runRepurpose.nr = (runRepurpose.nr || 0) + 1;
   { const ic = document.getElementById('img-context'); if (ic && ic.value && ic.value === kontekstGrafiki.auto) ic.value = ''; kontekstGrafiki.auto = ''; }
   try { inspektorZamknij(); } catch (e) {}
@@ -10487,6 +10495,9 @@ async function fetchSerpContext(topic, kwText) {
       })
     });
     const data = await res.json();
+    // R6 (E-08): blad dostawcy (np. 529) nie moze przejsc po cichu - Luki pisaly potem
+    // "Wlacz Analize SERP", choc byla wlaczona.
+    if (data.error) throw bladOdpowiedzi(data, res.status);
     const rawText = (data.content||[]).map(b => b.type === 'text' ? b.text : '').filter(Boolean).join('');
     try {
       const parsed = parsujJsonModelu(rawText);
@@ -10501,9 +10512,14 @@ async function fetchSerpContext(topic, kwText) {
     } catch {
       // fallback: use raw text as context
       serpData = null;
+      serpBlad = true;
       return rawText ? `\nSERP CONTEXT - NOT A SOURCE OF FACTS, only topics to cover: ${rawText.substring(0,500)}` : '';
     }
-  } catch(e) { serpData = null; return ''; }
+  } catch(e) {
+    serpData = null;
+    if (!(e && e.name === 'AbortError')) { serpBlad = true; pokazPowiadomienie(_t('serp-blad-toast'), 'uwaga'); }
+    return '';
+  }
 }
 
 // pokaz=true tylko z przycisku SERP; po generowaniu panel sie nie otwiera sam (R3: na telefonie
@@ -10572,7 +10588,8 @@ function closeSerpPanel() {
 function getArticleSnapshot() {
   const art = document.getElementById('article');
   const text = art?.innerText || '';
-  return text.substring(0, 300) + text.length;
+  // R6: skrot calego tekstu - wersje z tym samym poczatkiem i dlugoscia mialy wspolny wynik Luk
+  return simpleHash(text) + ':' + text.length;
 }
 
 function toggleGapPanel() {
@@ -10716,11 +10733,11 @@ function renderGapDelta(baseline, newResult, selectedTopics) {
   const bEl  = document.getElementById('gap-delta-before');
   const aEl  = document.getElementById('gap-delta-after');
   const dEl  = document.getElementById('gap-delta-diff');
-  bEl.textContent = scoreBefore + ' pkt';
+  bEl.textContent = scoreBefore + ' ' + _t('gap-pkt');
   bEl.style.color = scoreBefore >= 75 ? 'var(--c-sukces)' : scoreBefore >= 50 ? 'var(--c-uwaga)' : 'var(--red)';
-  aEl.textContent = scoreAfter + ' pkt';
+  aEl.textContent = scoreAfter + ' ' + _t('gap-pkt');
   aEl.style.color = scoreAfter >= 75 ? 'var(--c-sukces)' : scoreAfter >= 50 ? 'var(--c-uwaga)' : 'var(--red)';
-  dEl.textContent = (diff > 0 ? '+' : '') + diff + ' pkt';
+  dEl.textContent = (diff > 0 ? '+' : '') + diff + ' ' + _t('gap-pkt');
   dEl.style.color = diff > 0 ? 'var(--c-sukces)' : diff < 0 ? 'var(--red)' : 'var(--text3)';
 
   // Nowo pokryte = dokładnie te które użytkownik wybrał (autorytatywne)
@@ -10801,6 +10818,30 @@ function renderGapDelta(baseline, newResult, selectedTopics) {
   if (bezZrodla.length) pokazBrakZrodelLuk(bezZrodla, gapBezPokryciaSiec);
 }
 
+// R6 (E-05, E-06, E-10): do analizy idzie caly tekst (bez notatek, zrodel i ramki meta), a nie
+// 3000 pierwszych znakow - druga polowa artykulu i dopisane sekcje "nie istnialy". Tematy to tylko
+// tematy czolowki (frazy kluczowe nie sa tematami), listy modelu sa dopasowane do listy SERP, a wynik
+// liczony z niej. Ta sama analiza w toku nie idzie drugi raz (powrot na zakladke w trakcie).
+let gapWToku = null;
+function tekstDlaLuk(art) {
+  const kopia = art.cloneNode(true);
+  kopia.querySelectorAll('.zrodla-box, .meta-box, [data-tylko-ekran], [data-brak]').forEach((el) => el.remove());
+  return tekstBlokami(kopia).slice(0, 40000);
+}
+function dopasujDoSerp(lista, tematy) {
+  const wynik = [];
+  (Array.isArray(lista) ? lista : []).forEach((x) => {
+    let t = null;
+    if (/^\d+$/.test(String(x).trim())) t = tematy[Number(x) - 1] || null;
+    else {
+      let best = 0;
+      tematy.forEach((s) => { const p = podobienstwoTematu(s, x); if (p > best) { best = p; t = s; } });
+      if (best < 0.6) t = null;
+    }
+    if (t && !wynik.includes(t)) wynik.push(t);
+  });
+  return wynik;
+}
 async function runGapAnalysis() {
   const art    = document.getElementById('article');
   const loadEl = document.getElementById('gap-loading');
@@ -10809,14 +10850,19 @@ async function runGapAnalysis() {
   _gapResetPanels();
   if (rBtn) rBtn.style.display = 'none';
 
-  if (!serpData || (!serpData.topics.length && !serpData.phrases.length)) {
+  const tematy = serpData ? (serpData.topics || []).map((t) => String(t).trim()).filter(Boolean) : [];
+  if (!tematy.length) {
+    noSerp.textContent = _t(serpBlad ? 'gap-serp-blad' : 'gap-no-serp');
     noSerp.style.display = 'block'; return;
   }
   if (!art || !art.innerHTML.trim()) return;
+  loadEl.textContent = _t('gap-loading');
   loadEl.style.display = 'block';
 
-  const articleText = (art.innerText || '').substring(0, 3000);
-  const serpTopics  = [...serpData.topics, ...serpData.phrases].join(', ');
+  const snap = getArticleSnapshot();
+  if (gapWToku && gapWToku.snapshot === snap) return; // ta sama analiza juz trwa - czekamy na nia
+  const zad = gapWToku = { snapshot: snap };
+  const articleText = tekstDlaLuk(art);
   const kaLuki      = kontekstArtykulu();
   const kwText      = kaLuki.frazy.length ? kaLuki.frazy.join(', ') : kaLuki.temat;
 
@@ -10824,43 +10870,39 @@ async function runGapAnalysis() {
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 700,
-        system: 'You are a semantic SEO expert. Compare an article to SERP topics and return ONLY valid JSON (no markdown): {"score":0-100,"missing":["topic1",...up to 8],"present":["topic1",...up to 8],"msg":"one sentence assessment in ' + (currentLang === 'en' ? 'English' : 'Polish') + '"}. Score 100 = all topics covered. Return ALL relevant SERP topics in either missing or present.',
-        messages: [{ role: 'user', content: 'Keyword: ' + kwText + '\nSERP topics (full list): ' + serpTopics + '\n\nArticle:\n' + articleText }]
+      body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 900,
+        system: 'You are a semantic SEO expert. Compare an article to SERP topics and return ONLY valid JSON (no markdown): {"missing":["topic",...],"present":["topic",...],"msg":"one sentence assessment in ' + (currentLang === 'en' ? 'English' : 'Polish') + '"}. Copy each topic name exactly as listed and put EVERY listed topic in exactly one of the two lists. A topic is present only when the article actually discusses it, not when it merely mentions a word from it.',
+        messages: [{ role: 'user', content: 'Keyword: ' + kwText + '\nSERP topics (full list): ' + tematy.join(', ') + '\n\nArticle:\n' + articleText }]
       })
     });
     const data   = await res.json();
     if (data.error) throw bladOdpowiedzi(data, res.status);
     const raw    = (data.content || []).map(b => b.text || '').join('').replace(/```json|```/g, '').trim();
-    const parsed = parsujJsonModelu(raw);
-    // Zastąp niedeterministyczny score Claude wyliczeniem z liczby tematów
-    const _totalTopics = (parsed.present?.length || 0) + (parsed.missing?.length || 0);
-    if (_totalTopics > 0) {
-      parsed.score = Math.round((parsed.present?.length || 0) / _totalTopics * 100);
-    }
-    const snap   = getArticleSnapshot();
+    const odp    = parsujJsonModelu(raw);
+    // Tekst albo wersja zmienily sie w trakcie - wynik opisywalby inny tekst.
+    if (gapWToku !== zad || getArticleSnapshot() !== snap) return;
+    const present = dopasujDoSerp(odp.present, tematy);
+    const parsed = { present, missing: tematy.filter((t) => !present.includes(t)), msg: odp.msg || '',
+      score: Math.round(present.length / tematy.length * 100) };
 
     if (gapBaseline && gapSelectedTopics.length) {
-      // Po poprawce - pokaż delta z autorytatywnymi selectedTopics
+      // Po poprawce - delta z tematami, dla ktorych sekcja naprawde powstala
       gapCache = { snapshot: snap, result: parsed, baseline: gapBaseline,
                    selected: gapSelectedTopics, isDelta: true };
       renderGapDelta(gapBaseline, parsed, gapSelectedTopics);
-    } else if (gapBaseline) {
-      // Odświeżenie bez poprawki
-      gapCache = { snapshot: snap, result: parsed, baseline: gapBaseline,
-                   selected: [], isDelta: true };
-      renderGapDelta(gapBaseline, parsed, []);
     } else {
-      // Pierwsza analiza - zapisz baseline
-      gapBaseline = { score: parsed.score,
-                      missing: [...(parsed.missing||[])],
-                      present: [...(parsed.present||[])] };
+      // Pierwsza analiza albo Odswiez bez poprawki: nowy punkt odniesienia (wczesniej
+      // odswiezenie pokazywalo pozorne "47 pkt -> 47 pkt")
+      gapBaseline = { score: parsed.score, missing: [...parsed.missing], present: [...parsed.present] };
       gapCache = { snapshot: snap, result: parsed, isDelta: false };
       renderGapResult(parsed);
     }
   } catch(e) {
+    if (gapWToku !== zad) return;
     loadEl.textContent = komunikatBleduApi(e, 'gap-blad');
     if (rBtn) rBtn.style.display = 'inline-block';
+  } finally {
+    if (gapWToku === zad) gapWToku = null;
   }
 }
 
@@ -10895,6 +10937,7 @@ async function improveFromGaps() {
   // R6: lista zrodel wychodzi z artykulu PRZED cieciem na czesci. Wczesniej siedziala
   // miedzy "Kluczowymi wnioskami" a opisem meta, regex wnioskow zabieral ja razem z nimi,
   // a podmiana wnioskow kasowala zrodla - PDF i DOCX wychodzily bez zrodel.
+  const przedHtml = htmlDoZapisu(art);
   const robocze = document.createElement('div');
   robocze.innerHTML = art.innerHTML;
   const boxZrodelEl = robocze.querySelector('.zrodla-box');
@@ -10920,7 +10963,16 @@ async function improveFromGaps() {
   const outLang = jezykDlaModelu(ka.jezyk);
   const kwSectionName = { 'Polish':'Kluczowe wnioski', 'English':'Key takeaways', 'German':'Wichtigste Erkenntnisse', 'Czech':'Klíčové poznatky' }[outLang];
 
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><span class="progress-spinner" style="display:inline-block"></span><span>' + _t(zSiecia ? 'gap-szukam' : 'msg-spin-sections').replace('⏳','').trim() + '</span></span>'; }
+  // R6 (E-01): na czas poprawy to jest generowanie - Wygeneruj, Dopracuj i kolejka czekaja,
+  // a wynik trafia tylko do artykulu, z ktorego poprawa wyszla (numerArtykulu). Wczesniej
+  // spozniona odpowiedz ladowala w nowym artykule i nadpisywala jego wpis w Historii.
+  const nrArt = numerArtykulu;
+  const przerwanie = przerwanieGenerowania = new AbortController();
+  const ustawPrzycisk = (tekst) => { if (btn) btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><span class="progress-spinner" style="display:inline-block"></span><span>' + escapeHtml(tekst) + '</span></span>'; };
+  if (btn) btn.disabled = true;
+  ustawPrzycisk(_t(zSiecia ? 'gap-szukam' : 'msg-spin-sections').replace('⏳', '').trim());
+  // R6 (E-08): odliczanie przed ponowieniem po 429 w przycisku Luk, nie w ukrytym spinnerze generowania
+  komunikatPonawiania = (sek, n, m) => ustawPrzycisk(_t('spin-ponawiam-za').replace('{s}', sek) + ', ' + _t('spin-proba').replace('{n}', n).replace('{m}', m));
   // status generowania sekcji tylko na gorze (przycisk); bez dolnego wskaznika i skoku na dol
   const info = document.getElementById('gap-info');
   if (info) info.hidden = true;
@@ -10932,11 +10984,19 @@ async function improveFromGaps() {
   const originalKw = kwMatch ? kwMatch[1].trimEnd() : null;
   const htmlWithoutKw = originalKw ? originalHtml.replace(originalKw, '') : originalHtml;
 
-  // Plain text artykułu jako kontekst (bez KW i meta-box, bez tagów HTML)
+  // Tekst artykułu jako kontekst (bez KW, ramki meta i notatek), bloki rozdzielone
   const tmpCtx = document.createElement('div'); tmpCtx.innerHTML = htmlWithoutKw;
-  const metaInCtx = tmpCtx.querySelector('.meta-box');
-  if (metaInCtx) metaInCtx.remove();
-  const articlePlainText = (tmpCtx.innerText || tmpCtx.textContent || '').trim();
+  tmpCtx.querySelectorAll('.meta-box, [data-brak]').forEach((el) => el.remove());
+  const articlePlainText = tekstBlokami(tmpCtx).trim();
+  // R6 (E-16): spis sekcji i styl naglowkow - nowe sekcje ida tam, gdzie pasuja w konspekcie
+  // (wczesniej zawsze na koniec), a w artykule z H2-pytaniami tez jako pytania (AEO nie spada).
+  const h2Istniejace = [...tmpCtx.querySelectorAll('h2')].map((h) => h.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const pytajne = h2Istniejace.filter((t) => /\?\s*$/.test(t)).length;
+  const spis = h2Istniejace.length
+    ? '\n\nExisting H2 sections, in order:\n' + h2Istniejace.map((t) => '- ' + t).join('\n')
+      + '\nBefore each new <h2>, write one line [AFTER: exact text of the existing H2 it should follow], so the new section lands where it fits the outline; use [AFTER: START] for the very beginning. '
+      + (pytajne * 2 >= h2Istniejace.length ? 'Phrase each new H2 as a question, like most existing headings.' : 'Match the style of the existing H2 headings.')
+    : '';
 
   const maxNewTokens = Math.min(9000, selectedNow.length * 650 + 1400);
   const topicsList = selectedNow.map((t, i) => `${i + 1}. ${t}`).join('\n');
@@ -10961,7 +11021,7 @@ async function improveFromGaps() {
       'Article topic: ' + topic + '\nKeywords: ' + kwText +
       '\nOutput language: ' + outLang +
       '\n\nSOURCES (knowledge base' + (zSiecia ? '; you may also search the web' : ', the only material you may draw facts from') + '):\n' + zrodlaDoKontroli().slice(0, 100000) +
-      '\n\nExisting article (context/tone - do NOT repeat):\n' + articlePlainText +
+      '\n\nExisting article (context/tone - do NOT repeat):\n' + articlePlainText + spis +
       '\n\nWrite new HTML sections in ' + outLang + ' (each: <h2>Heading</h2><p>...</p><p>...</p>) for:\n' + topicsList +
       (hasKw
         ? '\n\nAfter the new sections, write an updated <h2>' + kwSectionName + '</h2><ul><li>...</li></ul> with 5 to 8 bullet points that sum up the WHOLE article, including the new sections. Merge related points; do not list every paragraph.'
@@ -10976,12 +11036,15 @@ async function improveFromGaps() {
       ? await wywolajZWyszukiwaniem(cialo, naglowki)
       : await (await apiFetch({ method: 'POST', headers: naglowki, body: JSON.stringify(cialo) })).json();
     if (!data || data.error) throw bladOdpowiedzi(data || {});
+    if (nrArt !== numerArtykulu) { pokazPowiadomienie(_t('gap-inny-artykul'), 'uwaga'); return; }
     // Tekst po ostatnim wyniku wyszukiwania (zapowiedz "Wyszukam..." nie trafia do artykulu).
     const bloki = data.content || [];
     let od = 0;
     bloki.forEach((b, i) => { if (b && b.type === 'web_search_tool_result') od = i + 1; });
     let aiOutput = bloki.slice(od).map((x) => x.text || '').join('').trim() || bloki.map((x) => x.text || '').join('');
     aiOutput = aiOutput.replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim();
+    // R6 (E-08): pusta odpowiedz modelu to blad, nie cisza
+    if (!aiOutput.replace(/<[^>]*>/g, '').trim()) { pokazBladLuk(_t('gap-pusto')); return; }
     if (outLang === 'Polish') aiOutput = aiOutput.replace(/[—–]/g, '-');
     aiOutput = aiOutput.replace(/<a\s+href=/gi, '<a target="_blank" rel="noopener" href=').replace(/target="_blank"\s+target="_blank"/gi, 'target="_blank"');
 
@@ -10991,35 +11054,45 @@ async function improveFromGaps() {
     const updatedKw = newKwMatch ? newKwMatch[1].trimEnd() : null;
     const surowe = newKwMatch ? aiOutput.slice(0, newKwMatch.index).trimEnd() : aiOutput;
 
+    // Znaczniki [AFTER: ...] dziela odpowiedz na grupy sekcji z miejscem docelowym w artykule.
+    const grupy = [];
+    const reMiejsca = /\[AFTER:\s*([^\]\n]*)\]/gi;
+    let cel = '', od2 = 0, zn;
+    while ((zn = reMiejsca.exec(surowe))) { grupy.push({ cel, html: surowe.slice(od2, zn.index) }); cel = zn[1].trim(); od2 = zn.index + zn[0].length; }
+    grupy.push({ cel, html: surowe.slice(od2) });
+
     // R6: sekcje "brak pokrycia" nie trafiaja do artykulu. Wczesniej osiem pustych naglowkow
     // z ramka "Brak pokrycia..." wygladalo jak blad, a wynik pokrycia rosl do 100 pkt.
     // Temat bez zrodla zostaje na liscie "Nadal brakujace" z wyjasnieniem w panelu.
-    const nowe = document.createElement('div');
-    nowe.innerHTML = oczyscHtmlModelu(surowe);
     const sekcje = [];
-    nowe.querySelectorAll('h2').forEach((h) => {
-      const czesci = [h];
-      let n = h.nextElementSibling;
-      while (n && n.tagName !== 'H2') { czesci.push(n); n = n.nextElementSibling; }
-      const pusta = czesci.some((el) => el.matches('[data-brak]') || el.querySelector('[data-brak]'));
-      const tresc = czesci.slice(1).map((el) => (el.textContent || '').trim()).join(' ');
-      sekcje.push({ tytul: h.textContent.trim(), czesci, ok: !pusta && tresc.length > 60 });
+    grupy.forEach((g) => {
+      const kont = document.createElement('div');
+      kont.innerHTML = oczyscHtmlModelu(g.html);
+      kont.querySelectorAll('h2').forEach((h) => {
+        const czesci = [h];
+        let n = h.nextElementSibling;
+        while (n && n.tagName !== 'H2') { czesci.push(n); n = n.nextElementSibling; }
+        const pusta = czesci.some((el) => el.matches('[data-brak]') || el.querySelector('[data-brak]'));
+        const tresc = czesci.slice(1).map((el) => (el.textContent || '').trim()).join(' ');
+        // puste akapity (resztki <p> wokol znacznika [AFTER: ...]) nie ida do artykulu
+        const wezly = czesci.filter((el, i) => i === 0 || (el.textContent || '').trim() || el.querySelector('table, ul, ol'));
+        sekcje.push({ tytul: h.textContent.trim(), wezly, cel: g.cel, ok: !pusta && tresc.length > 60 });
+      });
     });
-    sekcje.filter((x) => !x.ok).forEach((x) => x.czesci.forEach((el) => el.remove()));
     const pokryteTeraz = [], bezPokrycia = [];
     const rowno = sekcje.length === selectedNow.length;
     selectedNow.forEach((t, i) => {
-      let s = null, best = 0;
+      let sek = null, best = 0;
       sekcje.forEach((x, j) => {
         const p = podobienstwoTematu(x.tytul, t) + (rowno && j === i ? 0.01 : 0);
-        if (p > best) { best = p; s = x; }
+        if (p > best) { best = p; sek = x; }
       });
-      if (best < 0.6) s = rowno ? sekcje[i] : null;
-      (s && s.ok ? pokryteTeraz : bezPokrycia).push(t);
+      if (best < 0.6) sek = rowno ? sekcje[i] : null;
+      (sek && sek.ok ? pokryteTeraz : bezPokrycia).push(t);
     });
-    const newSectionsOnly = nowe.innerHTML.trim();
+    const dobre = sekcje.filter((x) => x.ok);
 
-    if (!pokryteTeraz.length || !newSectionsOnly) {
+    if (!pokryteTeraz.length || !dobre.length) {
       pokazBrakZrodelLuk(bezPokrycia.length ? bezPokrycia : selectedNow, zSiecia);
       return;
     }
@@ -11043,17 +11116,37 @@ async function improveFromGaps() {
       zrodlaSieciowe = zrodlaSieciowe.concat(noweZrodla.filter((z) => !znane.has(kluczAdresu(z.url))));
     }
 
-    // Zbuduj końcowy HTML: [artykuł bez KW i bez meta] + [nowe sekcje] + [KW] + [zrodla] + [meta]
-    const baseHtml = htmlWithoutKw.replace(savedMeta, '').trimEnd();
+    // Artykul bez KW i bez meta, nowe sekcje we wskazanych miejscach (za sekcja [AFTER: ...],
+    // przed pierwsza sekcja dla START, bez znacznika albo bez dopasowania na koncu), potem KW,
+    // lista zrodel i meta.
+    const kont = document.createElement('div');
+    kont.innerHTML = htmlWithoutKw;
+    kont.querySelectorAll('.meta-box').forEach((el) => el.remove());
+    const h2Bazy = [...kont.querySelectorAll('h2')];
+    dobre.forEach((sek) => {
+      let kotwica = null;
+      if (/^(start|begin|beginning|poczatek|początek)$/i.test(sek.cel)) kotwica = 'start';
+      else if (sek.cel) {
+        let best = 0;
+        h2Bazy.forEach((h) => { const p = podobienstwoTematu(h.textContent, sek.cel); if (p > best) { best = p; kotwica = h; } });
+        if (best < 0.8) kotwica = null;
+      }
+      const przed = kotwica === 'start' ? (h2Bazy[0] || null) : kotwica ? (h2Bazy[h2Bazy.indexOf(kotwica) + 1] || null) : null;
+      sek.wezly.forEach((el) => kont.insertBefore(el, przed));
+    });
     // Wnioski maja 5-8 punktow. Gdy model mimo to dopisze punkt za kazda nowa sekcje
     // (wczesniej 16 punktow), zostaja dotychczasowe wnioski.
     const ileLi = (h) => ((h || '').match(/<li[\s>]/gi) || []).length;
     const kwBlock = (updatedKw && (ileLi(updatedKw) <= 8 || !originalKw || ileLi(updatedKw) <= ileLi(originalKw)) ? updatedKw : originalKw) || '';
-    let updatedHtml = oczyscHtmlModelu(baseHtml + '\n' + newSectionsOnly
+    let updatedHtml = oczyscHtmlModelu(kont.innerHTML.trimEnd()
       + (kwBlock ? '\n' + kwBlock : '')
       + (savedMeta ? '\n' + savedMeta : ''));
     updatedHtml = wstawBlokZrodel(updatedHtml, box.innerHTML);
 
+    // Artykul z Historii nie ma wersji: oryginal zostaje jako wersja do porownania. Stan Luk
+    // sprzed poprawy zostaje przy wersji, z ktorej poprawa wyszla (E-09).
+    if (!versions.length) addVersion(przedHtml, _t('ver-original'));
+    zapiszStanLuk(versions[activeVersion]);
     art.innerHTML = updatedHtml;
     uporzadkujArtykul(art);
     currentText = tekstBlokami(art);
@@ -11061,8 +11154,8 @@ async function improveFromGaps() {
     if (zSiecia) pokazStanSieci(stanSieci || { szukan: 1, cytowan: 0 }, zrodlaSieciowe.length);
 
     gapImproveCount++;
-    const verLabel = gapImproveCount === 1 ? _t('ver-serp') : _t('ver-serp') + ' ' + gapImproveCount;
-    addVersion(art.innerHTML, verLabel);
+    addVersion(htmlDoZapisu(art), etykietaWersji(_t('ver-serp')));
+    // Wynik do biezacej wersji i do Historii - po odswiezeniu wracal tekst sprzed poprawy (E-03).
     if (typeof zapiszRecznePoprawki === 'function') zapiszRecznePoprawki();
 
     // Do wyniku "pokryte" ida tylko tematy z napisana sekcja.
@@ -11070,16 +11163,27 @@ async function improveFromGaps() {
     gapBezPokrycia = bezPokrycia; gapBezPokryciaSiec = zSiecia;
     gapCache = null;
 
-    document.getElementById('gap-panel').style.display = 'block';
-    gapOpen = true;
-    runGapAnalysis();
+    // R6 (E-11): panel Luk odswieza sie tylko wtedy, gdy jest na wierzchu. Wczesniej otwieral
+    // sie sam (takze nad innym artykulem i obok innej zakladki), teraz w innym razie komunikat.
+    const lukiNaWierzchu = gapOpen && panelWidoczny('gap-panel') && !document.getElementById('inspektor').hidden;
+    if (lukiNaWierzchu) runGapAnalysis();
+    else pokazPowiadomienie(_t('gap-dopisane').replace('{n}', String(pokryteTeraz.length)), 'ok');
   } catch (e) {
-    const info2 = document.getElementById('gap-info');
-    if (info2) { info2.textContent = komunikatBleduApi(e, 'gap-blad'); info2.className = 'gap-info blad'; info2.hidden = false; }
+    if (nrArt === numerArtykulu && !(e && e.name === 'AbortError')) pokazBladLuk(komunikatBleduApi(e, 'gap-blad'));
   } finally {
+    komunikatPonawiania = null;
+    if (przerwanieGenerowania === przerwanie) przerwanieGenerowania = null;
     document.getElementById('gap-gen-indicator')?.remove();
     if (btn) { btn.disabled = false; updateGapBtn(); }
   }
+}
+
+function pokazBladLuk(tekst) {
+  const info = document.getElementById('gap-info');
+  if (!info) return;
+  info.textContent = tekst;
+  info.className = 'gap-info blad';
+  info.hidden = false;
 }
 
 // Tematy, dla ktorych nie bylo zrodla: komunikat w panelu Luk zamiast pustych sekcji w artykule.
@@ -11312,6 +11416,9 @@ document.addEventListener('visibilitychange', function () {
 });
 
 // ─── VERSIONS ─────────────────────────────────────────────────────────────────
+// R6 (E-01): numer artykulu na ekranie - rosnie przy kazdym nowym artykule (generowanie,
+// otwarcie z Historii). Spozniona odpowiedz poprawy pod luki nie trafia do innego artykulu.
+let numerArtykulu = 0;
 let versions = [];
 let activeVersion = 0;
 let pendingVersions = null;
@@ -11380,6 +11487,7 @@ function zapiszRecznePoprawki() {
 function switchVersion(i) {
   if (editMode) toggleEdit();
   else if (versions[activeVersion]) versions[activeVersion].html = htmlDoZapisu(document.getElementById('article'));
+  zapiszStanLuk(versions[activeVersion]);
   activeVersion = i;
   const art = document.getElementById('article');
   art.innerHTML = oczyscHtmlModelu(versions[i].html);
@@ -11390,8 +11498,25 @@ function switchVersion(i) {
   // R4 (kod-17): wybrana wersja trafia do wpisu historii (po odswiezeniu wraca ta sama),
   // a oceny nie biora wyniku "(cache)" innej wersji.
   seoCache = null; aioCache = null;
+  wczytajStanLuk(versions[i]);
   zapiszRecznePoprawki();
   odswiezOtwarteOceny();
+}
+
+// R6 (E-09): stan Luk nalezy do wersji. Wczesniej "Przed" pokazywalo wynik po poprawie
+// (100 pkt, "Nowo pokryte"), bo baseline i wybrane tematy byly wspolne dla wszystkich wersji.
+function zapiszStanLuk(v) {
+  if (!v) return;
+  v.luki = { cache: gapCache, baseline: gapBaseline, wybrane: gapSelectedTopics.slice(),
+    bez: gapBezPokrycia.slice(), bezSiec: gapBezPokryciaSiec };
+}
+function wczytajStanLuk(v) {
+  const l = v && v.luki;
+  gapCache = l ? l.cache : null;
+  gapBaseline = l ? l.baseline : null;
+  gapSelectedTopics = l ? l.wybrane.slice() : [];
+  gapBezPokrycia = l ? l.bez.slice() : [];
+  gapBezPokryciaSiec = l ? l.bezSiec : false;
 }
 
 // R6: otwarty panel oceny pokazywal po przelaczeniu wersji wynik poprzedniej (SEO 64 przy "Po",
@@ -11400,6 +11525,7 @@ function switchVersion(i) {
 function odswiezOtwarteOceny() {
   if (aeoOpen) renderAeoCheck();
   if (geoOpen) renderGeoCheck();
+  if (gapOpen && panelWidoczny('gap-panel')) { gapOpen = false; toggleGapPanel(); }
   if (seoOpen) { seoOpen = false; toggleSeoPanel(); }
   if (aioOpen) { aioOpen = false; toggleAioPanel(); }
 }

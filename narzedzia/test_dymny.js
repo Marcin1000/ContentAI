@@ -683,6 +683,130 @@ async function wariantTelefonR6(b) {
   await k.close();
 }
 
+// R6 (audyt E, telefon 412x915): Luki - caly tekst i same tematy czolowki (E-05, E-06), analiza w toku
+// nie idzie drugi raz (E-10), sekcje w miejscu z konspektu (E-16), stan Luk per wersja (E-09), panel
+// nie otwiera sie sam (E-11), poprawa nie trafia do innego artykulu i blokuje Wygeneruj (E-01),
+// bledy widoczne (E-08).
+async function wariantTelefonR6Luki(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); } catch (e) { /* bez magazynu */ } });
+  const bledy = [];
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  const s = await zaloguj(k, 'premium');
+  const luki = [];
+  s.on('request', (r) => {
+    if (r.method() !== 'POST' || !/\/api$/.test(r.url())) return;
+    const d = r.postData() || '';
+    if (/semantic SEO expert/.test(d)) { try { luki.push(JSON.parse(d).messages[0].content); } catch (e) { luki.push(''); } }
+  });
+  const gotowe = (ms) => s.waitForFunction(() => !document.getElementById('gen-btn').disabled && getComputedStyle(document.getElementById('spinner')).display === 'none', null, { timeout: ms || 60000 });
+  const generujTu = async (temat) => {
+    await s.evaluate(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); });
+    await s.fill('#topic', temat);
+    await s.evaluate(() => { document.getElementById('use-web').checked = true; document.getElementById('use-serp').checked = true; premiumMode = false; generate(true); });
+    await gotowe();
+  };
+  await generujTu('Jak wybrać pompę ciepła');
+  await s.evaluate(() => inspektorPokaz('luki'));
+  await krok('R6L analiza luk', s.waitForFunction(() => document.querySelectorAll('#gap-missing .gap-miss-check').length > 0, null, { timeout: 30000 }));
+  const a1 = await s.evaluate(() => ({ tematy: serpData.topics.slice(), frazy: serpData.phrases.slice(),
+    wiersze: document.querySelectorAll('#gap-missing .gap-miss-item').length + document.querySelectorAll('#gap-present .gap-topic-row').length,
+    koniec: (document.querySelector('#article h2:last-of-type') || {}).textContent || '' }));
+  const zap = luki[0] || '';
+  const listaZap = ((zap.match(/SERP topics \(full list\): ([^\n]*)/) || [])[1] || '');
+  wynik('telefon: R6L Luki - same tematy czolowki (bez fraz), kazdy temat raz',
+    a1.wiersze === a1.tematy.length && a1.frazy.every((f) => listaZap.split(', ').indexOf(f) === -1 || a1.tematy.indexOf(f) !== -1), JSON.stringify({ wiersze: a1.wiersze, tematy: a1.tematy.length, listaZap: listaZap.slice(0, 120) }));
+  wynik('telefon: R6L Luki - do modelu idzie caly tekst (takze ostatnia sekcja)', a1.koniec && zap.indexOf(a1.koniec.trim()) !== -1 && zap.length > 3600, JSON.stringify({ dl: zap.length, koniec: a1.koniec }));
+
+  // E-10: powrot na zakladke w trakcie analizy nie wysyla drugiego zapytania
+  await s.evaluate(() => { kontekstArt.temat = 'Jak wybrać pompę ciepła [atrapa:opoznienie=2500@luki]'; kontekstArt.frazy = []; });
+  const przed10 = luki.length;
+  await s.evaluate(() => refreshGapAnalysis());
+  await s.waitForTimeout(300);
+  await s.evaluate(() => { inspektorPokaz('serp'); inspektorPokaz('luki'); });
+  await krok('R6L analiza po powrocie', s.waitForFunction(() => document.querySelectorAll('#gap-missing .gap-miss-check').length > 0, null, { timeout: 20000 }));
+  await s.waitForTimeout(400);
+  wynik('telefon: R6L Luki - powrot na zakladke w trakcie analizy bez drugiego zapytania', luki.length - przed10 === 1, String(luki.length - przed10));
+  await s.evaluate(() => { kontekstArt.temat = 'Jak wybrać pompę ciepła'; });
+
+  // E-16: nowe sekcje w miejscu z konspektu (atrapa wskazuje [AFTER: pierwsza sekcja])
+  const h2Przed = await s.evaluate(() => [...document.querySelectorAll('#article h2')].map((h) => h.textContent.trim()));
+  await s.evaluate(() => { kontekstArt.temat = 'Jak wybrać pompę ciepła [atrapa:opoznienie=2000@luki-sekcje]'; document.querySelectorAll('.gap-miss-check').forEach((c) => { c.checked = true; }); updateGapBtn(); improveFromGaps(); });
+  // E-01: w trakcie poprawy Wygeneruj czeka (komunikat), zamiast zaczynac nowy artykul
+  await s.waitForTimeout(300);
+  const blokada = await s.evaluate(() => { document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()); const w = generate(true); return Promise.resolve(w).then((x) => ({ wynik: x, toast: [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent).join(' | ') })); });
+  await krok('R6L poprawa pod luki', s.waitForFunction(() => versions.length >= 2 && document.getElementById('gap-delta').style.display === 'block', null, { timeout: 60000 }));
+  wynik('telefon: R6L w trakcie poprawy Wygeneruj czeka z komunikatem', blokada.wynik === false && /trwa|running/i.test(blokada.toast), JSON.stringify(blokada));
+  await s.evaluate(() => { kontekstArt.temat = 'Jak wybrać pompę ciepła'; });
+  const h2Po = await s.evaluate(() => [...document.querySelectorAll('#article h2')].map((h) => h.textContent.trim()));
+  const nowe = h2Po.filter((t) => h2Przed.indexOf(t) === -1);
+  wynik('telefon: R6L nowe sekcje za wskazana sekcja, nie na koncu', nowe.length > 0 && h2Po[0] === h2Przed[0] && h2Po[1] === nowe[0] && h2Po.indexOf(h2Przed[1]) > h2Po.indexOf(nowe[nowe.length - 1]), JSON.stringify({ h2Przed: h2Przed.slice(0, 3), h2Po: h2Po.slice(0, 5) }));
+
+  // E-09: "Wariant 1" (przed poprawa) ma wlasna analize; powrot na "Poprawa SERP" bez nowego zapytania
+  const przed9 = luki.length;
+  await s.evaluate(() => switchVersion(0));
+  await krok('R6L Luki dla wersji przed poprawa', s.waitForFunction(() => getComputedStyle(document.getElementById('gap-score-row')).display !== 'none' || document.getElementById('gap-missing-wrap').style.display === 'block', null, { timeout: 20000 }));
+  await s.waitForTimeout(300);
+  const v0 = await s.evaluate(() => ({ delta: document.getElementById('gap-delta').style.display, nowo: document.getElementById('gap-delta-newly-wrap').style.display }));
+  await s.evaluate(() => switchVersion(versions.length - 1));
+  await s.waitForTimeout(500);
+  const v2 = await s.evaluate(() => ({ delta: document.getElementById('gap-delta').style.display }));
+  wynik('telefon: R6L Luki per wersja - przed poprawa bez "Nowo pokryte", po powrocie znow delta bez nowego zapytania',
+    v0.delta !== 'block' && v0.nowo !== 'block' && v2.delta === 'block' && luki.length - przed9 <= 1, JSON.stringify({ v0, v2, zapytan: luki.length - przed9 }));
+
+  // E-11: poprawa przy zamknietym arkuszu - komunikat, arkusz sie nie otwiera
+  await s.evaluate(() => { document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()); inspektorZamknij(); const c = [...document.querySelectorAll('.gap-miss-check')]; c.forEach((x) => { x.checked = true; }); updateGapBtn(); improveFromGaps(); });
+  await krok('R6L druga poprawa', s.waitForFunction(() => versions.length >= 3 && !przerwanieGenerowania, null, { timeout: 60000 }));
+  await s.waitForTimeout(300);
+  const e11 = await s.evaluate(() => ({ ins: document.getElementById('inspektor').hidden, toast: [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent).join(' | '), wersje: versions.map((v) => v.label) }));
+  wynik('telefon: R6L poprawa przy zamknietym arkuszu - komunikat, arkusz zamkniety, numer wersji', e11.ins && /Dopisano|Sections added/.test(e11.toast) && new Set(e11.wersje).size === e11.wersje.length, JSON.stringify(e11));
+
+  // E-01: otwarcie innego artykulu w trakcie poprawy - wynik nie trafia do niego
+  await generujTu('Ogród zimowy na balkonie');
+  await s.evaluate(() => inspektorPokaz('luki'));
+  await krok('R6L luki drugiego artykulu', s.waitForFunction(() => document.querySelectorAll('#gap-missing .gap-miss-check').length > 0, null, { timeout: 30000 }));
+  const inny = await s.evaluate(() => history.find((h) => /pomp/i.test(h.topic)).id);
+  const htmlInnego = await s.evaluate((id) => wpisHistorii(id).html, inny);
+  await s.evaluate(() => { document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()); kontekstArt.temat = 'Ogród zimowy na balkonie [atrapa:opoznienie=2500@luki-sekcje]'; document.querySelectorAll('.gap-miss-check').forEach((c) => { c.checked = true; }); updateGapBtn(); improveFromGaps(); });
+  await s.waitForTimeout(300);
+  await s.evaluate((id) => otworzWGeneratorze(id), inny);
+  await krok('R6L koniec spoznionej poprawy', s.waitForFunction(() => !przerwanieGenerowania, null, { timeout: 30000 }));
+  await s.waitForTimeout(300);
+  const e01 = await s.evaluate((id) => ({ h1: (document.querySelector('#article h1') || {}).textContent || '', wersje: versions.length,
+    toast: [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent).join(' | '), html: wpisHistorii(id).html }), inny);
+  wynik('telefon: R6L spozniona poprawa nie trafia do innego artykulu ani jego wpisu Historii',
+    /pomp/i.test(e01.h1) && e01.wersje === 0 && /poprzedniego artykułu|previous article/.test(e01.toast) && e01.html === htmlInnego, JSON.stringify({ h1: e01.h1, wersje: e01.wersje, toast: e01.toast }));
+
+  // E-08: pusta odpowiedz i blad dostawcy przy poprawie - komunikat w panelu
+  await s.evaluate(() => inspektorPokaz('luki'));
+  await krok('R6L luki po otwarciu z Historii', s.waitForFunction(() => document.getElementById('gap-no-serp').style.display === 'block' || document.querySelectorAll('#gap-missing .gap-miss-check').length > 0, null, { timeout: 30000 }));
+  await generujTu('Rower elektryczny do miasta');
+  await s.evaluate(() => inspektorPokaz('luki'));
+  await krok('R6L luki trzeciego artykulu', s.waitForFunction(() => document.querySelectorAll('#gap-missing .gap-miss-check').length > 0, null, { timeout: 30000 }));
+  const blad = async (znacznik) => {
+    await s.evaluate((z) => { kontekstArt.temat = 'Rower elektryczny do miasta ' + z; document.getElementById('gap-info').hidden = true; document.querySelectorAll('.gap-miss-check').forEach((c) => { c.checked = true; }); updateGapBtn(); improveFromGaps(); }, znacznik);
+    await s.waitForFunction(() => !przerwanieGenerowania, null, { timeout: 30000 });
+    await s.waitForTimeout(200);
+    return s.evaluate(() => { const i = document.getElementById('gap-info'); return { widoczny: !i.hidden, klasa: i.className, tekst: i.textContent, wersje: versions.length }; });
+  };
+  const pusty = await blad('[atrapa:pusty@luki-sekcje]');
+  const p529 = await blad('[atrapa:529@luki-sekcje]');
+  wynik('telefon: R6L Popraw pod luki - pusta odpowiedz i blad dostawcy widoczne w panelu',
+    pusty.widoczny && /blad/.test(pusty.klasa) && p529.widoczny && /blad/.test(p529.klasa) && pusty.wersje <= 1 && p529.wersje <= 1, JSON.stringify({ pusty, p529 }));
+
+  // E-08: blad analizy SERP przy generowaniu - komunikat i osobny tekst w Lukach
+  await s.evaluate(() => document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()));
+  await generujTu('Kawa ziarnista do ekspresu [atrapa:529@serp]');
+  const serpBladT = await s.evaluate(() => [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent).join(' | '));
+  await s.evaluate(() => { inspektorZamknij(); toggleGapPanel(); });
+  await s.waitForTimeout(300);
+  const brakSerp = await s.evaluate(() => document.getElementById('gap-no-serp').textContent);
+  wynik('telefon: R6L blad SERP przy generowaniu - komunikat i tekst w Lukach', /SERP/.test(serpBladT) && /nie powiodła|failed/.test(brakSerp), JSON.stringify({ serpBladT, brakSerp }));
+  wynik('telefon: R6L bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+  if (bledow) await zrzut(s, 'telefon-r6-luki');
+  await k.close();
+}
+
 // Pliki z app/ pod http://127.0.0.1 - dla scenariuszy, ktore z file:// sa w CI niestabilne.
 let PORT_PLIKOW;
 const TYPY = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml',
@@ -713,6 +837,7 @@ async function uruchomSerwerPlikow() {
     await wariantKeys(b);
     await wariantProxy(b);
     await wariantTelefonR6(b);
+    await wariantTelefonR6Luki(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));
