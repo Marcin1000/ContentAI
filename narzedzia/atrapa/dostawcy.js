@@ -611,6 +611,13 @@ function odpFakty(cialo, ctx, zn) {
   const uwagi = [];
   if (zLiczba) uwagi.push({ rodzaj: 'liczba', cytat: zLiczba.slice(0, 120), powod: j === 'pl' ? 'Tej wartości nie ma w źródłach; źródła podają inny zakres albo milczą.' : 'This value is not in the sources; they give a different range or none.' });
   if (inne) uwagi.push({ rodzaj: 'zakres', cytat: inne.slice(0, 120), powod: j === 'pl' ? 'Źródła mówią o tym ogólnie, artykuł rozciąga to na wszystkie przypadki.' : 'The sources state this generally; the article extends it to every case.' });
+  // R7-I: prompt z kategoria "strona" i ponumerowanymi stronami z sieci - jedno zdanie "ze strony",
+  // ktorej cytowany fragment jest urwany. Na poczatku listy (jak u modelu), aplikacja przesuwa je w dol.
+  const nrStrony = (ctx.usr.match(/^\[(\d+)\] https?:\/\//m) || [])[1];
+  if (/"strona"/.test(ctx.sys) && nrStrony) {
+    const zeStrony = zdania.find((s) => s !== zLiczba && s !== inne && /\d/.test(s)) || zdania.find((s) => s !== zLiczba && s !== inne) || '';
+    if (zeStrony) uwagi.unshift({ rodzaj: 'strona', cytat: zeStrony.slice(0, 120), strona: Number(nrStrony), powod: j === 'pl' ? 'Cytowany fragment strony urywa się przed tą wartością.' : 'The quoted passage of the page stops before this value.' });
+  }
   return [{ type: 'text', text: tekstJson({ uwagi }, zn) }];
 }
 

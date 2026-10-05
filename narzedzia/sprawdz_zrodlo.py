@@ -1165,6 +1165,34 @@ KONTROLE += [
      "system: editorSysPelny + '\\n' + REGULA_FRAZY_PODMIOTU,", None, None),
 ]
 
+# R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna
+# z siecia, kategoria "Sprawdz na stronie", lista zrodel i ramka meta poza kontrola).
+# Osobny blok na koncu listy podpisow aplikacji (scalanie po liniach z innymi wykonawcami).
+KONTROLE += [
+    ("R7-I/fakty-bez-czesciowych", "Fakty: jeden stan ladowania do konca, bez czesciowego licznika i listy odnosnikow",
+     "let trescGotowa = false, linkiGotowe = false;", "if (u.length) pokazWynikFaktow(u, 'czesciowe');", None),
+    ("R7-I/fakty-w-toku-najpierw", "Fakty: kontrola w toku przed zapamietanym wynikiem (bez starej listy w trakcie)",
+     "    ladowanie.style.display = 'block';\n    return;\n  }\n  if (!wymus && faktyWynik && faktySygnatura === sygnatura) {", None, None),
+    ("R7-I/fakty-adres-link", "Fakty: adres w uwadze jako link (host i skrocona sciezka), nie URL kursywa w cudzyslowie",
+     "? '<div class=\"fakty-adres\" style=\"margin:3px 0\">' + linkUwagi(cytat.trim()) + '</div>'", None, None),
+    ("R7-I/fakty-link-karta", "Fakty: link w uwadze otwiera nowa karte (target _blank, rel noopener)",
+     "'\" target=\"_blank\" rel=\"noopener\" title=\"' + escapeHtml(tytul || adres) + '\">'", None, None),
+    ("R7-I/fakty-notka-siec", "Fakty: notka 'z wyszukiwaniem' tylko przy stronach z sieci, inaczej wariant bez stron",
+     "} else if (stan === 'gotowe' && trybUzupelniania && stronZSieci > 0) {", None, None),
+    ("R7-I/fakty-tryb-promptu", "Fakty: tryb promptu 'z siecia' tylko, gdy byly strony z sieci",
+     "const zSiecia = trybUzupelniania && sieciowe.length > 0;", None, None),
+    ("R7-I/fakty-strona-prompt", "Fakty: prompt wie, ze cytowane fragmenty stron sa niepelne (kategoria strona)",
+     "'whole pages: a detail missing from an excerpt is NOT evidence that the page lacks it. '", None, None),
+    ("R7-I/fakty-strona-adres", "Fakty: 'Sprawdz na stronie' z adresem wylacznie z listy stron z sieci",
+     "if (z) { kopia.rodzaj = 'strona'; kopia.adres = z.url; kopia.tytulStrony = z.tytul || ''; }", None, None),
+    ("R7-I/fakty-waga", "Fakty: kolejnosc wagi - 'Sprawdz na stronie' i niesprawdzony adres na koncu listy",
+     "const WAGA_UWAG = { strona: 1, 'link-niesprawdzony': 2 };", None, None),
+    ("R7-I/fakty-slownik", "Fakty: nowa kategoria i warianty notki w slowniku PL",
+     "'fakty-rodzaj-strona':'Sprawdź na stronie',", None, None),
+    ("R7-I/fakty-bez-listy-zrodel", "Fakty: lista zrodel aplikacji, ramka meta i notatki o lukach poza kontrola",
+     "const tekstArtykulu = tekstBlokami(kopiaDoStatystyk(art));", "const tekstArtykulu = art.innerText || art.textContent || '';", None),
+]
+
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi
 # do przegladarki bez przetworzenia, kazda z nich jest potrojona -> SyntaxError
 # "Identifier ... has already been declared" wywala caly blok <script> i zabija UI.
