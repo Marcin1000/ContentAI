@@ -871,6 +871,51 @@ async function wariantNowyArtykul(b) {
 // R6-F (wykonawca F, runda 6, audyt E poza Lukami). Telefon 412x915, konto standard: pusta Baza
 // (Fakty wzgledem stron z sieci), potem strona z adresem w Bazie na serwerze (Linki). Na koncu
 // Wstecz, bo ostatni krok naprawde opuszcza strone. Kazdy scenariusz pada na 52ad6c5.
+// Runda 7 (koordynator): Luki - temat konkurencji odznaczony, wybor zablokowany w trakcie poprawy,
+// wynik po poprawie od razu (bez drugiej analizy calego tekstu); tytul zrodla bez "Strona 1 z 7".
+async function wariantR7Luki(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); if (!localStorage.getItem('cai_lang')) localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  const bledy = [];
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  const s = await zaloguj(k, 'premium');
+  const luki = [];
+  s.on('request', (r) => { if (r.method() === 'POST' && /\/api$/.test(r.url()) && /semantic SEO expert/.test(r.postData() || '')) luki.push(Date.now()); });
+  await s.evaluate(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); });
+  await s.fill('#topic', 'Punkt odbioru paczek w sklepie');
+  await s.evaluate(() => { document.getElementById('use-web').checked = true; document.getElementById('use-serp').checked = true; premiumMode = false; generate(true); });
+  await s.waitForFunction(() => !document.getElementById('gen-btn').disabled && getComputedStyle(document.getElementById('spinner')).display === 'none', null, { timeout: 60000 });
+  const konk = 'Oferta Konkurent Alfa';
+  await s.evaluate((t) => { serpData.topics.push(t); gapCache = null; inspektorPokaz('luki'); }, konk);
+  await krok('R7L analiza luk', s.waitForFunction(() => document.querySelectorAll('#gap-missing .gap-miss-check').length > 1, null, { timeout: 30000 }));
+  const lista = await s.evaluate(() => [...document.querySelectorAll('#gap-missing .gap-miss-item')].map((el) => ({
+    tekst: el.querySelector('.gap-miss-text').textContent, zazn: el.querySelector('.gap-miss-check').checked, konk: !!el.querySelector('.gap-konk') })));
+  const wiersz = lista.find((x) => x.tekst.indexOf(konk) === 0) || {};
+  wynik('telefon: R7L temat o konkurencji oznaczony i domyslnie odznaczony, reszta zaznaczona',
+    wiersz.konk === true && wiersz.zazn === false && lista.filter((x) => x !== wiersz).every((x) => x.zazn && !x.konk), JSON.stringify(lista));
+
+  const przed = luki.length;
+  await s.evaluate(() => { kontekstArt.temat = 'Punkt odbioru paczek w sklepie [atrapa:opoznienie=2000@luki-sekcje]'; improveFromGaps(); });
+  await s.waitForTimeout(400);
+  const wTrakcie = await s.evaluate(() => [...document.querySelectorAll('#gap-missing .gap-miss-check')].map((c) => c.disabled));
+  wynik('telefon: R7L zaznaczenia tematow zablokowane w trakcie poprawy', wTrakcie.length > 0 && wTrakcie.every(Boolean), JSON.stringify(wTrakcie));
+  await krok('R7L poprawa pod luki', s.waitForFunction(() => versions.length >= 2 && !przerwanieGenerowania, null, { timeout: 60000 }));
+  const poKoncu = Date.now();
+  await s.waitForTimeout(800);
+  const po = await s.evaluate(() => ({ delta: document.getElementById('gap-delta').style.display,
+    ladowanie: getComputedStyle(document.getElementById('gap-loading')).display, przed: document.getElementById('gap-delta-before').textContent,
+    poPkt: document.getElementById('gap-delta-after').textContent, wolne: [...document.querySelectorAll('#gap-missing .gap-miss-check')].every((c) => !c.disabled) }));
+  wynik('telefon: R7L wynik po poprawie od razu, bez ponownej analizy calego tekstu',
+    po.delta === 'block' && po.ladowanie === 'none' && luki.length === przed && parseInt(po.poPkt, 10) > parseInt(po.przed, 10) && po.wolne,
+    JSON.stringify({ po, zapytan: luki.length - przed, poKoncu: luki.filter((t) => t >= poKoncu).length }));
+
+  const zrodla = await s.evaluate(() => blokZrodel([{ url: 'https://example.com/regulamin.pdf', tytul: 'Strona 1 z 7 Regulamin usługi odbioru', data: '' },
+    { url: 'https://example.com/terms.pdf', tytul: 'Page 2 of 9 - Service terms', data: '' }]));
+  wynik('telefon: R7L tytul zrodla z PDF bez numeru strony', /Regulamin usługi odbioru/.test(zrodla) && /Service terms/.test(zrodla) && !/Strona 1 z 7|Page 2 of 9/.test(zrodla), zrodla.replace(/<[^>]+>/g, ' ').slice(0, 200));
+  wynik('telefon: R7L bez bledow strony', bledy.length === 0, bledy.join(' | '));
+  await k.close();
+}
+
 async function wariantR6F(b) {
   // Interfejs i artykul po polsku (komunikaty, odmiana i polski sklad w eksporcie sa sprawdzane po polsku).
   const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, acceptDownloads: true, locale: 'pl-PL' });
@@ -1139,6 +1184,182 @@ async function wariantR6F(b) {
   await k.close();
 }
 
+// R7-I (wykonawca I, runda 7): panel Faktow. Telefon 412x915, konto premium, dokument w Bazie na
+// serwerze. Jeden stan ladowania do konca (odnosniki gotowe wczesniej nie rysuja sie jako wynik),
+// adres w uwadze jako link, notka zgodna z liczba stron z sieci, kategoria "Sprawdz na stronie"
+// z linkiem do strony z listy zrodel (na koncu listy), lista zrodel i ramka meta poza kontrola.
+// Kazdy scenariusz pada na a8a2e18.
+async function wariantR7I(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); if (!localStorage.getItem('cai_lang')) localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  const bledy = [];
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  const s = await zaloguj(k, 'premium');
+  const zapytania = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url())) zapytania.push(z.postData() || ''); });
+  const ostatnieFakty = () => { const t = zapytania.filter((x) => /You are a fact checker/.test(x)).pop() || ''; try { return JSON.parse(t); } catch (e) { return {}; } };
+  const gotowe = (ms) => s.waitForFunction(() => /ready|uwaga/.test(document.getElementById('out-badge').className) && !document.getElementById('gen-btn').disabled
+    && getComputedStyle(document.getElementById('spinner')).display === 'none' && getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: ms || 60000 });
+  const koniecFaktow = (nazwa) => krok(nazwa, s.waitForFunction(() => getComputedStyle(document.getElementById('fakty-loading')).display === 'none'
+    && document.getElementById('fakty-wynik').textContent.trim().length > 0, null, { timeout: 30000 }));
+
+  // Dokument w Bazie (na serwerze): kontrola ma z czym zestawic tekst poza stronami z sieci.
+  await s.evaluate(() => addDoc('Automaty paczkowe - oferta R7I', 'Automaty paczkowe w sklepie internetowym: paczka do 25 kg, wymiary skrytki 64 x 38 x 41 cm, odbior w ciagu 2 dni. Automaty paczkowe dla sklepu internetowego dzialaja cala dobe.', '📄', ''));
+  await krok('R7-I dokument w Bazie na serwerze', s.waitForFunction(() => (window._bazaSerwer || []).some((d) => /oferta R7I/.test(d.nazwa || d.name || '')), null, { timeout: 10000 }));
+
+  // 3: przelacznik sieci wlaczony, model nie szukal - pasek "Siec: bez wyszukiwania", notka bez "z wlaczonym wyszukiwaniem".
+  await s.evaluate(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); });
+  await s.fill('#topic', 'Automaty paczkowe w sklepie internetowym [atrapa:bez-sieci@artykul]');
+  await s.evaluate(() => { document.getElementById('use-web').checked = true; generate(); });
+  await krok('R7-I artykul bez wyszukiwania', gotowe(60000));
+  await s.evaluate(() => inspektorPokaz('fakty'));
+  await koniecFaktow('R7-I kontrola faktow bez wyszukiwania');
+  const bezSieci = await s.evaluate(() => ({ pasek: (document.getElementById('stat-siec') || {}).textContent || '', wiedza: !!String(ostatniaWiedzaSerwera || '').trim(),
+    notka: (document.querySelector('#fakty-wynik .fakty-siec-bez-stron') || {}).textContent || '', wynik: document.getElementById('fakty-wynik').textContent }));
+  await s.evaluate(() => inspektorZamknij());
+
+  // Artykul z siecia (strony z cytowanymi fragmentami) i Baza.
+  await s.evaluate(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); });
+  await s.fill('#topic', 'Automaty paczkowe w sklepie internetowym');
+  await s.evaluate(() => { document.getElementById('use-web').checked = true; generate(); });
+  await krok('R7-I artykul z siecia', gotowe(60000));
+
+  // 1 + 2: odnosnik w tekscie (sprawdzony od razu) i kontrola tresci opozniona o 3 s. Do konca
+  // tylko napis ladowania - bez licznika i listy; potem adres jako link (host i sciezka, nowa karta).
+  const ADRES = 'http://127.0.0.1:' + PORT_PLIKOW + '/brak-strony-r7i.html';
+  await s.evaluate((adres) => {
+    const art = document.getElementById('article');
+    const przed = art.querySelector('.zrodla-box') || art.querySelector('.meta-box');
+    const p = document.createElement('p'); p.id = 'r7i-link';
+    p.innerHTML = 'Aktualne lokalizacje są na <a href="' + adres + '">tutaj</a> [atrapa:opoznienie=3000@fakty].';
+    if (przed) przed.before(p); else art.appendChild(p);
+    window.__r7iProbki = [];
+    window.__r7iZegar = setInterval(() => {
+      const l = document.getElementById('fakty-loading');
+      window.__r7iProbki.push({ ladowanie: getComputedStyle(l).display !== 'none', napis: l.textContent, wynik: document.getElementById('fakty-wynik').textContent.trim().slice(0, 60) });
+    }, 50);
+    inspektorPokaz('fakty');
+  }, ADRES);
+  await koniecFaktow('R7-I kontrola faktow z siecia');
+  await s.waitForTimeout(200);
+  const przebieg = await s.evaluate(() => {
+    clearInterval(window.__r7iZegar);
+    const pr = window.__r7iProbki || [];
+    const wTrakcie = pr.filter((x) => x.ladowanie);
+    return { probek: wTrakcie.length, zWynikiem: wTrakcie.filter((x) => x.wynik).map((x) => x.napis + ' | ' + x.wynik).slice(0, 3),
+      napisy: [...new Set(wTrakcie.map((x) => x.napis))], koniec: document.getElementById('fakty-wynik').textContent.slice(0, 60) };
+  });
+  wynik('telefon: R7-I Fakty: jeden stan ladowania do konca, bez czesciowego licznika i listy (odnosniki gotowe wczesniej)',
+    przebieg.probek >= 20 && przebieg.zWynikiem.length === 0 && /Do sprawdzenia: \d+/.test(przebieg.koniec), JSON.stringify(przebieg));
+
+  const uwagi = await s.evaluate((adres) => {
+    const el = [...document.querySelectorAll('#fakty-wynik .fakty-uwaga')];
+    const linkAdresu = el.filter((u) => /^link-/.test(u.dataset.rodzaj)).map((u) => u.querySelector('.fakty-adres a')).filter(Boolean)
+      .map((a) => ({ href: a.getAttribute('href'), target: a.target, rel: a.rel, tekst: a.textContent, kursywa: getComputedStyle(a).fontStyle }));
+    const strona = el.find((u) => u.dataset.rodzaj === 'strona');
+    const aStrony = strona && strona.querySelector('.fakty-adres a');
+    return {
+      rodzaje: el.map((u) => u.dataset.rodzaj),
+      cytatyZAdresem: el.filter((u) => u.textContent.indexOf('"' + adres) >= 0).length,
+      linkAdresu: linkAdresu.find((a) => a.href === adres) || null,
+      strona: strona ? { etykieta: strona.firstElementChild.textContent.trim(), href: aStrony ? aStrony.getAttribute('href') : '', target: aStrony ? aStrony.target : '', tekst: aStrony ? aStrony.textContent : '' } : null,
+      adresyStron: zrodlaSieciowe.map((z) => z.url),
+      pasek: (document.getElementById('stat-siec') || {}).textContent || '',
+      wynikTekst: document.getElementById('fakty-wynik').textContent,
+      zrodlaArt: [...document.querySelectorAll('#article .zrodla-box li')].map((li) => li.textContent.trim()),
+      meta: ((document.querySelector('#article .meta-box p') || {}).textContent || '').trim(),
+    };
+  }, ADRES);
+  const host = ADRES.replace(/^http:\/\//, '');
+  wynik('telefon: R7-I adres w uwadze jako link (host i sciezka, nowa karta, bez cudzyslowu i kursywy)',
+    !!uwagi.linkAdresu && uwagi.linkAdresu.target === '_blank' && /noopener/.test(uwagi.linkAdresu.rel) && uwagi.linkAdresu.tekst === host
+    && uwagi.linkAdresu.kursywa !== 'italic' && uwagi.cytatyZAdresem === 0, JSON.stringify({ linkAdresu: uwagi.linkAdresu, cytatyZAdresem: uwagi.cytatyZAdresem }));
+  // 3: notka zgodna z paskiem sieci - "bez wyszukiwania": porownanie tylko z dokumentami (bez "z wlaczonym
+  // wyszukiwaniem"); "N zrodel": notka o tekscie z wyszukiwaniem.
+  const zSiecia = { stron: uwagi.adresyStron.length, pasek: uwagi.pasek, zWyszukiwaniem: /z włączonym wyszukiwaniem/.test(uwagi.wynikTekst), nieSzukal: /nie szukał w sieci/.test(uwagi.wynikTekst) };
+  wynik('telefon: R7-I notka Faktow zgodna z paskiem sieci ("bez wyszukiwania" = tylko Twoje dokumenty, "N zrodel" = z wyszukiwaniem)',
+    /bez wyszukiwania/.test(bezSieci.pasek) && bezSieci.wiedza && /nie szukał w sieci/.test(bezSieci.notka) && !/z włączonym wyszukiwaniem/.test(bezSieci.wynik)
+    && zSiecia.stron > 0 && new RegExp('^' + zSiecia.stron + ' ').test(zSiecia.pasek) && zSiecia.zWyszukiwaniem && !zSiecia.nieSzukal,
+    JSON.stringify({ bezSieci: Object.assign({}, bezSieci, { wynik: bezSieci.wynik.slice(-120) }), zSiecia }));
+
+  // 4: "Sprawdz na stronie" - fragment strony urwany. Link do strony z listy zrodel, prompt mowi
+  // o urwanych fragmentach, uwaga po twardych (liczba) i przed niesprawdzonym adresem.
+  const zap = ostatnieFakty();
+  const sys = String(zap.system || '');
+  const usr = ((zap.messages || [])[0] || {}).content || '';
+  const iStrona = uwagi.rodzaje.indexOf('strona'), iLiczba = uwagi.rodzaje.indexOf('liczba'), iNiespr = uwagi.rodzaje.indexOf('link-niesprawdzony');
+  wynik('telefon: R7-I kategoria "Sprawdz na stronie" z linkiem do strony z listy zrodel, po twardych uwagach',
+    /SHORT EXCERPTS/.test(sys) && /"strona"/.test(sys) && /\n\[1\] https?:\/\//.test(usr) && !!uwagi.strona && uwagi.strona.etykieta === 'Sprawdź na stronie'
+    && uwagi.adresyStron.indexOf(uwagi.strona.href) >= 0 && uwagi.strona.target === '_blank' && iLiczba >= 0 && iStrona > iLiczba && (iNiespr < 0 || iNiespr > iStrona),
+    JSON.stringify({ strona: uwagi.strona, rodzaje: uwagi.rodzaje, excerpts: /SHORT EXCERPTS/.test(sys) }));
+
+  // 5: lista zrodel aplikacji (tytuly, daty) i ramka meta nie ida do kontroli jako tresc artykulu.
+  const artykulWZapytaniu = String(usr.split('\n\nARTICLE:\n')[1] || '');
+  const zrodloWArt = uwagi.zrodlaArt.filter((t) => t && artykulWZapytaniu.indexOf(t) >= 0);
+  wynik('telefon: R7-I lista zrodel i ramka meta poza kontrola faktow (tresc artykulu bez nich)',
+    artykulWZapytaniu.length > 200 && uwagi.zrodlaArt.length > 0 && zrodloWArt.length === 0 && !!uwagi.meta && artykulWZapytaniu.indexOf(uwagi.meta) < 0
+    && /Aktualne lokalizacje/.test(artykulWZapytaniu),
+    JSON.stringify({ dl: artykulWZapytaniu.length, zrodel: uwagi.zrodlaArt.length, zrodloWArt: zrodloWArt.slice(0, 2), meta: uwagi.meta.slice(0, 40), metaW: artykulWZapytaniu.indexOf(uwagi.meta) >= 0 }));
+  await s.evaluate(() => { inspektorZamknij(); const p = document.getElementById('r7i-link'); if (p) p.remove(); });
+
+  wynik('telefon: R7-I bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+  if (bledow) await zrzut(s, 'telefon-r7i');
+  await k.close();
+}
+
+// R7-H (runda 7, wykonawca H): komputer 1280x720 - pusty ekran bez plakietki "gotowy do generowania"
+// i bez pustego paska; po generowaniu z samokorekta (2 wersje) i po trzeciej wersji pasek wyniku w jednym
+// wierszu; od trzech wersji wybor z listy przelacza artykul; to samo przy 1024 px z rozwinietym briefem.
+// Kazdy scenariusz pada na a8a2e18 (main przed runda 7).
+async function wariantR7H(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 720 }, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); if (!localStorage.getItem('cai_lang')) localStorage.setItem('cai_lang', 'pl'); localStorage.setItem('cai_samokorekta_ok', '1'); } catch (e) { /* bez magazynu */ } });
+  const bledy = [];
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  const s = await zaloguj(k, 'premium');
+  const pasek = () => s.evaluate(() => {
+    const widoczny = (e) => { if (!e) return false; const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2 && getComputedStyle(e).visibility !== 'hidden'; };
+    const p = document.querySelector('.output-bar'), o = document.getElementById('out-badge');
+    const el = [document.getElementById('versions-bar'), ...p.querySelectorAll('.pasek-akcje > .btn-secondary, .pasek-akcje > .grupa-wrap')].filter(widoczny);
+    const gory = el.map((e) => Math.round(e.getBoundingClientRect().top));
+    const przyciete = [...p.querySelectorAll('button, .ver-wybor')].filter(widoczny).filter((e) => e.scrollWidth > e.clientWidth + 1).map((e) => e.id || e.className);
+    return { wysokosc: p.offsetHeight, plakietka: widoczny(o) ? o.textContent : '', elementy: el.length, wiersz: gory.length > 1 && Math.max(...gory) - Math.min(...gory) <= 4,
+      gory, przyciete, wBok: p.scrollWidth - p.clientWidth, wersjeWidoczne: [...document.querySelectorAll('#versions-bar .ver-btn')].filter(widoczny).map((e) => e.innerText.trim()),
+      lista: widoczny(document.querySelector('.ver-wybor')) };
+  });
+  const p0 = await pasek();
+  wynik('komputer: R7-H pusty ekran bez plakietki "gotowy do generowania" i bez pustego paska wyniku', !p0.plakietka && p0.wysokosc === 0, JSON.stringify(p0));
+  await s.fill('#topic', 'Jak wybrać pompę ciepła');
+  await s.evaluate(() => { document.getElementById('use-web').checked = true; if (!premiumMode) togglePremium(); generate(true); });
+  await krok('R7-H artykul z samokorekta', s.waitForFunction(() => versions.length >= 2 && /ready/.test(document.getElementById('out-badge').className) && !document.getElementById('gen-btn').disabled, null, { timeout: 90000 }));
+  await s.waitForTimeout(400);
+  const p1 = await pasek();
+  wynik('komputer: R7-H po samokorekcie (2 wersje) pasek wyniku w jednym wierszu, "Przed | Po", bez przycietych napisow',
+    p1.wiersz && p1.elementy >= 5 && !p1.przyciete.length && p1.wBok <= 1 && p1.wersjeWidoczne.join('|') === 'Przed|Po' && !p1.plakietka, JSON.stringify(p1));
+  await s.evaluate(() => { addVersion(versions[versions.length - 1].html, _t('ver-serp')); });
+  await s.waitForTimeout(400);
+  const p2 = await pasek();
+  wynik('komputer: R7-H trzecia wersja - pasek w jednym wierszu, wersje jako lista wyboru', p2.wiersz && p2.lista && !p2.wersjeWidoczne.length && !p2.przyciete.length && p2.wBok <= 1, JSON.stringify(p2));
+  const wybrano = await krok('R7-H wybor wersji z listy', s.selectOption('#ver-select', '0', { timeout: 3000 }));
+  await s.waitForTimeout(300);
+  const w = await s.evaluate(() => ({ aktywna: activeVersion, napis: (document.getElementById('ver-wybor-tekst') || {}).textContent, pierwsza: versions[0].label }));
+  wynik('komputer: R7-H wybor wersji z listy przelacza artykul', wybrano && w.aktywna === 0 && w.napis === w.pierwsza, JSON.stringify(w));
+  await s.setViewportSize({ width: 1024, height: 768 });
+  await s.evaluate(() => { if (document.body.classList.contains('brief-zwiniety')) przelaczBrief(false); });
+  await s.waitForTimeout(500);
+  const p3 = await pasek();
+  wynik('komputer: R7-H 1024 px z rozwinietym briefem - pasek w jednym wierszu (podpisy zwiniete do ikon, w title)',
+    p3.wiersz && p3.wBok <= 1 && await s.evaluate(() => [...document.querySelectorAll('.pasek-akcje .tylko-ikona')].every((e) => !!e.title)), JSON.stringify(p3));
+  await s.setViewportSize({ width: 1280, height: 720 });
+  await s.evaluate(() => nowyArtykul());
+  await s.waitForTimeout(400);
+  const p4 = await pasek();
+  wynik('komputer: R7-H po "Nowy artykul" bez plakietki i bez pustego paska', !p4.plakietka && p4.wysokosc === 0, JSON.stringify(p4));
+  wynik('komputer: R7-H bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+  if (bledow) await zrzut(s, 'komputer-r7h');
+  await k.close();
+}
+
 // Pliki z app/ pod http://127.0.0.1 - dla scenariuszy, ktore z file:// sa w CI niestabilne.
 let PORT_PLIKOW;
 const TYPY = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml',
@@ -1172,6 +1393,9 @@ async function uruchomSerwerPlikow() {
     await wariantTelefonR6Luki(b);
     await wariantNowyArtykul(b);
     await wariantR6F(b);
+    await wariantR7Luki(b);
+    await wariantR7I(b);
+    await wariantR7H(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));

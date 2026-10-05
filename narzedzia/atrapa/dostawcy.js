@@ -611,6 +611,13 @@ function odpFakty(cialo, ctx, zn) {
   const uwagi = [];
   if (zLiczba) uwagi.push({ rodzaj: 'liczba', cytat: zLiczba.slice(0, 120), powod: j === 'pl' ? 'Tej wartości nie ma w źródłach; źródła podają inny zakres albo milczą.' : 'This value is not in the sources; they give a different range or none.' });
   if (inne) uwagi.push({ rodzaj: 'zakres', cytat: inne.slice(0, 120), powod: j === 'pl' ? 'Źródła mówią o tym ogólnie, artykuł rozciąga to na wszystkie przypadki.' : 'The sources state this generally; the article extends it to every case.' });
+  // R7-I: prompt z kategoria "strona" i ponumerowanymi stronami z sieci - jedno zdanie "ze strony",
+  // ktorej cytowany fragment jest urwany. Na poczatku listy (jak u modelu), aplikacja przesuwa je w dol.
+  const nrStrony = (ctx.usr.match(/^\[(\d+)\] https?:\/\//m) || [])[1];
+  if (/"strona"/.test(ctx.sys) && nrStrony) {
+    const zeStrony = zdania.find((s) => s !== zLiczba && s !== inne && /\d/.test(s)) || zdania.find((s) => s !== zLiczba && s !== inne) || '';
+    if (zeStrony) uwagi.unshift({ rodzaj: 'strona', cytat: zeStrony.slice(0, 120), strona: Number(nrStrony), powod: j === 'pl' ? 'Cytowany fragment strony urywa się przed tą wartością.' : 'The quoted passage of the page stops before this value.' });
+  }
   return [{ type: 'text', text: tekstJson({ uwagi }, zn) }];
 }
 
@@ -950,6 +957,9 @@ function odpLuki(cialo, ctx, zn) {
   if (!present.length && missing.length > 1) present.push(missing.shift());
   const dane = { score: 0, missing: missing.slice(0, 8), present: present.slice(0, 8), msg: j === 'pl' ? 'Artykuł pokrywa część tematów z czołówki; brakuje kilku wątków, które konkurencja omawia.' : 'The article covers part of the top topics; a few angles covered by competitors are missing.' };
   dane.score = Math.round(dane.present.length / Math.max(1, dane.present.length + dane.missing.length) * 100);
+  // R7: aplikacja prosi o "competitors" (tematy o cudzej marce). Atrapa uznaje za taki temat
+  // kazdy, w ktorym pada slowo "konkurent"/"competitor" (scenariusz testu dopisuje go do SERP).
+  if (/"competitors"/.test(ctx.sys)) dane.competitors = lista.filter((tem) => /konkurent|competitor/i.test(tem));
   return [{ type: 'text', text: tekstJson(dane, zn) }];
 }
 

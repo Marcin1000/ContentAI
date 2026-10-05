@@ -1163,6 +1163,61 @@ KONTROLE += [
      "akapitPdf.unbreakable = true;", None, None),
     ("R6-F/regula-frazy", "E-19: fraza kluczowa nie jako sztuczny podmiot zdania (generowanie i poprawa samokorekty)",
      "system: editorSysPelny + '\\n' + REGULA_FRAZY_PODMIOTU,", None, None),
+    # Runda 7 (koordynator): Luki, adresat tekstu, tytuly zrodel
+    ("R7/luki-wynik-od-razu", "wynik Luk po poprawie od razu, bez ponownej analizy calego tekstu",
+     "const wynikPo = { msg: _t('gap-po-poprawie'), present: [], missing: [] };", None, None),
+    ("R7/luki-blokada-wyboru", "zaznaczenia tematow zablokowane na czas poprawy",
+     "const blokuj = (tak) => document.querySelectorAll('#gap-missing .gap-miss-check, #gap-missing-wrap .btn-maly')", None, None),
+    ("R7/luki-konkurencja", "tematy o marce konkurencji domyslnie odznaczone, z plakietka",
+     "gapKonkurencja = dopasujDoSerp(odp.competitors, tematy);", None, None),
+    ("R7/luki-dlugosc-sekcji", "nowe sekcje zwiezle (120-200 slow), artykul nie puchnie ponad czolowke",
+     "Keep each new section concise: about 120-200 words", None, None),
+    ("R7/jeden-adresat", "jeden adresat w calym tekscie (wlasciciel sklepu albo klient, nie na zmiane)",
+     "- Keep ONE addressee for the whole text", None, None),
+    ("R7/tytul-zrodla", "tytul zrodla bez \"Strona 1 z 7\" z naglowka PDF",
+     ".replace(/^\\s*(?:strona|page|seite)\\s+\\d+\\s+(?:z|of|von)\\s+\\d+\\s*[-:|]?\\s*/i, '')", None, None),
+    # R7-H (runda 7, wykonawca H): pasek wyniku na komputerze w jednym wierszu, bez plakietki na pustym ekranie.
+    ("R7-H/pasek-jeden-wiersz", "komputer: pasek wyniku nie zawija sie do drugiego wiersza",
+     "body:not(.is-mobile) .output-bar { flex-wrap: nowrap; }", None, None),
+    ("R7-H/ikony-po-kolei", "brak miejsca: przyciski paska traca podpisy po jednym, od najmniej waznego (nie wszystkie ponizej 1280 px)",
+     "const ZWIJANE = ['#copy-btn', '#grupa-tworz-wrap > .btn-secondary', '#grupa-ocen-wrap > .btn-secondary',",
+     "body:not(.is-mobile) .pasek-akcje > .btn-secondary span { font-size: 0; }", None),
+    ("R7-H/pasek-jak-kartka", "krawedzie paska wyniku na krawedziach kartki artykulu",
+     "html.style.setProperty('--kolumna-paska', kol);", None, None),
+    ("R7-H/bez-plakietki-pusty", "pusty ekran bez 'gotowy do generowania' i bez pustego paska wyniku",
+     'body:not(.is-mobile) #out-badge[data-i18n="badge-ready"] { display: none; }', None, None),
+    ("R7-H/plakietka-kropka", "plakietka tylko dla stanow wartych uwagi (generowanie, blad, przerwane) z kropka; gotowe dla czytnika",
+     'body:not(.is-mobile) #out-badge:is(.ready, [data-i18n="badge-done"]) { position: absolute;', None, None),
+    ("R7-H/wersje-komputer", "komputer: dwie wersje jako Przed | Po, od trzech lista wyboru (#ver-select jak na telefonie)",
+     "body:not(.is-mobile) .versions-bar.wiele-wersji .ver-wybor {", None, None),
+]
+
+# R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna
+# z siecia, kategoria "Sprawdz na stronie", lista zrodel i ramka meta poza kontrola).
+# Osobny blok na koncu listy podpisow aplikacji (scalanie po liniach z innymi wykonawcami).
+KONTROLE += [
+    ("R7-I/fakty-bez-czesciowych", "Fakty: jeden stan ladowania do konca, bez czesciowego licznika i listy odnosnikow",
+     "let trescGotowa = false, linkiGotowe = false;", "if (u.length) pokazWynikFaktow(u, 'czesciowe');", None),
+    ("R7-I/fakty-w-toku-najpierw", "Fakty: kontrola w toku przed zapamietanym wynikiem (bez starej listy w trakcie)",
+     "    ladowanie.style.display = 'block';\n    return;\n  }\n  if (!wymus && faktyWynik && faktySygnatura === sygnatura) {", None, None),
+    ("R7-I/fakty-adres-link", "Fakty: adres w uwadze jako link (host i skrocona sciezka), nie URL kursywa w cudzyslowie",
+     "? '<div class=\"fakty-adres\" style=\"margin:3px 0\">' + linkUwagi(cytat.trim()) + '</div>'", None, None),
+    ("R7-I/fakty-link-karta", "Fakty: link w uwadze otwiera nowa karte (target _blank, rel noopener)",
+     "'\" target=\"_blank\" rel=\"noopener\" title=\"' + escapeHtml(tytul || adres) + '\">'", None, None),
+    ("R7-I/fakty-notka-siec", "Fakty: notka 'z wyszukiwaniem' tylko przy stronach z sieci, inaczej wariant bez stron",
+     "} else if (stan === 'gotowe' && trybUzupelniania && stronZSieci > 0) {", None, None),
+    ("R7-I/fakty-tryb-promptu", "Fakty: tryb promptu 'z siecia' tylko, gdy byly strony z sieci",
+     "const zSiecia = trybUzupelniania && sieciowe.length > 0;", None, None),
+    ("R7-I/fakty-strona-prompt", "Fakty: prompt wie, ze cytowane fragmenty stron sa niepelne (kategoria strona)",
+     "'whole pages: a detail missing from an excerpt is NOT evidence that the page lacks it. '", None, None),
+    ("R7-I/fakty-strona-adres", "Fakty: 'Sprawdz na stronie' z adresem wylacznie z listy stron z sieci",
+     "if (z) { kopia.rodzaj = 'strona'; kopia.adres = z.url; kopia.tytulStrony = z.tytul || ''; }", None, None),
+    ("R7-I/fakty-waga", "Fakty: kolejnosc wagi - 'Sprawdz na stronie' i niesprawdzony adres na koncu listy",
+     "const WAGA_UWAG = { strona: 1, 'link-niesprawdzony': 2 };", None, None),
+    ("R7-I/fakty-slownik", "Fakty: nowa kategoria i warianty notki w slowniku PL",
+     "'fakty-rodzaj-strona':'Sprawdź na stronie',", None, None),
+    ("R7-I/fakty-bez-listy-zrodel", "Fakty: lista zrodel aplikacji, ramka meta i notatki o lukach poza kontrola",
+     "const tekstArtykulu = tekstBlokami(kopiaDoStatystyk(art));", "const tekstArtykulu = art.innerText || art.textContent || '';", None),
 ]
 
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi
