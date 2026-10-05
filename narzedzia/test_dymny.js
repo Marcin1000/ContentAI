@@ -555,6 +555,10 @@ async function wariantTelefonR6(b) {
   const bledy = [];
   k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
   const s = await zaloguj(k, 'premium');
+  // Polski interfejs, jak u wlasciciela (temat bez zrodla w atrapie wymaga trzech brakujacych tematow).
+  await s.evaluate(() => { try { magazyn.setItem('cai_lang', 'pl'); localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  await s.reload({ waitUntil: 'load' });
+  await s.waitForTimeout(600);
   const brief = () => s.evaluate(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); });
 
   // "Wybierz" przy Bazie wiedzy: na telefonie zwijal niewidoczny panel komputera i nic sie nie dzialo.
@@ -807,6 +811,63 @@ async function wariantTelefonR6Luki(b) {
   await k.close();
 }
 
+// R6 (wlasciciel): kolejny, inny artykul bez odswiezania strony. "Nowy artykul" czysci temat, frazy,
+// wytyczne i wynik (artykul zostaje w Historii), preferencje zostaja, Cofnij przywraca; osobno
+// "Przywroc ustawienia domyslne". Telefon 412x915.
+async function wariantNowyArtykul(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); } catch (e) { /* bez magazynu */ } });
+  const bledy = [];
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  const s = await zaloguj(k, 'standard');
+  const stan = () => s.evaluate(() => ({ przycisk: !!document.getElementById('nowy-artykul-btn') && !document.getElementById('nowy-artykul-btn').hidden,
+    temat: document.getElementById('topic').value, frazy: keywords.length, extra: document.getElementById('extra').value,
+    artykul: getComputedStyle(document.getElementById('article')).display, wersje: versions.length, biezacy: magazyn.getItem('cai_biezacy'),
+    hist: history.length, ton: document.getElementById('tone').value, toast: [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent).join(' | ') }));
+  await s.evaluate(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); });
+  const s0 = await stan();
+  await s.fill('#topic', 'Jak wybrać pompę ciepła');
+  await s.evaluate(() => { keywords.push('pompa ciepła'); renderKws(); document.getElementById('extra').value = 'Wspomnij o dotacji';
+    const t = document.getElementById('tone'); t.value = t.options[1].value; document.getElementById('use-web').checked = true; generate(true); });
+  await krok('R6N artykul', czekajNaKoniec(s));
+  await s.evaluate(() => ustawWidokMobilny('brief'));
+  await s.waitForTimeout(300);
+  const s1 = await stan();
+  const wymiar = await s.evaluate(() => { const r = document.getElementById('nowy-artykul-btn').getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height) }; });
+  wynik('telefon: R6N "Nowy artykul" tylko gdy jest co czyscic (przy etykiecie Tematu)', !s0.przycisk && s1.przycisk && s1.artykul === 'block' && wymiar.h <= 30, JSON.stringify({ s0: s0.przycisk, s1: s1.przycisk, wymiar }));
+  await krok('R6N Nowy artykul', s.click('#nowy-artykul-btn', { timeout: 3000 }));
+  await s.waitForTimeout(300);
+  const s2 = await stan();
+  wynik('telefon: R6N Nowy artykul - pusty brief i wynik, artykul w Historii, ton zostaje, komunikat z Cofnij',
+    s2.temat === '' && s2.frazy === 0 && s2.extra === '' && s2.artykul === 'none' && s2.wersje === 0 && !s2.biezacy && s2.hist === s1.hist && s2.ton === s1.ton && /Cofnij|Undo/.test(s2.toast),
+    JSON.stringify(s2));
+  await krok('R6N Cofnij', s.click('.powiadomienie .powiadomienie-akcja', { timeout: 3000 }));
+  await s.waitForTimeout(400);
+  const s3 = await stan();
+  wynik('telefon: R6N Cofnij przywraca brief i artykul', s3.temat === s1.temat && s3.frazy === s1.frazy && s3.extra === s1.extra && s3.artykul === 'block', JSON.stringify(s3));
+  await s.evaluate(() => ustawWidokMobilny('brief'));
+  await s.waitForTimeout(300);
+  await s.click('#nowy-artykul-btn').catch(() => {});
+  await s.reload({ waitUntil: 'load' });
+  await s.waitForTimeout(1000);
+  const s4 = await stan();
+  wynik('telefon: R6N po Nowym artykule i odswiezeniu brief i wynik zostaja puste', s4.temat === '' && s4.frazy === 0 && s4.artykul === 'none', JSON.stringify(s4));
+  // Przywroc ustawienia domyslne + Cofnij
+  await s.evaluate(() => { ustawWidokMobilny('brief'); const d = document.getElementById('brief-zaawansowane'); if (d) d.open = true;
+    const sp = document.getElementById('use-serp'); sp.checked = true; sp.dispatchEvent(new Event('change', { bubbles: true })); document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()); });
+  const przed = await s.evaluate(() => ({ ton: document.getElementById('tone').value, serp: document.getElementById('use-serp').checked }));
+  await krok('R6N Przywroc ustawienia', s.click('.przywroc-domyslne', { timeout: 3000 }));
+  await s.waitForTimeout(300);
+  const po = await s.evaluate(() => { const t = document.getElementById('tone'); return { ton: t.value, dom: ([...t.options].find((o) => o.defaultSelected) || t.options[0]).value, serp: document.getElementById('use-serp').checked }; });
+  await krok('R6N Cofnij ustawienia', s.click('.powiadomienie .powiadomienie-akcja', { timeout: 3000 }));
+  await s.waitForTimeout(300);
+  const cof = await s.evaluate(() => ({ ton: document.getElementById('tone').value, serp: document.getElementById('use-serp').checked }));
+  wynik('telefon: R6N Przywroc ustawienia domyslne i Cofnij', po.ton === po.dom && !po.serp && cof.ton === przed.ton && cof.serp === przed.serp, JSON.stringify({ przed, po, cof }));
+  wynik('telefon: R6N bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+  if (bledow) await zrzut(s, 'telefon-r6-nowy');
+  await k.close();
+}
+
 // Pliki z app/ pod http://127.0.0.1 - dla scenariuszy, ktore z file:// sa w CI niestabilne.
 let PORT_PLIKOW;
 const TYPY = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml',
@@ -838,6 +899,7 @@ async function uruchomSerwerPlikow() {
     await wariantProxy(b);
     await wariantTelefonR6(b);
     await wariantTelefonR6Luki(b);
+    await wariantNowyArtykul(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));

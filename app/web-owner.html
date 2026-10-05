@@ -2483,6 +2483,20 @@ body.is-mobile .ver-wybor .ikona { flex: none; width: 16px; height: 16px; margin
 body.is-mobile .ver-wybor select { position: absolute; top: -6px; left: 0; width: 100%; height: var(--h-dotyk); min-height: 0; margin: 0; padding: 0; border: 0;
   opacity: 0; font-size: 16px; cursor: pointer; }
 body.is-mobile .ver-wybor:has(select:focus-visible) { box-shadow: 0 0 0 2px var(--c-fokus); }
+/* R6: Nowy artykul przy etykiecie Tematu i przywracanie ustawien domyslnych */
+.etykieta-wiersz { display: flex; align-items: center; justify-content: space-between; gap: var(--s-8); min-height: 24px; }
+.etykieta-wiersz .field-label { min-width: 0; }
+.nowy-artykul { position: relative; flex: none; display: inline-flex; align-items: center; gap: var(--s-4); font-size: var(--t-sm); font-weight: var(--g-mocny); white-space: nowrap; }
+.nowy-artykul .ikona { width: 16px; height: 16px; margin: 0; }
+.nowy-artykul[hidden], .brief-szyna .przycisk-ikona[hidden] { display: none; }
+/* wiersz etykiety nie skacze, gdy przycisk znika: na telefonie 24 px wysokosci, cel dotyku 44 px z ::before */
+body.is-mobile .etykieta-wiersz .nowy-artykul { min-height: 0; height: 24px; }
+body.is-mobile .nowy-artykul::before { content: ""; position: absolute; inset: -10px -8px; }
+.przywroc-domyslne { align-self: flex-start; margin-top: var(--s-8); }
+.powiadomienie-akcja { flex: none; align-self: center; min-height: 28px; margin: -4px 0; padding: 0 var(--s-6); border: 0; border-radius: var(--r-sm);
+  background: none; color: var(--c-akcent-mocny); font: inherit; font-weight: var(--g-mocny); cursor: pointer; }
+.powiadomienie-akcja:hover { background: var(--c-najazd); }
+body.is-mobile .powiadomienie-akcja { min-height: var(--h-dotyk); }
 
 /* statystyki jako arkusz od dolu (ten sam element #article-stats) */
 body.is-mobile .article-stats.show { display: none; }
@@ -3218,12 +3232,17 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
           <button type="button" class="przycisk-ikona" onclick="przelaczBrief()" title="Rozwiń brief" aria-label="Rozwiń brief" data-i18n-title="brief-rozwin" data-i18n-label="brief-rozwin"><svg class="ikona" aria-hidden="true"><use href="#i-panel-left"/></svg></button>
           <span class="szyna-sep"></span>
           <button type="button" class="przycisk-ikona" onclick="generujZSzyny()" title="Generuj ponownie" aria-label="Generuj ponownie" data-i18n-title="brief-ponownie" data-i18n-label="brief-ponownie"><svg class="ikona" aria-hidden="true"><use href="#i-refresh-cw"/></svg></button>
+          <button type="button" class="przycisk-ikona" id="nowy-artykul-szyna" onclick="nowyArtykul()" hidden title="Nowy artykuł" aria-label="Nowy artykuł" data-i18n-title="nowy-artykul" data-i18n-label="nowy-artykul"><svg class="ikona" aria-hidden="true"><use href="#i-square-pen"/></svg></button>
           <button type="button" class="przycisk-ikona" onclick="toggleKbPanel()" title="Źródła" aria-label="Źródła" data-i18n-title="brief-zrodla" data-i18n-label="brief-zrodla"><svg class="ikona" aria-hidden="true"><use href="#i-library"/></svg></button>
         </div>
         <div class="form-col" id="tresc-glowna" tabindex="-1">
           <div class="brief-naglowek"><h2 data-i18n="brief-naglowek">Brief</h2><button type="button" class="przycisk-ikona" onclick="przelaczBrief()" title="Zwiń brief" aria-label="Zwiń brief" data-i18n-title="brief-zwin" data-i18n-label="brief-zwin"><svg class="ikona" aria-hidden="true"><use href="#i-panel-left"/></svg></button></div>
           <div class="field">
-            <label class="field-label" for="topic" data-i18n="label-topic">Temat artykułu / strony</label>
+            <!-- R6: Nowy artykul przy etykiecie Tematu - widoczny, gdy jest co wyczyscic (odswiezNowyArtykul) -->
+            <div class="etykieta-wiersz">
+              <label class="field-label" for="topic" data-i18n="label-topic">Temat artykułu / strony</label>
+              <button type="button" class="btn-link nowy-artykul" id="nowy-artykul-btn" onclick="nowyArtykul()" hidden title="Wyczyść temat, słowa kluczowe i wytyczne, żeby zacząć kolejny artykuł. Poprzedni zostaje w Historii." data-i18n-title="nowy-artykul-title" data-i18n="nowy-artykul" data-ikona="square-pen"><svg class="ikona" aria-hidden="true"><use href="#i-square-pen"/></svg>Nowy artykuł</button>
+            </div>
             <div class="pole-wiersz">
               <input type="text" id="topic" autocomplete="off" placeholder="np. Jak wybrać system CRM dla małej firmy" data-i18n="ph-topic" />
               <button type="button" class="mic-btn" onclick="dictate('topic', this)" data-i18n-title="voice-dictate-title" title="Dyktuj"><svg class="ikona" aria-hidden="true"><use href="#i-mic"/></svg></button>
@@ -3367,6 +3386,8 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
               <span class="toggle-slider"></span>
             </div>
           </label>
+          <!-- R6: typ, dlugosc, ton, jezyk, odbiorca, zrodla i opcje jak na starcie; temat i frazy czysci Nowy artykul -->
+          <button type="button" class="btn-link przywroc-domyslne" onclick="przywrocUstawieniaDomyslne()" data-i18n="ustawienia-domyslne" data-ikona="undo-2"><svg class="ikona" aria-hidden="true"><use href="#i-undo-2"/></svg>Przywróć ustawienia domyślne</button>
 
             </div>
           </details>
@@ -3466,6 +3487,7 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
                 <div class="arkusz-tytul"><span data-i18n="grupa-wiecej">Więcej</span><button type="button" class="przycisk-ikona arkusz-zamknij" onclick="zamknijGrupyPaska()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
                 <button class="btn-secondary" id="premium-fix-btn" style="display:none" onclick="runPostGenerationPremium()" title="Model oceni gotowy tekst i poprawi go według oceny" data-i18n-title="title-premium-fix-tooltip" data-i18n="btn-premium-fix" data-ikona="list-checks"><svg class="ikona" aria-hidden="true"><use href="#i-list-checks"/></svg>Dopracuj tekst</button>
                 <button class="btn-secondary" id="tts-btn" style="display:none" onclick="speakArticle(this)" data-i18n-title="tts-read" title="Posłuchaj"><svg class="ikona" aria-hidden="true"><use href="#i-volume-2"/></svg><span data-i18n="tts-read">Posłuchaj</span></button>
+                <button class="btn-secondary" id="nowy-art-btn" style="display:none" onclick="nowyArtykul()" title="Wyczyść temat, słowa kluczowe i wytyczne, żeby zacząć kolejny artykuł. Poprzedni zostaje w Historii." data-i18n-title="nowy-artykul-title" data-i18n="nowy-artykul" data-ikona="square-pen"><svg class="ikona" aria-hidden="true"><use href="#i-square-pen"/></svg>Nowy artykuł</button>
               </div>
             </div>
             <span class="pasek-sep"></span>
@@ -5181,7 +5203,7 @@ var I18N = {
     'url-label':'Adres URL',
     'bv-modal-full-title':'Głos marki (brand voice)',
     'bv-modal-desc-full':'Wklej 2-5 istniejących artykułów firmowych (lub innych tekstów). Aplikacja wyekstrahuje profil stylu i zastosuje go do wszystkich przyszłych generowań.',
-    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','msg-dopracuj-bez-zmian':'Tekst ma już {n}/100, samokorekta nie znalazła nic do poprawy. Zostaje bez zmian.','ver-serp':'Poprawa SERP','ver-wybor':'Wersja artykułu',
+    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','nowy-artykul':'Nowy artykuł','nowy-artykul-title':'Wyczyść temat, słowa kluczowe i wytyczne, żeby zacząć kolejny artykuł. Poprzedni zostaje w Historii.','nowy-artykul-gotowe':'Możesz pisać nowy artykuł. Poprzedni jest w Historii.','nowy-brief-wyczyszczony':'Brief wyczyszczony.','nowy-cofnij':'Cofnij','ustawienia-domyslne':'Przywróć ustawienia domyślne','ustawienia-domyslne-gotowe':'Przywrócono ustawienia domyślne: typ, długość, ton, język, źródła i opcje zaawansowane.','msg-dopracuj-bez-zmian':'Tekst ma już {n}/100, samokorekta nie znalazła nic do poprawy. Zostaje bez zmian.','ver-serp':'Poprawa SERP','ver-wybor':'Wersja artykułu',
     'spin-sub-model':'model przetwarza temat i bazę wiedzy','spin-sub-hybrid2':'optymalizuję jednocześnie pod SEO, AIO i czytelnika',
     'link-suggest-prefix':'Rozważ link do','link-suggest-at':'przy słowach:',
     'gap-still-missing':'Nadal brakujące tematy','gap-szukam':'Szukam źródeł i piszę sekcje…','gap-bez-zrodel':'Nowe sekcje potrzebują źródeł. Baza wiedzy jest pusta, a wyszukiwanie w sieci wyłączone, więc tych tematów nie da się opisać bez zmyślania.','gap-wlacz-siec':'Włącz wyszukiwanie w sieci i popraw','gap-inny-artykul':'Poprawa dotyczyła poprzedniego artykułu, więc jej wynik nie został wstawiony.','gap-pusto':'Model nie zwrócił nowych sekcji. Spróbuj ponownie.','gap-dopisane':'Dopisano sekcje: {n}. Wynik w zakładce Luki.','gap-serp-blad':'Analiza SERP nie powiodła się przy generowaniu, więc nie ma z czym porównać tekstu. Wygeneruj artykuł ponownie z włączoną analizą SERP.','serp-blad-toast':'Analiza SERP nie powiodła się. Artykuł powstaje bez niej.','gap-pkt':'pkt','gap-bez-zrodel-baza':'Tematy bez pokrycia w zaznaczonych dokumentach: {n}. Nie dodano dla nich pustych sekcji. Włącz wyszukiwanie w sieci albo dodaj materiał do bazy wiedzy.','gap-bez-zrodel-siec':'Tematy bez źródła: {n}. Nie dodano dla nich pustych sekcji, zostają na liście brakujących. Dodaj materiał do bazy wiedzy i spróbuj ponownie.',
@@ -5813,7 +5835,7 @@ var I18N = {
     'url-label':'URL',
     'bv-modal-full-title':'Brand voice',
     'bv-modal-desc-full':'Paste 2-5 existing company articles (or other texts). The app will extract the style profile and apply it to all future generations.',
-    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','msg-dopracuj-bez-zmian':'The text already scores {n}/100, self-review found nothing to improve. It stays as it is.','ver-serp':'SERP improvement','ver-wybor':'Article version',
+    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','nowy-artykul':'New article','nowy-artykul-title':'Clear the topic, keywords and guidelines to start the next article. The previous one stays in History.','nowy-artykul-gotowe':'Ready for a new article. The previous one is in History.','nowy-brief-wyczyszczony':'Brief cleared.','nowy-cofnij':'Undo','ustawienia-domyslne':'Restore default settings','ustawienia-domyslne-gotowe':'Default settings restored: type, length, tone, language, sources and advanced options.','msg-dopracuj-bez-zmian':'The text already scores {n}/100, self-review found nothing to improve. It stays as it is.','ver-serp':'SERP improvement','ver-wybor':'Article version',
     'spin-sub-model':'model processes topic and knowledge base','spin-sub-hybrid2':'optimizing for SEO, AIO and readability simultaneously',
     'link-suggest-prefix':'Consider linking','link-suggest-at':'at words:',
     'gap-still-missing':'Still missing topics','gap-szukam':'Finding sources and writing sections…','gap-bez-zrodel':'New sections need sources. The knowledge base is empty and web search is off, so these topics cannot be covered without inventing facts.','gap-wlacz-siec':'Turn on web search and improve','gap-inny-artykul':'The improvement was for the previous article, so its result was not inserted.','gap-pusto':'The model returned no new sections. Please try again.','gap-dopisane':'Sections added: {n}. See the Gaps tab for the result.','gap-serp-blad':'The SERP analysis failed during generation, so there is nothing to compare the text with. Generate the article again with SERP analysis on.','serp-blad-toast':'The SERP analysis failed. The article is being written without it.','gap-pkt':'pts','gap-bez-zrodel-baza':'Topics not covered by the selected documents: {n}. No empty sections were added. Turn on web search or add material to the knowledge base.','gap-bez-zrodel-siec':'Topics without a source: {n}. No empty sections were added; they stay on the missing list. Add material to the knowledge base and try again.',
@@ -7844,7 +7866,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
 // znikaly Fakty, AEO, GEO, Posluchaj, Dopracuj, przerobki i JSON-LD (kod-01).
 const PRZYCISKI_WYNIKU = ['edit-btn', 'copy-btn', 'dl-btn', 'dl-docx-btn', 'dl-pdf-btn', 'jsonld-btn',
   'fakty-btn', 'seo-btn', 'aio-btn', 'aeo-btn', 'geo-btn', 'links-btn', 'gap-btn',
-  'img-btn', 'titles-btn', 'repurpose-wrap', 'premium-fix-btn', 'tts-btn'];
+  'img-btn', 'titles-btn', 'repurpose-wrap', 'premium-fix-btn', 'tts-btn', 'nowy-art-btn'];
 function pokazPrzyciskiWyniku(widoczne, typ) {
   PRZYCISKI_WYNIKU.forEach(function (id) {
     const el = document.getElementById(id);
@@ -11029,7 +11051,10 @@ async function improveFromGaps() {
     const newKwRegex = /(<h2[^>]*>\s*(?:Kluczowe wnioski|Key takeaways|Wichtigste Erkenntnisse|Klíčové poznatky)\s*<\/h2>[\s\S]*)/i;
     const newKwMatch = aiOutput.match(newKwRegex);
     const updatedKw = newKwMatch ? newKwMatch[1].trimEnd() : null;
-    const surowe = newKwMatch ? aiOutput.slice(0, newKwMatch.index).trimEnd() : aiOutput;
+    // Znacznik wpisany do srodka naglowka (<h2>[AFTER: X] Tytul</h2>) idzie przed naglowek,
+    // inaczej ciecie po znaczniku rozbiloby sekcje.
+    const surowe = (newKwMatch ? aiOutput.slice(0, newKwMatch.index).trimEnd() : aiOutput)
+      .replace(/<h2([^>]*)>\s*(\[AFTER:[^\]\n]*\])\s*/gi, '$2\n<h2$1>');
 
     // Znaczniki [AFTER: ...] dziela odpowiedz na grupy sekcji z miejscem docelowym w artykule.
     const grupy = [];
@@ -11408,6 +11433,8 @@ function etykietaWersji(nazwa) {
 }
 
 function addVersion(html, label) {
+  // Stan Luk zostaje przy wersji, z ktorej powstaje nowa (Dopracuj, Poprawa SERP) - E-09.
+  zapiszStanLuk(versions[activeVersion]);
   versions.push({ html, label });
   activeVersion = versions.length - 1;
   renderVersionsBar();
@@ -12491,6 +12518,132 @@ function zapiszSzkic() {
   const szkic = { keywords: keywords.slice(0, 50) };
   POLA_SZKICU.forEach(id => { const el = document.getElementById(id); if (el) szkic[id] = el.value; });
   magazyn.setItem('cai_szkic', JSON.stringify(szkic));
+  odswiezNowyArtykul();
+}
+
+// ── Nowy artykul ────────────────────────────────────────────────────────
+// R6: po wygenerowaniu brief zostawal z tematem, frazami i wytycznymi poprzedniego tekstu,
+// wiec kolejny, inny artykul wymagal odswiezenia strony albo recznego czyszczenia pol.
+// Jedno dotkniecie czysci to, co dotyczy jednego tekstu (temat, frazy, wytyczne, wynik
+// z wersjami i panelami), a zostawia preferencje (typ, dlugosc, ton, jezyk, zrodla, opcje
+// zaawansowane - te przywraca osobno "Przywroc ustawienia domyslne"). Poprzedni artykul
+// zostaje w Historii, komunikat ma Cofnij.
+function jestCoCzyscic() {
+  const t = document.getElementById('topic'), ex = document.getElementById('extra'), art = document.getElementById('article');
+  return !!((t && t.value.trim()) || keywords.length || (ex && ex.value.trim()) || (art && art.style.display === 'block'));
+}
+function odswiezNowyArtykul() {
+  const widac = jestCoCzyscic();
+  ['nowy-artykul-btn', 'nowy-artykul-szyna'].forEach((id) => { const b = document.getElementById(id); if (b && b.hidden === widac) b.hidden = !widac; });
+}
+function dodajCofnij(toast, fn) {
+  if (!toast) return;
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'powiadomienie-akcja';
+  b.textContent = _t('nowy-cofnij');
+  b.onclick = () => { fn(); toast.classList.add('znika'); setTimeout(() => toast.remove(), 200); };
+  toast.insertBefore(b, toast.querySelector('.powiadomienie-zamknij'));
+}
+// Wynik jak przed pierwszym generowaniem (artykul jest juz w Historii).
+function wyczyscWynik() {
+  const art = document.getElementById('article');
+  versions = []; activeVersion = 0; pendingVersions = null;
+  const vb = document.getElementById('versions-bar');
+  vb.classList.remove('show', 'wiele-wersji');
+  vb.querySelectorAll('.ver-btn').forEach((el) => el.remove());
+  seoCache = null; aioCache = null;
+  ocenyWersji.seo.clear(); ocenyWersji.aio.clear();
+  serpData = null; serpBlad = false;
+  gapOpen = false; gapCache = null; gapBaseline = null; gapSelectedTopics = []; gapBezPokrycia = [];
+  gapImproveCount = 0; gapPreviousTopics = [];
+  const gp = document.getElementById('gap-panel'); if (gp) gp.style.display = 'none';
+  zrodlaSieciowe = []; stanSieci = null; ostatniaWiedzaSerwera = ''; trybUzupelniania = false;
+  pokazStanSieci(null, 0);
+  wyczyscStanArtykulu();
+  jezykArtykulu = '';
+  currentText = '';
+  biezacyHist = null;
+  magazyn.removeItem('cai_biezacy');
+  art.innerHTML = '';
+  art.style.display = 'none';
+  art.contentEditable = 'false';
+  document.getElementById('placeholder').style.display = '';
+  const ob = document.getElementById('out-badge');
+  ustawTekst(ob, 'badge-ready'); ob.className = 'badge';
+  pokazPrzyciskiWyniku(false);
+}
+function nowyArtykul() {
+  if (generowanieTrwa()) { ostrzezGenerowanieTrwa(); return; }
+  if (editMode) toggleEdit();
+  const art = document.getElementById('article'), ex = document.getElementById('extra'), t = document.getElementById('topic');
+  const maArtykul = art.style.display === 'block';
+  const byl = { temat: t.value, frazy: keywords.slice(), extra: ex ? ex.value : '', hist: maArtykul ? biezacyHist : null,
+    wersje: versions.slice(), aktywna: activeVersion, serp: serpData, zrodla: zrodlaSieciowe.slice(), stan: stanSieci };
+  t.value = '';
+  keywords.length = 0;
+  if (ex) ex.value = '';
+  renderKws(); // zapisuje szkic i odswieza przycisk
+  if (typeof closeBriefPanel === 'function') { try { closeBriefPanel(); } catch (e) { /* panel zamkniety */ } }
+  wyczyscWynik();
+  zapiszSzkic();
+  if (document.body.classList.contains('is-mobile')) ustawWidokMobilny('brief');
+  else { if (document.body.classList.contains('brief-zwiniety')) przelaczBrief(false); t.focus(); }
+  const toast = pokazPowiadomienie(_t(maArtykul ? 'nowy-artykul-gotowe' : 'nowy-brief-wyczyszczony'), 'ok', 10000);
+  dodajCofnij(toast, () => cofnijNowyArtykul(byl));
+}
+function cofnijNowyArtykul(byl) {
+  if (generowanieTrwa()) { ostrzezGenerowanieTrwa(); return; }
+  if (byl.hist && wpisHistorii(byl.hist)) {
+    otworzWGeneratorze(byl.hist);
+    // wersje i dane z chwili przed Nowym artykulem (wpis Historii ma tylko wybrana wersje)
+    versions = byl.wersje; activeVersion = byl.aktywna; renderVersionsBar();
+    serpData = byl.serp; zrodlaSieciowe = byl.zrodla; stanSieci = byl.stan;
+    if (stanSieci) pokazStanSieci(stanSieci, zrodlaSieciowe.length);
+    pokazPrzyciskiWyniku(true);
+  }
+  const t = document.getElementById('topic'), ex = document.getElementById('extra');
+  t.value = byl.temat;
+  if (ex) ex.value = byl.extra;
+  keywords.length = 0;
+  byl.frazy.forEach((k) => keywords.push(k));
+  renderKws();
+  // Z artykulem telefon pokazuje Wynik (jak otwarcie z Historii) - od razu widac, ze tekst wrocil.
+}
+// R6: ustawienia jak na starcie. Temat, frazy i wytyczne zostaja - od tego jest Nowy artykul.
+function przywrocUstawieniaDomyslne() {
+  const byl = {};
+  const zmien = (el, wartosc, pole) => { if (el[pole] !== wartosc) { el[pole] = wartosc; el.dispatchEvent(new Event('change', { bubbles: true })); } };
+  ['ctype', 'length', 'length-custom', 'tone', 'audience', 'dir-country'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    byl[id] = el.value;
+    const dom = el.tagName === 'SELECT' ? (([...el.options].find((o) => o.defaultSelected) || el.options[0] || {}).value) : el.defaultValue;
+    if (dom != null) zmien(el, dom, 'value');
+  });
+  // Jezyk tekstu znow idzie za jezykiem interfejsu (bez zdarzenia change, ktore zapisaloby go jako wybor autora).
+  const jez = document.getElementById('lang');
+  const jezStan = magazyn.getItem('cai_lang_tekstu');
+  if (jez) { byl.jezyk = jez.value; magazyn.removeItem('cai_lang_tekstu'); jez.value = currentLang === 'en' ? 'English' : 'Polski'; magazyn.setItem('cai_lang_tekstu', 'auto'); }
+  ['use-web', 'use-serp', 'use-aeo'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    byl[id] = el.checked;
+    zmien(el, el.defaultChecked, 'checked');
+  });
+  byl.premium = premiumMode;
+  if (premiumMode) togglePremium();
+  zapiszSzkic();
+  dodajCofnij(pokazPowiadomienie(_t('ustawienia-domyslne-gotowe'), 'ok', 10000), () => {
+    Object.keys(byl).forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      zmien(el, byl[id], typeof byl[id] === 'boolean' ? 'checked' : 'value');
+    });
+    if (jez && byl.jezyk != null) { jez.value = byl.jezyk; if (jezStan == null) magazyn.removeItem('cai_lang_tekstu'); else magazyn.setItem('cai_lang_tekstu', jezStan); }
+    if (byl.premium !== premiumMode) togglePremium();
+    zapiszSzkic();
+  });
 }
 (function przywrocSzkic() {
   const szkic = czytajJson('cai_szkic', null);
@@ -12557,6 +12710,10 @@ function ustawJezykTekstuDomyslny() {
   magazyn.setItem('cai_lang_tekstu', 'auto');
 }
 { const selJezyka = document.getElementById('lang'); if (selJezyka) selJezyka.addEventListener('change', function () { magazyn.setItem('cai_lang_tekstu', '1'); }); }
+// R6: Nowy artykul widoczny od razu przy pisaniu i przy pokazaniu albo schowaniu artykulu.
+['topic', 'extra'].forEach((id) => { const el = document.getElementById(id); if (el) el.addEventListener('input', odswiezNowyArtykul); });
+{ const artNowy = document.getElementById('article'); if (artNowy && window.MutationObserver) new MutationObserver(odswiezNowyArtykul).observe(artNowy, { attributes: true, attributeFilter: ['style'] }); }
+odswiezNowyArtykul();
 
 // Automatyczny zapis po każdej zmianie
 // (saveState() wywoływane bezpośrednio w addDoc i delDoc poniżej)
