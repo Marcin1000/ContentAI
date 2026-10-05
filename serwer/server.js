@@ -1612,9 +1612,10 @@ async function obsluz(req, res) {
       return odpowiedzJson(res, 403, { error: 'Do bazy wspólnej dodaje wyłącznie admin' });
     }
     try {
+      // R6-F (E-13): adres strony (pole url albo "Zrodlo: URL" w tresci) wraca w liscie /api/baza.
       const opis = await baza.dodaj({
         katalog: KONF.katalogBazy, zakres, login: sesja.login,
-        nazwa: dane.nazwa, tresc: dane.tresc, konfWektorow: KONF.wektory,
+        nazwa: dane.nazwa, tresc: dane.tresc, url: dane.url, konfWektorow: KONF.wektory,
       });
       console.log(`[baza] +${zakres} "${opis.nazwa}" (${opis.fragmentow} fragm., wektory: ${opis.zWektorami})`);
       return odpowiedzJson(res, 200, opis);

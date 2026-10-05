@@ -226,6 +226,20 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
     const pusto = await baza.szukaj({ katalog, login: 'nikt-taki', zapytanie: 'x', konfWektorow: { klucz: '' } });
     sprawdz('szukanie dziala przy samej wspolnej', Array.isArray(pusto.fragmenty));
 
+    // R6-F (E-13): adres strony w liscie - z pola url albo z naglowka "Zrodlo: URL" w tresci.
+    const zNaglowka = await baza.dodaj({ katalog, zakres: 'prywatna', login: 'ewa', nazwa: 'Strona', tresc: 'Źródło: https://example.com/oferta\n\nTresc strony o kurierze', konfWektorow: { klucz: '' } });
+    const zPola = await baza.dodaj({ katalog, zakres: 'prywatna', login: 'ewa', nazwa: 'Z polem', tresc: 'Tresc bez naglowka', url: 'https://example.com/cennik', konfWektorow: { klucz: '' } });
+    const zlyAdres = await baza.dodaj({ katalog, zakres: 'prywatna', login: 'ewa', nazwa: 'Zly', tresc: 'Tresc', url: 'javascript:alert(1)', konfWektorow: { klucz: '' } });
+    const bezAdresu = await baza.dodaj({ katalog, zakres: 'prywatna', login: 'ewa', nazwa: 'Notatka', tresc: 'Zwykly tekst, w srodku Źródło: https://x.example/', konfWektorow: { klucz: '' } });
+    sprawdz('baza: adres strony z naglowka "Źródło: URL" w tresci', zNaglowka.url === 'https://example.com/oferta');
+    sprawdz('baza: adres strony z pola url', zPola.url === 'https://example.com/cennik');
+    sprawdz('baza: adres spoza http(s) odrzucony, tekst bez naglowka bez adresu', zlyAdres.url === '' && bezAdresu.url === '');
+    const listaEwy = baza.lista({ katalog, login: 'ewa' }).filter((d) => d.zakres === 'prywatna');
+    sprawdz('baza: lista (GET /api/baza) zwraca adresy dokumentow', listaEwy.map((d) => d.url).join('|') === 'https://example.com/oferta|https://example.com/cennik||');
+    // dokument zapisany przed zmiana (bez pola url) - adres z pierwszego fragmentu
+    const stary = { id: 'x', nazwa: 'Stary', zakres: 'prywatna', fragmenty: [{ tekst: '[Źródło: https://example.com/stary]\n\nTresc', wektor: null }] };
+    sprawdz('baza: dokument sprzed zmiany ma adres z tresci', baza.opis(stary).url === 'https://example.com/stary');
+
     global.fetch = oryginalnyFetch;
     fs.rmSync(katalog, { recursive: true, force: true });
 
@@ -1707,6 +1721,18 @@ async function testyPoprawek() {
       const getWlasny = await zadanie('/auth/logout', { headers: { cookie: cGet, 'sec-fetch-site': 'same-origin' } });
       sprawdz('GET /auth/logout z wlasnej strony nadal dziala (zgodnosc)', getWlasny.status === 302
         && (await zadanie('/auth/me', { headers: { cookie: cGet } })).status === 401);
+    }
+
+    console.log('\n  baza wiedzy: adres strony w liscie (R6-F, E-13)');
+    {
+      const zWlasnej = { origin: ADRES, 'sec-fetch-site': 'same-origin' };
+      const a = await zadanie('/api/baza', json(cAdmin, { nazwa: 'Strona z adresem', tresc: 'Źródło: https://example.com/uslugi\n\nOpis uslug firmy' }, zWlasnej));
+      const b = await zadanie('/api/baza', json(cAdmin, { nazwa: 'Strona z polem', tresc: 'Opis cennika firmy', url: 'https://example.com/cennik' }, zWlasnej));
+      const lista = (await (await zadanie('/api/baza', { headers: { cookie: cAdmin } })).json()).dokumenty || [];
+      const adres = (n) => ((lista.find((d) => d.nazwa === n) || {}).url);
+      sprawdz('POST /api/baza: adres z naglowka "Źródło: URL" i z pola url', a.status === 200 && b.status === 200);
+      sprawdz('GET /api/baza zwraca url dokumentu (Linki widza Baze na serwerze)',
+        adres('Strona z adresem') === 'https://example.com/uslugi' && adres('Strona z polem') === 'https://example.com/cennik', JSON.stringify(lista.map((d) => [d.nazwa, d.url])));
     }
 
     console.log('\n  koszt: modele, max_tokens, grafiki');

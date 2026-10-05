@@ -99,7 +99,7 @@ function sprawdzNazwe(opis, nazwa, h1, rozszerzenie) {
     nazwa + ' / H1: ' + pelny);
 }
 
-const ZAKAZANE = ['LOGIN-W-ADRESIE', 'HASLO-W-ADRESIE', 'days ago', 'var(--', 'EKRAN-TYLKO', 'UKRYTE-DOM', 'UKRYTE-SR', 'NOTATKA-AUTORA', 'data-tylko-ekran', 'data-brak'];
+const ZAKAZANE = ['LOGIN-W-ADRESIE', 'HASLO-W-ADRESIE', 'days ago', 'var(--', 'EKRAN-TYLKO', 'UKRYTE-DOM', 'UKRYTE-SR', 'Brak pokrycia', 'data-tylko-ekran', 'data-brak'];
 function sprawdzTresc(opis, tekst) {
   const znalezione = ZAKAZANE.filter((z) => tekst.indexOf(z) >= 0);
   wynik(opis + ': bez "days ago", var(--, elementow ekranowych, niewidocznych, notatek o lukach i hasel w linkach', !znalezione.length, znalezione.join(', '));
@@ -204,7 +204,8 @@ async function doklejPulapki(s) {
       + '<p>Akapit ze stylem <span style="color:var(--text3)">motywu</span> zostaje bez stylu.</p>'
       + '<p>Link z loginem: <a href="https://LOGIN-W-ADRESIE:HASLO-W-ADRESIE@example.com/x">panel</a>.</p>'
       + '<h2>Czy kod JSON-LD jest bezpieczny?</h2><p>Tekst z </p>'
-      + '<h2>Sekcja bez pokrycia</h2><p data-brak="1">NOTATKA-AUTORA</p>';
+      // R6-F (E-02): notatka z tekstem aplikacji (akapit z tekstem autora zostaje - test_dymny).
+      + '<h2>Sekcja bez pokrycia</h2><p data-brak="1">' + tekstWJezyku('gap-brak-pokrycia', 'pl') + '</p>';
     if (zrodla) zrodla.insertAdjacentHTML('beforebegin', html); else art.insertAdjacentHTML('beforeend', html);
     // Tekst zamykajacy znacznik skryptu w tresci (jako tekst, nie znacznik).
     const ps = art.querySelectorAll('h2 + p:not([data-brak])');

@@ -868,6 +868,277 @@ async function wariantNowyArtykul(b) {
   await k.close();
 }
 
+// R6-F (wykonawca F, runda 6, audyt E poza Lukami). Telefon 412x915, konto standard: pusta Baza
+// (Fakty wzgledem stron z sieci), potem strona z adresem w Bazie na serwerze (Linki). Na koncu
+// Wstecz, bo ostatni krok naprawde opuszcza strone. Kazdy scenariusz pada na 52ad6c5.
+async function wariantR6F(b) {
+  // Interfejs i artykul po polsku (komunikaty, odmiana i polski sklad w eksporcie sa sprawdzane po polsku).
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, acceptDownloads: true, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); if (!localStorage.getItem('cai_lang')) localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  const bledy = [];
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  const s = await zaloguj(k, 'standard');
+  const zapytania = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url())) zapytania.push(z.postData() || ''); });
+  const ile = (re) => zapytania.filter((t) => re.test(t)).length;
+  const ostatnie = (re) => zapytania.filter((t) => re.test(t)).pop() || '';
+  const tresc = (cialo) => { try { const c = JSON.parse(cialo); return String(c.system || '') + '\n' + (c.messages || []).map((m) => (typeof m.content === 'string' ? m.content : JSON.stringify(m.content))).join('\n'); } catch (e) { return ''; } };
+  const gotowe = (ms) => s.waitForFunction(() => /ready|uwaga/.test(document.getElementById('out-badge').className) && !document.getElementById('gen-btn').disabled
+    && getComputedStyle(document.getElementById('spinner')).display === 'none' && getComputedStyle(document.getElementById('article')).display === 'block', null, { timeout: ms || 60000 });
+  const pobierzPlik = async (wywolanie) => {
+    const [d] = await Promise.all([s.waitForEvent('download', { timeout: 30000 }), s.evaluate(wywolanie)]);
+    const sciezka = await d.path();
+    return fs.readFileSync(sciezka);
+  };
+  const NOTATKA = await s.evaluate(() => (typeof tekstWJezyku === 'function' ? tekstWJezyku('gap-brak-pokrycia', 'pl') : I18N.pl['gap-brak-pokrycia']));
+
+  // Artykul z siecia i SERP. E-19: regula "fraza nie jako podmiot zdania" w prompcie generowania.
+  await s.evaluate(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); });
+  await s.fill('#topic', 'Jak wybrać pompę ciepła do domu');
+  await s.evaluate(() => { document.getElementById('use-web').checked = true; document.getElementById('use-serp').checked = true; generate(); });
+  await krok('R6-F artykul z siecia i SERP', gotowe(60000));
+  wynik('telefon: R6-F E-19 regula frazy (nie jako podmiot zdania) w prompcie generowania',
+    /KEYWORD AS SUBJECT/.test(tresc(ostatnie(/You are an SEO and content writer|You are an expert content strategist/))), '');
+
+  // E-14: statystyki = eksport. Dwie sekcje z notatka o luce (bez tresci) nie wchodza do liczby slow
+  // ani sekcji; skrot "N slow · M min" i wpis Historii licza to samo co pasek.
+  await s.evaluate((notatka) => {
+    const art = document.getElementById('article');
+    const html = '<h2>Sekcja R6F jeden</h2><p data-brak="1">' + notatka + '</p><h2>Sekcja R6F dwa</h2><p data-brak="1">' + notatka + '</p>';
+    const przed = art.querySelector('.zrodla-box') || art.querySelector('.meta-box');
+    if (przed) przed.insertAdjacentHTML('beforebegin', html); else art.insertAdjacentHTML('beforeend', html);
+  }, NOTATKA);
+  const statystyki = () => s.evaluate(() => {
+    const art = document.getElementById('article');
+    const kopia = art.cloneNode(true);
+    kopia.querySelectorAll('.zrodla-box, .meta-box, [data-tylko-ekran], p[data-brak]').forEach((e) => e.remove());
+    // naglowek, pod ktorym po notatce nic nie zostalo, tez nie jest trescia
+    [...kopia.querySelectorAll('h2')].forEach((h) => { const n = h.nextElementSibling; if (!n || /^H[12]$/.test(n.tagName)) h.remove(); });
+    const bloki = [...kopia.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,th,td,blockquote')].filter((e) => !e.querySelector('h1,h2,h3,h4,h5,h6,p,li,th,td,blockquote'));
+    const slowa = bloki.reduce((n, e) => n + (e.textContent || '').split(/\s+/).filter(Boolean).length, 0);
+    const wpis = wpisHistorii(biezacyHist);
+    return { oczekiwane: slowa, h2: kopia.querySelectorAll('h2').length, pasek: Number(document.getElementById('stat-words').textContent),
+      sekcje: Number(document.getElementById('stat-h2').textContent), skrot: (document.getElementById('stat-skrot-tekst') || {}).textContent || '',
+      historia: wpis ? wpis.words : -1 };
+  });
+  await s.evaluate(() => { toggleEdit(); toggleEdit(); });
+  const st1 = await statystyki();
+  wynik('telefon: R6-F E-14 statystyki jak eksport (bez notatek o lukach, zrodel i meta), skrot i Historia te same',
+    st1.pasek === st1.oczekiwane && st1.sekcje === st1.h2 && st1.skrot.indexOf(String(st1.pasek) + ' ') === 0 && st1.historia === st1.pasek, JSON.stringify(st1));
+
+  // E-02: tekst wpisany w miejsce notatki i nowy akapit z Entera pod notatka sa trescia (bez data-brak).
+  await s.evaluate(() => { if (!editMode) toggleEdit(); });
+  await s.evaluate(() => {
+    const p = [...document.querySelectorAll('#article h2')].find((h) => h.textContent === 'Sekcja R6F jeden').nextElementSibling;
+    const art = document.getElementById('article'); art.focus();
+    const r = document.createRange(); r.selectNodeContents(p);
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  });
+  await s.keyboard.type('Tekst autora wpisany w sekcji jeden.');
+  await s.evaluate(() => {
+    const p = [...document.querySelectorAll('#article h2')].find((h) => h.textContent === 'Sekcja R6F dwa').nextElementSibling;
+    const r = document.createRange(); r.selectNodeContents(p); r.collapse(false);
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  });
+  await s.keyboard.press('Enter');
+  await s.keyboard.type('Akapit autora pod notatka w sekcji dwa.');
+  const ed = await s.evaluate(() => {
+    const art = document.getElementById('article');
+    const p1 = [...art.querySelectorAll('p')].find((p) => /Tekst autora wpisany w sekcji jeden/.test(p.textContent));
+    const p2 = [...art.querySelectorAll('p')].find((p) => /Akapit autora pod notatka/.test(p.textContent));
+    return { p1: !!p1, p1brak: !!(p1 && p1.hasAttribute('data-brak')), p2: !!p2, p2brak: !!(p2 && p2.hasAttribute('data-brak')), notatki: art.querySelectorAll('p[data-brak]').length };
+  });
+  await s.evaluate(() => { if (editMode) toggleEdit(); document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()); });
+  wynik('telefon: R6-F E-02 tekst wpisany w notatke i akapit z Entera traca data-brak (notatka obok zostaje)',
+    ed.p1 && !ed.p1brak && ed.p2 && !ed.p2brak && ed.notatki === 1, JSON.stringify(ed));
+  const st2 = await statystyki();
+  wynik('telefon: R6-F E-14 po edycji statystyki licza tekst autora, nie notatke', st2.pasek === st2.oczekiwane && st2.pasek > st1.pasek && st2.sekcje === st1.sekcje + 2, JSON.stringify({ st1, st2 }));
+
+  // Eksport: TXT z tekstem autora i naglowkami, bez notatki; komunikat jako ostrzezenie, z instrukcja.
+  // E-18: polski sklad - twarda spacja po jednoliterowych wyrazach w TXT, DOCX i PDF (ekran bez zmian),
+  // krotkie akapity PDF w calosci na jednej stronie.
+  const txt = (await pobierzPlik(() => dlTxt())).toString('utf8');
+  const toast = await s.evaluate(() => [...document.querySelectorAll('.powiadomienie')].map((p) => p.className + '|' + p.textContent).join(' || '));
+  // Twarde spacje z E-18 (po "w") porownujemy jak zwykle.
+  const txtZw = txt.replace(/\u00a0/g, ' ');
+  wynik('telefon: R6-F E-02 tekst autora i naglowki sekcji w pliku, sama notatka pominieta',
+    /Tekst autora wpisany w sekcji jeden/.test(txtZw) && /Akapit autora pod notatka w sekcji dwa/.test(txtZw) && /Sekcja R6F jeden/.test(txtZw) && /Sekcja R6F dwa/.test(txtZw)
+    && txtZw.indexOf(NOTATKA.slice(0, 30)) < 0, txtZw.slice(0, 200));
+  wynik('telefon: R6-F E-02/E-17 komunikat eksportu jako ostrzezenie z instrukcja (usun notatke albo wpisz tresc)',
+    /powiadomienie-uwaga\|[^|]*pominięte w eksporcie: 1[^|]*Usuń notatkę albo wpisz w jej miejsce treść/.test(toast), toast);
+  const JEDNA = /(^|[\s(„"])[aiouwzAIOUWZ] /m, TWARDA = /(^|[\s(„" ])[aiouwzAIOUWZ] /;
+  await s.evaluate(async () => {
+    await wczytajSkrypt('pwa/lib/docx-natywny.js');
+    const org = window.DocxNatywny.zbuduj;
+    window.DocxNatywny.zbuduj = function (el) { window.__docxTekst = el.textContent; return org.apply(this, arguments); };
+    await new Promise((ok) => zaladujPdfMake(ok));
+    const orgPdf = pdfMake.createPdf;
+    pdfMake.createPdf = function (dd) { window.__dd = JSON.parse(JSON.stringify(dd)); return orgPdf.apply(this, arguments); };
+  });
+  await pobierzPlik(() => dlDocx());
+  await pobierzPlik(() => dlPdf());
+  const typo = await s.evaluate(() => {
+    const dd = window.__dd || {};
+    const akapity = (dd.content || []).filter((e) => e && (e.style === 'p' || (Array.isArray(e.style) && e.style.indexOf('p') >= 0)));
+    const tekstPdf = akapity.map((e) => (Array.isArray(e.text) ? e.text.map((c) => c.text || '').join('') : String(e.text || ''))).join('\n');
+    return { docx: window.__docxTekst || '', pdf: tekstPdf, krotkieRazem: akapity.filter((e) => e.unbreakable).length, akapitow: akapity.length,
+      ekran: document.getElementById('article').textContent };
+  });
+  wynik('telefon: R6-F E-18 twarde spacje po jednoliterowych wyrazach w TXT, DOCX i PDF, ekran bez zmian',
+    TWARDA.test(txt) && !JEDNA.test(txt) && TWARDA.test(typo.docx) && !JEDNA.test(typo.docx) && TWARDA.test(typo.pdf) && !JEDNA.test(typo.pdf)
+    && !/[aiouwzAIOUWZ] /.test(typo.ekran), JSON.stringify({ txt: (txt.match(JEDNA) || [''])[0], docx: (typo.docx.match(JEDNA) || [''])[0], pdf: (typo.pdf.match(JEDNA) || [''])[0] }));
+  wynik('telefon: R6-F E-18 krotkie akapity PDF w calosci na jednej stronie (unbreakable)', typo.krotkieRazem > 0 && typo.krotkieRazem <= typo.akapitow, JSON.stringify({ krotkieRazem: typo.krotkieRazem, akapitow: typo.akapitow }));
+
+  // E-17: AEO z odmiana liczebnika (3 nagłówki-pytania, 32 słowa); GEO bez obietnicy JSON-LD i FAQPage.
+  const aeoGeo = await s.evaluate(() => {
+    const art = document.getElementById('article');
+    [...art.querySelectorAll('h2')].forEach((h, i) => { const t = h.textContent.replace(/\?\s*$/, ''); h.textContent = i < 3 ? t + '?' : t; });
+    const p = [...art.querySelectorAll('p')].find((x) => !x.closest('.meta-box'));
+    if (p) p.textContent = Array.from({ length: 32 }, (_, i) => (i ? 'słowo' : 'Pierwsze')).join(' ') + '.';
+    inspektorPokaz('aeo');
+    const aeo = document.getElementById('aeo-content').innerText.replace(/\s+/g, ' ');
+    inspektorPokaz('geo');
+    const geo = document.getElementById('geo-content').innerText.replace(/\s+/g, ' ');
+    inspektorZamknij();
+    return { aeo, geo };
+  });
+  wynik('telefon: R6-F E-17 AEO z odmiana liczebnika (3 nagłówki-pytania, 32 słowa)',
+    /FAQ: 3 nagłówki-pytania/.test(aeoGeo.aeo) && /pierwszy akapit 32 słowa\b/.test(aeoGeo.aeo), aeoGeo.aeo.slice(0, 200));
+  wynik('telefon: R6-F E-17 GEO opisuje to, co liczy (bez JSON-LD i FAQPage)', !/JSON-LD|FAQPage/.test(aeoGeo.geo) && /pyta/.test(aeoGeo.geo), aeoGeo.geo.slice(0, 200));
+
+  // E-17: "Popraw artykul pod brakujace tematy" przyklejony do dolu arkusza (360x700: bez tego pod zgieciem),
+  // a po przewinieciu do konca nie zaslania ostatniego elementu.
+  await s.setViewportSize({ width: 360, height: 700 });
+  await s.evaluate(() => inspektorPokaz('luki'));
+  await krok('R6-F analiza luk', s.waitForFunction(() => document.querySelectorAll('#gap-missing .gap-miss-check').length > 0, null, { timeout: 30000 }));
+  await s.waitForTimeout(400);
+  const lepki = await s.evaluate(async () => {
+    const b = document.getElementById('gap-improve-btn'), t = document.querySelector('#inspektor .ins-tresc');
+    t.scrollTop = 0;
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const rb = b.getBoundingClientRect(), rt = t.getBoundingClientRect();
+    const w = { pozycja: getComputedStyle(b).position, widoczny: rb.top >= rt.top && rb.bottom <= rt.bottom + 1, dol: Math.round(rt.bottom - rb.bottom), przewiniecie: t.scrollHeight - t.clientHeight };
+    t.scrollTop = t.scrollHeight;
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const ost = [...t.querySelectorAll('.gap-topic-row, .gap-miss-item, #gap-no-serp, #gap-present > *')].filter((e) => e.getClientRects().length).pop();
+    if (ost) { const ro = ost.getBoundingClientRect(); const x = document.elementFromPoint(ro.left + 20, ro.top + ro.height / 2); w.ostatniWidoczny = !!x && (ost === x || ost.contains(x)); }
+    t.scrollTop = 0;
+    return w;
+  });
+  await s.evaluate(() => inspektorZamknij());
+  await s.setViewportSize({ width: 412, height: 915 });
+  wynik('telefon: R6-F E-17 Popraw pod brakujace tematy przyklejony do dolu arkusza, ostatni element odsloniety',
+    lepki.pozycja === 'sticky' && lepki.widoczny && lepki.przewiniecie > 0 && lepki.ostatniWidoczny === true, JSON.stringify(lepki));
+
+  // E-07 + E-10: Fakty przy pustej Bazie porownuja artykul ze stronami z sieci (cytowane fragmenty),
+  // z dopiskiem w panelu; wyjscie z zakladki i powrot w trakcie nie wysyla drugiej kontroli.
+  await s.evaluate(() => {
+    const art = document.getElementById('article');
+    const meta = art.querySelector('.zrodla-box') || art.querySelector('.meta-box');
+    const p = document.createElement('p'); p.id = 'r6f-opoznienie'; p.textContent = 'Notatka redakcji do kontroli [atrapa:opoznienie=2500@fakty].';
+    if (meta) meta.before(p); else art.appendChild(p);
+    inspektorPokaz('fakty');
+  });
+  await s.waitForTimeout(500);
+  await s.evaluate(() => inspektorPokaz('aeo'));
+  await s.waitForTimeout(300);
+  await s.evaluate(() => inspektorPokaz('fakty'));
+  await krok('R6-F kontrola faktow', s.waitForFunction(() => getComputedStyle(document.getElementById('fakty-loading')).display === 'none' && document.getElementById('fakty-wynik').textContent.trim().length > 0, null, { timeout: 30000 }));
+  await s.waitForTimeout(300);
+  const fakty = await s.evaluate(() => ({ dopisek: !!document.querySelector('#fakty-wynik .fakty-wzgledem-sieci'), pusty: !!document.querySelector('#fakty-wynik .fakty-pusty'),
+    tekst: document.getElementById('fakty-wynik').textContent.slice(0, 160) }));
+  const zapFakty = tresc(ostatnie(/You are a fact checker/));
+  wynik('telefon: R6-F E-07 Fakty przy pustej Bazie porownuja ze stronami z sieci (cytowane fragmenty), z dopiskiem',
+    ile(/You are a fact checker/) >= 1 && /WEB SOURCES[\s\S]*\n {2}> "/.test(zapFakty) && fakty.dopisek && !fakty.pusty, JSON.stringify(Object.assign({ zapytan: ile(/You are a fact checker/) }, fakty)));
+  wynik('telefon: R6-F E-10 powrot na Fakty w trakcie kontroli czeka na nia (jedno zapytanie)', ile(/You are a fact checker/) === 1, 'zapytan: ' + ile(/You are a fact checker/));
+  await s.evaluate(() => { inspektorZamknij(); const p = document.getElementById('r6f-opoznienie'); if (p) p.remove(); });
+
+  // E-10: SEO -> AIO -> SEO w trakcie oceny SEO = jedna platna ocena, wynik rysuje sie po powrocie.
+  const seoPrzed = ile(/content SEO expert evaluating[\s\S]*\\"items\\"/);
+  await s.evaluate(() => { kontekstArt.temat = String(kontekstArt.temat || '') + ' [atrapa:opoznienie=2500@ocena-seo]'; inspektorPokaz('seo'); });
+  await s.waitForTimeout(400);
+  await s.evaluate(() => inspektorPokaz('aio'));
+  await s.waitForTimeout(300);
+  await s.evaluate(() => inspektorPokaz('seo'));
+  await krok('R6-F ocena SEO', s.waitForFunction(() => !!document.querySelector('#seo-content .seo-score-ring'), null, { timeout: 30000 }));
+  const seoZapytan = ile(/content SEO expert evaluating[\s\S]*\\"items\\"/) - seoPrzed;
+  await s.evaluate(() => { inspektorZamknij(); kontekstArt.temat = String(kontekstArt.temat || '').replace(/ \[atrapa:[^\]]*\]/g, ''); });
+  wynik('telefon: R6-F E-10 SEO -> AIO -> SEO w trakcie oceny: jedna ocena SEO, wynik po powrocie', seoZapytan === 1, 'ocen SEO: ' + seoZapytan);
+
+  // E-19: ta sama regula w ocenie i w poprawie samokorekty (Dopracuj).
+  await s.evaluate(() => { kontekstArt.temat = String(kontekstArt.temat || '') + ' [atrapa:ocena=55@ocena-premium]'; runPostGenerationPremium(); });
+  await krok('R6-F Dopracuj', s.waitForFunction(() => versions.length >= 2, null, { timeout: 30000 }).then(() => gotowe(30000)));
+  await s.evaluate(() => { kontekstArt.temat = String(kontekstArt.temat || '').replace(/ \[atrapa:[^\]]*\]/g, ''); });
+  const ocenaS = tresc(ostatnie(/strict hybrid SEO\+AIO content evaluator|"AIO evaluator\.|"SEO content evaluator\./));
+  const poprawaS = tresc(ostatnie(/You are an? (hybrid SEO\+AIO|SEO|AIO) editor\. Fix only the listed issues/));
+  wynik('telefon: R6-F E-19 regula frazy w ocenie i poprawie samokorekty', /KEYWORD AS SUBJECT/.test(ocenaS) && /KEYWORD AS SUBJECT/.test(poprawaS),
+    JSON.stringify({ ocena: ocenaS.length, poprawa: poprawaS.length }));
+
+  // E-12: artykul bez danych SERP (z Historii) - zakladka SERP naprawde znika (hidden przegrywal z display).
+  await s.evaluate(() => { otworzWGeneratorze(history[0].id); });
+  await s.waitForTimeout(400);
+  await s.evaluate(() => inspektorPokaz('luki'));
+  await s.waitForTimeout(300);
+  const zakl = await s.evaluate(() => { const z = document.querySelector('.ins-zakl[data-ins="serp"]');
+    return { hidden: z.hidden, display: getComputedStyle(z).display, serpData: !!serpData }; });
+  await s.evaluate(() => inspektorZamknij());
+  wynik('telefon: R6-F E-12 zakladka SERP bez danych niewidoczna', zakl.hidden && zakl.display === 'none' && !zakl.serpData, JSON.stringify(zakl));
+
+  // E-13: strona dodana do Bazy (na serwerze) jest w sugestiach linkow - lista /api/baza zwraca jej adres.
+  await s.evaluate(() => addDoc('Pompy ciepla - oferta montazu', 'Pompy ciepla do domu: dobor mocy, montaz i serwis. Oferta dla domow jednorodzinnych.', '🔗', 'https://example.com/pompy-ciepla'));
+  await krok('R6-F dokument z adresem w Bazie na serwerze', s.waitForFunction(() => (window._bazaSerwer || []).some((d) => d.url === 'https://example.com/pompy-ciepla'), null, { timeout: 10000 }));
+  await s.evaluate(() => inspektorPokaz('linki'));
+  await s.waitForTimeout(300);
+  const linki = await s.evaluate(() => ({ lista: document.getElementById('links-list').textContent.replace(/\s+/g, ' ').slice(0, 200), lokalne: docs.length }));
+  await s.evaluate(() => inspektorZamknij());
+  wynik('telefon: R6-F E-13 Linki biora adresy z Bazy na serwerze', /https:\/\/example\.com\/pompy-ciepla/.test(linki.lista) && linki.lokalne === 0, JSON.stringify(linki));
+
+  // E-04: Wstecz przy otwartym arkuszu zamyka arkusz bez przeladowania; zamkniecie krzyzykiem zdejmuje
+  // wpis historii, wiec nastepne Wstecz dziala zwyczajnie (opuszcza strone).
+  wynik('telefon: R6-F bez bledow JavaScript (przed Wstecz)', !bledy.length, bledy.join(' | '));
+  const stanWstecz = () => s.evaluate(() => ({ znacznik: window.__bezPrzeladowania === 1, inspektor: document.body.classList.contains('inspektor-otwarty'),
+    konto: document.getElementById('settings-menu').classList.contains('open'), baza: document.getElementById('mobile-sidebar').classList.contains('open'),
+    nasz: !!(window.history.state && window.history.state.cai), artykul: getComputedStyle(document.getElementById('article')).display }));
+  await s.evaluate(() => { window.__bezPrzeladowania = 1; inspektorPokaz('aeo'); });
+  await s.waitForTimeout(300);
+  const w0 = await stanWstecz();
+  await krok('R6-F Wstecz przy inspektorze', s.goBack({ timeout: 5000 }));
+  await s.waitForTimeout(400);
+  const w1 = await stanWstecz().catch((e) => ({ blad: String(e) }));
+  wynik('telefon: R6-F E-04 Wstecz zamyka inspektor, strona sie nie przeladowuje', w0.inspektor && w0.nasz && w1.znacznik === true && !w1.inspektor && w1.artykul === 'block', JSON.stringify({ w0, w1 }));
+  await s.evaluate(() => { if (typeof otworzKontoMobilne === 'function') otworzKontoMobilne(); }).catch(() => {});
+  await s.waitForTimeout(300);
+  await krok('R6-F Wstecz przy menu Konto', s.goBack({ timeout: 5000 }));
+  await s.waitForTimeout(400);
+  const w2 = await stanWstecz().catch((e) => ({ blad: String(e) }));
+  wynik('telefon: R6-F E-04 Wstecz zamyka menu Konto bez przeladowania', w2.znacznik === true && w2.konto === false, JSON.stringify(w2));
+  // Arkusz statystyk i menu grupy (Eksport) tak samo; liczba wpisow historii nie rosnie (bez petli).
+  const arkusze = [];
+  for (const otworz of [() => przelaczStatystyki(true), () => przelaczGrupe('pobierz')]) {
+    await s.evaluate(otworz).catch(() => {});
+    await s.waitForTimeout(300);
+    const przed = await s.evaluate(() => ({ otwarty: document.body.classList.contains('statystyki-otwarte') || !!document.querySelector('.grupa-menu.open'), dl: window.history.length })).catch((e) => ({ blad: String(e) }));
+    await krok('R6-F Wstecz przy arkuszu', s.goBack({ timeout: 5000 }));
+    await s.waitForTimeout(400);
+    const po = await s.evaluate(() => ({ znacznik: window.__bezPrzeladowania === 1, otwarty: document.body.classList.contains('statystyki-otwarte') || !!document.querySelector('.grupa-menu.open'), dl: window.history.length })).catch((e) => ({ blad: String(e) }));
+    arkusze.push({ przed, po });
+  }
+  wynik('telefon: R6-F E-04 Wstecz zamyka arkusz statystyk i menu grupy, bez nowych wpisow historii',
+    arkusze.every((a) => a.przed.otwarty && a.po.znacznik === true && a.po.otwarty === false && a.po.dl === a.przed.dl), JSON.stringify(arkusze));
+  await s.evaluate(() => { window.__bezPrzeladowania = 1; openMobileSidebar(); }).catch(() => {});
+  await s.waitForTimeout(300);
+  await krok('R6-F krzyzyk Bazy', s.click('#mobile-sidebar .przycisk-ikona', { timeout: 3000 }));
+  await s.waitForTimeout(500);
+  const w3 = await stanWstecz().catch((e) => ({ blad: String(e) }));
+  await krok('R6-F Wstecz po zamknieciu krzyzykiem', s.goBack({ timeout: 15000, waitUntil: 'load' }));
+  await s.waitForTimeout(800);
+  const w4 = await s.evaluate(() => ({ znacznik: window.__bezPrzeladowania === 1 })).catch((e) => ({ blad: String(e) }));
+  wynik('telefon: R6-F E-04 krzyzyk zdejmuje wpis arkusza, nastepne Wstecz dziala zwyczajnie (opuszcza strone)',
+    w3.znacznik === true && w3.baza === false && w3.nasz === false && w4.znacznik === false, JSON.stringify({ w3, w4 }));
+  if (bledow) await zrzut(s, 'telefon-r6f');
+  await k.close();
+}
+
 // Pliki z app/ pod http://127.0.0.1 - dla scenariuszy, ktore z file:// sa w CI niestabilne.
 let PORT_PLIKOW;
 const TYPY = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml',
@@ -900,6 +1171,7 @@ async function uruchomSerwerPlikow() {
     await wariantTelefonR6(b);
     await wariantTelefonR6Luki(b);
     await wariantNowyArtykul(b);
+    await wariantR6F(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));
