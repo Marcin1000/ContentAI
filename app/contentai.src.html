@@ -2734,6 +2734,8 @@ body.is-mobile .narzedzie-naglowek .modul-tytul { font-size: var(--t-lg) !import
 #fakty-wynik [style*="text-transform:uppercase"] { text-transform: none !important; letter-spacing: normal !important; }
 /* R7-I: adres w uwadze Faktow jako link (host i skrocona sciezka), jak odnosniki w artykule */
 #fakty-wynik .fakty-adres a { color: var(--c-dowod); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; overflow-wrap: anywhere; }
+/* telefon: link sam w linii, wiec pole dotyku 44 px (nie jest odnosnikiem w zdaniu) */
+body.is-mobile #fakty-wynik .fakty-adres a { display: inline-flex; align-items: center; min-height: var(--h-dotyk); min-width: var(--h-dotyk); }
 }
 @layer widoki {
 /* Baza wiedzy na telefonie (pelny ekran) nad paskami wyniku i naglowkiem, pod dolna nawigacja (zakladka Baza zostaje widoczna) */
