@@ -661,6 +661,23 @@ async function wariantTelefonR6(b) {
   await s.waitForTimeout(300);
   const poOdsw = await s.evaluate(() => ({ h2: document.querySelectorAll('#article h2').length, zrodla: document.querySelectorAll('#article .zrodla-box li').length }));
   wynik('telefon: R6 poprawa pod luki zapisana w historii (po odswiezeniu)', poOdsw.h2 === naEkranie && poOdsw.zrodla > 0, JSON.stringify({ naEkranie, poOdsw }));
+
+  // Dopracuj: druga wersja o tej samej nazwie dostaje numer; ocena ponad progiem konczy sie
+  // komunikatem (wczesniej cisza, jakby nic sie nie stalo).
+  const gotowe = () => s.waitForFunction(() => !document.getElementById('gen-btn').disabled && getComputedStyle(document.getElementById('spinner')).display === 'none', null, { timeout: 30000 });
+  // Atrapa zwraca tekst bez zmian, jesli ma juz jej zdanie "po poprawie" - zdejmujemy je przed kazdym Dopracuj.
+  const bezZdaniaAtrapy = () => document.querySelectorAll('#article p').forEach((p) => { if (/Ten przewodnik porządkuje|This guide organises/.test(p.textContent)) p.remove(); });
+  await s.evaluate((f) => { (new Function(f))(); kontekstArt.temat = 'Jak wybrać pompę ciepła [atrapa:ocena=55@ocena-premium]'; runPostGenerationPremium(); }, '(' + bezZdaniaAtrapy + ')()');
+  await krok('R6 Dopracuj 1', s.waitForFunction(() => versions.length === 2, null, { timeout: 30000 }).then(gotowe));
+  await s.evaluate((f) => { (new Function(f))(); runPostGenerationPremium(); }, '(' + bezZdaniaAtrapy + ')()');
+  await krok('R6 Dopracuj 2', s.waitForFunction(() => versions.length === 3, null, { timeout: 30000 }).then(gotowe));
+  const etyk = await s.evaluate(() => versions.map((v) => v.label));
+  wynik('telefon: R6 Dopracuj - powtorzona nazwa wersji z numerem', etyk.length === 3 && new Set(etyk).size === 3, JSON.stringify(etyk));
+  await s.evaluate(() => { document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()); kontekstArt.temat = 'Jak wybrać pompę ciepła [atrapa:ocena=90@ocena-premium]'; runPostGenerationPremium(); });
+  await s.waitForTimeout(300);
+  await krok('R6 Dopracuj bez uwag', gotowe());
+  const bezUwag = await s.evaluate(() => ({ wersje: versions.length, toast: [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent).join(' | ') }));
+  wynik('telefon: R6 Dopracuj bez uwag - komunikat z ocena zamiast ciszy', bezUwag.wersje === 3 && /90\/100/.test(bezUwag.toast), JSON.stringify(bezUwag));
   wynik('telefon: R6 bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow) await zrzut(s, 'telefon-r6');
   await k.close();

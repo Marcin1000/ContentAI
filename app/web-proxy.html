@@ -5269,7 +5269,7 @@ var I18N = {
     'url-label':'Adres URL',
     'bv-modal-full-title':'Głos marki (brand voice)',
     'bv-modal-desc-full':'Wklej 2-5 istniejących artykułów firmowych (lub innych tekstów). Aplikacja wyekstrahuje profil stylu i zastosuje go do wszystkich przyszłych generowań.',
-    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','ver-serp':'Poprawa SERP','ver-wybor':'Wersja artykułu',
+    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','msg-dopracuj-bez-zmian':'Tekst ma już {n}/100, samokorekta nie znalazła nic do poprawy. Zostaje bez zmian.','ver-serp':'Poprawa SERP','ver-wybor':'Wersja artykułu',
     'spin-sub-model':'model przetwarza temat i bazę wiedzy','spin-sub-hybrid2':'optymalizuję jednocześnie pod SEO, AIO i czytelnika',
     'link-suggest-prefix':'Rozważ link do','link-suggest-at':'przy słowach:',
     'gap-still-missing':'Nadal brakujące tematy','gap-szukam':'Szukam źródeł i piszę sekcje…','gap-bez-zrodel':'Nowe sekcje potrzebują źródeł. Baza wiedzy jest pusta, a wyszukiwanie w sieci wyłączone, więc tych tematów nie da się opisać bez zmyślania.','gap-wlacz-siec':'Włącz wyszukiwanie w sieci i popraw','gap-bez-zrodel-baza':'Tematy bez pokrycia w zaznaczonych dokumentach: {n}. Nie dodano dla nich pustych sekcji. Włącz wyszukiwanie w sieci albo dodaj materiał do bazy wiedzy.','gap-bez-zrodel-siec':'Tematy bez źródła: {n}. Nie dodano dla nich pustych sekcji, zostają na liście brakujących. Dodaj materiał do bazy wiedzy i spróbuj ponownie.',
@@ -5960,7 +5960,7 @@ var I18N = {
     'url-label':'URL',
     'bv-modal-full-title':'Brand voice',
     'bv-modal-desc-full':'Paste 2-5 existing company articles (or other texts). The app will extract the style profile and apply it to all future generations.',
-    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','ver-serp':'SERP improvement','ver-wybor':'Article version',
+    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','msg-dopracuj-bez-zmian':'The text already scores {n}/100, self-review found nothing to improve. It stays as it is.','ver-serp':'SERP improvement','ver-wybor':'Article version',
     'spin-sub-model':'model processes topic and knowledge base','spin-sub-hybrid2':'optimizing for SEO, AIO and readability simultaneously',
     'link-suggest-prefix':'Consider linking','link-suggest-at':'at words:',
     'gap-still-missing':'Still missing topics','gap-szukam':'Finding sources and writing sections…','gap-bez-zrodel':'New sections need sources. The knowledge base is empty and web search is off, so these topics cannot be covered without inventing facts.','gap-wlacz-siec':'Turn on web search and improve','gap-bez-zrodel-baza':'Topics not covered by the selected documents: {n}. No empty sections were added. Turn on web search or add material to the knowledge base.','gap-bez-zrodel-siec':'Topics without a source: {n}. No empty sections were added; they stay on the missing list. Add material to the knowledge base and try again.',
@@ -7885,18 +7885,19 @@ async function runPostGenerationPremium() {
   // Wlasny AbortController jak w generate(): Przerwij w spinnerze naprawde
   // zatrzymuje, a apiFetch konczy tez zadanie na serwerze.
   przerwanieGenerowania = new AbortController();
-  let stan = 'gotowe';
+  let stan = 'gotowe', zmiana = false;
 
   try {
     const articleText = kopia.innerText || kopia.textContent || '';
     const surowy = await doPremiumCorrection(doModelu, articleText, topic, kwText, ctype);
     const improved = surowy && surowy !== doModelu ? oczyscHtmlModelu(surowy) : '';
     if (improved) {
+      zmiana = true;
       art.innerHTML = wstawBlokZrodel(improved, zrodlaBox ? zrodlaBox.outerHTML : '');
       uporzadkujArtykul(art);
       // Artykul z Historii nie ma wersji: "przed" zostaje jako wariant do porownania.
       if (!versions.length) addVersion(przedHtml, _t('ver-before-premium'));
-      addVersion(htmlDoZapisu(art), _t('ver-after-premium'));
+      addVersion(htmlDoZapisu(art), etykietaWersji(_t('ver-after-premium')));
       // Wynik do biezacej wersji i do historii - po odswiezeniu wracala wersja
       // sprzed dopracowania.
       zapiszRecznePoprawki();
@@ -7906,6 +7907,8 @@ async function runPostGenerationPremium() {
     stan = e && e.name === 'AbortError' ? 'przerwane' : 'blad';
     if (stan === 'blad') powiadomBladApi(e, null, null, _t('msg-premium-blad'));
   }
+  // R6: ocena powyzej progu konczyla Dopracuj bez zmian i bez slowa - wygladalo, jakby nic sie nie stalo.
+  if (stan === 'gotowe' && !zmiana && samokorektaBezUwag !== null) pokazPowiadomienie(_t('msg-dopracuj-bez-zmian').replace('{n}', samokorektaBezUwag), 'info');
   przerwanieGenerowania = null;
   currentText = tekstBlokami(art);
   showArticleStats(art.innerHTML);
@@ -7931,7 +7934,10 @@ function wstawBlokZrodel(html, blok) {
 }
 
 // ── Właściwa logika samokorekcji - wywołana z generate() i runPostGenerationPremium()
+// Ocena z ostatniej samokorekty, gdy uznala tekst za dobry (od 82) i niczego nie zmienila; inaczej null.
+let samokorektaBezUwag = null;
 async function doPremiumCorrection(originalHtml, articleText, topic, kwText, ctype) {
+  samokorektaBezUwag = null;
   const isHybrid = ctype === 'Hybryda SEO + AIO';
   const isAio    = ctype === 'Treść AIO';
 
@@ -7969,6 +7975,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
 
   if (!evalResult || evalResult.score >= 82 || !evalResult.issues?.length) {
     // Artykuł już jest dobry - nie poprawiaj
+    samokorektaBezUwag = evalResult ? Math.round(Number(evalResult.score) || 0) : null;
     return originalHtml;
   }
 
@@ -11480,6 +11487,13 @@ document.addEventListener('visibilitychange', function () {
 let versions = [];
 let activeVersion = 0;
 let pendingVersions = null;
+
+// R6: kolejna wersja o tej samej nazwie dostaje numer ("Po samokorekcie 2"): Dopracuj na wersji
+// Przed albo Poprawa SERP dawal druga pozycje "Po samokorekcie" i na liscie nie dalo sie ich odroznic.
+function etykietaWersji(nazwa) {
+  const ile = versions.filter((v) => v.label === nazwa || String(v.label).indexOf(nazwa + ' ') === 0).length;
+  return ile ? nazwa + ' ' + (ile + 1) : nazwa;
+}
 
 function addVersion(html, label) {
   versions.push({ html, label });
