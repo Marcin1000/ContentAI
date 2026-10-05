@@ -132,6 +132,26 @@ function zapisz(katalog, zakres, login, dokumenty) {
 
 // ─── Operacje ─────────────────────────────────────────────────────────────────
 
+// ─── Adres strony dokumentu ───────────────────────────────────────────────────
+// R6-F (E-13): strona dodana do bazy z adresu ma ten adres takze na serwerze, zeby
+// sugestie linkow wewnetrznych widzialy Baze na serwerze (wczesniej lista nie miala
+// adresow, wiec zakladka Linki byla w wariancie z serwerem zawsze pusta).
+// Zrodla adresu: pole url przy dodawaniu albo naglowek "Zrodlo: URL" na poczatku tresci
+// (tak aplikacja zapisuje strony, takze w dokumentach dodanych przed ta zmiana).
+
+/** Adres http(s) albo pusty napis - nic innego nie trafia do listy. */
+function czystyAdres(adres) {
+  const t = String(adres || '').trim();
+  if (!/^https?:\/\/[^\s]+$/i.test(t) || t.length > 2000) return '';
+  try { return new URL(t).href; } catch { return ''; }
+}
+
+/** Adres z naglowka "Zrodlo: URL" (albo "[Zrodlo: URL]", z ogonkami lub bez) na poczatku tresci. */
+function adresZTresci(tresc) {
+  const m = /^\s*\[?(?:Źródło|Zrodlo|Source)\s*:\s*(https?:\/\/[^\s\]]+)/i.exec(String(tresc || '').slice(0, 2100));
+  return m ? czystyAdres(m[1]) : '';
+}
+
 /** Metadane bez fragmentow i wektorow - to idzie do przegladarki. */
 function opis(d) {
   return {
@@ -143,10 +163,11 @@ function opis(d) {
     znakow: d.znakow,
     fragmentow: (d.fragmenty || []).length,
     zWektorami: (d.fragmenty || []).some((f) => Array.isArray(f.wektor)),
+    url: czystyAdres(d.url) || adresZTresci(((d.fragmenty || [])[0] || {}).tekst),
   };
 }
 
-async function dodaj({ katalog, zakres, login, nazwa, tresc, konfWektorow }) {
+async function dodaj({ katalog, zakres, login, nazwa, tresc, url, konfWektorow }) {
   const fragmentyTekstu = podzielNaFragmenty(tresc);
   if (!fragmentyTekstu.length) throw new Error('dokument jest pusty');
 
@@ -159,6 +180,7 @@ async function dodaj({ katalog, zakres, login, nazwa, tresc, konfWektorow }) {
     wlasciciel: zakres === WSPOLNA ? null : login,
     dodany: new Date().toISOString(),
     znakow: String(tresc).length,
+    url: czystyAdres(url) || adresZTresci(tresc),
     fragmenty: fragmentyTekstu.map((tekst, i) => ({ tekst, wektor: wektory ? wektory[i] : null })),
   };
 
@@ -234,6 +256,7 @@ module.exports = {
   szukaj,
   doPromptu,
   opis,
+  adresZTresci,
   nazwaPliku,
   WSPOLNA,
   ROZMIAR_FRAGMENTU,

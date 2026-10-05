@@ -966,7 +966,11 @@ function odpLukiSekcje(cialo, ctx, zn) {
   const los = generator('luki|' + tematy.join('|'));
   const pula = t.akapity;
   const zd = () => wstaw(pula[Math.floor(los() * pula.length)], j === 'pl' ? 'rozwiązanie' : 'the solution');
-  let html = '';
+  // Spis istniejacych H2 (aplikacja prosi o [AFTER: ...] przed kazda nowa sekcja): atrapa stawia
+  // nowe sekcje za pierwsza istniejaca sekcja, zeby test widzial wstawianie w srodek artykulu.
+  const spis = ((ctx.usr.split(/Existing H2 sections, in order:\n/)[1] || '').split('\n'))
+    .map((l) => (l.match(/^- (.+)$/) || [])[1]).filter(Boolean);
+  let html = spis.length ? '[AFTER: ' + spis[0] + ']\n' : '';
   tematy.forEach((tem, i) => {
     if (tematy.length >= 3 && i === tematy.length - 1) {
       html += '<h2>' + esc(wielka(tem)) + '</h2><p data-brak="1">' + esc(brakTekst) + '</p>\n';

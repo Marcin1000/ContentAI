@@ -1532,6 +1532,8 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 @keyframes ramie { 0%, 100% { opacity: .22; } 20%, 45% { opacity: 1; } }
 .spinner-label { font-size: var(--t-lg); font-weight: var(--g-mocny); color: var(--c-tekst); }
 .spinner-sub { font-size: var(--t-sm); color: var(--c-tekst-3); }
+/* R6: dluzszy opis etapu ("szukam zrodel w sieci i sprawdzam...") zawija sie wysrodkowany, jak tytul nad nim */
+.spinner-wrap #spin-label, .spinner-sub { text-align: center; text-wrap: balance; max-width: 36em; }
 .spinner-czas { font-family: var(--f-mono); font-size: var(--t-xs); color: var(--c-tekst-3); margin-top: 0; }
 .spinner-stop { margin-top: var(--s-8); }
 .cin-progress { display: none; }
@@ -1703,6 +1705,27 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 .gap-topic-text.newly { color: var(--c-sukces); }
 .gap-miss-dot { background: var(--c-akcent); }
 .gap-delta-bar { background: var(--c-pole); border-color: var(--c-linia-2); border-radius: var(--r-md); }
+/* R6: strzalka miedzy wynikami jako ikona na srodku linii liczb (znak "→" siedzial na linii bazowej, nizej niz liczby) */
+.gap-delta-arrow { display: inline-flex; align-items: center; color: var(--c-tekst-3); }
+.gap-delta-arrow .ikona { width: 20px; height: 20px; }
+.gap-topic-icon .ikona { width: 16px; height: 16px; }
+.gap-topic-icon .ikona.ok { color: var(--c-sukces); } .gap-topic-icon .ikona.uwaga { color: var(--c-tekst-3); }
+.gap-info { margin: var(--s-8) 0; padding: var(--s-12); border-radius: var(--r-md); border: 1px solid var(--c-linia-2); background: var(--c-pole);
+  font-size: var(--t-sm); line-height: 1.45; color: var(--c-tekst-2); }
+.gap-info p { margin: 0 0 var(--s-8); } .gap-info p:last-child { margin-bottom: 0; }
+.gap-info.uwaga { border-color: var(--c-akcent-ramka); background: var(--c-akcent-tlo); color: var(--c-tekst); }
+.gap-info.blad { border-color: var(--c-blad); color: var(--c-blad); }
+.gap-info[hidden] { display: none; }
+/* R6: SERP - czolowka Google obok artykulu */
+.serp-stats { margin-bottom: var(--s-12); padding-bottom: var(--s-12); border-bottom: 1px solid var(--c-linia); }
+.serp-porownanie { display: grid; gap: 0; border: 1px solid var(--c-linia-2); border-radius: var(--r-md); overflow: hidden; background: var(--c-pole); }
+.serp-por-glowa, .serp-por-wiersz { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-8); align-items: baseline; padding: var(--s-8) var(--s-12); }
+.serp-por-glowa { font-size: var(--t-xs); color: var(--c-tekst-3); font-weight: var(--g-mocny); border-bottom: 1px solid var(--c-linia-2); }
+.serp-por-wiersz + .serp-por-wiersz { border-top: 1px solid var(--c-linia); }
+.serp-por-wiersz span { font-size: var(--t-sm); color: var(--c-tekst-2); }
+.serp-por-wiersz strong { font-size: var(--t-lg); font-weight: var(--g-mocny); color: var(--c-tekst); font-variant-numeric: normal; }
+.serp-por-glowa span:nth-child(n+2), .serp-por-wiersz strong { text-align: right; }
+.serp-por-opis { margin: var(--s-8) 0 0; font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
 .link-sug { border-bottom-color: var(--c-linia); }
 .bulk-item { border-bottom-color: var(--c-linia); }
 }
@@ -2451,6 +2474,30 @@ body.is-mobile .versions-bar .ver-btn { background: var(--c-wcisk); border-radiu
 body.is-mobile .versions-bar .ver-btn:first-of-type { border-radius: var(--r-sm) 0 0 var(--r-sm); padding-left: var(--s-10, 10px); }
 body.is-mobile .versions-bar .ver-btn:last-of-type { border-radius: 0 var(--r-sm) var(--r-sm) 0; }
 body.is-mobile .versions-bar .ver-btn.active { background: var(--c-nad); box-shadow: inset 0 0 0 2px var(--c-wcisk); border-radius: var(--r-sm); }
+/* R6: od trzech wersji zamiast segmentu jeden przycisk z nazwa biezacej wersji (odswiezWyborWersji) */
+.versions-bar .ver-wybor { display: none; }
+body.is-mobile .versions-bar.show.wiele-wersji .ver-btn, body.is-mobile .versions-bar.show.wiele-wersji .ver-podpis { display: none; }
+body.is-mobile .versions-bar.wiele-wersji .ver-wybor { position: relative; display: inline-flex; align-items: center; gap: var(--s-4); min-width: 0; max-width: 100%; height: 32px;
+  padding: 0 var(--s-6) 0 var(--s-10, 10px); border-radius: var(--r-sm); background: var(--c-wcisk); color: var(--c-tekst); font-size: 13px; font-weight: var(--g-mocny); }
+body.is-mobile .ver-wybor-tekst { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.is-mobile .ver-wybor .ikona { flex: none; width: 16px; height: 16px; margin: 0; color: var(--c-tekst-3); }
+body.is-mobile .ver-wybor select { position: absolute; top: -6px; left: 0; width: 100%; height: var(--h-dotyk); min-height: 0; margin: 0; padding: 0; border: 0;
+  opacity: 0; font-size: 16px; cursor: pointer; }
+body.is-mobile .ver-wybor:has(select:focus-visible) { box-shadow: 0 0 0 2px var(--c-fokus); }
+/* R6: Nowy artykul przy etykiecie Tematu i przywracanie ustawien domyslnych */
+.etykieta-wiersz { display: flex; align-items: center; justify-content: space-between; gap: var(--s-8); min-height: 24px; }
+.etykieta-wiersz .field-label { min-width: 0; }
+.nowy-artykul { position: relative; flex: none; display: inline-flex; align-items: center; gap: var(--s-4); font-size: var(--t-sm); font-weight: var(--g-mocny); white-space: nowrap; }
+.nowy-artykul .ikona { width: 16px; height: 16px; margin: 0; }
+.nowy-artykul[hidden], .brief-szyna .przycisk-ikona[hidden] { display: none; }
+/* wiersz etykiety nie skacze, gdy przycisk znika: na telefonie 24 px wysokosci, cel dotyku 44 px z ::before */
+body.is-mobile .etykieta-wiersz .nowy-artykul { min-height: 0; height: 24px; }
+body.is-mobile .nowy-artykul::before { content: ""; position: absolute; inset: -10px -8px; }
+.przywroc-domyslne { align-self: flex-start; margin-top: var(--s-8); }
+.powiadomienie-akcja { flex: none; align-self: center; min-height: 28px; margin: -4px 0; padding: 0 var(--s-6); border: 0; border-radius: var(--r-sm);
+  background: none; color: var(--c-akcent-mocny); font: inherit; font-weight: var(--g-mocny); cursor: pointer; }
+.powiadomienie-akcja:hover { background: var(--c-najazd); }
+body.is-mobile .powiadomienie-akcja { min-height: var(--h-dotyk); }
 
 /* statystyki jako arkusz od dolu (ten sam element #article-stats) */
 body.is-mobile .article-stats.show { display: none; }
@@ -2992,6 +3039,19 @@ body.is-mobile #au-script-actions > #au-play-btn { flex: 1 1 100%; min-height: 4
 body.is-mobile #au-script-actions > .btn-secondary { flex: 1 1 0; justify-content: center; }
 body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-content: center; }
 }
+@layer widoki {
+/* ══ RUNDA 6, wykonawca F ══ */
+/* R6-F (E-12): zakladka bez danych (SERP bez analizy) i ocena niedostepna znikaja naprawde - display
+   z .ins-zakl i .segmenty button wygrywal z atrybutem hidden, a dotkniecie pustej zakladki zamykalo inspektor */
+.ins-zakl[hidden], .ins-oceny [data-ins-ocena][hidden] { display: none; }
+/* R6-F (E-17): telefon - "Popraw artykul pod brakujace tematy" przyklejony do dolu arkusza (przy osmiu
+   tematach lezal pod zgieciem). Pas tla arkusza nad przyciskiem nie przyjmuje dotyku, a po przewinieciu
+   do konca listy przycisk stoi na swoim miejscu, wiec niczego nie zaslania. */
+body.is-mobile .ins-tresc #gap-improve-btn { position: sticky; bottom: 0; z-index: 1; box-shadow: 0 var(--s-6) 0 var(--s-6) var(--c-panel); }
+body.is-mobile .ins-tresc #gap-missing-wrap { padding-bottom: var(--s-12); }
+body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: absolute; left: calc(var(--s-12) * -1); right: calc(var(--s-12) * -1); bottom: 100%;
+  height: var(--s-16); pointer-events: none; background: linear-gradient(to bottom, transparent, var(--c-panel)); }
+}
 </style>
 </head>
 <body>
@@ -3010,7 +3070,7 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
 </script>
 <a href="#tresc-glowna" class="przejdz-do-tresci" onclick="return przejdzDoTresci()" data-i18n="skip-link">Przejdź do treści</a>
 <!-- Ikony: Lucide v1 (ISC, lucide.dev), tylko uzyte w aplikacji. -->
-<svg id="cai-ikony" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:none"><symbol id="i-arrow-left" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m12 19-7-7 7-7" /> <path vector-effect="non-scaling-stroke" d="M19 12H5" /></symbol><symbol id="i-bot" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 8V4H8" /> <rect vector-effect="non-scaling-stroke" width="16" height="12" x="4" y="8" rx="2" /> <path vector-effect="non-scaling-stroke" d="M2 14h2" /> <path vector-effect="non-scaling-stroke" d="M20 14h2" /> <path vector-effect="non-scaling-stroke" d="M15 13v2" /> <path vector-effect="non-scaling-stroke" d="M9 13v2" /></symbol><symbol id="i-braces" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1" /> <path vector-effect="non-scaling-stroke" d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1" /></symbol><symbol id="i-briefcase" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /> <rect vector-effect="non-scaling-stroke" width="20" height="14" x="2" y="6" rx="2" /></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="13" r="3" /></symbol><symbol id="i-chart-column" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 3v16a2 2 0 0 0 2 2h16" /> <path vector-effect="non-scaling-stroke" d="M18 17V9" /> <path vector-effect="non-scaling-stroke" d="M13 17V5" /> <path vector-effect="non-scaling-stroke" d="M8 17v-3" /></symbol><symbol id="i-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 6 9 17l-5-5" /></symbol><symbol id="i-chevron-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m6 9 6 6 6-6" /></symbol><symbol id="i-circle-check" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol><symbol id="i-circle-dot" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /></symbol><symbol id="i-circle-question-mark" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /> <path vector-effect="non-scaling-stroke" d="M12 17h.01" /></symbol><symbol id="i-circle-x" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m15 9-6 6" /> <path vector-effect="non-scaling-stroke" d="m9 9 6 6" /></symbol><symbol id="i-clipboard-list" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="8" height="4" x="8" y="2" rx="1" ry="1" /> <path vector-effect="non-scaling-stroke" d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M12 11h4" /> <path vector-effect="non-scaling-stroke" d="M12 16h4" /> <path vector-effect="non-scaling-stroke" d="M8 11h.01" /> <path vector-effect="non-scaling-stroke" d="M8 16h.01" /></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 6v6l4 2" /></symbol><symbol id="i-cloud" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" /></symbol><symbol id="i-compass" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" /></symbol><symbol id="i-copy" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="14" height="14" x="8" y="8" rx="2" ry="2" /> <path vector-effect="non-scaling-stroke" d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></symbol><symbol id="i-download" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 15V3" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <path vector-effect="non-scaling-stroke" d="m7 10 5 5 5-5" /></symbol><symbol id="i-ellipsis" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="19" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="5" cy="12" r="1" /></symbol><symbol id="i-file" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /></symbol><symbol id="i-file-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M12 18v-6" /> <path vector-effect="non-scaling-stroke" d="m9 15 3 3 3-3" /></symbol><symbol id="i-file-text" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M10 9H8" /> <path vector-effect="non-scaling-stroke" d="M16 13H8" /> <path vector-effect="non-scaling-stroke" d="M16 17H8" /></symbol><symbol id="i-flag" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528" /></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" /></symbol><symbol id="i-folder-open" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></symbol><symbol id="i-gauge" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m12 14 4-4" /> <path vector-effect="non-scaling-stroke" d="M3.34 19a10 10 0 1 1 17.32 0" /></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /> <path vector-effect="non-scaling-stroke" d="M2 12h20" /></symbol><symbol id="i-headphones" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" /></symbol><symbol id="i-history" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /> <path vector-effect="non-scaling-stroke" d="M3 3v5h5" /> <path vector-effect="non-scaling-stroke" d="M12 7v5l4 2" /></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" ry="2" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="9" r="2" /> <path vector-effect="non-scaling-stroke" d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 16v-4" /> <path vector-effect="non-scaling-stroke" d="M12 8h.01" /></symbol><symbol id="i-key-round" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle vector-effect="non-scaling-stroke" cx="16.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-languages" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m5 8 6 6" /> <path vector-effect="non-scaling-stroke" d="m4 14 6-6 2-3" /> <path vector-effect="non-scaling-stroke" d="M2 5h12" /> <path vector-effect="non-scaling-stroke" d="M7 2h1" /> <path vector-effect="non-scaling-stroke" d="m22 22-5-10-5 10" /> <path vector-effect="non-scaling-stroke" d="M14 18h6" /></symbol><symbol id="i-layout-grid" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="7" height="7" x="3" y="3" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="14" y="3" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="14" y="14" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="3" y="14" rx="1" /></symbol><symbol id="i-library" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 6 4 14" /> <path vector-effect="non-scaling-stroke" d="M12 6v14" /> <path vector-effect="non-scaling-stroke" d="M8 8v12" /> <path vector-effect="non-scaling-stroke" d="M4 4v16" /></symbol><symbol id="i-lightbulb" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" /> <path vector-effect="non-scaling-stroke" d="M9 18h6" /> <path vector-effect="non-scaling-stroke" d="M10 22h4" /></symbol><symbol id="i-link" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /> <path vector-effect="non-scaling-stroke" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></symbol><symbol id="i-link-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9 17H7A5 5 0 0 1 7 7h2" /> <path vector-effect="non-scaling-stroke" d="M15 7h2a5 5 0 1 1 0 10h-2" /> <line vector-effect="non-scaling-stroke" x1="8" x2="16" y1="12" y2="12" /></symbol><symbol id="i-list-checks" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13 5h8" /> <path vector-effect="non-scaling-stroke" d="M13 12h8" /> <path vector-effect="non-scaling-stroke" d="M13 19h8" /> <path vector-effect="non-scaling-stroke" d="m3 17 2 2 4-4" /> <path vector-effect="non-scaling-stroke" d="m3 7 2 2 4-4" /></symbol><symbol id="i-list-ordered" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 5h10" /> <path vector-effect="non-scaling-stroke" d="M11 12h10" /> <path vector-effect="non-scaling-stroke" d="M11 19h10" /> <path vector-effect="non-scaling-stroke" d="M4 4h1v5" /> <path vector-effect="non-scaling-stroke" d="M4 9h2" /> <path vector-effect="non-scaling-stroke" d="M6.5 20H3.4c0-1 2.6-1.925 2.6-3.5a1.5 1.5 0 0 0-2.6-1.02" /></symbol><symbol id="i-loader" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 2v4" /> <path vector-effect="non-scaling-stroke" d="m16.2 7.8 2.9-2.9" /> <path vector-effect="non-scaling-stroke" d="M18 12h4" /> <path vector-effect="non-scaling-stroke" d="m16.2 16.2 2.9 2.9" /> <path vector-effect="non-scaling-stroke" d="M12 18v4" /> <path vector-effect="non-scaling-stroke" d="m4.9 19.1 2.9-2.9" /> <path vector-effect="non-scaling-stroke" d="M2 12h4" /> <path vector-effect="non-scaling-stroke" d="m4.9 4.9 2.9 2.9" /></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path vector-effect="non-scaling-stroke" d="M7 11V7a5 5 0 0 1 10 0v4" /></symbol><symbol id="i-log-out" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 17 5-5-5-5" /> <path vector-effect="non-scaling-stroke" d="M21 12H9" /> <path vector-effect="non-scaling-stroke" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /></symbol><symbol id="i-mail" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /> <rect vector-effect="non-scaling-stroke" x="2" y="4" width="20" height="16" rx="2" /></symbol><symbol id="i-megaphone" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" /> <path vector-effect="non-scaling-stroke" d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14" /> <path vector-effect="non-scaling-stroke" d="M8 6v8" /></symbol><symbol id="i-mic" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 19v3" /> <path vector-effect="non-scaling-stroke" d="M19 10v2a7 7 0 0 1-14 0v-2" /> <rect vector-effect="non-scaling-stroke" x="9" y="2" width="6" height="13" rx="3" /></symbol><symbol id="i-minus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></symbol><symbol id="i-notebook-pen" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4" /> <path vector-effect="non-scaling-stroke" d="M2 6h4" /> <path vector-effect="non-scaling-stroke" d="M2 10h4" /> <path vector-effect="non-scaling-stroke" d="M2 14h4" /> <path vector-effect="non-scaling-stroke" d="M2 18h4" /> <path vector-effect="non-scaling-stroke" d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /></symbol><symbol id="i-octagon-alert" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 16h.01" /> <path vector-effect="non-scaling-stroke" d="M12 8v4" /> <path vector-effect="non-scaling-stroke" d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z" /></symbol><symbol id="i-package" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /> <path vector-effect="non-scaling-stroke" d="M12 22V12" /> <polyline vector-effect="non-scaling-stroke" points="3.29 7 12 12 20.71 7" /> <path vector-effect="non-scaling-stroke" d="m7.5 4.27 9 5.15" /></symbol><symbol id="i-palette" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" /> <circle vector-effect="non-scaling-stroke" cx="13.5" cy="6.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="17.5" cy="10.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="6.5" cy="12.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="8.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-panel-left" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /> <path vector-effect="non-scaling-stroke" d="M9 3v18" /></symbol><symbol id="i-paperclip" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551" /></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" x="14" y="3" width="5" height="18" rx="1" /> <rect vector-effect="non-scaling-stroke" x="5" y="3" width="5" height="18" rx="1" /></symbol><symbol id="i-pen-line" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13 21h8" /> <path vector-effect="non-scaling-stroke" d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /> <path vector-effect="non-scaling-stroke" d="m15 5 4 4" /></symbol><symbol id="i-play" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" /></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /> <path vector-effect="non-scaling-stroke" d="M12 5v14" /></symbol><symbol id="i-puzzle" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z" /></symbol><symbol id="i-radio-tower" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9" /> <path vector-effect="non-scaling-stroke" d="M7.8 4.7a6.14 6.14 0 0 0-.8 7.5" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="9" r="2" /> <path vector-effect="non-scaling-stroke" d="M16.2 4.8c2 2 2.26 5.11.8 7.47" /> <path vector-effect="non-scaling-stroke" d="M19.1 1.9a9.96 9.96 0 0 1 0 14.1" /> <path vector-effect="non-scaling-stroke" d="M9.5 18h5" /> <path vector-effect="non-scaling-stroke" d="m8 22 4-11 4 11" /></symbol><symbol id="i-refresh-cw" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path vector-effect="non-scaling-stroke" d="M21 3v5h-5" /> <path vector-effect="non-scaling-stroke" d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path vector-effect="non-scaling-stroke" d="M8 16H3v5" /></symbol><symbol id="i-rocket" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /> <path vector-effect="non-scaling-stroke" d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" /> <path vector-effect="non-scaling-stroke" d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" /> <path vector-effect="non-scaling-stroke" d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" /></symbol><symbol id="i-save" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /> <path vector-effect="non-scaling-stroke" d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" /> <path vector-effect="non-scaling-stroke" d="M7 3v4a1 1 0 0 0 1 1h7" /></symbol><symbol id="i-scale" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v18" /> <path vector-effect="non-scaling-stroke" d="m19 8 3 8a5 5 0 0 1-6 0zV7" /> <path vector-effect="non-scaling-stroke" d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1" /> <path vector-effect="non-scaling-stroke" d="m5 8 3 8a5 5 0 0 1-6 0zV7" /> <path vector-effect="non-scaling-stroke" d="M7 21h10" /></symbol><symbol id="i-scan-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 7V5a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M17 3h2a2 2 0 0 1 2 2v2" /> <path vector-effect="non-scaling-stroke" d="M21 17v2a2 2 0 0 1-2 2h-2" /> <path vector-effect="non-scaling-stroke" d="M7 21H5a2 2 0 0 1-2-2v-2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /> <path vector-effect="non-scaling-stroke" d="m16 16-1.9-1.9" /></symbol><symbol id="i-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m21 21-4.34-4.34" /> <circle vector-effect="non-scaling-stroke" cx="11" cy="11" r="8" /></symbol><symbol id="i-settings" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /></symbol><symbol id="i-shield-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /> <path vector-effect="non-scaling-stroke" d="m9 12 2 2 4-4" /></symbol><symbol id="i-sliders-horizontal" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 5H3" /> <path vector-effect="non-scaling-stroke" d="M12 19H3" /> <path vector-effect="non-scaling-stroke" d="M14 3v4" /> <path vector-effect="non-scaling-stroke" d="M16 17v4" /> <path vector-effect="non-scaling-stroke" d="M21 12h-9" /> <path vector-effect="non-scaling-stroke" d="M21 19h-5" /> <path vector-effect="non-scaling-stroke" d="M21 5h-7" /> <path vector-effect="non-scaling-stroke" d="M8 10v4" /> <path vector-effect="non-scaling-stroke" d="M8 12H3" /></symbol><symbol id="i-smile" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15 10V9" /> <path vector-effect="non-scaling-stroke" d="M16.472 15a6 6 0 01-8.943 0" /> <path vector-effect="non-scaling-stroke" d="M9 10V9" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /></symbol><symbol id="i-square" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /></symbol><symbol id="i-square-check" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol><symbol id="i-square-pen" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /> <path vector-effect="non-scaling-stroke" d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" /></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="4" /> <path vector-effect="non-scaling-stroke" d="M12 2v2" /> <path vector-effect="non-scaling-stroke" d="M12 20v2" /> <path vector-effect="non-scaling-stroke" d="m4.93 4.93 1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="m17.66 17.66 1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="M2 12h2" /> <path vector-effect="non-scaling-stroke" d="M20 12h2" /> <path vector-effect="non-scaling-stroke" d="m6.34 17.66-1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="m19.07 4.93-1.41 1.41" /></symbol><symbol id="i-tag" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" /> <circle vector-effect="non-scaling-stroke" cx="7.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="6" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="2" /></symbol><symbol id="i-ticket" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" /> <path vector-effect="non-scaling-stroke" d="M13 5v2" /> <path vector-effect="non-scaling-stroke" d="M13 17v2" /> <path vector-effect="non-scaling-stroke" d="M13 11v2" /></symbol><symbol id="i-trash-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 11v6" /> <path vector-effect="non-scaling-stroke" d="M14 11v6" /> <path vector-effect="non-scaling-stroke" d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /> <path vector-effect="non-scaling-stroke" d="M3 6h18" /> <path vector-effect="non-scaling-stroke" d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></symbol><symbol id="i-trending-up" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 7h6v6" /> <path vector-effect="non-scaling-stroke" d="m22 7-8.5 8.5-5-5L2 17" /></symbol><symbol id="i-triangle-alert" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path vector-effect="non-scaling-stroke" d="M12 9v4" /> <path vector-effect="non-scaling-stroke" d="M12 17h.01" /></symbol><symbol id="i-undo-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9 14 4 9l5-5" /> <path vector-effect="non-scaling-stroke" d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" /></symbol><symbol id="i-unlink" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71" /> <path vector-effect="non-scaling-stroke" d="m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71" /> <line vector-effect="non-scaling-stroke" x1="8" x2="8" y1="2" y2="5" /> <line vector-effect="non-scaling-stroke" x1="2" x2="5" y1="8" y2="8" /> <line vector-effect="non-scaling-stroke" x1="16" x2="16" y1="19" y2="22" /> <line vector-effect="non-scaling-stroke" x1="19" x2="22" y1="16" y2="16" /></symbol><symbol id="i-upload" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v12" /> <path vector-effect="non-scaling-stroke" d="m17 8-5-5-5 5" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></symbol><symbol id="i-user" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="7" r="4" /></symbol><symbol id="i-users" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path vector-effect="non-scaling-stroke" d="M16 3.128a4 4 0 0 1 0 7.744" /> <path vector-effect="non-scaling-stroke" d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="7" r="4" /></symbol><symbol id="i-volume-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /> <path vector-effect="non-scaling-stroke" d="M16 9a5 5 0 0 1 0 6" /> <path vector-effect="non-scaling-stroke" d="M19.364 18.364a9 9 0 0 0 0-12.728" /></symbol><symbol id="i-x" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M18 6 6 18" /> <path vector-effect="non-scaling-stroke" d="m6 6 12 12" /></symbol><symbol id="i-zap" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol></svg>
+<svg id="cai-ikony" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:none"><symbol id="i-arrow-right" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /> <path vector-effect="non-scaling-stroke" d="m12 5 7 7-7 7" /></symbol><symbol id="i-arrow-left" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m12 19-7-7 7-7" /> <path vector-effect="non-scaling-stroke" d="M19 12H5" /></symbol><symbol id="i-bot" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 8V4H8" /> <rect vector-effect="non-scaling-stroke" width="16" height="12" x="4" y="8" rx="2" /> <path vector-effect="non-scaling-stroke" d="M2 14h2" /> <path vector-effect="non-scaling-stroke" d="M20 14h2" /> <path vector-effect="non-scaling-stroke" d="M15 13v2" /> <path vector-effect="non-scaling-stroke" d="M9 13v2" /></symbol><symbol id="i-braces" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1" /> <path vector-effect="non-scaling-stroke" d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1" /></symbol><symbol id="i-briefcase" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /> <rect vector-effect="non-scaling-stroke" width="20" height="14" x="2" y="6" rx="2" /></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="13" r="3" /></symbol><symbol id="i-chart-column" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 3v16a2 2 0 0 0 2 2h16" /> <path vector-effect="non-scaling-stroke" d="M18 17V9" /> <path vector-effect="non-scaling-stroke" d="M13 17V5" /> <path vector-effect="non-scaling-stroke" d="M8 17v-3" /></symbol><symbol id="i-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 6 9 17l-5-5" /></symbol><symbol id="i-chevron-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m6 9 6 6 6-6" /></symbol><symbol id="i-circle-check" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol><symbol id="i-circle-dot" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /></symbol><symbol id="i-circle-question-mark" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /> <path vector-effect="non-scaling-stroke" d="M12 17h.01" /></symbol><symbol id="i-circle-x" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m15 9-6 6" /> <path vector-effect="non-scaling-stroke" d="m9 9 6 6" /></symbol><symbol id="i-clipboard-list" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="8" height="4" x="8" y="2" rx="1" ry="1" /> <path vector-effect="non-scaling-stroke" d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M12 11h4" /> <path vector-effect="non-scaling-stroke" d="M12 16h4" /> <path vector-effect="non-scaling-stroke" d="M8 11h.01" /> <path vector-effect="non-scaling-stroke" d="M8 16h.01" /></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 6v6l4 2" /></symbol><symbol id="i-cloud" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" /></symbol><symbol id="i-compass" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" /></symbol><symbol id="i-copy" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="14" height="14" x="8" y="8" rx="2" ry="2" /> <path vector-effect="non-scaling-stroke" d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></symbol><symbol id="i-download" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 15V3" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <path vector-effect="non-scaling-stroke" d="m7 10 5 5 5-5" /></symbol><symbol id="i-ellipsis" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="19" cy="12" r="1" /> <circle vector-effect="non-scaling-stroke" cx="5" cy="12" r="1" /></symbol><symbol id="i-file" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /></symbol><symbol id="i-file-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M12 18v-6" /> <path vector-effect="non-scaling-stroke" d="m9 15 3 3 3-3" /></symbol><symbol id="i-file-text" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M10 9H8" /> <path vector-effect="non-scaling-stroke" d="M16 13H8" /> <path vector-effect="non-scaling-stroke" d="M16 17H8" /></symbol><symbol id="i-flag" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528" /></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" /></symbol><symbol id="i-folder-open" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></symbol><symbol id="i-gauge" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m12 14 4-4" /> <path vector-effect="non-scaling-stroke" d="M3.34 19a10 10 0 1 1 17.32 0" /></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /> <path vector-effect="non-scaling-stroke" d="M2 12h20" /></symbol><symbol id="i-headphones" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" /></symbol><symbol id="i-history" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /> <path vector-effect="non-scaling-stroke" d="M3 3v5h5" /> <path vector-effect="non-scaling-stroke" d="M12 7v5l4 2" /></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" ry="2" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="9" r="2" /> <path vector-effect="non-scaling-stroke" d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="M12 16v-4" /> <path vector-effect="non-scaling-stroke" d="M12 8h.01" /></symbol><symbol id="i-key-round" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle vector-effect="non-scaling-stroke" cx="16.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-languages" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m5 8 6 6" /> <path vector-effect="non-scaling-stroke" d="m4 14 6-6 2-3" /> <path vector-effect="non-scaling-stroke" d="M2 5h12" /> <path vector-effect="non-scaling-stroke" d="M7 2h1" /> <path vector-effect="non-scaling-stroke" d="m22 22-5-10-5 10" /> <path vector-effect="non-scaling-stroke" d="M14 18h6" /></symbol><symbol id="i-layout-grid" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="7" height="7" x="3" y="3" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="14" y="3" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="14" y="14" rx="1" /> <rect vector-effect="non-scaling-stroke" width="7" height="7" x="3" y="14" rx="1" /></symbol><symbol id="i-library" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 6 4 14" /> <path vector-effect="non-scaling-stroke" d="M12 6v14" /> <path vector-effect="non-scaling-stroke" d="M8 8v12" /> <path vector-effect="non-scaling-stroke" d="M4 4v16" /></symbol><symbol id="i-lightbulb" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" /> <path vector-effect="non-scaling-stroke" d="M9 18h6" /> <path vector-effect="non-scaling-stroke" d="M10 22h4" /></symbol><symbol id="i-link" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /> <path vector-effect="non-scaling-stroke" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></symbol><symbol id="i-link-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9 17H7A5 5 0 0 1 7 7h2" /> <path vector-effect="non-scaling-stroke" d="M15 7h2a5 5 0 1 1 0 10h-2" /> <line vector-effect="non-scaling-stroke" x1="8" x2="16" y1="12" y2="12" /></symbol><symbol id="i-list-checks" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13 5h8" /> <path vector-effect="non-scaling-stroke" d="M13 12h8" /> <path vector-effect="non-scaling-stroke" d="M13 19h8" /> <path vector-effect="non-scaling-stroke" d="m3 17 2 2 4-4" /> <path vector-effect="non-scaling-stroke" d="m3 7 2 2 4-4" /></symbol><symbol id="i-list-ordered" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 5h10" /> <path vector-effect="non-scaling-stroke" d="M11 12h10" /> <path vector-effect="non-scaling-stroke" d="M11 19h10" /> <path vector-effect="non-scaling-stroke" d="M4 4h1v5" /> <path vector-effect="non-scaling-stroke" d="M4 9h2" /> <path vector-effect="non-scaling-stroke" d="M6.5 20H3.4c0-1 2.6-1.925 2.6-3.5a1.5 1.5 0 0 0-2.6-1.02" /></symbol><symbol id="i-loader" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 2v4" /> <path vector-effect="non-scaling-stroke" d="m16.2 7.8 2.9-2.9" /> <path vector-effect="non-scaling-stroke" d="M18 12h4" /> <path vector-effect="non-scaling-stroke" d="m16.2 16.2 2.9 2.9" /> <path vector-effect="non-scaling-stroke" d="M12 18v4" /> <path vector-effect="non-scaling-stroke" d="m4.9 19.1 2.9-2.9" /> <path vector-effect="non-scaling-stroke" d="M2 12h4" /> <path vector-effect="non-scaling-stroke" d="m4.9 4.9 2.9 2.9" /></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path vector-effect="non-scaling-stroke" d="M7 11V7a5 5 0 0 1 10 0v4" /></symbol><symbol id="i-log-out" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 17 5-5-5-5" /> <path vector-effect="non-scaling-stroke" d="M21 12H9" /> <path vector-effect="non-scaling-stroke" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /></symbol><symbol id="i-mail" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /> <rect vector-effect="non-scaling-stroke" x="2" y="4" width="20" height="16" rx="2" /></symbol><symbol id="i-megaphone" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" /> <path vector-effect="non-scaling-stroke" d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14" /> <path vector-effect="non-scaling-stroke" d="M8 6v8" /></symbol><symbol id="i-mic" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 19v3" /> <path vector-effect="non-scaling-stroke" d="M19 10v2a7 7 0 0 1-14 0v-2" /> <rect vector-effect="non-scaling-stroke" x="9" y="2" width="6" height="13" rx="3" /></symbol><symbol id="i-minus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></symbol><symbol id="i-notebook-pen" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4" /> <path vector-effect="non-scaling-stroke" d="M2 6h4" /> <path vector-effect="non-scaling-stroke" d="M2 10h4" /> <path vector-effect="non-scaling-stroke" d="M2 14h4" /> <path vector-effect="non-scaling-stroke" d="M2 18h4" /> <path vector-effect="non-scaling-stroke" d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /></symbol><symbol id="i-octagon-alert" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 16h.01" /> <path vector-effect="non-scaling-stroke" d="M12 8v4" /> <path vector-effect="non-scaling-stroke" d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z" /></symbol><symbol id="i-package" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /> <path vector-effect="non-scaling-stroke" d="M12 22V12" /> <polyline vector-effect="non-scaling-stroke" points="3.29 7 12 12 20.71 7" /> <path vector-effect="non-scaling-stroke" d="m7.5 4.27 9 5.15" /></symbol><symbol id="i-palette" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" /> <circle vector-effect="non-scaling-stroke" cx="13.5" cy="6.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="17.5" cy="10.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="6.5" cy="12.5" r=".5" fill="currentColor" /> <circle vector-effect="non-scaling-stroke" cx="8.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-panel-left" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /> <path vector-effect="non-scaling-stroke" d="M9 3v18" /></symbol><symbol id="i-paperclip" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551" /></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" x="14" y="3" width="5" height="18" rx="1" /> <rect vector-effect="non-scaling-stroke" x="5" y="3" width="5" height="18" rx="1" /></symbol><symbol id="i-pen-line" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M13 21h8" /> <path vector-effect="non-scaling-stroke" d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /> <path vector-effect="non-scaling-stroke" d="m15 5 4 4" /></symbol><symbol id="i-play" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" /></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /> <path vector-effect="non-scaling-stroke" d="M12 5v14" /></symbol><symbol id="i-puzzle" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z" /></symbol><symbol id="i-radio-tower" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9" /> <path vector-effect="non-scaling-stroke" d="M7.8 4.7a6.14 6.14 0 0 0-.8 7.5" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="9" r="2" /> <path vector-effect="non-scaling-stroke" d="M16.2 4.8c2 2 2.26 5.11.8 7.47" /> <path vector-effect="non-scaling-stroke" d="M19.1 1.9a9.96 9.96 0 0 1 0 14.1" /> <path vector-effect="non-scaling-stroke" d="M9.5 18h5" /> <path vector-effect="non-scaling-stroke" d="m8 22 4-11 4 11" /></symbol><symbol id="i-refresh-cw" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path vector-effect="non-scaling-stroke" d="M21 3v5h-5" /> <path vector-effect="non-scaling-stroke" d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path vector-effect="non-scaling-stroke" d="M8 16H3v5" /></symbol><symbol id="i-rocket" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /> <path vector-effect="non-scaling-stroke" d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" /> <path vector-effect="non-scaling-stroke" d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" /> <path vector-effect="non-scaling-stroke" d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" /></symbol><symbol id="i-save" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /> <path vector-effect="non-scaling-stroke" d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" /> <path vector-effect="non-scaling-stroke" d="M7 3v4a1 1 0 0 0 1 1h7" /></symbol><symbol id="i-scale" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v18" /> <path vector-effect="non-scaling-stroke" d="m19 8 3 8a5 5 0 0 1-6 0zV7" /> <path vector-effect="non-scaling-stroke" d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1" /> <path vector-effect="non-scaling-stroke" d="m5 8 3 8a5 5 0 0 1-6 0zV7" /> <path vector-effect="non-scaling-stroke" d="M7 21h10" /></symbol><symbol id="i-scan-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 7V5a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M17 3h2a2 2 0 0 1 2 2v2" /> <path vector-effect="non-scaling-stroke" d="M21 17v2a2 2 0 0 1-2 2h-2" /> <path vector-effect="non-scaling-stroke" d="M7 21H5a2 2 0 0 1-2-2v-2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /> <path vector-effect="non-scaling-stroke" d="m16 16-1.9-1.9" /></symbol><symbol id="i-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m21 21-4.34-4.34" /> <circle vector-effect="non-scaling-stroke" cx="11" cy="11" r="8" /></symbol><symbol id="i-settings" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /></symbol><symbol id="i-shield-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /> <path vector-effect="non-scaling-stroke" d="m9 12 2 2 4-4" /></symbol><symbol id="i-sliders-horizontal" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 5H3" /> <path vector-effect="non-scaling-stroke" d="M12 19H3" /> <path vector-effect="non-scaling-stroke" d="M14 3v4" /> <path vector-effect="non-scaling-stroke" d="M16 17v4" /> <path vector-effect="non-scaling-stroke" d="M21 12h-9" /> <path vector-effect="non-scaling-stroke" d="M21 19h-5" /> <path vector-effect="non-scaling-stroke" d="M21 5h-7" /> <path vector-effect="non-scaling-stroke" d="M8 10v4" /> <path vector-effect="non-scaling-stroke" d="M8 12H3" /></symbol><symbol id="i-smile" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15 10V9" /> <path vector-effect="non-scaling-stroke" d="M16.472 15a6 6 0 01-8.943 0" /> <path vector-effect="non-scaling-stroke" d="M9 10V9" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /></symbol><symbol id="i-square" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /></symbol><symbol id="i-square-check" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="18" height="18" x="3" y="3" rx="2" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol><symbol id="i-square-pen" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /> <path vector-effect="non-scaling-stroke" d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" /></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="4" /> <path vector-effect="non-scaling-stroke" d="M12 2v2" /> <path vector-effect="non-scaling-stroke" d="M12 20v2" /> <path vector-effect="non-scaling-stroke" d="m4.93 4.93 1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="m17.66 17.66 1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="M2 12h2" /> <path vector-effect="non-scaling-stroke" d="M20 12h2" /> <path vector-effect="non-scaling-stroke" d="m6.34 17.66-1.41 1.41" /> <path vector-effect="non-scaling-stroke" d="m19.07 4.93-1.41 1.41" /></symbol><symbol id="i-tag" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" /> <circle vector-effect="non-scaling-stroke" cx="7.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="6" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="2" /></symbol><symbol id="i-ticket" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" /> <path vector-effect="non-scaling-stroke" d="M13 5v2" /> <path vector-effect="non-scaling-stroke" d="M13 17v2" /> <path vector-effect="non-scaling-stroke" d="M13 11v2" /></symbol><symbol id="i-trash-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M10 11v6" /> <path vector-effect="non-scaling-stroke" d="M14 11v6" /> <path vector-effect="non-scaling-stroke" d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /> <path vector-effect="non-scaling-stroke" d="M3 6h18" /> <path vector-effect="non-scaling-stroke" d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></symbol><symbol id="i-trending-up" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 7h6v6" /> <path vector-effect="non-scaling-stroke" d="m22 7-8.5 8.5-5-5L2 17" /></symbol><symbol id="i-triangle-alert" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path vector-effect="non-scaling-stroke" d="M12 9v4" /> <path vector-effect="non-scaling-stroke" d="M12 17h.01" /></symbol><symbol id="i-undo-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M9 14 4 9l5-5" /> <path vector-effect="non-scaling-stroke" d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" /></symbol><symbol id="i-unlink" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71" /> <path vector-effect="non-scaling-stroke" d="m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71" /> <line vector-effect="non-scaling-stroke" x1="8" x2="8" y1="2" y2="5" /> <line vector-effect="non-scaling-stroke" x1="2" x2="5" y1="8" y2="8" /> <line vector-effect="non-scaling-stroke" x1="16" x2="16" y1="19" y2="22" /> <line vector-effect="non-scaling-stroke" x1="19" x2="22" y1="16" y2="16" /></symbol><symbol id="i-upload" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v12" /> <path vector-effect="non-scaling-stroke" d="m17 8-5-5-5 5" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></symbol><symbol id="i-user" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="7" r="4" /></symbol><symbol id="i-users" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path vector-effect="non-scaling-stroke" d="M16 3.128a4 4 0 0 1 0 7.744" /> <path vector-effect="non-scaling-stroke" d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="7" r="4" /></symbol><symbol id="i-volume-2" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /> <path vector-effect="non-scaling-stroke" d="M16 9a5 5 0 0 1 0 6" /> <path vector-effect="non-scaling-stroke" d="M19.364 18.364a9 9 0 0 0 0-12.728" /></symbol><symbol id="i-x" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M18 6 6 18" /> <path vector-effect="non-scaling-stroke" d="m6 6 12 12" /></symbol><symbol id="i-zap" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol></svg>
 
 <div class="topbar">
   <div class="topbar-logo">
@@ -3211,12 +3271,17 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
           <button type="button" class="przycisk-ikona" onclick="przelaczBrief()" title="Rozwiń brief" aria-label="Rozwiń brief" data-i18n-title="brief-rozwin" data-i18n-label="brief-rozwin"><svg class="ikona" aria-hidden="true"><use href="#i-panel-left"/></svg></button>
           <span class="szyna-sep"></span>
           <button type="button" class="przycisk-ikona" onclick="generujZSzyny()" title="Generuj ponownie" aria-label="Generuj ponownie" data-i18n-title="brief-ponownie" data-i18n-label="brief-ponownie"><svg class="ikona" aria-hidden="true"><use href="#i-refresh-cw"/></svg></button>
+          <button type="button" class="przycisk-ikona" id="nowy-artykul-szyna" onclick="nowyArtykul()" hidden title="Nowy artykuł" aria-label="Nowy artykuł" data-i18n-title="nowy-artykul" data-i18n-label="nowy-artykul"><svg class="ikona" aria-hidden="true"><use href="#i-square-pen"/></svg></button>
           <button type="button" class="przycisk-ikona" onclick="toggleKbPanel()" title="Źródła" aria-label="Źródła" data-i18n-title="brief-zrodla" data-i18n-label="brief-zrodla"><svg class="ikona" aria-hidden="true"><use href="#i-library"/></svg></button>
         </div>
         <div class="form-col" id="tresc-glowna" tabindex="-1">
           <div class="brief-naglowek"><h2 data-i18n="brief-naglowek">Brief</h2><button type="button" class="przycisk-ikona" onclick="przelaczBrief()" title="Zwiń brief" aria-label="Zwiń brief" data-i18n-title="brief-zwin" data-i18n-label="brief-zwin"><svg class="ikona" aria-hidden="true"><use href="#i-panel-left"/></svg></button></div>
           <div class="field">
-            <label class="field-label" for="topic" data-i18n="label-topic">Temat artykułu / strony</label>
+            <!-- R6: Nowy artykul przy etykiecie Tematu - widoczny, gdy jest co wyczyscic (odswiezNowyArtykul) -->
+            <div class="etykieta-wiersz">
+              <label class="field-label" for="topic" data-i18n="label-topic">Temat artykułu / strony</label>
+              <button type="button" class="btn-link nowy-artykul" id="nowy-artykul-btn" onclick="nowyArtykul()" hidden title="Wyczyść temat, słowa kluczowe i wytyczne, żeby zacząć kolejny artykuł. Poprzedni zostaje w Historii." data-i18n-title="nowy-artykul-title" data-i18n="nowy-artykul" data-ikona="square-pen"><svg class="ikona" aria-hidden="true"><use href="#i-square-pen"/></svg>Nowy artykuł</button>
+            </div>
             <div class="pole-wiersz">
               <input type="text" id="topic" autocomplete="off" placeholder="np. Jak wybrać system CRM dla małej firmy" data-i18n="ph-topic" />
               <button type="button" class="mic-btn" onclick="dictate('topic', this)" data-i18n-title="voice-dictate-title" title="Dyktuj"><svg class="ikona" aria-hidden="true"><use href="#i-mic"/></svg></button>
@@ -3309,7 +3374,7 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
           <div class="field zrodla">
             <div class="field-label" data-i18n="zrodla-tytul">Źródła</div>
             <div class="zrodla-karta">
-              <div class="zrodla-baza"><svg class="ikona" aria-hidden="true"><use href="#i-library"/></svg><div><b data-i18n="zrodla-baza">Baza wiedzy</b><span id="zrodla-baza-opis"></span></div><button type="button" class="btn-link" onclick="toggleKbPanel()" data-i18n="zrodla-wybierz">Wybierz</button></div>
+              <div class="zrodla-baza"><svg class="ikona" aria-hidden="true"><use href="#i-library"/></svg><div><b data-i18n="zrodla-baza">Baza wiedzy</b><span id="zrodla-baza-opis"></span></div><button type="button" class="btn-link" onclick="otworzBazeWiedzy()" data-i18n="zrodla-wybierz">Wybierz</button></div>
               <label class="toggle-row" for="use-web">
             <div class="toggle-info">
               <span class="toggle-label" data-i18n="toggle-web">Szukaj w sieci i podaj źródła</span>
@@ -3361,6 +3426,8 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
               <span class="toggle-slider"></span>
             </div>
           </label>
+          <!-- R6: typ, dlugosc, ton, jezyk, odbiorca, zrodla i opcje jak na starcie; temat i frazy czysci Nowy artykul -->
+          <button type="button" class="btn-link przywroc-domyslne" onclick="przywrocUstawieniaDomyslne()" data-i18n="ustawienia-domyslne" data-ikona="undo-2"><svg class="ikona" aria-hidden="true"><use href="#i-undo-2"/></svg>Przywróć ustawienia domyślne</button>
 
             </div>
           </details>
@@ -3398,6 +3465,8 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
               <div class="versions-bar" id="versions-bar">
                 <span class="ver-label" data-i18n="versions-label">Warianty:</span>
                 <span class="ver-podpis" data-i18n="btn-premium">Samokorekta</span>
+                <!-- R6: telefon, od trzech wersji: nazwa biezacej wersji, wybor w systemowej liscie -->
+                <span class="ver-wybor"><span class="ver-wybor-tekst" id="ver-wybor-tekst"></span><svg class="ikona" aria-hidden="true"><use href="#i-chevron-down"/></svg><select id="ver-select" aria-label="Wersja artykułu" data-i18n-label="ver-wybor" onchange="switchVersion(Number(this.value))"></select></span>
               </div>
             </div>
             <div class="pasek-akcje">
@@ -3458,6 +3527,7 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
                 <div class="arkusz-tytul"><span data-i18n="grupa-wiecej">Więcej</span><button type="button" class="przycisk-ikona arkusz-zamknij" onclick="zamknijGrupyPaska()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
                 <button class="btn-secondary" id="premium-fix-btn" style="display:none" onclick="runPostGenerationPremium()" title="Model oceni gotowy tekst i poprawi go według oceny" data-i18n-title="title-premium-fix-tooltip" data-i18n="btn-premium-fix" data-ikona="list-checks"><svg class="ikona" aria-hidden="true"><use href="#i-list-checks"/></svg>Dopracuj tekst</button>
                 <button class="btn-secondary" id="tts-btn" style="display:none" onclick="speakArticle(this)" data-i18n-title="tts-read" title="Posłuchaj"><svg class="ikona" aria-hidden="true"><use href="#i-volume-2"/></svg><span data-i18n="tts-read">Posłuchaj</span></button>
+                <button class="btn-secondary" id="nowy-art-btn" style="display:none" onclick="nowyArtykul()" title="Wyczyść temat, słowa kluczowe i wytyczne, żeby zacząć kolejny artykuł. Poprzedni zostaje w Historii." data-i18n-title="nowy-artykul-title" data-i18n="nowy-artykul" data-ikona="square-pen"><svg class="ikona" aria-hidden="true"><use href="#i-square-pen"/></svg>Nowy artykuł</button>
               </div>
             </div>
             <span class="pasek-sep"></span>
@@ -3614,7 +3684,7 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
               <span class="panel-tytul" data-i18n="serp-data-title">Dane SERP: top wyniki Google</span>
               <button type="button" class="seo-close panel-zamknij" onclick="closeSerpPanel()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
             </div>
-            <div id="serp-stats" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)"></div>
+            <div id="serp-stats" class="serp-stats"></div>
             <div id="serp-topics-wrap" style="margin-bottom:8px">
               <div class="panel-podtytul" data-i18n="gap-title-topics">Tematy w top wynikach</div>
               <div id="serp-topics" style="display:flex;flex-wrap:wrap;gap:5px"></div>
@@ -3660,7 +3730,7 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
                   <div class="tekst-pomoc" style="margin-bottom:2px" data-i18n="gap-coverage">Pokrycie SERP</div>
                   <div style="display:flex;align-items:center;gap:8px">
                     <span id="gap-delta-before" class="gap-delta-score"></span>
-                    <span class="gap-delta-arrow">→</span>
+                    <span class="gap-delta-arrow" aria-hidden="true"><svg class="ikona"><use href="#i-arrow-right"/></svg></span>
                     <span id="gap-delta-after" class="gap-delta-score"></span>
                     <span class="tekst-maly" id="gap-delta-diff"></span>
                   </div>
@@ -3688,11 +3758,12 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
                 </div>
               </div>
               <div id="gap-missing"></div>
+              <div id="gap-info" class="gap-info" role="status" hidden></div>
               <button type="button" id="gap-improve-btn" class="btn-secondary btn-pelny" onclick="improveFromGaps()" data-i18n="improve-by-gaps" data-ikona="pen-line"><svg class="ikona" aria-hidden="true"><use href="#i-pen-line"/></svg>Popraw artykuł pod brakujące tematy</button>
             </div>
             <div id="gap-present-wrap" style="display:none;margin-top:8px">
               <div class="panel-podtytul" data-i18n="gap-covered">Pokryte tematy</div>
-              <div id="gap-present" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+              <div id="gap-present"></div>
             </div>
             <div id="gap-no-serp" style="display:none;color:var(--text3)" data-i18n="gap-no-serp">Włącz Analizę SERP przed generowaniem, aby korzystać z analizy luk semantycznych.</div>
           </div>
@@ -4840,6 +4911,7 @@ var I18N = {
     'zrodla-pokaz-wszystkie':'Pokaż wszystkie ({n})','zrodla-zwin':'Zwiń',
     'spin-sub-szukam':'szukam źródeł w sieci i sprawdzam, co da się potwierdzić',
     'fakty-tryb-uzupelniania':'Tekst powstał z włączonym wyszukiwaniem w sieci, więc część zdań nie pochodzi z Twoich dokumentów, tylko ze stron wymienionych pod artykułem. Poniższe uwagi dotyczą zgodności z Twoimi źródłami: zdanie oparte na stronie zewnętrznej też się tu pojawi, bo trzeba sprawdzić, czy ta strona jest wiarygodna.',
+    'fakty-wzgledem-sieci':'Sprawdzono względem stron z sieci: Baza wiedzy jest pusta, więc artykuł porównano z fragmentami stron, które cytował przy pisaniu. Zdania o Twojej firmie nie mają tu potwierdzenia.',
     'fakty-rodzaj-link-obcy':'Adres spoza źródeł',
     'fakty-rodzaj-link-sciezka':'Znana domena, nieznana podstrona',
     'fakty-rodzaj-link-martwy':'Adres nie odpowiada',
@@ -4952,18 +5024,22 @@ var I18N = {
     'ocena-skala':'/100','ocena-podpis':'Ocena {x}','ocena-aria':'Ocena {x}: {n} na 100',
     'meta-etykieta':'Opis meta (SEO)',
     'eksport-zrodla':'Źródła',
-    'eksport-pominiete-luki':'Sekcje bez pokrycia w źródłach pominięte w eksporcie: {n}. Jeśli mają zostać, uzupełnij je w edycji.',
+    'eksport-pominiete-luki':'Sekcje bez pokrycia w źródłach pominięte w eksporcie: {n}. Usuń notatkę albo wpisz w jej miejsce treść (Edytuj).',
     'eksport-znak-1':'znak','eksport-znak-24':'znaki','eksport-znak-5':'znaków',
-    'aeo-definicja':'Definicja na start: pierwszy akapit {n} słów (cel 25-50)',
+    'aeo-definicja-1':'Definicja na start: pierwszy akapit {n} słowo (cel 25-50)',
+    'aeo-definicja-2':'Definicja na start: pierwszy akapit {n} słowa (cel 25-50)',
+    'aeo-definicja-5':'Definicja na start: pierwszy akapit {n} słów (cel 25-50)',
     'aeo-liczba':'Liczba, data lub procent w pierwszym akapicie',
-    'aeo-faq':'FAQ: {n} nagłówków-pytań (cel 5-7)',
+    'aeo-faq-1':'FAQ: {n} nagłówek-pytanie (cel 5-7)',
+    'aeo-faq-2':'FAQ: {n} nagłówki-pytania (cel 5-7)',
+    'aeo-faq-5':'FAQ: {n} nagłówków-pytań (cel 5-7)',
     'aeo-lista':'Co najmniej jedna krótka lista 3-7 pozycji',
     'aeo-pytania-h2':'H2 w formie pytań: {n}% (cel 50%+)',
     'aeo-dlugie-akapity':'Akapity dłuższe niż 80 słów: {n}',
     'aeo-linie':'Wzmiankowane linie','aeo-linie-brak':'brak','aeo-linie-sprawdz':'sprawdź rozróżnienie linii',
-    'geo-skladnik-aeo':'Format AEO','geo-skladnik-struktura':'Struktura i schemat JSON-LD','geo-skladnik-marka':'Marka i linie biznesowe',
+    'geo-skladnik-aeo':'Format AEO','geo-skladnik-struktura':'Struktura: H1, sekcje H2, pytania, lista','geo-skladnik-marka':'Marka i linie biznesowe',
     'geo-waga':'waga',
-    'geo-faq':'Sekcja FAQ pasująca do schematu FAQPage','geo-linie':'Linie biznesowe nie są pomylone','geo-aeo-ok':'Wymogi formatu AEO spełnione',
+    'geo-faq':'Co najmniej 3 nagłówki H2 w formie pytań','geo-linie':'Linie biznesowe nie są pomylone','geo-aeo-ok':'Wymogi formatu AEO spełnione',
     // GAP dynamic messages
     'gap-msg-excellent':'Świetnie! Artykuł pokrywa wszystkie istotne tematy z SERP.',
     'gap-msg-good':'Dobre pokrycie. Można uzupełnić kilka brakujących tematów.',
@@ -5233,10 +5309,10 @@ var I18N = {
     'url-label':'Adres URL',
     'bv-modal-full-title':'Głos marki (brand voice)',
     'bv-modal-desc-full':'Wklej 2-5 istniejących artykułów firmowych (lub innych tekstów). Aplikacja wyekstrahuje profil stylu i zastosuje go do wszystkich przyszłych generowań.',
-    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','ver-serp':'Poprawa SERP',
+    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','nowy-artykul':'Nowy artykuł','nowy-artykul-title':'Wyczyść temat, słowa kluczowe i wytyczne, żeby zacząć kolejny artykuł. Poprzedni zostaje w Historii.','nowy-artykul-gotowe':'Możesz pisać nowy artykuł. Poprzedni jest w Historii.','nowy-brief-wyczyszczony':'Brief wyczyszczony.','nowy-cofnij':'Cofnij','ustawienia-domyslne':'Przywróć ustawienia domyślne','ustawienia-domyslne-gotowe':'Przywrócono ustawienia domyślne: typ, długość, ton, język, źródła i opcje zaawansowane.','msg-dopracuj-bez-zmian':'Tekst ma już {n}/100, samokorekta nie znalazła nic do poprawy. Zostaje bez zmian.','ver-serp':'Poprawa SERP','ver-wybor':'Wersja artykułu',
     'spin-sub-model':'model przetwarza temat i bazę wiedzy','spin-sub-hybrid2':'optymalizuję jednocześnie pod SEO, AIO i czytelnika',
     'link-suggest-prefix':'Rozważ link do','link-suggest-at':'przy słowach:',
-    'gap-still-missing':'Nadal brakujące tematy',
+    'gap-still-missing':'Nadal brakujące tematy','gap-szukam':'Szukam źródeł i piszę sekcje…','gap-bez-zrodel':'Nowe sekcje potrzebują źródeł. Baza wiedzy jest pusta, a wyszukiwanie w sieci wyłączone, więc tych tematów nie da się opisać bez zmyślania.','gap-wlacz-siec':'Włącz wyszukiwanie w sieci i popraw','gap-inny-artykul':'Poprawa dotyczyła poprzedniego artykułu, więc jej wynik nie został wstawiony.','gap-pusto':'Model nie zwrócił nowych sekcji. Spróbuj ponownie.','gap-dopisane':'Dopisano sekcje: {n}. Wynik w zakładce Luki.','gap-serp-blad':'Analiza SERP nie powiodła się przy generowaniu, więc nie ma z czym porównać tekstu. Wygeneruj artykuł ponownie z włączoną analizą SERP.','serp-blad-toast':'Analiza SERP nie powiodła się. Artykuł powstaje bez niej.','gap-pkt':'pkt','gap-bez-zrodel-baza':'Tematy bez pokrycia w zaznaczonych dokumentach: {n}. Nie dodano dla nich pustych sekcji. Włącz wyszukiwanie w sieci albo dodaj materiał do bazy wiedzy.','gap-bez-zrodel-siec':'Tematy bez źródła: {n}. Nie dodano dla nich pustych sekcji, zostają na liście brakujących. Dodaj materiał do bazy wiedzy i spróbuj ponownie.',
     'editor-done':'Gotowe','edit-etykieta':'Edycja','edit-cofnij':'Cofnij','edit-pasek':'Edycja tekstu','edit-podpowiedz':'Tryb edycji: dotknij tekstu, aby go zmienić. Gotowe zapisuje zmiany.','kb-words-suffix':'słów','kb-tag-text':'Tekst','kb-tag-file':'Plik','hist-words-suffix':'słów',
     'url-fetch-done':'Gotowe - strona dodana do bazy!',
     'url-demo-connect':'Łączę ze stroną…','url-demo-fetch':'Pobieram treść…','url-demo-process':'Przetwarzam…','upload-processing':'Przetwarzam: {name}','url-demo-done':'Gotowe!',
@@ -5256,7 +5332,7 @@ var I18N = {
     // ── Retry messages ──
     // ── Bulk generation ──
     // ── SERP stats ──
-    'serp-avg-words':'śr. słów','serp-avg-h2':'śr. sekcji H2',
+    'serp-avg-words':'śr. słów','serp-avg-h2':'śr. sekcji H2','serp-por-top':'Top Google (śr.)','serp-por-artykul':'Twój artykuł','serp-por-slowa':'Słowa','serp-por-h2':'Sekcje H2','serp-por-opis':'Średnie z czołowych wyników Google dla tej frazy: punkt odniesienia, nie cel do skopiowania.','serp-w-czolowce':'W czołówce: {t} i frazy kluczowe ({f}), lista poniżej.',
     // ── Version labels ──
     'ver-original':'Oryginał','ver-previously-improved':'wcześniej poprawiany',
     // ── Templates ──
@@ -5518,6 +5594,7 @@ var I18N = {
     'zrodla-pokaz-wszystkie':'Show all ({n})','zrodla-zwin':'Show less',
     'spin-sub-szukam':'searching the web and checking what can be confirmed',
     'fakty-tryb-uzupelniania':'This text was written with web search enabled, so some sentences come from the pages listed under the article rather than from your documents. The findings below are about agreement with your own sources: a sentence backed by an external page will still appear here, because someone has to judge whether that page is trustworthy.',
+    'fakty-wzgledem-sieci':'Checked against web pages: the knowledge base is empty, so the article was compared with the passages it cited while writing. Statements about your company have no confirmation here.',
     'fakty-rodzaj-link-obcy':'Address not in the sources',
     'fakty-rodzaj-link-sciezka':'Known domain, unknown page',
     'fakty-rodzaj-link-martwy':'Address does not respond',
@@ -5630,18 +5707,22 @@ var I18N = {
     'ocena-skala':'/100','ocena-podpis':'{x} score','ocena-aria':'{x} score: {n} out of 100',
     'meta-etykieta':'Meta description (SEO)',
     'eksport-zrodla':'Sources',
-    'eksport-pominiete-luki':'Sections without coverage in your sources were left out of the export: {n}. To keep them, fill them in while editing.',
+    'eksport-pominiete-luki':'Sections without coverage in your sources were left out of the export: {n}. Delete the note or type your text in its place (Edit).',
     'eksport-znak-1':'character','eksport-znak-24':'characters','eksport-znak-5':'characters',
-    'aeo-definicja':'Definition box: first paragraph {n} words (target 25-50)',
+    'aeo-definicja-1':'Definition box: first paragraph {n} word (target 25-50)',
+    'aeo-definicja-2':'Definition box: first paragraph {n} words (target 25-50)',
+    'aeo-definicja-5':'Definition box: first paragraph {n} words (target 25-50)',
     'aeo-liczba':'Number, date or percentage in the first paragraph',
-    'aeo-faq':'FAQ: {n} question headings (target 5-7)',
+    'aeo-faq-1':'FAQ: {n} question heading (target 5-7)',
+    'aeo-faq-2':'FAQ: {n} question headings (target 5-7)',
+    'aeo-faq-5':'FAQ: {n} question headings (target 5-7)',
     'aeo-lista':'At least one short list of 3-7 items',
     'aeo-pytania-h2':'Question-form H2: {n}% (target 50%+)',
     'aeo-dlugie-akapity':'Paragraphs over 80 words: {n}',
     'aeo-linie':'Lines mentioned','aeo-linie-brak':'none','aeo-linie-sprawdz':'verify line disambiguation',
-    'geo-skladnik-aeo':'AEO format','geo-skladnik-struktura':'Structure and JSON-LD schema','geo-skladnik-marka':'Brand and business lines',
+    'geo-skladnik-aeo':'AEO format','geo-skladnik-struktura':'Structure: H1, H2 sections, questions, list','geo-skladnik-marka':'Brand and business lines',
     'geo-waga':'weight',
-    'geo-faq':'FAQ section that fits the FAQPage schema','geo-linie':'Business lines are not mixed up','geo-aeo-ok':'AEO format requirements met',
+    'geo-faq':'At least 3 H2 headings phrased as questions','geo-linie':'Business lines are not mixed up','geo-aeo-ok':'AEO format requirements met',
     // GAP dynamic messages
     'gap-msg-excellent':'Excellent! The article covers all important topics from SERP.',
     'gap-msg-good':'Good coverage. You can supplement a few missing topics.',
@@ -5924,10 +6005,10 @@ var I18N = {
     'url-label':'URL',
     'bv-modal-full-title':'Brand voice',
     'bv-modal-desc-full':'Paste 2-5 existing company articles (or other texts). The app will extract the style profile and apply it to all future generations.',
-    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','ver-serp':'SERP improvement',
+    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','nowy-artykul':'New article','nowy-artykul-title':'Clear the topic, keywords and guidelines to start the next article. The previous one stays in History.','nowy-artykul-gotowe':'Ready for a new article. The previous one is in History.','nowy-brief-wyczyszczony':'Brief cleared.','nowy-cofnij':'Undo','ustawienia-domyslne':'Restore default settings','ustawienia-domyslne-gotowe':'Default settings restored: type, length, tone, language, sources and advanced options.','msg-dopracuj-bez-zmian':'The text already scores {n}/100, self-review found nothing to improve. It stays as it is.','ver-serp':'SERP improvement','ver-wybor':'Article version',
     'spin-sub-model':'model processes topic and knowledge base','spin-sub-hybrid2':'optimizing for SEO, AIO and readability simultaneously',
     'link-suggest-prefix':'Consider linking','link-suggest-at':'at words:',
-    'gap-still-missing':'Still missing topics',
+    'gap-still-missing':'Still missing topics','gap-szukam':'Finding sources and writing sections…','gap-bez-zrodel':'New sections need sources. The knowledge base is empty and web search is off, so these topics cannot be covered without inventing facts.','gap-wlacz-siec':'Turn on web search and improve','gap-inny-artykul':'The improvement was for the previous article, so its result was not inserted.','gap-pusto':'The model returned no new sections. Please try again.','gap-dopisane':'Sections added: {n}. See the Gaps tab for the result.','gap-serp-blad':'The SERP analysis failed during generation, so there is nothing to compare the text with. Generate the article again with SERP analysis on.','serp-blad-toast':'The SERP analysis failed. The article is being written without it.','gap-pkt':'pts','gap-bez-zrodel-baza':'Topics not covered by the selected documents: {n}. No empty sections were added. Turn on web search or add material to the knowledge base.','gap-bez-zrodel-siec':'Topics without a source: {n}. No empty sections were added; they stay on the missing list. Add material to the knowledge base and try again.',
     'img-download-btn':'Download PNG','img-copy-btn-lbl':'Copy',
     'img-step1-noref':'Step 1 of 2: creating image prompt',
     'img-prompt-used':'Used prompt',
@@ -5950,7 +6031,7 @@ var I18N = {
     // ── Retry ──
     // ── Bulk ──
     // ── SERP ──
-    'serp-avg-words':'avg. words','serp-avg-h2':'avg. H2 sections',
+    'serp-avg-words':'avg. words','serp-avg-h2':'avg. H2 sections','serp-por-top':'Top Google (avg.)','serp-por-artykul':'Your article','serp-por-slowa':'Words','serp-por-h2':'H2 sections','serp-por-opis':'Averages of the top Google results for this phrase: a benchmark, not a target to copy.','serp-w-czolowce':'At the top: {t} and key phrases ({f}), listed below.',
     // ── Version labels ──
     'ver-original':'Original','ver-previously-improved':'previously improved',
     // ── Templates ──
@@ -6465,6 +6546,7 @@ function tekstBlokami(el) {
 }
 let premiumMode = false;       // tryb Jakość Premium - samokorekcja po generowaniu
 let serpData    = null;        // dane SERP z ostatniego fetchSerpContext
+let serpBlad    = false;       // R6 (E-08): analiza SERP przy generowaniu sie nie udala
 let gapOpen     = false;       // panel luk semantycznych otwarty
 let gapCache    = null;        // { snapshot, result } - cache wyników analizy luk
 let gapBaseline = null;        // { score, missing[], present[] } - wynik pierwszej analizy
@@ -6584,6 +6666,9 @@ async function fetchZadania(url, opcje, id, anuluj) {
   }
 }
 
+// R6 (E-08): odliczanie przed ponowieniem po 429 trafia tez tam, gdzie patrzy autor (np. przycisk
+// Luk) - spinner generowania jest wtedy ukryty. Funkcja (sekundy, proba, z ilu) albo null.
+let komunikatPonawiania = null;
 async function apiFetch(options, maxRetries = 3) {
   const WAIT_STEPS = [20, 40, 60]; // sekundy oczekiwania między próbami
   let endpoint = API_ENDPOINT;
@@ -6660,6 +6745,7 @@ async function apiFetch(options, maxRetries = 3) {
       if (sygnal && sygnal.aborted) throw new DOMException('Przerwano', 'AbortError');
       if (spinLabel) spinLabel.textContent = _t('spin-ponawiam-za').replace('{s}', s);
       if (spinSub)   spinSub.textContent   = _t('spin-proba').replace('{n}', attempt + 2).replace('{m}', maxRetries + 1);
+      if (typeof komunikatPonawiania === 'function') komunikatPonawiania(s, attempt + 2, maxRetries + 1);
       await new Promise(r => setTimeout(r, 1000));
     }
     if (spinLabel) spinLabel.textContent = _t('spin-ponawiam');
@@ -7192,6 +7278,13 @@ function blokFraz() {
     + '- Never repeat a keyword in a way a person would not say out loud. Natural '
     + 'sentence first, keyword second.';
 }
+
+// R6-F (E-19): fraza kluczowa wcisnieta jako podmiot zdania ("Dlatego kino dawniej i dzis rozni
+// sie glownie liczba decyzji...") - zdanie jest niejasne, a redaktor od razu je zaznacza.
+// Jedna regula w prompcie generowania i w ocenie oraz poprawie samokorekty.
+const REGULA_FRAZY_PODMIOTU = 'KEYWORD AS SUBJECT: Never make a keyword phrase the grammatical subject of a '
+  + 'sentence just to place it ("Kino dawniej i dziś różni się głównie..."). Use the phrase in its natural form '
+  + 'inside a sentence about a real subject, or leave it out.';
 
 // Kotwice: agencja zglosila monotonie stylu, a linkowanie jest tego czescia.
 // Piec razy "dowiedz sie wiecej" w jednym tekscie czyta sie tak samo zle jak
@@ -7849,18 +7942,19 @@ async function runPostGenerationPremium() {
   // Wlasny AbortController jak w generate(): Przerwij w spinnerze naprawde
   // zatrzymuje, a apiFetch konczy tez zadanie na serwerze.
   przerwanieGenerowania = new AbortController();
-  let stan = 'gotowe';
+  let stan = 'gotowe', zmiana = false;
 
   try {
     const articleText = kopia.innerText || kopia.textContent || '';
     const surowy = await doPremiumCorrection(doModelu, articleText, topic, kwText, ctype);
     const improved = surowy && surowy !== doModelu ? oczyscHtmlModelu(surowy) : '';
     if (improved) {
+      zmiana = true;
       art.innerHTML = wstawBlokZrodel(improved, zrodlaBox ? zrodlaBox.outerHTML : '');
       uporzadkujArtykul(art);
       // Artykul z Historii nie ma wersji: "przed" zostaje jako wariant do porownania.
       if (!versions.length) addVersion(przedHtml, _t('ver-before-premium'));
-      addVersion(htmlDoZapisu(art), _t('ver-after-premium'));
+      addVersion(htmlDoZapisu(art), etykietaWersji(_t('ver-after-premium')));
       // Wynik do biezacej wersji i do historii - po odswiezeniu wracala wersja
       // sprzed dopracowania.
       zapiszRecznePoprawki();
@@ -7870,6 +7964,8 @@ async function runPostGenerationPremium() {
     stan = e && e.name === 'AbortError' ? 'przerwane' : 'blad';
     if (stan === 'blad') powiadomBladApi(e, null, null, _t('msg-premium-blad'));
   }
+  // R6: ocena powyzej progu konczyla Dopracuj bez zmian i bez slowa - wygladalo, jakby nic sie nie stalo.
+  if (stan === 'gotowe' && !zmiana && samokorektaBezUwag !== null) pokazPowiadomienie(_t('msg-dopracuj-bez-zmian').replace('{n}', samokorektaBezUwag), 'info');
   przerwanieGenerowania = null;
   currentText = tekstBlokami(art);
   showArticleStats(art.innerHTML);
@@ -7895,7 +7991,10 @@ function wstawBlokZrodel(html, blok) {
 }
 
 // ── Właściwa logika samokorekcji - wywołana z generate() i runPostGenerationPremium()
+// Ocena z ostatniej samokorekty, gdy uznala tekst za dobry (od 82) i niczego nie zmienila; inaczej null.
+let samokorektaBezUwag = null;
 async function doPremiumCorrection(originalHtml, articleText, topic, kwText, ctype) {
+  samokorektaBezUwag = null;
   const isHybrid = ctype === 'Hybryda SEO + AIO';
   const isAio    = ctype === 'Treść AIO';
 
@@ -7915,7 +8014,8 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 500,
-        system: evalSys,
+        // R6-F (E-19): fraza jako sztuczny podmiot zdania to uwaga do poprawy.
+        system: evalSys + '\n' + REGULA_FRAZY_PODMIOTU + ' Report such a sentence as an issue.',
         messages: [{ role: 'user', content: `Topic: ${topic}\nKeywords: ${kwText}\n\nArticle:\n${articleText}` }]
       })
     });
@@ -7933,6 +8033,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
 
   if (!evalResult || evalResult.score >= 82 || !evalResult.issues?.length) {
     // Artykuł już jest dobry - nie poprawiaj
+    samokorektaBezUwag = evalResult ? Math.round(Number(evalResult.score) || 0) : null;
     return originalHtml;
   }
 
@@ -7958,7 +8059,8 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(premiumMaxTokens),
-        system: editorSysPelny,
+        // R6-F (E-19): przy poprawie fraza wraca do naturalnej formy, nie zostaje podmiotem.
+        system: editorSysPelny + '\n' + REGULA_FRAZY_PODMIOTU,
         messages: [{ role: 'user', content: `Fix ONLY these issues in the article: ${issuesList}\n\nDo NOT change factual content. Keep the same language and tone. IMPORTANT: keep the meta description block (class="meta-box") at the end if present. Keywords: ${kwText}.\nReturn ONLY the improved HTML, no markdown, no preamble.\n\nArticle:\n${originalHtml}` }]
       })
     });
@@ -7981,7 +8083,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
 // znikaly Fakty, AEO, GEO, Posluchaj, Dopracuj, przerobki i JSON-LD (kod-01).
 const PRZYCISKI_WYNIKU = ['edit-btn', 'copy-btn', 'dl-btn', 'dl-docx-btn', 'dl-pdf-btn', 'jsonld-btn',
   'fakty-btn', 'seo-btn', 'aio-btn', 'aeo-btn', 'geo-btn', 'links-btn', 'gap-btn',
-  'img-btn', 'titles-btn', 'repurpose-wrap', 'premium-fix-btn', 'tts-btn'];
+  'img-btn', 'titles-btn', 'repurpose-wrap', 'premium-fix-btn', 'tts-btn', 'nowy-art-btn'];
 function pokazPrzyciskiWyniku(widoczne, typ) {
   PRZYCISKI_WYNIKU.forEach(function (id) {
     const el = document.getElementById(id);
@@ -8074,7 +8176,9 @@ async function generate(skipPremiumModal = false, opcje = null) {
   document.getElementById('versions-bar').querySelectorAll('.ver-btn').forEach(el => el.remove());
   seoCache = null;
   aioCache = null;
+  ocenyWersji.seo.clear(); ocenyWersji.aio.clear();
   serpData = null;
+  serpBlad = false;
   document.getElementById('serp-toggle-btn').style.display = 'none';
   // Statystyki, panele i wyniki poprzedniego artykulu nie przeciekaja do nowego (R3-20).
   wyczyscStanArtykulu();
@@ -8217,6 +8321,7 @@ Add an H2 titled "${kwName}" followed by a SINGLE <ul> with 4-6 <li> bullets. Ea
 
 CONTENT QUALITY RULES (applied to every paragraph):
 ✗ ANTI-FLUFF: Cut any sentence that only restates the previous one or praises without saying anything ("rosnaca popularnosc", "dynamiczny rozwoj", "nowoczesne rozwiazanie"). Replace it with something the sources actually say, or delete it. Do NOT rescue such a sentence by attaching a number to it.
+✗ ${REGULA_FRAZY_PODMIOTU}
 ✗ ANTI-GENERIC: Never write a vague category label (e.g. "the industry", "providers") when you mean a specific company. Use the exact brand name every time.
 ✓ SALIENCE: Mention the main brand/product by exact name at least once in every H2 section (not just in the headline).
 ✓ BLUF: The first paragraph answers the question asked in the title, in two or three sentences. Open with a figure ONLY if the sources contain one that answers it; otherwise open with the substantive answer in words. Never open with a vague introduction.
@@ -8238,6 +8343,7 @@ ${useWeb
 ${(ctype !== 'FAQ page' && !isPress) ? `- MANDATORY: End the article, immediately before the meta description, with an H2 titled "${kwName}" followed by a SINGLE <ul> of 4-6 <li> bullets, each with at least one specific number, percentage or comparison. This section contains ONLY the H2 and the <ul>: no <p> inside it, between the bullets, or after it. Nothing follows it except the meta description.` : ''}
 - BLUF: The first paragraph answers the question in the title, in two or three sentences. Lead with a figure only if the sources contain one; otherwise lead with the answer in words. Never start with a vague introduction.
 - ANTI-FLUFF: Cut sentences that only restate the previous one or praise without content ("rosnąca popularność", "dynamiczny rozwój"). Delete them; do not repair them by adding a number.
+- ${REGULA_FRAZY_PODMIOTU}
 - ANTI-GENERIC: Use exact brand/product names, never generic "branża" when referring to a specific company.
 - SALIENCE: Mention the main brand by exact name at least once per H2 section.
 - TABLES: One dataset per table. Every cell comes from the sources. Omit a column rather than inventing its values. A table of periods or rates needs every row documented; a gap-toothed series of months means you are assembling data, not reporting it.
@@ -8579,6 +8685,7 @@ ${html}`;
   gapCache = null;
   gapBaseline = null;
   gapSelectedTopics = [];
+  gapBezPokrycia = [];
   gapImproveCount = 0;
   gapPreviousTopics = [];
   document.getElementById('gap-panel').style.display = 'none';
@@ -8613,7 +8720,8 @@ ${html}`;
   genCount++;
   updateStats();
 
-  const wordCount = currentText.split(/\s+/).filter(Boolean).length;
+  // R6-F (E-14): liczba slow wpisu jak w pasku statystyk (bez zrodel i meta), nie z calego tekstu.
+  const wordCount = liczbaSlowArtykulu(art);
   // Do historii idzie artykul tak, jak go widac (ze zrodlami), bez elementow tylko ekranowych.
   history.unshift({ topic: topic || _t('hist-default-name'), type: ctype, words: wordCount, time: new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}), html: htmlDoZapisu(art), jezyk: KODY_JEZYKOW[lang] || '' });
   // R4 (kod-08, kod-09, kod-17): trwale id, czas z data i kontekst artykulu we wpisie.
@@ -8720,6 +8828,7 @@ function previewHistory(i) {
     document.getElementById('out-badge').className = 'badge ready';
     // SERP nie nalezy do wpisu historii: dane w pamieci opisuja inny artykul.
     serpData = null;
+    serpBlad = false;
     pokazPrzyciskiWyniku(true, h.type);
     // Reset panelu linków
     linksOpen = false;
@@ -8742,6 +8851,7 @@ function previewHistory(i) {
     gapCache = null;
     gapBaseline = null;
     gapSelectedTopics = [];
+    gapBezPokrycia = [];
     gapImproveCount = 0;
     gapPreviousTopics = [];
     // Reset wersji - historia ma tylko jedną wersję artykułu
@@ -8754,6 +8864,7 @@ function previewHistory(i) {
     currentText = tekstBlokami(art);
     showArticleStats(h.html || '');
     seoCache = null; aioCache = null;
+    ocenyWersji.seo.clear(); ocenyWersji.aio.clear();
     // Zamknij panele SEO/AIO z poprzedniego artykułu
     seoOpen = false; aioOpen = false;
     document.getElementById('seo-panel')?.classList.remove('show');
@@ -8849,7 +8960,7 @@ function zrodlaZOdpowiedzi(dane) {
     // PDF i WordPressa jako odnosniki.
     if (!url || !/^https?:\/\//i.test(String(url))) return null;
     data = dataZrodla(data, teraz);
-    if (!mapa[url]) mapa[url] = { url: url, tytul: tytul || '', data: data || '', cytowan: 0 };
+    if (!mapa[url]) mapa[url] = { url: url, tytul: tytul || '', data: data || '', cytowan: 0, fragmenty: [] };
     if (!mapa[url].tytul && tytul) mapa[url].tytul = tytul;
     if (!mapa[url].data && data) mapa[url].data = data;
     return mapa[url];
@@ -8863,7 +8974,14 @@ function zrodlaZOdpowiedzi(dane) {
     for (const c of (blok.citations || [])) {
       if (c && c.url) {
         const wpis = dodaj(c.url, c.title, '');
-        if (wpis) wpis.cytowan += 1;
+        if (wpis) {
+          wpis.cytowan += 1;
+          // R6-F (E-07): cytowany fragment strony - jedyny czytelny tekst ze strony (wyniki
+          // wyszukiwania sa zaszyfrowane). Kontrola faktow porownuje z nim artykul, gdy Baza
+          // jest pusta. Nowe pole: url, tytul i data zostaja jak byly (blok zrodel ich uzywa).
+          const frag = String(c.cited_text || '').replace(/\s+/g, ' ').trim().slice(0, 600);
+          if (frag && wpis.fragmenty.length < 8 && wpis.fragmenty.indexOf(frag) < 0) wpis.fragmenty.push(frag);
+        }
       }
     }
   }
@@ -9038,7 +9156,44 @@ function uporzadkujArtykul(korzen, jezyk) {
   uporzadkujZrodla(korzen, jezyk);
   const t = tekstWJezyku('meta-etykieta', jezyk || currentLang);
   korzen.querySelectorAll('.meta-box > .meta-label').forEach(function (l) { if (l.textContent !== t) l.textContent = t; });
+  cudzyslowyPolskie(korzen);
   return korzen;
+}
+
+// R6: model miesza w polskim tekscie proste cudzyslowy z drukarskimi ("poprawi sie pozniej"
+// obok „...”), tak szly tez do PDF i DOCX. W polskim artykule (jezyk z tresci, bo tak samo
+// trafia tu podglad z historii i kopia do eksportu) ujednolicamy je na „...”: prosty albo angielski
+// cudzyslow po spacji lub na poczatku akapitu otwiera, nastepny zamyka. Stan cytatu liczony
+// w obrebie akapitu, bo cytat przechodzi przez <strong> albo <a>. Bez zmian: lista zrodel
+// (tytuly stron), kod, cytat w cytacie i samotny cudzyslow po cyfrze (cale: 27").
+function cudzyslowyPolskie(korzen) {
+  const BLOK = 'p,li,h1,h2,h3,h4,h5,h6,td,th,blockquote,figcaption,caption,dt,dd,div';
+  if (!korzen || !korzen.ownerDocument || !/["“]/.test(korzen.textContent || '')) return;
+  if (wykryjJezykTekstu(korzen.textContent) !== 'pl') return;
+  const tw = korzen.ownerDocument.createTreeWalker(korzen, NodeFilter.SHOW_TEXT);
+  let blok = null, otwarty = false, wewn = false, poprz = '';
+  for (let n = tw.nextNode(); n; n = tw.nextNode()) {
+    const el = n.parentElement;
+    if (!el || el.closest('.zrodla-box, code, pre, [data-tylko-ekran]')) continue;
+    const b = el.closest(BLOK);
+    if (b !== blok) { blok = b; otwarty = false; wewn = false; poprz = ''; }
+    const t = n.data;
+    let w = '';
+    for (const z of t) {
+      let c = z;
+      const granica = !poprz || /[\s([{/\u2013-]/.test(poprz);
+      if (z === '„') otwarty = true;
+      else if (z === '"' || z === '“' || z === '”') {
+        if (wewn) wewn = false;
+        else if (otwarty && granica && z !== '”') wewn = true;
+        else if (otwarty) { c = '”'; otwarty = false; }
+        else if (granica && z !== '”') { c = '„'; otwarty = true; }
+      }
+      w += c;
+      poprz = z;
+    }
+    if (w !== t) n.data = w;
+  }
 }
 
 // Lista zrodel doklejana do artykulu przed blokiem meta description, zeby
@@ -9217,6 +9372,11 @@ let faktySygnatura = '';        // dla jakiego artykulu (i jakich zrodel) policz
 // Stan idzie razem z wynikiem do kazdego rysowania - wczesniej ponowne otwarcie
 // panelu gubilo go i pusta lista uwag wygladala jak zielone "bez zastrzezen".
 let faktyStan = '';
+// R6-F (E-07): wynik policzony wzgledem samych stron z sieci (Baza pusta) - panel to mowi.
+let faktyWzgledemSieci = false;
+// R6-F (E-10): kontrola w toku { przebieg, sygnatura }. Powrot na zakladke Fakty w trakcie
+// czeka na nia zamiast wysylac drugie zapytanie (cala Baza i myslenie, wiec drogie).
+let faktyWToku = null;
 
 // Wynik kontroli to zlozony HTML skladany z wielu kluczy, wiec nie da sie go
 // oznaczyc jednym data-i18n. Przy zmianie jezyka skladamy go po prostu jeszcze
@@ -9314,9 +9474,18 @@ async function uruchomKontroleFaktow(wymus) {
   // Zrodla wchodza do sygnatury: po zaznaczeniu ich w bazie panel nie moze
   // pokazac zapamietanego wyniku "brak zrodel".
   const zrodla = zrodlaDoKontroli();
-  const sygnatura = String(tekstArtykulu.length) + ':' + tekstArtykulu.slice(0, 120) + '|' + zrodla.length;
+  // R6-F (E-07): strony z sieci, z ktorych powstal tekst, z cytowanymi fragmentami. Przy pustej
+  // Bazie kontrola porownuje artykul z nimi (wczesniej: zawsze "Brak zrodel do porownania").
+  const sieciowe = zrodlaSieciowe.filter(function (z) { return z && z.url; });
+  const sygnatura = String(tekstArtykulu.length) + ':' + tekstArtykulu.slice(0, 120) + '|' + zrodla.length + '|' + sieciowe.length;
   if (!wymus && faktyWynik && faktySygnatura === sygnatura) {
     pokazWynikFaktow(faktyWynik, faktyStan);
+    return;
+  }
+  // R6-F (E-10): ta sama kontrola juz trwa (wyjscie z zakladki i powrot) - panel zostaje
+  // z jej ladowaniem, a wynik narysuje ten przebieg. Bez drugiego zapytania.
+  if (!wymus && faktyWToku && faktyWToku.przebieg === faktyPrzebieg && faktyWToku.sygnatura === sygnatura) {
+    ladowanie.style.display = 'block';
     return;
   }
 
@@ -9325,6 +9494,8 @@ async function uruchomKontroleFaktow(wymus) {
   // gdy witryna za CDN-em nie odpowiada - przez ten czas panel byl otwarty
   // i zupelnie pusty, wiec wygladal na zepsuty.
   const moj = ++faktyPrzebieg;
+  faktyWToku = { przebieg: moj, sygnatura: sygnatura };
+  const koniecWToku = function () { if (faktyWToku && faktyWToku.przebieg === moj) faktyWToku = null; };
   wynikEl.innerHTML = '';
   odswiez.style.display = 'none';
   etapFaktow('fakty-etap-linki');
@@ -9340,18 +9511,21 @@ async function uruchomKontroleFaktow(wymus) {
     return u;
   })();
 
-  if (!zrodla.trim()) {
+  if (!zrodla.trim() && !sieciowe.length) {
     // Bez zrodel nie ma z czym zestawiac tresci. Sam model nie wystarczy -
     // ocena "z pamieci" byla by zgadywaniem. Kontrola odnosnikow dziala
     // niezaleznie od tego, wiec jej wynik i tak pokazujemy.
     const uwagiLinkow = await obietnicaLinkow;
+    koniecWToku();
     if (moj !== faktyPrzebieg) return;
     faktyWynik = uwagiLinkow;
     faktySygnatura = sygnatura;
     faktyStan = 'brak-zrodel';
+    faktyWzgledemSieci = false;
     pokazWynikFaktow(uwagiLinkow, faktyStan);
     return;
   }
+  const tylkoSiec = !zrodla.trim();
 
   // Wynik odnosnikow pokazujemy, gdy tylko przyjdzie - nie czekajac na model.
   // Przy dlugim sprawdzaniu tresci uzytkownik ma juz wtedy polowe odpowiedzi.
@@ -9411,12 +9585,15 @@ async function uruchomKontroleFaktow(wymus) {
         max_tokens: zRezerwa(2000),
         system: system,
         messages: [{ role: 'user', content:
-          'SOURCES:\n' + zrodla.slice(0, 120000)
-          + (zrodlaSieciowe.length
-              ? '\n\n---\n\nWEB SOURCES the article was allowed to draw on:\n'
-                + zrodlaSieciowe.map(function (z) {
-                    return '- ' + z.url + (z.tytul ? ' (' + z.tytul + ')' : '');
-                  }).join('\n')
+          'SOURCES:\n' + (tylkoSiec
+            ? '(no knowledge base documents for this article: compare it with the web sources and the passages they were cited for)'
+            : zrodla.slice(0, 120000))
+          + (sieciowe.length
+              ? '\n\n---\n\nWEB SOURCES the article was allowed to draw on (with the passages it cited):\n'
+                + sieciowe.map(function (z) {
+                    return '- ' + z.url + (z.tytul ? ' (' + z.tytul + ')' : '')
+                      + (z.fragmenty || []).map(function (f) { return '\n  > "' + f + '"'; }).join('');
+                  }).join('\n').slice(0, 40000)
               : '')
           + '\n\n---\n\nARTICLE:\n' + tekstArtykulu.slice(0, 40000) }]
       })
@@ -9431,6 +9608,7 @@ async function uruchomKontroleFaktow(wymus) {
     faktyWynik = uwagiLinkow.concat(Array.isArray(odczyt.uwagi) ? odczyt.uwagi : []);
     faktySygnatura = sygnatura;
     faktyStan = 'gotowe';
+    faktyWzgledemSieci = tylkoSiec;
     pokazWynikFaktow(faktyWynik, faktyStan);
   } catch (e) {
     // Nawet gdy model nie odpowiedzial, kontrola odnosnikow ma swoj wynik.
@@ -9441,8 +9619,10 @@ async function uruchomKontroleFaktow(wymus) {
     faktyWynik = uwagiLinkow;
     faktySygnatura = sygnatura;
     faktyStan = 'blad';
+    faktyWzgledemSieci = false;
     pokazWynikFaktow(uwagiLinkow, faktyStan);
   } finally {
+    koniecWToku();
     if (moj === faktyPrzebieg) ladowanie.style.display = 'none';
   }
 }
@@ -9486,7 +9666,11 @@ function pokazWynikFaktow(uwagi, stan) {
   // jest gorszy - znaczy, ze czesc zdan pochodzi z pamieci modelu, a nie
   // z dokumentow. Autor musi wiedziec, ktora to sytuacja. Wynik czesciowy
   // nie ma tej stopki - kontrola tresci jeszcze nie skonczyla.
-  if (stan === 'gotowe' && trybUzupelniania) {
+  // R6-F (E-07): bez Bazy porownanie szlo ze stronami z sieci - mowimy to wprost.
+  if (stan === 'gotowe' && faktyWzgledemSieci) {
+    stopka += '<div class="fakty-wzgledem-sieci" style="color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
+      + escapeHtml(_t('fakty-wzgledem-sieci')) + '</div>';
+  } else if (stan === 'gotowe' && trybUzupelniania) {
     stopka += '<div style="color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
       + escapeHtml(_t('fakty-tryb-uzupelniania')) + '</div>';
   }
@@ -9617,6 +9801,7 @@ function wyczyscStanArtykulu() {
   // nie trafi do panelu (kod-12); kontekst grafiki wpisany z poprzedniego artykulu
   // znika, wlasny tekst autora zostaje (kod-11).
   kontekstArt = null;
+  numerArtykulu++;
   if (typeof runRepurpose === 'function') runRepurpose.nr = (runRepurpose.nr || 0) + 1;
   { const ic = document.getElementById('img-context'); if (ic && ic.value && ic.value === kontekstGrafiki.auto) ic.value = ''; kontekstGrafiki.auto = ''; }
   try { inspektorZamknij(); } catch (e) {}
@@ -9635,18 +9820,33 @@ function wyczyscStanArtykulu() {
   if (jsonKod) jsonKod.textContent = '';
 }
 
+// R6-F (E-14): tresc do statystyk = to, co wyjdzie w pliku dla klienta: bez listy zrodel, ramki
+// meta, elementow tylko ekranowych i notatek o lukach (z naglowkiem, pod ktorym nic nie zostaje -
+// ta sama regula co w eksporcie). Ekran pokazywal 1265 slow i 15 sekcji, a PDF mial 1091 slow
+// i 7 sekcji. Jedno zrodlo dla paska, skrotu "N slow · M min", FOG, KD i liczby slow w Historii.
+function kopiaDoStatystyk(zrodlo) {
+  const kopia = zrodlo.cloneNode(true);
+  kopia.querySelectorAll('[data-tylko-ekran]').forEach(function (el) { el.remove(); });
+  usunNotatkiLuk(kopia);
+  kopia.querySelectorAll('.zrodla-box, .meta-box').forEach(function (el) { el.remove(); });
+  return kopia;
+}
+// Liczone blokami: innerText odlaczonego elementu sklejal akapity ("akapit.Nastepny").
+function liczbaSlowArtykulu(zrodlo) {
+  return tekstBlokami(kopiaDoStatystyk(zrodlo)).split(/\s+/).filter(Boolean).length;
+}
+
 function showArticleStats(html) {
   const tmp = document.createElement('div');
   tmp.innerHTML = html;
-  // Bibliografia nie jest trescia artykulu - nie wlicza sie do liczby slow
-  // ani do czasu czytania, tak samo jak meta description.
-  const _zr = tmp.querySelector('.zrodla-box');
-  if (_zr) _zr.remove();
-  const text = tmp.innerText || tmp.textContent || '';
+  // Bibliografia, meta description i notatki o lukach nie sa trescia artykulu - nie wliczaja
+  // sie do liczby slow, sekcji, czasu czytania, FOG ani KD (R6-F, E-14).
+  const tresc = kopiaDoStatystyk(tmp);
+  const text = tekstBlokami(tresc);
   const words = text.split(/\s+/).filter(Boolean).length;
   const readMin = Math.max(1, Math.ceil(words / 200));
-  const h2count = tmp.querySelectorAll('h2').length;
-  const h3count = tmp.querySelectorAll('h3').length;
+  const h2count = tresc.querySelectorAll('h2').length;
+  const h3count = tresc.querySelectorAll('h3').length;
   const metaEl = tmp.querySelector('.meta-box p');
   const metaLen = metaEl ? metaEl.textContent.trim().length : 0;
   ustawLiczbeStatystyki('stat-words', words);
@@ -9675,7 +9875,7 @@ function showArticleStats(html) {
   // sie do zdania nastepujacego po nich i sztucznie podnosily srednia dlugosc
   // zdania. Przy osmiu naglowkach po kilka slow to juz widoczna roznica.
   // Meta description tez odpada - to nie jest tresc artykulu.
-  const fog = calcFog(tekstProzy(tmp));
+  const fog = calcFog(tekstProzy(tresc));
   const fogEl = document.getElementById('stat-fog');
   if (fog !== null) {
     ustawLiczbeDziesietna(fogEl, fog);
@@ -9829,10 +10029,29 @@ function niewidoczneWArtykule(zrodlo) {
   return wynik;
 }
 
+// R6-F (E-02): notatka o luce to akapit p[data-brak], ktorego tekst nadal brzmi jak
+// notatka (PL albo EN) albo jest pusty. Akapit, w ktory autor wpisal swoj tekst (takze
+// nowy akapit z Entera, ktory dziedziczy atrybut), jest juz trescia artykulu.
+// Porownanie bez interpunkcji i cudzyslowow: model i typografia potrafia zmienic kropke albo spacje.
+function tekstNotatkiLuki(t) {
+  return String(t || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
+function czyNotatkaLuki(p) {
+  const t = tekstNotatkiLuki(p.textContent);
+  return !t || t === tekstNotatkiLuki(tekstWJezyku('gap-brak-pokrycia', 'pl'))
+    || t === tekstNotatkiLuki(tekstWJezyku('gap-brak-pokrycia', 'en'));
+}
+// Akapit, ktory przestal byc notatka, traci data-brak (wyglad notatki i pomijanie w eksporcie).
+function zdejmijNotatkiZTekstem(korzen) {
+  korzen.querySelectorAll('p[data-brak]').forEach(function (p) { if (!czyNotatkaLuki(p)) p.removeAttribute('data-brak'); });
+}
+
 // Notatka autora z uzupelniania luk ("Brak pokrycia w zaznaczonych zrodlach...")
 // nie jest trescia dla klienta. Usuwamy ja, a naglowek sekcji razem z nia, gdy pod
 // nim nic wiecej nie ma. Zwraca liczbe usunietych notatek.
 function usunNotatkiLuk(kopia) {
+  // R6-F (E-02): tekst autora wpisany w notatke zostaje w pliku (bez data-brak).
+  zdejmijNotatkiZTekstem(kopia);
   const notatki = kopia.querySelectorAll('p[data-brak]');
   notatki.forEach(function (p) {
     const naglowek = p.previousElementSibling;
@@ -9845,6 +10064,30 @@ function usunNotatkiLuk(kopia) {
     if (pusta) naglowek.remove();
   });
   return notatki.length;
+}
+
+// R6-F (E-18): polski sklad w plikach dla klienta (PDF, DOCX, TXT): twarda spacja po wyrazie
+// jednoliterowym (a, i, o, u, w, z, takze wielkie), zeby nie zostawal sam na koncu linii
+// ("zrezygnuj z / ustawien"). Tylko kopia eksportu, tylko wezly tekstowe (adresy i atrybuty
+// bez zmian), tylko artykul po polsku. Ekran, historia, schowek i CMS bez zmian.
+function twardeSpacjePl(korzen) {
+  if (!korzen || kodJezykaArtykulu() !== 'pl') return korzen;
+  const w = document.createTreeWalker(korzen, NodeFilter.SHOW_TEXT);
+  let blokPoprz = null, poprzedni = ' ';
+  for (let n = w.nextNode(); n; n = w.nextNode()) {
+    const rodzic = n.parentElement;
+    if (!rodzic || rodzic.closest('pre, code, script, style')) { poprzedni = ' '; continue; }
+    // Poczatek bloku (akapit, punkt, komorka, naglowek) liczy sie jak spacja przed wyrazem.
+    const blok = rodzic.closest('p, li, td, th, h1, h2, h3, h4, h5, h6, blockquote, dd, dt, caption, figcaption');
+    if (blok !== blokPoprz) { blokPoprz = blok; poprzedni = ' '; }
+    let t = poprzedni + n.nodeValue, przed;
+    // Kilka przebiegow: w "a i o" kazdy wyraz potrzebuje znaku przed soba, a ten zjada poprzednie dopasowanie.
+    do { przed = t; t = t.replace(/([\s(„"«])([aiouwzAIOUWZ]) /g, '$1$2 '); } while (t !== przed);
+    t = t.slice(1);
+    if (t !== n.nodeValue) n.nodeValue = t;
+    if (n.nodeValue) poprzedni = n.nodeValue.slice(-1);
+  }
+  return korzen;
 }
 
 // Kopia dla klienta (PDF, DOCX, TXT, schowek, WordPress, Drupal): jak do historii,
@@ -9869,7 +10112,8 @@ function kopiaDoEksportu(zrodlo) {
     }
   });
   const luki = usunNotatkiLuk(kopia);
-  if (luki) pokazPowiadomienie(_t('eksport-pominiete-luki').replace('{n}', String(luki)), 'info');
+  // R6-F (E-02, E-17): pominieta tresc to ostrzezenie, nie informacja.
+  if (luki) pokazPowiadomienie(_t('eksport-pominiete-luki').replace('{n}', String(luki)), 'uwaga');
   const j = jezykEtykiet();
   uporzadkujArtykul(kopia, j);
   kopia.querySelectorAll('.zrodla-box > .zrodla-label').forEach(function (l) { l.textContent = tekstWJezyku('eksport-zrodla', j); });
@@ -9946,7 +10190,8 @@ function formaZnakow(n, jezyk) {
 // tabele, ramka meta i zrodla z adresami.
 function tekstEksportu(korzen) {
   const linie = [];
-  const tekst = function (el) { return (el.textContent || '').replace(/\s+/g, ' ').trim(); };
+  // Twarda spacja zostaje (R6-F, E-18: polski sklad takze w naglowkach i ramce meta).
+  const tekst = function (el) { return (el.textContent || '').replace(/[^\S ]+/g, ' ').trim(); };
   const akapit = function (t) { if (t) { linie.push(t); linie.push(''); } };
   function inline(el) {
     let t = '';
@@ -10291,7 +10536,16 @@ function trescPdf(korzen) {
     if (tag === 'H1') { const t = tekstPdf(el); if (t.length) { out.push({ text: t, style: 'h1' }); poTytule = true; } return; }
     if (tag === 'H2') { out.push({ text: tekstPdf(el), style: 'h2', headlineLevel: 1 }); return; }
     if (/^H[3-6]$/.test(tag)) { out.push({ text: tekstPdf(el), style: 'h3', headlineLevel: 1 }); return; }
-    if (tag === 'P') { const t = tekstPdf(el); if (t.length) out.push({ text: t, style: byloPoTytule ? ['p', 'lead'] : 'p' }); return; }
+    if (tag === 'P') {
+      const t = tekstPdf(el);
+      if (!t.length) return;
+      const akapitPdf = { text: t, style: byloPoTytule ? ['p', 'lead'] : 'p' };
+      // R6-F (E-18): krotki akapit (do ok. 4 linii) w calosci na jednej stronie - bez
+      // pojedynczej linii poprzedniego akapitu na gorze nastepnej strony. Dluzsze sie lamia.
+      if (t.reduce(function (n, c) { return n + String(c.text || '').length; }, 0) <= 320) akapitPdf.unbreakable = true;
+      out.push(akapitPdf);
+      return;
+    }
     if (tag === 'UL' || tag === 'OL') { out.push(lista(el)); return; }
     if (tag === 'TABLE') { const t = tabela(el); if (t) out.push(t); return; }
     if (tag === 'BLOCKQUOTE') {
@@ -10317,7 +10571,7 @@ function trescPdf(korzen) {
   // Ramka meta description na samym koncu, w calosci na jednej stronie.
   if (meta) {
     const p = meta.querySelector('p');
-    const tekst = (p ? p.textContent : '').replace(/\s+/g, ' ').trim();
+    const tekst = (p ? p.textContent : '').replace(/[^\S ]+/g, ' ').trim();
     if (tekst) {
       out.push({ unbreakable: true, margin: [0, 20, 0, 0],
         table: { widths: ['*'], body: [[{ fillColor: DRUK.tloMeta, margin: [12, 10, 12, 10], stack: [
@@ -10352,6 +10606,8 @@ function dlPdf() {
     const czysta = document.createElement('div');
     czysta.innerHTML = oczyscHtmlModelu(kopia.innerHTML);
     const tytul = tytulEksportu(kopia);
+    // R6-F (E-18): twarde spacje w tresci strony, metadane (tytul, opis) bez zmian.
+    twardeSpacjePl(czysta);
     const dd = dokumentPdf(trescPdf(czysta), tytul, metaEksportu(kopia), jezykDokumentu());
     ustawKrojePdf();
     pdfMake.createPdf(dd).download(nazwaPlikuEksportu(tytul, 'pdf'));
@@ -10575,6 +10831,9 @@ async function fetchSerpContext(topic, kwText) {
       })
     });
     const data = await res.json();
+    // R6 (E-08): blad dostawcy (np. 529) nie moze przejsc po cichu - Luki pisaly potem
+    // "Wlacz Analize SERP", choc byla wlaczona.
+    if (data.error) throw bladOdpowiedzi(data, res.status);
     const rawText = (data.content||[]).map(b => b.type === 'text' ? b.text : '').filter(Boolean).join('');
     try {
       const parsed = parsujJsonModelu(rawText);
@@ -10589,9 +10848,14 @@ async function fetchSerpContext(topic, kwText) {
     } catch {
       // fallback: use raw text as context
       serpData = null;
+      serpBlad = true;
       return rawText ? `\nSERP CONTEXT - NOT A SOURCE OF FACTS, only topics to cover: ${rawText.substring(0,500)}` : '';
     }
-  } catch(e) { serpData = null; return ''; }
+  } catch(e) {
+    serpData = null;
+    if (!(e && e.name === 'AbortError')) { serpBlad = true; pokazPowiadomienie(_t('serp-blad-toast'), 'uwaga'); }
+    return '';
+  }
 }
 
 // pokaz=true tylko z przycisku SERP; po generowaniu panel sie nie otwiera sam (R3: na telefonie
@@ -10600,13 +10864,31 @@ function renderSerpPanel(pokaz) {
   if (!serpData) return;
   const panel = document.getElementById('serp-panel');
 
+  // R6: "900 sr. slow" to srednia czolowki Google, nie dane artykulu - bez porownania wygladalo
+  // jak blad. Tabela: czolowka obok artykulu, z podpisem; bez kropek, ktore wisialy na koncu linii.
   const statsEl = document.getElementById('serp-stats');
-  const statItems = [];
-  if (serpData.avgWords) statItems.push(`<span class="serp-stat"><strong>${serpData.avgWords}</strong>${_t('serp-avg-words')}</span>`);
-  if (serpData.avgH2)    statItems.push(`<span class="serp-stat"><strong>${serpData.avgH2}</strong>${_t('serp-avg-h2')}</span>`);
-  if (serpData.topics.length) statItems.push('<span class="serp-stat"><strong>' + serpData.topics.length + '</strong>' + _tn('tematy-slowo', serpData.topics.length) + '</span>');
-  if (serpData.phrases.length) statItems.push(`<span class="serp-stat"><strong>${serpData.phrases.length}</strong>${_t('serp-phrases')}</span>`);
-  statsEl.innerHTML = statItems.join('<span style="color:var(--border2)">·</span>');
+  const art = document.getElementById('article');
+  let slowaArt = 0, h2Art = 0;
+  if (art && getComputedStyle(art).display !== 'none' && art.textContent.trim()) {
+    const k = art.cloneNode(true);
+    k.querySelectorAll('.zrodla-box, .meta-box, [data-tylko-ekran], [data-brak]').forEach((e) => e.remove());
+    slowaArt = ((k.textContent || '').trim().match(/\S+/g) || []).length;
+    h2Art = k.querySelectorAll('h2').length;
+  }
+  const wiersz = (etykieta, top, wlasny) => '<div class="serp-por-wiersz"><span>' + escapeHtml(etykieta) + '</span><strong>'
+    + (top ? formatujLiczbe(top, 0) : '-') + '</strong><strong>' + (wlasny ? formatujLiczbe(wlasny, 0) : '-') + '</strong></div>';
+  let tabela = '';
+  if (serpData.avgWords || serpData.avgH2) {
+    tabela = '<div class="serp-porownanie"><div class="serp-por-glowa"><span></span><span>' + escapeHtml(_t('serp-por-top')) + '</span><span>'
+      + escapeHtml(_t('serp-por-artykul')) + '</span></div>'
+      + (serpData.avgWords ? wiersz(_t('serp-por-slowa'), serpData.avgWords, slowaArt) : '')
+      + (serpData.avgH2 ? wiersz(_t('serp-por-h2'), serpData.avgH2, h2Art) : '')
+      + '</div><p class="serp-por-opis">' + escapeHtml(_t('serp-por-opis')) + '</p>';
+  }
+  const ileT = serpData.topics.length, ileF = serpData.phrases.length;
+  const czolowka = (ileT || ileF) ? '<p class="serp-por-opis">' + escapeHtml(_t('serp-w-czolowce')
+    .replace('{t}', ileT + ' ' + _tn('tematy-slowo', ileT)).replace('{f}', String(ileF))) + '</p>' : '';
+  statsEl.innerHTML = tabela + czolowka;
 
   document.getElementById('serp-topics').innerHTML =
     serpData.topics.map(t => `<span class="serp-tag">${escapeHtml(t)}</span>`).join('');
@@ -10642,7 +10924,8 @@ function closeSerpPanel() {
 function getArticleSnapshot() {
   const art = document.getElementById('article');
   const text = art?.innerText || '';
-  return text.substring(0, 300) + text.length;
+  // R6: skrot calego tekstu - wersje z tym samym poczatkiem i dlugoscia mialy wspolny wynik Luk
+  return simpleHash(text) + ':' + text.length;
 }
 
 function toggleGapPanel() {
@@ -10708,9 +10991,11 @@ function _gapResetPanels() {
 function _buildMissingHtml(topics) {
   const btn = document.getElementById('gap-improve-btn');
   if (btn) btn.style.display = 'block';
-  const prevLC = gapPreviousTopics.map(t => t.toLowerCase().trim().substring(0, 25));
+  // R6: temat porownywany w calosci. Po 20 znakach "Jak wybrac pompe ciepla krok po kroku"
+  // rownal sie "Jak wybrac pompe ciepla cena" - frazy z SERP zwykle zaczynaja sie tak samo.
+  const prevLC = gapPreviousTopics.map(t => t.toLowerCase().trim());
   return topics.map((t, i) => {
-    const isPrev = prevLC.some(p => t.toLowerCase().trim().substring(0, 25).startsWith(p.substring(0, 20)) || p.startsWith(t.toLowerCase().trim().substring(0, 20)));
+    const isPrev = prevLC.includes(t.toLowerCase().trim());
     const prevBadge = isPrev
       ? '<span style="font-size:10px;color:var(--c-uwaga);background:var(--c-akcent-tlo);border-radius:4px;padding:1px 5px;margin-left:5px">' + _t('ver-previously-improved') + '</span>'
       : '';
@@ -10746,8 +11031,10 @@ function renderGapResult(parsed) {
   }
   const presWrap = document.getElementById('gap-present-wrap');
   if (parsed.present && parsed.present.length) {
+    // R6: pokryte tematy jako lista ze znacznikiem (wczesniej chipy bez ikony wygladaly jak przyciski)
     document.getElementById('gap-present').innerHTML = parsed.present.map(t =>
-      '<span class="serp-tag" style="color:var(--text)">' + escapeHtml(t) + '</span>'
+      '<div class="gap-topic-row"><span class="gap-topic-icon">' + ikona('circle-check') + '</span>' +
+      '<span class="gap-topic-text">' + escapeHtml(t) + '</span></div>'
     ).join('');
     presWrap.style.display = 'block';
   }
@@ -10769,9 +11056,8 @@ function renderGapDelta(baseline, newResult, selectedTopics) {
   // scoreAfter: syntetyzuj z baseline + pokrytych tematów (zawsze >= scoreBefore)
   const _addressed = selectedTopics || [];
   const _addrLC = _addressed.map(t => t.toLowerCase().trim());
-  const _newlyCovered = (baseline.missing || []).filter(t =>
-    _addrLC.some(a => a === t.toLowerCase().trim() || a.substring(0, 20) === t.toLowerCase().trim().substring(0, 20))
-  ).length;
+  // R6: caly temat, nie 20 pierwszych znakow (patrz _buildMissingHtml)
+  const _newlyCovered = (baseline.missing || []).filter(t => _addrLC.includes(t.toLowerCase().trim())).length;
   const _newPresentCount = (baseline.present?.length || 0) + _newlyCovered;
   const scoreAfter = _bTotal > 0
     ? Math.round(_newPresentCount / _bTotal * 100)
@@ -10783,11 +11069,11 @@ function renderGapDelta(baseline, newResult, selectedTopics) {
   const bEl  = document.getElementById('gap-delta-before');
   const aEl  = document.getElementById('gap-delta-after');
   const dEl  = document.getElementById('gap-delta-diff');
-  bEl.textContent = scoreBefore + ' pkt';
+  bEl.textContent = scoreBefore + ' ' + _t('gap-pkt');
   bEl.style.color = scoreBefore >= 75 ? 'var(--c-sukces)' : scoreBefore >= 50 ? 'var(--c-uwaga)' : 'var(--red)';
-  aEl.textContent = scoreAfter + ' pkt';
+  aEl.textContent = scoreAfter + ' ' + _t('gap-pkt');
   aEl.style.color = scoreAfter >= 75 ? 'var(--c-sukces)' : scoreAfter >= 50 ? 'var(--c-uwaga)' : 'var(--red)';
-  dEl.textContent = (diff > 0 ? '+' : '') + diff + ' pkt';
+  dEl.textContent = (diff > 0 ? '+' : '') + diff + ' ' + _t('gap-pkt');
   dEl.style.color = diff > 0 ? 'var(--c-sukces)' : diff < 0 ? 'var(--red)' : 'var(--text3)';
 
   // Nowo pokryte = dokładnie te które użytkownik wybrał (autorytatywne)
@@ -10815,7 +11101,7 @@ function renderGapDelta(baseline, newResult, selectedTopics) {
   const newlyWrap = document.getElementById('gap-delta-newly-wrap');
   if (addressed.length) {
     document.getElementById('gap-delta-newly').innerHTML = addressed.map(t =>
-      '<div class="gap-topic-row"><span class="gap-topic-icon">\u2705</span>' +
+      '<div class="gap-topic-row"><span class="gap-topic-icon">' + ikona('circle-check', 'ok') + '</span>' +
       '<span class="gap-topic-text newly">' + escapeHtml(t) + '</span></div>'
     ).join('');
     newlyWrap.style.display = 'block';
@@ -10834,9 +11120,10 @@ function renderGapDelta(baseline, newResult, selectedTopics) {
     document.getElementById('gap-all-topics').innerHTML = allBaseline.map(t => {
       const tLC     = t.toLowerCase().trim();
       const wasPresent = (baseline.present || []).some(p => p.toLowerCase().trim() === tLC);
-      const isAddressed = addrLC.some(a => a === tLC || a.substring(0,20) === tLC.substring(0,20));
+      const isAddressed = addrLC.includes(tLC);
       const covered = wasPresent || isAddressed;
-      const icon    = covered ? '\u2705' : '\u274c';
+      // R6: ikony SVG - emoji w .gap-topic-icon (font-size: 0) byly niewidoczne
+      const icon    = covered ? ikona('circle-check', isAddressed && !wasPresent ? 'ok' : '') : ikona('circle-x', 'uwaga');
       const cls     = covered ? (isAddressed && !wasPresent ? 'newly' : 'covered') : '';
       return '<div class="gap-topic-row">' +
         '<span class="gap-topic-icon">' + icon + '</span>' +
@@ -10847,9 +11134,7 @@ function renderGapDelta(baseline, newResult, selectedTopics) {
 
   // Nadal brakujące = baseline.missing MINUS addressed (bez względu na nową analizę AI)
   const addrLC2 = addressed.map(t => t.toLowerCase().trim());
-  const stillMissing = (baseline.missing || []).filter(t =>
-    !addrLC2.some(a => a === t.toLowerCase().trim() || a.substring(0,20) === t.toLowerCase().trim().substring(0,20))
-  );
+  const stillMissing = (baseline.missing || []).filter(t => !addrLC2.includes(t.toLowerCase().trim()));
 
   const missWrap = document.getElementById('gap-missing-wrap');
   const hdrDiv   = missWrap ? missWrap.querySelector('div:first-child div:first-child') : null;
@@ -10863,8 +11148,36 @@ function renderGapDelta(baseline, newResult, selectedTopics) {
     document.getElementById('gap-improve-btn').style.display = 'none';
     missWrap.style.display = 'none';
   }
+  const info = document.getElementById('gap-info');
+  if (info) info.hidden = true;
+  const bezZrodla = gapBezPokrycia.filter((t) => stillMissing.includes(t));
+  if (bezZrodla.length) pokazBrakZrodelLuk(bezZrodla, gapBezPokryciaSiec);
 }
 
+// R6 (E-05, E-06, E-10): do analizy idzie caly tekst (bez notatek, zrodel i ramki meta), a nie
+// 3000 pierwszych znakow - druga polowa artykulu i dopisane sekcje "nie istnialy". Tematy to tylko
+// tematy czolowki (frazy kluczowe nie sa tematami), listy modelu sa dopasowane do listy SERP, a wynik
+// liczony z niej. Ta sama analiza w toku nie idzie drugi raz (powrot na zakladke w trakcie).
+let gapWToku = null;
+function tekstDlaLuk(art) {
+  const kopia = art.cloneNode(true);
+  kopia.querySelectorAll('.zrodla-box, .meta-box, [data-tylko-ekran], [data-brak]').forEach((el) => el.remove());
+  return tekstBlokami(kopia).slice(0, 40000);
+}
+function dopasujDoSerp(lista, tematy) {
+  const wynik = [];
+  (Array.isArray(lista) ? lista : []).forEach((x) => {
+    let t = null;
+    if (/^\d+$/.test(String(x).trim())) t = tematy[Number(x) - 1] || null;
+    else {
+      let best = 0;
+      tematy.forEach((s) => { const p = podobienstwoTematu(s, x); if (p > best) { best = p; t = s; } });
+      if (best < 0.6) t = null;
+    }
+    if (t && !wynik.includes(t)) wynik.push(t);
+  });
+  return wynik;
+}
 async function runGapAnalysis() {
   const art    = document.getElementById('article');
   const loadEl = document.getElementById('gap-loading');
@@ -10873,14 +11186,19 @@ async function runGapAnalysis() {
   _gapResetPanels();
   if (rBtn) rBtn.style.display = 'none';
 
-  if (!serpData || (!serpData.topics.length && !serpData.phrases.length)) {
+  const tematy = serpData ? (serpData.topics || []).map((t) => String(t).trim()).filter(Boolean) : [];
+  if (!tematy.length) {
+    noSerp.textContent = _t(serpBlad ? 'gap-serp-blad' : 'gap-no-serp');
     noSerp.style.display = 'block'; return;
   }
   if (!art || !art.innerHTML.trim()) return;
+  loadEl.textContent = _t('gap-loading');
   loadEl.style.display = 'block';
 
-  const articleText = (art.innerText || '').substring(0, 3000);
-  const serpTopics  = [...serpData.topics, ...serpData.phrases].join(', ');
+  const snap = getArticleSnapshot();
+  if (gapWToku && gapWToku.snapshot === snap) return; // ta sama analiza juz trwa - czekamy na nia
+  const zad = gapWToku = { snapshot: snap };
+  const articleText = tekstDlaLuk(art);
   const kaLuki      = kontekstArtykulu();
   const kwText      = kaLuki.frazy.length ? kaLuki.frazy.join(', ') : kaLuki.temat;
 
@@ -10888,61 +11206,91 @@ async function runGapAnalysis() {
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 700,
-        system: 'You are a semantic SEO expert. Compare an article to SERP topics and return ONLY valid JSON (no markdown): {"score":0-100,"missing":["topic1",...up to 8],"present":["topic1",...up to 8],"msg":"one sentence assessment in ' + (currentLang === 'en' ? 'English' : 'Polish') + '"}. Score 100 = all topics covered. Return ALL relevant SERP topics in either missing or present.',
-        messages: [{ role: 'user', content: 'Keyword: ' + kwText + '\nSERP topics (full list): ' + serpTopics + '\n\nArticle:\n' + articleText }]
+      body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 900,
+        system: 'You are a semantic SEO expert. Compare an article to SERP topics and return ONLY valid JSON (no markdown): {"missing":["topic",...],"present":["topic",...],"msg":"one sentence assessment in ' + (currentLang === 'en' ? 'English' : 'Polish') + '"}. Copy each topic name exactly as listed and put EVERY listed topic in exactly one of the two lists. A topic is present only when the article actually discusses it, not when it merely mentions a word from it.',
+        messages: [{ role: 'user', content: 'Keyword: ' + kwText + '\nSERP topics (full list): ' + tematy.join(', ') + '\n\nArticle:\n' + articleText }]
       })
     });
     const data   = await res.json();
     if (data.error) throw bladOdpowiedzi(data, res.status);
     const raw    = (data.content || []).map(b => b.text || '').join('').replace(/```json|```/g, '').trim();
-    const parsed = parsujJsonModelu(raw);
-    // Zastąp niedeterministyczny score Claude wyliczeniem z liczby tematów
-    const _totalTopics = (parsed.present?.length || 0) + (parsed.missing?.length || 0);
-    if (_totalTopics > 0) {
-      parsed.score = Math.round((parsed.present?.length || 0) / _totalTopics * 100);
-    }
-    const snap   = getArticleSnapshot();
+    const odp    = parsujJsonModelu(raw);
+    // Tekst albo wersja zmienily sie w trakcie - wynik opisywalby inny tekst.
+    if (gapWToku !== zad || getArticleSnapshot() !== snap) return;
+    const present = dopasujDoSerp(odp.present, tematy);
+    const parsed = { present, missing: tematy.filter((t) => !present.includes(t)), msg: odp.msg || '',
+      score: Math.round(present.length / tematy.length * 100) };
 
     if (gapBaseline && gapSelectedTopics.length) {
-      // Po poprawce - pokaż delta z autorytatywnymi selectedTopics
+      // Po poprawce - delta z tematami, dla ktorych sekcja naprawde powstala
       gapCache = { snapshot: snap, result: parsed, baseline: gapBaseline,
                    selected: gapSelectedTopics, isDelta: true };
       renderGapDelta(gapBaseline, parsed, gapSelectedTopics);
-    } else if (gapBaseline) {
-      // Odświeżenie bez poprawki
-      gapCache = { snapshot: snap, result: parsed, baseline: gapBaseline,
-                   selected: [], isDelta: true };
-      renderGapDelta(gapBaseline, parsed, []);
     } else {
-      // Pierwsza analiza - zapisz baseline
-      gapBaseline = { score: parsed.score,
-                      missing: [...(parsed.missing||[])],
-                      present: [...(parsed.present||[])] };
+      // Pierwsza analiza albo Odswiez bez poprawki: nowy punkt odniesienia (wczesniej
+      // odswiezenie pokazywalo pozorne "47 pkt -> 47 pkt")
+      gapBaseline = { score: parsed.score, missing: [...parsed.missing], present: [...parsed.present] };
       gapCache = { snapshot: snap, result: parsed, isDelta: false };
       renderGapResult(parsed);
     }
   } catch(e) {
+    if (gapWToku !== zad) return;
     loadEl.textContent = komunikatBleduApi(e, 'gap-blad');
     if (rBtn) rBtn.style.display = 'inline-block';
+  } finally {
+    if (gapWToku === zad) gapWToku = null;
   }
 }
 
+// Temat z SERP-a a naglowek sekcji, ktory napisal model: 1 = ten sam, 0.95 = jeden zawiera
+// poczatek drugiego, dalej udzial wspolnych slow (model lubi dopisac nawias albo zmienic szyk).
+// Frazy z SERP zaczynaja sie zwykle tak samo ("pompa ciepla cena", "pompa ciepla opinie"),
+// wiec temat dostaje sekcje NAJLEPIEJ pasujaca, nie pierwsza podobna.
+function podobienstwoTematu(a, b) {
+  const n = (t) => String(t || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+  const x = n(a), y = n(b);
+  if (!x || !y) return 0;
+  if (x === y) return 1;
+  if (x.indexOf(y) === 0 || y.indexOf(x) === 0) return 0.95;
+  const sx = x.split(' ').filter((w) => w.length > 2), sy = new Set(y.split(' ').filter((w) => w.length > 2));
+  if (!sx.length || !sy.size) return 0;
+  const wspolne = sx.filter((w) => sy.has(w)).length;
+  return wspolne / Math.max(sx.length, sy.size);
+}
+
 async function improveFromGaps() {
+  if (generowanieTrwa()) { ostrzezGenerowanieTrwa(); return; }
   const art = document.getElementById('article');
   if (!art || !serpData) return;
-  const originalHtml = art.innerHTML;
-
-  // Zachowaj meta description
-  const tmpPre = document.createElement('div'); tmpPre.innerHTML = originalHtml;
-  const metaBoxEl = tmpPre.querySelector('.meta-box');
-  const savedMeta = metaBoxEl ? metaBoxEl.outerHTML : '';
+  if (editMode) toggleEdit();
 
   const checkedEls = Array.from(document.querySelectorAll('.gap-miss-check:checked'));
   if (!checkedEls.length) return;
   const selectedNow = checkedEls.map(c =>
     (c.closest('.gap-miss-item')?.querySelector('.gap-miss-text')?.textContent?.trim() || '')
   ).filter(Boolean);
+
+  // R6: lista zrodel wychodzi z artykulu PRZED cieciem na czesci. Wczesniej siedziala
+  // miedzy "Kluczowymi wnioskami" a opisem meta, regex wnioskow zabieral ja razem z nimi,
+  // a podmiana wnioskow kasowala zrodla - PDF i DOCX wychodzily bez zrodel.
+  const przedHtml = htmlDoZapisu(art);
+  const robocze = document.createElement('div');
+  robocze.innerHTML = art.innerHTML;
+  const boxZrodelEl = robocze.querySelector('.zrodla-box');
+  const staryBox = boxZrodelEl ? boxZrodelEl.outerHTML : '';
+  robocze.querySelectorAll('.zrodla-box').forEach((el) => el.remove());
+  const originalHtml = robocze.innerHTML;
+
+  // Zachowaj meta description
+  const metaBoxEl = robocze.querySelector('.meta-box');
+  const savedMeta = metaBoxEl ? metaBoxEl.outerHTML : '';
+
+  // R6: nowe sekcje potrzebuja zrodel. Artykul pisany z wyszukiwaniem (ma liste zrodel z sieci)
+  // albo wlaczony przelacznik = szukamy w sieci tak jak przy generowaniu. Bez bazy i bez sieci
+  // nie wolamy modelu: wyszlyby same sekcje "brak pokrycia", a wynik i tak pokazalby 100 pkt.
+  const zSiecia = !!(document.getElementById('use-web') && document.getElementById('use-web').checked) || !!staryBox;
+  const zaznaczoneDok = docs.some((d) => d.selected) || (window._bazaSerwerLiczba || 0) > 0;
+  if (!zSiecia && !zaznaczoneDok) { pokazBrakZrodelLuk(); return; }
 
   const btn    = document.getElementById('gap-improve-btn');
   const ka     = kontekstArtykulu();
@@ -10951,8 +11299,19 @@ async function improveFromGaps() {
   const outLang = jezykDlaModelu(ka.jezyk);
   const kwSectionName = { 'Polish':'Kluczowe wnioski', 'English':'Key takeaways', 'German':'Wichtigste Erkenntnisse', 'Czech':'Klíčové poznatky' }[outLang];
 
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><span class="progress-spinner" style="display:inline-block"></span><span>' + _t('msg-spin-sections').replace('⏳','').trim() + '</span></span>'; }
+  // R6 (E-01): na czas poprawy to jest generowanie - Wygeneruj, Dopracuj i kolejka czekaja,
+  // a wynik trafia tylko do artykulu, z ktorego poprawa wyszla (numerArtykulu). Wczesniej
+  // spozniona odpowiedz ladowala w nowym artykule i nadpisywala jego wpis w Historii.
+  const nrArt = numerArtykulu;
+  const przerwanie = przerwanieGenerowania = new AbortController();
+  const ustawPrzycisk = (tekst) => { if (btn) btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><span class="progress-spinner" style="display:inline-block"></span><span>' + escapeHtml(tekst) + '</span></span>'; };
+  if (btn) btn.disabled = true;
+  ustawPrzycisk(_t(zSiecia ? 'gap-szukam' : 'msg-spin-sections').replace('⏳', '').trim());
+  // R6 (E-08): odliczanie przed ponowieniem po 429 w przycisku Luk, nie w ukrytym spinnerze generowania
+  komunikatPonawiania = (sek, n, m) => ustawPrzycisk(_t('spin-ponawiam-za').replace('{s}', sek) + ', ' + _t('spin-proba').replace('{n}', n).replace('{m}', m));
   // status generowania sekcji tylko na gorze (przycisk); bez dolnego wskaznika i skoku na dol
+  const info = document.getElementById('gap-info');
+  if (info) info.hidden = true;
 
   // Wyciągnij i usuń sekcję "Kluczowe wnioski" z oryginalnego HTML
   // - musi zawsze być na końcu, przed meta-box
@@ -10961,103 +11320,238 @@ async function improveFromGaps() {
   const originalKw = kwMatch ? kwMatch[1].trimEnd() : null;
   const htmlWithoutKw = originalKw ? originalHtml.replace(originalKw, '') : originalHtml;
 
-  // Plain text artykułu jako kontekst (bez KW i meta-box, bez tagów HTML)
+  // Tekst artykułu jako kontekst (bez KW, ramki meta i notatek), bloki rozdzielone
   const tmpCtx = document.createElement('div'); tmpCtx.innerHTML = htmlWithoutKw;
-  const metaInCtx = tmpCtx.querySelector('.meta-box');
-  if (metaInCtx) metaInCtx.remove();
-  const articlePlainText = (tmpCtx.innerText || '').trim();
+  tmpCtx.querySelectorAll('.meta-box, [data-brak]').forEach((el) => el.remove());
+  const articlePlainText = tekstBlokami(tmpCtx).trim();
+  // R6 (E-16): spis sekcji i styl naglowkow - nowe sekcje ida tam, gdzie pasuja w konspekcie
+  // (wczesniej zawsze na koniec), a w artykule z H2-pytaniami tez jako pytania (AEO nie spada).
+  const h2Istniejace = [...tmpCtx.querySelectorAll('h2')].map((h) => h.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const pytajne = h2Istniejace.filter((t) => /\?\s*$/.test(t)).length;
+  const spis = h2Istniejace.length
+    ? '\n\nExisting H2 sections, in order:\n' + h2Istniejace.map((t) => '- ' + t).join('\n')
+      + '\nBefore each new <h2>, write one line [AFTER: exact text of the existing H2 it should follow], so the new section lands where it fits the outline; use [AFTER: START] for the very beginning. '
+      + (pytajne * 2 >= h2Istniejace.length ? 'Phrase each new H2 as a question, like most existing headings.' : 'Match the style of the existing H2 headings.')
+    : '';
 
-  const maxNewTokens = Math.min(8000, selectedNow.length * 600 + 1200);
+  const maxNewTokens = Math.min(9000, selectedNow.length * 650 + 1400);
   const topicsList = selectedNow.map((t, i) => `${i + 1}. ${t}`).join('\n');
   const hasKw = !!originalKw;
 
-  try {
-    const res = await apiFetch({
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({
-        model: MODEL_TRESCI,
-        max_tokens: zRezerwa(maxNewTokens),
-        // Ta sciezka dostawala wczesniej temat, frazy i gotowy artykul, ale
-        // ZADNYCH zrodel. Model musial wiec wymyslic tresc nowych sekcji -
-        // luki semantyczne z SERP-a to przeciez tematy, ktorych w artykule
-        // nie ma, a czesto nie ma ich rowniez w bazie wiedzy. Przycisk
-        // "Uzupelnij luki" byl przez to najkrotsza droga do halucynacji
-        // w tekscie, ktory poza tym trzymal sie zrodel. Teraz dostaje te
-        // same zrodla i te same reguly co glowne generowanie, a luke bez
-        // pokrycia ma pominac zamiast wypelnic.
-        system: `You are an SEO editor. Write ALL new content in ${outLang} (regardless of the language of the topic or keywords). Write ONLY the new HTML sections requested, then (if instructed) an updated summary section. No markdown fences, no preamble, no repetition of existing content.`
-          + blokFaktow(false) + blokZakresu() + blokKonfliktu() + blokRytmu() + blokTonu(tonKanoniczny())
-          + '\n\nA GAP IS NOT A LICENCE TO INVENT. These topics come from search results, '
-          + 'not from the sources. Write a section only for a topic the sources below '
-          + 'actually cover. For every other topic write exactly one line:\n'
-          + '<h2>TOPIC</h2><p data-brak="1">' + tekstWJezyku('gap-brak-pokrycia', jezykEtykiet()) + '</p>\n'
-          + 'so the author can see what is missing and decide whether to add a source.',
-        messages: [{ role: 'user', content:
-          'Article topic: ' + topic + '\nKeywords: ' + kwText +
-          '\nOutput language: ' + outLang +
-          '\n\nSOURCES (the only material you may draw facts from):\n' + zrodlaDoKontroli().slice(0, 100000) +
-          '\n\nExisting article (context/tone - do NOT repeat):\n' + articlePlainText +
-          '\n\nWrite new HTML sections in ' + outLang + ' (each: <h2>Heading</h2><p>...</p><p>...</p>) for:\n' + topicsList +
-          (hasKw
-            ? '\n\nAfter the new sections, write an updated <h2>' + kwSectionName + '</h2><ul><li>...</li></ul> that includes key points from BOTH the existing article AND the new sections above. Keep all original bullet points, add new ones for the new topics.'
-            : '') +
-          '\n\nReturn ONLY the HTML blocks. No preamble.'
-        }]
-      })
-    });
-    const data = await res.json();
-    const aiOutput = (data.content || []).map(x => x.text || '').join('')
-      .replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim();
+  const naglowki = { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
+  const cialo = {
+    model: MODEL_TRESCI,
+    max_tokens: zRezerwa(maxNewTokens),
+    // Te same zrodla i reguly co glowne generowanie. Luka z SERP-a to temat, ktorego
+    // w artykule nie ma; bez zrodla model by go zmyslil, wiec temat bez pokrycia pomija.
+    system: `You are an SEO editor. Write ALL new content in ${outLang} (regardless of the language of the topic or keywords). Write ONLY the new HTML sections requested, then (if instructed) an updated summary section. No markdown fences, no preamble, no repetition of existing content.`
+      + blokFaktow(zSiecia) + blokZakresu() + blokKonfliktu() + blokRytmu() + blokTonu(tonKanoniczny())
+      + '\n\nA GAP IS NOT A LICENCE TO INVENT. These topics come from search results, not from the sources. '
+      + (zSiecia
+        ? 'Use the knowledge base first; where it is silent, SEARCH the web for the topic and write the section from what you find, so every fact can be traced to a page. '
+        : 'Write a section only for a topic the sources below actually cover. ')
+      + 'Only for a topic that neither the sources' + (zSiecia ? ' nor a search' : '') + ' cover, write exactly one line:\n'
+      + '<h2>TOPIC</h2><p data-brak="1">' + tekstWJezyku('gap-brak-pokrycia', jezykEtykiet()) + '</p>\n'
+      + 'Never pad such a section with general statements.',
+    messages: [{ role: 'user', content:
+      'Article topic: ' + topic + '\nKeywords: ' + kwText +
+      '\nOutput language: ' + outLang +
+      '\n\nSOURCES (knowledge base' + (zSiecia ? '; you may also search the web' : ', the only material you may draw facts from') + '):\n' + zrodlaDoKontroli().slice(0, 100000) +
+      '\n\nExisting article (context/tone - do NOT repeat):\n' + articlePlainText + spis +
+      '\n\nWrite new HTML sections in ' + outLang + ' (each: <h2>Heading</h2><p>...</p><p>...</p>) for:\n' + topicsList +
+      (hasKw
+        ? '\n\nAfter the new sections, write an updated <h2>' + kwSectionName + '</h2><ul><li>...</li></ul> with 5 to 8 bullet points that sum up the WHOLE article, including the new sections. Merge related points; do not list every paragraph.'
+        : '') +
+      '\n\nReturn ONLY the HTML blocks. No preamble.'
+    }]
+  };
+  if (zSiecia) cialo.tools = [narzedzieWyszukiwania()];
 
-    if (!aiOutput || aiOutput.length < 50) {
-      document.getElementById('gap-gen-indicator')?.remove();
-      if (btn) { btn.disabled = false; updateGapBtn(); }
-      return;
-    }
+  try {
+    const data = zSiecia
+      ? await wywolajZWyszukiwaniem(cialo, naglowki)
+      : await (await apiFetch({ method: 'POST', headers: naglowki, body: JSON.stringify(cialo) })).json();
+    if (!data || data.error) throw bladOdpowiedzi(data || {});
+    if (nrArt !== numerArtykulu) { pokazPowiadomienie(_t('gap-inny-artykul'), 'uwaga'); return; }
+    // Tekst po ostatnim wyniku wyszukiwania (zapowiedz "Wyszukam..." nie trafia do artykulu).
+    const bloki = data.content || [];
+    let od = 0;
+    bloki.forEach((b, i) => { if (b && b.type === 'web_search_tool_result') od = i + 1; });
+    let aiOutput = bloki.slice(od).map((x) => x.text || '').join('').trim() || bloki.map((x) => x.text || '').join('');
+    aiOutput = aiOutput.replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim();
+    // R6 (E-08): pusta odpowiedz modelu to blad, nie cisza
+    if (!aiOutput.replace(/<[^>]*>/g, '').trim()) { pokazBladLuk(_t('gap-pusto')); return; }
+    if (outLang === 'Polish') aiOutput = aiOutput.replace(/[—–]/g, '-');
+    aiOutput = aiOutput.replace(/<a\s+href=/gi, '<a target="_blank" rel="noopener" href=').replace(/target="_blank"\s+target="_blank"/gi, 'target="_blank"');
 
     // Rozdziel odpowiedź AI na nowe sekcje i zaktualizowane KW
     const newKwRegex = /(<h2[^>]*>\s*(?:Kluczowe wnioski|Key takeaways|Wichtigste Erkenntnisse|Klíčové poznatky)\s*<\/h2>[\s\S]*)/i;
     const newKwMatch = aiOutput.match(newKwRegex);
-    const updatedKw      = newKwMatch ? newKwMatch[1].trimEnd() : null;
-    const newSectionsOnly = newKwMatch
-      ? aiOutput.slice(0, newKwMatch.index).trimEnd()
-      : aiOutput;
+    const updatedKw = newKwMatch ? newKwMatch[1].trimEnd() : null;
+    // Znacznik wpisany do srodka naglowka (<h2>[AFTER: X] Tytul</h2>) idzie przed naglowek,
+    // inaczej ciecie po znaczniku rozbiloby sekcje.
+    const surowe = (newKwMatch ? aiOutput.slice(0, newKwMatch.index).trimEnd() : aiOutput)
+      .replace(/<h2([^>]*)>\s*(\[AFTER:[^\]\n]*\])\s*/gi, '$2\n<h2$1>');
 
-    // Zbuduj końcowy HTML: [artykuł bez KW i bez meta] + [nowe sekcje] + [KW] + [meta]
-    const baseHtml = htmlWithoutKw
-      .replace(savedMeta, '').trimEnd();     // usuń meta-box z bazy
+    // Znaczniki [AFTER: ...] dziela odpowiedz na grupy sekcji z miejscem docelowym w artykule.
+    const grupy = [];
+    const reMiejsca = /\[AFTER:\s*([^\]\n]*)\]/gi;
+    let cel = '', od2 = 0, zn;
+    while ((zn = reMiejsca.exec(surowe))) { grupy.push({ cel, html: surowe.slice(od2, zn.index) }); cel = zn[1].trim(); od2 = zn.index + zn[0].length; }
+    grupy.push({ cel, html: surowe.slice(od2) });
 
-    const kwBlock   = updatedKw || originalKw || '';
-    const metaBlock = savedMeta || '';
+    // R6: sekcje "brak pokrycia" nie trafiaja do artykulu. Wczesniej osiem pustych naglowkow
+    // z ramka "Brak pokrycia..." wygladalo jak blad, a wynik pokrycia rosl do 100 pkt.
+    // Temat bez zrodla zostaje na liscie "Nadal brakujace" z wyjasnieniem w panelu.
+    const sekcje = [];
+    grupy.forEach((g) => {
+      const kont = document.createElement('div');
+      kont.innerHTML = oczyscHtmlModelu(g.html);
+      kont.querySelectorAll('h2').forEach((h) => {
+        const czesci = [h];
+        let n = h.nextElementSibling;
+        while (n && n.tagName !== 'H2') { czesci.push(n); n = n.nextElementSibling; }
+        const pusta = czesci.some((el) => el.matches('[data-brak]') || el.querySelector('[data-brak]'));
+        const tresc = czesci.slice(1).map((el) => (el.textContent || '').trim()).join(' ');
+        // puste akapity (resztki <p> wokol znacznika [AFTER: ...]) nie ida do artykulu
+        const wezly = czesci.filter((el, i) => i === 0 || (el.textContent || '').trim() || el.querySelector('table, ul, ol'));
+        sekcje.push({ tytul: h.textContent.trim(), wezly, cel: g.cel, ok: !pusta && tresc.length > 60 });
+      });
+    });
+    const pokryteTeraz = [], bezPokrycia = [];
+    const rowno = sekcje.length === selectedNow.length;
+    selectedNow.forEach((t, i) => {
+      let sek = null, best = 0;
+      sekcje.forEach((x, j) => {
+        const p = podobienstwoTematu(x.tytul, t) + (rowno && j === i ? 0.01 : 0);
+        if (p > best) { best = p; sek = x; }
+      });
+      if (best < 0.6) sek = rowno ? sekcje[i] : null;
+      (sek && sek.ok ? pokryteTeraz : bezPokrycia).push(t);
+    });
+    const dobre = sekcje.filter((x) => x.ok);
 
-    const updatedHtml = oczyscHtmlModelu(baseHtml
-      + (newSectionsOnly ? '\n' + newSectionsOnly : '')
-      + (kwBlock         ? '\n' + kwBlock         : '')
-      + (metaBlock       ? '\n' + metaBlock        : ''));
+    if (!pokryteTeraz.length || !dobre.length) {
+      pokazBrakZrodelLuk(bezPokrycia.length ? bezPokrycia : selectedNow, zSiecia);
+      return;
+    }
 
+    // Zrodla: dotychczasowe + nowe z wyszukiwania (bez powtorzen adresow).
+    const noweZrodla = zSiecia ? zrodlaZOdpowiedzi(data) : [];
+    const box = document.createElement('div');
+    box.innerHTML = staryBox || (noweZrodla.length ? blokZrodel(noweZrodla) : '');
+    const ul = box.querySelector('.zrodla-box ul');
+    if (ul && staryBox) {
+      const sa = new Set([...ul.querySelectorAll('a[href]')].map((a) => kluczAdresu(a.getAttribute('href'))));
+      const brakujace = noweZrodla.filter((z) => !sa.has(kluczAdresu(z.url)));
+      if (brakujace.length) {
+        const tmpUl = document.createElement('div');
+        tmpUl.innerHTML = blokZrodel(brakujace);
+        tmpUl.querySelectorAll('li').forEach((li) => ul.appendChild(li));
+      }
+    }
+    if (noweZrodla.length) {
+      const znane = new Set(zrodlaSieciowe.map((z) => kluczAdresu(z.url)));
+      zrodlaSieciowe = zrodlaSieciowe.concat(noweZrodla.filter((z) => !znane.has(kluczAdresu(z.url))));
+    }
+
+    // Artykul bez KW i bez meta, nowe sekcje we wskazanych miejscach (za sekcja [AFTER: ...],
+    // przed pierwsza sekcja dla START, bez znacznika albo bez dopasowania na koncu), potem KW,
+    // lista zrodel i meta.
+    const kont = document.createElement('div');
+    kont.innerHTML = htmlWithoutKw;
+    kont.querySelectorAll('.meta-box').forEach((el) => el.remove());
+    const h2Bazy = [...kont.querySelectorAll('h2')];
+    dobre.forEach((sek) => {
+      let kotwica = null;
+      if (/^(start|begin|beginning|poczatek|początek)$/i.test(sek.cel)) kotwica = 'start';
+      else if (sek.cel) {
+        let best = 0;
+        h2Bazy.forEach((h) => { const p = podobienstwoTematu(h.textContent, sek.cel); if (p > best) { best = p; kotwica = h; } });
+        if (best < 0.8) kotwica = null;
+      }
+      const przed = kotwica === 'start' ? (h2Bazy[0] || null) : kotwica ? (h2Bazy[h2Bazy.indexOf(kotwica) + 1] || null) : null;
+      sek.wezly.forEach((el) => kont.insertBefore(el, przed));
+    });
+    // Wnioski maja 5-8 punktow. Gdy model mimo to dopisze punkt za kazda nowa sekcje
+    // (wczesniej 16 punktow), zostaja dotychczasowe wnioski.
+    const ileLi = (h) => ((h || '').match(/<li[\s>]/gi) || []).length;
+    const kwBlock = (updatedKw && (ileLi(updatedKw) <= 8 || !originalKw || ileLi(updatedKw) <= ileLi(originalKw)) ? updatedKw : originalKw) || '';
+    let updatedHtml = oczyscHtmlModelu(kont.innerHTML.trimEnd()
+      + (kwBlock ? '\n' + kwBlock : '')
+      + (savedMeta ? '\n' + savedMeta : ''));
+    updatedHtml = wstawBlokZrodel(updatedHtml, box.innerHTML);
+
+    // Artykul z Historii nie ma wersji: oryginal zostaje jako wersja do porownania. Stan Luk
+    // sprzed poprawy zostaje przy wersji, z ktorej poprawa wyszla (E-09).
+    if (!versions.length) addVersion(przedHtml, _t('ver-original'));
+    zapiszStanLuk(versions[activeVersion]);
     art.innerHTML = updatedHtml;
     uporzadkujArtykul(art);
-    currentText   = tekstBlokami(art);
-    showArticleStats(updatedHtml);
+    currentText = tekstBlokami(art);
+    showArticleStats(art.innerHTML);
+    if (zSiecia) pokazStanSieci(stanSieci || { szukan: 1, cytowan: 0 }, zrodlaSieciowe.length);
 
     gapImproveCount++;
-    const verLabel = gapImproveCount === 1 ? _t('ver-serp') : _t('ver-serp') + ' ' + gapImproveCount;
-    addVersion(updatedHtml, verLabel);
+    addVersion(htmlDoZapisu(art), etykietaWersji(_t('ver-serp')));
+    // Wynik do biezacej wersji i do Historii - po odswiezeniu wracal tekst sprzed poprawy (E-03).
+    if (typeof zapiszRecznePoprawki === 'function') zapiszRecznePoprawki();
 
-    gapSelectedTopics = [...new Set([...gapSelectedTopics, ...selectedNow])];
+    // Do wyniku "pokryte" ida tylko tematy z napisana sekcja.
+    gapSelectedTopics = [...new Set([...gapSelectedTopics, ...pokryteTeraz])];
+    gapBezPokrycia = bezPokrycia; gapBezPokryciaSiec = zSiecia;
     gapCache = null;
 
-    document.getElementById('gap-panel').style.display = 'block';
-    gapOpen = true;
-    runGapAnalysis();
-
-  } catch(e) {
-    // apiFetch obsługuje błędy w UI
+    // R6 (E-11): panel Luk odswieza sie tylko wtedy, gdy jest na wierzchu. Wczesniej otwieral
+    // sie sam (takze nad innym artykulem i obok innej zakladki), teraz w innym razie komunikat.
+    const lukiNaWierzchu = gapOpen && panelWidoczny('gap-panel') && !document.getElementById('inspektor').hidden;
+    if (lukiNaWierzchu) runGapAnalysis();
+    else pokazPowiadomienie(_t('gap-dopisane').replace('{n}', String(pokryteTeraz.length)), 'ok');
+  } catch (e) {
+    if (nrArt === numerArtykulu && !(e && e.name === 'AbortError')) pokazBladLuk(komunikatBleduApi(e, 'gap-blad'));
+  } finally {
+    komunikatPonawiania = null;
+    if (przerwanieGenerowania === przerwanie) przerwanieGenerowania = null;
+    document.getElementById('gap-gen-indicator')?.remove();
+    if (btn) { btn.disabled = false; updateGapBtn(); }
   }
+}
 
-  document.getElementById('gap-gen-indicator')?.remove();
-  if (btn) { btn.disabled = false; updateGapBtn(); }
+function pokazBladLuk(tekst) {
+  const info = document.getElementById('gap-info');
+  if (!info) return;
+  info.textContent = tekst;
+  info.className = 'gap-info blad';
+  info.hidden = false;
+}
+
+// Tematy, dla ktorych nie bylo zrodla: komunikat w panelu Luk zamiast pustych sekcji w artykule.
+// Bez listy tematow = nie bylo zadnych zrodel; z lista = zrodla byly (baza albo siec), ale tematow nie opisuja.
+let gapBezPokrycia = [], gapBezPokryciaSiec = false;
+function pokazBrakZrodelLuk(tematy, zSiecia) {
+  const info = document.getElementById('gap-info');
+  if (!info) return;
+  const n = (tematy || []).length;
+  info.className = 'gap-info uwaga';
+  info.innerHTML = '';
+  const p = document.createElement('p');
+  p.textContent = zSiecia
+    ? _t('gap-bez-zrodel-siec').replace('{n}', n)
+    : (tematy ? _t('gap-bez-zrodel-baza').replace('{n}', n) : _t('gap-bez-zrodel'));
+  info.appendChild(p);
+  if (!zSiecia) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn-secondary btn-pelny';
+    b.innerHTML = ikona('globe') + '<span>' + escapeHtml(_t('gap-wlacz-siec')) + '</span>';
+    b.onclick = function () {
+      const w = document.getElementById('use-web');
+      if (w) { w.checked = true; w.dispatchEvent(new Event('change', { bubbles: true })); }
+      improveFromGaps();
+    };
+    info.appendChild(b);
+  }
+  info.hidden = false;
 }
 
 // ─── FEATURE: SUGESTIE LINKÓW WEWNĘTRZNYCH ─────────────────────────────────────
@@ -11087,6 +11581,14 @@ function buildLinkSuggestions() {
     }
     return d;
   }).filter(d => d.url);
+  // R6-F (E-13): takze strony z Bazy na serwerze (w wariancie z serwerem trafia tam wszystko
+  // z panelu, wiec bez tego zakladka Linki byla zawsze pusta). Lista serwera ma nazwe i adres
+  // bez tresci - dopasowanie idzie po slowach nazwy i adresu.
+  (window._bazaSerwer || []).forEach(function (d) {
+    if (d && d.url && !urlDocs.some(function (x) { return kluczAdresu(x.url) === kluczAdresu(d.url); })) {
+      urlDocs.push({ name: d.nazwa || d.url, url: d.url, content: '' });
+    }
+  });
   if (!urlDocs.length) {
     listEl.innerHTML = '<span style="color:var(--text3)">' + _t('msg-no-urls') + '</span>';
     return;
@@ -11125,7 +11627,7 @@ function buildLinkSuggestions() {
 
   listEl.innerHTML = suggestions.map(s => `
     <div class="link-sug">
-      <span class="link-sug-icon">' + ikona('link') + '</span>
+      <span class="link-sug-icon">${ikona('link')}</span>
       <div>
         <!-- Nazwa dokumentu bierze sie z tytulu pobranej strony, a wiec
              z tresci obcej witryny. Bez ucieczki znakow strona mogla by
@@ -11252,6 +11754,9 @@ function zapiszPoprawkiTeraz() {
 }
 document.getElementById('article')?.addEventListener('input', function () {
   if (!editMode) return;
+  // R6-F (E-02): notatka o luce, w ktora autor wpisal tekst (albo akapit z Entera pod nia),
+  // przestaje byc notatka - wczesniej znikala z eksportu razem z naglowkiem sekcji.
+  zdejmijNotatkiZTekstem(this);
   clearTimeout(licznikPoprawek);
   licznikPoprawek = setTimeout(zapiszPoprawkiTeraz, 1000);
 });
@@ -11261,11 +11766,23 @@ document.addEventListener('visibilitychange', function () {
 });
 
 // ─── VERSIONS ─────────────────────────────────────────────────────────────────
+// R6 (E-01): numer artykulu na ekranie - rosnie przy kazdym nowym artykule (generowanie,
+// otwarcie z Historii). Spozniona odpowiedz poprawy pod luki nie trafia do innego artykulu.
+let numerArtykulu = 0;
 let versions = [];
 let activeVersion = 0;
 let pendingVersions = null;
 
+// R6: kolejna wersja o tej samej nazwie dostaje numer ("Po samokorekcie 2"): Dopracuj na wersji
+// Przed albo Poprawa SERP dawal druga pozycje "Po samokorekcie" i na liscie nie dalo sie ich odroznic.
+function etykietaWersji(nazwa) {
+  const ile = versions.filter((v) => v.label === nazwa || String(v.label).indexOf(nazwa + ' ') === 0).length;
+  return ile ? nazwa + ' ' + (ile + 1) : nazwa;
+}
+
 function addVersion(html, label) {
+  // Stan Luk zostaje przy wersji, z ktorej powstaje nowa (Dopracuj, Poprawa SERP) - E-09.
+  zapiszStanLuk(versions[activeVersion]);
   versions.push({ html, label });
   activeVersion = versions.length - 1;
   renderVersionsBar();
@@ -11273,6 +11790,7 @@ function addVersion(html, label) {
 
 function renderVersionsBar() {
   const bar = document.getElementById('versions-bar');
+  odswiezWyborWersji(bar);
   if (versions.length < 2) { bar.classList.remove('show'); return; }
   bar.classList.add('show');
   bar.querySelectorAll('.ver-btn').forEach(el => el.remove());
@@ -11285,6 +11803,24 @@ function renderVersionsBar() {
   });
 }
 
+// R6: Przed | Po | Poprawa SERP nie miescily sie na telefonie obok "N slow · M min" i wchodzily
+// na nie. Od trzech wersji telefon pokazuje nazwe biezacej wersji, a wybor idzie przez systemowa
+// liste (select przykryty przezroczyscie, 16 px - iOS nie powieksza strony). Komputer bez zmian.
+function odswiezWyborWersji(bar) {
+  const sel = document.getElementById('ver-select'), napis = document.getElementById('ver-wybor-tekst');
+  bar.classList.toggle('wiele-wersji', versions.length >= 3);
+  if (!sel) return;
+  sel.innerHTML = '';
+  versions.forEach((v, i) => {
+    const o = document.createElement('option');
+    o.value = String(i);
+    o.textContent = v.label;
+    sel.appendChild(o);
+  });
+  if (versions[activeVersion]) sel.value = String(activeVersion);
+  if (napis) napis.textContent = versions[activeVersion] ? versions[activeVersion].label : '';
+}
+
 // Reczne poprawki trafiaja do biezacej wersji i do wpisu historii, inaczej
 // przelaczenie wersji albo odswiezenie strony kasowalo je bez ostrzezenia.
 function zapiszRecznePoprawki() {
@@ -11295,7 +11831,8 @@ function zapiszRecznePoprawki() {
   const wpis = wpisHistorii(biezacyHist);
   if (wpis) {
     wpis.html = h;
-    wpis.words = (art.innerText || '').split(/\s+/).filter(Boolean).length;
+    // R6-F (E-14): ta sama liczba slow co w pasku statystyk (wczesniej ze zrodlami i meta).
+    wpis.words = liczbaSlowArtykulu(art);
     saveState();
   }
 }
@@ -11303,6 +11840,7 @@ function zapiszRecznePoprawki() {
 function switchVersion(i) {
   if (editMode) toggleEdit();
   else if (versions[activeVersion]) versions[activeVersion].html = htmlDoZapisu(document.getElementById('article'));
+  zapiszStanLuk(versions[activeVersion]);
   activeVersion = i;
   const art = document.getElementById('article');
   art.innerHTML = oczyscHtmlModelu(versions[i].html);
@@ -11313,7 +11851,36 @@ function switchVersion(i) {
   // R4 (kod-17): wybrana wersja trafia do wpisu historii (po odswiezeniu wraca ta sama),
   // a oceny nie biora wyniku "(cache)" innej wersji.
   seoCache = null; aioCache = null;
+  wczytajStanLuk(versions[i]);
   zapiszRecznePoprawki();
+  odswiezOtwarteOceny();
+}
+
+// R6 (E-09): stan Luk nalezy do wersji. Wczesniej "Przed" pokazywalo wynik po poprawie
+// (100 pkt, "Nowo pokryte"), bo baseline i wybrane tematy byly wspolne dla wszystkich wersji.
+function zapiszStanLuk(v) {
+  if (!v) return;
+  v.luki = { cache: gapCache, baseline: gapBaseline, wybrane: gapSelectedTopics.slice(),
+    bez: gapBezPokrycia.slice(), bezSiec: gapBezPokryciaSiec };
+}
+function wczytajStanLuk(v) {
+  const l = v && v.luki;
+  gapCache = l ? l.cache : null;
+  gapBaseline = l ? l.baseline : null;
+  gapSelectedTopics = l ? l.wybrane.slice() : [];
+  gapBezPokrycia = l ? l.bez.slice() : [];
+  gapBezPokryciaSiec = l ? l.bezSiec : false;
+}
+
+// R6: otwarty panel oceny pokazywal po przelaczeniu wersji wynik poprzedniej (SEO 64 przy "Po",
+// AEO liczone dla "Przed"). AEO i GEO licza sie w przegladarce od razu, SEO i AIO biora wynik
+// tej wersji z pamieci albo oceniaja ja tak, jak przy otwarciu panelu.
+function odswiezOtwarteOceny() {
+  if (aeoOpen) renderAeoCheck();
+  if (geoOpen) renderGeoCheck();
+  if (gapOpen && panelWidoczny('gap-panel')) { gapOpen = false; toggleGapPanel(); }
+  if (seoOpen) { seoOpen = false; toggleSeoPanel(); }
+  if (aioOpen) { aioOpen = false; toggleAioPanel(); }
 }
 
 // ─── SEO ASSESSMENT ───────────────────────────────────────────────────────────
@@ -11328,6 +11895,25 @@ function regulaJezykaUwag() {
 // Cache wyników oceny - stabilny wynik dla tego samego artykułu
 let seoCache = null; // { articleHash, result }
 let aioCache = null;
+// R6: wyniki ocen modelu zapamietane dla kazdej wersji tekstu tego artykulu (klucz: skrot
+// calego tekstu). Przelaczanie Przed / Po / Poprawa SERP przy otwartym panelu pokazuje ocene
+// danej wersji bez ponownego wywolania; wersja jeszcze nieoceniona jest oceniana jak przy otwarciu.
+const ocenyWersji = { seo: new Map(), aio: new Map() };
+// R6-F (E-10): ocena w toku pamietana per skrot tekstu. Powrot na zakladke w trakcie (SEO -> AIO
+// -> SEO) pokazuje ladowanie i czeka na to samo zapytanie - wczesniej szly dwie platne oceny.
+// Numer przebiegu: wynik rysuje tylko ostatnie otwarcie panelu, wiec spozniona ocena innej
+// wersji tekstu nie nadpisze biezacej.
+const ocenyWToku = { seo: new Map(), aio: new Map() };
+let seoPrzebieg = 0, aioPrzebieg = 0;
+function ocenaWToku(rodzaj, skrot, zapytaj) {
+  let obietnica = ocenyWToku[rodzaj].get(skrot);
+  if (obietnica) return obietnica;
+  obietnica = zapytaj();
+  ocenyWToku[rodzaj].set(skrot, obietnica);
+  const sprzataj = function () { if (ocenyWToku[rodzaj].get(skrot) === obietnica) ocenyWToku[rodzaj].delete(skrot); };
+  obietnica.then(sprzataj, sprzataj);
+  return obietnica;
+}
 
 function simpleHash(str) {
   let h = 0;
@@ -11362,7 +11948,9 @@ async function toggleSeoPanel(forceRefresh = false) {
 
   // Użyj cache jeśli artykuł się nie zmienił
   const currentHash = simpleHash(fullText);
-  if (!forceRefresh && seoCache && seoCache.articleHash === currentHash) {
+  const seoZPamieci = forceRefresh ? null : (seoCache && seoCache.articleHash === currentHash ? seoCache : ocenyWersji.seo.get(currentHash));
+  if (seoZPamieci) {
+    seoCache = seoZPamieci;
     showSeoResult(seoCache.result);
     updateSeoHeader(true);
     return;
@@ -11380,7 +11968,10 @@ async function toggleSeoPanel(forceRefresh = false) {
     ]}), 1500);
     return;
   }
-  try {
+  // R6-F (E-10): ta sama ocena juz trwa - czekamy na nia (forceRefresh to swiadomie nowa ocena).
+  const moj = ++seoPrzebieg;
+  if (forceRefresh) ocenyWToku.seo.delete(currentHash);
+  const zapytaj = async () => {
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
@@ -11392,11 +11983,18 @@ async function toggleSeoPanel(forceRefresh = false) {
     const data = await res.json();
     if (data.error) throw bladOdpowiedzi(data, res.status);
     const raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
-    const result = parsujJsonModelu(raw);
-    seoCache = { articleHash: currentHash, result };
-    showSeoResult(result);
+    const ocena = { articleHash: currentHash, result: parsujJsonModelu(raw) };
+    ocenyWersji.seo.set(currentHash, ocena);
+    return ocena;
+  };
+  try {
+    const wpis = await ocenaWToku('seo', currentHash, zapytaj);
+    if (moj !== seoPrzebieg) return;
+    seoCache = wpis;
+    showSeoResult(wpis.result);
     updateSeoHeader(false);
   } catch(e) {
+    if (moj !== seoPrzebieg) return;
     document.getElementById('seo-content').innerHTML = blokBledu(e, 'seoOpen=false;toggleSeoPanel(true)');
   }
 }
@@ -11463,7 +12061,9 @@ async function toggleAioPanel(forceRefresh = false) {
 
   // Użyj cache jeśli artykuł się nie zmienił
   const currentHashAio = simpleHash(articleText);
-  if (!forceRefresh && aioCache && aioCache.articleHash === currentHashAio) {
+  const aioZPamieci = forceRefresh ? null : (aioCache && aioCache.articleHash === currentHashAio ? aioCache : ocenyWersji.aio.get(currentHashAio));
+  if (aioZPamieci) {
+    aioCache = aioZPamieci;
     showAioResult(aioCache.result);
     updateAioHeader(true);
     return;
@@ -11484,7 +12084,10 @@ async function toggleAioPanel(forceRefresh = false) {
     return;
   }
 
-  try {
+  // R6-F (E-10): jak w SEO - ta sama ocena w toku jest wspolna, rysuje ostatnie otwarcie panelu.
+  const moj = ++aioPrzebieg;
+  if (forceRefresh) ocenyWToku.aio.delete(currentHashAio);
+  const zapytaj = async () => {
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
@@ -11505,11 +12108,18 @@ The 6 criteria to evaluate (give one item per criterion):
     const data = await res.json();
     if (data.error) throw bladOdpowiedzi(data, res.status);
     const raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
-    const result = parsujJsonModelu(raw);
-    aioCache = { articleHash: currentHashAio, result };
-    showAioResult(result);
+    const ocena = { articleHash: currentHashAio, result: parsujJsonModelu(raw) };
+    ocenyWersji.aio.set(currentHashAio, ocena);
+    return ocena;
+  };
+  try {
+    const wpis = await ocenaWToku('aio', currentHashAio, zapytaj);
+    if (moj !== aioPrzebieg) return;
+    aioCache = wpis;
+    showAioResult(wpis.result);
     updateAioHeader(false);
   } catch(e) {
+    if (moj !== aioPrzebieg) return;
     document.getElementById('aio-content').innerHTML = blokBledu(e, 'aioOpen=false;toggleAioPanel(true)');
   }
 }
@@ -11612,8 +12222,10 @@ function dlTxt() {
   const art = document.getElementById('article');
   if (!art || !art.innerHTML.trim()) return;
   const kopia = kopiaDoEksportu(art);
-  const blob = new Blob([tekstEksportu(kopia)], { type: 'text/plain;charset=utf-8' });
-  pobierzPlik(blob, nazwaPlikuEksportu(tytulEksportu(kopia), 'txt'));
+  const nazwa = nazwaPlikuEksportu(tytulEksportu(kopia), 'txt');
+  // R6-F (E-18): polski sklad w pliku (twarde spacje po wyrazach jednoliterowych).
+  const blob = new Blob([tekstEksportu(twardeSpacjePl(kopia))], { type: 'text/plain;charset=utf-8' });
+  pobierzPlik(blob, nazwa);
 }
 
 // DOCX to prawdziwy dokument Worda (pwa/lib/docx-natywny.js), nie HTML w opakowaniu:
@@ -11626,7 +12238,9 @@ async function dlDocx() {
   if (btn) { btn.innerHTML = _t('msg-loading-docx'); btn.disabled = true; }
   try {
     const kopia = kopiaDoEksportu(art);
-    await pobierzDocx(kopia, opcjeDocxArtykulu(kopia), nazwaPlikuEksportu(tytulEksportu(kopia), 'docx'));
+    // R6-F (E-18): metadane (tytul, opis) przed twardymi spacjami, tresc dokumentu po nich.
+    const opcje = opcjeDocxArtykulu(kopia), nazwa = nazwaPlikuEksportu(tytulEksportu(kopia), 'docx');
+    await pobierzDocx(twardeSpacjePl(kopia), opcje, nazwa);
   } catch (e) {
     // Bez surowego komunikatu wyjatku w interfejsie (angielski, techniczny) - szczegol w konsoli.
     console.error('[docx]', e);
@@ -11659,7 +12273,13 @@ function przyciskDostepny(id) { var b = document.getElementById(id); return !!b 
 function inspektorPokaz(k) {
   if (!k) k = przyciskDostepny('seo-btn') ? 'seo' : (przyciskDostepny('fakty-btn') ? 'fakty' : 'seo');
   Object.keys(INSPEKTOR).forEach(function (n) { if (n !== k && panelWidoczny(INSPEKTOR[n].el)) INSPEKTOR[n].zamknij(); });
-  if (!panelWidoczny(INSPEKTOR[k].el)) INSPEKTOR[k].otworz();
+  if (!panelWidoczny(INSPEKTOR[k].el)) {
+    INSPEKTOR[k].otworz();
+    // R6: nowa zakladka od gory. Arkusz zostawal przewiniety jak poprzednia zakladka,
+    // wiec SERP otwieral sie z tabela ucieta pod zakladkami.
+    var tr = document.querySelector('#inspektor .ins-tresc');
+    if (tr) tr.scrollTop = 0;
+  }
   odswiezInspektor();
 }
 function inspektorZamknij() {
@@ -12054,6 +12674,73 @@ document.addEventListener('keydown', function (e) {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
 
+// R6-F (E-04): telefon - gest albo przycisk Wstecz przy otwartym arkuszu (inspektor, Baza,
+// statystyki, menu grup, Konto) zamyka arkusz. Wczesniej przegladarka cofala strone: aplikacja
+// ladowala sie od nowa, a przelacznik wersji i wyniki inspektora przepadaly (w PWA Wstecz
+// wychodzil z aplikacji). Otwarcie arkusza dokłada wpis historii przegladarki {cai:'arkusz'},
+// Wstecz go zdejmuje i zamyka arkusz, a zamkniecie krzyzykiem, zaslona albo Escape cofa nasz wpis
+// (history.back), zeby nastepne Wstecz dzialalo zwyczajnie. Arkusze otwiera i zamyka wiele miejsc
+// w kodzie, wiec stan czytamy z klas (obserwator), nie z kazdej funkcji osobno. Zmienna history
+// w tym pliku to lista artykulow - stad window.history.
+(function arkuszeIWstecz() {
+  const H = window.history;
+  let otwarty = false;          // stan z ostatniego sprawdzenia
+  let zPopstate = false;        // zamykamy po Wstecz: wpisu juz nie ma, bez history.back()
+  let czekamNaCofniecie = 0;    // nasze history.back(), ktore jeszcze nie wrocily jako popstate
+  function nasz(st) { return !!(st && st.cai === 'arkusz'); }
+  function jestOtwarty() {
+    const b = document.body;
+    return b.classList.contains('inspektor-otwarty') || b.classList.contains('statystyki-otwarte')
+      || !!document.querySelector('#mobile-sidebar.open, .grupa-menu.open, #settings-menu.open');
+  }
+  function zamknijArkusze() {
+    if (document.body.classList.contains('inspektor-otwarty')) inspektorZamknij();
+    if (document.body.classList.contains('statystyki-otwarte')) przelaczStatystyki(false);
+    closeMobileSidebar();
+    zamknijGrupyPaska();
+    closeSettingsMenu();
+  }
+  function sprawdz() {
+    const teraz = jestOtwarty();
+    if (teraz === otwarty) return;
+    otwarty = teraz;
+    if (teraz) {
+      // Arkusz otwarty, zanim wrocilo nasze history.back(): wpis dochodzi w popstate.
+      if (!document.body.classList.contains('is-mobile') || czekamNaCofniecie || nasz(H.state)) return;
+      H.pushState({ cai: 'arkusz' }, '');
+    } else if (zPopstate) {
+      zPopstate = false;
+    } else if (nasz(H.state)) {
+      czekamNaCofniecie++;
+      H.back();
+    }
+  }
+  window.addEventListener('popstate', function () {
+    if (czekamNaCofniecie) {
+      czekamNaCofniecie--;
+      if (!czekamNaCofniecie && otwarty && document.body.classList.contains('is-mobile') && !nasz(H.state)) H.pushState({ cai: 'arkusz' }, '');
+      return;
+    }
+    // Wstecz bez otwartego arkusza: przegladarka robi swoje.
+    if (!jestOtwarty()) return;
+    zPopstate = true;
+    zamknijArkusze();
+    sprawdz();
+    zPopstate = false;
+  });
+  function start() {
+    // Odswiezenie strony z otwartym arkuszem: arkusza juz nie ma, wpis przestaje byc nasz.
+    if (nasz(H.state)) H.replaceState(null, '');
+    const obs = new MutationObserver(sprawdz);
+    obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    document.querySelectorAll('#mobile-sidebar, .grupa-menu, #settings-menu').forEach(function (e) {
+      obs.observe(e, { attributes: true, attributeFilter: ['class'] });
+    });
+    otwarty = jestOtwarty();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
 // ─── MOBILE NAV ───────────────────────────────────────────────────────────────
 function openMobileSidebar() {
   document.getElementById('mobile-sidebar').classList.add('open');
@@ -12245,6 +12932,8 @@ function loadState() {
       if (Array.isArray(parsed) && parsed.length > 0) {
         // Dokument bez pola selected (zapis sprzed zaznaczania) jest zaznaczony (kod-06).
         docs = parsed.map(d => (d && d.selected === undefined) ? Object.assign(d, { selected: true }) : d);
+        // R6: wpis bez liczby slow (stary albo uszkodzony zapis) wywracal liste bazy i statystyki przy generowaniu
+        docs.forEach(d => { if (d && !Number.isFinite(d.words)) d.words = String(d.content || '').split(/\s+/).filter(Boolean).length; });
         renderDocs();
       }
     }
@@ -12284,6 +12973,132 @@ function zapiszSzkic() {
   const szkic = { keywords: keywords.slice(0, 50) };
   POLA_SZKICU.forEach(id => { const el = document.getElementById(id); if (el) szkic[id] = el.value; });
   magazyn.setItem('cai_szkic', JSON.stringify(szkic));
+  odswiezNowyArtykul();
+}
+
+// ── Nowy artykul ────────────────────────────────────────────────────────
+// R6: po wygenerowaniu brief zostawal z tematem, frazami i wytycznymi poprzedniego tekstu,
+// wiec kolejny, inny artykul wymagal odswiezenia strony albo recznego czyszczenia pol.
+// Jedno dotkniecie czysci to, co dotyczy jednego tekstu (temat, frazy, wytyczne, wynik
+// z wersjami i panelami), a zostawia preferencje (typ, dlugosc, ton, jezyk, zrodla, opcje
+// zaawansowane - te przywraca osobno "Przywroc ustawienia domyslne"). Poprzedni artykul
+// zostaje w Historii, komunikat ma Cofnij.
+function jestCoCzyscic() {
+  const t = document.getElementById('topic'), ex = document.getElementById('extra'), art = document.getElementById('article');
+  return !!((t && t.value.trim()) || keywords.length || (ex && ex.value.trim()) || (art && art.style.display === 'block'));
+}
+function odswiezNowyArtykul() {
+  const widac = jestCoCzyscic();
+  ['nowy-artykul-btn', 'nowy-artykul-szyna'].forEach((id) => { const b = document.getElementById(id); if (b && b.hidden === widac) b.hidden = !widac; });
+}
+function dodajCofnij(toast, fn) {
+  if (!toast) return;
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'powiadomienie-akcja';
+  b.textContent = _t('nowy-cofnij');
+  b.onclick = () => { fn(); toast.classList.add('znika'); setTimeout(() => toast.remove(), 200); };
+  toast.insertBefore(b, toast.querySelector('.powiadomienie-zamknij'));
+}
+// Wynik jak przed pierwszym generowaniem (artykul jest juz w Historii).
+function wyczyscWynik() {
+  const art = document.getElementById('article');
+  versions = []; activeVersion = 0; pendingVersions = null;
+  const vb = document.getElementById('versions-bar');
+  vb.classList.remove('show', 'wiele-wersji');
+  vb.querySelectorAll('.ver-btn').forEach((el) => el.remove());
+  seoCache = null; aioCache = null;
+  ocenyWersji.seo.clear(); ocenyWersji.aio.clear();
+  serpData = null; serpBlad = false;
+  gapOpen = false; gapCache = null; gapBaseline = null; gapSelectedTopics = []; gapBezPokrycia = [];
+  gapImproveCount = 0; gapPreviousTopics = [];
+  const gp = document.getElementById('gap-panel'); if (gp) gp.style.display = 'none';
+  zrodlaSieciowe = []; stanSieci = null; ostatniaWiedzaSerwera = ''; trybUzupelniania = false;
+  pokazStanSieci(null, 0);
+  wyczyscStanArtykulu();
+  jezykArtykulu = '';
+  currentText = '';
+  biezacyHist = null;
+  magazyn.removeItem('cai_biezacy');
+  art.innerHTML = '';
+  art.style.display = 'none';
+  art.contentEditable = 'false';
+  document.getElementById('placeholder').style.display = '';
+  const ob = document.getElementById('out-badge');
+  ustawTekst(ob, 'badge-ready'); ob.className = 'badge';
+  pokazPrzyciskiWyniku(false);
+}
+function nowyArtykul() {
+  if (generowanieTrwa()) { ostrzezGenerowanieTrwa(); return; }
+  if (editMode) toggleEdit();
+  const art = document.getElementById('article'), ex = document.getElementById('extra'), t = document.getElementById('topic');
+  const maArtykul = art.style.display === 'block';
+  const byl = { temat: t.value, frazy: keywords.slice(), extra: ex ? ex.value : '', hist: maArtykul ? biezacyHist : null,
+    wersje: versions.slice(), aktywna: activeVersion, serp: serpData, zrodla: zrodlaSieciowe.slice(), stan: stanSieci };
+  t.value = '';
+  keywords.length = 0;
+  if (ex) ex.value = '';
+  renderKws(); // zapisuje szkic i odswieza przycisk
+  if (typeof closeBriefPanel === 'function') { try { closeBriefPanel(); } catch (e) { /* panel zamkniety */ } }
+  wyczyscWynik();
+  zapiszSzkic();
+  if (document.body.classList.contains('is-mobile')) ustawWidokMobilny('brief');
+  else { if (document.body.classList.contains('brief-zwiniety')) przelaczBrief(false); t.focus(); }
+  const toast = pokazPowiadomienie(_t(maArtykul ? 'nowy-artykul-gotowe' : 'nowy-brief-wyczyszczony'), 'ok', 10000);
+  dodajCofnij(toast, () => cofnijNowyArtykul(byl));
+}
+function cofnijNowyArtykul(byl) {
+  if (generowanieTrwa()) { ostrzezGenerowanieTrwa(); return; }
+  if (byl.hist && wpisHistorii(byl.hist)) {
+    otworzWGeneratorze(byl.hist);
+    // wersje i dane z chwili przed Nowym artykulem (wpis Historii ma tylko wybrana wersje)
+    versions = byl.wersje; activeVersion = byl.aktywna; renderVersionsBar();
+    serpData = byl.serp; zrodlaSieciowe = byl.zrodla; stanSieci = byl.stan;
+    if (stanSieci) pokazStanSieci(stanSieci, zrodlaSieciowe.length);
+    pokazPrzyciskiWyniku(true);
+  }
+  const t = document.getElementById('topic'), ex = document.getElementById('extra');
+  t.value = byl.temat;
+  if (ex) ex.value = byl.extra;
+  keywords.length = 0;
+  byl.frazy.forEach((k) => keywords.push(k));
+  renderKws();
+  // Z artykulem telefon pokazuje Wynik (jak otwarcie z Historii) - od razu widac, ze tekst wrocil.
+}
+// R6: ustawienia jak na starcie. Temat, frazy i wytyczne zostaja - od tego jest Nowy artykul.
+function przywrocUstawieniaDomyslne() {
+  const byl = {};
+  const zmien = (el, wartosc, pole) => { if (el[pole] !== wartosc) { el[pole] = wartosc; el.dispatchEvent(new Event('change', { bubbles: true })); } };
+  ['ctype', 'length', 'length-custom', 'tone', 'audience', 'dir-country'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    byl[id] = el.value;
+    const dom = el.tagName === 'SELECT' ? (([...el.options].find((o) => o.defaultSelected) || el.options[0] || {}).value) : el.defaultValue;
+    if (dom != null) zmien(el, dom, 'value');
+  });
+  // Jezyk tekstu znow idzie za jezykiem interfejsu (bez zdarzenia change, ktore zapisaloby go jako wybor autora).
+  const jez = document.getElementById('lang');
+  const jezStan = magazyn.getItem('cai_lang_tekstu');
+  if (jez) { byl.jezyk = jez.value; magazyn.removeItem('cai_lang_tekstu'); jez.value = currentLang === 'en' ? 'English' : 'Polski'; magazyn.setItem('cai_lang_tekstu', 'auto'); }
+  ['use-web', 'use-serp', 'use-aeo'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    byl[id] = el.checked;
+    zmien(el, el.defaultChecked, 'checked');
+  });
+  byl.premium = premiumMode;
+  if (premiumMode) togglePremium();
+  zapiszSzkic();
+  dodajCofnij(pokazPowiadomienie(_t('ustawienia-domyslne-gotowe'), 'ok', 10000), () => {
+    Object.keys(byl).forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      zmien(el, byl[id], typeof byl[id] === 'boolean' ? 'checked' : 'value');
+    });
+    if (jez && byl.jezyk != null) { jez.value = byl.jezyk; if (jezStan == null) magazyn.removeItem('cai_lang_tekstu'); else magazyn.setItem('cai_lang_tekstu', jezStan); }
+    if (byl.premium !== premiumMode) togglePremium();
+    zapiszSzkic();
+  });
 }
 (function przywrocSzkic() {
   const szkic = czytajJson('cai_szkic', null);
@@ -12350,6 +13165,10 @@ function ustawJezykTekstuDomyslny() {
   magazyn.setItem('cai_lang_tekstu', 'auto');
 }
 { const selJezyka = document.getElementById('lang'); if (selJezyka) selJezyka.addEventListener('change', function () { magazyn.setItem('cai_lang_tekstu', '1'); }); }
+// R6: Nowy artykul widoczny od razu przy pisaniu i przy pokazaniu albo schowaniu artykulu.
+['topic', 'extra'].forEach((id) => { const el = document.getElementById(id); if (el) el.addEventListener('input', odswiezNowyArtykul); });
+{ const artNowy = document.getElementById('article'); if (artNowy && window.MutationObserver) new MutationObserver(odswiezNowyArtykul).observe(artNowy, { attributes: true, attributeFilter: ['style'] }); }
+odswiezNowyArtykul();
 
 // Automatyczny zapis po każdej zmianie
 // (saveState() wywoływane bezpośrednio w addDoc i delDoc poniżej)
@@ -14773,9 +15592,10 @@ function renderAeoCheck() {
 
   // Teksty ze slownika: panel przelacza sie z jezykiem (przerysujOceny).
   const items = [];
-  items.push({ ok: firstWords >= 25 && firstWords <= 50, text: _t('aeo-definicja').replace('{n}', firstWords) });
+  // R6-F (E-17): odmiana przez liczbe ("32 słowa", "3 nagłówki-pytania", "1 nagłówek-pytanie").
+  items.push({ ok: firstWords >= 25 && firstWords <= 50, text: _tn('aeo-definicja', firstWords) });
   items.push({ ok: /\d/.test(firstP), text: _t('aeo-liczba') });
-  items.push({ ok: qH2.length >= 5 && qH2.length <= 7, text: _t('aeo-faq').replace('{n}', qH2.length) });
+  items.push({ ok: qH2.length >= 5 && qH2.length <= 7, text: _tn('aeo-faq', qH2.length) });
   const goodList = lists.some(l => { const n = l.querySelectorAll('li').length; return n >= 3 && n <= 7; });
   items.push({ ok: goodList, text: _t('aeo-lista') });
   const ratio = h2s.length ? qH2.length / h2s.length : 0;
@@ -16498,7 +17318,20 @@ async function podcastDownload(btn) {
 }
 
 /* ═══════════════════════ MODUŁ TREŚCI AUDIO ═══════════════════════ */
-function toggleKbPanel(){ document.body.classList.toggle('kb-collapsed'); try{ magazyn.setItem('cai_kb_collapsed', document.body.classList.contains('kb-collapsed')?'1':'0'); }catch(e){} }
+function toggleKbPanel(){
+  // R6: na telefonie panelu bocznego nie ma - baza otwiera sie jako arkusz (jak "Baza" w nawigacji).
+  // Wczesniej przycisk zwijal niewidoczny panel komputera, wiec "Wybierz" w briefie nic nie robil.
+  if (document.body.classList.contains('is-mobile')) { openMobileSidebar(); return; }
+  document.body.classList.toggle('kb-collapsed'); try{ magazyn.setItem('cai_kb_collapsed', document.body.classList.contains('kb-collapsed')?'1':'0'); }catch(e){}
+}
+// "Wybierz" przy Bazie wiedzy: otwiera baze (nie przelacza - na komputerze klikniecie przy
+// otwartym panelu zwijalo go) i przenosi do listy dokumentow.
+function otworzBazeWiedzy(){
+  if (document.body.classList.contains('is-mobile')) { openMobileSidebar(); return; }
+  if (document.body.classList.contains('kb-collapsed')) toggleKbPanel();
+  const cel = document.querySelector('#kb-list .kb-check, #kb-list button, #kb-empty button, .kb-add-btn');
+  if (cel && cel.offsetParent) cel.focus({ preventScroll: false });
+}
 var _piiCb=null; var _piiAck=false;
 function piiConfirm(cb){ if(_piiAck){ if(typeof cb==='function') cb(); return; } _piiCb=(typeof cb==='function')?cb:null; var o=document.getElementById('pii-overlay'), m=document.getElementById('pii-modal'); if(o)o.classList.add('show'); if(m)m.classList.add('show'); if(m)m.style.pointerEvents='none'; if(o)o.style.pointerEvents='none'; setTimeout(function(){ if(m)m.style.pointerEvents=''; if(o)o.style.pointerEvents=''; }, 450); }
 function piiClose(){ var o=document.getElementById('pii-overlay'), m=document.getElementById('pii-modal'); if(o)o.classList.remove('show'); if(m)m.classList.remove('show'); _piiCb=null; }
@@ -17243,11 +18076,12 @@ async function kbAudioTranscribeAndOpen(file) {
   }
   window.rysujBazeWPanelu = rysujBazeWPanelu;
 
-  async function wyslijDoBazy(nazwa, tresc){
+  // R6-F (E-13): adres strony idzie osobnym polem (serwer zwraca go w liscie dla Linkow).
+  async function wyslijDoBazy(nazwa, tresc, url){
     try {
       var odp = await fetch('/api/baza', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ zakres: 'prywatna', nazwa: nazwa, tresc: tresc })
+        body: JSON.stringify({ zakres: 'prywatna', nazwa: nazwa, tresc: tresc, url: url || '' })
       });
       var dane = {}; try { dane = await odp.json(); } catch(e){}
       return { ok: odp.ok, status: odp.status, blad: dane.error || '' };
@@ -17263,7 +18097,7 @@ async function kbAudioTranscribeAndOpen(file) {
   window.addDoc = function(name, content, icon, url){
     if (icon === '⚠️' || !content) return dodajLokalnie(name, content, icon, url);
     var tresc = url ? ('Źródło: ' + url + '\n\n' + content) : content;
-    wyslijDoBazy(name, tresc).then(function(w){
+    wyslijDoBazy(name, tresc, url).then(function(w){
       if (w.ok) {
         pokazPowiadomienie(tekst('kb-dodano','Dodano do bazy wiedzy na serwerze') + ': ' + name, 'ok');
         odswiezListeBazy();
@@ -17281,7 +18115,7 @@ async function kbAudioTranscribeAndOpen(file) {
     for (var i = 0; i < doPrzeniesienia.length; i++) {
       var d = doPrzeniesienia[i];
       if (d.icon === '⚠️') continue;
-      var w = await wyslijDoBazy(d.name, d.url ? ('Źródło: ' + d.url + '\n\n' + d.content) : d.content);
+      var w = await wyslijDoBazy(d.name, d.url ? ('Źródło: ' + d.url + '\n\n' + d.content) : d.content, d.url);
       if (!w.ok) { odmowa = w.blad || tekst('bazas-blad','Nie udało się połączyć z serwerem.'); break; }
       var idx = docs.indexOf(d); if (idx >= 0) docs.splice(idx, 1);
       przeniesione++;
