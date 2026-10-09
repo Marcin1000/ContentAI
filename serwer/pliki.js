@@ -155,4 +155,5 @@ function czytajLinie(plik) {
 
 module.exports = {
   BladDanych, zapiszAtomowo, zapiszJson, czytajJson, dopiszLinie, czytajLinie, czyTablica, czyObiekt,
+  zachowajKopie,
 };

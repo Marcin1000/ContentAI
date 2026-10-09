@@ -41,6 +41,8 @@
 
 const path = require('node:path');
 const pliki = require('./pliki.js');
+const magazyn = require('./magazyn.js');
+const dzierzawy = require('./dzierzawy.js');
 
 // ─── Pakiety ──────────────────────────────────────────────────────────────────
 // okres: 'zawsze'  - limit na cale konto, nie odnawia sie (pakiet probny)
@@ -69,6 +71,23 @@ const PLANY = {
       cms: false,
     },
     limitDokumentow: 3,
+    // M-3 (DECYZJE-R9): sufit wywolan modelu dla kont na WLASNYM kluczu (zrodlo_kluczy
+    // 'wlasne'). Pomiar na atrapie: pelny artykul (siec, oceny SEO/AIO/AEO/GEO, Fakty,
+    // Luki z poprawa, samokorekta) to POMIAR wywolan; 3 artykuly + 30% zapasu.
+    // Konta na kluczach serwera dalej maja `limity.wywolanie` (30). Ten blok stoi PO
+    // `limity`, bo buduj_strone.py czyta pierwsze `wywolanie:` w pakiecie.
+    limityWlasneKlucze: {
+      wywolanie: 90,
+    },
+    sprzedaz: false,            // nie ma go w Checkout (ARCH8-13)
+    kolejnosc: 0,               // wybor subskrypcji przy kilku zywych i kolejnosc kart
+    // Zasoby oplacane przez serwer, tylko konta zrodlo_kluczy='wlasne' (ARCH8-11);
+    // okres jak `okres` pakietu, null = bez limitu, 0 = niedostepne w pakiecie.
+    limitySerwera: {
+      serp: 0,
+      wektory: 20,
+      strony: 30,
+    },
   },
 
   standard: {
@@ -92,6 +111,13 @@ const PLANY = {
       cms: true,
     },
     limitDokumentow: 50,
+    sprzedaz: true,
+    kolejnosc: 1,
+    limitySerwera: {
+      serp: 100,
+      wektory: 1000,
+      strony: 1000,
+    },
   },
 
   premium: {
@@ -115,35 +141,104 @@ const PLANY = {
       cms: true,
     },
     limitDokumentow: null,
+    sprzedaz: true,
+    kolejnosc: 2,
+    limitySerwera: {
+      serp: 500,
+      wektory: 5000,
+      strony: 5000,
+    },
   },
 };
 
 const DOMYSLNY = 'darmowy';
 
-/**
- * Plan konta. Admin zawsze dostaje premium niezaleznie od wpisu - inaczej
- * wlasciciel systemu moglby sobie zablokowac wlasne narzedzie limitem.
- */
-function planKonta(uzytkownik) {
-  if (!uzytkownik) return PLANY[DOMYSLNY];
-  if (uzytkownik.rola === 'admin') return PLANY.premium;
-  return PLANY[uzytkownik.plan] || PLANY[DOMYSLNY];
+// ─── Konfiguracja (ustawia server.js z KONF; domyslne ze srodowiska) ─────────
+// planNowych: plan konta samoobslugowego bez subskrypcji (CAI_PLAN_NOWYCH, decyzja 3),
+// trybPlatnosci i zaleglaDni: dla dostepPlatny (wykonawca B, ARCH8-16).
+
+const KONF_PLANOW = {
+  planNowych: DOMYSLNY,
+  trybPlatnosci: '',
+  zaleglaDni: 7,
+};
+
+/** Ustawia konfiguracje; nieznany plan nowych kont -> darmowy + blad w dzienniku. */
+function ustawKonfiguracje({ planNowych, trybPlatnosci, zaleglaDni } = {}) {
+  if (planNowych !== undefined) {
+    if (PLANY[planNowych]) KONF_PLANOW.planNowych = planNowych;
+    else {
+      console.error(`[plany] CAI_PLAN_NOWYCH="${String(planNowych).slice(0, 40)}" nie istnieje w PLANY - nowe konta dostaja ${DOMYSLNY}`);
+      KONF_PLANOW.planNowych = DOMYSLNY;
+    }
+  }
+  if (trybPlatnosci !== undefined) KONF_PLANOW.trybPlatnosci = String(trybPlatnosci || '');
+  if (zaleglaDni !== undefined && Number(zaleglaDni) >= 0) KONF_PLANOW.zaleglaDni = Number(zaleglaDni);
+  return { ...KONF_PLANOW };
 }
 
-function nazwaPlanu(uzytkownik) {
-  if (!uzytkownik) return DOMYSLNY;
-  if (uzytkownik.rola === 'admin') return 'premium';
-  return PLANY[uzytkownik.plan] ? uzytkownik.plan : DOMYSLNY;
+ustawKonfiguracje({
+  planNowych: process.env.CAI_PLAN_NOWYCH || DOMYSLNY,
+  trybPlatnosci: process.env.PLATNOSCI_TRYB || '',
+  zaleglaDni: process.env.PLATNOSCI_ZALEGLA_DNI || 7,
+});
+
+function czasMs(teraz) {
+  if (teraz instanceof Date) return teraz.getTime();
+  return Number.isFinite(Number(teraz)) && teraz !== undefined && teraz !== null ? Number(teraz) : Date.now();
+}
+
+function czasData(teraz) {
+  return teraz instanceof Date ? teraz : new Date(czasMs(teraz));
+}
+
+/**
+ * Nazwa planu, wedlug ktorego konto dziala teraz (ARCH8-16).
+ * Operator (admin organizacji glownej) zawsze premium - wlasciciel systemu nie moze
+ * sobie zablokowac narzedzia. Potem plan przypisany przez administratora, a konto
+ * samoobslugowe bez planu dostaje CAI_PLAN_NOWYCH.
+ * Wykonawca B dokłada tu, przed planem przypisanym, dostep z subskrypcji:
+ *   if (dostepPlatny(konto, teraz, konf) && PLANY[konto.subskrypcjaPlan]) return konto.subskrypcjaPlan;
+ */
+function planEfektywny(konto, teraz = Date.now(), konf = KONF_PLANOW) {
+  if (!konto) return DOMYSLNY;
+  if (dzierzawy.operator(konto)) return 'premium';
+  if (konto.plan && PLANY[konto.plan]) return konto.plan;
+  return konto.pochodzenie === 'samoobsluga' ? konf.planNowych : DOMYSLNY;
+}
+
+/** Plan konta (obiekt z PLANY). */
+function planKonta(uzytkownik, teraz) {
+  return PLANY[planEfektywny(uzytkownik, czasMs(teraz))] || PLANY[DOMYSLNY];
+}
+
+function nazwaPlanu(uzytkownik, teraz) {
+  return planEfektywny(uzytkownik, czasMs(teraz));
+}
+
+/** Czy konto pracuje na wlasnych kluczach (konto samoobslugowe; ARCH8-10). */
+function naWlasnymKluczu(konto) {
+  return Boolean(konto) && konto.zrodloKluczy === 'wlasne';
+}
+
+/** Limit czynnosci dla konta: na wlasnym kluczu pierwszenstwo ma `limityWlasneKlucze` (M-3). */
+function limitDla(konto, plan, czynnosc) {
+  if (naWlasnymKluczu(konto) && plan.limityWlasneKlucze
+    && Object.prototype.hasOwnProperty.call(plan.limityWlasneKlucze, czynnosc)) {
+    return plan.limityWlasneKlucze[czynnosc];
+  }
+  return plan.limity[czynnosc];
 }
 
 // ─── Zliczanie uzycia ─────────────────────────────────────────────────────────
-// Jeden plik JSON na uzytkownika: { "zawsze": {...}, "2026-08": {...} }.
-// Przy tej skali to wystarcza i nie wnosi zaleznosci; przy tysiacach kont
-// trzeba bedzie bazy.
+// Liczniki leza w bazie (serwer/magazyn.js, tabela uzycie): okres 'zawsze' albo
+// 'RRRR-MM', atomowy UPSERT, bez przepisywania pliku. Pliki JSON z R8
+// (uzycie/<login>.json) czyta juz tylko migracja - stad wczytajUzycie i plikUzycia.
 
 function okresTeraz(plan, teraz = new Date()) {
   if (plan.okres === 'zawsze') return 'zawsze';
-  return `${teraz.getUTCFullYear()}-${String(teraz.getUTCMonth() + 1).padStart(2, '0')}`;
+  const d = czasData(teraz);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
 /** Login w nazwie pliku - tylko bezpieczne znaki, zeby nie dalo sie wyjsc z katalogu. */
@@ -153,8 +248,7 @@ function plikUzycia(katalog, login) {
   return path.join(katalog, `${czysty}.json`);
 }
 
-// Uszkodzony plik licznikow to BladDanych, nie pusty obiekt: pusty oznaczalby
-// po cichu wyzerowane limity, a nastepny zapis utrwalilby to zerowanie.
+// Format R8 (tylko migracja i eksport-json). Uszkodzony plik to BladDanych, nie pusty obiekt.
 function wczytajUzycie(katalog, login) {
   return pliki.czytajJson(plikUzycia(katalog, login), {}, pliki.czyObiekt);
 }
@@ -166,20 +260,22 @@ function zapiszUzycie(katalog, login, dane) {
 /**
  * Czy wolno wykonac czynnosc. Zwraca opis decyzji, a nie samo true/false -
  * aplikacja ma z czego zbudowac komunikat, a nie tylko powiedziec "nie mozna".
+ *   sprawdzLimit({ konto, czynnosc, teraz })   (`uzytkownik` = dawna nazwa `konto`; `katalog` ignorowany)
  */
-function sprawdzLimit({ katalog, uzytkownik, czynnosc, teraz }) {
-  const plan = planKonta(uzytkownik);
-  const limit = plan.limity[czynnosc];
+function sprawdzLimit({ konto, uzytkownik, czynnosc, teraz }) {
+  const k = konto || uzytkownik;
+  const plan = planKonta(k, teraz);
+  const limit = limitDla(k, plan, czynnosc);
 
   if (limit === undefined) {
     return { wolno: false, powod: 'nieznana-czynnosc', czynnosc };
   }
   if (limit === null) {
-    return { wolno: true, limit: null, zuzyte: null, zostalo: null, plan: nazwaPlanu(uzytkownik) };
+    return { wolno: true, limit: null, zuzyte: null, zostalo: null, plan: nazwaPlanu(k, teraz) };
   }
 
   const okres = okresTeraz(plan, teraz);
-  const zuzyte = Number(wczytajUzycie(katalog, uzytkownik.login)?.[okres]?.[czynnosc]) || 0;
+  const zuzyte = Number(magazyn.uzycie(k.login, okres)[czynnosc]) || 0;
 
   return {
     wolno: zuzyte < limit,
@@ -188,41 +284,67 @@ function sprawdzLimit({ katalog, uzytkownik, czynnosc, teraz }) {
     zuzyte,
     zostalo: Math.max(0, limit - zuzyte),
     okres: plan.okres,
-    plan: nazwaPlanu(uzytkownik),
+    plan: nazwaPlanu(k, teraz),
   };
 }
 
-/** Dopisuje jedno uzycie. Wolane PO udanej odpowiedzi dostawcy. */
-function policz({ katalog, uzytkownik, czynnosc, teraz }) {
-  const plan = planKonta(uzytkownik);
-  if (plan.limity[czynnosc] === null) return;   // bez limitu nie ma czego liczyc
-
-  const okres = okresTeraz(plan, teraz);
-  const dane = wczytajUzycie(katalog, uzytkownik.login);
-  if (!dane[okres]) dane[okres] = {};
-  dane[okres][czynnosc] = (Number(dane[okres][czynnosc]) || 0) + 1;
-
-  // Stare okresy miesieczne nie sa do niczego potrzebne poza statystyka,
-  // a plik ma nie puchnac. Zostawiamy biezacy i dwanascie wstecz.
-  const miesieczne = Object.keys(dane).filter((k) => k !== 'zawsze').sort();
-  for (const stary of miesieczne.slice(0, -13)) delete dane[stary];
-
-  zapiszUzycie(katalog, uzytkownik.login, dane);
+/** Dopisuje jedno uzycie (atomowo w bazie). Wolane PO udanej odpowiedzi dostawcy. */
+function policz({ konto, uzytkownik, czynnosc, teraz }) {
+  const k = konto || uzytkownik;
+  const plan = planKonta(k, teraz);
+  if (limitDla(k, plan, czynnosc) === null) return;   // bez limitu nie ma czego liczyc
+  magazyn.policz(k.login, okresTeraz(plan, teraz), czynnosc, 1);
 }
 
-/** Czy plan daje dostep do calej funkcji (nie do puli sztuk). */
+// ─── Zasoby oplacane przez serwer (ARCH8-11) ──────────────────────────────────
+// Osobna pula w tej samej tabeli (czynnosc 'serwer:<zasob>'), tylko dla kont na
+// wlasnym kluczu. Konta na kluczach serwera dzialaja jak dzis: zawsze wolno, nic
+// nie liczymy, takze gdy maja ten sam plan co konto samoobslugowe.
+
+const ZASOBY_SERWERA = ['serp', 'wektory', 'strony'];
+
+/** -> { wolno, limit, zuzyte, zostalo, okres, zasob }; limit null = bez limitu. */
+function sprawdzLimitSerwera(konto, zasob, teraz) {
+  if (!ZASOBY_SERWERA.includes(zasob)) throw new Error(`nieznany zasob serwera: ${zasob}`);
+  if (!naWlasnymKluczu(konto)) return { wolno: true, limit: null, zuzyte: null, zostalo: null, zasob };
+  const plan = planKonta(konto, teraz);
+  const limit = plan.limitySerwera ? plan.limitySerwera[zasob] : null;
+  if (limit === null || limit === undefined) return { wolno: true, limit: null, zuzyte: null, zostalo: null, zasob };
+  const zuzyte = Number(magazyn.uzycie(konto.login, okresTeraz(plan, teraz))[`serwer:${zasob}`]) || 0;
+  return { wolno: zuzyte < limit, limit, zuzyte, zostalo: Math.max(0, limit - zuzyte), okres: plan.okres, zasob };
+}
+
+/** Dopisuje `ile` uzyc zasobu serwera (np. liczba sprawdzonych adresow). Konta 'serwera': nic. */
+function policzSerwer(konto, zasob, ile = 1, teraz) {
+  if (!ZASOBY_SERWERA.includes(zasob)) throw new Error(`nieznany zasob serwera: ${zasob}`);
+  if (!naWlasnymKluczu(konto) || !(Number(ile) > 0)) return;
+  const plan = planKonta(konto, teraz);
+  const limit = plan.limitySerwera ? plan.limitySerwera[zasob] : null;
+  if (limit === null || limit === undefined) return;
+  magazyn.policz(konto.login, okresTeraz(plan, teraz), `serwer:${zasob}`, Number(ile));
+}
+
+/**
+ * Czy plan daje dostep do calej funkcji (nie do puli sztuk).
+ * OpenSEO (jeden kontener i projekt zespolu) tylko w organizacji glownej (ARCH8-09);
+ * konto na wlasnym kluczu ma zawsze `wlasnyKlucz`.
+ */
 function maFunkcje(uzytkownik, funkcja) {
+  if (funkcja === 'openseo' && dzierzawy.idOrganizacji(uzytkownik) !== dzierzawy.GLOWNA) return false;
+  if (funkcja === 'wlasnyKlucz' && naWlasnymKluczu(uzytkownik)) return true;
   return Boolean(planKonta(uzytkownik).funkcje[funkcja]);
 }
 
 /** Pelny stan pakietu dla aplikacji - to pokazuje sie uzytkownikowi. */
-function stanPakietu({ katalog, uzytkownik, teraz }) {
-  const plan = planKonta(uzytkownik);
+function stanPakietu({ konto, uzytkownik, teraz }) {
+  const k = konto || uzytkownik;
+  const plan = planKonta(k, teraz);
   const okres = okresTeraz(plan, teraz);
-  const uzycie = wczytajUzycie(katalog, uzytkownik.login)[okres] || {};
+  const uzycie = magazyn.uzycie(k.login, okres);
 
   const pozycje = {};
-  for (const [czynnosc, limit] of Object.entries(plan.limity)) {
+  for (const czynnosc of Object.keys(plan.limity)) {
+    const limit = limitDla(k, plan, czynnosc);
     const zuzyte = Number(uzycie[czynnosc]) || 0;
     pozycje[czynnosc] = {
       limit,
@@ -231,29 +353,53 @@ function stanPakietu({ katalog, uzytkownik, teraz }) {
     };
   }
 
+  const funkcje = {};
+  for (const funkcja of Object.keys(plan.funkcje)) funkcje[funkcja] = maFunkcje(k, funkcja);
+
+  let limitySerwera = null;
+  if (naWlasnymKluczu(k)) {
+    limitySerwera = {};
+    for (const zasob of ZASOBY_SERWERA) {
+      const s = sprawdzLimitSerwera(k, zasob, teraz);
+      limitySerwera[zasob] = { limit: s.limit, zuzyte: s.zuzyte, zostalo: s.zostalo };
+    }
+  }
+
   return {
-    plan: nazwaPlanu(uzytkownik),
+    plan: nazwaPlanu(k, teraz),
     nazwa: plan.nazwa,
     nazwaEn: plan.nazwaEn,
     opis: plan.opis,
     opisEn: plan.opisEn,
     okres: plan.okres,
-    funkcje: { ...plan.funkcje },
+    funkcje,
     limitDokumentow: plan.limitDokumentow,
     uzycie: pozycje,
+    zrodloKluczy: (k && k.zrodloKluczy) || 'serwera',
+    limitySerwera,
+    subskrypcja: null,          // B: { stan, plan, okresDo, dostepDo } (ARCH8-16)
   };
 }
 
 module.exports = {
   PLANY,
   DOMYSLNY,
+  KONF_PLANOW,
+  ZASOBY_SERWERA,
+  ustawKonfiguracje,
+  planEfektywny,
   planKonta,
   nazwaPlanu,
+  naWlasnymKluczu,
+  limitDla,
   sprawdzLimit,
   policz,
+  sprawdzLimitSerwera,
+  policzSerwer,
   maFunkcje,
   stanPakietu,
   okresTeraz,
   wczytajUzycie,
+  zapiszUzycie,
   plikUzycia,
 };
