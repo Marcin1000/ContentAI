@@ -909,8 +909,10 @@ własnym kluczu użytkownika.
 Zmiana dokumentu: popraw oba języki, podnieś `wersja` i `data` w nagłówkach (PL i EN takie
 same, pilnuje tego `buduj_strone.py`), ustaw tę samą wersję w `CAI_REGULAMIN_WERSJA` albo
 `CAI_POLITYKA_WERSJA`, przebuduj stronę (wersje widać na `/regulamin/` i `/prywatnosc/`)
-i zrestartuj serwer. Zmiana listy podprzetwarzających: nowy wiersz w historii zmian
-i nowa wersja listy. Zalecane adresy na ekranach i w e-mailach:
+i zrestartuj serwer. Rozjazd wersji z konfiguracji i z nagłówka szablonu serwer zgłasza
+w dzienniku (`[dokumenty] wersja w konfiguracji rozna od dokumentu: ...`), a funkcja
+`rozjazdyWersji(konf)` modułu daje tę listę kontroli przy starcie. Zmiana listy
+podprzetwarzających: nowy wiersz w historii zmian i nowa wersja listy. Zalecane adresy na ekranach i w e-mailach:
 `CAI_REGULAMIN_URL=https://app.content-ai.net/dokumenty/regulamin`,
 `CAI_POLITYKA_URL=https://app.content-ai.net/dokumenty/prywatnosc` (domyślne adresy
 `content-ai.net/regulamin/` i `/prywatnosc/` też działają: prowadzą do tych dokumentów).
