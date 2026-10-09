@@ -3076,6 +3076,50 @@ body.is-mobile #au-script-actions > .btn-secondary { flex: 1 1 0; justify-conten
 body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-content: center; }
 }
 @layer widoki {
+/* ══ RUNDA 9, wykonawca G: zrozumialosc i dostepnosc dla nowej osoby ══ */
+/* UX8-14: trzecie wyjscie z okna "Brak zrodel wiedzy" (bez zrodel) i ostrzezenie pod nim */
+#no-source-modal .no-source-bez { align-self: center; }
+#no-source-modal .no-source-bez-uwaga { margin: calc(var(--s-4) * -1) 0 0; text-align: center; font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
+/* UX8-11: jedno zdanie, co mierzy wybrana ocena (pod przelacznikiem) i co znaczy typ SEO / AIO (pod polem) */
+.inspektor.ocena .ins-oceny { flex-wrap: wrap; }
+.ins-oceny .ins-ocena-opis { flex: 1 1 100%; margin: var(--s-8) 0 0; font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-2); }
+.ins-oceny .ins-ocena-opis:empty { display: none; }
+.form-col .row2 > .ctype-opis { grid-column: 1 / -1; margin: calc(var(--s-10, 10px) * -1) 0 0; }
+.form-col .row2 > .ctype-opis[hidden] { display: none; }
+/* UX8-13: grupa Widocznosc AI w arkuszu Konto tylko na telefonie (komputer ma ja w gornym pasku obszarow) */
+body:not(.is-mobile) .menu-tel-widocznosc { display: none; }
+/* UX8-16: Historia tylko w tej przegladarce - zdanie i kopia do pobrania pod licznikami */
+.hist-lokalnie { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-4) var(--s-12); margin-top: var(--s-12); font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-2); }
+.hist-lokalnie > .ikona { flex: none; align-self: flex-start; margin-top: 2px; width: 14px; height: 14px; color: var(--c-tekst-3); }
+.hist-lokalnie > span { flex: 1 1 240px; min-width: 0; }
+body.is-mobile .hist-lokalnie { margin-top: var(--s-8); }
+/* UX8-15: kreator - "Krok n z m" tekstem nad tytulem; tytul przyjmuje fokus programowo (bez ramki jak pole) */
+#start-modal .start-postep { margin: calc(var(--s-10, 10px) * -1) 0 var(--s-8); }
+#start-modal #start-tytul:focus { outline: none; }
+/* UX8-24: przykladowy artykul - komputer: tekst z karta ocen z prawej; telefon: karta ocen nad tekstem */
+.start-przyklad { margin-top: var(--s-12); }
+.przyklad-okno { width: min(1040px, 100%); }
+#przyklad-modal .przyklad-okno:focus { outline: none; }
+#przyklad-modal .przyklad-pasek { padding: var(--s-12); border: 1px solid var(--c-akcent-ramka); border-radius: var(--r-md); background: var(--c-akcent-tlo); color: var(--c-tekst); }
+.przyklad-uklad { display: flex; flex-direction: row-reverse; align-items: flex-start; gap: var(--s-24); }
+.przyklad-uklad > .przyklad-artykul { display: block; flex: 1 1 auto; min-width: 0; margin: 0; }
+.przyklad-oceny { flex: 0 0 300px; position: sticky; top: 0; padding: var(--s-16); border: 1px solid var(--c-linia-2); border-radius: var(--r-lg); background: var(--c-panel); }
+.przyklad-siatka { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-8); margin: var(--s-12) 0; }
+body.is-mobile .przyklad-siatka { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.przyklad-ocena { display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-8) var(--s-12); border: 1px solid var(--c-linia-2); border-radius: var(--r-md); background: var(--c-pole); }
+.przyklad-ocena b { font-size: var(--t-2xl); line-height: 1.1; }
+.przyklad-ocena span { font-size: var(--t-xs); font-weight: var(--g-mocny); color: var(--c-tekst); }
+.przyklad-ocena small { font-size: var(--t-xs); line-height: 1.4; color: var(--c-tekst-2); }
+#przyklad-modal .przyklad-fakty { display: flex; gap: var(--s-8); align-items: flex-start; margin: 0; padding: var(--s-8) var(--s-12); border: 1px solid var(--c-uwaga-ramka); border-radius: var(--r-md);
+  background: var(--c-uwaga-tlo); font-size: var(--t-sm); color: var(--c-tekst); }
+.przyklad-fakty .ikona { flex: none; margin-top: 2px; color: var(--c-uwaga); }
+#przyklad-modal .modal-footer { justify-content: space-between; }
+.przyklad-stopka { flex: 1 1 260px; }
+body.is-mobile .przyklad-uklad { flex-direction: column; gap: var(--s-16); }
+body.is-mobile .przyklad-oceny { flex: none; position: static; width: 100%; box-sizing: border-box; }
+body.is-mobile #przyklad-modal .modal-footer > .btn-generate { width: 100%; justify-content: center; min-height: var(--h-dotyk); }
+}
+@layer widoki {
 /* ══ RUNDA 6, wykonawca F ══ */
 /* R6-F (E-12): zakladka bez danych (SERP bez analizy) i ocena niedostepna znikaja naprawde - display
    z .ins-zakl i .segmenty button wygrywal z atrybutem hidden, a dotkniecie pustej zakladki zamykalo inspektor */
@@ -3123,10 +3167,10 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
       <button type="button" class="obszar" aria-haspopup="true" aria-expanded="false" aria-controls="grupa-widocznosc-menu" onclick="przelaczGrupe('widocznosc')"><svg class="ikona" aria-hidden="true"><use href="#i-radio-tower"/></svg><span data-i18n="nav-widocznosc">Widoczność AI</span><svg class="ikona ikona-s" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
       <div class="grupa-backdrop" onclick="przelaczGrupe('widocznosc')"></div>
       <div class="grupa-menu" id="grupa-widocznosc-menu">
-          <button type="button" class="poz-menu" onclick="openVisModal()"><svg class="ikona" aria-hidden="true"><use href="#i-scan-search"/></svg><span><b data-i18n="settings-vis-title">Obecność marki w AI</b><small data-i18n="settings-vis-sub">zapytania zakupowe, pozycja, konkurenci</small></span></button>
-          <button type="button" class="poz-menu" onclick="aivOpen()"><svg class="ikona" aria-hidden="true"><use href="#i-radio-tower"/></svg><span><b data-i18n="settings-aiv-title">Cytowania w AI</b><small data-i18n="settings-aiv-sub">Twoje zapytania, trend w czasie</small></span></button>
+          <button type="button" class="poz-menu" onclick="openVisModal()"><svg class="ikona" aria-hidden="true"><use href="#i-scan-search"/></svg><span><b data-i18n="settings-vis-title">Obecność marki w AI</b><small data-i18n="settings-vis-sub">czy AI poleca Twoją markę przy zakupach</small></span></button>
+          <button type="button" class="poz-menu" onclick="aivOpen()"><svg class="ikona" aria-hidden="true"><use href="#i-radio-tower"/></svg><span><b data-i18n="settings-aiv-title">Cytowania w AI</b><small data-i18n="settings-aiv-sub">czy AI cytuje Twoje strony, trend</small></span></button>
           <button type="button" class="poz-menu" onclick="openRepModal()"><svg class="ikona" aria-hidden="true"><use href="#i-chart-column"/></svg><span><b data-i18n="settings-rep-title">Raport widoczności</b><small data-i18n="settings-rep-sub">porównanie pomiarów i priorytety</small></span></button>
-          <button type="button" class="poz-menu" onclick="openTrkModal()"><svg class="ikona" aria-hidden="true"><use href="#i-bot"/></svg><span><b data-i18n="settings-trk-title">Pomiar ruchu z AI</b><small data-i18n="settings-trk-sub">robots.txt, UTM, GA4</small></span></button>
+          <button type="button" class="poz-menu" onclick="openTrkModal()"><svg class="ikona" aria-hidden="true"><use href="#i-bot"/></svg><span><b data-i18n="settings-trk-title">Pomiar ruchu z AI</b><small data-i18n="settings-trk-sub">wejścia z czatów AI: robots.txt, UTM</small></span></button>
       </div>
     </div>
   </nav>
@@ -3140,6 +3184,26 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
       <div class="settings-menu" id="settings-menu" role="menu" aria-label="Konto" data-i18n-label="konto-menu">
         <div class="menu-konto"><span class="konto-awatar" id="konto-awatar-menu"><svg class="ikona" aria-hidden="true"><use href="#i-user"/></svg></span><div><b id="konto-nazwa" data-i18n="konto-gosc">To urządzenie</b><span id="konto-opis" data-i18n="konto-opis">Ustawienia aplikacji</span></div></div>
         <hr>
+        <!-- R9-G (UX8-13): telefon nie ma paska obszarow, wiec Widocznosc AI stoi w arkuszu Konto (na komputerze w gornym pasku) -->
+        <div class="menu-tel-widocznosc">
+        <div class="menu-naglowek" data-i18n="nav-widocznosc">Widoczność AI</div>
+        <div class="settings-item" onclick="openVisModal();closeSettingsMenu()">
+          <span><svg class="ikona" aria-hidden="true"><use href="#i-scan-search"/></svg></span>
+          <div><div class="settings-item-tytul" data-i18n="settings-vis-title">Obecność marki w AI</div><div class="settings-item-opis" data-i18n="settings-vis-sub">czy AI poleca Twoją markę przy zakupach</div></div>
+        </div>
+        <div class="settings-item" onclick="aivOpen();closeSettingsMenu()">
+          <span><svg class="ikona" aria-hidden="true"><use href="#i-radio-tower"/></svg></span>
+          <div><div class="settings-item-tytul" data-i18n="settings-aiv-title">Cytowania w AI</div><div class="settings-item-opis" data-i18n="settings-aiv-sub">czy AI cytuje Twoje strony, trend</div></div>
+        </div>
+        <div class="settings-item" onclick="openRepModal();closeSettingsMenu()">
+          <span><svg class="ikona" aria-hidden="true"><use href="#i-chart-column"/></svg></span>
+          <div><div class="settings-item-tytul" data-i18n="settings-rep-title">Raport widoczności</div><div class="settings-item-opis" data-i18n="settings-rep-sub">porównanie pomiarów i priorytety</div></div>
+        </div>
+        <div class="settings-item" onclick="openTrkModal();closeSettingsMenu()">
+          <span><svg class="ikona" aria-hidden="true"><use href="#i-bot"/></svg></span>
+          <div><div class="settings-item-tytul" data-i18n="settings-trk-title">Pomiar ruchu z AI</div><div class="settings-item-opis" data-i18n="settings-trk-sub">wejścia z czatów AI: robots.txt, UTM</div></div>
+        </div>
+        </div>
         <div class="menu-naglowek" data-i18n="menu-gr-marka">Marka</div>
         <div class="settings-item" onclick="openLlmsModal();closeSettingsMenu()">
           <span><svg class="ikona" aria-hidden="true"><use href="#i-briefcase"/></svg></span>
@@ -3149,14 +3213,14 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
           <span id="bv-menu-icon"><svg class="ikona" aria-hidden="true"><use href="#i-mic"/></svg></span>
           <div><div class="settings-item-tytul" data-i18n="settings-bv-title">Głos marki</div><div class="settings-item-opis" id="bv-menu-sub" data-i18n="settings-bv-inactive">Nieaktywny</div></div>
         </div>
-        <div class="menu-naglowek" data-i18n="menu-gr-polaczenia">Połączenia</div>
+        <div class="menu-naglowek" data-i18n="menu-gr-polaczenia">Ustawienia</div>
         <div class="settings-item" onclick="openWpModal();closeSettingsMenu()">
           <span id="cms-menu-icon"><svg class="ikona" aria-hidden="true"><use href="#i-globe"/></svg></span>
           <div><div class="settings-item-tytul" data-i18n="settings-cms-title">Integracja CMS</div><div class="settings-item-opis" id="cms-menu-sub" data-i18n="settings-cms-sub">WordPress / Drupal</div></div>
         </div>
         <div class="settings-item" onclick="openVoiceSettings();closeSettingsMenu()">
           <span><svg class="ikona" aria-hidden="true"><use href="#i-volume-2"/></svg></span>
-          <div><div class="settings-item-tytul" data-i18n="settings-voice-title">Asystent głosowy</div><div class="settings-item-opis" data-i18n="settings-voice-sub">czytanie na głos i dyktowanie</div></div>
+          <div><div class="settings-item-tytul" data-i18n="settings-voice-title">Czytanie na głos i dyktowanie</div><div class="settings-item-opis" data-i18n="settings-voice-sub">silnik głosu i mikrofon</div></div>
         </div>
         <hr>
         <div class="menu-wiersz"><span><svg class="ikona" aria-hidden="true"><use href="#i-moon"/></svg><span data-i18n="menu-motyw">Motyw</span></span><div class="segmenty" role="group" aria-label="Motyw" data-i18n-label="menu-motyw"><button type="button" id="motyw-ciemny" aria-pressed="true" onclick="ustawMotyw(true);event.stopPropagation()" data-i18n="motyw-ciemny">Ciemny</button><button type="button" id="motyw-jasny" aria-pressed="false" onclick="ustawMotyw(false);event.stopPropagation()" data-i18n="motyw-jasny">Jasny</button></div></div>
@@ -3169,7 +3233,7 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
 <!-- MOBILE SIDEBAR PANEL -->
 <div class="mobile-sidebar-panel" id="mobile-sidebar">
   <div class="sidebar-head" style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-    <h2 data-i18n="sidebar-title">Baza wiedzy - źródła</h2>
+    <h2 data-i18n="sidebar-title">Baza wiedzy</h2>
     <button type="button" class="przycisk-ikona" onclick="closeMobileSidebar()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
   </div>
   <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:0">
@@ -3206,7 +3270,7 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
     <span class="nav-icon"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-square-pen"/></svg></span><span data-i18n="nav-pisz">Pisz</span>
   </button>
   <button type="button" class="mobile-nav-btn" onclick="openMobileSidebar()" id="mnav-kb">
-    <span class="nav-icon"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-library"/></svg></span><span data-i18n="nav-base">Baza</span>
+    <span class="nav-icon"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-library"/></svg></span><span data-i18n="nav-base">Baza wiedzy</span>
   </button>
   <button type="button" class="mobile-nav-btn" onclick="switchMobileTab('history')" id="mnav-hist">
     <span class="nav-icon"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-history"/></svg></span><span data-i18n="nav-history">Historia</span>
@@ -3222,7 +3286,7 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-head">
-      <h2 data-i18n="sidebar-title">Baza wiedzy - źródła</h2>
+      <h2 data-i18n="sidebar-title">Baza wiedzy</h2>
       <button class="kb-collapse-btn" onclick="toggleKbPanel()" title="Zwiń panel" data-i18n-title="kb-collapse" aria-label="Zwiń panel bazy wiedzy" data-i18n-label="kb-collapse-label"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-panel-left"/></svg></button>
     </div>
     <div class="kb-select-bar" id="kb-select-bar">
@@ -3338,6 +3402,8 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
               </select>
               <input type="number" id="length-custom" aria-label="Własna długość w słowach" data-i18n-label="lbl-length-custom" min="100" max="5000" step="50" placeholder="np. 1200" data-i18n="ph-length-custom" style="display:none;margin-top:6px" />
             </div>
+            <!-- R9-G (UX8-11): jedno zdanie, co znaczy wybrany typ SEO / AIO (dla pozostalych typow ukryte) -->
+            <p class="tekst-pomoc ctype-opis" id="ctype-opis" hidden></p>
           </div>
 
           <!-- R3: Ton i Jezyk w glownym briefie (obok Typu tresci i Dlugosci), nie w zaawansowanych. -->
@@ -3453,11 +3519,11 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
                 <!-- Samokorekta: opcja generowania w menu obok przycisku (nie zajmuje paska); stan widac na przycisku Wygeneruj. -->
                 <button type="button" class="btn-secondary menu-przelacznik" id="premium-btn" onclick="togglePremium()" role="switch" aria-checked="false" aria-describedby="samokorekta-opis" title="Model oceni gotowy tekst i poprawi go według oceny. Generowanie trwa 2-3 razy dłużej i zużywa więcej wywołań modelu z pakietu." data-i18n-title="title-premium-tooltip"><svg class="ikona" aria-hidden="true"><use href="#i-list-checks"/></svg><span class="menu-przelacznik-tekst"><span data-i18n="btn-premium">Samokorekta</span><small id="samokorekta-opis" data-i18n="premium-opis">Model oceni gotowy tekst i poprawi go (2-3 razy dłużej).</small></span><span class="menu-przelacznik-tor" aria-hidden="true"></span></button>
                 <div class="menu-separator" role="separator"></div>
-                <button type="button" class="btn-secondary" onclick="openBriefPanel()" data-ikona="clipboard-list" title="Wygeneruj brief przed artykułem" data-i18n-title="title-brief-tooltip"><svg class="ikona" aria-hidden="true"><use href="#i-clipboard-list"/></svg>Brief</button>
+                <button type="button" class="btn-secondary" onclick="openBriefPanel()" data-ikona="clipboard-list" title="Plan przed pisaniem: frazy, nagłówki H2, luki i zalecana długość" data-i18n-title="title-brief-tooltip" data-i18n="btn-brief"><svg class="ikona" aria-hidden="true"><use href="#i-clipboard-list"/></svg>Plan artykułu</button>
                 <button type="button" class="btn-secondary" onclick="openBulkModal()" data-ikona="layout-grid" title="Generowanie grupowe: wiele artykułów naraz" data-i18n-title="title-bulk-tooltip" data-i18n="btn-bulk"><svg class="ikona" aria-hidden="true"><use href="#i-layout-grid"/></svg>Generuj grupowo</button>
-                <button type="button" class="btn-secondary" onclick="openImproveModal()" data-ikona="pen-line" title="Popraw istniejący artykuł" data-i18n-title="title-improve-art" data-i18n="btn-improve"><svg class="ikona" aria-hidden="true"><use href="#i-pen-line"/></svg>Popraw</button>
+                <button type="button" class="btn-secondary" onclick="openImproveModal()" data-ikona="pen-line" title="Wklej istniejący artykuł i podnieś jego ocenę" data-i18n-title="title-improve-art" data-i18n="btn-improve"><svg class="ikona" aria-hidden="true"><use href="#i-pen-line"/></svg>Popraw wklejony tekst</button>
                 <button type="button" class="btn-secondary" onclick="openImgPanelSmart()" data-ikona="image" title="Generuj grafikę" data-i18n-title="title-img-short" data-i18n="btn-img-short"><svg class="ikona" aria-hidden="true"><use href="#i-image"/></svg>Grafika</button>
-                <button type="button" class="btn-secondary" onclick="openAudioPanel()" data-ikona="headphones" title="Treści audio" data-i18n-title="title-audio" data-i18n="audio-btn"><svg class="ikona" aria-hidden="true"><use href="#i-headphones"/></svg>Audio</button>
+                <button type="button" class="btn-secondary" onclick="openAudioPanel()" data-ikona="headphones" title="Audio: podcast, newsletter, audiobook i transkrypcja" data-i18n-title="title-audio" data-i18n="audio-btn"><svg class="ikona" aria-hidden="true"><use href="#i-headphones"/></svg>Audio</button>
               </div>
             </div>
             </div>
@@ -3535,8 +3601,8 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
               <div class="grupa-backdrop" onclick="przelaczGrupe('wiecej')"></div>
               <div class="grupa-menu" id="grupa-wiecej-menu">
                 <div class="arkusz-tytul"><span data-i18n="grupa-wiecej">Więcej</span><button type="button" class="przycisk-ikona arkusz-zamknij" onclick="zamknijGrupyPaska()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
-                <button class="btn-secondary" id="premium-fix-btn" style="display:none" onclick="runPostGenerationPremium()" title="Model oceni gotowy tekst i poprawi go według oceny" data-i18n-title="title-premium-fix-tooltip" data-i18n="btn-premium-fix" data-ikona="list-checks"><svg class="ikona" aria-hidden="true"><use href="#i-list-checks"/></svg>Dopracuj tekst</button>
-                <button class="btn-secondary" id="tts-btn" style="display:none" onclick="speakArticle(this)" data-i18n-title="tts-read" title="Posłuchaj"><svg class="ikona" aria-hidden="true"><use href="#i-volume-2"/></svg><span data-i18n="tts-read">Posłuchaj</span></button>
+                <button class="btn-secondary" id="premium-fix-btn" style="display:none" onclick="runPostGenerationPremium()" title="Samokorekta gotowego tekstu: model go oceni i poprawi według oceny" data-i18n-title="title-premium-fix-tooltip" data-i18n="btn-premium-fix" data-ikona="list-checks"><svg class="ikona" aria-hidden="true"><use href="#i-list-checks"/></svg>Popraw ten tekst</button>
+                <button class="btn-secondary" id="tts-btn" style="display:none" onclick="speakArticle(this)" data-i18n-title="tts-read" title="Czytaj na głos"><svg class="ikona" aria-hidden="true"><use href="#i-volume-2"/></svg><span data-i18n="tts-read">Czytaj na głos</span></button>
                 <button class="btn-secondary" id="nowy-art-btn" style="display:none" onclick="nowyArtykul()" title="Wyczyść temat, słowa kluczowe i wytyczne, żeby zacząć kolejny artykuł. Poprzedni zostaje w Historii." data-i18n-title="nowy-artykul-title" data-i18n="nowy-artykul" data-ikona="square-pen"><svg class="ikona" aria-hidden="true"><use href="#i-square-pen"/></svg>Nowy artykuł</button>
               </div>
             </div>
@@ -3633,16 +3699,18 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
               <p class="start-opis" data-i18n="start-ekran-opis">Wpisz temat w briefie albo zacznij od jednego z gotowych punktów startu.</p>
               <div class="start-karty">
                 <button type="button" class="start-karta" onclick="otworzTematy()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-lightbulb"/></svg><b data-i18n="start-karta-tematy">Podpowiedz tematy</b><span data-i18n="start-karta-tematy-opis">Opisz potrzebę, dostaniesz 10 tematów z intencją</span></button>
-                <button type="button" class="start-karta" onclick="openImproveModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-pen-line"/></svg><b data-i18n="start-karta-popraw">Popraw istniejący tekst</b><span data-i18n="start-karta-popraw-opis">Wklej artykuł i podnieś jego ocenę</span></button>
+                <button type="button" class="start-karta" onclick="openImproveModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-pen-line"/></svg><b data-i18n="start-karta-popraw">Popraw wklejony tekst</b><span data-i18n="start-karta-popraw-opis">Wklej artykuł i podnieś jego ocenę</span></button>
                 <button type="button" class="start-karta" onclick="openBulkModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-layout-grid"/></svg><b data-i18n="start-karta-grupowe">Generowanie grupowe</b><span data-i18n="start-karta-grupowe-opis">Wiele tematów naraz, jedna kolejka</span></button>
               </div>
               <div class="start-kroki" id="start-kroki">
                 <div class="start-sekcja" data-i18n="start-kroki-tytul">Pierwszy tekst w trzech krokach</div>
                 <ol>
-                  <li><span class="start-nr">1</span><span data-i18n="start-krok-1">Dodaj do bazy wiedzy pliki, strony albo notatki o firmie.</span></li>
-                  <li><span class="start-nr">2</span><span data-i18n="start-krok-2">Wpisz temat i słowa kluczowe w briefie.</span></li>
-                  <li><span class="start-nr">3</span><span data-i18n="start-krok-3">Wygeneruj tekst, a potem oceń go: SEO, fakty i luki.</span></li>
+                  <li><span class="start-nr">1</span><span data-i18n="start-krok-1">Wpisz temat i słowa kluczowe w briefie.</span></li>
+                  <li><span class="start-nr">2</span><span data-i18n="start-krok-2">Kliknij „Wygeneruj treść”. Przy pustej bazie AI oprze tekst na stronach z sieci i poda źródła.</span></li>
+                  <li><span class="start-nr">3</span><span data-i18n="start-krok-3">Dodaj do bazy wiedzy pliki, strony albo notatki o firmie, żeby kolejne teksty mówiły o Twojej ofercie.</span></li>
                 </ol>
+                <!-- R9-G (UX8-24): przyklad wyniku bez klucza i bez generowania -->
+                <button type="button" class="btn-link start-przyklad" onclick="otworzPrzyklad()" data-i18n="przyklad-link" data-ikona="file-text"><svg class="ikona" aria-hidden="true"><use href="#i-file-text"/></svg>Zobacz przykładowy artykuł z ocenami</button>
               </div>
               <div class="start-ostatnie" id="start-ostatnie" hidden>
                 <div class="start-sekcja" data-i18n="start-ostatnie">Ostatnie</div>
@@ -3672,7 +3740,7 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
               </div>
               <button type="button" class="przycisk-ikona" onclick="inspektorZamknij()" title="Zamknij panel" aria-label="Zamknij panel" data-i18n-title="ins-zamknij" data-i18n-label="ins-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
             </div>
-            <div class="ins-oceny"><div class="segmenty" role="group"><button type="button" data-ins-ocena="seo" onclick="inspektorPokaz('seo')">SEO</button><button type="button" data-ins-ocena="aio" onclick="inspektorPokaz('aio')">AIO</button><button type="button" data-ins-ocena="aeo" onclick="inspektorPokaz('aeo')">AEO</button><button type="button" data-ins-ocena="geo" onclick="inspektorPokaz('geo')">GEO</button></div></div>
+            <div class="ins-oceny"><div class="segmenty" role="group" aria-describedby="ins-ocena-opis"><button type="button" data-ins-ocena="seo" onclick="inspektorPokaz('seo')" data-i18n-title="ocena-opis-seo" title="SEO: czy tekst ma szansę na wysoką pozycję w klasycznych wynikach Google (fraza, nagłówki, opis meta).">SEO</button><button type="button" data-ins-ocena="aio" onclick="inspektorPokaz('aio')" data-i18n-title="ocena-opis-aio" title="AIO: czy Google przytoczy tekst w podsumowaniu AI nad wynikami wyszukiwania (AI Overviews).">AIO</button><button type="button" data-ins-ocena="aeo" onclick="inspektorPokaz('aeo')" data-i18n-title="ocena-opis-aeo" title="AEO: czy asystenci i wyszukiwarki odpowiedzi wezmą z tekstu gotową odpowiedź (definicja, FAQ, krótkie listy).">AEO</button><button type="button" data-ins-ocena="geo" onclick="inspektorPokaz('geo')" data-i18n-title="ocena-opis-geo" title="GEO: czy czaty AI, np. ChatGPT albo Perplexity, zacytują tekst i Twoją markę jako źródło (nie chodzi o geolokalizację).">GEO</button></div><p class="ins-ocena-opis" id="ins-ocena-opis"></p></div>
             <div class="ins-tresc">
           <!-- Panel FOG -->
           <div id="fog-panel" class="ins-panel" style="display:none">
@@ -3843,6 +3911,12 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
           <div class="hstat"><div class="hstat-val" id="h-avg">-</div><div class="hstat-lbl" data-i18n="stat-avg-words">Średnia słów</div></div>
           <div class="hstat" id="h-cost-kafel"><div class="hstat-val" id="h-cost">$0.00</div><div class="hstat-lbl" id="h-cost-lbl" data-i18n="hist-cost">Szac. koszt API</div><div class="hstat-pod" id="h-cost-pod"></div></div>
         </div>
+        <!-- R9-G (UX8-16): Historia zyje tylko w tej przegladarce - mowimy to wprost i dajemy kopie do pobrania -->
+        <div class="hist-lokalnie" id="hist-lokalnie">
+          <svg class="ikona" aria-hidden="true"><use href="#i-info"/></svg>
+          <span data-i18n="hist-lokalnie">Historia jest zapisana tylko w tej przeglądarce: nie zobaczysz jej na innym urządzeniu, a wyczyszczenie danych przeglądarki ją usuwa.</span>
+          <button type="button" class="btn-link" id="hist-eksport-btn" onclick="eksportujHistorie()" data-i18n="hist-eksport" data-ikona="download"><svg class="ikona" aria-hidden="true"><use href="#i-download"/></svg>Pobierz kopię historii</button>
+        </div>
       </div>
       <!-- Split: list + preview -->
       <div style="display:flex;flex:1;overflow:hidden">
@@ -3851,9 +3925,9 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
             <input type="text" id="hist-filter" aria-label="Szukaj w historii…" data-i18n-label="ph-history-search" placeholder="Szukaj w historii…" data-i18n="ph-history-search" oninput="filterHistory()" style="width:100%;box-sizing:border-box"/>
             <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap" id="hist-tag-filters">
               <button type="button" class="htag-filter active" aria-pressed="true" onclick="setHistFilter(this,'all')" data-i18n="hist-filter-all">Wszystkie</button>
-              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Artykuł SEO')">SEO</button>
-              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Treść AIO')">AIO</button>
-              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Hybryda SEO + AIO')" data-i18n="hist-filter-hybrid">Hybryda</button>
+              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Artykuł SEO')" data-i18n-title="ctype-opis-seo" title="Artykuł SEO: tekst pod klasyczne wyniki Google, czyli fraza kluczowa w nagłówkach, opis meta i pełne omówienie tematu.">SEO</button>
+              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Treść AIO')" data-i18n-title="ctype-opis-aio" title="Treść AIO: tekst pod podsumowania AI w Google (AI Overviews), czyli bezpośrednie odpowiedzi i krótkie zdania łatwe do zacytowania.">AIO</button>
+              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Hybryda SEO + AIO')" data-i18n="hist-filter-hybrid" data-i18n-title="ctype-opis-hybryda" title="Hybryda SEO + AIO (zalecana): jeden tekst pod klasyczne wyniki Google (SEO) i pod podsumowania AI nad wynikami (AIO).">Hybryda</button>
             </div>
           </div>
           <div id="h-list-inner" style="padding:8px">
@@ -3879,7 +3953,7 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
 <!-- Panel Briefu -->
 <div class="brief-panel" id="brief-panel">
   <div class="brief-panel-glowa" style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-    <strong class="tekst-zwykly" data-i18n="brief-title">Brief artykułu</strong>
+    <strong class="tekst-zwykly" data-i18n="brief-title">Plan artykułu</strong>
     <button class="seo-close" onclick="closeBriefPanel()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
   </div>
   <div style="overflow-y:auto;flex:1" id="brief-content"><div class="seo-loading" data-i18n="msg-loading-brief">Analizuję temat i bazę wiedzy…</div></div>
@@ -4036,7 +4110,7 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
 <div class="overlay" id="vis-modal" onclick="if(event.target===this)closeVisModal()">
   <div class="modal" style="width:680px">
     <div class="modal-head">
-      <h3 data-i18n="vis-title">Widoczność marki w AI</h3>
+      <h3 data-i18n="vis-title">Obecność marki w AI</h3>
       <button class="modal-close" onclick="closeVisModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
     </div>
     <p data-i18n="vis-desc">Sprawdza czy marka pojawia się w odpowiedziach AI na zapytania zakupowe. Uruchamia każdy prompt przez Claude z wyszukiwaniem w sieci i raportuje obecność, pozycję, konkurentów i źródła. To migawka na żądanie z jednego modelu (Claude), nie ciągły monitoring wielu modeli. Każdy prompt zużywa zapytanie web search (płatne).</p>
@@ -4088,7 +4162,7 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
 <div class="overlay" id="trk-modal" onclick="if(event.target===this)closeTrkModal()">
   <div class="modal" style="width:660px">
     <div class="modal-head">
-      <h3 data-i18n="trk-title">Tracking ruchu z AI (przygotowanie)</h3>
+      <h3 data-i18n="trk-title">Pomiar ruchu z AI (przygotowanie)</h3>
       <button class="modal-close" onclick="closeTrkModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
     </div>
     <p data-i18n="trk-desc">To nie jest pomiar ruchu. Generuje warunki wstępne: dyrektywy robots.txt dla botów AI, linki z UTM i wskazówkę konfiguracji GA4. Sam pomiar wymaga GA4 i analizy logów po stronie serwera.</p>
@@ -4185,7 +4259,7 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
 <!-- BRAND VOICE MODAL -->
 <div class="overlay" id="aiv-modal" onclick="if(event.target===this)aivClose()">
   <div class="modal" style="width:560px;max-width:94vw">
-    <div class="modal-head"><h3 data-i18n="aiv-modal-title">Widoczność w AI (AEO/GEO)</h3><button class="modal-close" onclick="aivClose()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+    <div class="modal-head"><h3 data-i18n="aiv-modal-title">Cytowania w AI</h3><button class="modal-close" onclick="aivClose()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
     <p class="tekst-2" style="margin-top:0" data-i18n="aiv-modal-desc">Sprawdza, czy odpowiedzi AI (Claude z web search) na Twoje zapytania przywołują markę - w treści lub w cytowanych źródłach. Wynik i historia zapisują się lokalnie, więc widać trend w czasie. To przybliżenie jednym silnikiem, nie pomiar wszystkich wyszukiwarek AI.</p>
     <div style="display:flex;align-items:center;gap:10px;margin:8px 0 12px;padding:8px 12px;background:var(--surface2);border-radius:8px">
       <span class="tekst-pomoc" data-i18n="aiv-score-label">Wynik widoczności:</span>
@@ -4209,7 +4283,7 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
 </div>
 <div class="overlay" id="voice-modal" onclick="if(event.target===this)closeVoiceSettings()">
   <div class="modal" style="width:480px">
-    <div class="modal-head"><h3 data-i18n="voice-modal-title">Asystent głosowy</h3><button class="modal-close" onclick="closeVoiceSettings()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+    <div class="modal-head"><h3 data-i18n="voice-modal-title">Czytanie na głos i dyktowanie</h3><button class="modal-close" onclick="closeVoiceSettings()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
     <p class="tekst-2" style="margin-top:0" data-i18n="voice-modal-desc">Czytanie wygenerowanych treści na głos oraz dyktowanie do pól. Silnik przeglądarki działa lokalnie i za darmo. ElevenLabs i OpenAI dają wyższą jakość, ale wysyłają tekst lub audio do API.</p>
     <div style="display:flex;flex-direction:column;gap:14px;margin-top:6px">
       <label class="field-label" style="display:block">
@@ -4318,7 +4392,7 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
 <!-- CONTENT IMPROVEMENT MODAL -->
 <div class="overlay" id="improve-modal" onclick="if(event.target===this)closeImproveModal()">
   <div class="modal" style="width:600px;max-height:85vh;display:flex;flex-direction:column">
-    <div class="modal-head" style="flex-shrink:0"><h3 data-i18n="improve-title">Popraw istniejący artykuł</h3><button class="modal-close" onclick="closeImproveModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+    <div class="modal-head" style="flex-shrink:0"><h3 data-i18n="improve-title">Popraw wklejony tekst</h3><button class="modal-close" onclick="closeImproveModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
     <div style="padding:0 20px 14px;overflow-y:auto;flex:1">
       <p data-i18n="improve-modal-desc">Wklej istniejący artykuł ze strony firmy. Aplikacja przepisze go pod kątem SEO+AIO zachowując wszystkie fakty i informacje firmowe.</p>
       <textarea class="improve-textarea" id="improve-input" aria-label="Wklej tutaj treść artykułu do poprawy…" data-i18n-label="improve-ph" placeholder="Wklej tutaj treść artykułu do poprawy…" data-i18n="improve-ph" style="width:100%;resize:vertical;box-sizing:border-box"></textarea>
@@ -4328,7 +4402,7 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
       <div style="display:flex;margin-top:10px">
         <button class="btn-generate" style="width:100%;justify-content:center" onclick="runImprove()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          <span data-i18n="improve-action-txt">Popraw artykuł</span>
+          <span data-i18n="improve-action-txt">Popraw tekst</span>
         </button>
       </div>
     </div>
@@ -4359,6 +4433,9 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
     <div class="modal-footer" style="flex-direction:column;gap:10px;margin-top:16px">
       <button class="btn-generate" style="width:100%;justify-content:center" onclick="noSourceConfirmWeb()" data-i18n="btn-generate-internet" data-ikona="globe"><svg class="ikona" aria-hidden="true"><use href="#i-globe"/></svg>Wygeneruj z wyszukiwaniem w sieci</button>
       <button id="no-source-kb-btn" class="btn-secondary" style="width:100%;justify-content:center" onclick="noSourceGoToKB()" data-i18n="err-add-src" data-ikona="folder"><svg class="ikona" aria-hidden="true"><use href="#i-folder"/></svg>Dodaj źródła do bazy wiedzy</button>
+      <!-- R9-G (UX8-14): trzecie wyjscie, z ostrzezeniem pod przyciskiem -->
+      <button id="no-source-bez-btn" class="btn-link no-source-bez" onclick="noSourceBezZrodel()" aria-describedby="no-source-bez-uwaga" data-i18n="btn-generate-bez-zrodel">Wygeneruj bez źródeł</button>
+      <p class="tekst-pomoc no-source-bez-uwaga" id="no-source-bez-uwaga" data-i18n="no-src-bez-uwaga">Bez źródeł AI pisze z ogólnej wiedzy modelu: liczby i fakty mogą być nieaktualne albo zmyślone, a o Twojej firmie nie powie nic konkretnego. Sprawdź tekst przed publikacją.</p>
     </div>
   </div>
 </div>
@@ -4388,6 +4465,30 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
     <div class="modal-footer" style="flex-direction:column;gap:10px;margin-top:16px">
       <button class="btn-generate" style="width:100%;justify-content:center" onclick="premiumProceed()" data-i18n="btn-continue-premium" data-ikona="list-checks"><svg class="ikona" aria-hidden="true"><use href="#i-list-checks"/></svg>Kontynuuj z samokorektą</button>
       <button class="btn-secondary" style="width:100%;justify-content:center" onclick="premiumSkip()" data-i18n="btn-generate-normal" data-ikona="zap"><svg class="ikona" aria-hidden="true"><use href="#i-zap"/></svg>Wygeneruj bez samokorekty</button>
+    </div>
+  </div>
+</div>
+
+<!-- R9-G (UX8-24): PRZYKLADOWY ARTYKUL - nowa osoba widzi wynik (tekst ze zrodlami, cztery oceny, kontrola
+     faktow), zanim zacznie pisac albo podlaczy klucz. Tylko do odczytu: nie trafia do Historii i nie zuzywa pakietu. -->
+<div class="overlay" id="przyklad-modal" onclick="if(event.target===this)zamknijPrzyklad()">
+  <div class="modal przyklad-okno" tabindex="-1">
+    <div class="modal-head">
+      <h3 data-i18n="przyklad-tytul">Przykładowy artykuł</h3>
+      <button class="modal-close" onclick="zamknijPrzyklad()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </div>
+    <p class="przyklad-pasek" data-i18n="przyklad-opis">To przykładowy artykuł: tak wygląda wynik, czyli tekst ze źródłami, cztery oceny i kontrola faktów. Swój napiszesz w briefie.</p>
+    <div class="przyklad-uklad">
+      <aside class="przyklad-oceny" aria-labelledby="przyklad-oceny-tytul">
+        <div class="panel-tytul" id="przyklad-oceny-tytul" data-i18n="przyklad-oceny-tytul">Ocena tekstu</div>
+        <div class="przyklad-siatka" id="przyklad-siatka"></div>
+        <p class="przyklad-fakty" id="przyklad-fakty"></p>
+      </aside>
+      <div class="article przyklad-artykul" id="przyklad-artykul"></div>
+    </div>
+    <div class="modal-footer">
+      <span class="tekst-pomoc przyklad-stopka" data-i18n="przyklad-stopka">W swoich artykułach możesz edytować, eksportować i publikować. Przykład przygotował zespół Content AI: nie trafia do Historii i nie zużywa pakietu.</span>
+      <button class="btn-generate" onclick="zamknijPrzyklad()" data-i18n="przyklad-zamknij">Zamknij przykład</button>
     </div>
   </div>
 </div>
@@ -4469,7 +4570,7 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
   <div class="modul-ramka">
     <div class="narzedzie-naglowek modul-naglowek">
       <button type="button" class="btn-secondary narzedzie-wroc" id="img-panel-back-mobile" onclick="closeImgPanelSmart()" data-i18n="img-back" data-ikona="arrow-left"><svg class="ikona" aria-hidden="true"><use href="#i-arrow-left"/></svg>Wróć</button>
-      <h2 class="modul-tytul" data-i18n="img-title">Generator grafik</h2>
+      <h2 class="modul-tytul" data-i18n="img-title">Grafika</h2>
       <button type="button" class="btn-secondary narzedzie-zamknij" id="img-panel-close-desktop" onclick="closeImgPanelSmart()" data-i18n="img-close" data-ikona="x"><svg class="ikona" aria-hidden="true"><use href="#i-x"/></svg>Zamknij</button>
     </div>
     <div id="img-panel-grid" class="modul-siatka">
@@ -4769,15 +4870,23 @@ var I18N = {
     'start-ekran-opis':'Wpisz temat w briefie albo zacznij od jednego z gotowych punktów startu.',
     'start-karta-tematy':'Podpowiedz tematy',
     'start-karta-tematy-opis':'Opisz potrzebę, a dostaniesz 10 tematów z intencją wyszukiwania.',
-    'start-karta-popraw':'Popraw istniejący tekst',
+    'start-karta-popraw':'Popraw wklejony tekst',
     'start-karta-popraw-opis':'Wklej artykuł i podnieś jego ocenę',
     'start-karta-grupowe':'Generowanie grupowe',
     'start-karta-grupowe-opis':'Wiele tematów naraz, jedna kolejka',
     'start-kroki-tytul':'Pierwszy tekst w trzech krokach',
-    'start-krok-1':'Dodaj do bazy wiedzy pliki, strony albo notatki o firmie.',
-    'start-krok-2':'Wpisz temat i słowa kluczowe w briefie.',
-    'start-krok-3':'Wygeneruj tekst, a potem oceń go: SEO, fakty i luki.',
+    'start-krok-1':'Wpisz temat i słowa kluczowe w briefie.',
+    'start-krok-2':'Kliknij „Wygeneruj treść”. Przy pustej bazie AI oprze tekst na stronach z sieci i poda źródła.',
+    'start-krok-3':'Dodaj do bazy wiedzy pliki, strony albo notatki o firmie, żeby kolejne teksty mówiły o Twojej ofercie.',
     'start-ostatnie':'Ostatnie',
+    // R9-G (UX8-24): przykladowy artykul (tylko do odczytu, bez klucza)
+    'przyklad-link':'Zobacz przykładowy artykuł z ocenami','przyklad-tytul':'Przykładowy artykuł','przyklad-zamknij':'Zamknij przykład',
+    'przyklad-opis':'To przykładowy artykuł: tak wygląda wynik, czyli tekst ze źródłami, cztery oceny i kontrola faktów. Swój napiszesz w briefie.',
+    'przyklad-oceny-tytul':'Ocena tekstu','przyklad-nazwa-seo':'SEO · Google','przyklad-nazwa-aio':'AIO · podsumowania AI w Google',
+    'przyklad-nazwa-aeo':'AEO · odpowiedzi asystentów','przyklad-nazwa-geo':'GEO · cytowania w czatach AI',
+    'przyklad-fakty':'Kontrola faktów: 1 zdanie do sprawdzenia. „Da się uruchomić w kilka dni”: źródło mówi o 2 do 10 dniach roboczych.',
+    'przyklad-stopka':'W swoich artykułach możesz edytować, eksportować i publikować. Przykład przygotował zespół Content AI: nie trafia do Historii i nie zużywa pakietu.',
+    'przyklad-tresc':'<h1>Jak wybrać system CRM dla małej firmy: od czego zacząć</h1><p>System CRM to program, który zbiera w jednym miejscu kontakty z klientami, historię rozmów i etap każdej sprzedaży. Małej firmie zwykle wystarczy prosty system dla 3 do 5 osób, który da się uruchomić w kilka dni.</p><h2>Czym jest CRM i komu się opłaca?</h2><p>CRM (Customer Relationship Management) porządkuje pracę z klientami tam, gdzie kilka osób rozmawia z tymi samymi firmami, a ustalenia giną w skrzynkach pocztowych i arkuszach. Jeśli oferta wysłana w poniedziałek w piątek nie ma już właściciela, to znak, że czas na CRM.</p><h2>Jak wybrać system w czterech krokach?</h2><ol><li>Wypisz trzy czynności, które dziś zabierają zespołowi najwięcej czasu.</li><li>Sprawdź, czy system zaimportuje kontakty z pliku CSV.</li><li>Porównaj cenę za użytkownika i koszt dodatkowych modułów.</li><li>Przetestuj wersję próbną na jednym prawdziwym kliencie.</li></ol><h2>Ile kosztuje CRM dla małej firmy?</h2><p>Proste systemy kosztują zwykle od kilkudziesięciu do około 100 zł miesięcznie za użytkownika. Do ceny trzeba doliczyć czas wdrożenia: import kontaktów i ustawienie etapów sprzedaży zajmuje od 2 do 10 dni roboczych.</p><h2>Kluczowe wnioski</h2><ul><li>CRM opłaca się, gdy z tymi samymi klientami rozmawia więcej niż jedna osoba.</li><li>Wybór zacznij od trzech najbardziej czasochłonnych czynności, nie od listy funkcji.</li><li>Policz cały koszt: licencje za użytkownika i od 2 do 10 dni wdrożenia.</li></ul><div class="zrodla-box"><div class="zrodla-label">Źródła</div><ul><li>Oferta firmy (dokument z bazy wiedzy)</li><li>Poradnik o wdrażaniu CRM w małych firmach (strona z sieci)</li></ul></div><div class="meta-box"><p>Jak wybrać CRM dla małej firmy: komu się opłaca, ile kosztuje i jak wybrać system w czterech krokach, zanim zapłacisz za licencje.</p></div>',
     // nowy uklad (E4)
     'nav-pisz':'Pisz','widok-wynik':'Wynik','widok-etykieta':'Widok',
     'nav-widocznosc':'Widoczność AI',
@@ -4787,7 +4896,7 @@ var I18N = {
     'konto-opis':'Ustawienia aplikacji',
     'konto-zalogowany':'Zalogowano na tym urządzeniu',
     'menu-gr-marka':'Marka',
-    'menu-gr-polaczenia':'Połączenia',
+    'menu-gr-polaczenia':'Ustawienia',
     'menu-motyw':'Motyw',
     'motyw-ciemny':'Ciemny',
     'motyw-jasny':'Jasny',
@@ -4816,13 +4925,13 @@ var I18N = {
     'ins-linki':'Linki',
     'ins-serp':'SERP',
     'ins-zamknij':'Zamknij panel',
-    'settings-aiv-title':'Cytowania w AI','settings-aiv-sub':'Twoje zapytania, trend w czasie',
-    'aiv-modal-title':'Widoczność w AI (AEO/GEO)','aiv-modal-desc':'Sprawdza, czy odpowiedzi AI (Claude z web search) na Twoje zapytania przywołują markę - w treści lub w cytowanych źródłach. Wynik i historia zapisują się lokalnie, więc widać trend w czasie. To przybliżenie jednym silnikiem, nie pomiar wszystkich wyszukiwarek AI.',
+    'settings-aiv-title':'Cytowania w AI','settings-aiv-sub':'czy AI cytuje Twoje strony, trend',
+    'aiv-modal-title':'Cytowania w AI','aiv-modal-desc':'Sprawdza, czy odpowiedzi AI (Claude z web search) na Twoje zapytania przywołują markę - w treści lub w cytowanych źródłach. Wynik i historia zapisują się lokalnie, więc widać trend w czasie. To przybliżenie jednym silnikiem, nie pomiar wszystkich wyszukiwarek AI.',
     'aiv-score-label':'Wynik widoczności:','aiv-add-ph':'np. najlepsza firma [branża] w Polsce','aiv-add-btn':'Dodaj','aiv-domains-label':'Domeny marki (do wykrywania w źródłach)','aiv-export':'Eksport CSV',
     'aiv-check-all':'Sprawdź wszystkie','aiv-check-one':'Sprawdź','aiv-checking':'Sprawdzam','aiv-status-cited':'Cytowane w źródłach','aiv-status-mentioned':'Wspomniane w treści','aiv-status-none':'Brak',
     'aiv-never':'Nie sprawdzono','aiv-last':'Ostatnio:','aiv-srcword':'zr.','aiv-empty':'Dodaj zapytania, które chcesz monitorować w odpowiedziach AI.','aiv-del-title':'Usuń','aiv-gpt-na':'Tracking nie działa w trybie GPT-only (brak web search).','aiv-no-key':'Brak klucza API Anthropic. Wpisz go w menu konta → Klucze API.',
     'opt-podcast':'Podcast (skrypt + audio)','opt-newsletter-audio':'Newsletter audio','opt-transcription':'Transkrypcja audio',
-    'audio-btn':'Audio','title-audio':'Treści audio','audio-title':'Treści audio','audio-close':'Zamknij',
+    'audio-btn':'Audio','title-audio':'Audio: podcast, newsletter, audiobook i transkrypcja','audio-title':'Audio','audio-close':'Zamknij',
     'audio-type':'Rodzaj treści audio','au-podcast':'Podcast (skrypt + audio)','au-newsletter':'Newsletter audio','au-audiobook':'Artykuł → audiobook','au-transcription':'Transkrypcja (audio → tekst)',
     'audio-voices':'Liczba głosów','audio-engine':'Silnik głosu','au-eng-openai':'OpenAI','au-eng-eleven':'ElevenLabs','au-eng-web':'Przeglądarka',
     'audio-source':'Temat lub treść','audio-source-ph':'Wpisz temat albo wklej gotową treść…','audio-from-article':'Wczytaj artykuł','audio-file':'Plik audio do transkrypcji',
@@ -4840,9 +4949,9 @@ var I18N = {
     'voice-engine-eleven':'ElevenLabs (najlepszy polski)','voice-eleven-voice':'Głos ElevenLabs','voice-eleven-custom':'lub wklej własny voice_id','voice-eleven-custom-opt':'Własny voice_id','voice-eleven-model':'Model ElevenLabs',
     'voice-eleven-m-quality':'Wielojęzyczny v2 (jakość)','voice-eleven-m-fast':'Flash v2.5 (szybki, tańszy)','voice-eleven-m-expr':'Eleven v3 (ekspresyjny)',
     'voice-mic-insecure':'Mikrofon wymaga HTTPS. Otwórz aplikację przez intranet/serwer (adres https), nie jako lokalny plik.','voice-no-eleven-key':'Brak klucza ElevenLabs - ustaw klucz lub użyj proxy albo innego silnika.',
-    'tts-read':'Posłuchaj','tts-stop':'Zatrzymaj','tts-generating':'Generuję audio…','tts-dl':'Pobierz MP3','tts-dl-title':'Pobierz audio mp3 (OpenAI)',
-    'settings-voice-title':'Asystent głosowy','settings-voice-sub':'czytanie na głos i dyktowanie',
-    'voice-modal-title':'Asystent głosowy','voice-modal-desc':'Czytanie wygenerowanych treści na głos oraz dyktowanie do pól. Silnik przeglądarki działa lokalnie i za darmo. ElevenLabs i OpenAI dają wyższą jakość, ale wysyłają tekst lub audio do API.',
+    'tts-read':'Czytaj na głos','tts-stop':'Zatrzymaj','tts-generating':'Generuję audio…','tts-dl':'Pobierz MP3','tts-dl-title':'Pobierz audio mp3 (OpenAI)',
+    'settings-voice-title':'Czytanie na głos i dyktowanie','settings-voice-sub':'silnik głosu i mikrofon',
+    'voice-modal-title':'Czytanie na głos i dyktowanie','voice-modal-desc':'Czytanie wygenerowanych treści na głos oraz dyktowanie do pól. Silnik przeglądarki działa lokalnie i za darmo. ElevenLabs i OpenAI dają wyższą jakość, ale wysyłają tekst lub audio do API.',
     'voice-engine':'Silnik mowy (czytanie)','voice-engine-web':'Przeglądarka (za darmo, lokalnie)','voice-engine-openai':'OpenAI (wysoka jakość)',
     'voice-oa-voice':'Głos OpenAI','voice-rate':'Tempo','voice-stt':'Dyktowanie (mowa na tekst)','voice-stt-web':'Przeglądarka','voice-stt-openai':'OpenAI (transkrypcja)',
     'voice-disclosure':'Głos jest generowany przez AI, nie jest to nagranie człowieka. Dyktowanie oraz głosy ElevenLabs i OpenAI wysyłają dane do API. Silnik przeglądarki dla dyktowania korzysta z usługi dostawcy przeglądarki.',
@@ -4875,11 +4984,15 @@ var I18N = {
     'siec-bez-wyszukiwania-opis':'Bez zapytań do sieci: baza wiedzy pokryła temat. Wyszukiwanie uruchamia się tylko tam, gdzie baza milczy.',
     'toggle-web':'Szukaj w sieci i podaj źródła',
     'toggle-web-hint':'Czego brakuje w bazie, AI poszuka w sieci i wymieni źródła pod artykułem. Dane o Twojej firmie zawsze tylko z bazy. Wydłuża generowanie o ok. 30 s.',
+    'toggle-web-hint-pusta':'Twoja baza wiedzy jest pusta, więc AI oprze tekst na stronach z sieci i wymieni je pod artykułem. Dodaj materiały o firmie, żeby kolejne teksty mówiły o Twojej ofercie.',
     'toggle-serp':'Analiza SERP przed generowaniem',
     'toggle-serp-hint':'Przed pisaniem AI sprawdza, co rankuje w Google na Twoje słowo kluczowe, i bierze to pod uwagę. Wydłuża generowanie o ok. 15 s.',
     'toggle-aeo':'Tryb AEO (treść pod cytowania AI)','toggle-aeo-hint':'Wymusza format pod silniki odpowiedzi: definicja 25-50 słów na start, liczby w intro, 5-7 pytań FAQ, krótkie listy, nagłówki jako pytania.',
     'btn-aeo':'Oceń AEO','aeo-panel-title':'Ocena AEO','btn-geo':'Oceń GEO','geo-panel-title':'Ocena GEO',
     'opt-hybrid':'Hybryda SEO + AIO','opt-seo':'Artykuł SEO','opt-aio':'Treść AIO',
+    'ctype-opis-hybryda':'Hybryda SEO + AIO (zalecana): jeden tekst pod klasyczne wyniki Google (SEO) i pod podsumowania AI nad wynikami (AIO).',
+    'ctype-opis-seo':'Artykuł SEO: tekst pod klasyczne wyniki Google, czyli fraza kluczowa w nagłówkach, opis meta i pełne omówienie tematu.',
+    'ctype-opis-aio':'Treść AIO: tekst pod podsumowania AI w Google (AI Overviews), czyli bezpośrednie odpowiedzi i krótkie zdania łatwe do zacytowania.',
     'opt-faq':'Strona FAQ','opt-landing':'Strona docelowa','opt-blog':'Wpis blogowy','opt-product':'Opis produktu/usługi',
     'opt-directional':'Strona kierunkowa','opt-press':'Informacja prasowa','label-dir-country':'Kierunek (kraj docelowy)',
     'dir-de':'Niemcy','dir-cz':'Czechy','dir-sk':'Słowacja','dir-nl':'Holandia','dir-fr':'Francja',
@@ -4887,7 +5000,7 @@ var I18N = {
     'opt-prof':'Profesjonalny','opt-expert':'Ekspercki','opt-friendly':'Przyjazny','opt-neutral':'Neutralny',
     'label-audience':'Odbiorca',
     'opt-aud-auto':'Dopasuj do tematu','opt-aud-b2c':'Klient indywidualny (B2C)','opt-aud-b2b':'Firma (B2B)',
-    'btn-brief':'Brief','btn-bulk':'Generuj grupowo','btn-improve':'Popraw','btn-img-short':'Grafika',
+    'btn-brief':'Plan artykułu','btn-bulk':'Generuj grupowo','btn-improve':'Popraw wklejony tekst','btn-img-short':'Grafika',
     'btn-generate':'Wygeneruj treść','btn-premium':'Samokorekta','btn-premium-active':'Samokorekta',
     'premium-opis':'Model oceni gotowy tekst i poprawi go (2-3 razy dłużej).','gen-z-samokorekta':'Wygeneruj z samokorektą',
     'out-title':'Wynik','badge-ready':'gotowy do generowania','badge-done':'gotowe',
@@ -4905,7 +5018,7 @@ var I18N = {
     'fakty-loading':'Zestawiam artykuł ze źródłami…',
     'fakty-brak-zrodel':'Kontrola faktów porównuje tekst z dokumentami z bazy wiedzy. Zaznacz te, na których opiera się ten tekst, i uruchom kontrolę ponownie.',
     'fakty-brak-zrodel-tytul':'Brak źródeł do porównania',
-    'fakty-wybierz-zrodla':'Wybierz źródła w Bazie',
+    'fakty-wybierz-zrodla':'Wybierz źródła w bazie wiedzy',
     'fakty-blad':'Nie udało się przeprowadzić kontroli. Spróbuj ponownie.',
     'fakty-czysto':'Bez zastrzeżeń.',
     'fakty-czysto-opis':'Każda liczba i każde twierdzenie ma pokrycie w zaznaczonych źródłach. To kontrola automatyczna, nie zastępuje czytania tekstu przed publikacją.',
@@ -4937,13 +5050,13 @@ var I18N = {
     'fakty-powod-link-kotwica':'Klikalne słowa powinny mówić, co jest po drugiej stronie.',
     'fakty-powod-link-powtorka':'Dwa odnośniki z tym samym tekstem czyta się jak pomyłkę.',
     'fakty-powod-link-pusty':'Odnośnik nie ma widocznego tekstu.',
-    'btn-jsonld':'JSON-LD','btn-premium-fix':'Dopracuj tekst','btn-copy':'Kopiuj','btn-copied':'Skopiowano',
+    'btn-jsonld':'JSON-LD','btn-premium-fix':'Popraw ten tekst','btn-copy':'Kopiuj','btn-copied':'Skopiowano',
     'rp-linkedin':'Post na LinkedIn','rp-facebook':'Post na Facebooku','rp-email':'Newsletter e-mail',
     'rp-faq':'Strona FAQ','rp-landing':'Wstęp strony docelowej',
     'rp-panel-title':'Przeróbki artykułu','rp-copy':'Kopiuj','rp-loading':'Tworzę przeróbkę…',
-    'brief-title':'Brief artykułu','brief-zapamietany':'Zapisany brief z {czas}','brief-odswiez':'Analizuj ponownie','brief-use-kw':'Użyj słów kluczowych','brief-loading':'Analizuję temat i bazę wiedzy…',
+    'brief-title':'Plan artykułu','brief-zapamietany':'Zapisany plan z {czas}','brief-odswiez':'Analizuj ponownie','brief-use-kw':'Użyj słów kluczowych','brief-loading':'Analizuję temat i bazę wiedzy…',
     'jsonld-title':'{ } Schematy JSON-LD','jsonld-copy':'Kopiuj kod','jsonld-type-label':'Typ schematu',
-    'sidebar-title':'Baza wiedzy - źródła','sidebar-docs':'Dokumenty','sidebar-words':'Słowa',
+    'sidebar-title':'Baza wiedzy','sidebar-docs':'Dokumenty','sidebar-words':'Słowa',
     'sidebar-gen':'Wygenerowane','sidebar-click':'Kliknij, aby wybrać pliki','sidebar-types':'PDF, DOCX, XLSX, PPTX, TXT, CSV',
     'sidebar-link':'Dodaj link / URL','sidebar-text':'Dodaj tekst ręcznie','sidebar-deselect':'Odznacz wszystkie',
     'settings-llms-title':'Dane marki','settings-llms-sub':'nazwa, domeny, pliki llms.txt',
@@ -4960,19 +5073,19 @@ var I18N = {
     'llms-tylko-odczyt':'Konfigurację marki ustawia administrator - pola są tylko do odczytu.',
     'llms-zapis-lokalny':'Zapisane tylko na tym urządzeniu. Konfigurację dla całego zespołu ustawia administrator.',
     'llms-generate':'Wygeneruj pliki','llms-out-basic':'llms.txt','llms-out-full':'llms-full.txt','llms-copy':'Kopiuj','llms-download':'Pobierz','llms-hint-urls':'URL-e pobrane z bazy wiedzy: {n}',
-    'settings-vis-title':'Obecność marki w AI','settings-vis-sub':'zapytania zakupowe, pozycja, konkurenci',
-    'vis-title':'Widoczność marki w AI','vis-desc':'Sprawdza czy marka pojawia się w odpowiedziach AI na zapytania zakupowe. Uruchamia każdy prompt przez Claude z wyszukiwaniem w sieci i raportuje obecność, pozycję, konkurentów i źródła. To migawka na żądanie z jednego modelu (Claude), nie ciągły monitoring wielu modeli. Każdy prompt zużywa zapytanie web search (płatne).',
+    'settings-vis-title':'Obecność marki w AI','settings-vis-sub':'czy AI poleca Twoją markę przy zakupach',
+    'vis-title':'Obecność marki w AI','vis-desc':'Sprawdza czy marka pojawia się w odpowiedziach AI na zapytania zakupowe. Uruchamia każdy prompt przez Claude z wyszukiwaniem w sieci i raportuje obecność, pozycję, konkurentów i źródła. To migawka na żądanie z jednego modelu (Claude), nie ciągły monitoring wielu modeli. Każdy prompt zużywa zapytanie web search (płatne).',
     'vis-f-brand':'Marka do wykrycia','vis-f-comp':'Konkurenci (po przecinku)','vis-f-prompts':'Zapytania kontrolne (jedno na linię)','vis-run':'Sprawdź widoczność',
     'vis-f-iter':'Iteracje na prompt (stabilność)','vis-narr':'Narracja marki',
     'settings-rep-title':'Raport widoczności','settings-rep-sub':'porównanie pomiarów i priorytety',
-    'settings-trk-title':'Pomiar ruchu z AI','settings-trk-sub':'robots.txt, UTM, GA4',
-    'trk-title':'Tracking ruchu z AI (przygotowanie)','trk-desc':'To nie jest pomiar ruchu. Generuje warunki wstępne: dyrektywy robots.txt dla botów AI, linki z UTM i wskazówkę konfiguracji GA4. Sam pomiar wymaga GA4 i analizy logów po stronie serwera.',
+    'settings-trk-title':'Pomiar ruchu z AI','settings-trk-sub':'wejścia z czatów AI: robots.txt, UTM',
+    'trk-title':'Pomiar ruchu z AI (przygotowanie)','trk-desc':'To nie jest pomiar ruchu. Generuje warunki wstępne: dyrektywy robots.txt dla botów AI, linki z UTM i wskazówkę konfiguracji GA4. Sam pomiar wymaga GA4 i analizy logów po stronie serwera.',
     'trk-robots-h':'1. robots.txt dla botów AI','trk-robots-gen':'Generuj robots.txt','trk-copy':'Kopiuj','trk-download':'Pobierz',
     'trk-utm-h':'2. Generator linku z UTM','trk-utm-base':'Adres docelowy (URL)','trk-utm-source':'Źródło (model AI)','trk-utm-medium':'Medium','trk-utm-campaign':'Kampania (opcjonalnie)','trk-utm-gen':'Zbuduj link',
     'trk-ga4-h':'3. Wskazówka GA4','trk-ga4-note':'W GA4 utwórz grupę kanałów lub segment dla ruchu z AI: dopasuj wymiar Źródło lub Host odsyłający regexem chatgpt|openai|perplexity|gemini|copilot|claude. Wykrywa to odesłania z modeli AI, o ile zachowują referrer. Linki z UTM powyżej zapewniają atrybucję także gdy referrer jest pusty.',
     'rep-title':'Raport widoczności AI','rep-desc':'Trend i priorytety na podstawie zapisanych snapshotów widoczności. Porównuje ostatni pomiar z poprzednim i wskazuje zapytania do poprawy.','rep-copy':'Kopiuj','rep-docx':'.docx','rep-pdf':'.pdf',
     'no-source-msg':'Baza wiedzy jest pusta. Dodaj materiały firmowe albo wygeneruj tekst z wyszukiwaniem w sieci: źródła pojawią się pod artykułem.',
-    'tab-generator':'Generator treści','tab-history':'Historia','nav-base':'Baza','nav-history':'Historia',
+    'tab-generator':'Generator treści','tab-history':'Historia','nav-base':'Baza wiedzy','nav-history':'Historia',
     'settings-cms-title':'Integracja CMS','settings-cms-sub':'WordPress / Drupal',
     'settings-bv-title':'Głos marki','settings-bv-inactive':'Nieaktywny',
     'out-placeholder':'Wpisz temat i kliknij „Wygeneruj treść”','out-placeholder-sub':'AI przeanalizuje bazę wiedzy i stworzy treść',
@@ -4982,21 +5095,21 @@ var I18N = {
     'gap-title-topics':'Tematy w top wynikach','gap-title-phrases':'Frazy kluczowe',
     'gap-coverage':'Pokrycie SERP','gap-new-covered':'Nowo pokryte',
     'gap-all-topics':'Wszystkie tematy SERP','gap-missing':'Brakujące tematy','gap-covered':'Pokryte tematy',
-    'gap-improve-btn':'Popraw artykuł pod brakujące tematy',
+    'gap-improve-btn':'Dopisz brakujące tematy',
     'seo-analyzing':'Analizuję artykuł…','aio-analyzing':'Oceniam tekst pod AI Overviews…',
-    'improve-title':'Popraw istniejący artykuł','improve-btn':'Popraw artykuł',
+    'improve-title':'Popraw wklejony tekst','improve-btn':'Popraw tekst',
     'spin-knowledge':'Analizuję bazę wiedzy…','spin-sub-knowledge':'skanowanie dokumentów',
     'spin-context':'Przygotowuję kontekst…','spin-sub-context':'ekstrakcja kluczowych informacji',
     'spin-generate':'Generuję treść…','spin-seo':'Oceniam SEO…','spin-sub-seo':'sprawdzam strukturę i słowa kluczowe',
     'spin-aio':'Oceniam AIO…','spin-sub-aio':'sprawdzam kryteria AI Overviews',
     'spin-hybrid':'Oceniam SEO+AIO…','spin-sub-hybrid':'sprawdzam optymalizację pod wyszukiwarki i AI',
     'spin-quality':'Oceniam jakość…','spin-sub-quality':'głęboka weryfikacja wymagań SEO i AIO',
-    'spin-improve-label':'Poprawiam artykuł…','spin-sub-improve':'samokorekcja na podstawie wyników oceny',
+    'spin-improve-label':'Poprawiam artykuł…','spin-sub-improve':'samokorekta na podstawie wyników oceny',
     'spin-final':'Finalizuję artykuł…','spin-sub-final':'ostateczna weryfikacja',
     'spin-finalize':'Finalizuję…','spin-sub-finalize':'ostatnie sprawdzenie',
     'kd-title':'Gęstość słów kluczowych',
     // Generator grafik
-    'img-back':'Wróć','img-title':'Generator grafik','img-ctx-label':'Kontekst artykułu',
+    'img-back':'Wróć','img-title':'Grafika','img-ctx-label':'Kontekst artykułu',
     'img-ctx-ph':'Wklej temat lub fragment artykułu…','img-load-article':'Wczytaj bieżący artykuł',
     'img-upload-ref':'Wgraj grafikę referencyjną','img-ref-remove':'Usuń',
     'img-quality':'Jakość','img-generate':'Wygeneruj grafikę','img-retry':'Ponów',
@@ -5022,7 +5135,7 @@ var I18N = {
     'err-add-src':'Dodaj źródła do bazy wiedzy',
     // Inne
     'premium-info':'Tryb samokorekty','rp-strong':'Przeróbki artykułu',
-    'improve-by-gaps':'Popraw artykuł pod brakujące tematy',
+    'improve-by-gaps':'Dopisz brakujące tematy',
     // Panele FOG/KD/GAP/SEO/AIO/SERP/Links
     'serp-data-title':'Dane SERP: top wyniki Google',
     'gap-analysis-title':'Analiza luk semantycznych',
@@ -5033,6 +5146,10 @@ var I18N = {
     'versions-label':'Warianty:',
     'seo-panel-title':'Ocena SEO','aio-panel-title':'Ocena AIO',
     'ocena-skala':'/100','ocena-podpis':'Ocena {x}','ocena-aria':'Ocena {x}: {n} na 100',
+    'ocena-opis-seo':'SEO: czy tekst ma szansę na wysoką pozycję w klasycznych wynikach Google (fraza, nagłówki, opis meta).',
+    'ocena-opis-aio':'AIO: czy Google przytoczy tekst w podsumowaniu AI nad wynikami wyszukiwania (AI Overviews).',
+    'ocena-opis-aeo':'AEO: czy asystenci i wyszukiwarki odpowiedzi wezmą z tekstu gotową odpowiedź (definicja, FAQ, krótkie listy).',
+    'ocena-opis-geo':'GEO: czy czaty AI, np. ChatGPT albo Perplexity, zacytują tekst i Twoją markę jako źródło (nie chodzi o geolokalizację).',
     'meta-etykieta':'Opis meta (SEO)',
     'eksport-zrodla':'Źródła',
     'eksport-pominiete-luki':'Sekcje bez pokrycia w źródłach pominięte w eksporcie: {n}. Usuń notatkę albo wpisz w jej miejsce treść (Edytuj).',
@@ -5085,6 +5202,8 @@ var I18N = {
     'msg-spin-sections':'Generuję sekcje…',
     // Badges
     'badge-error':'błąd','badge-generating':'generowanie…','badge-premium':'samokorekta…','badge-uciety':'ucięty',
+    'sr-artykul-gotowy':'Artykuł gotowy.','sr-artykul-blad':'Generowanie zakończone błędem. Opis jest w miejscu artykułu.',
+    'sr-artykul-przerwany':'Generowanie przerwane.','sr-artykul-uciety':'Artykuł gotowy, ale ucięty na limicie długości.',
     // Loading
     'msg-loading-article':'Analizuję artykuł…',
     'msg-loading-aio':'Oceniam tekst pod AI Overviews…',
@@ -5153,6 +5272,9 @@ var I18N = {
     'sidebar-selected':'zaznaczonych - AI użyje tylko tych',
     'sidebar-none-selected':'Nic nie zaznaczono - dokumenty z tej przeglądarki nie zostaną użyte',
     'hist-usun':'Usuń wpis','hist-usun-pytanie':'Usunąć z historii artykuł "{t}"? Tego nie da się cofnąć.','hist-usuniety':'Wpis usunięty z historii.',
+    'hist-lokalnie':'Historia jest zapisana tylko w tej przeglądarce: nie zobaczysz jej na innym urządzeniu, a wyczyszczenie danych przeglądarki ją usuwa.',
+    'hist-eksport':'Pobierz kopię historii','hist-eksport-pusto':'Historia jest pusta: nie ma czego pobrać.',
+    'hist-eksport-tytul':'Content AI: historia artykułów ({data})','hist-eksport-opis':'Kopia z tej przeglądarki, artykułów: {n}. Plik otworzysz w każdej przeglądarce.',
     'msg-historia-przycieta':'Pamięć przeglądarki jest pełna. Usunięte najstarsze wpisy historii: {n}.',
     'improve-topic-label':'Temat (opcjonalnie)','improve-topic-ph':'Poprawa artykułu',
     'sidebar-of':'z',
@@ -5171,7 +5293,7 @@ var I18N = {
     'bulk-gen-all':'Generuj wszystkie',
     // ── Improve modal ──
     'improve-modal-desc':'Wklej istniejący artykuł ze strony firmy. Aplikacja przepisze go pod kątem SEO+AIO zachowując wszystkie fakty i informacje firmowe.',
-    'improve-action':'Popraw artykuł',
+    'improve-action':'Popraw tekst',
     // ── Templates modal ──
     'templates-desc':'Wybierz szablon - wypełni formularz automatycznie. Możesz go potem edytować.',
     // ── URL/Text modal ──
@@ -5202,7 +5324,7 @@ var I18N = {
     'lbl-repurpose-out':'Gotowa przeróbka',
     'lbl-length-custom':'Własna długość w słowach',
     'bulk-gotowe-1':'Gotowe. Wygenerowano {n} artykuł. Sprawdź Historię.','bulk-gotowe-2':'Gotowe. Wygenerowano {n} artykuły. Sprawdź Historię.','bulk-gotowe-5':'Gotowe. Wygenerowano {n} artykułów. Sprawdź Historię.',
-    'bulk-gotowe-czesc':'Gotowe. Wygenerowano {ok} z {n}, nie powiodło się: {bad}. Sprawdź Historię.','bulk-zatrzymano':'Zatrzymano. Wygenerowano {ok} z {n}. Sprawdź Historię.','bulk-zatrzymuje':'Zatrzymuję...','bulk-zatrzymaj':'Zatrzymaj','bulk-ponow':'Ponów nieudane','msg-generowanie-trwa':'Generowanie już trwa. Poczekaj na koniec albo je przerwij.','msg-premium-blad':'Dopracowanie tekstu nie powiodło się: ',
+    'bulk-gotowe-czesc':'Gotowe. Wygenerowano {ok} z {n}, nie powiodło się: {bad}. Sprawdź Historię.','bulk-zatrzymano':'Zatrzymano. Wygenerowano {ok} z {n}. Sprawdź Historię.','bulk-zatrzymuje':'Zatrzymuję...','bulk-zatrzymaj':'Zatrzymaj','bulk-ponow':'Ponów nieudane','msg-generowanie-trwa':'Generowanie już trwa. Poczekaj na koniec albo je przerwij.','msg-premium-blad':'Poprawa tekstu nie powiodła się: ',
     'tematy-slowo-1':'temat','tematy-slowo-2':'tematy','tematy-slowo-5':'tematów',
     'skip-link':'Przejdź do treści',
     'btn-uzyj-h1':'Użyj jako H1','msg-tytul-ustawiony':'Ustawiony','msg-tytul-h1':'Tytuł artykułu zmieniony. Ocena SEO policzy się od nowa.',
@@ -5219,10 +5341,10 @@ var I18N = {
     'history-empty':'Brak historii - wygeneruj pierwszą treść.',
     'history-select':'Wybierz artykuł z listy',
     // ── Tooltips ──
-    'title-brief-tooltip':'Wygeneruj brief przed artykułem',
+    'title-brief-tooltip':'Plan przed pisaniem: frazy, nagłówki H2, luki i zalecana długość',
     'title-bulk-tooltip':'Generowanie grupowe: wiele artykułów naraz',
     'title-premium-tooltip':'Model oceni gotowy tekst i poprawi go według oceny. Generowanie trwa 2-3 razy dłużej i zużywa więcej wywołań modelu z pakietu.',
-    'title-premium-fix-tooltip':'Model oceni gotowy tekst i poprawi go według oceny',
+    'title-premium-fix-tooltip':'Samokorekta gotowego tekstu: model go oceni i poprawi według oceny',
     'title-include-kw':'Uwzględnij w generowaniu',
     'title-remove':'Usuń','title-remove-link':'Usuń link',
     'title-dm':'Przełącz tryb ciemny',
@@ -5251,6 +5373,8 @@ var I18N = {
     'no-src-title-empty':'Brak źródeł wiedzy','no-src-title-none':'Brak wybranych źródeł',
     'no-src-desc-empty':'Baza wiedzy jest pusta. Dodaj materiały firmowe albo wygeneruj tekst z wyszukiwaniem w sieci: źródła pojawią się pod artykułem.',
     'no-src-desc-none':'Nie zaznaczono żadnego źródła. Wybierz materiały albo wygeneruj tekst z wyszukiwaniem w sieci.',
+    'btn-generate-bez-zrodel':'Wygeneruj bez źródeł',
+    'no-src-bez-uwaga':'Bez źródeł AI pisze z ogólnej wiedzy modelu: liczby i fakty mogą być nieaktualne albo zmyślone, a o Twojej firmie nie powie nic konkretnego. Sprawdź tekst przed publikacją.',
     'cms-modal-title':'Integracja z CMS','cms-drupal-hint-short':'Wymagany moduł Basic Auth (wbudowany w Drupal 8/9/10). Włącz w: Extend → Basic Authentication.',
     'cms-drupal-hint':'Wymagany moduł Basic Auth (wbudowany w Drupal 8/9/10). Włącz w: Extend → Basic Authentication.',
     'cms-drupal-url-label':'Adres Drupala (np. https://twojafirma.pl)','cms-format-label':'Format tekstu',
@@ -5261,10 +5385,10 @@ var I18N = {
     'url-label':'Adres URL',
     'bv-modal-full-title':'Głos marki (brand voice)',
     'bv-modal-desc-full':'Wklej 2-5 istniejących artykułów firmowych (lub innych tekstów). Aplikacja wyekstrahuje profil stylu i zastosuje go do wszystkich przyszłych generowań.',
-    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','nowy-artykul':'Nowy artykuł','nowy-artykul-title':'Wyczyść temat, słowa kluczowe i wytyczne, żeby zacząć kolejny artykuł. Poprzedni zostaje w Historii.','nowy-artykul-gotowe':'Możesz pisać nowy artykuł. Poprzedni jest w Historii.','nowy-brief-wyczyszczony':'Brief wyczyszczony.','nowy-cofnij':'Cofnij','ustawienia-domyslne':'Przywróć ustawienia domyślne','ustawienia-domyslne-gotowe':'Przywrócono ustawienia domyślne: typ, długość, ton, język, źródła i opcje zaawansowane.','msg-dopracuj-bez-zmian':'Tekst ma już {n}/100, samokorekta nie znalazła nic do poprawy. Zostaje bez zmian.','ver-serp':'Poprawa SERP','ver-wybor':'Wersja artykułu',
+    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','nowy-artykul':'Nowy artykuł','nowy-artykul-title':'Wyczyść temat, słowa kluczowe i wytyczne, żeby zacząć kolejny artykuł. Poprzedni zostaje w Historii.','nowy-artykul-gotowe':'Możesz pisać nowy artykuł. Poprzedni jest w Historii.','nowy-brief-wyczyszczony':'Brief wyczyszczony.','nowy-cofnij':'Cofnij','ustawienia-domyslne':'Przywróć ustawienia domyślne','ustawienia-domyslne-gotowe':'Przywrócono ustawienia domyślne: typ, długość, ton, język, źródła i opcje zaawansowane.','msg-dopracuj-bez-zmian':'Tekst ma już {n}/100, samokorekta nie znalazła nic do poprawy. Zostaje bez zmian.','ver-serp':'Dopisane tematy','ver-wybor':'Wersja artykułu',
     'spin-sub-model':'model przetwarza temat i bazę wiedzy','spin-sub-hybrid2':'optymalizuję jednocześnie pod SEO, AIO i czytelnika',
     'link-suggest-prefix':'Rozważ link do','link-suggest-at':'przy słowach:',
-    'gap-still-missing':'Nadal brakujące tematy','gap-szukam':'Szukam źródeł i piszę sekcje…','gap-bez-zrodel':'Nowe sekcje potrzebują źródeł. Baza wiedzy jest pusta, a wyszukiwanie w sieci wyłączone, więc tych tematów nie da się opisać bez zmyślania.','gap-wlacz-siec':'Włącz wyszukiwanie w sieci i popraw','gap-konkurencja':'konkurencja','gap-konkurencja-title':'Temat o marce lub produkcie konkurencji. Domyślnie odznaczony: w tekście marki to Twoja decyzja.','gap-po-poprawie':'Wynik z dopisanych sekcji. Odśwież, jeśli model ma ocenić cały tekst od nowa.','gap-inny-artykul':'Poprawa dotyczyła poprzedniego artykułu, więc jej wynik nie został wstawiony.','gap-pusto':'Model nie zwrócił nowych sekcji. Spróbuj ponownie.','gap-dopisane':'Dopisano sekcje: {n}. Wynik w zakładce Luki.','gap-serp-blad':'Analiza SERP nie powiodła się przy generowaniu, więc nie ma z czym porównać tekstu. Wygeneruj artykuł ponownie z włączoną analizą SERP.','serp-blad-toast':'Analiza SERP nie powiodła się. Artykuł powstaje bez niej.','gap-pkt':'pkt','gap-bez-zrodel-baza':'Tematy bez pokrycia w zaznaczonych dokumentach: {n}. Nie dodano dla nich pustych sekcji. Włącz wyszukiwanie w sieci albo dodaj materiał do bazy wiedzy.','gap-bez-zrodel-siec':'Tematy bez źródła: {n}. Nie dodano dla nich pustych sekcji, zostają na liście brakujących. Dodaj materiał do bazy wiedzy i spróbuj ponownie.',
+    'gap-still-missing':'Nadal brakujące tematy','gap-szukam':'Szukam źródeł i piszę sekcje…','gap-bez-zrodel':'Nowe sekcje potrzebują źródeł. Baza wiedzy jest pusta, a wyszukiwanie w sieci wyłączone, więc tych tematów nie da się opisać bez zmyślania.','gap-wlacz-siec':'Włącz wyszukiwanie w sieci i dopisz','gap-konkurencja':'konkurencja','gap-konkurencja-title':'Temat o marce lub produkcie konkurencji. Domyślnie odznaczony: w tekście marki to Twoja decyzja.','gap-po-poprawie':'Wynik z dopisanych sekcji. Odśwież, jeśli model ma ocenić cały tekst od nowa.','gap-inny-artykul':'Dopisane sekcje dotyczyły poprzedniego artykułu, więc nie zostały wstawione.','gap-pusto':'Model nie zwrócił nowych sekcji. Spróbuj ponownie.','gap-dopisane':'Dopisano sekcje: {n}. Wynik w zakładce Luki.','gap-serp-blad':'Analiza SERP nie powiodła się przy generowaniu, więc nie ma z czym porównać tekstu. Wygeneruj artykuł ponownie z włączoną analizą SERP.','serp-blad-toast':'Analiza SERP nie powiodła się. Artykuł powstaje bez niej.','gap-pkt':'pkt','gap-bez-zrodel-baza':'Tematy bez pokrycia w zaznaczonych dokumentach: {n}. Nie dodano dla nich pustych sekcji. Włącz wyszukiwanie w sieci albo dodaj materiał do bazy wiedzy.','gap-bez-zrodel-siec':'Tematy bez źródła: {n}. Nie dodano dla nich pustych sekcji, zostają na liście brakujących. Dodaj materiał do bazy wiedzy i spróbuj ponownie.',
     'editor-done':'Gotowe','edit-etykieta':'Edycja','edit-cofnij':'Cofnij','edit-pasek':'Edycja tekstu','edit-podpowiedz':'Tryb edycji: dotknij tekstu, aby go zmienić. Gotowe zapisuje zmiany.','kb-words-suffix':'słów','kb-tag-text':'Tekst','kb-tag-file':'Plik','hist-words-suffix':'słów',
     'url-fetch-done':'Gotowe - strona dodana do bazy!',
     'url-demo-connect':'Łączę ze stroną…','url-demo-fetch':'Pobieram treść…','url-demo-process':'Przetwarzam…','upload-processing':'Przetwarzam: {name}','url-demo-done':'Gotowe!',
@@ -5276,7 +5400,7 @@ var I18N = {
     'nokey-title':'Brak klucza API','nokey-line1':'Otwórz plik w edytorze tekstowym i znajdź linię:','nokey-line2':'Zastąp WSTAW_TUTAJ_NOWY_KLUCZ_API swoim kluczem z console.anthropic.com','badge-nokey':'brak klucza',
     'hist-docs-base':'Dokumenty w bazie','hist-cost':'Szac. koszt API','hist-cost-wlasne':'Koszt na Twoich kluczach','hist-cost-wczesniej':'wcześniej',
     'hist-filter-all':'Wszystkie','hist-filter-hybrid':'Hybryda',
-    'bulk-gen-all-txt':'Generuj wszystkie','improve-action-txt':'Popraw artykuł',
+    'bulk-gen-all-txt':'Generuj wszystkie','improve-action-txt':'Popraw tekst',
     // ── Spinner generowania ──
     'spin-generating-seo-aio':'Generuję treść SEO+AIO…','spin-generating':'Generuję treść…',
     'spin-sub-premium-long':'samokorekta: generowanie potrwa 2-3 razy dłużej',
@@ -5314,7 +5438,7 @@ var I18N = {
     'file-read-err':'[Nie można odczytać pliku]',
     // ── Tooltip img btn ──
     'title-img-generate':'Wygeneruj grafikę dopasowaną do artykułu','title-img-short':'Wygeneruj grafikę',
-    'title-improve-art':'Popraw istniejący artykuł',
+    'title-improve-art':'Wklej istniejący artykuł i podnieś jego ocenę',
     // ── SEO/AIO hints (static) ──
     'hint-meta-ok':'Meta description wypełniona',
     'hint-kw-more':'Słowa kluczowe mogą być użyte częściej w tekście',
@@ -5363,10 +5487,10 @@ var I18N = {
     'wp-published':'opublikowano',
     'wp-draft':'zapisano jako szkic',
     'wp-default-title':'Artykuł',
-    'gap-btn-select':'Wybierz tematy do poprawy',
+    'gap-btn-select':'Wybierz tematy do dopisania',
     'hist-default-name':'Artykuł',
     'improve-topic-default':'Poprawa artykułu',
-    'improve-by-gaps-n':'Popraw artykuł pod {n} z {total} tematów',
+    'improve-by-gaps-n':'Dopisz {n} z {total} tematów',
     'img-net-err-short':'błąd sieci',
     'page-title':'Content AI - Generator treści, grafik i audio',
     'img-copy-btn-lbl':'Kopiuj',
@@ -5396,15 +5520,23 @@ var I18N = {
     'start-ekran-opis':'Enter a topic in the brief or start from one of the ready-made starting points.',
     'start-karta-tematy':'Suggest topics',
     'start-karta-tematy-opis':'Describe the need and get 10 topics with search intent.',
-    'start-karta-popraw':'Improve an existing text',
+    'start-karta-popraw':'Improve a pasted text',
     'start-karta-popraw-opis':'Paste an article and raise its score',
     'start-karta-grupowe':'Bulk generation',
     'start-karta-grupowe-opis':'Many topics at once, one queue',
     'start-kroki-tytul':'Your first text in three steps',
-    'start-krok-1':'Add files, pages or notes about your company to the knowledge base.',
-    'start-krok-2':'Enter the topic and keywords in the brief.',
-    'start-krok-3':'Generate the text, then review it: SEO, facts and gaps.',
+    'start-krok-1':'Enter the topic and keywords in the brief.',
+    'start-krok-2':'Click “Generate content”. With an empty knowledge base the AI bases the text on web pages and cites them.',
+    'start-krok-3':'Add files, pages or notes about your company to the knowledge base so the next texts talk about your offer.',
     'start-ostatnie':'Recent',
+    // R9-G (UX8-24): sample article (read only, no key needed)
+    'przyklad-link':'See a sample article with scores','przyklad-tytul':'Sample article','przyklad-zamknij':'Close the sample',
+    'przyklad-opis':'This is a sample article: this is what a result looks like, a text with sources, four scores and a fact check. You write your own in the brief.',
+    'przyklad-oceny-tytul':'Text scores','przyklad-nazwa-seo':'SEO · Google','przyklad-nazwa-aio':'AIO · AI summaries in Google',
+    'przyklad-nazwa-aeo':'AEO · assistant answers','przyklad-nazwa-geo':'GEO · citations in AI chats',
+    'przyklad-fakty':'Fact check: 1 sentence to verify. “Up and running in a few days”: the source says 2 to 10 working days.',
+    'przyklad-stopka':'In your own articles you can edit, export and publish. The Content AI team prepared this sample: it does not go to History and does not use your plan.',
+    'przyklad-tresc':'<h1>How to choose a CRM for a small business: where to start</h1><p>A CRM is software that keeps customer contacts, conversation history and the stage of every sale in one place. A small business usually needs a simple system for 3 to 5 people that can be up and running in a few days.</p><h2>What is a CRM and who is it for?</h2><p>A CRM (Customer Relationship Management) system organises work with customers where several people talk to the same companies and agreements get lost in inboxes and spreadsheets. If an offer sent on Monday has no owner by Friday, it is time for a CRM.</p><h2>How do you choose a system in four steps?</h2><ol><li>List the three tasks that take your team the most time today.</li><li>Check that the system can import contacts from a CSV file.</li><li>Compare the price per user and the cost of add-on modules.</li><li>Try the trial version with one real customer.</li></ol><h2>How much does a CRM for a small business cost?</h2><p>Simple systems usually cost from a few euros to around 25 euros per user per month. Add the time it takes to set up: importing contacts and defining sales stages takes 2 to 10 working days.</p><h2>Key takeaways</h2><ul><li>A CRM pays off when more than one person talks to the same customers.</li><li>Start from your three most time-consuming tasks, not from a list of features.</li><li>Count the full cost: licences per user and 2 to 10 days of setup.</li></ul><div class="zrodla-box"><div class="zrodla-label">Sources</div><ul><li>Company offer (knowledge base document)</li><li>Guide to rolling out a CRM in small businesses (web page)</li></ul></div><div class="meta-box"><p>How to choose a CRM for a small business: who it is for, what it costs and how to pick a system in four steps before you pay for licences.</p></div>',
     // nowy uklad (E4)
     'nav-pisz':'Write','widok-wynik':'Result','widok-etykieta':'View',
     'nav-widocznosc':'AI visibility',
@@ -5414,7 +5546,7 @@ var I18N = {
     'konto-opis':'App settings',
     'konto-zalogowany':'Signed in on this device',
     'menu-gr-marka':'Brand',
-    'menu-gr-polaczenia':'Connections',
+    'menu-gr-polaczenia':'Settings',
     'menu-motyw':'Theme',
     'motyw-ciemny':'Dark',
     'motyw-jasny':'Light',
@@ -5443,13 +5575,13 @@ var I18N = {
     'ins-linki':'Links',
     'ins-serp':'SERP',
     'ins-zamknij':'Close panel',
-    'settings-aiv-title':'AI citations','settings-aiv-sub':'your queries, trend over time',
-    'aiv-modal-title':'AI visibility (AEO/GEO)','aiv-modal-desc':'Checks whether AI answers (Claude with web search) to your queries surface the brand - in the text or in cited sources. Results and history are stored locally, so you can see the trend over time. This is a single-engine approximation, not a measurement of every AI search engine.',
+    'settings-aiv-title':'AI citations','settings-aiv-sub':'does AI cite your pages, trend',
+    'aiv-modal-title':'AI citations','aiv-modal-desc':'Checks whether AI answers (Claude with web search) to your queries surface the brand - in the text or in cited sources. Results and history are stored locally, so you can see the trend over time. This is a single-engine approximation, not a measurement of every AI search engine.',
     'aiv-score-label':'Visibility score:','aiv-add-ph':'e.g. best [industry] company in your market','aiv-add-btn':'Add','aiv-domains-label':'Brand domains (for source detection)','aiv-export':'Export CSV',
     'aiv-check-all':'Check all','aiv-check-one':'Check','aiv-checking':'Checking','aiv-status-cited':'Cited in sources','aiv-status-mentioned':'Mentioned in answer','aiv-status-none':'Absent',
     'aiv-never':'Not checked','aiv-last':'Last:','aiv-srcword':'src','aiv-empty':'Add queries you want to monitor in AI answers.','aiv-del-title':'Delete','aiv-gpt-na':'Tracking is unavailable in GPT-only mode (no web search).','aiv-no-key':'Missing Anthropic API key. Enter it in the account menu → API keys.',
     'opt-podcast':'Podcast (script + audio)','opt-newsletter-audio':'Audio newsletter','opt-transcription':'Audio transcription',
-    'audio-btn':'Audio','title-audio':'Audio content','audio-title':'Audio content','audio-close':'Close',
+    'audio-btn':'Audio','title-audio':'Audio: podcast, newsletter, audiobook and transcription','audio-title':'Audio','audio-close':'Close',
     'audio-type':'Audio content type','au-podcast':'Podcast (script + audio)','au-newsletter':'Audio newsletter','au-audiobook':'Article → audiobook','au-transcription':'Transcription (audio → text)',
     'audio-voices':'Number of voices','audio-engine':'Voice engine','au-eng-openai':'OpenAI','au-eng-eleven':'ElevenLabs','au-eng-web':'Browser',
     'audio-source':'Topic or content','audio-source-ph':'Type a topic or paste ready content…','audio-from-article':'Load article','audio-file':'Audio file to transcribe',
@@ -5467,9 +5599,9 @@ var I18N = {
     'voice-engine-eleven':'ElevenLabs (best Polish)','voice-eleven-voice':'ElevenLabs voice','voice-eleven-custom':'or paste a custom voice_id','voice-eleven-custom-opt':'Custom voice_id','voice-eleven-model':'ElevenLabs model',
     'voice-eleven-m-quality':'Multilingual v2 (quality)','voice-eleven-m-fast':'Flash v2.5 (fast, cheaper)','voice-eleven-m-expr':'Eleven v3 (expressive)',
     'voice-mic-insecure':'Microphone requires HTTPS. Open the app via the intranet/server (https address), not as a local file.','voice-no-eleven-key':'Missing ElevenLabs key - set the key or use proxy or another engine.',
-    'tts-read':'Listen','tts-stop':'Stop','tts-generating':'Generating audio…','tts-dl':'Download MP3','tts-dl-title':'Download audio mp3 (OpenAI)',
-    'settings-voice-title':'Voice assistant','settings-voice-sub':'read-aloud and dictation',
-    'voice-modal-title':'Voice assistant','voice-modal-desc':'Read generated content aloud and dictate into fields. The browser engine runs locally and free. ElevenLabs and OpenAI give higher quality but send text or audio to the API.',
+    'tts-read':'Read aloud','tts-stop':'Stop','tts-generating':'Generating audio…','tts-dl':'Download MP3','tts-dl-title':'Download audio mp3 (OpenAI)',
+    'settings-voice-title':'Read aloud and dictation','settings-voice-sub':'voice engine and microphone',
+    'voice-modal-title':'Read aloud and dictation','voice-modal-desc':'Read generated content aloud and dictate into fields. The browser engine runs locally and free. ElevenLabs and OpenAI give higher quality but send text or audio to the API.',
     'voice-engine':'Speech engine (reading)','voice-engine-web':'Browser (free, local)','voice-engine-openai':'OpenAI (high quality)',
     'voice-oa-voice':'OpenAI voice','voice-rate':'Speed','voice-stt':'Dictation (speech to text)','voice-stt-web':'Browser','voice-stt-openai':'OpenAI (transcription)',
     'voice-disclosure':'The voice is AI-generated, not a human recording. Dictation and the ElevenLabs and OpenAI voices send data to the API. The browser dictation engine uses your browser vendor service.',
@@ -5502,11 +5634,15 @@ var I18N = {
     'siec-bez-wyszukiwania-opis':'No web searches: the knowledge base covered the topic. Search runs only where the base is silent.',
     'toggle-web':'Search the web and cite sources',
     'toggle-web-hint':'What the knowledge base lacks, the AI looks up online and lists the sources under the article. Anything about your company still comes from the knowledge base only. Adds about 30 s.',
+    'toggle-web-hint-pusta':'Your knowledge base is empty, so the AI bases the text on web pages and lists them under the article. Add materials about your company so the next texts talk about your offer.',
     'toggle-serp':'SERP analysis before generating',
     'toggle-serp-hint':'Before writing, the AI checks what ranks in Google for your keyword and takes it into account. Adds about 15 s.',
     'toggle-aeo':'AEO mode (content for AI citations)','toggle-aeo-hint':'Forces answer-engine format: 25-50 word definition up front, numbers in intro, 5-7 FAQ questions, short lists, headings as questions.',
     'btn-aeo':'Assess AEO','aeo-panel-title':'AEO assessment','btn-geo':'Assess GEO','geo-panel-title':'GEO score',
     'opt-hybrid':'SEO + AIO hybrid','opt-seo':'SEO article','opt-aio':'AIO content',
+    'ctype-opis-hybryda':'SEO + AIO hybrid (recommended): one text for classic Google results (SEO) and for the AI summaries above them (AIO).',
+    'ctype-opis-seo':'SEO article: a text for classic Google results, with the keyword in headings, a meta description and full coverage of the topic.',
+    'ctype-opis-aio':'AIO content: a text for Google\'s AI summaries (AI Overviews), with direct answers and short sentences that are easy to quote.',
     'opt-faq':'FAQ page','opt-landing':'Landing page copy','opt-blog':'Blog post','opt-product':'Product / service copy',
     'opt-directional':'Export market page','opt-press':'Press release','label-dir-country':'Target market (country)',
     'dir-de':'Germany','dir-cz':'Czechia','dir-sk':'Slovakia','dir-nl':'Netherlands','dir-fr':'France',
@@ -5514,7 +5650,7 @@ var I18N = {
     'opt-prof':'Professional','opt-expert':'Expert','opt-friendly':'Friendly','opt-neutral':'Neutral',
     'label-audience':'Audience',
     'opt-aud-auto':'Match the topic','opt-aud-b2c':'Individual customer (B2C)','opt-aud-b2b':'Business (B2B)',
-    'btn-brief':'Brief','btn-bulk':'Bulk generate','btn-improve':'Improve','btn-img-short':'Image',
+    'btn-brief':'Article plan','btn-bulk':'Bulk generate','btn-improve':'Improve a pasted text','btn-img-short':'Image',
     'btn-generate':'Generate content','btn-premium':'Self-review','btn-premium-active':'Self-review',
     'premium-opis':'The model scores the draft and revises it (takes 2-3 times longer).','gen-z-samokorekta':'Generate with self-review',
     'out-title':'Result','badge-ready':'ready to generate','badge-done':'done',
@@ -5564,13 +5700,13 @@ var I18N = {
     'fakty-powod-link-kotwica':'The clickable words should say what is on the other side.',
     'fakty-powod-link-powtorka':'Two links with identical text read like a mistake.',
     'fakty-powod-link-pusty':'The link has no visible text.',
-    'btn-jsonld':'JSON-LD','btn-premium-fix':'Refine the text','btn-copy':'Copy','btn-copied':'Copied',
+    'btn-jsonld':'JSON-LD','btn-premium-fix':'Improve this text','btn-copy':'Copy','btn-copied':'Copied',
     'rp-linkedin':'LinkedIn post','rp-facebook':'Facebook post','rp-email':'Email newsletter',
     'rp-faq':'FAQ page','rp-landing':'Landing page intro',
     'rp-panel-title':'Content repurpose','rp-copy':'Copy','rp-loading':'Creating repurpose…',
-    'brief-title':'Article brief','brief-zapamietany':'Saved brief from {czas}','brief-odswiez':'Analyse again','brief-use-kw':'Use keywords','brief-loading':'Analyzing topic and knowledge base…',
+    'brief-title':'Article plan','brief-zapamietany':'Saved plan from {czas}','brief-odswiez':'Analyse again','brief-use-kw':'Use keywords','brief-loading':'Analyzing topic and knowledge base…',
     'jsonld-title':'{ } JSON-LD schemas','jsonld-copy':'Copy code','jsonld-type-label':'Schema type',
-    'sidebar-title':'Knowledge base - sources','sidebar-docs':'Documents','sidebar-words':'Words',
+    'sidebar-title':'Knowledge base','sidebar-docs':'Documents','sidebar-words':'Words',
     'sidebar-gen':'Generated','sidebar-click':'Click to select files','sidebar-types':'PDF, DOCX, XLSX, PPTX, TXT, CSV',
     'sidebar-link':'Add link / URL','sidebar-text':'Add text manually','sidebar-deselect':'Deselect all',
     'settings-llms-title':'Brand details','settings-llms-sub':'name, domains, llms.txt files',
@@ -5587,19 +5723,19 @@ var I18N = {
     'llms-tylko-odczyt':'An administrator sets the brand configuration - these fields are read-only.',
     'llms-zapis-lokalny':'Saved on this device only. An administrator sets the configuration for the whole team.',
     'llms-generate':'Generate files','llms-out-basic':'llms.txt','llms-out-full':'llms-full.txt','llms-copy':'Copy','llms-download':'Download','llms-hint-urls':'URLs harvested from knowledge base: {n}',
-    'settings-vis-title':'Brand presence in AI','settings-vis-sub':'buyer queries, position, competitors',
-    'vis-title':'Brand visibility in AI','vis-desc':'Checks whether the brand appears in AI answers to buyer queries. Runs each prompt through Claude with web search and reports presence, position, competitors and sources. This is an on-demand snapshot from a single model (Claude), not continuous multi-model monitoring. Each prompt consumes a web search request (billed).',
+    'settings-vis-title':'Brand presence in AI','settings-vis-sub':'does AI recommend your brand to buyers',
+    'vis-title':'Brand presence in AI','vis-desc':'Checks whether the brand appears in AI answers to buyer queries. Runs each prompt through Claude with web search and reports presence, position, competitors and sources. This is an on-demand snapshot from a single model (Claude), not continuous multi-model monitoring. Each prompt consumes a web search request (billed).',
     'vis-f-brand':'Brand to detect','vis-f-comp':'Competitors (comma separated)','vis-f-prompts':'Control queries (one per line)','vis-run':'Check visibility',
     'vis-f-iter':'Iterations per prompt (stability)','vis-narr':'Brand narrative',
     'settings-rep-title':'Visibility report','settings-rep-sub':'measurement comparison and priorities',
-    'settings-trk-title':'AI traffic setup','settings-trk-sub':'robots.txt, UTM, GA4',
-    'trk-title':'AI traffic tracking (preparation)','trk-desc':'This does not measure traffic. It generates preconditions: robots.txt directives for AI bots, UTM links and a GA4 setup hint. Actual measurement requires GA4 and server-side log analysis.',
+    'settings-trk-title':'AI traffic setup','settings-trk-sub':'visits from AI chats: robots.txt, UTM',
+    'trk-title':'AI traffic setup','trk-desc':'This does not measure traffic. It generates preconditions: robots.txt directives for AI bots, UTM links and a GA4 setup hint. Actual measurement requires GA4 and server-side log analysis.',
     'trk-robots-h':'1. robots.txt for AI bots','trk-robots-gen':'Generate robots.txt','trk-copy':'Copy','trk-download':'Download',
     'trk-utm-h':'2. UTM link builder','trk-utm-base':'Target address (URL)','trk-utm-source':'Source (AI model)','trk-utm-medium':'Medium','trk-utm-campaign':'Campaign (optional)','trk-utm-gen':'Build link',
     'trk-ga4-h':'3. GA4 hint','trk-ga4-note':'In GA4 create a channel group or segment for AI traffic: match the Source or Referring host dimension with the regex chatgpt|openai|perplexity|gemini|copilot|claude. This detects AI referrals when they keep a referrer. The UTM links above provide attribution even when the referrer is empty.',
     'rep-title':'AI visibility report','rep-desc':'Trend and priorities based on saved visibility snapshots. Compares the latest measurement with the previous one and flags queries to improve.','rep-copy':'Copy','rep-docx':'.docx','rep-pdf':'.pdf',
     'no-source-msg':'The knowledge base is empty. Add company materials or generate with web search: the sources will be listed under the article.',
-    'tab-generator':'Content generator','tab-history':'History','nav-base':'Sources','nav-history':'History',
+    'tab-generator':'Content generator','tab-history':'History','nav-base':'Knowledge','nav-history':'History',
     'settings-cms-title':'CMS integration','settings-cms-sub':'WordPress / Drupal',
     'settings-bv-title':'Brand voice','settings-bv-inactive':'Inactive',
     'out-placeholder':'Enter a topic and click “Generate content”','out-placeholder-sub':'AI will analyze the knowledge base and create content',
@@ -5609,21 +5745,21 @@ var I18N = {
     'gap-title-topics':'Topics in top results','gap-title-phrases':'Key phrases',
     'gap-coverage':'SERP coverage','gap-new-covered':'Newly covered',
     'gap-all-topics':'All SERP topics','gap-missing':'Missing topics','gap-covered':'Covered topics',
-    'gap-improve-btn':'Improve article for missing topics',
+    'gap-improve-btn':'Add the missing topics',
     'seo-analyzing':'Analyzing article…','aio-analyzing':'Assessing the draft for AI Overviews…',
-    'improve-title':'Improve existing article','improve-btn':'Improve article',
+    'improve-title':'Improve a pasted text','improve-btn':'Improve the text',
     'spin-knowledge':'Analyzing knowledge base…','spin-sub-knowledge':'scanning documents',
     'spin-context':'Preparing context…','spin-sub-context':'extracting key information',
     'spin-generate':'Generating content…','spin-seo':'Assessing SEO…','spin-sub-seo':'checking structure and keywords',
     'spin-aio':'Assessing AIO…','spin-sub-aio':'checking AI Overviews criteria',
     'spin-hybrid':'Assessing SEO+AIO…','spin-sub-hybrid':'checking optimization for search engines and AI',
     'spin-quality':'Assessing quality…','spin-sub-quality':'deep verification of SEO and AIO requirements',
-    'spin-improve-label':'Improving article…','spin-sub-improve':'self-correction based on assessment results',
+    'spin-improve-label':'Improving article…','spin-sub-improve':'self-review based on the score',
     'spin-final':'Finalizing article…','spin-sub-final':'final verification',
     'spin-finalize':'Finalizing…','spin-sub-finalize':'final check',
     'kd-title':'Keyword density',
     // Generator grafik
-    'img-back':'Back','img-title':'Image generator','img-ctx-label':'Article context',
+    'img-back':'Back','img-title':'Image','img-ctx-label':'Article context',
     'img-ctx-ph':'Paste topic or article fragment…','img-load-article':'Load the current article',
     'img-upload-ref':'Upload reference image','img-ref-remove':'Remove',
     'img-quality':'Quality','img-generate':'Generate image','img-retry':'Retry',
@@ -5649,7 +5785,7 @@ var I18N = {
     'err-add-src':'Add sources to the knowledge base',
     // Other
     'premium-info':'Self-review mode','rp-strong':'Article repurpose',
-    'improve-by-gaps':'Improve article for missing topics',
+    'improve-by-gaps':'Add the missing topics',
     // Panels FOG/KD/GAP/SEO/AIO/SERP/Links
     'serp-data-title':'SERP data: top Google results',
     'gap-analysis-title':'Semantic gap analysis',
@@ -5660,6 +5796,10 @@ var I18N = {
     'versions-label':'Variants:',
     'seo-panel-title':'SEO Score','aio-panel-title':'AIO Score',
     'ocena-skala':'/100','ocena-podpis':'{x} score','ocena-aria':'{x} score: {n} out of 100',
+    'ocena-opis-seo':'SEO: how well the text can rank in classic Google results (keyword, headings, meta description).',
+    'ocena-opis-aio':'AIO: whether Google will quote the text in the AI summary above the search results (AI Overviews).',
+    'ocena-opis-aeo':'AEO: whether assistants and answer engines can take a ready answer from the text (definition, FAQ, short lists).',
+    'ocena-opis-geo':'GEO: whether AI chats such as ChatGPT or Perplexity will cite the text and your brand as a source (nothing to do with geolocation).',
     'meta-etykieta':'Meta description (SEO)',
     'eksport-zrodla':'Sources',
     'eksport-pominiete-luki':'Sections without coverage in your sources were left out of the export: {n}. Delete the note or type your text in its place (Edit).',
@@ -5712,6 +5852,8 @@ var I18N = {
     'msg-spin-sections':'Generating sections…',
     // Badges
     'badge-error':'error','badge-generating':'generating…','badge-premium':'self-review…','badge-uciety':'cut off',
+    'sr-artykul-gotowy':'The article is ready.','sr-artykul-blad':'Generation ended with an error. The description is where the article would be.',
+    'sr-artykul-przerwany':'Generation stopped.','sr-artykul-uciety':'The article is ready but was cut off at the length limit.',
     // Loading
     'msg-loading-article':'Analyzing article…',
     'msg-loading-aio':'Assessing the draft for AI Overviews…',
@@ -5780,6 +5922,9 @@ var I18N = {
     'sidebar-selected':'selected - AI will use only these',
     'sidebar-none-selected':'Nothing selected - documents from this browser will not be used',
     'hist-usun':'Delete entry','hist-usun-pytanie':'Delete the article "{t}" from history? This cannot be undone.','hist-usuniety':'Entry deleted from history.',
+    'hist-lokalnie':'Your history is saved only in this browser: you will not see it on another device, and clearing browser data deletes it.',
+    'hist-eksport':'Download a copy of your history','hist-eksport-pusto':'Your history is empty: there is nothing to download.',
+    'hist-eksport-tytul':'Content AI: article history ({data})','hist-eksport-opis':'A copy from this browser, articles: {n}. The file opens in any browser.',
     'msg-historia-przycieta':'Browser storage is full. Oldest history entries removed: {n}.',
     'improve-topic-label':'Topic (optional)','improve-topic-ph':'Article improvement',
     'sidebar-of':'of',
@@ -5798,7 +5943,7 @@ var I18N = {
     'bulk-gen-all':'Generate all',
     // ── Improve modal ──
     'improve-modal-desc':'Paste an existing article from the company website. The app will rewrite it for SEO+AIO while preserving all facts and company information.',
-    'improve-action':'Improve article',
+    'improve-action':'Improve the text',
     // ── Templates modal ──
     'templates-desc':'Pick a template - it fills the form automatically. You can edit afterwards.',
     // ── URL/Text modal ──
@@ -5829,7 +5974,7 @@ var I18N = {
     'lbl-repurpose-out':'Repurposed content',
     'lbl-length-custom':'Custom length in words',
     'bulk-gotowe-1':'Done. Generated {n} article. Check History.','bulk-gotowe-2':'Done. Generated {n} articles. Check History.','bulk-gotowe-5':'Done. Generated {n} articles. Check History.',
-    'bulk-gotowe-czesc':'Done. Generated {ok} of {n}, failed: {bad}. Check History.','bulk-zatrzymano':'Stopped. Generated {ok} of {n}. Check History.','bulk-zatrzymuje':'Stopping...','bulk-zatrzymaj':'Stop','bulk-ponow':'Retry failed','msg-generowanie-trwa':'Generation is already running. Wait for it to finish or stop it.','msg-premium-blad':'Polishing the text failed: ',
+    'bulk-gotowe-czesc':'Done. Generated {ok} of {n}, failed: {bad}. Check History.','bulk-zatrzymano':'Stopped. Generated {ok} of {n}. Check History.','bulk-zatrzymuje':'Stopping...','bulk-zatrzymaj':'Stop','bulk-ponow':'Retry failed','msg-generowanie-trwa':'Generation is already running. Wait for it to finish or stop it.','msg-premium-blad':'Improving the text failed: ',
     'tematy-slowo-1':'topic','tematy-slowo-2':'topics','tematy-slowo-5':'topics',
     'skip-link':'Skip to content',
     'btn-uzyj-h1':'Use as H1','msg-tytul-ustawiony':'Set','msg-tytul-h1':'Article title changed. The SEO score will be recalculated.',
@@ -5847,10 +5992,10 @@ var I18N = {
     'history-no-filter':'No results for the selected filter.',
     'history-select':'Select an article from the list',
     // ── Tooltips ──
-    'title-brief-tooltip':'Generate brief before article',
+    'title-brief-tooltip':'Plan before writing: keywords, H2 headings, gaps and recommended length',
     'title-bulk-tooltip':'Bulk generation: many articles at once',
     'title-premium-tooltip':'The model scores the finished draft and revises it based on the score. Generation takes 2-3 times longer and uses more model calls from your plan.',
-    'title-premium-fix-tooltip':'The model scores the finished text and revises it accordingly',
+    'title-premium-fix-tooltip':'Self-review of the finished text: the model scores it and revises it accordingly',
     'title-include-kw':'Include in generation',
     'title-remove':'Remove','title-remove-link':'Remove link',
     'title-dm':'Toggle dark mode',
@@ -5891,6 +6036,8 @@ var I18N = {
     'no-src-title-empty':'No knowledge sources','no-src-title-none':'No sources selected',
     'no-src-desc-empty':'The knowledge base is empty. Add company materials or generate with web search: the sources will be listed under the article.',
     'no-src-desc-none':'No source is selected. Choose materials or generate with web search.',
+    'btn-generate-bez-zrodel':'Generate without sources',
+    'no-src-bez-uwaga':'Without sources the AI writes from the model\'s general knowledge: figures and facts may be outdated or made up, and it will say nothing specific about your company. Check the text before publishing.',
     'cms-modal-title':'CMS Integration','cms-drupal-hint-short':'Requires Basic Auth module (built into Drupal 8/9/10). Enable at: Extend → Basic Authentication.',
     'cms-drupal-hint':'Requires Basic Auth module (built into Drupal 8/9/10). Enable at: Extend → Basic Authentication.',
     'cms-drupal-url-label':'Drupal URL (e.g. https://yourcompany.com)','cms-format-label':'Text format',
@@ -5901,10 +6048,10 @@ var I18N = {
     'url-label':'URL',
     'bv-modal-full-title':'Brand voice',
     'bv-modal-desc-full':'Paste 2-5 existing company articles (or other texts). The app will extract the style profile and apply it to all future generations.',
-    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','nowy-artykul':'New article','nowy-artykul-title':'Clear the topic, keywords and guidelines to start the next article. The previous one stays in History.','nowy-artykul-gotowe':'Ready for a new article. The previous one is in History.','nowy-brief-wyczyszczony':'Brief cleared.','nowy-cofnij':'Undo','ustawienia-domyslne':'Restore default settings','ustawienia-domyslne-gotowe':'Default settings restored: type, length, tone, language, sources and advanced options.','msg-dopracuj-bez-zmian':'The text already scores {n}/100, self-review found nothing to improve. It stays as it is.','ver-serp':'SERP improvement','ver-wybor':'Article version',
+    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','nowy-artykul':'New article','nowy-artykul-title':'Clear the topic, keywords and guidelines to start the next article. The previous one stays in History.','nowy-artykul-gotowe':'Ready for a new article. The previous one is in History.','nowy-brief-wyczyszczony':'Brief cleared.','nowy-cofnij':'Undo','ustawienia-domyslne':'Restore default settings','ustawienia-domyslne-gotowe':'Default settings restored: type, length, tone, language, sources and advanced options.','msg-dopracuj-bez-zmian':'The text already scores {n}/100, self-review found nothing to improve. It stays as it is.','ver-serp':'Added topics','ver-wybor':'Article version',
     'spin-sub-model':'model processes topic and knowledge base','spin-sub-hybrid2':'optimizing for SEO, AIO and readability simultaneously',
     'link-suggest-prefix':'Consider linking','link-suggest-at':'at words:',
-    'gap-still-missing':'Still missing topics','gap-szukam':'Finding sources and writing sections…','gap-bez-zrodel':'New sections need sources. The knowledge base is empty and web search is off, so these topics cannot be covered without inventing facts.','gap-wlacz-siec':'Turn on web search and improve','gap-konkurencja':'competitor','gap-konkurencja-title':'A topic about a competing brand or product. Unchecked by default: in brand content this is your call.','gap-po-poprawie':'Score from the added sections. Refresh if the model should rate the whole text again.','gap-inny-artykul':'The improvement was for the previous article, so its result was not inserted.','gap-pusto':'The model returned no new sections. Please try again.','gap-dopisane':'Sections added: {n}. See the Gaps tab for the result.','gap-serp-blad':'The SERP analysis failed during generation, so there is nothing to compare the text with. Generate the article again with SERP analysis on.','serp-blad-toast':'The SERP analysis failed. The article is being written without it.','gap-pkt':'pts','gap-bez-zrodel-baza':'Topics not covered by the selected documents: {n}. No empty sections were added. Turn on web search or add material to the knowledge base.','gap-bez-zrodel-siec':'Topics without a source: {n}. No empty sections were added; they stay on the missing list. Add material to the knowledge base and try again.',
+    'gap-still-missing':'Still missing topics','gap-szukam':'Finding sources and writing sections…','gap-bez-zrodel':'New sections need sources. The knowledge base is empty and web search is off, so these topics cannot be covered without inventing facts.','gap-wlacz-siec':'Turn on web search and add','gap-konkurencja':'competitor','gap-konkurencja-title':'A topic about a competing brand or product. Unchecked by default: in brand content this is your call.','gap-po-poprawie':'Score from the added sections. Refresh if the model should rate the whole text again.','gap-inny-artykul':'The added sections were for the previous article, so they were not inserted.','gap-pusto':'The model returned no new sections. Please try again.','gap-dopisane':'Sections added: {n}. See the Gaps tab for the result.','gap-serp-blad':'The SERP analysis failed during generation, so there is nothing to compare the text with. Generate the article again with SERP analysis on.','serp-blad-toast':'The SERP analysis failed. The article is being written without it.','gap-pkt':'pts','gap-bez-zrodel-baza':'Topics not covered by the selected documents: {n}. No empty sections were added. Turn on web search or add material to the knowledge base.','gap-bez-zrodel-siec':'Topics without a source: {n}. No empty sections were added; they stay on the missing list. Add material to the knowledge base and try again.',
     'img-download-btn':'Download PNG','img-copy-btn-lbl':'Copy',
     'img-step1-noref':'Step 1 of 2: creating image prompt',
     'img-prompt-used':'Used prompt',
@@ -5919,7 +6066,7 @@ var I18N = {
     'nokey-title':'Missing API key','nokey-line1':'Open the file in a text editor and find the line:','nokey-line2':'Replace WSTAW_TUTAJ_NOWY_KLUCZ_API with your key from console.anthropic.com','badge-nokey':'no key',
     'hist-docs-base':'Documents in base','hist-cost':'Est. API cost','hist-cost-wlasne':'Cost on your keys','hist-cost-wczesniej':'earlier',
     'hist-filter-all':'All','hist-filter-hybrid':'Hybrid',
-    'bulk-gen-all-txt':'Generate all','improve-action-txt':'Improve article',
+    'bulk-gen-all-txt':'Generate all','improve-action-txt':'Improve the text',
     // ── Spinner ──
     'spin-generating-seo-aio':'Generating SEO+AIO content…','spin-generating':'Generating content…',
     'spin-sub-premium-long':'self-review: generation takes 2-3 times longer',
@@ -5956,7 +6103,7 @@ var I18N = {
     'file-read-err':'[Cannot read file]',
     // ── Tooltips ──
     'title-img-generate':'Generate an image that matches the article','title-img-short':'Generate image',
-    'title-improve-art':'Improve existing article',
+    'title-improve-art':'Paste an existing article and raise its score',
     // ── SEO/AIO hints ──
     'hint-meta-ok':'Meta description filled in',
     'hint-kw-more':'Keywords could be used more often in the text',
@@ -6006,10 +6153,10 @@ var I18N = {
     'err-klucz':'The AI provider rejected the API key stored in the app file. Put a current key in the file and reload the page.',
     'btn-sprobuj-ponownie':'Try again',
     'err-json-modelu':'The model returned a malformed response. Please try again.',
-    'gap-btn-select':'Select topics to improve',
+    'gap-btn-select':'Select topics to add',
     'hist-default-name':'Article',
     'img-net-err-short':'network error',
-    'improve-by-gaps-n':'Improve article for {n} of {total} topics',
+    'improve-by-gaps-n':'Add {n} of {total} topics',
     'improve-topic-default':'Article improvement',
     'page-title':'Content AI - Text, image and audio generator',
     'wp-default-title':'Article',
@@ -10122,6 +10269,29 @@ function pobierzPlik(blob, nazwa) {
   a.remove();
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 10000);
 }
+// R9-G (UX8-16): Historia zyje tylko w tej przegladarce, wiec dajemy jej kopie: plik HTML, ktory
+// otworzy kazda przegladarka (artykuly z data, typem i liczba slow), z danymi wpisow w JSON na koncu
+// pliku (do wczytania w przyszlosci). Bez kolorow: dokument zostaje przy domyslnych barwach przegladarki.
+function eksportujHistorie() {
+  if (!history.length) { pokazPowiadomienie(_t('hist-eksport-pusto'), 'info'); return; }
+  const en = currentLang === 'en', data = dzisIso(), tytul = _t('hist-eksport-tytul').replace('{data}', data);
+  const wpisy = history.map(function (h) {
+    return { id: h.id, ts: h.ts || null, topic: h.topic || '', type: h.type || '', words: h.words || 0, time: h.time || '',
+      jezyk: h.jezyk || '', kontekst: h.kontekst || null, html: h.html || '' };
+  });
+  const dane = JSON.stringify({ aplikacja: 'Content AI', rodzaj: 'historia', wersja: 1, wyeksportowano: new Date().toISOString(), wpisy: wpisy }).replace(/</g, '\\u003c');
+  let dok = '<!doctype html><html lang="' + (en ? 'en' : 'pl') + '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<title>' + escapeHtml(tytul) + '</title><style>body{font:17px/1.6 Georgia,serif;max-width:46em;margin:2em auto;padding:0 1em}'
+    + 'header,.meta{font-family:system-ui,sans-serif}.meta{font-size:14px;opacity:.7}.wpis{border-top:1px solid;margin-top:3em;padding-top:1em}</style></head><body>'
+    + '<header><h1>' + escapeHtml(tytul) + '</h1><p class="meta">' + escapeHtml(_t('hist-eksport-opis').replace('{n}', history.length)) + '</p></header>';
+  history.forEach(function (h) {
+    dok += '<article class="wpis"><p class="meta">' + escapeHtml([czasWpisu(h), nazwaTypu(h.type), '~' + (h.words || 0) + ' ' + _t('hist-words-suffix')].filter(Boolean).join(' · ')) + '</p>'
+      + (h.html ? oczyscHtmlModelu(h.html) : '<h2>' + escapeHtml(h.topic || '') + '</h2>') + '</article>';
+  });
+  // Znacznik skryptu skladany z kawalkow: inaczej przegladarka (i kontrola budowania) wzielaby go za koniec skryptu aplikacji.
+  dok += '<' + 'script type="application/json" id="content-ai-historia">' + dane + '<' + '/script></body></html>';
+  pobierzPlik(new Blob([dok], { type: 'text/html;charset=utf-8' }), 'content-ai-' + (en ? 'history-' : 'historia-') + data + '.html');
+}
 
 // "154 znaki" / "154 characters" w jezyku etykiet dokumentu.
 function formaZnakow(n, jezyk) {
@@ -12273,6 +12443,9 @@ function odswiezInspektor() {
     b.hidden = !przyciskDostepny(INSPEKTOR[n].btn);
     b.setAttribute('aria-pressed', String(n === otwarty));
   });
+  // R9-G (UX8-11): pod przelacznikiem jedno zdanie, co mierzy wybrana ocena (telefon nie ma podpowiedzi myszy).
+  var opisOceny = document.getElementById('ins-ocena-opis');
+  if (opisOceny) opisOceny.textContent = gr === 'ocena' ? _t('ocena-opis-' + otwarty) : '';
 }
 // Brief zwija sie do szyny na zyczenie (wiecej miejsca na kartke i inspektor).
 function przelaczBrief(zwin) {
@@ -12293,6 +12466,7 @@ function odswiezLiczniki() {
     var zazn = (typeof docs !== 'undefined' ? docs.filter(function (d) { return d.selected; }).length : 0) + (window._bazaSerwerLiczba || 0);
     opis.textContent = nDocs ? _t('zrodla-baza-opis').replace('{n}', zazn) : _t('zrodla-baza-pusta');
   }
+  if (typeof siecDomyslnaDlaBazy === 'function') siecDomyslnaDlaBazy();
 }
 function odswiezPodsumowanie() {
   var el = document.getElementById('zaaw-podsumowanie'); if (!el) return;
@@ -13257,7 +13431,8 @@ function toggleSettingsMenu() {
   menu.classList.add('open');
   document.getElementById('settings-btn')?.setAttribute('aria-expanded', 'true');
   // Z klawiatury fokus wchodzi do menu na pierwsza pozycje (strzalki chodza dalej).
-  requestAnimationFrame(function () { const p = menu.querySelector('.settings-item'); if (p) p.focus({ preventScroll: true }); });
+  // R9-G: pierwsza WIDOCZNA - grupa Widocznosc AI w tym menu jest tylko na telefonie.
+  requestAnimationFrame(function () { const p = [...menu.querySelectorAll('.settings-item')].find(function (x) { return x.offsetParent !== null; }); if (p) p.focus({ preventScroll: true }); });
 }
 // Przycisk otwierajacy menu, w ktorym lezy element (fokus wraca na niego po zamknieciu).
 function przyciskMenuDla(el) {
@@ -13342,15 +13517,35 @@ function openWpPublish() {
 function closeWpPublishModal() { document.getElementById('wp-publish-modal').classList.remove('open'); }
 
 function closeNoSourceModal() { document.getElementById('no-source-modal').classList.remove('open'); }
+// R9-G (UX8-24): przykladowy artykul z czterema ocenami i kontrola faktow, bez klucza i bez zapytania do modelu.
+// Tekst i liczby sa stale (przyklad), opisy ocen te same co pod przelacznikiem SEO/AIO/AEO/GEO. Zmiana jezyka
+// przy otwartym oknie rysuje przyklad od nowa (applyLang ustawia lang na <html>).
+const PRZYKLAD_OCENY = [['seo', 86], ['aio', 84], ['aeo', 90], ['geo', 88]];
+function rysujPrzyklad() {
+  const art = document.getElementById('przyklad-artykul'), siatka = document.getElementById('przyklad-siatka'), fakty = document.getElementById('przyklad-fakty');
+  if (art) art.innerHTML = _t('przyklad-tresc');
+  if (siatka) siatka.innerHTML = PRZYKLAD_OCENY.map(function (o) {
+    return '<div class="przyklad-ocena"><b style="color:' + kolorOceny(o[1]) + '">' + o[1] + '</b><span>' + escapeHtml(_t('przyklad-nazwa-' + o[0])) + '</span>'
+      + '<small>' + escapeHtml(_t('ocena-opis-' + o[0]).replace(/^[A-Z]{3}: /, '')) + '</small></div>';
+  }).join('');
+  if (fakty) fakty.innerHTML = ikona('triangle-alert', 'uwaga') + '<span>' + escapeHtml(_t('przyklad-fakty')) + '</span>';
+}
+function otworzPrzyklad() {
+  rysujPrzyklad();
+  document.getElementById('przyklad-modal').classList.add('open');
+  // Fokus na samym oknie (nie na "Zamknij"): czytnik czyta tytul, a strzalki przewijaja tekst przykladu.
+  requestAnimationFrame(function () { const d = document.querySelector('#przyklad-modal .modal'); if (d) d.focus({ preventScroll: true }); });
+}
+function zamknijPrzyklad() { document.getElementById('przyklad-modal').classList.remove('open'); }
+new MutationObserver(function () {
+  const m = document.getElementById('przyklad-modal');
+  if (m && m.classList.contains('open')) rysujPrzyklad();
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
 function noSourceGoToKB() {
   closeNoSourceModal();
-  if (document.body.classList.contains('is-mobile')) {
-    openMobileSidebar();
-  } else {
-    const kb = document.querySelector('.kb-add-section, .kb-list, .sidebar');
-    if (kb) kb.scrollIntoView({ behavior: 'smooth' });
-  }
+  // R9-G (UX8-14): na komputerze baza bywa zwinieta - przewiniecie do ukrytego panelu nic nie pokazywalo.
+  otworzBazeWiedzy();
 }
 function noSourceConfirmWeb() {
   document.getElementById('no-source-modal').classList.remove('open');
@@ -13358,6 +13553,38 @@ function noSourceConfirmWeb() {
   webEnabledByModal = true;
   generate(true);  // true = pomiń premium modal (user już go potwierdził)
 }
+// R9-G (UX8-14): trzecie wyjscie z okna "Brak zrodel wiedzy" - tekst bez bazy i bez sieci,
+// z ostrzezeniem w oknie, ze fakty trzeba sprawdzic (wczesniej okno nie pozwalalo pisac dalej).
+function noSourceBezZrodel() {
+  closeNoSourceModal();
+  skipSourceCheck = true;
+  generate(true);
+}
+// R9-G (UX8-14): przy pustej bazie wiedzy "Szukaj w sieci" jest domyslnie wlaczone, wiec pierwsze
+// "Wygeneruj" nowej osoby od razu pisze tekst ze zrodlami z sieci zamiast konczyc sie oknem.
+// Przelacznik idzie za stanem bazy, dopoki autor sam go nie przestawi (okno zostaje dla tych,
+// ktorzy wylaczyli siec). Za proxy czekamy na liczbe dokumentow z serwera.
+let siecWybranaRecznie = false, siecWlaczonaDlaPustej = false;
+function siecDomyslnaDlaBazy() {
+  const w = document.getElementById('use-web');
+  if (!w) return;
+  if (window.API_ENDPOINT_OVERRIDE && typeof window._bazaSerwerLiczba !== 'number') return;
+  const pusta = liczbaDokumentow() === 0;
+  if (!siecWybranaRecznie && !webEnabledByModal && !spinnerPracuje()) {
+    // Wylaczamy tylko to, co sami wlaczylismy: stan ustawiony inaczej zostaje.
+    if (pusta && !w.checked) { w.checked = true; siecWlaczonaDlaPustej = true; }
+    else if (!pusta && siecWlaczonaDlaPustej) { w.checked = false; siecWlaczonaDlaPustej = false; }
+  }
+  // Po ustawieniu stanu (inaczej sama zmiana defaultChecked przestawia jeszcze nieruszony przelacznik).
+  w.defaultChecked = pusta;
+  const opis = document.querySelector('label[for="use-web"] .toggle-hint');
+  const klucz = pusta && w.checked ? 'toggle-web-hint-pusta' : 'toggle-web-hint';
+  if (opis && opis.getAttribute('data-i18n') !== klucz) { opis.setAttribute('data-i18n', klucz); opis.textContent = _t(klucz); }
+}
+document.getElementById('use-web')?.addEventListener('change', (e) => {
+  if (e.isTrusted) siecWybranaRecznie = true;
+  siecDomyslnaDlaBazy();
+});
 
 async function publishToCms(status) {
   const res = document.getElementById('wp-pub-result');
@@ -14792,6 +15019,10 @@ function onContentTypeChange() {
   if (pv) pv.style.display = (typeof isPodcastType === 'function' && isPodcastType(sel.value)) ? 'block' : 'none';
   const tp = document.getElementById('transcribe-panel');
   if (tp) tp.style.display = (typeof isTranscriptionType === 'function' && isTranscriptionType(sel.value)) ? 'block' : 'none';
+  // R9-G (UX8-11): podpowiedz pod polem dla typow nazwanych skrotami SEO i AIO.
+  const opisTypu = document.getElementById('ctype-opis');
+  const kluczOpisu = { 'Hybryda SEO + AIO': 'ctype-opis-hybryda', 'Artykuł SEO': 'ctype-opis-seo', 'Treść AIO': 'ctype-opis-aio' }[sel.value];
+  if (opisTypu) { opisTypu.hidden = !kluczOpisu; opisTypu.textContent = kluczOpisu ? _t(kluczOpisu) : ''; }
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -15947,7 +16178,8 @@ document.addEventListener('keydown', e => {
     d.setAttribute('role', 'dialog');
     d.setAttribute('aria-modal', 'true');
     if (!d.hasAttribute('aria-labelledby')) {
-      const t = d.querySelector('h1, h2, h3, [class*="title"]');
+      // R9-G (UX8-15): okna z tytulem w .tekst-tytul (baza na serwerze, frazy OpenSEO, pakiet) tez dostaja nazwe.
+      const t = d.querySelector('h1, h2, h3, [class*="title"], .tekst-tytul');
       if (t) { if (!t.id) t.id = okno.id + '-tytul'; d.setAttribute('aria-labelledby', t.id); }
     }
     if (!d.hasAttribute('tabindex')) d.setAttribute('tabindex', '-1');
@@ -16021,6 +16253,38 @@ document.addEventListener('keydown', e => {
       obs.observe(o, { attributes: true, attributeFilter: ['class', 'style'] });
       if (widoczny(o)) poOtwarciu(o);
     });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
+// ── R9-G (UX8-15): POSTEP GENEROWANIA DLA CZYTNIKA EKRANU ─────────────────
+// Przez 30-60 s generowania czytnik nie dostawal nic, a wynik pojawial sie bez zapowiedzi. Etap z napisu
+// spinnera i koniec (gotowe, blad, przerwane, uciety) ida do stalego regionu aria-live (spinner bywa
+// ukryty, a region w ukrytym kontenerze nic nie mowi); artykul ma aria-busy, dopoki trwa pisanie.
+// Obserwujemy spinner i odznake wyniku, wiec funkcje generowania zostaja nietkniete.
+(function postepDlaCzytnika() {
+  const KONIEC = { 'badge-done': 'sr-artykul-gotowy', 'badge-error': 'sr-artykul-blad', 'badge-przerwane': 'sr-artykul-przerwany', 'badge-uciety': 'sr-artykul-uciety' };
+  function start() {
+    const sp = document.getElementById('spinner'), etap = document.getElementById('spin-label');
+    const odznaka = document.getElementById('out-badge'), art = document.getElementById('article');
+    if (!sp || !etap || !odznaka) return;
+    const region = document.createElement('div');
+    region.id = 'gen-postep-sr'; region.className = 'sr-only';
+    region.setAttribute('role', 'status'); region.setAttribute('aria-live', 'polite'); region.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(region);
+    let trwa = false, ostatni = '';
+    const powiedz = (t) => { t = String(t || '').trim(); if (!t || t === ostatni) return; ostatni = t; region.textContent = t; };
+    const widac = () => getComputedStyle(sp).display !== 'none';
+    new MutationObserver(() => {
+      if (art) art.setAttribute('aria-busy', String(widac()));
+      if (widac()) { trwa = true; powiedz(etap.textContent); }
+    }).observe(sp, { attributes: true, attributeFilter: ['style'] });
+    new MutationObserver(() => { if (widac()) powiedz(etap.textContent); }).observe(etap, { childList: true, characterData: true, subtree: true });
+    new MutationObserver(() => {
+      const k = odznaka.getAttribute('data-i18n') || '';
+      if (k === 'badge-generating' || k === 'badge-premium') { trwa = true; return; }
+      if (trwa && KONIEC[k]) { trwa = false; ostatni = ''; powiedz(_t(KONIEC[k])); }
+    }).observe(odznaka, { attributes: true, attributeFilter: ['data-i18n'] });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
@@ -16525,6 +16789,10 @@ async function generateImage() {
         clearTimeout(tOut); clearInterval(tInt);
         // 5xx -> retry; pozostałe statusy -> wyjdź z pętli
         if (imgRes.status >= 500 && imgRes.status < 600 && attempt < IMG_MAX_RETRIES) {
+          // R9-G (UX8-07): brak klucza na serwerze (i inne bledy, ktorych ponowienie nie naprawi) od razu
+          // do komunikatu - wczesniej 15 s odliczania do tego samego bledu.
+          const podglad = await imgRes.clone().json().catch(() => ({}));
+          if (!czyPonowic(bladOdpowiedzi(podglad, imgRes.status, 'OpenAI'))) break;
           const wait = (attempt + 1) * 5;
           for (let s = wait; s > 0; s--) {
             const subEl = document.getElementById('img-spin-sub');
@@ -17746,7 +18014,7 @@ async function kbAudioTranscribeAndOpen(file) {
   <div class="modul-ramka">
     <div class="narzedzie-naglowek modul-naglowek">
       <button type="button" class="btn-secondary narzedzie-wroc" onclick="closeAudioPanel()" data-i18n="img-back" data-ikona="arrow-left"><svg class="ikona" aria-hidden="true"><use href="#i-arrow-left"/></svg>Wróć</button>
-      <h3 class="modul-tytul" data-i18n="audio-title">Treści audio</h3>
+      <h3 class="modul-tytul" data-i18n="audio-title">Audio</h3>
       <button type="button" class="btn-secondary narzedzie-zamknij" onclick="closeAudioPanel()" data-i18n="audio-close" data-ikona="x"><svg class="ikona" aria-hidden="true"><use href="#i-x"/></svg>Zamknij</button>
     </div>
     <div class="modul-siatka">

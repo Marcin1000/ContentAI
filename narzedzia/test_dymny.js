@@ -1405,6 +1405,276 @@ async function uruchomSerwerPlikow() {
   return srv;
 }
 
+// R9-G: aplikacja zrozumiala dla nowej osoby (UX8-11 do UX8-16): pusta baza bez okna "Brak zrodel wiedzy",
+// okno z trzema wyjsciami, wyjasnienia ocen i typow tresci. Telefon i komputer, PL i EN.
+// Kazda kontrola pada na 822d52d (main przed runda 9).
+async function wariantR9Zrozumialosc(b) {
+  const bledy = [];
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, locale: 'pl-PL', acceptDownloads: true });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); if (!localStorage.getItem('cai_lang')) localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  let s = await zaloguj(k, 'standard');
+  // Nowa osoba ma pusta baze: dokumenty dodane przez wczesniejsze scenariusze znikaja z bazy tego konta.
+  await s.evaluate(async () => {
+    const d = await (await fetch('/api/baza')).json();
+    for (const x of (d.dokumenty || [])) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) });
+  });
+  await s.reload({ waitUntil: 'load' });
+  await s.waitForTimeout(800);
+  await s.evaluate(() => { if (typeof startPomin === 'function') startPomin(); });
+  await krok('R9-G liczba dokumentow z serwera', s.waitForFunction(() => typeof window._bazaSerwerLiczba === 'number', null, { timeout: 10000 }));
+  const artykuly = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url()) && z.headers()['x-cai-czynnosc'] === 'artykul') artykuly.push(z.postData() || ''); });
+
+  // UX8-14: przy pustej bazie "Szukaj w sieci" wlaczone od wejscia, z dopiskiem, a pierwsze Wygeneruj pisze bez okna.
+  const start = await s.evaluate(() => ({ web: document.getElementById('use-web').checked,
+    opis: document.querySelector('label[for="use-web"] .toggle-hint').textContent, baza: window._bazaSerwerLiczba + docs.length }));
+  wynik('telefon: R9-G UX8-14 pusta baza - Szukaj w sieci wlaczone od wejscia, z dopiskiem o pustej bazie',
+    start.web && start.baza === 0 && /pusta/.test(start.opis), JSON.stringify(start));
+  // UX8-15: postep generowania dla czytnika ekranu - zapis regionu aria-live i aria-busy artykulu w trakcie pierwszego tekstu.
+  const zapisSr = [];
+  await s.exposeFunction('r9gZapisz', (t) => { zapisSr.push(t); });
+  await s.evaluate(() => {
+    const r = document.getElementById('gen-postep-sr'), a = document.getElementById('article');
+    if (r) new MutationObserver(() => window.r9gZapisz('sr:' + r.textContent)).observe(r, { childList: true, characterData: true, subtree: true });
+    if (a) new MutationObserver(() => window.r9gZapisz('busy:' + a.getAttribute('aria-busy'))).observe(a, { attributes: true, attributeFilter: ['aria-busy'] });
+  });
+  await s.fill('#topic', 'Jak wybrać pompę ciepła do domu');
+  await s.click('#gen-btn');
+  await s.waitForTimeout(400);
+  const okno1 = await s.evaluate(() => document.getElementById('no-source-modal').classList.contains('open'));
+  await krok('R9-G pierwszy artykul', czekajNaKoniec(s, 60000));
+  await s.waitForTimeout(300);
+  const srTeksty = zapisSr.filter((t) => t.indexOf('sr:') === 0), srBusy = zapisSr.filter((t) => t.indexOf('busy:') === 0);
+  const regionSr = await s.evaluate(() => { const r = document.getElementById('gen-postep-sr'); return r ? { rola: r.getAttribute('role'), live: r.getAttribute('aria-live') } : null; });
+  wynik('telefon: R9-G UX8-15 postep generowania dla czytnika: etapy w regionie aria-live, aria-busy artykulu, na koniec "Artykul gotowy"',
+    !!regionSr && regionSr.rola === 'status' && srTeksty.length >= 2 && /…/.test(srTeksty[0]) && srTeksty[srTeksty.length - 1] === 'sr:Artykuł gotowy.'
+      && srBusy.indexOf('busy:true') !== -1 && srBusy[srBusy.length - 1] === 'busy:false', JSON.stringify({ regionSr, zapisSr }));
+  const pierwszy = await s.evaluate(() => ({ odz: document.getElementById('out-badge').className, h2: document.querySelectorAll('#article h2').length }));
+  wynik('telefon: R9-G UX8-14 pierwsze Wygeneruj nowej osoby pisze tekst z siecia, bez okna "Brak zrodel wiedzy"',
+    !okno1 && /ready/.test(pierwszy.odz) && pierwszy.h2 > 0 && artykuly.length === 1 && /web_search/.test(artykuly[0]), JSON.stringify({ okno1, pierwszy, zapytan: artykuly.length }));
+  // Bez poprawki okno zostaje otwarte: zamykamy je, zeby reszta kontroli dala wlasny wynik.
+  if (okno1) await s.evaluate(() => { closeNoSourceModal(); document.getElementById('use-web').checked = true; generate(true); }).then(() => czekajNaKoniec(s, 60000)).catch(() => {});
+
+  // UX8-11: pod przelacznikiem ocen jedno zdanie, co mierzy wybrana ocena; przyciski z podpowiedzia.
+  await s.evaluate(() => inspektorPokaz('seo'));
+  await s.waitForTimeout(600);
+  const oSeo = await s.evaluate(() => ({ opis: (document.getElementById('ins-ocena-opis') || {}).textContent || '',
+    widac: !!document.getElementById('ins-ocena-opis') && document.getElementById('ins-ocena-opis').getBoundingClientRect().height > 0,
+    podpowiedzi: [...document.querySelectorAll('[data-ins-ocena]')].map((x) => x.title).filter((t) => t.length > 20).length }));
+  await s.evaluate(() => inspektorPokaz('geo'));
+  await s.waitForTimeout(600);
+  const oGeo = await s.evaluate(() => (document.getElementById('ins-ocena-opis') || {}).textContent || '');
+  wynik('telefon: R9-G UX8-11 pod SEO/AIO/AEO/GEO zdanie, co mierzy wybrana ocena (GEO to nie geolokalizacja), przyciski z podpowiedzia',
+    oSeo.widac && /^SEO: .*Google/.test(oSeo.opis) && /^GEO: .*geolokalizac/.test(oGeo) && oSeo.podpowiedzi === 4, JSON.stringify({ oSeo, oGeo }));
+  await s.evaluate(() => inspektorZamknij());
+  await s.evaluate(() => ustawWidokMobilny('brief'));
+  // UX8-11: Typ tresci SEO / AIO z jednym zdaniem pod polem; dla innych typow bez dopisku.
+  const typ = async (v) => { await s.selectOption('#ctype', v); return s.evaluate(() => { const o = document.getElementById('ctype-opis'); return o && !o.hidden && o.getBoundingClientRect().height > 0 ? o.textContent : ''; }); };
+  const tH = await typ('Hybryda SEO + AIO'), tB = await typ('Wpis blogowy'), tA = await typ('Treść AIO');
+  await s.selectOption('#ctype', 'Hybryda SEO + AIO');
+  wynik('telefon: R9-G UX8-11 Typ tresci: zdanie pod polem dla Hybrydy i AIO, bez dopisku dla wpisu blogowego',
+    /zalecana/.test(tH) && /Google/.test(tH) && !tB && /AI Overviews/.test(tA), JSON.stringify({ tH, tB, tA }));
+
+  // UX8-14: autor sam wylaczyl siec - okno ma trzy wyjscia, "bez zrodel" z ostrzezeniem pisze tekst bez sieci.
+  if (await s.evaluate(() => document.getElementById('use-web').checked)) await krok('R9-G wylacz siec', s.click('#use-web', { timeout: 3000 }));
+  await s.fill('#topic', 'Pompa ciepła a fotowoltaika');
+  await krok('R9-G Wygeneruj (siec wylaczona)', s.click('#gen-btn', { timeout: 3000 }));
+  await krok('R9-G okno Brak zrodel wiedzy', s.waitForFunction(() => document.getElementById('no-source-modal').classList.contains('open'), null, { timeout: 5000 }));
+  const okno2 = await s.evaluate(() => {
+    const widoczny = (e) => !!e && e.getBoundingClientRect().height > 0;
+    const bez = document.getElementById('no-source-bez-btn'), uw = document.getElementById('no-source-bez-uwaga');
+    return { web: document.getElementById('use-web').checked, wyjsc: [...document.querySelectorAll('#no-source-modal button:not(.modal-close)')].filter(widoczny).length,
+      bez: widoczny(bez) ? bez.textContent : '', uwaga: widoczny(uw) ? uw.textContent : '' };
+  });
+  const przed = artykuly.length;
+  if (okno2.bez) await krok('R9-G Wygeneruj bez zrodel', s.click('#no-source-bez-btn', { timeout: 3000 }));
+  else await s.evaluate(() => closeNoSourceModal());
+  await krok('R9-G artykul bez zrodel', czekajNaKoniec(s, 60000));
+  const bez = await s.evaluate(() => ({ odz: document.getElementById('out-badge').className, web: document.getElementById('use-web').checked,
+    okno: document.getElementById('no-source-modal').classList.contains('open') }));
+  wynik('telefon: R9-G UX8-14 okno "Brak zrodel wiedzy" ma trzy wyjscia, "Wygeneruj bez zrodel" z ostrzezeniem pisze tekst bez sieci',
+    !okno2.web && okno2.wyjsc === 3 && /bez źródeł/.test(okno2.bez) && /Sprawdź/.test(okno2.uwaga) && artykuly.length === przed + 1 && !/web_search/.test(artykuly[przed] || '') && /ready/.test(bez.odz) && !bez.web && !bez.okno,
+    JSON.stringify({ okno2, bez, zapytan: artykuly.length - przed }));
+  // UX8-15: okna maja nazwe dla czytnika (tytul), kreator mowi "Krok n z m" i stawia fokus na tytule, nie na "Pomin".
+  await s.evaluate(() => { closeNoSourceModal(); otworzStart(); });
+  await s.waitForTimeout(300);
+  const kreator = async () => s.evaluate(() => { const d = document.querySelector('#start-modal [role="dialog"]'); const lb = d && d.getAttribute('aria-labelledby');
+    return { nazwa: lb ? ((document.getElementById(lb) || {}).textContent || '') : '', postep: (document.getElementById('start-postep') || {}).textContent || '',
+      fokus: document.activeElement ? (document.activeElement.id || document.activeElement.textContent.trim().slice(0, 20)) : '' }; });
+  const kr1 = await kreator();
+  await s.evaluate(() => startDalej());
+  await s.waitForTimeout(200);
+  const kr2 = await kreator();
+  await s.evaluate(() => startPomin());
+  const nazwyOkien = {};
+  for (const [id, otworz, zamknij] of [['pakiet-modal', 'otworzPakiet', 'zamknijPakiet'], ['bazas-modal', 'otworzBazeSerwera', 'zamknijBazeSerwera']]) {
+    await s.evaluate((f) => { window[f](); }, otworz);
+    await s.waitForTimeout(400);
+    nazwyOkien[id] = await s.evaluate((i) => { const d = document.querySelector('#' + i + ' [role="dialog"]'); const lb = d && d.getAttribute('aria-labelledby');
+      return lb ? ((document.getElementById(lb) || {}).textContent || '').trim() : ''; }, id);
+    await s.evaluate((f) => { window[f](); }, zamknij);
+  }
+  wynik('telefon: R9-G UX8-15 okna z nazwa (kreator, pakiet, baza), kreator "Krok n z 4" i fokus na tytule kroku',
+    kr1.nazwa.length > 3 && kr1.postep === 'Krok 1 z 4' && kr1.fokus === 'start-tytul' && kr2.postep === 'Krok 2 z 4' && kr2.fokus === 'start-tytul' && kr2.nazwa !== kr1.nazwa
+      && nazwyOkien['pakiet-modal'].length > 3 && nazwyOkien['bazas-modal'].length > 3, JSON.stringify({ kr1, kr2, nazwyOkien }));
+  // UX8-13: na telefonie Widocznosc AI (4 narzedzia) w arkuszu Konto, nazwy okien jak w menu, podpis "po co".
+  await s.evaluate(() => { closeNoSourceModal(); ustawWidokMobilny('brief'); });
+  await krok('R9-G arkusz Konto', s.click('#mnav-konto', { timeout: 3000 }));
+  await s.waitForTimeout(400);
+  const wid = await s.evaluate(() => {
+    const poz = [...document.querySelectorAll('#settings-menu .settings-item')].filter((x) => x.offsetParent !== null && /openVisModal|aivOpen|openRepModal|openTrkModal/.test(x.getAttribute('onclick') || ''));
+    return { poz: poz.length, podpisy: poz.map((x) => (x.querySelector('.settings-item-opis') || {}).textContent || '') };
+  });
+  const oknoZMenu = async (fn) => {
+    await s.evaluate(() => { if (!document.getElementById('settings-menu').classList.contains('open')) otworzKontoMobilne(); });
+    await s.waitForTimeout(300);
+    const ok = await krok('R9-G pozycja ' + fn, s.click('#settings-menu .settings-item[onclick^="' + fn + '"]', { timeout: 3000 }));
+    await s.waitForTimeout(400);
+    const t = await s.evaluate(() => { const m = [...document.querySelectorAll('.overlay')].filter((o) => getComputedStyle(o).display !== 'none' && o.getClientRects().length).pop(); return m ? (m.querySelector('h3') || {}).textContent : ''; });
+    await s.keyboard.press('Escape');
+    return ok ? t : '';
+  };
+  const tVis = await oknoZMenu('openVisModal'), tAiv = await oknoZMenu('aivOpen');
+  wynik('telefon: R9-G UX8-13 Widocznosc AI w arkuszu Konto: 4 narzedzia z podpisem "po co", okna nazwane jak w menu',
+    wid.poz === 4 && /^czy AI poleca/.test(wid.podpisy[0]) && /^czy AI cytuje/.test(wid.podpisy[1]) && /^wejścia z czatów AI/.test(wid.podpisy[3]) && tVis === 'Obecność marki w AI' && tAiv === 'Cytowania w AI', JSON.stringify({ wid, tVis, tAiv }));
+  // UX8-16: Historia mowi, ze jest tylko w tej przegladarce, i daje kopie do pobrania (HTML z artykulami i danymi wpisow).
+  await krok('R9-G Historia', s.click('#mnav-hist', { timeout: 3000 }));
+  await s.waitForTimeout(400);
+  const hist = await s.evaluate(() => { const n = document.getElementById('hist-lokalnie'); return { widac: !!n && n.getBoundingClientRect().height > 0, tekst: n ? n.textContent : '', wpisow: history.length }; });
+  let kopia = { plik: '', wpisy: -1, artykuly: -1 };
+  try {
+    const [pob] = await Promise.all([s.waitForEvent('download', { timeout: 5000 }), s.click('#hist-eksport-btn', { timeout: 3000 })]);
+    const tresc = fs.readFileSync(await pob.path(), 'utf8');
+    const dane = tresc.match(/<script type="application\/json" id="content-ai-historia">([\s\S]*?)<\/script>/);
+    kopia = { plik: pob.suggestedFilename(), wpisy: dane ? JSON.parse(dane[1]).wpisy.length : 0, artykuly: (tresc.match(/<article/g) || []).length };
+  } catch (e) { kopia.blad = String(e.message || e).split('\n')[0]; }
+  wynik('telefon: R9-G UX8-16 Historia: zdanie "tylko w tej przegladarce" i kopia do pobrania (plik HTML z artykulami i danymi wpisow)',
+    hist.widac && /tylko w tej przeglądarce/.test(hist.tekst) && hist.wpisow >= 2 && /^content-ai-historia-\d{4}-\d{2}-\d{2}\.html$/.test(kopia.plik) && kopia.wpisy === hist.wpisow && kopia.artykuly === hist.wpisow,
+    JSON.stringify({ hist, kopia }));
+  // UX8-12: jedna nazwa na jedna rzecz - wejscie do narzedzia nazywa sie tak jak ekran, ktory otwiera, a cztery
+  // sposoby poprawiania maja cztery rozne nazwy (Samokorekta, Popraw ten tekst, Popraw wklejony tekst, Dopisz brakujace tematy).
+  const nazwy = await s.evaluate(() => {
+    const t = (sel) => { const e = document.querySelector(sel); return e ? e.textContent.replace(/\s+/g, ' ').trim() : '?'; };
+    return {
+      plan: [t('#grupa-brief-menu button[onclick="openBriefPanel()"]'), t('#brief-panel [data-i18n="brief-title"]')],
+      popraw: [t('#grupa-brief-menu button[onclick="openImproveModal()"]'), t('[data-i18n="start-karta-popraw"]'), t('#improve-modal h3')],
+      grafika: [t('#grupa-brief-menu button[onclick="openImgPanelSmart()"]'), t('#img-btn'), t('#img-panel .modul-tytul')],
+      audio: [t('#grupa-brief-menu button[onclick="openAudioPanel()"]'), t('#audio-panel .modul-tytul')],
+      baza: [t('#kb-tab [data-i18n="kb-reopen"]'), t('#mnav-kb [data-i18n="nav-base"]'), t('.layout > .sidebar h2'), t('#mobile-sidebar h2'), t('[data-i18n="bazas-menu-title"]'), t('#bazas-modal .tekst-tytul')],
+      glos: [t('[data-i18n="settings-voice-title"]'), t('#voice-modal h3')],
+      poprawianie: [t('#premium-btn [data-i18n="btn-premium"]'), t('#premium-fix-btn'), t('#grupa-brief-menu button[onclick="openImproveModal()"]'), t('#gap-improve-btn')],
+    };
+  });
+  const jednaNazwa = ['plan', 'popraw', 'grafika', 'audio', 'baza', 'glos'].every((n) => new Set(nazwy[n]).size === 1 && nazwy[n][0] !== '?');
+  wynik('telefon: R9-G UX8-12 jedna nazwa na jedna rzecz: Plan artykulu, Popraw wklejony tekst, Grafika, Audio, Baza wiedzy, czytanie na glos; cztery rozne nazwy poprawiania',
+    jednaNazwa && nazwy.plan[0] === 'Plan artykułu' && nazwy.baza[0] === 'Baza wiedzy' && new Set(nazwy.poprawianie).size === 4
+      && nazwy.poprawianie.join('|') === 'Samokorekta|Popraw ten tekst|Popraw wklejony tekst|Dopisz brakujące tematy', JSON.stringify(nazwy));
+  wynik('telefon: R9-G bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+  if (bledow) await zrzut(s, 'telefon-r9g');
+  await k.close();
+
+  // Komputer, EN: opisy po angielsku, "Dodaj zrodla" otwiera zwinieta baze.
+  const k2 = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, locale: 'en-US' });
+  await k2.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); localStorage.setItem('cai_lang', 'en'); localStorage.setItem('cai_samokorekta_ok', '1'); } catch (e) { /* bez magazynu */ } });
+  k2.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  s = await zaloguj(k2, 'standard');
+  await krok('R9-G komputer: liczba dokumentow z serwera', s.waitForFunction(() => typeof window._bazaSerwerLiczba === 'number', null, { timeout: 10000 }));
+  const en = await s.evaluate(() => ({ web: document.getElementById('use-web').checked, opis: document.querySelector('label[for="use-web"] .toggle-hint').textContent,
+    typ: (document.getElementById('ctype-opis') || {}).textContent || '' }));
+  wynik('komputer EN: R9-G UX8-14 i UX8-11 dopisek o pustej bazie i opis typu tresci po angielsku',
+    en.web && /empty/.test(en.opis) && /recommended/.test(en.typ), JSON.stringify(en));
+  // UX8-14: dokument w bazie wylacza siec wlaczona dla pustej bazy (wraca zwykly dopisek), pusta baza znow ja wlacza.
+  // W trakcie generowania (spinner) przelacznik stoi: zmiana dopiero po nim.
+  const przelacznik = () => s.evaluate(() => ({ web: document.getElementById('use-web').checked,
+    klucz: document.querySelector('label[for="use-web"] .toggle-hint').getAttribute('data-i18n'), baza: window._bazaSerwerLiczba }));
+  const idDok = await s.evaluate(async () => {
+    document.getElementById('spinner').style.display = 'flex';
+    await fetch('/api/baza', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zakres: 'prywatna', nazwa: 'Oferta R9-G', tresc: 'Pompy ciepla: montaz i serwis w 7 dni.' }) });
+    await odswiezListeBazy();
+    return ((await (await fetch('/api/baza')).json()).dokumenty || []).map((x) => x.id);
+  });
+  await s.waitForTimeout(400);
+  const wTrakcie = await przelacznik();
+  await s.evaluate(() => { document.getElementById('spinner').style.display = 'none'; odswiezLiczniki(); });
+  const zDok = await przelacznik();
+  await s.evaluate(async (ids) => {
+    for (const id of ids) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, zakres: 'prywatna' }) });
+    await odswiezListeBazy();
+  }, idDok);
+  await s.waitForTimeout(400);
+  const bezDok = await przelacznik();
+  wynik('komputer EN: R9-G UX8-14 siec wlaczona dla pustej bazy wylacza sie, gdy w bazie jest dokument (po generowaniu, nie w trakcie), i wraca, gdy baza znow jest pusta',
+    wTrakcie.web && wTrakcie.baza === 1 && !zDok.web && zDok.klucz === 'toggle-web-hint' && zDok.baza === 1 && bezDok.web && bezDok.klucz === 'toggle-web-hint-pusta' && bezDok.baza === 0,
+    JSON.stringify({ wTrakcie, zDok, bezDok }));
+  // UX8-24: przykladowy artykul z pustego ekranu - bez klucza i bez zapytania do modelu, nie trafia do Historii.
+  let zapytaniaPrzykladu = 0;
+  const liczPrzyklad = (z) => { if (z.method() === 'POST' && /\/api(\/|$)/.test(z.url())) zapytaniaPrzykladu++; };
+  s.on('request', liczPrzyklad);
+  const przykladOk = await krok('R9-G link do przykladu', s.click('#placeholder .start-przyklad', { timeout: 3000 }));
+  await s.waitForTimeout(400);
+  const przyklad = await s.evaluate(() => {
+    const m = document.getElementById('przyklad-modal'), d = m && m.querySelector('[role="dialog"]'), lb = d && d.getAttribute('aria-labelledby');
+    return { otwarte: !!m && m.classList.contains('open'), nazwa: lb ? (document.getElementById(lb) || {}).textContent : '',
+      h1: (document.querySelector('#przyklad-artykul h1') || {}).textContent || '', h2: document.querySelectorAll('#przyklad-artykul h2').length,
+      zrodla: !!document.querySelector('#przyklad-artykul .zrodla-box'), oceny: [...document.querySelectorAll('#przyklad-siatka .przyklad-ocena')].map((o) => o.textContent.slice(0, 12)),
+      fakty: (document.getElementById('przyklad-fakty') || {}).textContent || '', hist: history.length,
+      fokusNaOknie: !!m && document.activeElement === m.querySelector('.modal') };
+  });
+  await s.keyboard.press('Escape');
+  await s.waitForTimeout(300);
+  const poPrzykladzie = await s.evaluate(() => ({ zamkniete: !document.getElementById('przyklad-modal') || !document.getElementById('przyklad-modal').classList.contains('open'), hist: history.length }));
+  s.off('request', liczPrzyklad);
+  wynik('komputer EN: R9-G UX8-24 przykladowy artykul z pustego ekranu: tekst ze zrodlami, cztery oceny z opisem, kontrola faktow, bez zapytania i bez Historii',
+    przykladOk && przyklad.otwarte && przyklad.nazwa === 'Sample article' && /CRM/.test(przyklad.h1) && przyklad.h2 >= 3 && przyklad.zrodla && przyklad.oceny.length === 4
+      && /^86SEO/.test(przyklad.oceny[0]) && /Fact check/.test(przyklad.fakty) && przyklad.fokusNaOknie && zapytaniaPrzykladu === 0 && poPrzykladzie.zamkniete && poPrzykladzie.hist === przyklad.hist,
+    JSON.stringify({ przyklad, poPrzykladzie, zapytaniaPrzykladu }));
+  await s.evaluate(() => { if (!document.body.classList.contains('kb-collapsed')) toggleKbPanel(); });
+  if (await s.evaluate(() => document.getElementById('use-web').checked)) await krok('R9-G komputer: wylacz siec', s.click('#use-web', { timeout: 3000 }));
+  await s.fill('#topic', 'Heat pump sizing');
+  await krok('R9-G komputer: Wygeneruj (siec wylaczona)', s.click('#gen-btn', { timeout: 3000 }));
+  await krok('R9-G komputer: okno Brak zrodel wiedzy', s.waitForFunction(() => document.getElementById('no-source-modal').classList.contains('open'), null, { timeout: 5000 }));
+  await krok('R9-G komputer: Dodaj zrodla', s.click('#no-source-kb-btn', { timeout: 3000 }));
+  await s.waitForTimeout(500);
+  const baza = await s.evaluate(() => ({ zwinieta: document.body.classList.contains('kb-collapsed'), okno: document.getElementById('no-source-modal').classList.contains('open'),
+    panel: getComputedStyle(document.querySelector('.layout > .sidebar')).display !== 'none' && document.querySelector('.layout > .sidebar').getBoundingClientRect().width > 100 }));
+  wynik('komputer EN: R9-G UX8-14 "Dodaj zrodla do bazy wiedzy" otwiera zwinieta baze wiedzy', !baza.zwinieta && !baza.okno && baza.panel, JSON.stringify(baza));
+  // UX8-13: na komputerze grupa z arkusza Konto jest ukryta (Widocznosc AI w gornym pasku), fokus menu na pierwszej widocznej pozycji.
+  await s.evaluate(() => toggleSettingsMenu());
+  await s.waitForTimeout(400);
+  const menuK = await s.evaluate(() => ({ grupa: [...document.querySelectorAll('#settings-menu .settings-item')].filter((x) => x.offsetParent !== null && /openVisModal/.test(x.getAttribute('onclick') || '')).length,
+    fokus: !!document.activeElement && document.activeElement.classList.contains('settings-item') && document.activeElement.offsetParent !== null }));
+  await s.evaluate(() => closeSettingsMenu());
+  wynik('komputer EN: R9-G UX8-13 menu konta bez kopii Widocznosci AI, fokus na pierwszej widocznej pozycji', menuK.grupa === 0 && menuK.fokus, JSON.stringify(menuK));
+  // UX8-07 (czesc grafiki): brak klucza na serwerze (500 "Brak OPENAI_KEY na serwerze") nie jest ponawiany przez 15 s,
+  // a zwykly blad serwera (500 api_error) dalej jest ponawiany.
+  let grafik = 0, tryb = 'brak-klucza';
+  await s.route(/\/api\/images$/, async (route) => {
+    grafik++;
+    if (tryb === 'brak-klucza') return route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'Brak OPENAI_KEY na serwerze' }) });
+    if (tryb === 'przejsciowy' && grafik === 1) return route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: { type: 'api_error', message: 'Internal server error' } }) });
+    return route.continue();
+  });
+  await s.evaluate(() => { document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()); openImgPanelSmart(); document.getElementById('img-context').value = 'Heat pump in a detached house'; });
+  await s.waitForTimeout(400);
+  const t0 = Date.now();
+  await krok('R9-G grafika bez klucza', s.click('#img-gen-btn', { timeout: 3000 }));
+  await krok('R9-G grafika bez klucza: komunikat', s.waitForFunction(() => document.querySelectorAll('.powiadomienie').length > 0 && !document.getElementById('img-gen-btn').disabled, null, { timeout: 40000 }));
+  const bezKlucza = { zapytan: grafik, ms: Date.now() - t0, komunikat: await s.evaluate(() => (document.querySelector('.powiadomienie') || {}).textContent || '') };
+  tryb = 'przejsciowy'; grafik = 0;
+  await s.evaluate(() => { document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()); });
+  await krok('R9-G grafika po bledzie przejsciowym', s.click('#img-gen-btn', { timeout: 3000 }));
+  await krok('R9-G grafika gotowa po ponowieniu', s.waitForFunction(() => document.getElementById('img-result-wrap').style.display === 'block' && !document.getElementById('img-gen-btn').disabled, null, { timeout: 40000 }));
+  const przejsciowy = { zapytan: grafik };
+  await s.unroute(/\/api\/images$/);
+  await s.evaluate(() => closeImgPanelSmart());
+  wynik('komputer EN: R9-G UX8-07 grafika: brak klucza na serwerze bez 15 s ponawiania (jedno zapytanie, komunikat od razu), zwykly 500 dalej ponawiany',
+    bezKlucza.zapytan === 1 && bezKlucza.ms < 8000 && /key|klucz/i.test(bezKlucza.komunikat) && przejsciowy.zapytan === 2, JSON.stringify({ bezKlucza, przejsciowy }));
+  wynik('komputer EN: R9-G bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+  if (bledow) await zrzut(s, 'komputer-r9g');
+  await k2.close();
+}
+
 (async () => {
   await przygotujPorty();
   const serwerPlikow = await uruchomSerwerPlikow();
@@ -1425,6 +1695,7 @@ async function uruchomSerwerPlikow() {
     await wariantR7I(b);
     await wariantR7H(b);
     await wariantPilneKreator(b);
+    await wariantR9Zrozumialosc(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));
