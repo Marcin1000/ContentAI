@@ -1204,6 +1204,12 @@ KONTROLE += [
      "bladPolaTekstu(document.getElementById(name ? 'm-content' : 'm-name'), name ? 'text-brak-tresci' : 'text-brak-nazwy');", None, None),
     ("R9-F/brama-ponowienie", "KOD8-07: 502/503/504 bramy bez JSON-a w oknie restartu = zerwane polaczenie, to samo zadanie ponowione",
      "if (!odpowiedzBramy(res) || bramaMs >= 60000) return res;", None, None),
+    ("R9-F/historia-scalanie", "KOD8-09: zapis Historii scala liste z magazynem (druga karta tego konta), bez nadpisywania",
+     "if (scalHistorieZMagazynem()) { try { renderHistory(); } catch (e) {} }", None, None),
+    ("R9-F/historia-storage", "KOD8-09: zmiana Historii w innej karcie trafia do tej karty (zdarzenie storage)",
+     "window.addEventListener('storage', function (e) {", None, None),
+    ("R9-F/historia-usuniete", "KOD8-09: usuniety wpis nie wraca z listy innej karty",
+     "if (h.id) oznaczUsunietyWpis(h.id);", None, None),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna
