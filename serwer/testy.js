@@ -253,6 +253,7 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
     testyMarki();
     testyUsuwaniaKonta();
     await testyPoprawek();
+    await require('./testy-dokumenty.js').uruchom({ sprawdz });
 
     // Runda 9: etap 0 (magazyn, migracja, kontrakty) i pliki testow wykonawcow A1, B, C, D.
     // Kazdy plik eksportuje uruchom({ sprawdz }) - nowe testy dopisuje sie we wlasnym pliku.

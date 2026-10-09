@@ -1,0 +1,89 @@
+<!doctype html>
+{# /ai-act/ (PL) i /en/ai-act/ (EN): AI Act i przejrzystosc (STR8-19, PR8-04: „wspiera wymogi przejrzystosci", nigdy
+   „w pelni zgodne"). Czesc prawna od roli prawo (prawo/ai-act-przejrzystosc-pl.md), opisy oznaczen z projektu (rozdz. 9).
+   Opis oznaczen w plikach pokazujemy tylko dla formatow z listy "oznaczenia" w konfiguracja.json (wpisuje je koordynator
+   po scaleniu oznaczen w aplikacji); przy pustej liscie strona i FAQ sa w wariancie @przejsciowy. #}
+<html lang="{{$jezyk}}">
+<head>
+<meta charset="utf-8">
+<title>{{a:ai-meta-title}}</title>
+<meta name="description" content="{{a:ai-meta-desc}}">
+<link rel="canonical" href="{{$url}}">
+<link rel="alternate" hreflang="pl" href="{{$url_pl}}">
+<link rel="alternate" hreflang="en" href="{{$url_en}}">
+<link rel="alternate" hreflang="x-default" href="{{$url_en}}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Content AI">
+<meta property="og:title" content="{{a:ai-meta-title}}">
+<meta property="og:description" content="{{a:ai-meta-desc}}">
+<meta property="og:url" content="{{$url}}">
+<meta property="og:image" content="{{$og_obraz}}">
+<meta property="og:locale" content="{{$og_locale}}">
+{{>glowa}}
+</head>
+<body class="podstrona">
+{{>nawigacja}}
+
+<main id="tresc" class="dokument">
+  <div class="kont dokument-siatka">
+    <header class="dokument-nag">
+      <p class="etyk">{{t:ai-kicker}}</p>
+      <h1>{{t:ai-h1}}</h1>
+      <p class="lead">{{t:ai-lead}}</p>
+      <p class="mala">{{t:ai-updated}}</p>
+    </header>
+    <div class="dokument-tresc">
+      <section aria-labelledby="ai-0"><h2 id="ai-0"><span class="etyk-nr">{{nr}}</span>{{t:ai-0-t}}</h2><p>{{t:ai-0-p}}</p></section>
+      <section aria-labelledby="ai-1"><h2 id="ai-1"><span class="etyk-nr">{{nr}}</span>{{t:ai-1-t}}</h2><p>{{t:ai-1-p}}</p></section>
+      {{?oznaczenia}}
+      <section aria-labelledby="ai-2"><h2 id="ai-2"><span class="etyk-nr">{{nr}}</span>{{t:ai-2-t}}</h2><p>{{t:ai-2-p}}</p>
+        <table class="dok-tabela">
+          <thead><tr><th scope="col">{{t:ai-2-kol-a}}</th><th scope="col">{{t:ai-2-kol-b}}</th></tr></thead>
+          <tbody>
+            {{?ozn-docx}}<tr><th scope="row">{{t:ai-2-w1-a}}</th><td>{{t:ai-2-w1-b}}</td></tr>{{/ozn-docx}}
+            {{?ozn-pdf}}<tr><th scope="row">{{t:ai-2-w2-a}}</th><td>{{t:ai-2-w2-b}}</td></tr>{{/ozn-pdf}}
+            {{?ozn-cms}}<tr><th scope="row">{{t:ai-2-w3-a}}</th><td>{{t:ai-2-w3-b}}</td></tr>{{/ozn-cms}}
+            {{?ozn-jsonld}}<tr><th scope="row">{{t:ai-2-w4-a}}</th><td>{{t:ai-2-w4-b}}</td></tr>{{/ozn-jsonld}}
+            {{?ozn-png}}<tr><th scope="row">{{t:ai-2-w5-a}}</th><td>{{t:ai-2-w5-b}}</td></tr>{{/ozn-png}}
+            {{?ozn-mp3}}<tr><th scope="row">{{t:ai-2-w6-a}}</th><td>{{t:ai-2-w6-b}}</td></tr>{{/ozn-mp3}}
+            {{?ozn-txt}}<tr><th scope="row">{{t:ai-2-w7-a}}</th><td>{{t:ai-2-w7-b}}</td></tr>{{/ozn-txt}}
+          </tbody>
+        </table>
+        <p class="dok-uwaga">{{t:ai-2-uwaga}}</p>
+      </section>
+      {{/oznaczenia}}
+      <section aria-labelledby="ai-3"><h2 id="ai-3"><span class="etyk-nr">{{nr}}</span>{{t:ai-3-t}}</h2><p>{{t:ai-3-p}}</p></section>
+      <section aria-labelledby="ai-4"><h2 id="ai-4"><span class="etyk-nr">{{nr}}</span>{{t:ai-4-t}}</h2><p>{{t:ai-4-p}}</p>
+        <ul class="dok-lista-tekst">
+          <li>{{t:ai-4-l1}}</li>
+          <li>{{t:ai-4-l2}}</li>
+        </ul>
+        <p>{{t:ai-4-p2}}</p>
+      </section>
+      {{?oznaczenia}}
+      <section aria-labelledby="ai-5"><h2 id="ai-5"><span class="etyk-nr">{{nr}}</span>{{t:ai-5-t}}</h2>
+        <ul class="dok-lista-tekst">
+          {{?ozn-docx}}<li>{{t:ai-5-docx}}</li>{{/ozn-docx}}
+          {{?ozn-pdf}}<li>{{t:ai-5-pdf}}</li>{{/ozn-pdf}}
+          {{?ozn-png}}<li>{{t:ai-5-png}}</li>{{/ozn-png}}
+          {{?ozn-mp3}}<li>{{t:ai-5-mp3}}</li>{{/ozn-mp3}}
+        </ul>
+      </section>
+      {{/oznaczenia}}
+      <section aria-labelledby="ai-6"><h2 id="ai-6"><span class="etyk-nr">{{nr}}</span>{{t:ai-6-t}}</h2><p>{{t:ai-6-p}}</p>
+        {{?oznaczenia}}<p>{{t:ai-6-p2}}</p>{{/oznaczenia}}
+      </section>
+      <section aria-labelledby="ai-7"><h2 id="ai-7"><span class="etyk-nr">{{nr}}</span>{{t:ai-7-t}}</h2><p>{{t:ai-7-p}}</p></section>
+      <section aria-labelledby="ai-8"><h2 id="ai-8"><span class="etyk-nr">{{nr}}</span>{{t:ai-8-t}}</h2><p>{{t:ai-8-p}}</p></section>
+      <section aria-labelledby="ai-9"><h2 id="ai-9"><span class="etyk-nr">{{nr}}</span>{{t:ai-9-t}}</h2><p>{{t:ai-9-p}}</p></section>
+      <p class="cta">
+        <a class="btn btn-glowny" href="{{$dok_regulamin}}">{{t:ai-cta}}<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
+        <a class="btn btn-drugi" href="{{$glowna}}">{{t:pod-wroc}}</a>
+      </p>
+    </div>
+  </div>
+</main>
+
+{{>stopka}}
+</body>
+</html>

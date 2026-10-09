@@ -1072,7 +1072,97 @@ projektu, domyślne etykiety wg decyzji M-5) wysyłana aplikacji w `/api/konto.o
 
 ## Strona i dokumenty
 
-Wykonawca E (`serwer/dokumenty-prawne.js`, szablony w `dokumenty-prawne/`): regulamin,
-polityka prywatności, odstąpienie, DPA i dane usługodawcy pod `/dokumenty/<nazwa>`
-i `/en/dokumenty/<nazwa>`, z danymi `CAI_USLUGODAWCA_*` z konfiguracji (nie z repozytorium).
-Etap 0: trasa publiczna i zaślepka (501 „dokument w przygotowaniu").
+Dwie części, które razem zastępują dawny formularz „Poproś o dostęp": statyczna strona
+produktowa `content-ai.net` (konto zakłada się samemu w aplikacji) i dokumenty prawne,
+które renderuje serwer aplikacji, bo tylko jego konfiguracja zna dane usługodawcy.
+
+### Strona produktowa (`showcase/`)
+
+Źródła w `showcase/zrodlo/`: `szablon.html` (strona główna z cennikiem, FAQ i zakończeniem
+„trzy kroki do pierwszego artykułu"), `klucz-api.html`, `ai-act.html`, `prywatnosc.html`,
+`regulamin.html`, wspólne `czesci/`, słownik `teksty.json` (PL i EN) i ustawienia
+`konfiguracja.json`. Budowanie: `python3 narzedzia/buduj_strone.py` (CI: `--sprawdz`).
+Lista stron (`STRONY` w `buduj_strone.py`) jest jedna: z niej powstają `sitemap.xml`
+i hreflang, a `audyt_showcase.py` i `test_uklad_strony.js` sprawdzają te same strony.
+
+| Strona PL | Strona EN | Treść |
+|---|---|---|
+| `/` | `/en/` | produkt, cennik (`#cennik`, stara kotwica `#pakiety` działa), FAQ, `#start` |
+| `/klucz-api/` | `/en/api-key/` | jak zdobyć klucz Anthropic (oraz OpenAI i ElevenLabs), koszt artykułu ze źródłem i datą |
+| `/ai-act/` | `/en/ai-act/` | AI Act i przejrzystość („wspiera wymogi przejrzystości", nigdy „w pełni zgodne") |
+| `/prywatnosc/` | `/en/privacy/` | krótko o samej stronie i odnośnik do pełnej polityki |
+| `/regulamin/` | `/en/terms/` | wejście na pełny regulamin (domyślny `CAI_REGULAMIN_URL`) |
+
+`konfiguracja.json` (zmiana = edycja pliku i `buduj_strone.py`, bez zmian w kodzie):
+
+| Pole | Domyślnie | Znaczenie |
+|---|---|---|
+| `aplikacja` | `https://app.content-ai.net/` | „Zaloguj się" |
+| `rejestracja` | `https://app.content-ai.net/rejestracja` | „Załóż konto"; karty pakietów dokładają `?pakiet=standard\|premium`, strona EN `lang=en` |
+| `dokumenty` | `https://app.content-ai.net/dokumenty/` | odnośniki do dokumentów prawnych (stopka, cennik, zakończenie, podstrony) |
+| `email_kontakt` | `kontakt@content-ai.net` | stopka, FAQ, AI Act (`mailto:`); w Cloudflare wyłącz Email Address Obfuscation i Rocket Loader, inaczej CSP zablokuje ich skrypt |
+| `ceny` | `standard:eur=19,pln=79;premium:eur=49,pln=199` | ten sam zapis i te same kwoty co `PLATNOSCI_CENY_WYSWIETLANE`; ceny końcowe; PL w zł, EN w EUR, druga waluta w notce; także JSON-LD `offers` |
+| `koszt_artykulu` | `{"pl": "0,25-0,50 USD", "en": "$0.25-0.50"}` | szacunek kosztu modelu za artykuł (hero, cennik, FAQ, klucz API); wyliczenie i stawki w tekście `key-3-jak` |
+| `data_stanu` | `2026-10-09` | „Stan na ..." podstron klucz API i AI Act (data odczytu cenników dostawców) |
+| `audio_liczone` | `fragmenty` | jak serwer liczy audio: `fragmenty` (każde wywołanie lektora, uczciwy opis w cenniku) albo `nagrania` (jedno nagranie na budowanie; wariant tekstów `@nagrania`) |
+| `oznaczenia` | `[]` | formaty, które aplikacja naprawdę oznacza: `docx`, `pdf`, `cms`, `jsonld`, `png`, `mp3`, `txt`, `etykiety` (widoczne etykiety); pusta lista = wariant `@przejsciowy` (FAQ i AI Act bez „wspiera wymogi" i bez opisu oznaczeń w plikach) |
+
+Kontrole `buduj_strone.py --sprawdz` (zatrzymują CI): teksty PL i EN kompletne i użyte,
+liczby i funkcje pakietów w cenniku zgodne z `serwer/plany.js` (`LICZBY_PAKIETOW`,
+`BEZ_LIMITU`, `ZERO`, `FUNKCJE_W_TABELI`), poprawna `konfiguracja.json`, wersje dokumentów
+PL i EN zgodne, długość przykładowego opisu meta zgodna z liczbą na stronie, tytuł do 70
+i opis do 160 znaków, bez długich myślników i bez zakazanych sformułowań (`ZAKAZANE`:
+nazwa dokumentu sprzedaży z VAT (PR8-11), „w pełni zgodne", „Poproś o dostęp", OpenSEO, DataForSEO,
+NVIDIA, marki klientów).
+
+Zmiana ceny: cena w Stripe, `PLATNOSCI_CENY_WYSWIETLANE` na serwerze i `ceny`
+w `konfiguracja.json` (potem `buduj_strone.py` i wdrożenie `showcase/`). Strona nie łączy się
+ze Stripe, więc zgodności kwot pilnuje serwer (`platnosci-sprawdz`), a tej trójki człowiek.
+
+Caddy (`dokumenty/Caddyfile.content-ai`): nowe podstrony to katalogi z `index.html`, więc
+dopasowanie nagłówków HTML powinno obejmować każdy adres zakończony ukośnikiem:
+`@html path */ *.html`. Strona nie wysyła już niczego do aplikacji (bez formularza),
+więc `connect-src` może zostać samym `'self'`.
+
+### Dokumenty prawne (`/dokumenty/<nazwa>`)
+
+Moduł `serwer/dokumenty-prawne.js`, szablony `dokumenty-prawne/<nazwa>.pl.md`
+i `<nazwa>.en.md` (Markdown z nagłówkiem `tytul`, `wersja`, `data`; komentarze `<!-- -->`
+dla prawnika nie trafiają na stronę). Trasa w `server.js`: `GET` i `HEAD`
+`/dokumenty/<nazwa>?lang=pl|en` oraz `/en/dokumenty/<nazwa>`, bez logowania;
+`?format=txt` oddaje plik tekstowy do pobrania (PDF: polecenie drukowania w przeglądarce).
+Nagłówki: `X-Robots-Tag: noindex`, `Cache-Control: public, max-age=300`, kompresja brotli
+albo gzip, bez skryptów.
+
+| Nazwa | Dokument |
+|---|---|
+| `regulamin` | Regulamin (wersja zapisywana przy zgodzie: `CAI_REGULAMIN_WERSJA`) |
+| `prywatnosc` | Polityka prywatności (`CAI_POLITYKA_WERSJA`) |
+| `odstapienie` | pouczenie o odstąpieniu od umowy z wzorem formularza |
+| `dpa` | umowa powierzenia przetwarzania danych z listą podprzetwarzających jako załącznikiem A |
+| `podprzetwarzajacy` | lista podprzetwarzających z własną wersją i historią zmian |
+| `uslugodawca` | dane usługodawcy i punkt kontaktowy |
+
+Dane usługodawcy: znaczniki `WSTAW_TUTAJ_IMIE_I_NAZWISKO`, `_ADRES`, `_TELEFON`, `_EMAIL`,
+`_WWW` w szablonach zastępują wartości `CAI_USLUGODAWCA_*` (tabela zmiennych wyżej).
+W repozytorium zostają tylko znaczniki. Puste pole = na stronie widoczny znacznik
+„do uzupełnienia" (EN „to be completed"); przy `PLATNOSCI_TRYB=live` serwer raz zapisuje
+w dzienniku ostrzeżenie `[dokumenty] tryb live: ...` z nazwami pustych zmiennych (bez
+wartości). Puste `CAI_USLUGODAWCA_WWW` = `https://content-ai.net`.
+
+Usługi wymieniane warunkowo (polityka, lista podprzetwarzających): NVIDIA tylko przy
+`NVIDIA_KEY`, ElevenLabs po stronie serwera tylko przy `ELEVEN_KEY`, DataForSEO tylko przy
+`DATAFORSEO_LOGIN` i `DATAFORSEO_HASLO`. Bez nich dokumenty mówią to, co jest prawdą na
+produkcji: Anthropic i OpenAI na kluczach serwera dla kont zespołu, ElevenLabs tylko na
+własnym kluczu użytkownika.
+
+Zmiana dokumentu: popraw oba języki, podnieś `wersja` i `data` w nagłówkach (PL i EN takie
+same, pilnuje tego `buduj_strone.py`), ustaw tę samą wersję w `CAI_REGULAMIN_WERSJA` albo
+`CAI_POLITYKA_WERSJA`, przebuduj stronę (wersje widać na `/regulamin/` i `/prywatnosc/`)
+i zrestartuj serwer. Rozjazd wersji z konfiguracji i z nagłówka szablonu serwer zgłasza
+w dzienniku (`[dokumenty] wersja w konfiguracji rozna od dokumentu: ...`), a funkcja
+`rozjazdyWersji(konf)` modułu daje tę listę kontroli przy starcie. Zmiana listy
+podprzetwarzających: nowy wiersz w historii zmian i nowa wersja listy. Zalecane adresy na ekranach i w e-mailach:
+`CAI_REGULAMIN_URL=https://app.content-ai.net/dokumenty/regulamin`,
+`CAI_POLITYKA_URL=https://app.content-ai.net/dokumenty/prywatnosc` (domyślne adresy
+`content-ai.net/regulamin/` i `/prywatnosc/` też działają: prowadzą do tych dokumentów).

@@ -1,0 +1,50 @@
+<!doctype html>
+{# /regulamin/ (PL) i /en/terms/ (EN): wejscie na pelny regulamin. Pelny tekst, z danymi uslugodawcy, renderuje serwer
+   aplikacji ({{$dok_regulamin}}, dokumenty-prawne/). Ten adres jest domyslnym CAI_REGULAMIN_URL serwera, wiec odnosniki
+   z ekranow i e-maili dzialaja tez bez tej zmiennej. Wersja z naglowka szablonu regulaminu (ta sama co CAI_REGULAMIN_WERSJA). #}
+<html lang="{{$jezyk}}">
+<head>
+<meta charset="utf-8">
+<title>{{a:reg-meta-title}}</title>
+<meta name="description" content="{{a:reg-meta-desc}}">
+<link rel="canonical" href="{{$url}}">
+<link rel="alternate" hreflang="pl" href="{{$url_pl}}">
+<link rel="alternate" hreflang="en" href="{{$url_en}}">
+<link rel="alternate" hreflang="x-default" href="{{$url_en}}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Content AI">
+<meta property="og:title" content="{{a:reg-meta-title}}">
+<meta property="og:description" content="{{a:reg-meta-desc}}">
+<meta property="og:url" content="{{$url}}">
+<meta property="og:image" content="{{$og_obraz}}">
+<meta property="og:locale" content="{{$og_locale}}">
+{{>glowa}}
+</head>
+<body class="podstrona">
+{{>nawigacja}}
+
+<main id="tresc" class="dokument">
+  <div class="kont dokument-siatka">
+    <header class="dokument-nag">
+      <p class="etyk">{{t:reg-kicker}}</p>
+      <h1>{{t:reg-h1}}</h1>
+      <p class="lead">{{t:reg-lead}}</p>
+      <p class="mala">{{t:reg-updated}}</p>
+    </header>
+    <div class="dokument-tresc">
+      <section aria-labelledby="rg-1"><h2 id="rg-1"><span class="etyk-nr">{{nr}}</span>{{t:reg-1-t}}</h2><p>{{t:reg-1-p}}</p>
+        <p class="dok-akcja"><a class="btn btn-glowny" href="{{$dok_regulamin}}">{{t:reg-cta}}<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a></p>
+      </section>
+      <section aria-labelledby="rg-2"><h2 id="rg-2"><span class="etyk-nr">{{nr}}</span>{{t:dok-t}}</h2>
+        {{>dokumenty}}
+      </section>
+      <p class="cta">
+        <a class="btn btn-drugi" href="{{$glowna}}">{{t:pod-wroc}}</a>
+      </p>
+    </div>
+  </div>
+</main>
+
+{{>stopka}}
+</body>
+</html>
