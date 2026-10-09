@@ -314,8 +314,9 @@ function wartosciSzablonu(jezyk, ust, meta) {
   const z = {
     WERSJA: meta.wersja,
     DATA: dataSlownie(meta.data, jezyk),
-    URL_CENNIK: ust.www + (en ? '/en/#cennik' : '/#cennik'),
-    URL_AI_ACT: ust.www + (en ? '/en/ai-act/' : '/ai-act/'),
+    // strona produktu, nie strona uslugodawcy (CAI_USLUGODAWCA_WWW moze wskazywac inna witryne)
+    URL_CENNIK: ADRES_STRONY + (en ? '/en/#cennik' : '/#cennik'),
+    URL_AI_ACT: ADRES_STRONY + (en ? '/en/ai-act/' : '/ai-act/'),
     LIMIT_DARMOWY: String(limitDarmowy()),
     ZALEGLA_DNI: String(ust.zaleglaDni),
     WERSJA_PODPRZETWARZAJACY: wczytajSzablon('podprzetwarzajacy', jezyk).meta.wersja,

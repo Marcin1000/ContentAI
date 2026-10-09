@@ -136,6 +136,12 @@ async function uruchom({ sprawdz }) {
       wrogi.includes('&lt;script&gt;alert(1)&lt;/script&gt;') && !wrogi.includes('<script>') && !wrogi.includes('mailto:zly@adres')
       && !wrogi.includes('javascript:') && wrogi.includes('<a href="https://content-ai.net">content-ai.net</a>'));
 
+    konf = { ...PELNE, uslugodawca: { ...PELNE.uslugodawca, www: 'https://witryna-uslugodawcy.example.pl' } };
+    const inneWww = (await pobierz('/dokumenty/regulamin?lang=en')).tekst;
+    sprawdz('cennik i strona AI Act zawsze na content-ai.net, takze gdy CAI_USLUGODAWCA_WWW wskazuje inna witryne',
+      inneWww.includes('https://content-ai.net/en/#cennik') && inneWww.includes('https://content-ai.net/en/ai-act/')
+      && !inneWww.includes('witryna-uslugodawcy.example.pl/en/'));
+
     const ostrzezenia = [];
     const oryginalWarn = console.warn;
     console.warn = (...a) => ostrzezenia.push(a.join(' '));
