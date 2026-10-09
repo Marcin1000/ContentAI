@@ -1226,6 +1226,10 @@ KONTROLE += [
      "document.getElementById('vis-results').innerHTML = blokBledu(ostatniBlad || new Error(_t('vis-blad-wszystkie')), 'runVisibility()');", None, None),
     ("R9-F/widocznosc-mianownik", "KOD8-22: Widocznosc AI - nieudane zapytania poza mianownikiem wyniku",
      "results = (results || []).filter(r => r && !r.error);", None, None),
+    ("R9-F/transkrypcja-limit", "KOD8-16: transkrypcja - plik ponad 25 MB zatrzymany przed wyslaniem z jasnym komunikatem",
+     "if (file && file.size > LIMIT_PLIKU_TRANSKRYPCJI) throw new Error(_t('err-transkrypcja-za-duzy')", None, None),
+    ("R9-F/transkrypcja-zadanie", "KOD8-16: transkrypcja przez zadanie w tle (zerwane polaczenie nie gubi wyniku)",
+     "var res = await fetchZadania(OPENAI_STT_ENDPOINT, { method: 'POST', headers, body: fd });", None, None),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna

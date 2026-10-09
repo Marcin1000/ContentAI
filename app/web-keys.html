@@ -5359,6 +5359,7 @@ var I18N = {
     'err-za-dlugi':'Za dużo tekstu naraz dla modelu AI. Odznacz część źródeł w bazie wiedzy albo skróć tekst i spróbuj jeszcze raz.',
     'err-za-duze':'Zapytanie jest za duże dla dostawcy AI, zwykle przez duże pliki w bazie wiedzy. Odznacz część źródeł albo podziel duże pliki na mniejsze.',
     'err-za-duze-plik':'Plik jest za duży dla dostawcy AI. Skróć nagranie albo zapisz je w mniejszym pliku i spróbuj jeszcze raz.',
+    'err-transkrypcja-za-duzy':'Plik ma {mb} MB, a transkrypcja przyjmuje najwyżej 25 MB. Podziel nagranie na części albo zapisz je w niższej jakości (np. mono, 64 kb/s) i spróbuj ponownie.',
     'err-model':'Dostawca AI nie udostępnia temu kluczowi API modelu, którego używa aplikacja. Sprawdź dostęp do modeli w panelu dostawcy albo zgłoś to administratorowi.',
     'err-moderacja':'Dostawca AI odrzucił zapytanie na podstawie swoich zasad dotyczących treści. Zmień opis albo wytyczne i spróbuj jeszcze raz.',
     'err-przerwano':'Zapytanie zostało przerwane.','err-szczegoly':'Szczegóły techniczne',
@@ -6019,6 +6020,7 @@ var I18N = {
     'err-za-dlugi':'Too much text at once for the AI model. Deselect some sources in the knowledge base or shorten the text, then try again.',
     'err-za-duze':'The request is too large for the AI provider, usually because of large files in the knowledge base. Deselect some sources or split large files into smaller ones.',
     'err-za-duze-plik':'The file is too large for the AI provider. Shorten the recording or save it as a smaller file, then try again.',
+    'err-transkrypcja-za-duzy':'The file is {mb} MB, but transcription accepts at most 25 MB. Split the recording into parts or save it at a lower quality (e.g. mono, 64 kbps) and try again.',
     'err-model':'The AI provider does not give this API key access to the model the app uses. Check model access in the provider dashboard or tell your administrator.',
     'err-moderacja':'The AI provider rejected the request under its content policy. Change the description or guidelines, then try again.',
     'err-przerwano':'The request was stopped.','err-szczegoly':'Technical details',
@@ -17801,15 +17803,21 @@ function newsletterPromptBlock() {
 }
 
 /* ── Transkrypcja pliku audio (Whisper) ── */
+// R9-F (KOD8-16): limit dostawcy na plik (25 MB) z zapasem na reszte zapytania. Wiekszy plik konczyl sie
+// komunikatem "blad serwera (500) ... bez analizy SERP", a ponowienie niczego nie zmienia.
+const LIMIT_PLIKU_TRANSKRYPCJI = 25 * 1024 * 1024 - 16 * 1024;
 async function transcribeMedia(file) {
   var key = voiceOAKey();
   if (!voiceIsProxy() && !key) { powiadomBlad(_t('voice-no-key')); throw new Error('no key'); }
+  if (file && file.size > LIMIT_PLIKU_TRANSKRYPCJI) throw new Error(_t('err-transkrypcja-za-duzy').replace('{mb}', formatujLiczbe(file.size / 1048576, 1)));
   var fd = new FormData();
   fd.append('file', file, file.name || 'audio.webm');
   fd.append('model', 'gpt-4o-transcribe');
   var headers = {};
   if (!voiceIsProxy()) headers['Authorization'] = 'Bearer ' + key;
-  var res = await fetch(OPENAI_STT_ENDPOINT, { method: 'POST', headers, body: fd });
+  // R9-F (KOD8-16): przez zadanie w tle (jak artykul i grafika) - zerwane polaczenie (telefon w tle przy
+  // dlugim nagraniu) nie gubi oplaconej transkrypcji, tylko odbiera ja z serwera.
+  var res = await fetchZadania(OPENAI_STT_ENDPOINT, { method: 'POST', headers, body: fd });
   if (!res.ok) { var e = await res.json().catch(function(){ return {}; }); throw bladOdpowiedzi(e, res.status, 'OpenAI'); }
   var d = await res.json(); return d.text || '';
 }

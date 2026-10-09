@@ -1040,12 +1040,63 @@ async function scenariuszR9FFakty(b) {
   await k.close();
 }
 
+// KOD8-16: transkrypcja. Plik ponad limit dostawcy (25 MB) - jasny komunikat przed wyslaniem (bez wysylania
+// 26 MB i bez "bledu serwera 500 ... bez analizy SERP"); zerwane polaczenie w trakcie - wynik odebrany
+// z zadania na serwerze (transkrypcja policzona raz), a nie blad przy oplaconej pracy.
+async function scenariuszR9FTranskrypcja(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'standard');
+  const wyslane = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api\/transcribe$/.test(z.url())) wyslane.push(z.headers()['x-zadanie'] || '-'); });
+  const ustawPlik = (mb, nazwa) => s.evaluate(({ mb, nazwa }) => {
+    const bajty = new Uint8Array(Math.round(mb * 1024 * 1024)); bajty[0] = 0x49; bajty[1] = 0x44; bajty[2] = 0x33;
+    const dt = new DataTransfer(); dt.items.add(new File([bajty], nazwa, { type: 'audio/mpeg' }));
+    const fi = document.getElementById('au-file'); fi.files = dt.files; if (typeof audioFileLabel === 'function') audioFileLabel();
+  }, { mb, nazwa });
+  const uruchom = async () => {
+    await s.evaluate(() => { document.querySelectorAll('.powiadomienie').forEach((x) => x.remove()); document.getElementById('au-script').innerText = '';
+      document.getElementById('au-result-wrap').style.display = 'none'; document.getElementById('au-gen-btn').click(); });
+    await s.waitForTimeout(300);
+    await s.waitForFunction(() => !document.getElementById('au-gen-btn').disabled, null, { timeout: 60000 }).catch(() => {});
+    await s.waitForTimeout(300);
+    return s.evaluate(() => ({ wynik: (document.getElementById('au-script').innerText || '').slice(0, 60), widoczny: document.getElementById('au-result-wrap').style.display,
+      powiadomienia: [...document.querySelectorAll('.powiadomienie')].map((x) => x.textContent.replace(/\s+/g, ' ').slice(0, 200)) }));
+  };
+  await s.evaluate(() => { openAudioPanel(); document.getElementById('au-type').value = 'transcription'; audioSetType(); });
+  await s.waitForTimeout(300);
+  // Plik 26 MB: komunikat o limicie, nic nie idzie do serwera.
+  await ustawPlik(26, 'dlugie-nagranie.m4a');
+  const duzy = await uruchom();
+  const wzorLimitu = await s.evaluate(() => _t('err-transkrypcja-za-duzy').split('{')[0]);
+  wynik('R9-F KOD8-16: plik ponad 25 MB - komunikat o limicie przed wyslaniem, bez wysylania pliku',
+    wyslane.length === 0 && !!wzorLimitu && duzy.powiadomienia.some((p) => p.indexOf(wzorLimitu) !== -1) && !duzy.powiadomienia.some((p) => /SERP|500/.test(p)), JSON.stringify({ duzy, wyslane }));
+  // Zerwane polaczenie: zapytanie dochodzi do serwera, odpowiedz nie wraca; aplikacja odbiera wynik tego samego zadania.
+  const przed = ((await pakietUzycie(s)).transkrypcja || {}).zuzyte || 0;
+  let zerwij = true;
+  await s.route(/\/api\/transcribe$/, async (route) => {
+    if (zerwij) { zerwij = false; route.fetch().catch(() => {}); await new Promise((r) => setTimeout(r, 400)); return route.abort('connectionreset'); }
+    return route.continue();
+  });
+  await ustawPlik(0.2, 'nagranie.mp3');
+  const zerwane = await uruchom();
+  await s.unroute(/\/api\/transcribe$/);
+  const po = ((await pakietUzycie(s)).transkrypcja || {}).zuzyte || 0;
+  wynik('R9-F KOD8-16: zerwane polaczenie w trakcie transkrypcji - wynik odebrany z serwera, policzony raz',
+    zerwane.widoczny === 'block' && zerwane.wynik.length > 5 && !zerwane.powiadomienia.length && wyslane.length >= 2 && wyslane.every((x) => x === wyslane[0] && x !== '-') && po === przed + 1,
+    JSON.stringify({ zerwane, wyslane, przed, po }));
+  wynik('R9-F KOD8-16: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-transkrypcja');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
   ['stan', scenariuszStanu], ['r4-logika', scenariuszR4Logiki], ['bledy', scenariuszBledow], ['historia-r4', scenariuszHistoriiR4],
   ['r9f-keys', scenariuszR9FKeys], ['r9f-widocznosc', scenariuszR9FWidocznosc], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
   ['r9f-pause-turn', scenariuszR9FPauseTurn], ['r9f-przeladowanie', scenariuszR9FPrzeladowanie], ['r9f-fakty', scenariuszR9FFakty],
+  ['r9f-transkrypcja', scenariuszR9FTranskrypcja],
 ];
 (async () => {
   let b;
