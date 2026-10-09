@@ -8671,6 +8671,7 @@ function usunWpisHistorii(id) {
   if (!h) return;
   if (!window.confirm(_t('hist-usun-pytanie').replace('{t}', h.topic || ''))) return;
   history = history.filter(function (x) { return x !== h; });
+  if (h.id) oznaczUsunietyWpis(h.id); // R9-F (KOD8-09): nie wraca z listy innej karty
   if (biezacyHist === h.id) { biezacyHist = null; magazyn.removeItem('cai_biezacy'); }
   if (previewHistory._podglad === h.id) {
     previewHistory._podglad = null;
@@ -11856,6 +11857,7 @@ function zapiszRecznePoprawki() {
   const wpis = wpisHistorii(biezacyHist);
   if (wpis) {
     wpis.html = h;
+    wpis.zm = Date.now(); // R9-F (KOD8-09): nowsza zmiana wpisu wygrywa przy scalaniu kart
     // R6-F (E-14): ta sama liczba slow co w pasku statystyk (wczesniej ze zrodlami i meta).
     wpis.words = liczbaSlowArtykulu(art);
     saveState();
@@ -12943,6 +12945,49 @@ const LS = {
   COST:     'cai_cost_v2',
 };
 
+// R9-F (KOD8-09): Historia jednego konta w kilku kartach. Kazda karta trzyma liste w pamieci, a zapis
+// szedl zawsze cala lista tej karty, wiec artykul z drugiej karty znikal bez sladu. Teraz zapis
+// i zdarzenie 'storage' scalaja listy po id (wygrywa nowsza zmiana wpisu), a id usunietych wpisow
+// pamietamy, zeby nie wracaly z listy innej karty.
+let ostatniZapisHistorii = null;
+const LS_USUNIETE = 'cai_history_usuniete';
+function oznaczUsunietyWpis(id) {
+  const lista = (czytajJson(LS_USUNIETE, []) || []).filter(x => x !== id);
+  lista.push(id);
+  magazyn.setItem(LS_USUNIETE, JSON.stringify(lista.slice(-300)));
+}
+function scalHistorieZMagazynem() {
+  const surowe = magazyn.getItem(LS.HISTORY);
+  if (!surowe || surowe === ostatniZapisHistorii) return false;
+  let zapisana;
+  try { zapisana = JSON.parse(surowe); } catch (e) { return false; }
+  if (!Array.isArray(zapisana)) return false;
+  ostatniZapisHistorii = surowe;
+  const usuniete = new Set(czytajJson(LS_USUNIETE, []) || []);
+  const mapa = new Map();
+  let zmiana = false;
+  history.forEach(h => {
+    if (!h) return;
+    if (h.id && usuniete.has(h.id)) { zmiana = true; return; }
+    mapa.set(h.id || ('bez-id-' + mapa.size), h);
+  });
+  zapisana.forEach(z => {
+    if (!z || !z.id || usuniete.has(z.id)) return;
+    const moj = mapa.get(z.id);
+    if (!moj) { mapa.set(z.id, z); zmiana = true; }
+    else if ((z.zm || z.ts || 0) > (moj.zm || moj.ts || 0)) { Object.assign(moj, z); zmiana = true; }
+  });
+  if (!zmiana) return false;
+  history = Array.from(mapa.values()).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  if (biezacyHist != null && !wpisHistorii(biezacyHist)) { biezacyHist = null; magazyn.removeItem('cai_biezacy'); }
+  return true;
+}
+window.addEventListener('storage', function (e) {
+  const k = String((e && e.key) || '');
+  if (k.slice(-LS.HISTORY.length) !== LS.HISTORY && k.slice(-LS_USUNIETE.length) !== LS_USUNIETE) return;
+  if (scalHistorieZMagazynem()) { try { renderHistory(); } catch (er) {} }
+});
+
 function saveState() {
   // Historia najpierw i osobno: pelny magazyn (zwykle przez duze dokumenty
   // bazy) nie moze po cichu zablokowac zapisu artykulow. Wczesniej jeden
@@ -12953,13 +12998,19 @@ function saveState() {
   // wypadaja najstarsze wpisy historii - z komunikatem, ile ich bylo.
   const wpisDoZapisu = h => ({
     id: h.id, ts: h.ts, topic: h.topic, type: h.type, words: h.words, time: h.time,
-    html: h.html || '', jezyk: h.jezyk || '', kontekst: h.kontekst || null
+    html: h.html || '', jezyk: h.jezyk || '', kontekst: h.kontekst || null, zm: h.zm || h.ts || 0
   });
-  const zapiszHistorie = (n) => magazyn.setItem(LS.HISTORY, JSON.stringify(history.slice(0, n).map(wpisDoZapisu)));
+  // R9-F (KOD8-09): najpierw wpisy zapisane przez inne karty tego konta - zapis calej listy z pamieci
+  // tej karty kasowal artykuly z drugiej karty.
+  if (scalHistorieZMagazynem()) { try { renderHistory(); } catch (e) {} }
+  const zapiszHistorie = (n) => { const json = JSON.stringify(history.slice(0, n).map(wpisDoZapisu)); const ok = magazyn.setItem(LS.HISTORY, json); if (ok) ostatniZapisHistorii = json; return ok; };
   const mniej = (n, min) => Math.max(min, n - Math.max(1, Math.ceil(n / 10)));
   let n = history.length;
   let ok = zapiszHistorie(n);
   while (!ok && n > 1) { n = mniej(n, 1); ok = zapiszHistorie(n); }
+  // Licznik i koszt z drugiej karty nie cofaja sie przy zapisie tej karty (R9-F, KOD8-09).
+  genCount = Math.max(genCount, parseInt(magazyn.getItem(LS.GENCOUNT) || '0', 10) || 0);
+  sessionCost = Math.max(sessionCost, parseFloat(magazyn.getItem(LS.COST) || '0') || 0);
   magazyn.setItem(LS.GENCOUNT, String(genCount));
   magazyn.setItem(LS.COST, String(sessionCost));
   const docsToSave = docs.map(d => ({

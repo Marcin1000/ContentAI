@@ -870,11 +870,48 @@ async function scenariuszR9FBrama(b) {
   await k.close();
 }
 
+// KOD8-09: dwie karty tego samego konta (wspolny localStorage). Artykul z jednej karty nie moze zniknac
+// z Historii, gdy druga zapisze swoja liste; usuniety wpis nie wraca.
+async function scenariuszR9FDwieKarty(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const a = await zalogujProxy(k, srv.port, 'standard');
+  const bKarta = await k.newPage();
+  await bKarta.goto('http://127.0.0.1:' + srv.port + '/', { waitUntil: 'load' });
+  await bKarta.waitForFunction(() => typeof generate === 'function' && document.readyState === 'complete', null, { timeout: 15000 });
+  await bKarta.evaluate(() => { if (typeof startPomin === 'function') startPomin(); });
+  await generuj(a, 'Artykul z karty A', false);
+  await krok('R9-F KOD8-09 artykul w karcie A', czekajNaKoniec(a));
+  await generuj(bKarta, 'Artykul z karty B', false);
+  await krok('R9-F KOD8-09 artykul w karcie B', czekajNaKoniec(bKarta));
+  await a.waitForTimeout(500);
+  const tematy = (s) => s.evaluate(() => history.map((h) => h.topic).sort().join(' | '));
+  const zapisane = (s) => s.evaluate(() => JSON.parse(magazyn.getItem('cai_history_v2') || '[]').map((h) => h.topic).sort().join(' | '));
+  const oba = 'Artykul z karty A | Artykul z karty B';
+  const st1 = { a: await tematy(a), b: await tematy(bKarta), magazyn: await zapisane(a) };
+  wynik('R9-F KOD8-09: dwie karty - oba artykuly w Historii obu kart i w magazynie', st1.a === oba && st1.b === oba && st1.magazyn === oba, JSON.stringify(st1));
+  await a.reload({ waitUntil: 'load' });
+  await a.waitForFunction(() => typeof generate === 'function' && document.readyState === 'complete', null, { timeout: 15000 });
+  const poOdswiezeniu = await tematy(a);
+  wynik('R9-F KOD8-09: po odswiezeniu karty A oba artykuly zostaja', poOdswiezeniu === oba, poOdswiezeniu);
+  // Usuniecie w karcie B: wpis znika tez w A i nie wraca, gdy A zapisze swoja (starsza) liste.
+  await bKarta.evaluate(() => { const h = history.find((x) => x.topic === 'Artykul z karty A'); if (h) usunWpisHistorii(h.id); });
+  await a.waitForTimeout(400);
+  const poUsunieciuA = await tematy(a);
+  await a.evaluate(() => saveState());
+  const poZapisieA = { a: await tematy(a), b: await tematy(bKarta), magazyn: await zapisane(a) };
+  wynik('R9-F KOD8-09: wpis usuniety w jednej karcie znika w drugiej i nie wraca po jej zapisie',
+    poUsunieciuA === 'Artykul z karty B' && poZapisieA.a === 'Artykul z karty B' && poZapisieA.magazyn === 'Artykul z karty B', JSON.stringify({ poUsunieciuA, poZapisieA }));
+  wynik('R9-F KOD8-09: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(a, 'r9f-dwie-karty');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
   ['stan', scenariuszStanu], ['r4-logika', scenariuszR4Logiki], ['bledy', scenariuszBledow], ['historia-r4', scenariuszHistoriiR4],
-  ['r9f-keys', scenariuszR9FKeys], ['r9f-brama', scenariuszR9FBrama],
+  ['r9f-keys', scenariuszR9FKeys], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
 ];
 (async () => {
   let b;
