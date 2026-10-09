@@ -32,10 +32,10 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/fonty/literata-latin-pl.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonty/schibsted-grotesk-latin-pl.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/zasoby/strona.css?v=5c27e08805">
+<link rel="stylesheet" href="/zasoby/strona.css?v=4ab745035c">
 
 <script src="/zasoby/motyw.js?v=5fcd5d4153"></script>
-<script src="/zasoby/strona.js?v=0c555d47e7" defer></script>
+<script src="/zasoby/strona.js?v=43f0c7c7b1" defer></script>
 
 <script type="application/ld+json">
 {
@@ -45,8 +45,10 @@
    "@type": "Organization",
    "@id": "https://content-ai.net/#organizacja",
    "name": "Content AI",
+   "alternateName": "content-ai.net",
    "url": "https://content-ai.net/",
-   "logo": "https://content-ai.net/obrazy/icon-512.png"
+   "logo": "https://content-ai.net/obrazy/icon-512.png",
+   "email": "kontakt@content-ai.net"
   },
   {
    "@type": "SoftwareApplication",
@@ -59,7 +61,44 @@
    "description": "Content AI pisze artykuły z Twojej bazy wiedzy, ocenia je pod SEO, AIO, AEO i GEO, sprawdza fakty i linki, a gotowy tekst publikuje w WordPressie lub Drupalu.",
    "publisher": {
     "@id": "https://content-ai.net/#organizacja"
-   }
+   },
+   "offers": [
+    {
+     "@type": "Offer",
+     "name": "Darmowy",
+     "price": "0",
+     "priceCurrency": "PLN",
+     "url": "https://content-ai.net/#cennik"
+    },
+    {
+     "@type": "Offer",
+     "name": "Standard",
+     "price": "79",
+     "priceCurrency": "PLN",
+     "url": "https://content-ai.net/#cennik",
+     "priceSpecification": {
+      "@type": "UnitPriceSpecification",
+      "price": "79",
+      "priceCurrency": "PLN",
+      "billingDuration": "P1M",
+      "unitCode": "MON"
+     }
+    },
+    {
+     "@type": "Offer",
+     "name": "Premium",
+     "price": "199",
+     "priceCurrency": "PLN",
+     "url": "https://content-ai.net/#cennik",
+     "priceSpecification": {
+      "@type": "UnitPriceSpecification",
+      "price": "199",
+      "priceCurrency": "PLN",
+      "billingDuration": "P1M",
+      "unitCode": "MON"
+     }
+    }
+   ]
   },
   {
    "@type": "FAQPage",
@@ -72,6 +111,30 @@
      "acceptedAnswer": {
       "@type": "Answer",
       "text": "Czat odpowiada z pamięci modelu. Content AI pisze z Twojej bazy wiedzy, sięga do sieci tylko po brakujące informacje i podaje źródła, a potem ocenia tekst pod SEO, AIO, AEO i GEO i sprawdza fakty. Wszystko w jednym oknie, od tematu do publikacji."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Czego potrzebuję, żeby zacząć?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Konta w Content AI (e-mail i hasło) i klucza API Anthropic, na którym powstają teksty. Klucz jest potrzebny w każdym pakiecie, także w Darmowym. Klucze OpenAI (grafiki, lektor, transkrypcja) i ElevenLabs (lepszy lektor) są opcjonalne. Pakiet Darmowy daje 3 artykuły na start, bez karty."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Jak zdobyć klucz API i ile kosztuje model?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "W konsoli Anthropic zakładasz konto, doładowujesz je i tworzysz klucz; to około 10 minut. Za model płacisz dostawcy na swoim koncie, orientacyjnie 0,25-0,50 USD za artykuł o długości około 800 słów z oceną i kontrolą faktów. Instrukcja krok po kroku i wyliczenie są na stronie „Jak zdobyć klucz API”."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Gdzie trafia mój klucz API?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Trzyma go tylko Twoja przeglądarka, w zaszyfrowanym ciasteczku przypisanym do Twojego konta; inne konto go nie odczyta. Z opcją „Zapamiętaj na tym urządzeniu” klucz zostaje przez 30 dni, także po wylogowaniu, a bez niej do zamknięcia przeglądarki. Usuwa go przycisk „Usuń klucz”, wylogowanie na wszystkich urządzeniach, zmiana hasła i usunięcie konta. Przy każdym zapytaniu serwer Content AI przekazuje klucz dostawcy AI i nie zapisuje go ani na dysku, ani w dziennikach."
      }
     },
     {
@@ -92,18 +155,34 @@
     },
     {
      "@type": "Question",
-     "name": "Jakich modeli AI używa Content AI?",
+     "name": "Jak płacę za pakiet?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Teksty pisze model Claude firmy Anthropic. Serwer można przełączyć na modele open source przez NVIDIA NIM bez zmian w aplikacji. Grafiki, lektor i transkrypcja korzystają z OpenAI, a opcjonalny lektor z ElevenLabs."
+      "text": "Pakiety płatne opłacasz przez Stripe, co miesiąc z góry, w złotych albo w euro: walutę wybierasz w oknie zakupu. Dane karty wpisujesz na stronie Stripe, a Content AI ich nie widzi. Płatne pakiety są dostępne dla klientów z adresem rozliczeniowym w Unii Europejskiej. Po każdej płatności Stripe wysyła potwierdzenie na Twój adres e-mail."
      }
     },
     {
      "@type": "Question",
-     "name": "Czy mogę użyć własnego klucza API?",
+     "name": "Jaki dokument dostanę po płatności?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Tak, w pakietach Standard i Premium, dla Anthropic, OpenAI i ElevenLabs. Koszt modelu idzie wtedy na Twoje konto u dostawcy. Klucz jest zapisany tylko w przeglądarce, serwer przekazuje go dostawcy z każdym zapytaniem i niczego nie zapisuje. Limity pakietu obowiązują nadal."
+      "text": "Po każdej płatności Stripe wysyła na Twój adres e-mail potwierdzenie płatności. Rachunek wystawiamy na prośbę: napisz na kontakt@content-ai.net w ciągu 3 miesięcy od końca miesiąca, w którym była płatność, i podaj jej datę. Ceny na stronie są cenami końcowymi."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Jak zmienić albo anulować pakiet?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "W ustawieniach konta w aplikacji otwierasz panel płatności Stripe: tam zmienisz pakiet albo kartę i anulujesz subskrypcję. Po anulowaniu pakiet działa do końca opłaconego miesiąca, potem konto przechodzi na pakiet Darmowy, a historia tekstów i dokumenty zostają. W ciągu 14 dni od zakupu możesz też odstąpić od umowy: zasady opisuje pouczenie o odstąpieniu."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Jak Content AI podchodzi do AI Act?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Za publikację odpowiada publikujący: realistyczne grafiki i nagrania oraz teksty informujące o sprawach publicznych bez przeglądu redakcyjnego trzeba oznaczyć jako wygenerowane przez AI. Przy lektorze aplikacja informuje, że głos jest syntetyczny. Kto za co odpowiada, opisujemy na stronie „AI Act i przejrzystość”."
      }
     },
     {
@@ -111,7 +190,15 @@
      "name": "Gdzie trafiają moje dokumenty?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Dokumenty bazy wiedzy leżą na serwerze Content AI: prywatne widzi tylko właściciel, wspólne cały zespół. Przy generowaniu dostawca modelu dostaje z nich tylko fragmenty pasujące do tematu. Historia tekstów zostaje w przeglądarce."
+      "text": "Dokumenty bazy wiedzy leżą na serwerze Content AI i widzi je tylko Twoje konto. Przy pisaniu dostawca modelu dostaje z nich tylko fragmenty pasujące do tematu. Gotowe teksty i ich historia zostają w Twojej przeglądarce."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Jakich modeli AI używa Content AI?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Teksty, oceny i kontrolę faktów przygotowują modele firmy Anthropic. Grafiki, lektor i transkrypcja korzystają z modeli OpenAI, a lepszy lektor z ElevenLabs. Każdy z tych dostawców rozlicza zużycie na Twoim kluczu API."
      }
     },
     {
@@ -119,7 +206,15 @@
      "name": "Skąd pochodzą dane SERP?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Zależy od konfiguracji serwera: z wyszukiwania prowadzonego przez model (wtedy to szacunek) albo z API DataForSEO (wtedy to zmierzone wyniki organiczne). Analiza SERP jest dostępna od pakietu Standard."
+      "text": "Analizę wyników Google robi model z wyszukiwaniem w sieci, na Twoim kluczu API. To szacunek wyników, a nie pomiar pozycji. Analiza SERP jest dostępna od pakietu Standard."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Mam konto założone przez administratora. Co się zmienia?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Logujesz się jak dotąd, a pakiet, limity i dokumenty zostają. Teksty dalej powstają na kluczach serwera, więc nie potrzebujesz własnego klucza ani płatnego pakietu. Własny klucz możesz wpisać, jeśli wolisz rozliczać model na swoim koncie."
      }
     },
     {
@@ -128,14 +223,6 @@
      "acceptedAnswer": {
       "@type": "Answer",
       "text": "Interfejs jest po polsku i po angielsku. Treści powstają po polsku, angielsku, niemiecku i czesku."
-     }
-    },
-    {
-     "@type": "Question",
-     "name": "Jak założyć konto?",
-     "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "Przez formularz „Poproś o dostęp” na tej stronie. Konto zakłada administrator, a nowe konto zaczyna od pakietu Darmowego: 3 artykuły na spróbowanie."
      }
     }
    ]
@@ -156,7 +243,9 @@
 <symbol id="i-bot" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 8V4H8" /> <rect vector-effect="non-scaling-stroke" width="16" height="12" x="4" y="8" rx="2" /> <path vector-effect="non-scaling-stroke" d="M2 14h2" /> <path vector-effect="non-scaling-stroke" d="M20 14h2" /> <path vector-effect="non-scaling-stroke" d="M15 13v2" /> <path vector-effect="non-scaling-stroke" d="M9 13v2" /></symbol>
 <symbol id="i-chart-column" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 3v16a2 2 0 0 0 2 2h16" /> <path vector-effect="non-scaling-stroke" d="M18 17V9" /> <path vector-effect="non-scaling-stroke" d="M13 17V5" /> <path vector-effect="non-scaling-stroke" d="M8 17v-3" /></symbol>
 <symbol id="i-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 6 9 17l-5-5" /></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m6 9 6 6 6-6" /></symbol>
 <symbol id="i-circle-check" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol>
+<symbol id="i-credit-card" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="20" height="14" x="2" y="5" rx="2" /> <path vector-effect="non-scaling-stroke" d="M2 10h20" /></symbol>
 <symbol id="i-file-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M12 18v-6" /> <path vector-effect="non-scaling-stroke" d="m9 15 3 3 3-3" /></symbol>
 <symbol id="i-file-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <circle vector-effect="non-scaling-stroke" cx="11.5" cy="14.5" r="2.5" /> <path vector-effect="non-scaling-stroke" d="M13.3 16.3 15 18" /></symbol>
 <symbol id="i-file-text" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M10 9H8" /> <path vector-effect="non-scaling-stroke" d="M16 13H8" /> <path vector-effect="non-scaling-stroke" d="M16 17H8" /></symbol>
@@ -183,7 +272,6 @@
 <symbol id="i-play" viewBox="0 0 24 24"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /> <path vector-effect="non-scaling-stroke" d="M12 5v14" /></symbol>
 <symbol id="i-refresh-cw" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path vector-effect="non-scaling-stroke" d="M21 3v5h-5" /> <path vector-effect="non-scaling-stroke" d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path vector-effect="non-scaling-stroke" d="M8 16H3v5" /></symbol>
-<symbol id="i-scan-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 7V5a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M17 3h2a2 2 0 0 1 2 2v2" /> <path vector-effect="non-scaling-stroke" d="M21 17v2a2 2 0 0 1-2 2h-2" /> <path vector-effect="non-scaling-stroke" d="M7 21H5a2 2 0 0 1-2-2v-2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /> <path vector-effect="non-scaling-stroke" d="m16 16-1.9-1.9" /></symbol>
 <symbol id="i-server" viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></symbol>
 <symbol id="i-share-2" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="18" cy="5" r="3" /> <circle vector-effect="non-scaling-stroke" cx="6" cy="12" r="3" /> <circle vector-effect="non-scaling-stroke" cx="18" cy="19" r="3" /> <line vector-effect="non-scaling-stroke" x1="8.59" x2="15.42" y1="13.51" y2="17.49" /> <line vector-effect="non-scaling-stroke" x1="15.41" x2="8.59" y1="6.51" y2="10.49" /></symbol>
 <symbol id="i-shield-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /> <path vector-effect="non-scaling-stroke" d="m9 12 2 2 4-4" /></symbol>
@@ -191,7 +279,6 @@
 <symbol id="i-trending-up" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 7h6v6" /> <path vector-effect="non-scaling-stroke" d="m22 7-8.5 8.5-5-5L2 17" /></symbol>
 <symbol id="i-triangle-alert" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path vector-effect="non-scaling-stroke" d="M12 9v4" /> <path vector-effect="non-scaling-stroke" d="M12 17h.01" /></symbol>
 <symbol id="i-upload" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v12" /> <path vector-effect="non-scaling-stroke" d="m17 8-5-5-5 5" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></symbol>
-<symbol id="i-users" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path vector-effect="non-scaling-stroke" d="M16 3.128a4 4 0 0 1 0 7.744" /> <path vector-effect="non-scaling-stroke" d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="7" r="4" /></symbol>
 <symbol id="i-x" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M18 6 6 18" /> <path vector-effect="non-scaling-stroke" d="m6 6 12 12" /></symbol>
 </svg>
 
@@ -206,7 +293,7 @@
       <a href="/#funkcje">Funkcje</a>
       <a href="/#niezawodnosc">Niezawodność</a>
       <a href="/#bezpieczenstwo">Bezpieczeństwo</a>
-      <a href="/#pakiety">Pakiety</a>
+      <a href="/#cennik">Cennik</a>
       <a href="/#faq">FAQ</a>
     </nav>
     <div class="nav-akcje">
@@ -218,7 +305,7 @@
         <svg class="ik ik-ksiezyc" aria-hidden="true" focusable="false"><use href="#i-moon"/></svg>
       </button>
       <a class="zaloguj" href="https://app.content-ai.net/">Zaloguj się</a>
-      <a class="btn btn-glowny nav-cta" href="/#dostep">Poproś o dostęp</a>
+      <a class="btn btn-glowny nav-cta" href="https://app.content-ai.net/rejestracja">Załóż konto</a>
       <a class="ikona-btn menu-btn" href="#stopka-spis" aria-label="Otwórz menu" data-otworz="Otwórz menu" data-zamknij="Zamknij menu">
         <svg class="ik ik-menu" aria-hidden="true" focusable="false"><use href="#i-menu"/></svg>
         <svg class="ik ik-x" aria-hidden="true" focusable="false"><use href="#i-x"/></svg>
@@ -231,11 +318,11 @@
       <a href="/#funkcje">Funkcje</a>
       <a href="/#niezawodnosc">Niezawodność</a>
       <a href="/#bezpieczenstwo">Bezpieczeństwo</a>
-      <a href="/#pakiety">Pakiety</a>
+      <a href="/#cennik">Cennik</a>
       <a href="/#faq">FAQ</a>
       <div class="menu-dol">
         <a href="/en/" hreflang="en" lang="en">English</a>
-        <a class="btn btn-glowny" href="/#dostep">Poproś o dostęp</a>
+        <a class="btn btn-glowny" href="https://app.content-ai.net/rejestracja">Załóż konto</a>
       </div>
     </nav>
   </div>
@@ -246,15 +333,15 @@
   <section class="hero" aria-labelledby="h1">
     <div class="kont hero-siatka">
       <div class="hero-tekst">
-        <p class="etyk">Treści pod SEO, AIO, AEO i GEO</p>
+        <p class="etyk">Dla zespołów marketingu, agencji SEO i autorów</p>
         <h1 id="h1">Treści pod Google i odpowiedzi AI. <span class="zakr">Pisane z Twoich źródeł.</span></h1>
-        <p class="lead">Content AI pisze artykuły z Twojej bazy wiedzy, a czego w niej brakuje, szuka w sieci i podaje źródło. Potem ocenia tekst pod SEO, AIO, AEO i GEO, sprawdza fakty oraz linki i pokazuje, co poprawić.</p>
+        <p class="lead">Content AI pisze artykuły z Twoich dokumentów, a nie z pamięci modelu. Czego w nich brakuje, szuka w sieci i podaje źródło. Potem ocenia tekst pod SEO, AIO, AEO i GEO, sprawdza fakty oraz linki i pokazuje, co poprawić.</p>
         <div class="cta">
-          <a class="btn btn-glowny btn-duzy" href="#dostep">Poproś o dostęp<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
-          <a class="btn btn-drugi btn-duzy" href="#jak">Zobacz, jak to działa</a>
+          <a class="btn btn-glowny btn-duzy" href="https://app.content-ai.net/rejestracja">Załóż konto<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn-drugi btn-duzy" href="#jak">Zobacz przykład</a>
         </div>
         <p class="mala">Masz konto? <a class="link" href="https://app.content-ai.net/">Zaloguj się</a></p>
-        <p class="mala mala-2">Konto zakłada administrator. Nowe zaczyna od pakietu Darmowego: 3 artykuły na spróbowanie.</p>
+        <p class="mala mala-2">Pakiet Darmowy: 3 artykuły na start, bez karty. Teksty powstają na Twoim kluczu API Anthropic: za model płacisz bezpośrednio dostawcy, orientacyjnie 0,25-0,50 USD za artykuł. <a class="link" href="/klucz-api/">Jak zdobyć klucz API</a></p>
       </div>
 
       <figure class="ramka" id="ramka" aria-labelledby="ramka-opis">
@@ -310,7 +397,7 @@
       <ul class="dowody" aria-label="Fakty o produkcie">
         <li><b>4 oceny</b><span>SEO, AIO, AEO i GEO dla każdego tekstu</span></li>
         <li><b>Kontrola faktów</b><span>liczby, twierdzenia i linki względem Twoich źródeł</span></li>
-        
+
         <li><b class="licz" data-cel="501">501</b><span>testy serwera przy każdej zmianie kodu</span></li>
         <li><b>0</b><span>zależności npm na serwerze</span></li>
         <li><b>PL · EN · DE · CS</b><span>języki generowanych treści</span></li>
@@ -386,9 +473,9 @@
             <div class="ekran-pasek"><svg class="ik"><use href="#i-library"/></svg>Źródła</div>
             <div class="ekran-tresc">
               <ul class="baza">
-                <li><svg class="ik"><use href="#i-file-text"/></svg><span>oferta-crm.pdf</span><em>wspólna</em><i class="trafnosc"><b class="w92"></b></i></li>
-                <li><svg class="ik"><use href="#i-file-text"/></svg><span>ankieta-klientow.xlsx</span><em>prywatna</em><i class="trafnosc"><b class="w86"></b></i></li>
-                <li><svg class="ik"><use href="#i-file-text"/></svg><span>cennik-pakietow.pdf</span><em>wspólna</em><i class="trafnosc"><b class="w71"></b></i></li>
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>oferta-crm.pdf</span><em>PDF</em><i class="trafnosc"><b class="w92"></b></i></li>
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>ankieta-klientow.xlsx</span><em>XLSX</em><i class="trafnosc"><b class="w86"></b></i></li>
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>cennik-pakietow.pdf</span><em>PDF</em><i class="trafnosc"><b class="w71"></b></i></li>
                 <li class="baza-slaby"><svg class="ik"><use href="#i-globe"/></svg><span>example.com/crm</span><em>URL</em><i class="trafnosc"><b class="w24"></b></i></li>
               </ul>
               <p class="ekran-meta">fragmenty pasujące do tematu</p>
@@ -398,7 +485,7 @@
             <span class="krok-nr">2</span>
             <h3>Źródła</h3>
             <p>Pliki PDF, DOCX, XLSX, PPTX, TXT i CSV, strony z adresu, notatki i nagrania do transkrypcji. Z bazy na serwerze do tekstu trafiają tylko fragmenty pasujące do tematu.</p>
-            <p class="krok-cap">Baza wiedzy prywatna i wspólna, na serwerze</p>
+            <p class="krok-cap">Baza wiedzy na serwerze, tylko dla Twojego konta</p>
           </div>
         </li>
         <li class="krok" id="krok-3">
@@ -488,7 +575,7 @@
             <p><span class="z" data-z="aio aeo">System CRM to program, który zbiera w jednym miejscu kontakty z klientami, historię rozmów i etap każdej sprzedaży.</span> <span class="z" data-z="aio geo">Według ankiety wśród 120 klientów 7 na 10 firm wdraża go, gdy oferty zaczynają ginąć w skrzynce.</span></p>
             <h4><span class="z" data-z="aeo seo">Ile kosztuje CRM dla 5 osób?</span></h4>
             <p><span class="z" data-z="aeo">Pakiet Start obejmuje do 5 użytkowników i import kontaktów z pliku CSV.</span> <span class="z" data-z="geo">Przy wyborze liczą się trzy rzeczy: import kontaktów, integracja z pocztą i cena za użytkownika.</span></p>
-            <p class="k-opis-meta"><span class="z" data-z="seo">Jak wybrać system CRM dla małej firmy: import kontaktów, poczta i cena za użytkownika na podstawie oferty i ankiety.</span> <span class="mono">meta, 128 zn.</span></p>
+            <p class="k-opis-meta"><span class="z" data-z="seo">Jak wybrać system CRM dla małej firmy: import kontaktów, integracja z pocztą i cena za użytkownika, na podstawie oferty i ankiety wśród 120 klientów firmy.</span> <span class="mono">meta, 155 zn.</span></p>
           </article>
           <aside class="margines" aria-live="polite">
             <div class="pow-opis" data-dla="seo">
@@ -606,7 +693,7 @@
         <article class="kafel kb5 wej">
           <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-library"/></svg></span>
           <h3>Baza wiedzy</h3>
-          <p>Prywatna i wspólna dla zespołu. Dokumenty leżą na serwerze, więc są dostępne na każdym urządzeniu, a do tekstu trafiają tylko pasujące fragmenty.</p>
+          <p>Dokumenty firmy leżą na serwerze, więc są dostępne na każdym urządzeniu, a do tekstu trafiają tylko pasujące fragmenty.</p>
           <div class="podglad frag" aria-hidden="true">
             <div><span>oferta-crm.pdf</span><i><b class="w92"></b></i><span class="mono">0,92</span></div>
             <div><span>ankieta-klientow.xlsx</span><i><b class="w86"></b></i><span class="mono">0,86</span></div>
@@ -668,7 +755,7 @@
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Głos marki: wystarczy wkleić 2-5 tekstów firmy, żeby model przejął ich styl</li>
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Samokorekta: model ocenia gotowy tekst i poprawia go według oceny (trwa 2-3 razy dłużej)</li>
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Generowanie grupowe: lista tematów, jeden w każdej linii</li>
-          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Strony na rynki eksportowe: Niemcy, Czechy, Słowacja, Holandia i Francja</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Typy treści: artykuł, wpis blogowy, strona FAQ, strona docelowa, opis produktu lub usługi i informacja prasowa</li>
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Widoczność marki w odpowiedziach AI: migawka na żądanie</li>
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Pliki llms.txt, reguły robots.txt dla botów AI i linki UTM</li>
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Dyktowanie i czytanie tekstu na głos</li>
@@ -707,25 +794,25 @@
       <header class="sek-nag wej">
         <p class="etyk"><span class="etyk-nr">07</span>Bezpieczeństwo</p>
         <h2 id="h-sec">Klucze i dane pod kontrolą.</h2>
-        <p class="sek-lead">Content AI przechowuje klucze API i dokumenty firm, więc ma jak najmniej miejsc, w których coś mogłoby pójść nie tak.</p>
+        <p class="sek-lead">Poniżej dokładnie, co zostaje w Twojej przeglądarce, co trafia na serwer Content AI, a co do dostawcy AI.</p>
       </header>
       <div class="sec-siatka">
         <figure class="droga wej" aria-labelledby="droga-tytul">
           <figcaption id="droga-tytul" class="droga-tytul">Droga zapytania</figcaption>
           <ol class="droga-lista">
-            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-monitor"/></svg></span><b>Przeglądarka</b><span>wysyła temat i ustawienia, bez klucza serwera</span></li>
-            <li class="droga-srodek"><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-server"/></svg></span><b>Serwer Content AI</b><span>sprawdza sesję i limit pakietu, dołącza klucz</span><span class="droga-klucz"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg></span></li>
-            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-bot"/></svg></span><b>Dostawca AI</b><span>dostaje temat i pasujące fragmenty bazy</span></li>
+            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-monitor"/></svg></span><b>Przeglądarka</b><span>wysyła temat, ustawienia i pasujące fragmenty bazy, a Twój klucz API w zaszyfrowanym ciasteczku</span></li>
+            <li class="droga-srodek"><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-server"/></svg></span><b>Serwer Content AI</b><span>sprawdza sesję i limit pakietu, odszyfrowuje klucz na czas zapytania i przekazuje zapytanie</span><span class="droga-klucz"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg></span></li>
+            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-bot"/></svg></span><b>Dostawca AI</b><span>odpowiada na zapytanie i rozlicza je na Twoim koncie</span></li>
           </ol>
-          <p class="droga-nota"><svg class="znacznik ik" aria-hidden="true"><use href="#i-info"/></svg>Własny klucz przechodzi przez serwer z każdym zapytaniem i nie jest zapisywany.</p>
+          <p class="droga-nota"><svg class="znacznik ik" aria-hidden="true"><use href="#i-info"/></svg>Serwer nie zapisuje Twojego klucza: odszyfrowuje go tylko na czas zapytania.</p>
         </figure>
         <ul class="sec-lista">
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg><h3>Klucze serwera zostają na serwerze</h3><p>Przeglądarka nigdy ich nie dostaje: aplikacja wysyła zapytanie do serwera, a dopiero serwer łączy się z dostawcą AI.</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-lock"/></svg><h3>Własny klucz bez zapisu na serwerze</h3><p>W pakietach Standard i Premium można użyć własnego klucza. Jest zapisany tylko w przeglądarce, a serwer przekazuje go dostawcy z każdym zapytaniem i niczego nie zapisuje.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg><h3>Twój klucz API trzyma tylko Twoja przeglądarka</h3><p>Klucz zapisujesz w aplikacji, a przeglądarka trzyma go w zaszyfrowanym ciasteczku, którego nie odczyta żaden skrypt na stronie ani inne konto. Przy każdym zapytaniu trafia szyfrowanym połączeniem do serwera Content AI, który przekazuje go dostawcy AI. Serwer nie zapisuje klucza na dysku ani w dziennikach i nie używa go do niczego innego.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-chart-column"/></svg><h3>Koszty modelu na Twoim koncie</h3><p>Każde zapytanie do modelu rozlicza Twoje konto u dostawcy, nie nasze. Limit wydatków ustawiasz w konsoli dostawcy, a szacunkowy koszt każdego tekstu widzisz w aplikacji.</p></li>
           <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-shield-check"/></svg><h3>Hasła i sesje</h3><p>Hasła haszowane scryptem z losową solą. Po 8 nieudanych próbach z jednego adresu logowanie jest blokowane na 15 minut. Sesja trwa w podpisanym ciasteczku HttpOnly.</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-users"/></svg><h3>Dostęp do dokumentów</h3><p>Bazę prywatną widzi tylko jej właściciel, wspólną cały zespół. Do wspólnej dodaje wyłącznie administrator.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-lock"/></svg><h3>Twoje dokumenty widzi tylko Twoje konto</h3><p>Dokumenty z Twojej bazy wiedzy leżą na serwerze Content AI i widzi je tylko Twoje konto. Przy pisaniu do dostawcy modelu trafiają z nich tylko fragmenty pasujące do tematu.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-credit-card"/></svg><h3>Płatności przez Stripe</h3><p>Dane karty wpisujesz na stronie Stripe. Content AI ich nie widzi i nie przechowuje; od Stripe dostaje tylko stan płatności i dane potrzebne do jej rozliczenia.</p></li>
           <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-package"/></svg><h3>Nic z obcych serwerów</h3><p>Aplikacja nie pobiera skryptów ani fontów z zewnątrz: biblioteki i krój pisma pochodzą z tego samego serwera. Serwer nie ma ani jednej zależności npm.</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-scan-search"/></svg><h3>Bezpieczne pobieranie stron</h3><p>Adres dodawany do bazy wiedzy jest sprawdzany przy każdym przekierowaniu, więc serwer nie odpyta sieci wewnętrznej.</p></li>
         </ul>
       </div>
     </div>
@@ -738,55 +825,89 @@
         <h2 id="h-who">Dla zespołów, które piszą dużo i nie mogą sobie pozwolić na pomyłki.</h2>
       </header>
       <ul class="kto">
-        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-megaphone"/></svg><h3>Zespoły marketingu</h3><p>Wspólna baza wiedzy, jedna konfiguracja marki dla wszystkich i osobne konta. Nowa osoba pisze od pierwszego dnia według tych samych zasad.</p></li>
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-megaphone"/></svg><h3>Zespoły marketingu</h3><p>Baza wiedzy z dokumentami firmy, głos marki i reguły marki w jednym miejscu. Każdy tekst powstaje według tych samych zasad.</p></li>
         <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-trending-up"/></svg><h3>Agencje SEO</h3><p>Analiza SERP, luki, oceny pod cztery powierzchnie i generowanie grupowe. Gotowy tekst trafia prosto do WordPressa lub Drupala.</p></li>
         <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-notebook-pen"/></svg><h3>Autorzy i redakcje</h3><p>Dyktowanie, kontrola faktów z cytatem fragmentu i wersje przed samokorektą i po niej. Tekst do publikacji, nie do przepisywania.</p></li>
-        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-languages"/></svg><h3>Firmy z rynkami zagranicznymi</h3><p>Treści po polsku, angielsku, niemiecku i czesku oraz strony kierunkowe dla pięciu rynków eksportowych.</p></li>
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-languages"/></svg><h3>Firmy z rynkami zagranicznymi</h3><p>Treści po polsku, angielsku, niemiecku i czesku z tej samej bazy wiedzy, pisane od razu w wybranym języku.</p></li>
       </ul>
     </div>
   </section>
 
-  <section class="sekcja" id="pakiety" aria-labelledby="h-plan">
+  <section class="sekcja" id="cennik" aria-labelledby="h-plan">
+    <span class="kotwica" id="pakiety"></span>
     <div class="kont">
       <header class="sek-nag wej">
-        <p class="etyk"><span class="etyk-nr">09</span>Pakiety</p>
-        <h2 id="h-plan">Trzy pakiety. Zużycie zawsze widać w aplikacji.</h2>
+        <p class="etyk"><span class="etyk-nr">09</span>Cennik</p>
+        <h2 id="h-plan">Płacisz nam za narzędzie, a dostawcy za model.</h2>
+        <p class="sek-lead">Każdy pakiet działa na Twoim kluczu API Anthropic, więc zużycie modelu rozlicza Twoje konto u dostawcy. Pakiet decyduje o tym, ile artykułów, grafik i nagrań przygotujesz i z których funkcji korzystasz.</p>
       </header>
       <div class="pakiety">
         <article class="pakiet wej" aria-labelledby="pk-free">
           <h3 id="pk-free">Darmowy</h3>
-          <p class="pakiet-opis">Na spróbowanie.</p>
+          <p class="pakiet-cena"><b>0 zł</b> <span>bez karty</span></p>
+          <p class="pakiet-opis">Na spróbowanie, na własnym kluczu API.</p>
           <ul>
-            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>3 artykuły, bez odnawiania</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>3 artykuły na start, bez odnawiania</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>do 3 dokumentów w bazie wiedzy</li>
-            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>oceny, kontrola faktów, przeróbki i eksport plików</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>oceny SEO, AIO, AEO i GEO, kontrola faktów, przeróbki i eksport plików</li>
           </ul>
-          <a class="btn btn-drugi" href="#dostep" data-pakiet="darmowy" aria-label="Poproś o dostęp: pakiet Darmowy">Poproś o dostęp</a>
+          <a class="btn btn-drugi" href="https://app.content-ai.net/rejestracja">Zacznij za darmo</a>
         </article>
         <article class="pakiet pakiet-wyroz wej" aria-labelledby="pk-std">
           <h3 id="pk-std">Standard</h3>
+          <p class="pakiet-cena"><b>79 zł</b> <span>miesięcznie</span></p>
           <p class="pakiet-opis">Do regularnej pracy nad treścią.</p>
           <ul>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>50 artykułów miesięcznie</li>
-            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>50 grafik, 20 nagrań audio i 20 transkrypcji miesięcznie</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>50 grafik, 20 transkrypcji i 20 fragmentów audio miesięcznie (fragment to do 2400 znaków czytanego tekstu albo jedna wypowiedź podcastu)</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>do 50 dokumentów w bazie wiedzy</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>analiza SERP i luki</li>
-            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>własny klucz API i publikacja w CMS</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>publikacja w WordPressie i Drupalu</li>
           </ul>
-          <a class="btn btn-glowny" href="#dostep" data-pakiet="standard" aria-label="Poproś o dostęp: pakiet Standard">Poproś o dostęp</a>
+          <a class="btn btn-glowny" href="https://app.content-ai.net/rejestracja?pakiet=standard">Wybierz Standard</a>
         </article>
         <article class="pakiet wej" aria-labelledby="pk-pro">
           <h3 id="pk-pro">Premium</h3>
+          <p class="pakiet-cena"><b>199 zł</b> <span>miesięcznie</span></p>
           <p class="pakiet-opis">Wszystko, bez limitów sztukowych.</p>
           <ul>
-            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>bez limitu artykułów, grafik, audio i dokumentów</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>bez limitu artykułów, grafik, audio i transkrypcji</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>bez limitu dokumentów w bazie wiedzy</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>wszystko, co w pakiecie Standard</li>
-            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>dane z OpenSEO: frazy i pozycje</li>
           </ul>
-          <a class="btn btn-drugi" href="#dostep" data-pakiet="premium" aria-label="Poproś o dostęp: pakiet Premium">Poproś o dostęp</a>
+          <a class="btn btn-drugi" href="https://app.content-ai.net/rejestracja?pakiet=premium">Wybierz Premium</a>
         </article>
       </div>
-      <p class="pakiety-nota wej">Pakiet przydziela administrator. Liczniki miesięczne odnawiają się pierwszego dnia miesiąca. Każdy pakiet ma też sufit wywołań modelu (30 na start, 750 miesięcznie, bez limitu), bo jeden artykuł to kilka wywołań. Limity obowiązują także przy własnym kluczu.</p>
+      <div class="pakiety-noty wej">
+        <p class="pakiety-nota">Każdy pakiet wymaga własnego klucza API Anthropic. Koszt modelu, orientacyjnie 0,25-0,50 USD za artykuł, płacisz dostawcy na swoim koncie. Za pakiet płatny płacisz co miesiąc z góry przez Stripe, a zmieniasz go albo anulujesz w ustawieniach konta. Po anulowaniu pakiet działa do końca opłaconego miesiąca. Podane kwoty są cenami końcowymi.</p>
+        <p class="pakiety-nota pakiety-nota-2">W oknie zakupu możesz zapłacić w złotych albo w euro: Standard 19 EUR, Premium 49 EUR miesięcznie. Liczniki miesięczne odnawiają się pierwszego dnia miesiąca, a pakiety Darmowy i Standard mają też sufit wywołań modelu, który chroni przed nadużyciem. Po każdej płatności Stripe wysyła potwierdzenie na Twój adres e-mail, a rachunek wystawiamy na prośbę.</p>
+        <p class="pakiety-nota pakiety-nota-2">Zasady płatności, anulowania i odstąpienia od umowy opisują <a class="link" href="https://app.content-ai.net/dokumenty/regulamin?lang=pl">Regulamin</a> i <a class="link" href="https://app.content-ai.net/dokumenty/odstapienie?lang=pl">pouczenie o odstąpieniu od umowy</a>.</p>
+        <p class="pakiety-klucz"><a class="link kafel-link" href="/klucz-api/">Jak zdobyć klucz API i ile kosztuje artykuł<svg class="ik" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></p>
+      </div>
+
+      <details class="porownanie wej" open>
+        <summary>Porównaj pakiety<svg class="ik" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+        <table class="cennik-tabela">
+          <caption class="sr">Porównanie pakietów</caption>
+          <thead><tr><th scope="col">Co obejmuje pakiet</th><th scope="col">Darmowy</th><th scope="col">Standard</th><th scope="col">Premium</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Cena</th><td data-et="Darmowy">0 zł</td><td data-et="Standard">79 zł miesięcznie</td><td data-et="Premium">199 zł miesięcznie</td></tr>
+            <tr><th scope="row">Artykuły</th><td data-et="Darmowy">3 na start</td><td data-et="Standard">50 miesięcznie</td><td data-et="Premium">bez limitu</td></tr>
+            <tr><th scope="row">Grafiki</th><td data-et="Darmowy">nie</td><td data-et="Standard">50 miesięcznie</td><td data-et="Premium">bez limitu</td></tr>
+            <tr><th scope="row">Fragmenty audio</th><td data-et="Darmowy">nie</td><td data-et="Standard">20 miesięcznie</td><td data-et="Premium">bez limitu</td></tr>
+            <tr><th scope="row">Transkrypcje</th><td data-et="Darmowy">nie</td><td data-et="Standard">20 miesięcznie</td><td data-et="Premium">bez limitu</td></tr>
+            <tr><th scope="row">Dokumenty w bazie wiedzy</th><td data-et="Darmowy">do 3</td><td data-et="Standard">do 50</td><td data-et="Premium">bez limitu</td></tr>
+            <tr><th scope="row">Oceny SEO, AIO, AEO i GEO, kontrola faktów</th><td data-et="Darmowy">tak</td><td data-et="Standard">tak</td><td data-et="Premium">tak</td></tr>
+            <tr><th scope="row">Przeróbki i eksport: DOCX, PDF, TXT, JSON-LD</th><td data-et="Darmowy">tak</td><td data-et="Standard">tak</td><td data-et="Premium">tak</td></tr>
+
+            <tr><th scope="row">Analiza SERP i luki</th><td data-et="Darmowy">nie</td><td data-et="Standard">tak</td><td data-et="Premium">tak</td></tr>
+            <tr><th scope="row">Publikacja w WordPressie i Drupalu</th><td data-et="Darmowy">nie</td><td data-et="Standard">tak</td><td data-et="Premium">tak</td></tr>
+            <tr><th scope="row">Klucz API Anthropic (tekst)</th><td data-et="Darmowy">wymagany</td><td data-et="Standard">wymagany</td><td data-et="Premium">wymagany</td></tr>
+            <tr><th scope="row">Klucz API OpenAI (grafiki, lektor, transkrypcja)</th><td data-et="Darmowy">nie dotyczy</td><td data-et="Standard">opcjonalnie</td><td data-et="Premium">opcjonalnie</td></tr>
+            <tr><th scope="row">Klucz API ElevenLabs (lepszy lektor)</th><td data-et="Darmowy">nie dotyczy</td><td data-et="Standard">opcjonalnie</td><td data-et="Premium">opcjonalnie</td></tr>
+          </tbody>
+        </table>
+      </details>
     </div>
   </section>
 
@@ -798,96 +919,47 @@
       </header>
       <div class="faq-lista wej">
         <details><summary>Czym Content AI różni się od czatu z AI?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Czat odpowiada z pamięci modelu. Content AI pisze z Twojej bazy wiedzy, sięga do sieci tylko po brakujące informacje i podaje źródła, a potem ocenia tekst pod SEO, AIO, AEO i GEO i sprawdza fakty. Wszystko w jednym oknie, od tematu do publikacji.</p></details>
+        <details><summary>Czego potrzebuję, żeby zacząć?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Konta w Content AI (e-mail i hasło) i klucza API Anthropic, na którym powstają teksty. Klucz jest potrzebny w każdym pakiecie, także w Darmowym. Klucze OpenAI (grafiki, lektor, transkrypcja) i ElevenLabs (lepszy lektor) są opcjonalne. Pakiet Darmowy daje 3 artykuły na start, bez karty.</p></details>
+        <details><summary>Jak zdobyć klucz API i ile kosztuje model?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>W konsoli Anthropic zakładasz konto, doładowujesz je i tworzysz klucz; to około 10 minut. Za model płacisz dostawcy na swoim koncie, orientacyjnie 0,25-0,50 USD za artykuł o długości około 800 słów z oceną i kontrolą faktów. Instrukcja krok po kroku i wyliczenie są na stronie <a class="link" href="/klucz-api/">„Jak zdobyć klucz API”</a>.</p></details>
+        <details><summary>Gdzie trafia mój klucz API?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Trzyma go tylko Twoja przeglądarka, w zaszyfrowanym ciasteczku przypisanym do Twojego konta; inne konto go nie odczyta. Z opcją „Zapamiętaj na tym urządzeniu” klucz zostaje przez 30 dni, także po wylogowaniu, a bez niej do zamknięcia przeglądarki. Usuwa go przycisk „Usuń klucz”, wylogowanie na wszystkich urządzeniach, zmiana hasła i usunięcie konta. Przy każdym zapytaniu serwer Content AI przekazuje klucz dostawcy AI i nie zapisuje go ani na dysku, ani w dziennikach.</p></details>
         <details><summary>Skąd model bierze fakty?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Z bazy wiedzy. Przy włączonym wyszukiwaniu w sieci brakujące informacje pochodzą ze stron wymienionych pod artykułem. Informacje o Twojej firmie zawsze tylko z bazy.</p></details>
         <details><summary>Czy tekst będzie wolny od błędów?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Żadne narzędzie AI tego nie gwarantuje. Content AI ogranicza ryzyko: liczby i linki pochodzą ze źródeł, a kontrola faktów wypisuje zdania, których źródła nie potwierdzają, z cytatem fragmentu. Ostatnie słowo zawsze należy do człowieka.</p></details>
-        <details><summary>Jakich modeli AI używa Content AI?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Teksty pisze model Claude firmy Anthropic. Serwer można przełączyć na modele open source przez NVIDIA NIM bez zmian w aplikacji. Grafiki, lektor i transkrypcja korzystają z OpenAI, a opcjonalny lektor z ElevenLabs.</p></details>
-        <details><summary>Czy mogę użyć własnego klucza API?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Tak, w pakietach Standard i Premium, dla Anthropic, OpenAI i ElevenLabs. Koszt modelu idzie wtedy na Twoje konto u dostawcy. Klucz jest zapisany tylko w przeglądarce, serwer przekazuje go dostawcy z każdym zapytaniem i niczego nie zapisuje. Limity pakietu obowiązują nadal.</p></details>
-        <details><summary>Gdzie trafiają moje dokumenty?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Dokumenty bazy wiedzy leżą na serwerze Content AI: prywatne widzi tylko właściciel, wspólne cały zespół. Przy generowaniu dostawca modelu dostaje z nich tylko fragmenty pasujące do tematu. Historia tekstów zostaje w przeglądarce.</p></details>
-        <details><summary>Skąd pochodzą dane SERP?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Zależy od konfiguracji serwera: z wyszukiwania prowadzonego przez model (wtedy to szacunek) albo z API DataForSEO (wtedy to zmierzone wyniki organiczne). Analiza SERP jest dostępna od pakietu Standard.</p></details>
+        <details><summary>Jak płacę za pakiet?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Pakiety płatne opłacasz przez Stripe, co miesiąc z góry, w złotych albo w euro: walutę wybierasz w oknie zakupu. Dane karty wpisujesz na stronie Stripe, a Content AI ich nie widzi. Płatne pakiety są dostępne dla klientów z adresem rozliczeniowym w Unii Europejskiej. Po każdej płatności Stripe wysyła potwierdzenie na Twój adres e-mail.</p></details>
+        <details><summary>Jaki dokument dostanę po płatności?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Po każdej płatności Stripe wysyła na Twój adres e-mail potwierdzenie płatności. Rachunek wystawiamy na prośbę: napisz na <a class="link" href="mailto:kontakt@content-ai.net">kontakt@content-ai.net</a> w ciągu 3 miesięcy od końca miesiąca, w którym była płatność, i podaj jej datę. Ceny na stronie są cenami końcowymi.</p></details>
+        <details><summary>Jak zmienić albo anulować pakiet?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>W ustawieniach konta w aplikacji otwierasz panel płatności Stripe: tam zmienisz pakiet albo kartę i anulujesz subskrypcję. Po anulowaniu pakiet działa do końca opłaconego miesiąca, potem konto przechodzi na pakiet Darmowy, a historia tekstów i dokumenty zostają. W ciągu 14 dni od zakupu możesz też odstąpić od umowy: zasady opisuje <a class="link" href="https://app.content-ai.net/dokumenty/odstapienie?lang=pl">pouczenie o odstąpieniu</a>.</p></details>
+        <details><summary>Jak Content AI podchodzi do AI Act?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Za publikację odpowiada publikujący: realistyczne grafiki i nagrania oraz teksty informujące o sprawach publicznych bez przeglądu redakcyjnego trzeba oznaczyć jako wygenerowane przez AI. Przy lektorze aplikacja informuje, że głos jest syntetyczny. Kto za co odpowiada, opisujemy na stronie <a class="link" href="/ai-act/">„AI Act i przejrzystość”</a>.</p></details>
+        <details><summary>Gdzie trafiają moje dokumenty?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Dokumenty bazy wiedzy leżą na serwerze Content AI i widzi je tylko Twoje konto. Przy pisaniu dostawca modelu dostaje z nich tylko fragmenty pasujące do tematu. Gotowe teksty i ich historia zostają w Twojej przeglądarce.</p></details>
+        <details><summary>Jakich modeli AI używa Content AI?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Teksty, oceny i kontrolę faktów przygotowują modele firmy Anthropic. Grafiki, lektor i transkrypcja korzystają z modeli OpenAI, a lepszy lektor z ElevenLabs. Każdy z tych dostawców rozlicza zużycie na Twoim kluczu API.</p></details>
+        <details><summary>Skąd pochodzą dane SERP?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Analizę wyników Google robi model z wyszukiwaniem w sieci, na Twoim kluczu API. To szacunek wyników, a nie pomiar pozycji. Analiza SERP jest dostępna od pakietu Standard.</p></details>
+        <details><summary>Mam konto założone przez administratora. Co się zmienia?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Logujesz się jak dotąd, a pakiet, limity i dokumenty zostają. Teksty dalej powstają na kluczach serwera, więc nie potrzebujesz własnego klucza ani płatnego pakietu. Własny klucz możesz wpisać, jeśli wolisz rozliczać model na swoim koncie.</p></details>
         <details><summary>W jakich językach działa Content AI?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Interfejs jest po polsku i po angielsku. Treści powstają po polsku, angielsku, niemiecku i czesku.</p></details>
-        <details><summary>Jak założyć konto?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Przez formularz „Poproś o dostęp” na tej stronie. Konto zakłada administrator, a nowe konto zaczyna od pakietu Darmowego: 3 artykuły na spróbowanie.</p></details>
       </div>
     </div>
   </section>
 
-  <section class="koniec" id="dostep" aria-labelledby="h-dostep">
+  <section class="koniec" id="start" aria-labelledby="h-start">
+    <span class="kotwica" id="dostep"></span>
     <div class="kont koniec-siatka">
       <div class="koniec-tekst wej">
-        <h2 id="h-dostep">Następny tekst z Twoich źródeł, nie z domysłów.</h2>
-        <p class="sek-lead">Tekst, oceny, kontrola faktów, grafika, audio i publikacja. Od tematu do gotowego artykułu w jednym oknie.</p>
+        <h2 id="h-start">Następny tekst z Twoich źródeł, nie z domysłów.</h2>
+        <p class="sek-lead">Konto zakładasz sam, w minutę. Pierwsze 3 artykuły są w pakiecie Darmowym, a płatny pakiet wybierasz wtedy, kiedy go potrzebujesz.</p>
         <div class="koniec-nota" aria-hidden="true">
           <span class="kn-linia"><span class="kn-zakr">System CRM dla małej firmy: od czego zacząć</span></span>
           <span class="notka notka-ok"><svg class="znacznik ik"><use href="#i-circle-check"/></svg><span><b>Gotowe do publikacji</b></span></span>
         </div>
-        <p class="mala">Masz już konto? <a class="link" href="https://app.content-ai.net/">Zaloguj się</a></p>
       </div>
-      
-      <form class="formularz wej" id="formularz" data-api="https://app.content-ai.net/api/prosba-o-dostep" data-jezyk="pl" novalidate aria-labelledby="form-tytul"
-            data-wysylanie="Wysyłanie…" data-b-imie="Wpisz imię." data-b-email="Wpisz adres e-mail, np. kontakt@firma.pl."
-            data-b-zgoda="Zaznacz zgodę, żebyśmy mogli odpowiedzieć." data-b-dlugie="Ten tekst jest za długi." data-b-pakiet="Wybierz pakiet z listy."
-            data-b-ogolny="Sprawdź pola formularza i spróbuj ponownie." data-b-429="Za dużo prób. Spróbuj ponownie później." data-b-siec="Nie udało się wysłać. Spróbuj za chwilę.">
-        <h3 class="form-tytul" id="form-tytul">Poproś o dostęp do Content AI</h3>
-        <p class="form-nojs" id="form-nojs"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg><span>Formularz wymaga JavaScriptu. Włącz go w przeglądarce, żeby wysłać prośbę o dostęp. Masz już konto? <a class="link" href="https://app.content-ai.net/">Zaloguj się</a></span></p>
-        <fieldset class="pola" id="form-pola" disabled>
-          <div class="dwa">
-            <div class="pole-f">
-              <label for="f-imie">Imię</label>
-              <input id="f-imie" name="imie" autocomplete="given-name" required maxlength="100" aria-describedby="b-imie">
-              <p class="blad" id="b-imie" hidden></p>
-            </div>
-            <div class="pole-f">
-              <label for="f-email">E-mail służbowy</label>
-              <input id="f-email" name="email" type="email" autocomplete="email" required maxlength="200" aria-describedby="b-email" inputmode="email">
-              <p class="blad" id="b-email" hidden></p>
-            </div>
-          </div>
-          <div class="dwa">
-            <div class="pole-f">
-              <label for="f-firma">Firma lub zespół <span class="opc">(opcjonalnie)</span></label>
-              <input id="f-firma" name="firma" autocomplete="organization" maxlength="200" aria-describedby="b-firma">
-              <p class="blad" id="b-firma" hidden></p>
-            </div>
-            <div class="pole-f">
-              <label for="f-pakiet">Pakiet</label>
-              <select id="f-pakiet" name="pakiet" aria-describedby="b-pakiet">
-                <option value="nie-wiem">Jeszcze nie wiem</option>
-                <option value="darmowy">Darmowy</option>
-                <option value="standard">Standard</option>
-                <option value="premium">Premium</option>
-              </select>
-              <p class="blad" id="b-pakiet" hidden></p>
-            </div>
-          </div>
-          <div class="pole-f">
-            <label for="f-wiadomosc">Wiadomość <span class="opc">(opcjonalnie)</span></label>
-            <textarea id="f-wiadomosc" name="wiadomosc" rows="3" maxlength="2000" placeholder="Kto będzie pisać i jakie teksty?" aria-describedby="b-wiadomosc"></textarea>
-            <p class="blad" id="b-wiadomosc" hidden></p>
-          </div>
-          
-          <div class="pulapka" aria-hidden="true">
-            <label for="f-strona">Nie wypełniaj tego pola</label>
-            <input id="f-strona" name="strona" tabindex="-1" autocomplete="off">
-          </div>
-          <div class="pole-f">
-            <label class="zgoda" for="f-zgoda"><input id="f-zgoda" name="zgoda" type="checkbox" required aria-describedby="b-zgoda"><span>Zgadzam się na kontakt w sprawie tej prośby. <a class="link" href="/prywatnosc/">Jak przetwarzamy dane</a></span></label>
-            <p class="blad" id="b-zgoda" hidden></p>
-          </div>
-          <div class="form-dol">
-            <button class="btn btn-glowny btn-duzy form-wyslij" type="submit"><span class="fw-tekst">Wyślij prośbę</span><svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></button>
-            <p class="form-komunikat" id="form-komunikat" role="alert" hidden></p>
-          </div>
-        </fieldset>
-        <div class="wyslano" id="wyslano" hidden tabindex="-1">
-          <p class="wyslano-tytul"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>Prośba wysłana.</p>
-          <p>Odezwiemy się na adres <b class="wyslano-email"></b>.</p>
-          <p class="wyslano-et">Co dalej</p>
-          <ol>
-            <li>Administrator zakłada konto i przydziela pakiet.</li>
-            <li>W wiadomości dostaniesz adres logowania i dane konta.</li>
-            <li>Logujesz się na app.content-ai.net i piszesz pierwszy tekst.</li>
-          </ol>
-        </div>
-      </form>
+      <div class="koniec-start wej">
+        <h3 class="koniec-start-t">Trzy kroki do pierwszego artykułu</h3>
+        <ol class="koniec-kroki">
+          <li>Załóż konto: adres e-mail i hasło, bez karty.</li>
+          <li>Podłącz klucz API Anthropic. Kreator przeprowadzi Cię przez to krok po kroku.</li>
+          <li>Wpisz temat, dodaj dokumenty i wygeneruj pierwszy artykuł.</li>
+        </ol>
+        <p class="cta koniec-cta"><a class="btn btn-glowny btn-duzy" href="https://app.content-ai.net/rejestracja">Załóż konto<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a></p>
+        <p class="mala">Nie masz jeszcze klucza API? <a class="link" href="/klucz-api/">Zobacz, jak go zdobyć i ile kosztuje</a>.</p>
+        <p class="mala">Masz już konto? <a class="link" href="https://app.content-ai.net/">Zaloguj się</a></p>
+        <p class="mala">Przed założeniem konta możesz przeczytać <a class="link" href="https://app.content-ai.net/dokumenty/regulamin?lang=pl">Regulamin</a> i <a class="link" href="https://app.content-ai.net/dokumenty/prywatnosc?lang=pl">Politykę prywatności</a>.</p>
+      </div>
     </div>
   </section>
 </main>
@@ -909,7 +981,7 @@
         <li><a href="/#funkcje">Funkcje</a></li>
         <li><a href="/#niezawodnosc">Niezawodność</a></li>
         <li><a href="/#bezpieczenstwo">Bezpieczeństwo</a></li>
-        <li><a href="/#pakiety">Pakiety</a></li>
+        <li><a href="/#cennik">Cennik</a></li>
         <li><a href="/#faq">FAQ</a></li>
       </ul>
     </nav>
@@ -917,14 +989,18 @@
       <h2 id="st-app">Aplikacja</h2>
       <ul>
         <li><a href="https://app.content-ai.net/">Zaloguj się</a></li>
-        <li><a href="/#dostep">Poproś o dostęp</a></li>
+        <li><a href="https://app.content-ai.net/rejestracja">Załóż konto</a></li>
+        <li><a href="/klucz-api/">Jak zdobyć klucz API</a></li>
       </ul>
     </nav>
     <nav class="stopka-kol" aria-labelledby="st-info">
       <h2 id="st-info">Informacje</h2>
       <ul>
-        <li><a href="/prywatnosc/">Polityka prywatności</a></li>
-        <li><a href="/#dostep">Kontakt</a></li>
+        <li><a href="https://app.content-ai.net/dokumenty/regulamin?lang=pl">Regulamin</a></li>
+        <li><a href="https://app.content-ai.net/dokumenty/prywatnosc?lang=pl">Polityka prywatności</a></li>
+        <li><a href="/ai-act/">AI Act i przejrzystość</a></li>
+        <li><a href="https://app.content-ai.net/dokumenty/uslugodawca?lang=pl">Dane usługodawcy</a></li>
+        <li><a href="mailto:kontakt@content-ai.net">Kontakt: kontakt@content-ai.net</a></li>
         <li><a href="/en/" hreflang="en" lang="en">Read in English</a></li>
       </ul>
     </nav>
@@ -936,7 +1012,7 @@
 </footer>
 
 <div class="pasek-cta" id="pasek-cta" role="region" aria-label="Szybkie akcje" hidden>
-  <a class="btn btn-glowny" href="#dostep">Poproś o dostęp<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
+  <a class="btn btn-glowny" href="https://app.content-ai.net/rejestracja">Załóż konto<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
 </div>
 </body>
 </html>

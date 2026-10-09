@@ -1,0 +1,80 @@
+<!doctype html>
+{# /klucz-api/ (PL) i /en/api-key/ (EN): jak zdobyc klucz API (STR8-05). Koszt artykulu: {{$koszt_artykulu}} i data stanu
+   {{$data_stanu}} z konfiguracja.json; wyliczenie i zrodlo stawek w tekscie key-3-jak (cennik Anthropic). Nazwy przyciskow
+   konsol dostawcow zostaja po angielsku w obu jezykach (STR8-21). #}
+<html lang="{{$jezyk}}">
+<head>
+<meta charset="utf-8">
+<title>{{a:key-meta-title}}</title>
+<meta name="description" content="{{a:key-meta-desc}}">
+<link rel="canonical" href="{{$url}}">
+<link rel="alternate" hreflang="pl" href="{{$url_pl}}">
+<link rel="alternate" hreflang="en" href="{{$url_en}}">
+<link rel="alternate" hreflang="x-default" href="{{$url_en}}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Content AI">
+<meta property="og:title" content="{{a:key-meta-title}}">
+<meta property="og:description" content="{{a:key-meta-desc}}">
+<meta property="og:url" content="{{$url}}">
+<meta property="og:image" content="{{$og_obraz}}">
+<meta property="og:locale" content="{{$og_locale}}">
+{{>glowa}}
+</head>
+<body class="podstrona">
+{{>nawigacja}}
+
+<main id="tresc" class="dokument">
+  <div class="kont dokument-siatka">
+    <header class="dokument-nag">
+      <p class="etyk">{{t:key-kicker}}</p>
+      <h1>{{t:key-h1}}</h1>
+      <p class="lead">{{t:key-lead}}</p>
+      <p class="mala">{{t:key-updated}}</p>
+    </header>
+    <div class="dokument-tresc">
+      <section aria-labelledby="kl-1"><h2 id="kl-1"><span class="etyk-nr">{{nr}}</span>{{t:key-1-t}}</h2><p>{{t:key-1-p}}</p></section>
+      <section aria-labelledby="kl-2"><h2 id="kl-2"><span class="etyk-nr">{{nr}}</span>{{t:key-2-t}}</h2>
+        <ol class="dok-kroki">
+          <li><h3>{{t:key-2-k1-t}}</h3><p>{{t:key-2-k1-p}}</p></li>
+          <li><h3>{{t:key-2-k2-t}}</h3><p>{{t:key-2-k2-p}}</p></li>
+          <li><h3>{{t:key-2-k3-t}}</h3><p>{{t:key-2-k3-p}}</p></li>
+          <li><h3>{{t:key-2-k4-t}}</h3><p>{{t:key-2-k4-p}}</p></li>
+          <li><h3>{{t:key-2-k5-t}}</h3><p>{{t:key-2-k5-p}}</p></li>
+        </ol>
+      </section>
+      <section aria-labelledby="kl-3"><h2 id="kl-3"><span class="etyk-nr">{{nr}}</span>{{t:key-3-t}}</h2><p>{{t:key-3-p}}</p>
+        <table class="dok-tabela">
+          <thead><tr><th scope="col">{{t:key-3-kol-a}}</th><th scope="col">{{t:key-3-kol-b}}</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">{{t:key-3-w1-a}}</th><td data-et="{{a:key-3-kol-b}}">{{t:key-3-w1-b}}</td></tr>
+            <tr><th scope="row">{{t:key-3-w2-a}}</th><td data-et="{{a:key-3-kol-b}}">{{t:key-3-w2-b}}</td></tr>
+            <tr><th scope="row">{{t:key-3-w3-a}}</th><td data-et="{{a:key-3-kol-b}}">{{t:key-3-w3-b}}</td></tr>
+            <tr><th scope="row">{{t:key-3-w4-a}}</th><td data-et="{{a:key-3-kol-b}}">{{t:key-3-w4-b}}</td></tr>
+          </tbody>
+        </table>
+        <p>{{t:key-3-p2}}</p>
+        <details class="dok-wiecej"><summary>{{t:key-3-jak-t}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:key-3-jak}}</p></details>
+      </section>
+      <section aria-labelledby="kl-4"><h2 id="kl-4"><span class="etyk-nr">{{nr}}</span>{{t:key-4-t}}</h2><p>{{t:key-4-p}}</p></section>
+      <section aria-labelledby="kl-5"><h2 id="kl-5"><span class="etyk-nr">{{nr}}</span>{{t:key-5-t}}</h2><p>{{t:key-5-p}}</p></section>
+      <section aria-labelledby="kl-6"><h2 id="kl-6"><span class="etyk-nr">{{nr}}</span>{{t:key-6-t}}</h2><p>{{t:key-6-p}}</p></section>
+      <section aria-labelledby="kl-7"><h2 id="kl-7"><span class="etyk-nr">{{nr}}</span>{{t:key-7-t}}</h2>
+        <dl class="dok-problemy">
+          <div><dt>{{t:key-7-p1-a}}</dt><dd>{{t:key-7-p1-b}}</dd></div>
+          <div><dt>{{t:key-7-p2-a}}</dt><dd>{{t:key-7-p2-b}}</dd></div>
+          <div><dt>{{t:key-7-p3-a}}</dt><dd>{{t:key-7-p3-b}}</dd></div>
+          <div><dt>{{t:key-7-p4-a}}</dt><dd>{{t:key-7-p4-b}}</dd></div>
+          <div><dt>{{t:key-7-p5-a}}</dt><dd>{{t:key-7-p5-b}}</dd></div>
+        </dl>
+      </section>
+      <p class="cta">
+        <a class="btn btn-glowny" href="{{$rejestracja}}">{{t:key-cta}}<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
+        <a class="btn btn-drugi" href="{{$glowna}}">{{t:pod-wroc}}</a>
+      </p>
+    </div>
+  </div>
+</main>
+
+{{>stopka}}
+</body>
+</html>

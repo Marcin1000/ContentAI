@@ -42,7 +42,7 @@
         <h1 id="h1">{{t:hero-h1}}</h1>
         <p class="lead">{{t:hero-lede}}</p>
         <div class="cta">
-          <a class="btn btn-glowny btn-duzy" href="#dostep">{{t:hero-cta1}}<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn-glowny btn-duzy" href="{{$rejestracja}}">{{t:hero-cta1}}<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
           <a class="btn btn-drugi btn-duzy" href="#jak">{{t:hero-cta2}}</a>
         </div>
         <p class="mala">{{t:hero-login-q}} <a class="link" href="{{$app}}">{{t:nav-login}}</a></p>
@@ -181,9 +181,9 @@
             <div class="ekran-pasek"><svg class="ik"><use href="#i-library"/></svg>{{t:how-2-t}}</div>
             <div class="ekran-tresc">
               <ul class="baza">
-                <li><svg class="ik"><use href="#i-file-text"/></svg><span>{{t:demo-plik-1}}</span><em>{{t:how-s2-wspolna}}</em><i class="trafnosc"><b class="w92"></b></i></li>
-                <li><svg class="ik"><use href="#i-file-text"/></svg><span>{{t:demo-plik-3}}</span><em>{{t:how-s2-prywatna}}</em><i class="trafnosc"><b class="w86"></b></i></li>
-                <li><svg class="ik"><use href="#i-file-text"/></svg><span>{{t:demo-plik-2}}</span><em>{{t:how-s2-wspolna}}</em><i class="trafnosc"><b class="w71"></b></i></li>
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>{{t:demo-plik-1}}</span><em>PDF</em><i class="trafnosc"><b class="w92"></b></i></li>
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>{{t:demo-plik-3}}</span><em>XLSX</em><i class="trafnosc"><b class="w86"></b></i></li>
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>{{t:demo-plik-2}}</span><em>PDF</em><i class="trafnosc"><b class="w71"></b></i></li>
                 <li class="baza-slaby"><svg class="ik"><use href="#i-globe"/></svg><span>example.com/crm</span><em>URL</em><i class="trafnosc"><b class="w24"></b></i></li>
               </ul>
               <p class="ekran-meta">{{t:how-s2-frag}}</p>
@@ -521,11 +521,11 @@
         </figure>
         <ul class="sec-lista">
           <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg><h3>{{t:sec-1-t}}</h3><p>{{t:sec-1-p}}</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-lock"/></svg><h3>{{t:sec-2-t}}</h3><p>{{t:sec-2-p}}</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-chart-column"/></svg><h3>{{t:sec-2-t}}</h3><p>{{t:sec-2-p}}</p></li>
           <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-shield-check"/></svg><h3>{{t:sec-3-t}}</h3><p>{{t:sec-3-p}}</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-users"/></svg><h3>{{t:sec-4-t}}</h3><p>{{t:sec-4-p}}</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-package"/></svg><h3>{{t:sec-5-t}}</h3><p>{{t:sec-5-p}}</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-scan-search"/></svg><h3>{{t:sec-6-t}}</h3><p>{{t:sec-6-p}}</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-lock"/></svg><h3>{{t:sec-4-t}}</h3><p>{{t:sec-4-p}}</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-credit-card"/></svg><h3>{{t:sec-5-t}}</h3><p>{{t:sec-5-p}}</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-package"/></svg><h3>{{t:sec-6-t}}</h3><p>{{t:sec-6-p}}</p></li>
         </ul>
       </div>
     </div>
@@ -547,26 +547,33 @@
     </div>
   </section>
 
-  {# ================= 9. PAKIETY (bez cen; liczby z serwer/plany.js, pilnuje buduj_strone.py) ================= #}
-  <section class="sekcja" id="pakiety" aria-labelledby="h-plan">
+  {# ================= 9. CENNIK =================
+     Kwoty z zrodlo/konfiguracja.json (te same co PLATNOSCI_CENY_WYSWIETLANE serwera), liczby i funkcje pakietow
+     z serwer/plany.js: pilnuje buduj_strone.py (LICZBY_PAKIETOW, BEZ_LIMITU, ZERO, FUNKCJE_W_TABELI).
+     Przyciski prowadza do rejestracji z wybranym pakietem. #pakiety zostaje jako kotwica dla starych odnosnikow. #}
+  <section class="sekcja" id="cennik" aria-labelledby="h-plan">
+    <span class="kotwica" id="pakiety"></span>
     <div class="kont">
       <header class="sek-nag wej">
         <p class="etyk"><span class="etyk-nr">09</span>{{t:plan-kicker}}</p>
         <h2 id="h-plan">{{t:plan-title}}</h2>
+        <p class="sek-lead">{{t:plan-lead}}</p>
       </header>
       <div class="pakiety">
         <article class="pakiet wej" aria-labelledby="pk-free">
           <h3 id="pk-free">{{t:plan-free-name}}</h3>
+          <p class="pakiet-cena"><b>{{t:plan-free-price}}</b> <span>{{t:plan-free-period}}</span></p>
           <p class="pakiet-opis">{{t:plan-free-desc}}</p>
           <ul>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-free-1}}</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-free-2}}</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-free-3}}</li>
           </ul>
-          <a class="btn btn-drugi" href="#dostep" data-pakiet="darmowy" aria-label="{{a:plan-cta-label}} {{a:plan-free-name}}">{{t:plan-cta}}</a>
+          <a class="btn btn-drugi" href="{{$rejestracja}}">{{t:plan-free-cta}}</a>
         </article>
         <article class="pakiet pakiet-wyroz wej" aria-labelledby="pk-std">
           <h3 id="pk-std">{{t:plan-std-name}}</h3>
+          <p class="pakiet-cena"><b>{{t:plan-std-price}}</b> <span>{{t:plan-std-period}}</span></p>
           <p class="pakiet-opis">{{t:plan-std-desc}}</p>
           <ul>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-std-1}}</li>
@@ -575,24 +582,54 @@
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-std-4}}</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-std-5}}</li>
           </ul>
-          <a class="btn btn-glowny" href="#dostep" data-pakiet="standard" aria-label="{{a:plan-cta-label}} {{a:plan-std-name}}">{{t:plan-cta}}</a>
+          <a class="btn btn-glowny" href="{{$rejestracja_standard}}">{{t:plan-std-cta}}</a>
         </article>
         <article class="pakiet wej" aria-labelledby="pk-pro">
           <h3 id="pk-pro">{{t:plan-pro-name}}</h3>
+          <p class="pakiet-cena"><b>{{t:plan-pro-price}}</b> <span>{{t:plan-pro-period}}</span></p>
           <p class="pakiet-opis">{{t:plan-pro-desc}}</p>
           <ul>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-pro-1}}</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-pro-2}}</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>{{t:plan-pro-3}}</li>
           </ul>
-          <a class="btn btn-drugi" href="#dostep" data-pakiet="premium" aria-label="{{a:plan-cta-label}} {{a:plan-pro-name}}">{{t:plan-cta}}</a>
+          <a class="btn btn-drugi" href="{{$rejestracja_premium}}">{{t:plan-pro-cta}}</a>
         </article>
       </div>
-      <p class="pakiety-nota wej">{{t:plan-note}}</p>
+      <div class="pakiety-noty wej">
+        <p class="pakiety-nota">{{t:plan-note}}</p>
+        <p class="pakiety-nota pakiety-nota-2">{{t:plan-note-2}}</p>
+        <p class="pakiety-nota pakiety-nota-2">{{t:plan-dokumenty}}</p>
+        <p class="pakiety-klucz"><a class="link kafel-link" href="{{$klucz_api}}">{{t:plan-key-link}}<svg class="ik" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></p>
+      </div>
+      {# Tabela otwarta w HTML (bez JS widac ja wszedzie); strona.js zwija ja na telefonie. #}
+      <details class="porownanie wej" open>
+        <summary>{{t:plan-tab-toggle}}<svg class="ik" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+        <table class="cennik-tabela">
+          <caption class="sr">{{t:plan-tab-caption}}</caption>
+          <thead><tr><th scope="col">{{t:plan-tab-co}}</th><th scope="col">{{t:plan-free-name}}</th><th scope="col">{{t:plan-std-name}}</th><th scope="col">{{t:plan-pro-name}}</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">{{t:plan-tab-cena}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-cena-darmowy}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-cena-standard}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-cena-premium}}</td></tr>
+            <tr><th scope="row">{{t:plan-tab-art}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-art-darmowy}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-art-standard}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-art-premium}}</td></tr>
+            <tr><th scope="row">{{t:plan-tab-graf}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-graf-darmowy}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-graf-standard}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-graf-premium}}</td></tr>
+            <tr><th scope="row">{{t:plan-tab-audio}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-audio-darmowy}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-audio-standard}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-audio-premium}}</td></tr>
+            <tr><th scope="row">{{t:plan-tab-trans}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-trans-darmowy}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-trans-standard}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-trans-premium}}</td></tr>
+            <tr><th scope="row">{{t:plan-tab-dok}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-dok-darmowy}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-dok-standard}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-dok-premium}}</td></tr>
+            <tr><th scope="row">{{t:plan-tab-oceny}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-tak}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-tak}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-tak}}</td></tr>
+            <tr><th scope="row">{{t:plan-tab-eksport}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-tak}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-tak}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-tak}}</td></tr>
+            {# serp i cms: zgodnosc z funkcjami w plany.js pilnuje FUNKCJE_W_TABELI w buduj_strone.py #}
+            <tr><th scope="row">{{t:plan-tab-serp}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-nie}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-tak}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-tak}}</td></tr>
+            <tr><th scope="row">{{t:plan-tab-cms}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-nie}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-tak}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-tak}}</td></tr>
+            <tr><th scope="row">{{t:plan-tab-klucz}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-wymagany}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-wymagany}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-wymagany}}</td></tr>
+            <tr><th scope="row">{{t:plan-tab-openai}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-nd}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-opcja}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-opcja}}</td></tr>
+            <tr><th scope="row">{{t:plan-tab-eleven}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-nd}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-opcja}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-opcja}}</td></tr>
+          </tbody>
+        </table>
+      </details>
     </div>
   </section>
 
-  {# ================= 10. FAQ (ta sama tresc w JSON-LD FAQPage) ================= #}
+  {# ================= 10. FAQ (ta sama tresc w JSON-LD FAQPage, z tymi samymi wariantami) ================= #}
   <section class="sekcja" id="faq" aria-labelledby="h-faq">
     <div class="kont faq-siatka">
       <header class="sek-nag faq-nag wej">
@@ -609,89 +646,41 @@
         <details><summary>{{t:faq-7-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-7-a}}</p></details>
         <details><summary>{{t:faq-8-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-8-a}}</p></details>
         <details><summary>{{t:faq-9-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-9-a}}</p></details>
+        <details><summary>{{t:faq-10-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-10-a}}</p></details>
+        <details><summary>{{t:faq-11-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-11-a}}</p></details>
+        <details><summary>{{t:faq-12-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-12-a}}</p></details>
+        <details><summary>{{t:faq-13-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-13-a}}</p></details>
+        <details><summary>{{t:faq-14-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-14-a}}</p></details>
+        <details><summary>{{t:faq-15-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-15-a}}</p></details>
       </div>
     </div>
   </section>
 
-  {# ================= 11. CTA + FORMULARZ ================= #}
-  <section class="koniec" id="dostep" aria-labelledby="h-dostep">
+  {# ================= 11. ZAKONCZENIE: trzy kroki do pierwszego artykulu (zamiast formularza, D-13) =================
+     #dostep zostaje jako kotwica dla starych odnosnikow z e-maili i dokumentow. #}
+  <section class="koniec" id="start" aria-labelledby="h-start">
+    <span class="kotwica" id="dostep"></span>
     <div class="kont koniec-siatka">
       <div class="koniec-tekst wej">
-        <h2 id="h-dostep">{{t:end-title}}</h2>
+        <h2 id="h-start">{{t:end-title}}</h2>
         <p class="sek-lead">{{t:end-p}}</p>
         <div class="koniec-nota" aria-hidden="true">
           <span class="kn-linia"><span class="kn-zakr">{{t:hero-demo-h}}</span></span>
           <span class="notka notka-ok"><svg class="znacznik ik"><use href="#i-circle-check"/></svg><span><b>{{t:hero-demo-done}}</b></span></span>
         </div>
-        <p class="mala">{{t:end-login}} <a class="link" href="{{$app}}">{{t:nav-login}}</a></p>
       </div>
-      {# data-api: adres endpointu; test podmienia go w przegladarce, nie w pliku #}
-      <form class="formularz wej" id="formularz" data-api="{{$api}}" data-jezyk="{{$jezyk}}" novalidate aria-labelledby="form-tytul"
-            data-wysylanie="{{a:form-wysylanie}}" data-b-imie="{{a:form-blad-imie}}" data-b-email="{{a:form-blad-email}}"
-            data-b-zgoda="{{a:form-blad-zgoda}}" data-b-dlugie="{{a:form-blad-dlugie}}" data-b-pakiet="{{a:form-blad-pakiet}}"
-            data-b-ogolny="{{a:form-blad-ogolny}}" data-b-429="{{a:form-blad-429}}" data-b-siec="{{a:form-blad-siec}}">
-        <h3 class="form-tytul" id="form-tytul">{{t:form-label}}</h3>
-        <p class="form-nojs" id="form-nojs"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg><span>{{t:form-nojs}} {{t:end-login}} <a class="link" href="{{$app}}">{{t:nav-login}}</a></span></p>
-        <fieldset class="pola" id="form-pola" disabled>
-          <div class="dwa">
-            <div class="pole-f">
-              <label for="f-imie">{{t:form-imie}}</label>
-              <input id="f-imie" name="imie" autocomplete="given-name" required maxlength="100" aria-describedby="b-imie">
-              <p class="blad" id="b-imie" hidden></p>
-            </div>
-            <div class="pole-f">
-              <label for="f-email">{{t:form-email}}</label>
-              <input id="f-email" name="email" type="email" autocomplete="email" required maxlength="200" aria-describedby="b-email" inputmode="email">
-              <p class="blad" id="b-email" hidden></p>
-            </div>
-          </div>
-          <div class="dwa">
-            <div class="pole-f">
-              <label for="f-firma">{{t:form-firma}} <span class="opc">({{t:form-opcjonalnie}})</span></label>
-              <input id="f-firma" name="firma" autocomplete="organization" maxlength="200" aria-describedby="b-firma">
-              <p class="blad" id="b-firma" hidden></p>
-            </div>
-            <div class="pole-f">
-              <label for="f-pakiet">{{t:form-pakiet}}</label>
-              <select id="f-pakiet" name="pakiet" aria-describedby="b-pakiet">
-                <option value="nie-wiem">{{t:form-pakiet-nie-wiem}}</option>
-                <option value="darmowy">{{t:plan-free-name}}</option>
-                <option value="standard">{{t:plan-std-name}}</option>
-                <option value="premium">{{t:plan-pro-name}}</option>
-              </select>
-              <p class="blad" id="b-pakiet" hidden></p>
-            </div>
-          </div>
-          <div class="pole-f">
-            <label for="f-wiadomosc">{{t:form-wiadomosc}} <span class="opc">({{t:form-opcjonalnie}})</span></label>
-            <textarea id="f-wiadomosc" name="wiadomosc" rows="3" maxlength="2000" placeholder="{{a:form-wiadomosc-ph}}" aria-describedby="b-wiadomosc"></textarea>
-            <p class="blad" id="b-wiadomosc" hidden></p>
-          </div>
-          {# pulapka na boty: czlowiek tego pola nie widzi ani nie dostaje fokusem #}
-          <div class="pulapka" aria-hidden="true">
-            <label for="f-strona">{{t:form-pulapka}}</label>
-            <input id="f-strona" name="strona" tabindex="-1" autocomplete="off">
-          </div>
-          <div class="pole-f">
-            <label class="zgoda" for="f-zgoda"><input id="f-zgoda" name="zgoda" type="checkbox" required aria-describedby="b-zgoda"><span>{{t:form-zgoda}} <a class="link" href="{{$prywatnosc}}">{{t:form-zgoda-link}}</a></span></label>
-            <p class="blad" id="b-zgoda" hidden></p>
-          </div>
-          <div class="form-dol">
-            <button class="btn btn-glowny btn-duzy form-wyslij" type="submit"><span class="fw-tekst">{{t:form-wyslij}}</span><svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></button>
-            <p class="form-komunikat" id="form-komunikat" role="alert" hidden></p>
-          </div>
-        </fieldset>
-        <div class="wyslano" id="wyslano" hidden tabindex="-1">
-          <p class="wyslano-tytul"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>{{t:form-ok-title}}</p>
-          <p>{{t:form-ok-p}} <b class="wyslano-email"></b>.</p>
-          <p class="wyslano-et">{{t:form-ok-dalej}}</p>
-          <ol>
-            <li>{{t:form-ok-1}}</li>
-            <li>{{t:form-ok-2}}</li>
-            <li>{{t:form-ok-3}}</li>
-          </ol>
-        </div>
-      </form>
+      <div class="koniec-start wej">
+        <h3 class="koniec-start-t">{{t:end-kroki}}</h3>
+        <ol class="koniec-kroki">
+          <li>{{t:end-krok-1}}</li>
+          <li>{{t:end-krok-2}}</li>
+          <li>{{t:end-krok-3}}</li>
+        </ol>
+        <p class="cta koniec-cta"><a class="btn btn-glowny btn-duzy" href="{{$rejestracja}}">{{t:end-cta}}<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a></p>
+        <p class="mala">{{t:end-klucz}}</p>
+        <p class="mala">{{t:end-login}} <a class="link" href="{{$app}}">{{t:nav-login}}</a></p>
+        <p class="mala">{{t:end-dokumenty}}</p>
+      </div>
     </div>
   </section>
 </main>
@@ -699,9 +688,9 @@
 {{>stopka}}
 
 {# Telefon: jeden główny przycisk; „Zaloguj się" jest stale w nagłówku. Pasek pojawia się po minięciu hero,
-   chowa się przy przewijaniu w górę (wtedy część przeglądarek pokazuje własny przycisk „do góry"), przy formularzu i stopce. #}
+   chowa się przy przewijaniu w górę (wtedy część przeglądarek pokazuje własny przycisk „do góry"), przy zakończeniu strony i stopce. #}
 <div class="pasek-cta" id="pasek-cta" role="region" aria-label="{{a:mob-bar}}" hidden>
-  <a class="btn btn-glowny" href="#dostep">{{t:nav-cta}}<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
+  <a class="btn btn-glowny" href="{{$rejestracja}}">{{t:nav-cta}}<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
 </div>
 </body>
 </html>

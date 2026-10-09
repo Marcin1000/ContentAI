@@ -573,18 +573,37 @@ html.js .kafel:not(.is-in) .frag i b{transform:scaleX(0)}
 .kto h3{font-family:var(--f-tresc);font-weight:560;font-size:22px;line-height:1.2;margin-bottom:var(--s-8)}
 .kto p{font-size:16px;line-height:1.6;color:var(--c-tekst-2)}
 
-/* ============ 17. Pakiety ============ */
+/* ============ 17. Cennik ============ */
+.kotwica{display:block;height:0}
 .pakiety{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s-16);align-items:stretch}
 .pakiet{position:relative;display:flex;flex-direction:column;border:1px solid var(--c-linia-2);border-radius:var(--r-xl);background:var(--w-karta);padding:var(--s-32) var(--s-24) var(--s-24)}
 .pakiet-wyroz{border-color:var(--c-akcent-ramka);box-shadow:var(--cien-2)}
 .pakiet-wyroz::before{content:"";position:absolute;left:24px;right:24px;top:-1px;height:2px;border-radius:2px;background:var(--c-akcent)}
 .pakiet h3{font-family:var(--f-tresc);font-weight:560;font-size:30px;letter-spacing:var(--k-display)}
+.pakiet-cena{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin-top:var(--s-12)}
+.pakiet-cena b{font-family:var(--f-tresc);font-weight:560;font-size:clamp(30px,2.6vw,38px);line-height:1.1;letter-spacing:var(--k-display);color:var(--c-tekst);white-space:nowrap}
+.pakiet-cena span{font-size:var(--t-md);color:var(--c-tekst-3)}
 .pakiet-opis{color:var(--c-tekst-2);margin-top:6px;font-size:16px}
 .pakiet ul{list-style:none;padding:var(--s-20) 0 0;margin:var(--s-20) 0 var(--s-24);border-top:1px solid var(--c-linia);display:grid;gap:var(--s-12)}
 .pakiet li{display:grid;grid-template-columns:18px 1fr;gap:10px;font-size:16px;line-height:1.45}
 .pakiet li .ik{width:16px;height:16px;margin-top:2px;color:var(--c-sukces)}
 .pakiet .btn{margin-top:auto;width:100%}
 .pakiety-nota{margin-top:var(--s-24);font-size:var(--t-md);line-height:1.6;color:var(--c-tekst-3);max-width:52em}
+.pakiety-noty{margin-top:var(--s-24);display:grid;gap:var(--s-8);max-width:52em}
+.pakiety-noty .pakiety-nota{margin-top:0}
+.pakiety-noty .pakiety-nota:first-child{color:var(--c-tekst-2);font-size:var(--t-lg)}
+.pakiety-klucz .kafel-link{margin-top:var(--s-4)}
+.porownanie{margin-top:var(--s-40);border-top:1px solid var(--c-linia)}
+.porownanie summary{display:flex;align-items:center;justify-content:space-between;gap:var(--s-16);min-height:56px;padding:var(--s-12) 0;cursor:pointer;list-style:none;font-size:var(--t-xl);font-weight:600;border-radius:var(--r-sm)}
+.porownanie summary::-webkit-details-marker{display:none}
+.porownanie summary:hover{color:var(--c-tekst-2)}
+.porownanie summary .ik{width:20px;height:20px;color:var(--c-tekst-3);transition:transform var(--m-3) var(--e-std)}
+.porownanie[open] summary .ik{transform:rotate(180deg)}
+.cennik-tabela{width:100%;border-collapse:collapse;font-size:var(--t-lg);line-height:1.45}
+.cennik-tabela th,.cennik-tabela td{padding:var(--s-12) var(--s-16) var(--s-12) 0;border-bottom:1px solid var(--c-linia);text-align:left;vertical-align:top}
+.cennik-tabela thead th{font-family:var(--f-ui);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--c-tekst-3);border-bottom-color:var(--c-linia-2)}
+.cennik-tabela tbody th{width:40%;font-weight:600;color:var(--c-tekst)}
+.cennik-tabela td{width:20%;color:var(--c-tekst-2)}
 
 /* ============ 18. FAQ ============ */
 .faq-siatka{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);gap:var(--s-32);align-items:start}
@@ -601,7 +620,7 @@ html.js .kafel:not(.is-in) .frag i b{transform:scaleX(0)}
 @media (prefers-reduced-motion:no-preference){.faq-lista details[open] p{animation:wsun-g var(--m-4) var(--e-wejscie)}}
 @keyframes wsun-g{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 
-/* ============ 19. Koniec + formularz ============ */
+/* ============ 19. Koniec: trzy kroki i rejestracja ============ */
 .koniec{margin-top:var(--w-sekcja);padding:var(--w-sekcja) 0;background:var(--w-pas);border-top:1px solid var(--c-linia)}
 .koniec-siatka{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(40px,6vw,96px);align-items:start}
 .koniec h2{font-size:clamp(34px,3.9vw,56px)}
@@ -609,50 +628,14 @@ html.js .kafel:not(.is-in) .frag i b{transform:scaleX(0)}
 .kn-linia{font-family:var(--f-tresc);font-size:18px;line-height:1.4}
 .kn-zakr{background:linear-gradient(var(--w-zakr),var(--w-zakr)) no-repeat 0 90%/100% 36%;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .koniec-nota .notka{padding:6px 12px}
-.formularz{border:1px solid var(--c-linia-2);border-radius:var(--r-2xl);background:var(--w-karta);padding:clamp(24px,3vw,36px);box-shadow:var(--cien-2)}
-.form-tytul{font-size:var(--t-2xl);font-weight:700;letter-spacing:var(--k-naglowek);margin-bottom:var(--s-20)}
-.form-nojs{display:flex;gap:10px;align-items:flex-start;padding:var(--s-12) var(--s-16);margin-bottom:var(--s-20);border-radius:var(--r-md);background:var(--c-uwaga-tlo);border:1px solid var(--c-uwaga-ramka);font-size:var(--t-md);color:var(--c-tekst)}
-.form-nojs .ik{width:17px;height:17px;margin-top:2px;color:var(--c-uwaga)}
-html.js .form-nojs{display:none}
-.pola{border:0;margin:0;padding:0;min-width:0;display:grid;gap:var(--s-16)}
-.pola[disabled]{opacity:.55}
-.dwa{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-16)}
-.pole-f{display:grid;gap:6px;align-content:start;min-width:0}
-.pole-f>label{font-size:var(--t-sm);font-weight:600;color:var(--c-tekst)}
-.opc{font-weight:400;color:var(--c-tekst-3)}
-.formularz input:not([type="checkbox"]),.formularz select,.formularz textarea{width:100%;min-height:var(--h-dotyk);padding:0 var(--s-12);border:1px solid var(--c-ramka);border-radius:var(--r-md);background:var(--c-pole);color:var(--c-tekst);font-size:16px;
-  transition:border-color var(--m-1),box-shadow var(--m-1)}
-.formularz textarea{padding:10px var(--s-12);min-height:92px;resize:vertical;line-height:1.5}
-.formularz select{appearance:none;-webkit-appearance:none;padding-right:36px;background-image:linear-gradient(45deg,transparent 50%,var(--c-tekst-3) 50%),linear-gradient(135deg,var(--c-tekst-3) 50%,transparent 50%);
-  background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
-.formularz input:hover,.formularz select:hover,.formularz textarea:hover{border-color:var(--c-ramka-najazd)}
-.formularz input:focus-visible,.formularz select:focus-visible,.formularz textarea:focus-visible{outline:none;border-color:var(--c-fokus);box-shadow:0 0 0 3px var(--c-akcent-tlo),0 0 0 1px var(--c-fokus)}
-.formularz [aria-invalid="true"]{border-color:var(--c-blad)}
-.formularz ::placeholder{color:var(--c-tekst-3);opacity:1}
-.blad{display:flex;gap:6px;align-items:flex-start;font-size:var(--t-sm);color:var(--c-blad);font-weight:500}
-.blad::before{content:"!";flex-shrink:0;display:inline-grid;place-items:center;width:16px;height:16px;margin-top:1px;border-radius:50%;background:var(--c-blad);color:var(--c-panel);font-size:12px;font-weight:800}
-.blad[hidden]{display:none}
-.zgoda{display:flex;gap:10px;align-items:flex-start;font-size:var(--t-md);font-weight:400;color:var(--c-tekst-2);line-height:1.5;cursor:pointer}
-.zgoda input{width:20px;height:20px;margin:1px 0 0;flex-shrink:0;accent-color:var(--c-akcent)}
-.pulapka{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
-.form-dol{display:grid;gap:var(--s-12);margin-top:var(--s-4)}
-.form-wyslij{width:100%}
-.form-wyslij[aria-busy="true"]{cursor:progress;opacity:.8}
-.form-wyslij[aria-busy="true"] .strz{animation:puls 1s ease-in-out infinite}
-.form-komunikat{display:flex;gap:8px;padding:var(--s-12) var(--s-16);border-radius:var(--r-md);background:var(--c-blad-tlo);border:1px solid var(--c-blad-ramka);color:var(--c-tekst);font-size:var(--t-md)}
-.form-komunikat[hidden]{display:none}
-.wyslano{padding:var(--s-8) 0 0}
-.wyslano[hidden]{display:none}
-.wyslano:focus{outline:none}
-.wyslano .wyslano-tytul{color:var(--c-tekst);display:flex;align-items:center;gap:10px;font-family:var(--f-tresc);font-size:28px;font-weight:560;letter-spacing:var(--k-display);margin-bottom:var(--s-12)}
-.wyslano-tytul .ik{width:26px;height:26px;color:var(--c-sukces)}
-.wyslano>p{color:var(--c-tekst-2);font-size:var(--t-lg)}
-.wyslano b{color:var(--c-tekst);word-break:break-all}
-.wyslano .wyslano-et{margin-top:var(--s-24);font-family:var(--f-ui);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--c-tekst-3)}
-.wyslano ol{margin:var(--s-12) 0 0;padding:0;list-style:none;counter-reset:k;display:grid;gap:var(--s-12)}
-.wyslano li{counter-increment:k;display:grid;grid-template-columns:28px 1fr;gap:10px;font-size:16px;line-height:1.5}
-.wyslano li::before{content:counter(k);display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:1px solid var(--c-linia-2);color:var(--c-tekst-2);font-family:var(--f-mono);font-size:12px}
-.formularz.wyslana .form-tytul,.formularz.wyslana .pola{display:none}
+.koniec-start{border:1px solid var(--c-linia-2);border-radius:var(--r-2xl);background:var(--w-karta);padding:clamp(24px,3vw,36px);box-shadow:var(--cien-2)}
+.koniec-start-t{font-size:var(--t-2xl);font-weight:700;letter-spacing:var(--k-naglowek);margin-bottom:var(--s-16)}
+.koniec-kroki{margin:0;padding:0;list-style:none;counter-reset:k;display:grid;gap:var(--s-12)}
+.koniec-kroki li{counter-increment:k;display:grid;grid-template-columns:28px 1fr;gap:10px;font-size:16px;line-height:1.5}
+.koniec-kroki li::before{content:counter(k);display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:1px solid var(--c-linia-2);color:var(--c-tekst-2);font-family:var(--f-mono);font-size:12px}
+.koniec-start .koniec-cta{margin-top:var(--s-24)}
+.koniec-start .koniec-cta .btn{width:100%}
+.koniec-start .mala{margin-top:var(--s-12)}
 
 /* ============ 20. Stopka ============ */
 .stopka{border-top:1px solid var(--c-linia);padding:var(--s-64) 0 var(--s-32);font-size:var(--t-md);color:var(--c-tekst-2)}
@@ -670,7 +653,7 @@ html.js .form-nojs{display:none}
 /* ============ 21. Pasek akcji na telefonie ============ */
 .pasek-cta{display:none}
 
-/* ============ 22. Podstrona: dokument (polityka prywatności) ============ */
+/* ============ 22. Podstrony: klucz API, AI Act, prywatność, regulamin ============ */
 .dokument{padding:clamp(48px,7vw,96px) 0 var(--w-sekcja)}
 .dokument-siatka{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(32px,5vw,80px);align-items:start}
 .dokument-nag{position:sticky;top:calc(var(--nav-h) + 32px)}
@@ -680,6 +663,32 @@ html.js .form-nojs{display:none}
 .dokument-tresc h2 .etyk-nr{font-family:var(--f-ui);font-size:12px}
 .dokument-tresc p{font-family:var(--f-tresc);font-size:var(--t-xl);line-height:1.7;max-width:36em}
 .dokument-tresc .cta{font-family:var(--f-ui);font-size:16px;padding-top:var(--s-24);border-top:1px solid var(--c-linia);margin-top:0}
+.dokument-tresc section>*+*{margin-top:var(--s-16)}
+.dokument-tresc h2+*{margin-top:0}
+.dok-akcja{font-family:var(--f-ui);font-size:16px}
+.dok-lista{list-style:none;padding:0;display:grid;gap:var(--s-4);font-size:var(--t-lg)}
+.dok-lista a{display:inline-flex;align-items:center;min-height:32px}
+.dok-kroki{list-style:none;padding:0;counter-reset:k;display:grid;gap:var(--s-24)}
+.dok-kroki li{counter-increment:k;position:relative;padding-left:44px}
+.dok-kroki li::before{content:counter(k);position:absolute;left:0;top:0;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1px solid var(--c-linia-2);color:var(--c-tekst-2);font-family:var(--f-mono);font-size:13px}
+.dok-kroki h3{font-size:var(--t-xl);font-weight:700;line-height:1.35;letter-spacing:var(--k-naglowek);margin-bottom:var(--s-6)}
+.dokument-tresc .dok-kroki p{font-size:var(--t-lg)}
+.dok-tabela{width:100%;border-collapse:collapse;font-size:var(--t-lg);line-height:1.5}
+.dok-tabela th,.dok-tabela td{padding:var(--s-12) var(--s-16) var(--s-12) 0;border-bottom:1px solid var(--c-linia);text-align:left;vertical-align:top}
+.dok-tabela thead th{font-family:var(--f-ui);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--c-tekst-3);border-bottom-color:var(--c-linia-2)}
+.dok-tabela tbody th{font-weight:600;color:var(--c-tekst);width:45%}
+.dok-tabela td{color:var(--c-tekst-2)}
+.dok-wiecej{border-top:1px solid var(--c-linia);border-bottom:1px solid var(--c-linia)}
+.dok-wiecej summary{display:flex;align-items:center;justify-content:space-between;gap:var(--s-16);min-height:var(--h-dotyk);padding:var(--s-8) 0;cursor:pointer;list-style:none;font-size:var(--t-lg);font-weight:600}
+.dok-wiecej summary::-webkit-details-marker{display:none}
+.dok-wiecej summary .ik{width:18px;height:18px;color:var(--c-tekst-3);transition:transform var(--m-3) var(--e-std)}
+.dok-wiecej[open] summary .ik{transform:rotate(45deg);color:var(--c-tekst)}
+.dokument-tresc .dok-wiecej p{font-size:var(--t-lg);color:var(--c-tekst-2);padding-bottom:var(--s-16)}
+.dok-problemy{display:grid;gap:var(--s-16)}
+.dok-problemy dt{font-size:var(--t-lg);font-weight:700}
+.dok-problemy dd{margin:4px 0 0;font-family:var(--f-tresc);font-size:var(--t-lg);line-height:1.6;color:var(--c-tekst-2);max-width:40em}
+.dok-lista-tekst{padding-left:1.2em;display:grid;gap:var(--s-8);font-family:var(--f-tresc);font-size:var(--t-xl);line-height:1.7;max-width:36em}
+.dokument-tresc .dok-uwaga{font-size:var(--t-lg);padding-left:var(--s-16);border-left:2px solid var(--c-akcent-ramka)}
 
 /* ============ 23. Responsywność ============ */
 /* tablet poziomo i komputer (R3-36, projekt T1, K1, K2, K4) */
@@ -767,7 +776,6 @@ html.js .form-nojs{display:none}
   .logo{min-height:var(--h-dotyk)}
   .ikona-btn{width:var(--h-dotyk);height:var(--h-dotyk)}
   .kafel-link{min-height:var(--h-dotyk)}
-  .zgoda{min-height:var(--h-dotyk);align-items:center}
   .stopka-kol a{min-height:var(--h-dotyk);display:flex;width:100%}
   .stopka ul{gap:0}
   .menu-btn{display:inline-grid;width:var(--h-dotyk);height:var(--h-dotyk);margin-right:-6px}
@@ -818,11 +826,21 @@ html.js .form-nojs{display:none}
   .rel-tabela td,.rel-tabela tbody th{padding:0;border:0}
   .rel-tabela .rel-nr{padding:0 0 var(--s-8);width:auto}
   .rel-tabela tbody th{margin-bottom:var(--s-8)}
+  .cennik-tabela thead,.dok-tabela thead{display:none}
+  .cennik-tabela,.cennik-tabela tbody,.dok-tabela,.dok-tabela tbody,.dok-tabela tr{display:block;width:auto}
+  .cennik-tabela tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px var(--s-12);padding:var(--s-12) 0;border-bottom:1px solid var(--c-linia)}
+  .cennik-tabela tbody th{grid-column:1 / -1;width:auto;padding:0;border:0}
+  .cennik-tabela td{width:auto;padding:0;border:0;font-size:var(--t-md)}
+  .cennik-tabela td::before,.dok-tabela td[data-et]::before{content:attr(data-et);display:block;font-size:12px;font-weight:600;color:var(--c-tekst-3)}
+  .dok-tabela tr{padding:var(--s-12) 0;border-bottom:1px solid var(--c-linia)}
+  .dok-tabela th,.dok-tabela td,.dok-tabela tbody th{display:block;width:auto;padding:0;border:0}
+  .dok-tabela td{margin-top:4px}
+  .dok-lista a{min-height:var(--h-dotyk)}
+  .dok-kroki li{padding-left:40px}
   .sec-lista{grid-template-columns:1fr;gap:var(--s-24)}
   .kto{grid-template-columns:1fr}
   .faq-lista summary{font-size:var(--t-lg)}
   .faq-lista details p{padding-right:0}
-  .dwa{grid-template-columns:1fr}
   .stopka-siatka{grid-template-columns:1fr}
   .stopka-dol{flex-direction:column;align-items:flex-start;gap:var(--s-12)}
   /* telefon: kroki jako pionowa oś czasu (decyzja agencja-strona-projekt D1); makiety ekranów ukryte - hero pokazuje te same etapy */
@@ -869,13 +887,13 @@ html.js .form-nojs{display:none}
   .logo{min-width:var(--h-dotyk);justify-content:center}
   .logo-znak{width:26px;height:26px}
 }
-/* tablet: język i „Poproś o dostęp" są w nagłówku, więc panel menu ma tylko sekcje */
+/* tablet: język i „Załóż konto" są w nagłówku, więc panel menu ma tylko sekcje */
 @media (min-width:721px){.menu-dol{display:none}}
 @media (min-width:1181px){.menu-panel{display:none!important}}
 
 /* ============ 24. Druk ============ */
 @media print{
-  .nav,.pasek-cta,.ramka-kroki,.ramka-pauza,.formularz,.skip{display:none!important}
+  .nav,.pasek-cta,.ramka-kroki,.ramka-pauza,.skip{display:none!important}
   html.js .wej{opacity:1!important;transform:none!important}
   main>section.sekcja,main>section.koniec{content-visibility:visible}
   body{background:#fff;color:#000}

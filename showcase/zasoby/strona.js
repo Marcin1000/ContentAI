@@ -365,121 +365,21 @@
     rysujLinie();
   }
 
-  /* ---------- pakiety: przycisk w karcie ustawia pakiet w formularzu ---------- */
-  var form = $('#formularz');
-  var poleP = form ? $('[name="pakiet"]', form) : null;
-  $$('[data-pakiet]').forEach(function (a) {
-    a.addEventListener('click', function () { if (poleP) poleP.value = a.getAttribute('data-pakiet'); });
-  });
+  /* ---------- cennik: tabela porównania jest otwarta w HTML (bez JS widać ją wszędzie);
+     na telefonie zwijamy ją, bo karty pakietów mówią to samo krócej ---------- */
+  var porownanie = $('.porownanie');
+  if (porownanie && window.matchMedia && matchMedia('(max-width: 720px)').matches) porownanie.open = false;
 
-  /* ---------- formularz „Poproś o dostęp" ---------- */
-  if (form) {
-    var pola = $('#form-pola', form);
-    var wyslij = $('.form-wyslij', form), wyslijTekst = $('.fw-tekst', form);
-    var komunikat = $('#form-komunikat', form);
-    var wyslano = $('#wyslano', form);
-    var tekstPrzycisku = wyslijTekst.textContent;
-    var POLA = ['imie', 'email', 'firma', 'pakiet', 'wiadomosc', 'zgoda'];
-    var KODY = { 'brak-imienia': 'data-b-imie', 'zly-email': 'data-b-email', 'za-dlugie': 'data-b-dlugie', 'zly-pakiet': 'data-b-pakiet', 'brak-zgody': 'data-b-zgoda' };
-    var pole = function (n) { return form.elements[n]; };
-    var tekst = function (atr) { return form.getAttribute(atr) || ''; };
-    pola.disabled = false;
-
-    var pokazBlad = function (nazwa, msg) {
-      var el = pole(nazwa), b = $('#b-' + nazwa, form);
-      if (!el || !b) return false;
-      if (msg) { b.textContent = msg; b.hidden = false; el.setAttribute('aria-invalid', 'true'); }
-      else { b.textContent = ''; b.hidden = true; el.removeAttribute('aria-invalid'); }
-      return true;
-    };
-    var pokazKomunikat = function (msg) { komunikat.textContent = msg || ''; komunikat.hidden = !msg; };
-    var EMAIL = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
-    var sprawdzPole = function (n) {
-      var el = pole(n), v = el.type === 'checkbox' ? el.checked : el.value.trim(), msg = '';
-      if (n === 'imie' && !v) msg = tekst('data-b-imie');
-      else if (n === 'email' && !EMAIL.test(v)) msg = tekst('data-b-email');
-      else if (n === 'zgoda' && !v) msg = tekst('data-b-zgoda');
-      else if (el.maxLength > 0 && typeof v === 'string' && v.length > el.maxLength) msg = tekst('data-b-dlugie');
-      pokazBlad(n, msg);
-      return !msg;
-    };
-    ['imie', 'email'].forEach(function (n) {
-      pole(n).addEventListener('blur', function () { if (pole(n).value.trim()) sprawdzPole(n); });
-      pole(n).addEventListener('input', function () { if (pole(n).getAttribute('aria-invalid')) sprawdzPole(n); });
-    });
-    pole('zgoda').addEventListener('change', function () { if (pole('zgoda').getAttribute('aria-invalid')) sprawdzPole('zgoda'); });
-
-    var stanWysylania = function (trwa) {
-      wyslij.disabled = trwa;
-      wyslij.setAttribute('aria-busy', trwa ? 'true' : 'false');
-      wyslijTekst.textContent = trwa ? tekst('data-wysylanie') : tekstPrzycisku;
-    };
-    var sukces = function (email) {
-      $('.wyslano-email', form).textContent = email;
-      form.classList.add('wyslana');
-      wyslano.hidden = false;
-      wyslano.focus();
-    };
-
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      pokazKomunikat('');
-      var pierwszyZly = null;
-      POLA.forEach(function (n) { if (!sprawdzPole(n) && !pierwszyZly) pierwszyZly = pole(n); });
-      if (pierwszyZly) { pierwszyZly.focus(); return; }
-      var dane = {
-        imie: pole('imie').value.trim(),
-        email: pole('email').value.trim(),
-        firma: pole('firma').value.trim(),
-        pakiet: pole('pakiet').value,
-        wiadomosc: pole('wiadomosc').value.trim(),
-        jezyk: form.getAttribute('data-jezyk') || d.lang,
-        zgoda: pole('zgoda').checked === true,
-        strona: pole('strona').value
-      };
-      stanWysylania(true);
-      var ctrl = window.AbortController ? new AbortController() : null;
-      var limit = setTimeout(function () { if (ctrl) ctrl.abort(); }, 15000);
-      fetch(form.getAttribute('data-api'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dane),
-        credentials: 'omit',
-        signal: ctrl ? ctrl.signal : undefined
-      }).then(function (odp) {
-        return odp.json().catch(function () { return {}; }).then(function (cialo) { return { status: odp.status, cialo: cialo || {} }; });
-      }).then(function (w) {
-        clearTimeout(limit);
-        stanWysylania(false);
-        if (w.status === 200 && w.cialo.ok === true) { sukces(dane.email); return; }
-        if (w.status === 429) { pokazKomunikat(tekst('data-b-429')); return; }
-        if (w.status === 413) { pokazKomunikat(tekst('data-b-dlugie')); return; }
-        if (w.status === 400) {
-          var c = w.cialo, msg = (c.blad && KODY[c.blad]) ? tekst(KODY[c.blad]) : (typeof c.komunikat === 'string' && c.komunikat) || tekst('data-b-ogolny');
-          var nazwaPola = c.pole || (c.blad === 'brak-zgody' ? 'zgoda' : '');
-          if (nazwaPola && POLA.indexOf(nazwaPola) >= 0 && pokazBlad(nazwaPola, msg)) pole(nazwaPola).focus();
-          else pokazKomunikat(msg);
-          return;
-        }
-        pokazKomunikat(tekst('data-b-siec'));
-      }).catch(function () {
-        clearTimeout(limit);
-        stanWysylania(false);
-        pokazKomunikat(tekst('data-b-siec'));
-      });
-    });
-  }
-
-  /* ---------- pasek akcji na telefonie (decyzja agencja-strona-projekt D2): jedna pigułka „Poproś o dostęp" przy prawej
+  /* ---------- pasek akcji na telefonie (decyzja agencja-strona-projekt D2): jedna pigułka „Załóż konto" przy prawej
      krawędzi. Widać ją po minięciu hero, przy przewijaniu w dół; chowa się przy przewijaniu w górę (wtedy przeglądarki,
      np. Samsung Internet, pokazują na środku dołu swój przycisk „do góry", a nagłówek z „Zaloguj się" i tak wraca),
-     przy formularzu, przy stopce i gdy ktoś pisze w polu. ---------- */
+     przy zakończeniu strony (#start ma własny przycisk) i przy stopce. ---------- */
   var pasek = $('#pasek-cta');
   if (pasek && maIO) {
     pasek.hidden = false;
-    var poHero = false, przyKoncu = false, przyStopce = false, wDol = true, pisze = false, ostatniY = window.scrollY, suma = 0, stan = null;
+    var poHero = false, przyKoncu = false, przyStopce = false, wDol = true, ostatniY = window.scrollY, suma = 0, stan = null;
     var odswiezPasek = function () {
-      var w = poHero && !przyKoncu && !przyStopce && wDol && !pisze;
+      var w = poHero && !przyKoncu && !przyStopce && wDol;
       if (w === stan) return;
       stan = w;
       pasek.classList.toggle('widoczny', w);
@@ -494,10 +394,7 @@
       if (suma >= 24 && !wDol) { wDol = true; odswiezPasek(); }
       else if (suma <= -24 && wDol) { wDol = false; odswiezPasek(); }
     }, { passive: true });
-    var POLA_PISANIA = 'input, select, textarea';
-    document.addEventListener('focusin', function (e) { if (e.target.matches && e.target.matches(POLA_PISANIA)) { pisze = true; odswiezPasek(); } });
-    document.addEventListener('focusout', function (e) { if (e.target.matches && e.target.matches(POLA_PISANIA)) { pisze = false; odswiezPasek(); } });
-    var celHero = $('.hero .cta'), celKoniec = $('#dostep'), celStopka = $('.stopka');
+    var celHero = $('.hero .cta'), celKoniec = $('#start'), celStopka = $('.stopka');
     if (celHero) new IntersectionObserver(function (w) { poHero = !w[0].isIntersecting && w[0].boundingClientRect.top < 0; odswiezPasek(); }).observe(celHero);
     if (celKoniec) new IntersectionObserver(function (w) { przyKoncu = w[0].isIntersecting; odswiezPasek(); }).observe(celKoniec);
     if (celStopka) new IntersectionObserver(function (w) { przyStopce = w[0].isIntersecting; odswiezPasek(); }).observe(celStopka);

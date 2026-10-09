@@ -1,4 +1,6 @@
-{# Stopka wspolna. #stopka-spis jest celem przycisku menu na telefonie, gdy JS nie dziala. #}
+{# Stopka wspolna. #stopka-spis jest celem przycisku menu na telefonie, gdy JS nie dziala.
+   Regulamin, polityka i dane uslugodawcy sa na serwerze aplikacji ({{$dok_...}}): dane uslugodawcy zna tylko
+   jego konfiguracja (DECYZJE-R9), wiec ta strona do nich linkuje. Adres e-mail z konfiguracja.json. #}
 <footer class="stopka">
   <div class="kont stopka-siatka">
     <div class="stopka-marka">
@@ -16,7 +18,7 @@
         <li><a href="{{$glowna}}#funkcje">{{t:nav-features}}</a></li>
         <li><a href="{{$glowna}}#niezawodnosc">{{t:nav-reliability}}</a></li>
         <li><a href="{{$glowna}}#bezpieczenstwo">{{t:nav-security}}</a></li>
-        <li><a href="{{$glowna}}#pakiety">{{t:nav-plans}}</a></li>
+        <li><a href="{{$cennik}}">{{t:nav-plans}}</a></li>
         <li><a href="{{$glowna}}#faq">{{t:nav-faq}}</a></li>
       </ul>
     </nav>
@@ -24,14 +26,18 @@
       <h2 id="st-app">{{t:foot-col-app}}</h2>
       <ul>
         <li><a href="{{$app}}">{{t:foot-login}}</a></li>
-        <li><a href="{{$glowna}}#dostep">{{t:nav-cta}}</a></li>
+        <li><a href="{{$rejestracja}}">{{t:foot-signup}}</a></li>
+        <li><a href="{{$klucz_api}}">{{t:foot-key}}</a></li>
       </ul>
     </nav>
     <nav class="stopka-kol" aria-labelledby="st-info">
       <h2 id="st-info">{{t:foot-col-company}}</h2>
       <ul>
-        <li><a href="{{$prywatnosc}}">{{t:foot-privacy}}</a></li>
-        <li><a href="{{$glowna}}#dostep">{{t:foot-contact}}</a></li>
+        <li><a href="{{$dok_regulamin}}">{{t:foot-terms}}</a></li>
+        <li><a href="{{$dok_prywatnosc}}">{{t:foot-privacy}}</a></li>
+        <li><a href="{{$ai_act}}">{{t:foot-aiact}}</a></li>
+        <li><a href="{{$dok_uslugodawca}}">{{t:foot-provider}}</a></li>
+        <li><a href="mailto:{{$email}}">{{t:foot-contact}}: {{$email}}</a></li>
         <li><a href="{{$alt}}" hreflang="{{$jezyk_alt}}" lang="{{$jezyk_alt}}">{{t:lang-alt-long}}</a></li>
       </ul>
     </nav>
