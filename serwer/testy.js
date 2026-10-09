@@ -252,6 +252,7 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
     testyMarki();
     testyUsuwaniaKonta();
     await testyPoprawek();
+    await require('./testy-dokumenty.js').uruchom({ sprawdz });
 
     console.log(`\n  ${zaliczone} zaliczonych, ${bledy.length} bledow\n`);
     if (bledy.length) {
