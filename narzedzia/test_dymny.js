@@ -395,7 +395,10 @@ async function zaloguj(k, login) {
     await s.fill('input[type="password"]', HASLO);
     await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"], input[type="submit"]')]);
   }
-  await s.waitForTimeout(800);
+  // R9-F (KOD8-27): kreator pierwszego uruchomienia wyskakuje dopiero po odpowiedzi /api/pakiet. Stale 800 ms
+  // przegrywalo z wolnym serwerem i kreator zaslanial pierwsze klikniecie - czekamy na jego stan.
+  await s.waitForFunction(() => { const m = document.getElementById('start-modal');
+    return !m || getComputedStyle(m).display !== 'none' || (typeof magazyn !== 'undefined' && !!magazyn.getItem('cai_start_ukonczony')); }, null, { timeout: 8000 }).catch(() => {});
   await s.evaluate(() => { if (typeof startPomin === 'function') startPomin(); });
   return s;
 }
