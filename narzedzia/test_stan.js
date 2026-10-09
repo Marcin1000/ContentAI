@@ -1435,6 +1435,43 @@ async function scenariuszR9FNarracja(b) {
   await k.close();
 }
 
+// KOD8-10: sesja wygasla w trakcie pracy. Lista Bazy czytala {"error":"Niezalogowany"} jak pusta liste
+// ("Brak dokumentow", licznik 0), a nowy dokument po cichu zostawal tylko w przegladarce.
+async function scenariuszR9FSesja(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  await s.evaluate(async () => {
+    await fetch('/api/baza', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zakres: 'prywatna', nazwa: 'Cennik', tresc: 'Montaz kosztuje od 18 do 35 tys. zl.' }) });
+    await odswiezListeBazy();
+  });
+  const przed = await s.evaluate(() => window._bazaSerwerLiczba);
+  // Wygasniecie sesji: przegladarka nie ma juz ciasteczka sesji, serwer odpowiada 401.
+  const ciastka = await k.cookies();
+  await k.clearCookies();
+  const lista = await s.evaluate(async () => {
+    await otworzBazeSerwera();
+    return { liczba: window._bazaSerwerLiczba, tekst: (document.getElementById('bazas-lista').innerText || '').replace(/\s+/g, ' ').slice(0, 160),
+      pusto: _t('bazas-pusto'), sesja: _t('bazas-sesja') };
+  });
+  wynik('R9-F KOD8-10: po wygasnieciu sesji lista Bazy mowi o sesji, a nie "Brak dokumentow"; licznik zostaje',
+    przed === 1 && lista.liczba === 1 && lista.tekst.indexOf(lista.sesja) !== -1 && lista.tekst.indexOf(lista.pusto) === -1, JSON.stringify(lista));
+  const dodanie = await s.evaluate(async () => {
+    zamknijBazeSerwera();
+    document.querySelectorAll('.powiadomienie').forEach((p) => p.remove());
+    addDoc('Nowy dokument', 'Tresc nowego dokumentu po wygasnieciu sesji.', '✏️');
+    await new Promise((r) => setTimeout(r, 1200));
+    return { lokalne: docs.length, pow: [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent.replace(/\s+/g, ' ').slice(0, 200)), wzor: _t('kb-sesja-wygasla') };
+  });
+  wynik('R9-F KOD8-10: dodanie dokumentu przy wygaslej sesji - komunikat o sesji, bez cichego zapisu tylko w przegladarce',
+    dodanie.lokalne === 0 && dodanie.pow.some((p) => p.indexOf(dodanie.wzor) !== -1), JSON.stringify(dodanie));
+  await k.addCookies(ciastka);
+  await s.evaluate(async () => { const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); });
+  wynik('R9-F KOD8-10: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-sesja');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
@@ -1445,7 +1482,7 @@ const SCENARIUSZE = [
   ['r9f-cms', scenariuszR9FCms], ['r9f-pdf', scenariuszR9FPdf],
   ['r9f-luki-darmowy', scenariuszR9FLukiDarmowy], ['r9f-bez-sieci', scenariuszR9FBezSieci],
   ['r9f-prompt-bazy', scenariuszR9FPromptBazy], ['r9f-pomocnicy', scenariuszR9FPomocnicy],
-  ['r9f-narracja', scenariuszR9FNarracja],
+  ['r9f-narracja', scenariuszR9FNarracja], ['r9f-sesja', scenariuszR9FSesja],
 ];
 (async () => {
   let b;

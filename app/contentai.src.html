@@ -5351,6 +5351,7 @@ var I18N = {
     'bazas-prywatna':'Prywatna (tylko Ty)','bazas-wspolna':'Wspólna (cały zespół)',
     'bazas-nazwa':'Nazwa dokumentu','bazas-tresc':'Treść','bazas-dodaj':'Dodaj',
     'bazas-pusto':'Brak dokumentów. Dodaj pierwszy poniżej.','bazas-usun':'Usuń',
+    'bazas-sesja':'Sesja wygasła, więc Baza na serwerze jest teraz niedostępna. Zaloguj się ponownie (odśwież stronę).','kb-sesja-wygasla':'Sesja wygasła: dokumentu nie dodano do Bazy. Zaloguj się ponownie i dodaj go jeszcze raz.','kb-sesja-zaloguj':'Zaloguj się',
     'bazas-zamknij':'Zamknij','bazas-tylko-admin':'Do bazy wspólnej dodaje wyłącznie administrator.',
     'bazas-blad':'Nie udało się połączyć z serwerem.','bazas-dodaje':'Dodaję…',
     'openseo-menu-title':'OpenSEO','openseo-menu-sub':'pozycje, backlinki, audyty',
@@ -6084,6 +6085,7 @@ var I18N = {
     'bazas-prywatna':'Private (only you)','bazas-wspolna':'Shared (whole team)',
     'bazas-nazwa':'Document name','bazas-tresc':'Content','bazas-dodaj':'Add',
     'bazas-pusto':'No documents yet. Add the first one below.','bazas-usun':'Remove',
+    'bazas-sesja':'Your session has expired, so the server knowledge base is unavailable. Log in again (reload the page).','kb-sesja-wygasla':'Your session has expired: the document was not added. Log in again and add it once more.','kb-sesja-zaloguj':'Log in',
     'bazas-zamknij':'Close','bazas-tylko-admin':'Only an administrator can add to the shared base.',
     'bazas-blad':'Could not reach the server.','bazas-dodaje':'Adding…',
     'openseo-menu-title':'OpenSEO','openseo-menu-sub':'rankings, backlinks, audits',
@@ -18882,7 +18884,13 @@ async function kbAudioTranscribeAndOpen(file) {
   async function odswiezListeBazy(){
     var cel = el('bazas-lista');
     try {
-      var dane = await (await fetch('/api/baza')).json();
+      var odpBazy = await fetch('/api/baza');
+      // R9-F (KOD8-10): wygasla sesja (401) to nie pusta Baza - wczesniej "Brak dokumentow" i licznik 0.
+      if (odpBazy.status === 401) {
+        cel.innerHTML = '<div style="font-size:12px;color:var(--c-blad);padding:10px 0" role="alert">' + escapeHtml(tekst('bazas-sesja', '')) + '</div>';
+        return;
+      }
+      var dane = await odpBazy.json();
       var dokumenty = dane.dokumenty || [];
       window._bazaSerwer = dokumenty;
       window._bazaSerwerLiczba = dokumenty.length;
@@ -18986,6 +18994,16 @@ async function kbAudioTranscribeAndOpen(file) {
         if (uc) pokazPowiadomienie(tekst('kb-uciety', '').replace('{nazwa}', name).replace('{zapisano}', formatujLiczbe(uc.zapisano, 0)).replace('{wszystko}', formatujLiczbe(uc.wszystko, 0)), 'uwaga', 15000);
         else pokazPowiadomienie(tekst('kb-dodano','Dodano do bazy wiedzy na serwerze') + ': ' + name, 'ok');
         odswiezListeBazy();
+      } else if (w.status === 401) {
+        // R9-F (KOD8-10): wygasla sesja - dokument zostawal po cichu tylko w przegladarce (i tam po zalogowaniu).
+        // Mowimy, co sie stalo; "Zaloguj sie" zapisuje szkic i przechodzi do ekranu logowania.
+        var toast = pokazPowiadomienie(tekst('kb-sesja-wygasla', ''), 'blad', 15000);
+        if (toast) {
+          var zaloguj = document.createElement('button');
+          zaloguj.type = 'button'; zaloguj.className = 'powiadomienie-akcja'; zaloguj.textContent = tekst('kb-sesja-zaloguj', '');
+          zaloguj.onclick = function(){ try { zapiszSzkic(); } catch(e){} location.reload(); };
+          toast.insertBefore(zaloguj, toast.querySelector('.powiadomienie-zamknij'));
+        }
       } else {
         dodajLokalnie(name, content, icon, url);
         rysujBazeWPanelu();

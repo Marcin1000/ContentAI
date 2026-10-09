@@ -1275,6 +1275,10 @@ KONTROLE += [
      "120 to 180 words, in ' + jezykNarracji + ', plain text only", "120 to 180 words, in Polish, plain text only", None),
     ("R9-F/narracja-baza-serwera", "KOD8-23: Narracja porownuje z Baza na serwerze, blad API z powodem",
      "out.innerHTML = blokBledu(e, 'runNarrative()', 'vis-blad-narracji');", None, None),
+    ("R9-F/baza-sesja-lista", "KOD8-10: wygasla sesja - lista Bazy mowi o sesji zamiast 'Brak dokumentow' i nie zeruje licznika",
+     "if (odpBazy.status === 401) {", None, ("proxy",)),
+    ("R9-F/baza-sesja-dodanie", "KOD8-10: dodanie dokumentu przy wygaslej sesji - komunikat z 'Zaloguj sie', bez cichego zapisu lokalnego",
+     "var toast = pokazPowiadomienie(tekst('kb-sesja-wygasla', ''), 'blad', 15000);", None, ("proxy",)),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna
