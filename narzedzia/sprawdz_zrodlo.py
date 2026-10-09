@@ -1202,6 +1202,8 @@ KONTROLE += [
      None, "setTimeout(() => document.getElementById('u-url').focus(), 80);", None),
     ("R9-F/pusta-tresc", "KOD8-03: Dodaj bez nazwy albo tresci - komunikat przy polu zamiast cichego powrotu",
      "bladPolaTekstu(document.getElementById(name ? 'm-content' : 'm-name'), name ? 'text-brak-tresci' : 'text-brak-nazwy');", None, None),
+    ("R9-F/brama-ponowienie", "KOD8-07: 502/503/504 bramy bez JSON-a w oknie restartu = zerwane polaczenie, to samo zadanie ponowione",
+     "if (!odpowiedzBramy(res) || bramaMs >= 60000) return res;", None, None),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna

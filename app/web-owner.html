@@ -6524,6 +6524,21 @@ function czekajNaPowrot(sygnal) {
 function anulujZadanieWTle(id) {
   fetch('/api/zadanie/anuluj', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }), keepalive: true }).catch(function () {});
 }
+// R9-F (KOD8-07): brama przed serwerem (Caddy, Cloudflare) w oknie restartu uslugi oddaje 502/503/504
+// (Cloudflare 520-524) bez JSON-a. To nie jest odpowiedz serwera aplikacji, tylko zerwane polaczenie:
+// po 1, 2, 4 i 8 s pytamy o to samo zadanie (do ok. 60 s), zamiast konczyc artykul bledem.
+const STATUSY_BRAMY = [502, 503, 504, 520, 521, 522, 523, 524];
+function odpowiedzBramy(res) {
+  return STATUSY_BRAMY.indexOf(res.status) !== -1 && !/json/i.test(res.headers.get('content-type') || '');
+}
+function poczekaj(ms, sygnal) {
+  return new Promise(function (ok, zle) {
+    if (sygnal && sygnal.aborted) { zle(new DOMException('Przerwano', 'AbortError')); return; }
+    var przerwij = function () { clearTimeout(t); zle(new DOMException('Przerwano', 'AbortError')); };
+    var t = setTimeout(function () { if (sygnal) sygnal.removeEventListener('abort', przerwij); ok(); }, ms);
+    if (sygnal) sygnal.addEventListener('abort', przerwij, { once: true });
+  });
+}
 // fetch do serwera aplikacji odporny na zerwane polaczenie. `id` podaje wolajacy,
 // ktory sam ponawia (grafika): kolejna proba dolacza wtedy do tego samego zadania.
 // `anuluj`: przerwanie przez uzytkownika konczy tez zadanie na serwerze.
@@ -6532,9 +6547,19 @@ async function fetchZadania(url, opcje, id, anuluj) {
   id = id || noweIdZadania();
   const o = Object.assign({}, opcje, { headers: Object.assign({}, opcje && opcje.headers, { 'X-Zadanie': id }) });
   const przerwane = (e) => e && (e.name === 'AbortError' || (o.signal && o.signal.aborted));
+  let bramaMs = 0, bramaProb = 0;
   for (let proba = 0; ; proba++) {
     try {
-      return await fetch(url, o);
+      const res = await fetch(url, o);
+      if (!odpowiedzBramy(res) || bramaMs >= 60000) return res;
+      try { if (res.body) res.body.cancel().catch(function () {}); } catch (e) { /* cialo juz odczytane */ }
+      const przerwa = Math.min(8000, 1000 * Math.pow(2, bramaProb++));
+      bramaMs += przerwa;
+      const sub = document.getElementById('spin-sub');
+      if (sub) sub.textContent = _t('spin-wznawiam');
+      await poczekaj(przerwa, o.signal);
+      proba--; // odpowiedz bramy nie liczy sie do limitu zerwanych polaczen
+      continue;
     } catch (e) {
       if (przerwane(e) || proba >= 5) {
         if (przerwane(e) && anuluj) anulujZadanieWTle(id);

@@ -827,11 +827,54 @@ async function scenariuszR9FKeys(b) {
   await k.close();
 }
 
+// Wariant proxy: jeden serwer z atrapa na wszystkie scenariusze R9-F (uruchamiany przy pierwszym uzyciu).
+let SERWER = null;
+async function serwer() { if (!SERWER) SERWER = await serwerProxy(); return SERWER; }
+const pakietUzycie = (s) => s.evaluate(async () => (await (await fetch('/api/pakiet')).json()).uzycie || {});
+
+// KOD8-07: wdrozenie (restart uslugi) w trakcie generowania - brama oddaje 502 bez tresci, a serwer po
+// chwili dziala. Aplikacja traktuje to jak zerwane polaczenie i odbiera wynik tego samego zadania.
+async function scenariuszR9FBrama(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  // Konto standard: licznik artykulow pokazuje, czy artykul policzono raz (premium nie ma licznikow).
+  const s = await zalogujProxy(k, srv.port, 'standard');
+  const przed = { hist: await s.evaluate(() => history.length), art: ((await pakietUzycie(s)).artykul || {}).zuzyte };
+  const zadania = [];
+  let bramaRaz = true;
+  await s.route(/\/api$/, async (route) => {
+    const z = route.request();
+    const artykul = z.method() === 'POST' && z.headers()['x-cai-czynnosc'] === 'artykul';
+    if (artykul) zadania.push(z.headers()['x-zadanie'] || '');
+    if (artykul && bramaRaz) {
+      bramaRaz = false;
+      // Zapytanie dochodzi do serwera (zadanie biegnie dalej), a przegladarka dostaje 502 bramy bez tresci.
+      route.fetch().catch(() => {});
+      await new Promise((r) => setTimeout(r, 400));
+      return route.fulfill({ status: 502, body: '' });
+    }
+    return route.continue();
+  });
+  await generuj(s, 'Artykul w oknie restartu [atrapa:opoznienie=2500@artykul]', false);
+  await krok('R9-F KOD8-07 generowanie po 502 bramy', czekajNaKoniec(s, 60000));
+  await s.unroute(/\/api$/);
+  const po = await s.evaluate(() => ({ hist: history.length, odz: document.getElementById('out-badge').className,
+    blad: ((document.querySelector('#article .komunikat-bledu') || {}).innerText || '').replace(/\s+/g, ' ').slice(0, 140) }));
+  po.art = ((await pakietUzycie(s)).artykul || {}).zuzyte;
+  wynik('R9-F KOD8-07: 502 bramy w trakcie generowania - artykul odebrany z zadania na serwerze (Historia +1)',
+    po.hist === przed.hist + 1 && /ready/.test(po.odz) && !po.blad, JSON.stringify({ przed, po }));
+  wynik('R9-F KOD8-07: ponowienie z tym samym X-Zadanie, artykul policzony raz',
+    zadania.length >= 2 && !!zadania[0] && zadania.every((x) => x === zadania[0]) && po.art === przed.art + 1, JSON.stringify({ zadania, przed: przed.art, po: po.art }));
+  wynik('R9-F KOD8-07: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-brama');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
   ['stan', scenariuszStanu], ['r4-logika', scenariuszR4Logiki], ['bledy', scenariuszBledow], ['historia-r4', scenariuszHistoriiR4],
-  ['r9f-keys', scenariuszR9FKeys],
+  ['r9f-keys', scenariuszR9FKeys], ['r9f-brama', scenariuszR9FBrama],
 ];
 (async () => {
   let b;
@@ -851,6 +894,7 @@ const SCENARIUSZE = [
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
   } finally {
     if (b) await b.close();
+    if (SERWER) { if (bledow) console.log(SERWER.log().split('\n').slice(-15).join('\n')); SERWER.zatrzymaj(); }
   }
   console.log(bledow ? '\nBLEDOW: ' + bledow : '\nWszystkie scenariusze przeszly.');
   process.exit(bledow ? 1 : 0);
