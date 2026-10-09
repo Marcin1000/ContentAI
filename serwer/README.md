@@ -863,7 +863,8 @@ liczby i funkcje pakietów w cenniku zgodne z `serwer/plany.js` (`LICZBY_PAKIETO
 `BEZ_LIMITU`, `ZERO`, `FUNKCJE_W_TABELI`), poprawna `konfiguracja.json`, wersje dokumentów
 PL i EN zgodne, długość przykładowego opisu meta zgodna z liczbą na stronie, tytuł do 70
 i opis do 160 znaków, bez długich myślników i bez zakazanych sformułowań (`ZAKAZANE`:
-faktura, „w pełni zgodne", „Poproś o dostęp", OpenSEO, DataForSEO, NVIDIA, marki klientów).
+nazwa dokumentu sprzedaży z VAT (PR8-11), „w pełni zgodne", „Poproś o dostęp", OpenSEO, DataForSEO,
+NVIDIA, marki klientów).
 
 Zmiana ceny: cena w Stripe, `PLATNOSCI_CENY_WYSWIETLANE` na serwerze i `ceny`
 w `konfiguracja.json` (potem `buduj_strone.py` i wdrożenie `showcase/`). Strona nie łączy się

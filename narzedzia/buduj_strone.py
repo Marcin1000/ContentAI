@@ -125,7 +125,7 @@ FUNKCJE_W_TABELI = {
 }
 
 DLUGIE_MYSLNIKI = ('\u2014', '\u2013')
-# Sformulowania, ktorych na stronie byc nie moze: brak faktur (PR8-11), AI Act tylko „wspiera wymogi
+# Sformulowania, ktorych na stronie byc nie moze: nazwa dokumentu sprzedazy z VAT (PR8-11), AI Act tylko „wspiera wymogi
 # przejrzystosci" (PR8-04), samoobsluga zamiast formularza (STR8-03), uslugi nieuzywane na produkcji
 # (DECYZJE-R9, konfiguracja produkcji), funkcja wysylek z wdrozenia klienta (STR8-11), marki klientow.
 ZAKAZANE = re.compile(
