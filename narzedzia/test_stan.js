@@ -962,12 +962,46 @@ async function scenariuszR9FPrzeladowanie(b) {
   await k.close();
 }
 
+// KOD8-17: Fakty dla artykulu napisanego z Bazy na serwerze, zaraz po generowaniu i po odswiezeniu strony
+// (artykul wraca z Historii): kontrola zestawia tekst z fragmentami Bazy, nie "Brak zrodel do porownania".
+async function scenariuszR9FFakty(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  await s.evaluate(async () => {
+    await fetch('/api/baza', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zakres: 'prywatna', nazwa: 'Oferta Termoplus',
+      tresc: 'Termoplus montuje pompy ciepla Vitocal w 48 godzin. Gwarancja 7 lat. Pompy ciepla w Krakowie od 28 000 zl.' }) });
+    await odswiezListeBazy();
+  });
+  const zrodlaFaktow = [];
+  s.on('request', (z) => { const d = z.postData() || ''; if (z.method() === 'POST' && /\/api$/.test(z.url()) && /fact checker/.test(d)) zrodlaFaktow.push(/Vitocal/.test(d)); });
+  await s.evaluate(() => { document.getElementById('topic').value = 'Pompy ciepla w Krakowie'; document.getElementById('use-web').checked = false; generate(true); });
+  await krok('R9-F KOD8-17 artykul z Bazy', czekajNaKoniec(s));
+  const fakty = async () => {
+    await s.evaluate(() => { const p = document.getElementById('fakty-panel'); if (p.style.display === 'block') p.style.display = 'none'; przelaczPanelFaktow(); });
+    await s.waitForFunction(() => getComputedStyle(document.getElementById('fakty-loading')).display === 'none', null, { timeout: 30000 }).catch(() => {});
+    return s.evaluate(() => ({ stan: faktyStan, tekst: (document.getElementById('fakty-wynik').innerText || '').replace(/\s+/g, ' ').slice(0, 120) }));
+  };
+  const przed = await fakty();
+  await s.reload({ waitUntil: 'load' });
+  await s.waitForFunction(() => typeof generate === 'function' && document.readyState === 'complete' && document.getElementById('article').style.display === 'block', null, { timeout: 15000 });
+  await s.waitForTimeout(500);
+  const po = await fakty();
+  wynik('R9-F KOD8-17: Fakty zaraz po generowaniu zestawiaja tekst z Baza na serwerze', przed.stan === 'gotowe' && zrodlaFaktow[0] === true, JSON.stringify({ przed, zrodlaFaktow }));
+  wynik('R9-F KOD8-17: po odswiezeniu (artykul z Historii) Fakty dalej widza Baze na serwerze, bez "Brak zrodel"',
+    po.stan === 'gotowe' && zrodlaFaktow.length === 2 && zrodlaFaktow[1] === true, JSON.stringify({ po, zrodlaFaktow }));
+  await s.evaluate(async () => { const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); });
+  wynik('R9-F KOD8-17: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-fakty');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
   ['stan', scenariuszStanu], ['r4-logika', scenariuszR4Logiki], ['bledy', scenariuszBledow], ['historia-r4', scenariuszHistoriiR4],
   ['r9f-keys', scenariuszR9FKeys], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
-  ['r9f-pause-turn', scenariuszR9FPauseTurn], ['r9f-przeladowanie', scenariuszR9FPrzeladowanie],
+  ['r9f-pause-turn', scenariuszR9FPauseTurn], ['r9f-przeladowanie', scenariuszR9FPrzeladowanie], ['r9f-fakty', scenariuszR9FFakty],
 ];
 (async () => {
   let b;

@@ -4929,6 +4929,7 @@ var I18N = {
     'gap-brak-pokrycia':'Brak pokrycia w zaznaczonych źródłach. Dodaj materiał na ten temat albo usuń tę sekcję.',
     'fakty-title':'Kontrola faktów',
     'fakty-etap-linki':'Sprawdzam odnośniki w artykule…',
+    'fakty-etap-baza':'Pobieram fragmenty Bazy wiedzy, z których powstał artykuł…',
     'fakty-brak-tekstu':'Najpierw wygeneruj artykuł: na razie nie ma czego sprawdzać.',
     'fakty-refresh':'Sprawdź ponownie',
     'fakty-loading':'Zestawiam artykuł ze źródłami…',
@@ -5617,6 +5618,7 @@ var I18N = {
     'gap-brak-pokrycia':'Not covered by the selected sources. Add material on this topic or remove this section.',
     'fakty-title':'Fact check',
     'fakty-etap-linki':'Checking the links in the article…',
+    'fakty-etap-baza':'Fetching the knowledge base passages the article was written from…',
     'fakty-brak-tekstu':'Generate an article first: there is nothing to check yet.',
     'fakty-refresh':'Check again',
     'fakty-loading':'Comparing the article with the sources…',
@@ -9655,6 +9657,14 @@ async function uruchomKontroleFaktow(wymus) {
   // R7-I: do kontroli idzie sama tresc artykulu - bez listy zrodel (tytuly i daty stron, np.
   // "Regulamin ... (2 gru 2024)", wracaly jako "liczba bez pokrycia"), ramki meta i notatek o lukach.
   const tekstArtykulu = tekstBlokami(kopiaDoStatystyk(art));
+  // R9-F (KOD8-17): artykul z Historii (takze przywrocony po odswiezeniu strony) nie niesie fragmentow
+  // Bazy na serwerze, z ktorych powstal, a tych dokumentow nie da sie zaznaczyc w panelu - Fakty mowily
+  // "Brak zrodel". Pobieramy je tym samym zapytaniem co przy pisaniu (frazy albo temat artykulu).
+  if (!ostatniaWiedzaSerwera && (window._bazaSerwerLiczba || 0) > 0 && typeof wiedzaZSerwera === 'function') {
+    etapFaktow('fakty-etap-baza');
+    const ka = kontekstArtykulu();
+    ostatniaWiedzaSerwera = await wiedzaZSerwera(ka.frazy && ka.frazy.length ? ka.frazy.join(', ') : (ka.temat || ka.h1));
+  }
   // Zrodla wchodza do sygnatury: po zaznaczeniu ich w bazie panel nie moze
   // pokazac zapamietanego wyniku "brak zrodel".
   const zrodla = zrodlaDoKontroli();

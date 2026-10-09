@@ -1218,6 +1218,8 @@ KONTROLE += [
      "window.addEventListener('load', function () { setTimeout(odbierzArtykulWToku, 400); });", None, ("proxy",)),
     ("R9-F/zadanie-po-429", "KOD8-30: ponowienie po 429 jako nowe zadanie (nie zapamietane 429 pod tym samym identyfikatorem)",
      "delete options.headers['X-Zadanie'];", None, None),
+    ("R9-F/fakty-baza-serwera", "KOD8-17: Fakty dla artykulu z Historii (i po odswiezeniu) pobieraja fragmenty Bazy na serwerze",
+     "ostatniaWiedzaSerwera = await wiedzaZSerwera(ka.frazy && ka.frazy.length ? ka.frazy.join(', ') : (ka.temat || ka.h1));", None, ("proxy",)),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna
