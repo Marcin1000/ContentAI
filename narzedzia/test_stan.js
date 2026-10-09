@@ -1503,6 +1503,158 @@ async function scenariuszR9FSesja(b) {
   await k.close();
 }
 
+// KOD8-28: sciezki, ktorych nie sprawdzal zaden test (raport it-kod, "0 testow"): pliki do Bazy przez pole pliku
+// (handleFiles/processFile), strona do Bazy (saveUrl + /api/strona), przeniesienie dokumentow z przegladarki na
+// serwer (przeniesNaSerwer), Glos marki (analyzeBrandVoice) uzyty w prompcie artykulu, panel KD (toggleKdPanel),
+// lektor artykulu (speakArticle) i monitor widocznosci AI (aivCheckOne/aivCheckAll).
+async function scenariuszR9FPokrycie(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  const wyczyscBaze = () => s.evaluate(async () => { const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); await odswiezListeBazy(); });
+  // Kazde powiadomienie od chwili pokazania (znikaja po 6 s, a na ekranie mieszcza sie 4).
+  const powiadomienia = () => s.evaluate(() => window.__powiadomienia.slice());
+  await s.evaluate(() => {
+    window.__powiadomienia = [];
+    new MutationObserver((zmiany) => zmiany.forEach((z) => z.addedNodes.forEach((n) => {
+      if (n.classList && n.classList.contains('powiadomienie')) window.__powiadomienia.push(n.textContent.replace(/\s+/g, ' '));
+    }))).observe(document.body, { childList: true, subtree: true });
+  });
+  const czekajNaBaze = (n) => s.waitForFunction((n) => (window._bazaSerwerLiczba || 0) >= n, n, { timeout: 15000 }).catch(() => {});
+  await wyczyscBaze();
+  const doBazy = [];
+  const zap = [];
+  s.on('request', (z) => {
+    if (z.method() !== 'POST') return;
+    if (/\/api\/baza$/.test(z.url())) { try { doBazy.push(JSON.parse(z.postData() || '{}')); } catch (e) { /* inne cialo */ } }
+    if (/\/api$/.test(z.url())) zap.push({ czynnosc: z.headers()['x-cai-czynnosc'] || '', cialo: z.postData() || '' });
+  });
+
+  // Pliki przez pole pliku: TXT z polskimi literami, DOCX (z generatora eksportu aplikacji), prezentacja i pusty plik.
+  const docx = await s.evaluate(async () => {
+    await wczytajSkrypt('pwa/lib/docx-natywny.js');
+    const el = document.createElement('div');
+    el.innerHTML = '<h1>Oferta serwisowa</h1><p>Przegląd pompy ciepła raz w roku. Gwarancja 7 lat, dojazd w 48 godzin.</p>';
+    const bajty = new Uint8Array(await (await window.DocxNatywny.zbuduj(el, { tytul: 'Oferta serwisowa', jezyk: 'pl-PL' })).arrayBuffer());
+    let bin = ''; for (const x of bajty) bin += String.fromCharCode(x);
+    return btoa(bin);
+  });
+  await s.evaluate(() => document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()));
+  await s.setInputFiles('#file-input', [
+    { name: 'cennik.txt', mimeType: 'text/plain', buffer: Buffer.from('Pompa ciepła Vitocal 250-A: montaż w 48 godzin, cena od 38 000 zł. Żółta karta gwarancyjna na 7 lat.', 'utf8') },
+    { name: 'oferta-serwisowa.docx', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', buffer: Buffer.from(docx, 'base64') },
+    { name: 'prezentacja.pptx', mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', buffer: Buffer.from('PK') },
+    { name: 'pusty.txt', mimeType: 'text/plain', buffer: Buffer.alloc(0) },
+  ]);
+  await czekajNaBaze(2);
+  await s.waitForTimeout(500);
+  const pliki = await s.evaluate(() => ({ liczba: window._bazaSerwerLiczba || 0, lokalne: docs.length,
+    pptx: _t('msg-plik-pptx').replace('{name}', 'prezentacja.pptx'), pusty: _t('msg-plik-pusty').replace('{name}', 'pusty.txt') }));
+  const powPliki = await powiadomienia();
+  const txt = doBazy.find((d) => d.nazwa === 'cennik.txt') || {};
+  const dok = doBazy.find((d) => d.nazwa === 'oferta-serwisowa.docx') || {};
+  wynik('R9-F KOD8-28: pliki do Bazy przez pole pliku - TXT i DOCX z polskimi literami na serwerze, bez kopii w przegladarce',
+    /Pompa ciepła Vitocal/.test(txt.tresc || '') && /Żółta karta/.test(txt.tresc || '') && /Przegląd pompy ciepła/.test(dok.tresc || '') && /Gwarancja 7 lat/.test(dok.tresc || '')
+      && pliki.liczba === 2 && pliki.lokalne === 0, JSON.stringify({ pliki, txt: (txt.tresc || '').slice(0, 80), dok: (dok.tresc || '').slice(0, 80) }));
+  wynik('R9-F KOD8-28: prezentacja i pusty plik - komunikat zamiast dokumentu w Bazie',
+    doBazy.length === 2 && powPliki.some((p) => p.indexOf(pliki.pptx) !== -1) && powPliki.some((p) => p.indexOf(pliki.pusty) !== -1), JSON.stringify({ wyslane: doBazy.map((d) => d.nazwa), powPliki }).slice(0, 400));
+
+  // Strona do Bazy: adres bez https://, serwer pobiera strone (/api/strona udawane trasa - kontener nie ma sieci).
+  let adresStrony = '';
+  await s.route(/\/api\/strona$/, (route) => {
+    try { adresStrony = JSON.parse(route.request().postData() || '{}').adres || ''; } catch (e) { /* inne cialo */ }
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ tytul: 'Termoplus - pompy ciepła w Krakowie',
+      tekst: 'Termoplus montuje pompy ciepła w Krakowie i okolicach, z przeglądem po pierwszym sezonie grzewczym. '.repeat(6) + 'Serwis odpowiada w 24 godziny.' }) });
+  });
+  await s.evaluate(async () => { openUrlModal(); document.getElementById('u-url').value = 'termoplus.example.com/oferta'; await saveUrl(); });
+  await czekajNaBaze(3);
+  await s.unroute(/\/api\/strona$/);
+  const strona = doBazy.find((d) => d.nazwa === 'Termoplus - pompy ciepła w Krakowie') || {};
+  const oknoAdresu = await s.evaluate(() => document.getElementById('url-modal').classList.contains('open'));
+  wynik('R9-F KOD8-28: strona do Bazy (saveUrl + /api/strona) - https:// dopisane, tytul strony jako nazwa, tresc i adres na serwerze',
+    adresStrony === 'https://termoplus.example.com/oferta' && strona.url === 'https://termoplus.example.com/oferta' && /montuje pompy ciepła/.test(strona.tresc || '') && !oknoAdresu,
+    JSON.stringify({ adresStrony, url: strona.url, tresc: (strona.tresc || '').slice(0, 80), oknoAdresu }));
+
+  // Dokument sprzed Bazy na serwerze (tylko w przegladarce): "Przenies na serwer" w panelu Bazy.
+  const przen = await s.evaluate(async () => {
+    document.querySelectorAll('.powiadomienie').forEach((p) => p.remove());
+    docs.push({ name: 'Notatka z przegladarki', content: 'Klienci pytaja o dotacje Czyste Powietrze i montaz zima.', icon: '✏️', words: 9, added: new Date(), selected: true, url: null });
+    rysujBazeWPanelu();
+    const przycisk = document.querySelector('#kb-serwer .kb-przenies');
+    const przed = window._bazaSerwerLiczba || 0;
+    if (przycisk) przycisk.click();
+    for (let i = 0; i < 60 && ((window._bazaSerwerLiczba || 0) === przed || docs.length); i++) await new Promise((r) => setTimeout(r, 250));
+    await new Promise((r) => setTimeout(r, 300));
+    return { przycisk: !!przycisk, przed, po: window._bazaSerwerLiczba || 0, lokalne: docs.length, wzor: _t('kb-przeniesiono') + ': 1', pow: window.__powiadomienia.slice(-3) };
+  });
+  wynik('R9-F KOD8-28: przeniesienie dokumentu z przegladarki na serwer - w Bazie na serwerze, nie w przegladarce, z komunikatem',
+    przen.przycisk && przen.po === przen.przed + 1 && przen.lokalne === 0 && doBazy.some((d) => d.nazwa === 'Notatka z przegladarki') && przen.pow.some((p) => p.indexOf(przen.wzor) !== -1), JSON.stringify(przen).slice(0, 400));
+
+  // Glos marki: profil z probek tekstu, zapisany i uzyty w prompcie nastepnego artykulu.
+  const bv = await s.evaluate(async () => {
+    openBvModal();
+    document.getElementById('bv-articles').value = 'Pompa ciepla to inwestycja na lata. Liczymy koszty uczciwie i mowimy wprost, ile zaoszczedzisz. '
+      + 'Montaz trwa dwa dni, a serwis odpowiada w 24 godziny. Bez zargonu, za to z liczbami.';
+    document.querySelector('#bv-input-area button[onclick="analyzeBrandVoice()"]').click();
+    for (let i = 0; i < 80 && !brandVoiceProfile; i++) await new Promise((r) => setTimeout(r, 250));
+    return { styl: (brandVoiceProfile && brandVoiceProfile.style) || '', zapisany: !!magazyn.getItem('cai-bv'), otwarte: document.getElementById('bv-modal').classList.contains('open') };
+  });
+  wynik('R9-F KOD8-28: Glos marki - profil stylu z probek zapisany, okno zamkniete', !!bv.styl && bv.zapisany && !bv.otwarte, JSON.stringify(bv));
+  await s.fill('#kw-input', 'pompy ciepla');
+  await s.press('#kw-input', 'Enter');
+  await s.evaluate(() => { document.getElementById('topic').value = 'Pompy ciepla w Krakowie'; document.getElementById('use-web').checked = false; generate(true); });
+  await krok('R9-F KOD8-28 artykul z Glosem marki', czekajNaKoniec(s));
+  const artykul = zap.filter((z) => z.czynnosc === 'artykul').map((z) => z.cialo);
+  wynik('R9-F KOD8-28: Glos marki trafia do promptu artykulu', !!bv.styl && artykul.some((c) => c.indexOf('BRAND VOICE - apply this style: ' + JSON.stringify(bv.styl).slice(1, -1)) !== -1),
+    'zapytan artykulu: ' + artykul.length);
+
+  // Panel KD: klik w gestosc slow kluczowych otwiera tabele, drugi klik zamyka.
+  const kd = await s.evaluate(() => {
+    const w = document.getElementById('stat-kd-wrap'), p = document.getElementById('kd-panel');
+    w.click(); const otwarty = p.style.display === 'block', wiersze = p.querySelectorAll('.kd-row').length;
+    w.click(); return { otwarty, wiersze, zamkniety: p.style.display === 'none' };
+  });
+  wynik('R9-F KOD8-28: panel KD - tabela gestosci slow kluczowych otwiera sie i zamyka', kd.otwarty && kd.wiersze > 0 && kd.zamkniety, JSON.stringify(kd));
+
+  // Lektor: "Posluchaj" czyta artykul glosem z serwera (TTS przez /api/tts, atrapa MP3).
+  const tts = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api\/tts/.test(z.url())) tts.push(z.url()); });
+  const przedLektorem = (await powiadomienia()).length;
+  await krok('R9-F KOD8-28 lektor: menu Wiecej', s.click('#grupa-wiecej-wrap > button', { timeout: 5000 }));
+  await krok('R9-F KOD8-28 lektor: Posluchaj', s.click('#tts-btn', { timeout: 5000 }));
+  await s.waitForFunction(() => window.AUDIO && AUDIO.buffer && AUDIO.playing, null, { timeout: 30000 }).catch(() => {});
+  const lektor = await s.evaluate(() => ({ gra: !!(AUDIO.buffer && AUDIO.playing), czas: Math.round(AUDIO.dur || 0), przycisk: document.getElementById('tts-btn').textContent.trim(), wzor: _t('audio-pause') }));
+  lektor.pow = (await powiadomienia()).slice(przedLektorem).map((p) => p.slice(0, 160));
+  await s.evaluate(() => { try { audioBarClose(); } catch (e) { /* bez paska */ } });
+  wynik('R9-F KOD8-28: lektor artykulu - glos z serwera gra, przycisk "Pauza", bez bledu', lektor.gra && lektor.przycisk === lektor.wzor && tts.length > 0 && !lektor.pow.length,
+    JSON.stringify({ lektor, tts: tts.length }));
+
+  // Monitor widocznosci AI: zapytania dodane w oknie, "Sprawdz" przy jednym i "Sprawdz wszystkie" zapisuja pomiar.
+  // Domeny google.com i gov.pl sa zawsze w wynikach wyszukiwania atrapy, wiec status to "cytowane".
+  const aiv = await s.evaluate(async () => {
+    aivOpen();
+    const c = aivCfg(); c.domains = ['google.com', 'gov.pl']; c.brands = ['Termoplus']; c.queries = []; aivSave(c);
+    for (const q of ['czy Termoplus to dobry instalator pomp ciepla', 'najlepszy instalator pomp ciepla w Krakowie']) { document.getElementById('aiv-add-input').value = q; aivAdd(); }
+    await aivCheckOne(0, document.querySelector('#aiv-list button[onclick^="aivCheckOne(0"]'));
+    const poJednym = aivCfg().queries.map((q) => (q.hist || []).length);
+    await aivCheckAll(null);
+    const po = aivCfg().queries;
+    const wynik = { poJednym, poWszystkich: po.map((q) => (q.hist || []).length), status: po.map((q) => (q.hist && q.hist.length ? q.hist[q.hist.length - 1].status : '')),
+      ocena: document.getElementById('aiv-score').textContent, lista: (document.getElementById('aiv-list').innerText || '').replace(/\s+/g, ' ').slice(0, 240), etykieta: _t('aiv-status-cited') };
+    aivClose();
+    return wynik;
+  });
+  const pytaniaAiv = zap.filter((z) => /helpful AI assistant answering a user question using web search/.test(z.cialo));
+  wynik('R9-F KOD8-28: monitor widocznosci AI - "Sprawdz" i "Sprawdz wszystkie" zapisuja pomiar z wyszukiwaniem, wynik i status w oknie',
+    aiv.poJednym.join() === '1,0' && aiv.poWszystkich.join() === '2,1' && aiv.status.every((x) => x === 'cited') && aiv.ocena === '100/100' && aiv.lista.indexOf(aiv.etykieta) !== -1
+      && pytaniaAiv.length === 3 && pytaniaAiv.every((z) => /web_search/.test(z.cialo) && /in Polish/.test(z.cialo)), JSON.stringify({ aiv, pytan: pytaniaAiv.length }).slice(0, 500));
+
+  await wyczyscBaze();
+  wynik('R9-F KOD8-28: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-pokrycie');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
@@ -1514,6 +1666,7 @@ const SCENARIUSZE = [
   ['r9f-luki-darmowy', scenariuszR9FLukiDarmowy], ['r9f-bez-sieci', scenariuszR9FBezSieci],
   ['r9f-prompt-bazy', scenariuszR9FPromptBazy], ['r9f-pomocnicy', scenariuszR9FPomocnicy],
   ['r9f-narracja', scenariuszR9FNarracja], ['r9f-sesja', scenariuszR9FSesja],
+  ['r9f-pokrycie', scenariuszR9FPokrycie],
 ];
 (async () => {
   let b;
