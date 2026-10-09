@@ -3122,6 +3122,7 @@ body.is-mobile .hist-lokalnie { margin-top: var(--s-8); }
 /* UX8-24: przykladowy artykul - komputer: tekst z karta ocen z prawej; telefon: karta ocen nad tekstem */
 .start-przyklad { margin-top: var(--s-12); }
 .przyklad-okno { width: min(1040px, 100%); }
+#przyklad-modal .przyklad-okno:focus { outline: none; }
 #przyklad-modal .przyklad-pasek { padding: var(--s-12); border: 1px solid var(--c-akcent-ramka); border-radius: var(--r-md); background: var(--c-akcent-tlo); color: var(--c-tekst); }
 .przyklad-uklad { display: flex; flex-direction: row-reverse; align-items: flex-start; gap: var(--s-24); }
 .przyklad-uklad > .przyklad-artykul { display: block; flex: 1 1 auto; min-width: 0; margin: 0; }
@@ -4578,7 +4579,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <!-- R9-G (UX8-24): PRZYKLADOWY ARTYKUL - nowa osoba widzi wynik (tekst ze zrodlami, cztery oceny, kontrola
      faktow), zanim zacznie pisac albo podlaczy klucz. Tylko do odczytu: nie trafia do Historii i nie zuzywa pakietu. -->
 <div class="overlay" id="przyklad-modal" onclick="if(event.target===this)zamknijPrzyklad()">
-  <div class="modal przyklad-okno">
+  <div class="modal przyklad-okno" tabindex="-1">
     <div class="modal-head">
       <h3 data-i18n="przyklad-tytul">Przykładowy artykuł</h3>
       <button class="modal-close" onclick="zamknijPrzyklad()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
@@ -13930,6 +13931,8 @@ function rysujPrzyklad() {
 function otworzPrzyklad() {
   rysujPrzyklad();
   document.getElementById('przyklad-modal').classList.add('open');
+  // Fokus na samym oknie (nie na "Zamknij"): czytnik czyta tytul, a strzalki przewijaja tekst przykladu.
+  requestAnimationFrame(function () { const d = document.querySelector('#przyklad-modal .modal'); if (d) d.focus({ preventScroll: true }); });
 }
 function zamknijPrzyklad() { document.getElementById('przyklad-modal').classList.remove('open'); }
 new MutationObserver(function () {
@@ -13965,12 +13968,13 @@ function siecDomyslnaDlaBazy() {
   if (!w) return;
   if (window.API_ENDPOINT_OVERRIDE && typeof window._bazaSerwerLiczba !== 'number') return;
   const pusta = liczbaDokumentow() === 0;
-  w.defaultChecked = pusta;
   if (!siecWybranaRecznie && !webEnabledByModal && !spinnerPracuje()) {
     // Wylaczamy tylko to, co sami wlaczylismy: stan ustawiony inaczej zostaje.
     if (pusta && !w.checked) { w.checked = true; siecWlaczonaDlaPustej = true; }
     else if (!pusta && siecWlaczonaDlaPustej) { w.checked = false; siecWlaczonaDlaPustej = false; }
   }
+  // Po ustawieniu stanu (inaczej sama zmiana defaultChecked przestawia jeszcze nieruszony przelacznik).
+  w.defaultChecked = pusta;
   const opis = document.querySelector('label[for="use-web"] .toggle-hint');
   const klucz = pusta && w.checked ? 'toggle-web-hint-pusta' : 'toggle-web-hint';
   if (opis && opis.getAttribute('data-i18n') !== klucz) { opis.setAttribute('data-i18n', klucz); opis.textContent = _t(klucz); }
