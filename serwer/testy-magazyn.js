@@ -702,7 +702,7 @@ async function testySerwera(sprawdz) {
     const dokNieznany = await t.zadanie('/dokumenty/nieznany');
     const dokPost = await t.zadanie('/dokumenty/regulamin', t.formularz(null, {}));
     sprawdz('dokumenty prawne (E): publiczne bez logowania, naglowki bezpieczenstwa, krotka pamiec podreczna, PL/EN, 404 i 405',
-      dok.status === 501 && /<html lang="pl"/.test(await dok.text()) && /frame-ancestors 'none'/.test(dok.headers.get('content-security-policy') || '')
+      dok.status === 200 && /<html lang="pl"/.test(await dok.text()) && /frame-ancestors 'none'/.test(dok.headers.get('content-security-policy') || '')
       && dok.headers.get('cache-control') === 'public, max-age=300' && /<html lang="en"/.test(await dokEn.text())
       && dokNieznany.status === 404 && dokPost.status === 405);
 
