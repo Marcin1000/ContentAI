@@ -3093,6 +3093,9 @@ body:not(.is-mobile) .menu-tel-widocznosc { display: none; }
 .hist-lokalnie > .ikona { flex: none; align-self: flex-start; margin-top: 2px; width: 14px; height: 14px; color: var(--c-tekst-3); }
 .hist-lokalnie > span { flex: 1 1 240px; min-width: 0; }
 body.is-mobile .hist-lokalnie { margin-top: var(--s-8); }
+/* UX8-15: kreator - "Krok n z m" tekstem nad tytulem; tytul przyjmuje fokus programowo (bez ramki jak pole) */
+#start-modal .start-postep { margin: calc(var(--s-10, 10px) * -1) 0 var(--s-8); }
+#start-modal #start-tytul:focus { outline: none; }
 }
 @layer widoki {
 /* ══ RUNDA 6, wykonawca F ══ */
@@ -5143,6 +5146,8 @@ var I18N = {
     'msg-spin-sections':'Generuję sekcje…',
     // Badges
     'badge-error':'błąd','badge-generating':'generowanie…','badge-premium':'samokorekta…','badge-uciety':'ucięty',
+    'sr-artykul-gotowy':'Artykuł gotowy.','sr-artykul-blad':'Generowanie zakończone błędem. Opis jest w miejscu artykułu.',
+    'sr-artykul-przerwany':'Generowanie przerwane.','sr-artykul-uciety':'Artykuł gotowy, ale ucięty na limicie długości.',
     // Loading
     'msg-loading-article':'Analizuję artykuł…',
     'msg-loading-aio':'Oceniam tekst pod AI Overviews…',
@@ -5783,6 +5788,8 @@ var I18N = {
     'msg-spin-sections':'Generating sections…',
     // Badges
     'badge-error':'error','badge-generating':'generating…','badge-premium':'self-review…','badge-uciety':'cut off',
+    'sr-artykul-gotowy':'The article is ready.','sr-artykul-blad':'Generation ended with an error. The description is where the article would be.',
+    'sr-artykul-przerwany':'Generation stopped.','sr-artykul-uciety':'The article is ready but was cut off at the length limit.',
     // Loading
     'msg-loading-article':'Analyzing article…',
     'msg-loading-aio':'Assessing the draft for AI Overviews…',
@@ -16082,7 +16089,8 @@ document.addEventListener('keydown', e => {
     d.setAttribute('role', 'dialog');
     d.setAttribute('aria-modal', 'true');
     if (!d.hasAttribute('aria-labelledby')) {
-      const t = d.querySelector('h1, h2, h3, [class*="title"]');
+      // R9-G (UX8-15): okna z tytulem w .tekst-tytul (baza na serwerze, frazy OpenSEO, pakiet) tez dostaja nazwe.
+      const t = d.querySelector('h1, h2, h3, [class*="title"], .tekst-tytul');
       if (t) { if (!t.id) t.id = okno.id + '-tytul'; d.setAttribute('aria-labelledby', t.id); }
     }
     if (!d.hasAttribute('tabindex')) d.setAttribute('tabindex', '-1');
@@ -16156,6 +16164,38 @@ document.addEventListener('keydown', e => {
       obs.observe(o, { attributes: true, attributeFilter: ['class', 'style'] });
       if (widoczny(o)) poOtwarciu(o);
     });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
+// ── R9-G (UX8-15): POSTEP GENEROWANIA DLA CZYTNIKA EKRANU ─────────────────
+// Przez 30-60 s generowania czytnik nie dostawal nic, a wynik pojawial sie bez zapowiedzi. Etap z napisu
+// spinnera i koniec (gotowe, blad, przerwane, uciety) ida do stalego regionu aria-live (spinner bywa
+// ukryty, a region w ukrytym kontenerze nic nie mowi); artykul ma aria-busy, dopoki trwa pisanie.
+// Obserwujemy spinner i odznake wyniku, wiec funkcje generowania zostaja nietkniete.
+(function postepDlaCzytnika() {
+  const KONIEC = { 'badge-done': 'sr-artykul-gotowy', 'badge-error': 'sr-artykul-blad', 'badge-przerwane': 'sr-artykul-przerwany', 'badge-uciety': 'sr-artykul-uciety' };
+  function start() {
+    const sp = document.getElementById('spinner'), etap = document.getElementById('spin-label');
+    const odznaka = document.getElementById('out-badge'), art = document.getElementById('article');
+    if (!sp || !etap || !odznaka) return;
+    const region = document.createElement('div');
+    region.id = 'gen-postep-sr'; region.className = 'sr-only';
+    region.setAttribute('role', 'status'); region.setAttribute('aria-live', 'polite'); region.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(region);
+    let trwa = false, ostatni = '';
+    const powiedz = (t) => { t = String(t || '').trim(); if (!t || t === ostatni) return; ostatni = t; region.textContent = t; };
+    const widac = () => getComputedStyle(sp).display !== 'none';
+    new MutationObserver(() => {
+      if (art) art.setAttribute('aria-busy', String(widac()));
+      if (widac()) { trwa = true; powiedz(etap.textContent); }
+    }).observe(sp, { attributes: true, attributeFilter: ['style'] });
+    new MutationObserver(() => { if (widac()) powiedz(etap.textContent); }).observe(etap, { childList: true, characterData: true, subtree: true });
+    new MutationObserver(() => {
+      const k = odznaka.getAttribute('data-i18n') || '';
+      if (k === 'badge-generating' || k === 'badge-premium') { trwa = true; return; }
+      if (trwa && KONIEC[k]) { trwa = false; ostatni = ''; powiedz(_t(KONIEC[k])); }
+    }).observe(odznaka, { attributes: true, attributeFilter: ['data-i18n'] });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

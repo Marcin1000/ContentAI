@@ -3116,6 +3116,9 @@ body:not(.is-mobile) .menu-tel-widocznosc { display: none; }
 .hist-lokalnie > .ikona { flex: none; align-self: flex-start; margin-top: 2px; width: 14px; height: 14px; color: var(--c-tekst-3); }
 .hist-lokalnie > span { flex: 1 1 240px; min-width: 0; }
 body.is-mobile .hist-lokalnie { margin-top: var(--s-8); }
+/* UX8-15: kreator - "Krok n z m" tekstem nad tytulem; tytul przyjmuje fokus programowo (bez ramki jak pole) */
+#start-modal .start-postep { margin: calc(var(--s-10, 10px) * -1) 0 var(--s-8); }
+#start-modal #start-tytul:focus { outline: none; }
 }
 @layer widoki {
 /* ══ RUNDA 6, wykonawca F ══ */
@@ -5254,6 +5257,8 @@ var I18N = {
     'msg-spin-sections':'Generuję sekcje…',
     // Badges
     'badge-error':'błąd','badge-generating':'generowanie…','badge-premium':'samokorekta…','badge-uciety':'ucięty',
+    'sr-artykul-gotowy':'Artykuł gotowy.','sr-artykul-blad':'Generowanie zakończone błędem. Opis jest w miejscu artykułu.',
+    'sr-artykul-przerwany':'Generowanie przerwane.','sr-artykul-uciety':'Artykuł gotowy, ale ucięty na limicie długości.',
     // Loading
     'msg-loading-article':'Analizuję artykuł…',
     'msg-loading-aio':'Oceniam tekst pod AI Overviews…',
@@ -5443,6 +5448,7 @@ var I18N = {
     'pakiet-wywolania-opis':'Jeden artykuł to kilka wywołań: brief, treść, korekta, przeróbki.',
     'start-menu-title':'Konfiguracja konta','start-menu-sub':'klucze API i pierwsze kroki',
     'start-dalej':'Dalej','start-wstecz':'Wstecz','start-pomin':'Pomiń kreator',
+    'start-krok-z':'Krok {n} z {m}',
     'start-zaczynamy':'Zacznij pisać','start-sztuk':'szt.','start-twoj-pakiet':'Twój pakiet',
     'start-1-tytul':'Witaj w Content AI',
     'start-1-opis':'Zanim napiszesz pierwszy artykuł, przejdźmy przez cztery krótkie kroki. Zajmie to minutę, a wszystko można zmienić później w ustawieniach.',
@@ -5989,6 +5995,8 @@ var I18N = {
     'msg-spin-sections':'Generating sections…',
     // Badges
     'badge-error':'error','badge-generating':'generating…','badge-premium':'self-review…','badge-uciety':'cut off',
+    'sr-artykul-gotowy':'The article is ready.','sr-artykul-blad':'Generation ended with an error. The description is where the article would be.',
+    'sr-artykul-przerwany':'Generation stopped.','sr-artykul-uciety':'The article is ready but was cut off at the length limit.',
     // Loading
     'msg-loading-article':'Analyzing article…',
     'msg-loading-aio':'Assessing the draft for AI Overviews…',
@@ -6179,6 +6187,7 @@ var I18N = {
     'pakiet-wywolania-opis':'One article takes several calls: brief, content, review, rewrites.',
     'start-menu-title':'Account setup','start-menu-sub':'API keys and first steps',
     'start-dalej':'Next','start-wstecz':'Back','start-pomin':'Skip setup',
+    'start-krok-z':'Step {n} of {m}',
     'start-zaczynamy':'Start writing','start-sztuk':'items','start-twoj-pakiet':'Your plan',
     'start-1-tytul':'Welcome to Content AI',
     'start-1-opis':'Before you write your first article, let\'s go through four short steps. It takes a minute, and everything can be changed later in settings.',
@@ -16584,7 +16593,8 @@ document.addEventListener('keydown', e => {
     d.setAttribute('role', 'dialog');
     d.setAttribute('aria-modal', 'true');
     if (!d.hasAttribute('aria-labelledby')) {
-      const t = d.querySelector('h1, h2, h3, [class*="title"]');
+      // R9-G (UX8-15): okna z tytulem w .tekst-tytul (baza na serwerze, frazy OpenSEO, pakiet) tez dostaja nazwe.
+      const t = d.querySelector('h1, h2, h3, [class*="title"], .tekst-tytul');
       if (t) { if (!t.id) t.id = okno.id + '-tytul'; d.setAttribute('aria-labelledby', t.id); }
     }
     if (!d.hasAttribute('tabindex')) d.setAttribute('tabindex', '-1');
@@ -16658,6 +16668,38 @@ document.addEventListener('keydown', e => {
       obs.observe(o, { attributes: true, attributeFilter: ['class', 'style'] });
       if (widoczny(o)) poOtwarciu(o);
     });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
+// ── R9-G (UX8-15): POSTEP GENEROWANIA DLA CZYTNIKA EKRANU ─────────────────
+// Przez 30-60 s generowania czytnik nie dostawal nic, a wynik pojawial sie bez zapowiedzi. Etap z napisu
+// spinnera i koniec (gotowe, blad, przerwane, uciety) ida do stalego regionu aria-live (spinner bywa
+// ukryty, a region w ukrytym kontenerze nic nie mowi); artykul ma aria-busy, dopoki trwa pisanie.
+// Obserwujemy spinner i odznake wyniku, wiec funkcje generowania zostaja nietkniete.
+(function postepDlaCzytnika() {
+  const KONIEC = { 'badge-done': 'sr-artykul-gotowy', 'badge-error': 'sr-artykul-blad', 'badge-przerwane': 'sr-artykul-przerwany', 'badge-uciety': 'sr-artykul-uciety' };
+  function start() {
+    const sp = document.getElementById('spinner'), etap = document.getElementById('spin-label');
+    const odznaka = document.getElementById('out-badge'), art = document.getElementById('article');
+    if (!sp || !etap || !odznaka) return;
+    const region = document.createElement('div');
+    region.id = 'gen-postep-sr'; region.className = 'sr-only';
+    region.setAttribute('role', 'status'); region.setAttribute('aria-live', 'polite'); region.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(region);
+    let trwa = false, ostatni = '';
+    const powiedz = (t) => { t = String(t || '').trim(); if (!t || t === ostatni) return; ostatni = t; region.textContent = t; };
+    const widac = () => getComputedStyle(sp).display !== 'none';
+    new MutationObserver(() => {
+      if (art) art.setAttribute('aria-busy', String(widac()));
+      if (widac()) { trwa = true; powiedz(etap.textContent); }
+    }).observe(sp, { attributes: true, attributeFilter: ['style'] });
+    new MutationObserver(() => { if (widac()) powiedz(etap.textContent); }).observe(etap, { childList: true, characterData: true, subtree: true });
+    new MutationObserver(() => {
+      const k = odznaka.getAttribute('data-i18n') || '';
+      if (k === 'badge-generating' || k === 'badge-premium') { trwa = true; return; }
+      if (trwa && KONIEC[k]) { trwa = false; ostatni = ''; powiedz(_t(KONIEC[k])); }
+    }).observe(odznaka, { attributes: true, attributeFilter: ['data-i18n'] });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
@@ -19427,8 +19469,10 @@ async function kbAudioTranscribeAndOpen(file) {
 
 <!-- KREATOR PIERWSZEGO URUCHOMIENIA (wariant proxy - tylko tam sa konta) -->
 <div id="start-modal" class="okno-tlo" style="display:none">
-  <div class="modal okno-panel" style="width:560px">
-    <div id="start-kropki" style="display:flex;gap:6px;margin-bottom:18px"></div>
+  <div class="modal okno-panel" style="width:560px" aria-labelledby="start-tytul" aria-describedby="start-postep">
+    <div id="start-kropki" aria-hidden="true" style="display:flex;gap:6px;margin-bottom:18px"></div>
+    <!-- R9-G (UX8-15): postep tekstem ("Krok 2 z 4"), nie tylko paskami - czytnik ekranu go odczyta -->
+    <div class="tekst-pomoc start-postep" id="start-postep"></div>
     <div id="start-tresc"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:22px">
       <button class="btn-link" id="start-pomin" onclick="startPomin()" data-i18n="start-pomin">Pomiń kreator</button>
@@ -19472,7 +19516,8 @@ async function kbAudioTranscribeAndOpen(file) {
   }
 
   function naglowek(tytul, opis){
-    return '<div style="font-weight:700;font-size:18px;color:var(--text);margin-bottom:6px">' + tytul + '</div>'
+    // R9-G (UX8-15): tytul kroku to naglowek okna (aria-labelledby) i miejsce fokusu po otwarciu i po kazdym kroku.
+    return '<h2 id="start-tytul" tabindex="-1" aria-describedby="start-postep" style="font-weight:700;font-size:18px;line-height:1.3;color:var(--text);margin:0 0 6px">' + tytul + '</h2>'
       + '<div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px">' + opis + '</div>';
   }
 
@@ -19482,6 +19527,8 @@ async function kbAudioTranscribeAndOpen(file) {
       return '<div style="height:3px;flex:1;border-radius:2px;background:'
         + (aktywna ? 'var(--c-akcent)' : 'var(--border)') + '"></div>';
     }).join('');
+    var postep = el('start-postep');
+    if (postep) postep.textContent = tekst('start-krok-z', 'Krok {n} z {m}').replace('{n}', krok + 1).replace('{m}', kroki.length);
   }
 
   function rysuj(){
@@ -19547,6 +19594,9 @@ async function kbAudioTranscribeAndOpen(file) {
     el('start-dalej').textContent = (krok === kroki.length - 1)
       ? tekst('start-zaczynamy','Zacznij pisać') : tekst('start-dalej','Dalej');
     el('start-pomin').style.display = (krok === kroki.length - 1) ? 'none' : '';
+    // R9-G (UX8-15): fokus na tytule kroku (wczesniej na "Pomin kreator": Enter z rozpedu konczyl konfiguracje).
+    var tytulKroku = el('start-tytul');
+    if (tytulKroku && el('start-modal').style.display === 'flex') tytulKroku.focus({ preventScroll: true });
   }
 
   /** Format, nie prawdziwość - sprawdzenie klucza u dostawcy kosztowałoby wywołanie. */

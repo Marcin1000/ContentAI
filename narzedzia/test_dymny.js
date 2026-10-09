@@ -1431,11 +1431,25 @@ async function wariantR9Zrozumialosc(b) {
     opis: document.querySelector('label[for="use-web"] .toggle-hint').textContent, baza: window._bazaSerwerLiczba + docs.length }));
   wynik('telefon: R9-G UX8-14 pusta baza - Szukaj w sieci wlaczone od wejscia, z dopiskiem o pustej bazie',
     start.web && start.baza === 0 && /pusta/.test(start.opis), JSON.stringify(start));
+  // UX8-15: postep generowania dla czytnika ekranu - zapis regionu aria-live i aria-busy artykulu w trakcie pierwszego tekstu.
+  const zapisSr = [];
+  await s.exposeFunction('r9gZapisz', (t) => { zapisSr.push(t); });
+  await s.evaluate(() => {
+    const r = document.getElementById('gen-postep-sr'), a = document.getElementById('article');
+    if (r) new MutationObserver(() => window.r9gZapisz('sr:' + r.textContent)).observe(r, { childList: true, characterData: true, subtree: true });
+    if (a) new MutationObserver(() => window.r9gZapisz('busy:' + a.getAttribute('aria-busy'))).observe(a, { attributes: true, attributeFilter: ['aria-busy'] });
+  });
   await s.fill('#topic', 'Jak wybrać pompę ciepła do domu');
   await s.click('#gen-btn');
   await s.waitForTimeout(400);
   const okno1 = await s.evaluate(() => document.getElementById('no-source-modal').classList.contains('open'));
   await krok('R9-G pierwszy artykul', czekajNaKoniec(s, 60000));
+  await s.waitForTimeout(300);
+  const srTeksty = zapisSr.filter((t) => t.indexOf('sr:') === 0), srBusy = zapisSr.filter((t) => t.indexOf('busy:') === 0);
+  const regionSr = await s.evaluate(() => { const r = document.getElementById('gen-postep-sr'); return r ? { rola: r.getAttribute('role'), live: r.getAttribute('aria-live') } : null; });
+  wynik('telefon: R9-G UX8-15 postep generowania dla czytnika: etapy w regionie aria-live, aria-busy artykulu, na koniec "Artykul gotowy"',
+    !!regionSr && regionSr.rola === 'status' && srTeksty.length >= 2 && /…/.test(srTeksty[0]) && srTeksty[srTeksty.length - 1] === 'sr:Artykuł gotowy.'
+      && srBusy.indexOf('busy:true') !== -1 && srBusy[srBusy.length - 1] === 'busy:false', JSON.stringify({ regionSr, zapisSr }));
   const pierwszy = await s.evaluate(() => ({ odz: document.getElementById('out-badge').className, h2: document.querySelectorAll('#article h2').length }));
   wynik('telefon: R9-G UX8-14 pierwsze Wygeneruj nowej osoby pisze tekst z siecia, bez okna "Brak zrodel wiedzy"',
     !okno1 && /ready/.test(pierwszy.odz) && pierwszy.h2 > 0 && artykuly.length === 1 && /web_search/.test(artykuly[0]), JSON.stringify({ okno1, pierwszy, zapytan: artykuly.length }));
@@ -1482,6 +1496,28 @@ async function wariantR9Zrozumialosc(b) {
   wynik('telefon: R9-G UX8-14 okno "Brak zrodel wiedzy" ma trzy wyjscia, "Wygeneruj bez zrodel" z ostrzezeniem pisze tekst bez sieci',
     !okno2.web && okno2.wyjsc === 3 && /bez źródeł/.test(okno2.bez) && /Sprawdź/.test(okno2.uwaga) && artykuly.length === przed + 1 && !/web_search/.test(artykuly[przed] || '') && /ready/.test(bez.odz) && !bez.web && !bez.okno,
     JSON.stringify({ okno2, bez, zapytan: artykuly.length - przed }));
+  // UX8-15: okna maja nazwe dla czytnika (tytul), kreator mowi "Krok n z m" i stawia fokus na tytule, nie na "Pomin".
+  await s.evaluate(() => { closeNoSourceModal(); otworzStart(); });
+  await s.waitForTimeout(300);
+  const kreator = async () => s.evaluate(() => { const d = document.querySelector('#start-modal [role="dialog"]'); const lb = d && d.getAttribute('aria-labelledby');
+    return { nazwa: lb ? ((document.getElementById(lb) || {}).textContent || '') : '', postep: (document.getElementById('start-postep') || {}).textContent || '',
+      fokus: document.activeElement ? (document.activeElement.id || document.activeElement.textContent.trim().slice(0, 20)) : '' }; });
+  const kr1 = await kreator();
+  await s.evaluate(() => startDalej());
+  await s.waitForTimeout(200);
+  const kr2 = await kreator();
+  await s.evaluate(() => startPomin());
+  const nazwyOkien = {};
+  for (const [id, otworz, zamknij] of [['pakiet-modal', 'otworzPakiet', 'zamknijPakiet'], ['bazas-modal', 'otworzBazeSerwera', 'zamknijBazeSerwera']]) {
+    await s.evaluate((f) => { window[f](); }, otworz);
+    await s.waitForTimeout(400);
+    nazwyOkien[id] = await s.evaluate((i) => { const d = document.querySelector('#' + i + ' [role="dialog"]'); const lb = d && d.getAttribute('aria-labelledby');
+      return lb ? ((document.getElementById(lb) || {}).textContent || '').trim() : ''; }, id);
+    await s.evaluate((f) => { window[f](); }, zamknij);
+  }
+  wynik('telefon: R9-G UX8-15 okna z nazwa (kreator, pakiet, baza), kreator "Krok n z 4" i fokus na tytule kroku',
+    kr1.nazwa.length > 3 && kr1.postep === 'Krok 1 z 4' && kr1.fokus === 'start-tytul' && kr2.postep === 'Krok 2 z 4' && kr2.fokus === 'start-tytul' && kr2.nazwa !== kr1.nazwa
+      && nazwyOkien['pakiet-modal'].length > 3 && nazwyOkien['bazas-modal'].length > 3, JSON.stringify({ kr1, kr2, nazwyOkien }));
   // UX8-13: na telefonie Widocznosc AI (4 narzedzia) w arkuszu Konto, nazwy okien jak w menu, podpis "po co".
   await s.evaluate(() => { closeNoSourceModal(); ustawWidokMobilny('brief'); });
   await krok('R9-G arkusz Konto', s.click('#mnav-konto', { timeout: 3000 }));
