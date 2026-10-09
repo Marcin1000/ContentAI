@@ -1405,6 +1405,112 @@ async function uruchomSerwerPlikow() {
   return srv;
 }
 
+// R9-G: aplikacja zrozumiala dla nowej osoby (UX8-11 do UX8-16): pusta baza bez okna "Brak zrodel wiedzy",
+// okno z trzema wyjsciami, wyjasnienia ocen i typow tresci. Telefon i komputer, PL i EN.
+// Kazda kontrola pada na 822d52d (main przed runda 9).
+async function wariantR9Zrozumialosc(b) {
+  const bledy = [];
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); if (!localStorage.getItem('cai_lang')) localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  let s = await zaloguj(k, 'standard');
+  // Nowa osoba ma pusta baze: dokumenty dodane przez wczesniejsze scenariusze znikaja z bazy tego konta.
+  await s.evaluate(async () => {
+    const d = await (await fetch('/api/baza')).json();
+    for (const x of (d.dokumenty || [])) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) });
+  });
+  await s.reload({ waitUntil: 'load' });
+  await s.waitForTimeout(800);
+  await s.evaluate(() => { if (typeof startPomin === 'function') startPomin(); });
+  await krok('R9-G liczba dokumentow z serwera', s.waitForFunction(() => typeof window._bazaSerwerLiczba === 'number', null, { timeout: 10000 }));
+  const artykuly = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url()) && z.headers()['x-cai-czynnosc'] === 'artykul') artykuly.push(z.postData() || ''); });
+
+  // UX8-14: przy pustej bazie "Szukaj w sieci" wlaczone od wejscia, z dopiskiem, a pierwsze Wygeneruj pisze bez okna.
+  const start = await s.evaluate(() => ({ web: document.getElementById('use-web').checked,
+    opis: document.querySelector('label[for="use-web"] .toggle-hint').textContent, baza: window._bazaSerwerLiczba + docs.length }));
+  wynik('telefon: R9-G UX8-14 pusta baza - Szukaj w sieci wlaczone od wejscia, z dopiskiem o pustej bazie',
+    start.web && start.baza === 0 && /pusta/.test(start.opis), JSON.stringify(start));
+  await s.fill('#topic', 'Jak wybrać pompę ciepła do domu');
+  await s.click('#gen-btn');
+  await s.waitForTimeout(400);
+  const okno1 = await s.evaluate(() => document.getElementById('no-source-modal').classList.contains('open'));
+  await krok('R9-G pierwszy artykul', czekajNaKoniec(s, 60000));
+  const pierwszy = await s.evaluate(() => ({ odz: document.getElementById('out-badge').className, h2: document.querySelectorAll('#article h2').length }));
+  wynik('telefon: R9-G UX8-14 pierwsze Wygeneruj nowej osoby pisze tekst z siecia, bez okna "Brak zrodel wiedzy"',
+    !okno1 && /ready/.test(pierwszy.odz) && pierwszy.h2 > 0 && artykuly.length === 1 && /web_search/.test(artykuly[0]), JSON.stringify({ okno1, pierwszy, zapytan: artykuly.length }));
+  // Bez poprawki okno zostaje otwarte: zamykamy je, zeby reszta kontroli dala wlasny wynik.
+  if (okno1) await s.evaluate(() => { closeNoSourceModal(); document.getElementById('use-web').checked = true; generate(true); }).then(() => czekajNaKoniec(s, 60000)).catch(() => {});
+
+  // UX8-11: pod przelacznikiem ocen jedno zdanie, co mierzy wybrana ocena; przyciski z podpowiedzia.
+  await s.evaluate(() => inspektorPokaz('seo'));
+  await s.waitForTimeout(600);
+  const oSeo = await s.evaluate(() => ({ opis: (document.getElementById('ins-ocena-opis') || {}).textContent || '',
+    widac: !!document.getElementById('ins-ocena-opis') && document.getElementById('ins-ocena-opis').getBoundingClientRect().height > 0,
+    podpowiedzi: [...document.querySelectorAll('[data-ins-ocena]')].map((x) => x.title).filter((t) => t.length > 20).length }));
+  await s.evaluate(() => inspektorPokaz('geo'));
+  await s.waitForTimeout(600);
+  const oGeo = await s.evaluate(() => (document.getElementById('ins-ocena-opis') || {}).textContent || '');
+  wynik('telefon: R9-G UX8-11 pod SEO/AIO/AEO/GEO zdanie, co mierzy wybrana ocena (GEO to nie geolokalizacja), przyciski z podpowiedzia',
+    oSeo.widac && /^SEO: .*Google/.test(oSeo.opis) && /^GEO: .*geolokalizac/.test(oGeo) && oSeo.podpowiedzi === 4, JSON.stringify({ oSeo, oGeo }));
+  await s.evaluate(() => inspektorZamknij());
+  await s.evaluate(() => ustawWidokMobilny('brief'));
+  // UX8-11: Typ tresci SEO / AIO z jednym zdaniem pod polem; dla innych typow bez dopisku.
+  const typ = async (v) => { await s.selectOption('#ctype', v); return s.evaluate(() => { const o = document.getElementById('ctype-opis'); return o && !o.hidden && o.getBoundingClientRect().height > 0 ? o.textContent : ''; }); };
+  const tH = await typ('Hybryda SEO + AIO'), tB = await typ('Wpis blogowy'), tA = await typ('Treść AIO');
+  await s.selectOption('#ctype', 'Hybryda SEO + AIO');
+  wynik('telefon: R9-G UX8-11 Typ tresci: zdanie pod polem dla Hybrydy i AIO, bez dopisku dla wpisu blogowego',
+    /zalecana/.test(tH) && /Google/.test(tH) && !tB && /AI Overviews/.test(tA), JSON.stringify({ tH, tB, tA }));
+
+  // UX8-14: autor sam wylaczyl siec - okno ma trzy wyjscia, "bez zrodel" z ostrzezeniem pisze tekst bez sieci.
+  if (await s.evaluate(() => document.getElementById('use-web').checked)) await krok('R9-G wylacz siec', s.click('#use-web', { timeout: 3000 }));
+  await s.fill('#topic', 'Pompa ciepła a fotowoltaika');
+  await krok('R9-G Wygeneruj (siec wylaczona)', s.click('#gen-btn', { timeout: 3000 }));
+  await krok('R9-G okno Brak zrodel wiedzy', s.waitForFunction(() => document.getElementById('no-source-modal').classList.contains('open'), null, { timeout: 5000 }));
+  const okno2 = await s.evaluate(() => {
+    const widoczny = (e) => !!e && e.getBoundingClientRect().height > 0;
+    const bez = document.getElementById('no-source-bez-btn'), uw = document.getElementById('no-source-bez-uwaga');
+    return { web: document.getElementById('use-web').checked, wyjsc: [...document.querySelectorAll('#no-source-modal button:not(.modal-close)')].filter(widoczny).length,
+      bez: widoczny(bez) ? bez.textContent : '', uwaga: widoczny(uw) ? uw.textContent : '' };
+  });
+  const przed = artykuly.length;
+  if (okno2.bez) await krok('R9-G Wygeneruj bez zrodel', s.click('#no-source-bez-btn', { timeout: 3000 }));
+  else await s.evaluate(() => closeNoSourceModal());
+  await krok('R9-G artykul bez zrodel', czekajNaKoniec(s, 60000));
+  const bez = await s.evaluate(() => ({ odz: document.getElementById('out-badge').className, web: document.getElementById('use-web').checked,
+    okno: document.getElementById('no-source-modal').classList.contains('open') }));
+  wynik('telefon: R9-G UX8-14 okno "Brak zrodel wiedzy" ma trzy wyjscia, "Wygeneruj bez zrodel" z ostrzezeniem pisze tekst bez sieci',
+    !okno2.web && okno2.wyjsc === 3 && /bez źródeł/.test(okno2.bez) && /Sprawdź/.test(okno2.uwaga) && artykuly.length === przed + 1 && !/web_search/.test(artykuly[przed] || '') && /ready/.test(bez.odz) && !bez.web && !bez.okno,
+    JSON.stringify({ okno2, bez, zapytan: artykuly.length - przed }));
+  wynik('telefon: R9-G bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+  if (bledow) await zrzut(s, 'telefon-r9g');
+  await k.close();
+
+  // Komputer, EN: opisy po angielsku, "Dodaj zrodla" otwiera zwinieta baze.
+  const k2 = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, locale: 'en-US' });
+  await k2.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); localStorage.setItem('cai_lang', 'en'); localStorage.setItem('cai_samokorekta_ok', '1'); } catch (e) { /* bez magazynu */ } });
+  k2.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  s = await zaloguj(k2, 'standard');
+  await krok('R9-G komputer: liczba dokumentow z serwera', s.waitForFunction(() => typeof window._bazaSerwerLiczba === 'number', null, { timeout: 10000 }));
+  const en = await s.evaluate(() => ({ web: document.getElementById('use-web').checked, opis: document.querySelector('label[for="use-web"] .toggle-hint').textContent,
+    typ: (document.getElementById('ctype-opis') || {}).textContent || '' }));
+  wynik('komputer EN: R9-G UX8-14 i UX8-11 dopisek o pustej bazie i opis typu tresci po angielsku',
+    en.web && /empty/.test(en.opis) && /recommended/.test(en.typ), JSON.stringify(en));
+  await s.evaluate(() => { if (!document.body.classList.contains('kb-collapsed')) toggleKbPanel(); });
+  if (await s.evaluate(() => document.getElementById('use-web').checked)) await krok('R9-G komputer: wylacz siec', s.click('#use-web', { timeout: 3000 }));
+  await s.fill('#topic', 'Heat pump sizing');
+  await krok('R9-G komputer: Wygeneruj (siec wylaczona)', s.click('#gen-btn', { timeout: 3000 }));
+  await krok('R9-G komputer: okno Brak zrodel wiedzy', s.waitForFunction(() => document.getElementById('no-source-modal').classList.contains('open'), null, { timeout: 5000 }));
+  await krok('R9-G komputer: Dodaj zrodla', s.click('#no-source-kb-btn', { timeout: 3000 }));
+  await s.waitForTimeout(500);
+  const baza = await s.evaluate(() => ({ zwinieta: document.body.classList.contains('kb-collapsed'), okno: document.getElementById('no-source-modal').classList.contains('open'),
+    panel: getComputedStyle(document.querySelector('.layout > .sidebar')).display !== 'none' && document.querySelector('.layout > .sidebar').getBoundingClientRect().width > 100 }));
+  wynik('komputer EN: R9-G UX8-14 "Dodaj zrodla do bazy wiedzy" otwiera zwinieta baze wiedzy', !baza.zwinieta && !baza.okno && baza.panel, JSON.stringify(baza));
+  wynik('komputer EN: R9-G bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+  if (bledow) await zrzut(s, 'komputer-r9g');
+  await k2.close();
+}
+
 (async () => {
   await przygotujPorty();
   const serwerPlikow = await uruchomSerwerPlikow();
@@ -1425,6 +1531,7 @@ async function uruchomSerwerPlikow() {
     await wariantR7I(b);
     await wariantR7H(b);
     await wariantPilneKreator(b);
+    await wariantR9Zrozumialosc(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));

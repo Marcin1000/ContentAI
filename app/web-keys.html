@@ -3076,6 +3076,18 @@ body.is-mobile #au-script-actions > .btn-secondary { flex: 1 1 0; justify-conten
 body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-content: center; }
 }
 @layer widoki {
+/* ══ RUNDA 9, wykonawca G: zrozumialosc i dostepnosc dla nowej osoby ══ */
+/* UX8-14: trzecie wyjscie z okna "Brak zrodel wiedzy" (bez zrodel) i ostrzezenie pod nim */
+#no-source-modal .no-source-bez { align-self: center; }
+#no-source-modal .no-source-bez-uwaga { margin: calc(var(--s-4) * -1) 0 0; text-align: center; font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
+/* UX8-11: jedno zdanie, co mierzy wybrana ocena (pod przelacznikiem) i co znaczy typ SEO / AIO (pod polem) */
+.inspektor.ocena .ins-oceny { flex-wrap: wrap; }
+.ins-oceny .ins-ocena-opis { flex: 1 1 100%; margin: var(--s-8) 0 0; font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-2); }
+.ins-oceny .ins-ocena-opis:empty { display: none; }
+.form-col .row2 > .ctype-opis { grid-column: 1 / -1; margin: calc(var(--s-10, 10px) * -1) 0 0; }
+.form-col .row2 > .ctype-opis[hidden] { display: none; }
+}
+@layer widoki {
 /* ══ RUNDA 6, wykonawca F ══ */
 /* R6-F (E-12): zakladka bez danych (SERP bez analizy) i ocena niedostepna znikaja naprawde - display
    z .ins-zakl i .segmenty button wygrywal z atrybutem hidden, a dotkniecie pustej zakladki zamykalo inspektor */
@@ -3342,6 +3354,8 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
               </select>
               <input type="number" id="length-custom" aria-label="Własna długość w słowach" data-i18n-label="lbl-length-custom" min="100" max="5000" step="50" placeholder="np. 1200" data-i18n="ph-length-custom" style="display:none;margin-top:6px" />
             </div>
+            <!-- R9-G (UX8-11): jedno zdanie, co znaczy wybrany typ SEO / AIO (dla pozostalych typow ukryte) -->
+            <p class="tekst-pomoc ctype-opis" id="ctype-opis" hidden></p>
           </div>
 
           <!-- R3: Ton i Jezyk w glownym briefie (obok Typu tresci i Dlugosci), nie w zaawansowanych. -->
@@ -3643,9 +3657,9 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
               <div class="start-kroki" id="start-kroki">
                 <div class="start-sekcja" data-i18n="start-kroki-tytul">Pierwszy tekst w trzech krokach</div>
                 <ol>
-                  <li><span class="start-nr">1</span><span data-i18n="start-krok-1">Dodaj do bazy wiedzy pliki, strony albo notatki o firmie.</span></li>
-                  <li><span class="start-nr">2</span><span data-i18n="start-krok-2">Wpisz temat i słowa kluczowe w briefie.</span></li>
-                  <li><span class="start-nr">3</span><span data-i18n="start-krok-3">Wygeneruj tekst, a potem oceń go: SEO, fakty i luki.</span></li>
+                  <li><span class="start-nr">1</span><span data-i18n="start-krok-1">Wpisz temat i słowa kluczowe w briefie.</span></li>
+                  <li><span class="start-nr">2</span><span data-i18n="start-krok-2">Kliknij „Wygeneruj treść”. Przy pustej bazie AI oprze tekst na stronach z sieci i poda źródła.</span></li>
+                  <li><span class="start-nr">3</span><span data-i18n="start-krok-3">Dodaj do bazy wiedzy pliki, strony albo notatki o firmie, żeby kolejne teksty mówiły o Twojej ofercie.</span></li>
                 </ol>
               </div>
               <div class="start-ostatnie" id="start-ostatnie" hidden>
@@ -3676,7 +3690,7 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
               </div>
               <button type="button" class="przycisk-ikona" onclick="inspektorZamknij()" title="Zamknij panel" aria-label="Zamknij panel" data-i18n-title="ins-zamknij" data-i18n-label="ins-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
             </div>
-            <div class="ins-oceny"><div class="segmenty" role="group"><button type="button" data-ins-ocena="seo" onclick="inspektorPokaz('seo')">SEO</button><button type="button" data-ins-ocena="aio" onclick="inspektorPokaz('aio')">AIO</button><button type="button" data-ins-ocena="aeo" onclick="inspektorPokaz('aeo')">AEO</button><button type="button" data-ins-ocena="geo" onclick="inspektorPokaz('geo')">GEO</button></div></div>
+            <div class="ins-oceny"><div class="segmenty" role="group" aria-describedby="ins-ocena-opis"><button type="button" data-ins-ocena="seo" onclick="inspektorPokaz('seo')" data-i18n-title="ocena-opis-seo" title="SEO: czy tekst ma szansę na wysoką pozycję w klasycznych wynikach Google (fraza, nagłówki, opis meta).">SEO</button><button type="button" data-ins-ocena="aio" onclick="inspektorPokaz('aio')" data-i18n-title="ocena-opis-aio" title="AIO: czy Google przytoczy tekst w podsumowaniu AI nad wynikami wyszukiwania (AI Overviews).">AIO</button><button type="button" data-ins-ocena="aeo" onclick="inspektorPokaz('aeo')" data-i18n-title="ocena-opis-aeo" title="AEO: czy asystenci i wyszukiwarki odpowiedzi wezmą z tekstu gotową odpowiedź (definicja, FAQ, krótkie listy).">AEO</button><button type="button" data-ins-ocena="geo" onclick="inspektorPokaz('geo')" data-i18n-title="ocena-opis-geo" title="GEO: czy czaty AI, np. ChatGPT albo Perplexity, zacytują tekst i Twoją markę jako źródło (nie chodzi o geolokalizację).">GEO</button></div><p class="ins-ocena-opis" id="ins-ocena-opis"></p></div>
             <div class="ins-tresc">
           <!-- Panel FOG -->
           <div id="fog-panel" class="ins-panel" style="display:none">
@@ -3855,9 +3869,9 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
             <input type="text" id="hist-filter" aria-label="Szukaj w historii…" data-i18n-label="ph-history-search" placeholder="Szukaj w historii…" data-i18n="ph-history-search" oninput="filterHistory()" style="width:100%;box-sizing:border-box"/>
             <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap" id="hist-tag-filters">
               <button type="button" class="htag-filter active" aria-pressed="true" onclick="setHistFilter(this,'all')" data-i18n="hist-filter-all">Wszystkie</button>
-              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Artykuł SEO')">SEO</button>
-              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Treść AIO')">AIO</button>
-              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Hybryda SEO + AIO')" data-i18n="hist-filter-hybrid">Hybryda</button>
+              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Artykuł SEO')" data-i18n-title="ctype-opis-seo" title="Artykuł SEO: tekst pod klasyczne wyniki Google, czyli fraza kluczowa w nagłówkach, opis meta i pełne omówienie tematu.">SEO</button>
+              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Treść AIO')" data-i18n-title="ctype-opis-aio" title="Treść AIO: tekst pod podsumowania AI w Google (AI Overviews), czyli bezpośrednie odpowiedzi i krótkie zdania łatwe do zacytowania.">AIO</button>
+              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Hybryda SEO + AIO')" data-i18n="hist-filter-hybrid" data-i18n-title="ctype-opis-hybryda" title="Hybryda SEO + AIO (zalecana): jeden tekst pod klasyczne wyniki Google (SEO) i pod podsumowania AI nad wynikami (AIO).">Hybryda</button>
             </div>
           </div>
           <div id="h-list-inner" style="padding:8px">
@@ -4363,6 +4377,9 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
     <div class="modal-footer" style="flex-direction:column;gap:10px;margin-top:16px">
       <button class="btn-generate" style="width:100%;justify-content:center" onclick="noSourceConfirmWeb()" data-i18n="btn-generate-internet" data-ikona="globe"><svg class="ikona" aria-hidden="true"><use href="#i-globe"/></svg>Wygeneruj z wyszukiwaniem w sieci</button>
       <button id="no-source-kb-btn" class="btn-secondary" style="width:100%;justify-content:center" onclick="noSourceGoToKB()" data-i18n="err-add-src" data-ikona="folder"><svg class="ikona" aria-hidden="true"><use href="#i-folder"/></svg>Dodaj źródła do bazy wiedzy</button>
+      <!-- R9-G (UX8-14): trzecie wyjscie, z ostrzezeniem pod przyciskiem -->
+      <button id="no-source-bez-btn" class="btn-link no-source-bez" onclick="noSourceBezZrodel()" aria-describedby="no-source-bez-uwaga" data-i18n="btn-generate-bez-zrodel">Wygeneruj bez źródeł</button>
+      <p class="tekst-pomoc no-source-bez-uwaga" id="no-source-bez-uwaga" data-i18n="no-src-bez-uwaga">Bez źródeł AI pisze z ogólnej wiedzy modelu: liczby i fakty mogą być nieaktualne albo zmyślone, a o Twojej firmie nie powie nic konkretnego. Sprawdź tekst przed publikacją.</p>
     </div>
   </div>
 </div>
@@ -4778,9 +4795,9 @@ var I18N = {
     'start-karta-grupowe':'Generowanie grupowe',
     'start-karta-grupowe-opis':'Wiele tematów naraz, jedna kolejka',
     'start-kroki-tytul':'Pierwszy tekst w trzech krokach',
-    'start-krok-1':'Dodaj do bazy wiedzy pliki, strony albo notatki o firmie.',
-    'start-krok-2':'Wpisz temat i słowa kluczowe w briefie.',
-    'start-krok-3':'Wygeneruj tekst, a potem oceń go: SEO, fakty i luki.',
+    'start-krok-1':'Wpisz temat i słowa kluczowe w briefie.',
+    'start-krok-2':'Kliknij „Wygeneruj treść”. Przy pustej bazie AI oprze tekst na stronach z sieci i poda źródła.',
+    'start-krok-3':'Dodaj do bazy wiedzy pliki, strony albo notatki o firmie, żeby kolejne teksty mówiły o Twojej ofercie.',
     'start-ostatnie':'Ostatnie',
     // nowy uklad (E4)
     'nav-pisz':'Pisz','widok-wynik':'Wynik','widok-etykieta':'Widok',
@@ -4879,11 +4896,15 @@ var I18N = {
     'siec-bez-wyszukiwania-opis':'Bez zapytań do sieci: baza wiedzy pokryła temat. Wyszukiwanie uruchamia się tylko tam, gdzie baza milczy.',
     'toggle-web':'Szukaj w sieci i podaj źródła',
     'toggle-web-hint':'Czego brakuje w bazie, AI poszuka w sieci i wymieni źródła pod artykułem. Dane o Twojej firmie zawsze tylko z bazy. Wydłuża generowanie o ok. 30 s.',
+    'toggle-web-hint-pusta':'Twoja baza wiedzy jest pusta, więc AI oprze tekst na stronach z sieci i wymieni je pod artykułem. Dodaj materiały o firmie, żeby kolejne teksty mówiły o Twojej ofercie.',
     'toggle-serp':'Analiza SERP przed generowaniem',
     'toggle-serp-hint':'Przed pisaniem AI sprawdza, co rankuje w Google na Twoje słowo kluczowe, i bierze to pod uwagę. Wydłuża generowanie o ok. 15 s.',
     'toggle-aeo':'Tryb AEO (treść pod cytowania AI)','toggle-aeo-hint':'Wymusza format pod silniki odpowiedzi: definicja 25-50 słów na start, liczby w intro, 5-7 pytań FAQ, krótkie listy, nagłówki jako pytania.',
     'btn-aeo':'Oceń AEO','aeo-panel-title':'Ocena AEO','btn-geo':'Oceń GEO','geo-panel-title':'Ocena GEO',
     'opt-hybrid':'Hybryda SEO + AIO','opt-seo':'Artykuł SEO','opt-aio':'Treść AIO',
+    'ctype-opis-hybryda':'Hybryda SEO + AIO (zalecana): jeden tekst pod klasyczne wyniki Google (SEO) i pod podsumowania AI nad wynikami (AIO).',
+    'ctype-opis-seo':'Artykuł SEO: tekst pod klasyczne wyniki Google, czyli fraza kluczowa w nagłówkach, opis meta i pełne omówienie tematu.',
+    'ctype-opis-aio':'Treść AIO: tekst pod podsumowania AI w Google (AI Overviews), czyli bezpośrednie odpowiedzi i krótkie zdania łatwe do zacytowania.',
     'opt-faq':'Strona FAQ','opt-landing':'Strona docelowa','opt-blog':'Wpis blogowy','opt-product':'Opis produktu/usługi',
     'opt-directional':'Strona kierunkowa','opt-press':'Informacja prasowa','label-dir-country':'Kierunek (kraj docelowy)',
     'dir-de':'Niemcy','dir-cz':'Czechy','dir-sk':'Słowacja','dir-nl':'Holandia','dir-fr':'Francja',
@@ -5037,6 +5058,10 @@ var I18N = {
     'versions-label':'Warianty:',
     'seo-panel-title':'Ocena SEO','aio-panel-title':'Ocena AIO',
     'ocena-skala':'/100','ocena-podpis':'Ocena {x}','ocena-aria':'Ocena {x}: {n} na 100',
+    'ocena-opis-seo':'SEO: czy tekst ma szansę na wysoką pozycję w klasycznych wynikach Google (fraza, nagłówki, opis meta).',
+    'ocena-opis-aio':'AIO: czy Google przytoczy tekst w podsumowaniu AI nad wynikami wyszukiwania (AI Overviews).',
+    'ocena-opis-aeo':'AEO: czy asystenci i wyszukiwarki odpowiedzi wezmą z tekstu gotową odpowiedź (definicja, FAQ, krótkie listy).',
+    'ocena-opis-geo':'GEO: czy czaty AI, np. ChatGPT albo Perplexity, zacytują tekst i Twoją markę jako źródło (nie chodzi o geolokalizację).',
     'meta-etykieta':'Opis meta (SEO)',
     'eksport-zrodla':'Źródła',
     'eksport-pominiete-luki':'Sekcje bez pokrycia w źródłach pominięte w eksporcie: {n}. Usuń notatkę albo wpisz w jej miejsce treść (Edytuj).',
@@ -5264,6 +5289,8 @@ var I18N = {
     'no-src-title-empty':'Brak źródeł wiedzy','no-src-title-none':'Brak wybranych źródeł',
     'no-src-desc-empty':'Baza wiedzy jest pusta. Dodaj materiały firmowe albo wygeneruj tekst z wyszukiwaniem w sieci: źródła pojawią się pod artykułem.',
     'no-src-desc-none':'Nie zaznaczono żadnego źródła. Wybierz materiały albo wygeneruj tekst z wyszukiwaniem w sieci.',
+    'btn-generate-bez-zrodel':'Wygeneruj bez źródeł',
+    'no-src-bez-uwaga':'Bez źródeł AI pisze z ogólnej wiedzy modelu: liczby i fakty mogą być nieaktualne albo zmyślone, a o Twojej firmie nie powie nic konkretnego. Sprawdź tekst przed publikacją.',
     'cms-modal-title':'Integracja z CMS','cms-drupal-hint-short':'Wymagany moduł Basic Auth (wbudowany w Drupal 8/9/10). Włącz w: Extend → Basic Authentication.',
     'cms-drupal-hint':'Wymagany moduł Basic Auth (wbudowany w Drupal 8/9/10). Włącz w: Extend → Basic Authentication.',
     'cms-drupal-url-label':'Adres Drupala (np. https://twojafirma.pl)','cms-format-label':'Format tekstu',
@@ -5414,9 +5441,9 @@ var I18N = {
     'start-karta-grupowe':'Bulk generation',
     'start-karta-grupowe-opis':'Many topics at once, one queue',
     'start-kroki-tytul':'Your first text in three steps',
-    'start-krok-1':'Add files, pages or notes about your company to the knowledge base.',
-    'start-krok-2':'Enter the topic and keywords in the brief.',
-    'start-krok-3':'Generate the text, then review it: SEO, facts and gaps.',
+    'start-krok-1':'Enter the topic and keywords in the brief.',
+    'start-krok-2':'Click “Generate content”. With an empty knowledge base the AI bases the text on web pages and cites them.',
+    'start-krok-3':'Add files, pages or notes about your company to the knowledge base so the next texts talk about your offer.',
     'start-ostatnie':'Recent',
     // nowy uklad (E4)
     'nav-pisz':'Write','widok-wynik':'Result','widok-etykieta':'View',
@@ -5515,11 +5542,15 @@ var I18N = {
     'siec-bez-wyszukiwania-opis':'No web searches: the knowledge base covered the topic. Search runs only where the base is silent.',
     'toggle-web':'Search the web and cite sources',
     'toggle-web-hint':'What the knowledge base lacks, the AI looks up online and lists the sources under the article. Anything about your company still comes from the knowledge base only. Adds about 30 s.',
+    'toggle-web-hint-pusta':'Your knowledge base is empty, so the AI bases the text on web pages and lists them under the article. Add materials about your company so the next texts talk about your offer.',
     'toggle-serp':'SERP analysis before generating',
     'toggle-serp-hint':'Before writing, the AI checks what ranks in Google for your keyword and takes it into account. Adds about 15 s.',
     'toggle-aeo':'AEO mode (content for AI citations)','toggle-aeo-hint':'Forces answer-engine format: 25-50 word definition up front, numbers in intro, 5-7 FAQ questions, short lists, headings as questions.',
     'btn-aeo':'Assess AEO','aeo-panel-title':'AEO assessment','btn-geo':'Assess GEO','geo-panel-title':'GEO score',
     'opt-hybrid':'SEO + AIO hybrid','opt-seo':'SEO article','opt-aio':'AIO content',
+    'ctype-opis-hybryda':'SEO + AIO hybrid (recommended): one text for classic Google results (SEO) and for the AI summaries above them (AIO).',
+    'ctype-opis-seo':'SEO article: a text for classic Google results, with the keyword in headings, a meta description and full coverage of the topic.',
+    'ctype-opis-aio':'AIO content: a text for Google\'s AI summaries (AI Overviews), with direct answers and short sentences that are easy to quote.',
     'opt-faq':'FAQ page','opt-landing':'Landing page copy','opt-blog':'Blog post','opt-product':'Product / service copy',
     'opt-directional':'Export market page','opt-press':'Press release','label-dir-country':'Target market (country)',
     'dir-de':'Germany','dir-cz':'Czechia','dir-sk':'Slovakia','dir-nl':'Netherlands','dir-fr':'France',
@@ -5673,6 +5704,10 @@ var I18N = {
     'versions-label':'Variants:',
     'seo-panel-title':'SEO Score','aio-panel-title':'AIO Score',
     'ocena-skala':'/100','ocena-podpis':'{x} score','ocena-aria':'{x} score: {n} out of 100',
+    'ocena-opis-seo':'SEO: how well the text can rank in classic Google results (keyword, headings, meta description).',
+    'ocena-opis-aio':'AIO: whether Google will quote the text in the AI summary above the search results (AI Overviews).',
+    'ocena-opis-aeo':'AEO: whether assistants and answer engines can take a ready answer from the text (definition, FAQ, short lists).',
+    'ocena-opis-geo':'GEO: whether AI chats such as ChatGPT or Perplexity will cite the text and your brand as a source (nothing to do with geolocation).',
     'meta-etykieta':'Meta description (SEO)',
     'eksport-zrodla':'Sources',
     'eksport-pominiete-luki':'Sections without coverage in your sources were left out of the export: {n}. Delete the note or type your text in its place (Edit).',
@@ -5913,6 +5948,8 @@ var I18N = {
     'no-src-title-empty':'No knowledge sources','no-src-title-none':'No sources selected',
     'no-src-desc-empty':'The knowledge base is empty. Add company materials or generate with web search: the sources will be listed under the article.',
     'no-src-desc-none':'No source is selected. Choose materials or generate with web search.',
+    'btn-generate-bez-zrodel':'Generate without sources',
+    'no-src-bez-uwaga':'Without sources the AI writes from the model\'s general knowledge: figures and facts may be outdated or made up, and it will say nothing specific about your company. Check the text before publishing.',
     'cms-modal-title':'CMS Integration','cms-drupal-hint-short':'Requires Basic Auth module (built into Drupal 8/9/10). Enable at: Extend → Basic Authentication.',
     'cms-drupal-hint':'Requires Basic Auth module (built into Drupal 8/9/10). Enable at: Extend → Basic Authentication.',
     'cms-drupal-url-label':'Drupal URL (e.g. https://yourcompany.com)','cms-format-label':'Text format',
@@ -12296,6 +12333,9 @@ function odswiezInspektor() {
     b.hidden = !przyciskDostepny(INSPEKTOR[n].btn);
     b.setAttribute('aria-pressed', String(n === otwarty));
   });
+  // R9-G (UX8-11): pod przelacznikiem jedno zdanie, co mierzy wybrana ocena (telefon nie ma podpowiedzi myszy).
+  var opisOceny = document.getElementById('ins-ocena-opis');
+  if (opisOceny) opisOceny.textContent = gr === 'ocena' ? _t('ocena-opis-' + otwarty) : '';
 }
 // Brief zwija sie do szyny na zyczenie (wiecej miejsca na kartke i inspektor).
 function przelaczBrief(zwin) {
@@ -12316,6 +12356,7 @@ function odswiezLiczniki() {
     var zazn = (typeof docs !== 'undefined' ? docs.filter(function (d) { return d.selected; }).length : 0) + (window._bazaSerwerLiczba || 0);
     opis.textContent = nDocs ? _t('zrodla-baza-opis').replace('{n}', zazn) : _t('zrodla-baza-pusta');
   }
+  if (typeof siecDomyslnaDlaBazy === 'function') siecDomyslnaDlaBazy();
 }
 function odswiezPodsumowanie() {
   var el = document.getElementById('zaaw-podsumowanie'); if (!el) return;
@@ -13368,12 +13409,8 @@ function closeNoSourceModal() { document.getElementById('no-source-modal').class
 
 function noSourceGoToKB() {
   closeNoSourceModal();
-  if (document.body.classList.contains('is-mobile')) {
-    openMobileSidebar();
-  } else {
-    const kb = document.querySelector('.kb-add-section, .kb-list, .sidebar');
-    if (kb) kb.scrollIntoView({ behavior: 'smooth' });
-  }
+  // R9-G (UX8-14): na komputerze baza bywa zwinieta - przewiniecie do ukrytego panelu nic nie pokazywalo.
+  otworzBazeWiedzy();
 }
 function noSourceConfirmWeb() {
   document.getElementById('no-source-modal').classList.remove('open');
@@ -13381,6 +13418,37 @@ function noSourceConfirmWeb() {
   webEnabledByModal = true;
   generate(true);  // true = pomiń premium modal (user już go potwierdził)
 }
+// R9-G (UX8-14): trzecie wyjscie z okna "Brak zrodel wiedzy" - tekst bez bazy i bez sieci,
+// z ostrzezeniem w oknie, ze fakty trzeba sprawdzic (wczesniej okno nie pozwalalo pisac dalej).
+function noSourceBezZrodel() {
+  closeNoSourceModal();
+  skipSourceCheck = true;
+  generate(true);
+}
+// R9-G (UX8-14): przy pustej bazie wiedzy "Szukaj w sieci" jest domyslnie wlaczone, wiec pierwsze
+// "Wygeneruj" nowej osoby od razu pisze tekst ze zrodlami z sieci zamiast konczyc sie oknem.
+// Przelacznik idzie za stanem bazy, dopoki autor sam go nie przestawi (okno zostaje dla tych,
+// ktorzy wylaczyli siec). Za proxy czekamy na liczbe dokumentow z serwera.
+let siecWybranaRecznie = false, siecWlaczonaDlaPustej = false;
+function siecDomyslnaDlaBazy() {
+  const w = document.getElementById('use-web');
+  if (!w) return;
+  if (window.API_ENDPOINT_OVERRIDE && typeof window._bazaSerwerLiczba !== 'number') return;
+  const pusta = liczbaDokumentow() === 0;
+  w.defaultChecked = pusta;
+  if (!siecWybranaRecznie && !webEnabledByModal && !spinnerPracuje()) {
+    // Wylaczamy tylko to, co sami wlaczylismy: stan ustawiony inaczej zostaje.
+    if (pusta && !w.checked) { w.checked = true; siecWlaczonaDlaPustej = true; }
+    else if (!pusta && siecWlaczonaDlaPustej) { w.checked = false; siecWlaczonaDlaPustej = false; }
+  }
+  const opis = document.querySelector('label[for="use-web"] .toggle-hint');
+  const klucz = pusta && w.checked ? 'toggle-web-hint-pusta' : 'toggle-web-hint';
+  if (opis && opis.getAttribute('data-i18n') !== klucz) { opis.setAttribute('data-i18n', klucz); opis.textContent = _t(klucz); }
+}
+document.getElementById('use-web')?.addEventListener('change', (e) => {
+  if (e.isTrusted) siecWybranaRecznie = true;
+  siecDomyslnaDlaBazy();
+});
 
 async function publishToCms(status) {
   const res = document.getElementById('wp-pub-result');
@@ -14815,6 +14883,10 @@ function onContentTypeChange() {
   if (pv) pv.style.display = (typeof isPodcastType === 'function' && isPodcastType(sel.value)) ? 'block' : 'none';
   const tp = document.getElementById('transcribe-panel');
   if (tp) tp.style.display = (typeof isTranscriptionType === 'function' && isTranscriptionType(sel.value)) ? 'block' : 'none';
+  // R9-G (UX8-11): podpowiedz pod polem dla typow nazwanych skrotami SEO i AIO.
+  const opisTypu = document.getElementById('ctype-opis');
+  const kluczOpisu = { 'Hybryda SEO + AIO': 'ctype-opis-hybryda', 'Artykuł SEO': 'ctype-opis-seo', 'Treść AIO': 'ctype-opis-aio' }[sel.value];
+  if (opisTypu) { opisTypu.hidden = !kluczOpisu; opisTypu.textContent = kluczOpisu ? _t(kluczOpisu) : ''; }
 }
 
 // ═══════════════════════════════════════════════════════════════════════
