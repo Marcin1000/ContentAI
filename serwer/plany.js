@@ -198,7 +198,7 @@ function czasData(teraz) {
  * Operator (admin organizacji glownej) zawsze premium - wlasciciel systemu nie moze
  * sobie zablokowac narzedzia. Potem plan przypisany przez administratora, a konto
  * samoobslugowe bez planu dostaje CAI_PLAN_NOWYCH.
- * Wykonawca B dokłada tu, przed planem przypisanym, dostep z subskrypcji:
+ * Wykonawca B doklada tu, przed planem przypisanym, dostep z subskrypcji:
  *   if (dostepPlatny(konto, teraz, konf) && PLANY[konto.subskrypcjaPlan]) return konto.subskrypcjaPlan;
  */
 function planEfektywny(konto, teraz = Date.now(), konf = KONF_PLANOW) {

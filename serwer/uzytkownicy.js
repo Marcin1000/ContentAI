@@ -196,12 +196,12 @@ function znacznikPliku() {
 async function main() {
   const argumenty = process.argv.slice(2);
   const [polecenie, login, arg] = argumenty;
-  // Prośby nie potrzebują bazy kont - działają nawet przy jej awarii.
+  // Prosby nie potrzebuja bazy kont - dzialaja nawet przy jej awarii.
   if (polecenie === 'prosby') return wypiszProsby(Math.min(Math.max(Number(login) || 20, 1), 500));
   if (!polecenie || ['pomoc', 'help', '-h', '--help'].includes(polecenie)) return pomoc();
 
   sprawdzWlasciciela(argumenty.join(' '));
-  // Uszkodzona albo zablokowana baza kończy się błędem tutaj, zanim cokolwiek zapiszemy.
+  // Uszkodzona albo zablokowana baza konczy sie bledem tutaj, zanim cokolwiek zapiszemy.
   magazyn.otworz({ plik: KONF.sqlite, timeoutMs: 5000 });
 
   if (polecenie === 'migruj') {
@@ -256,8 +256,8 @@ async function main() {
     return;
   }
 
-  // Konta R8 jeszcze w plikach: praca na bazie przed migracją pokazałaby pustą listę,
-  // a zmiany zostałyby nadpisane przy migracji. Migrację robi usługa przy starcie.
+  // Konta R8 jeszcze w plikach: praca na bazie przed migracja pokazalaby pusta liste,
+  // a zmiany zostalyby nadpisane przy migracji. Migracje robi usluga przy starcie.
   if (migracja.czekaNaMigracje(PLIK_UZYTKOWNIKOW)) {
     console.error(`BŁĄD: konta są jeszcze w ${PLIK_UZYTKOWNIKOW} (format R8).\n`
       + 'Uruchom ponownie usługę (migracja przy starcie) albo, przy zatrzymanej usłudze: uzytkownicy.js migruj');
