@@ -1245,6 +1245,8 @@ KONTROLE += [
      "'bazas-desc':'To ta sama baza wiedzy, którą widzisz w panelu", "Pliki wgrywane w panelu bocznym to co innego", ("proxy",)),
     ("R9-G/nazwa-czytanie", "UX8-12: czytanie artykulu na glos to 'Czytaj na glos', ustawienia 'Czytanie na glos i dyktowanie'",
      "'tts-read':'Czytaj na głos',", "'settings-voice-title':'Asystent głosowy'", None),
+    ("R9-G/grafika-bez-ponawiania", "UX8-07: grafika nie ponawia bledu, ktorego ponowienie nie naprawi (brak klucza na serwerze)",
+     "if (!czyPonowic(bladOdpowiedzi(podglad, imgRes.status, 'OpenAI'))) break;", None, None),
     ("R9-G/historia-lokalnie", "UX8-16: Historia mowi, ze jest zapisana tylko w tej przegladarce",
      '<div class="hist-lokalnie" id="hist-lokalnie">', None, None),
     ("R9-G/nazwy-okien", "UX8-15: okna z tytulem w .tekst-tytul (baza, frazy OpenSEO, pakiet) dostaja aria-labelledby",

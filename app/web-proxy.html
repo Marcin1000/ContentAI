@@ -16999,6 +16999,10 @@ async function generateImage() {
         clearTimeout(tOut); clearInterval(tInt);
         // 5xx -> retry; pozostałe statusy -> wyjdź z pętli
         if (imgRes.status >= 500 && imgRes.status < 600 && attempt < IMG_MAX_RETRIES) {
+          // R9-G (UX8-07): brak klucza na serwerze (i inne bledy, ktorych ponowienie nie naprawi) od razu
+          // do komunikatu - wczesniej 15 s odliczania do tego samego bledu.
+          const podglad = await imgRes.clone().json().catch(() => ({}));
+          if (!czyPonowic(bladOdpowiedzi(podglad, imgRes.status, 'OpenAI'))) break;
           const wait = (attempt + 1) * 5;
           for (let s = wait; s > 0; s--) {
             const subEl = document.getElementById('img-spin-sub');

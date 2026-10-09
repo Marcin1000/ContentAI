@@ -1601,6 +1601,30 @@ async function wariantR9Zrozumialosc(b) {
     fokus: !!document.activeElement && document.activeElement.classList.contains('settings-item') && document.activeElement.offsetParent !== null }));
   await s.evaluate(() => closeSettingsMenu());
   wynik('komputer EN: R9-G UX8-13 menu konta bez kopii Widocznosci AI, fokus na pierwszej widocznej pozycji', menuK.grupa === 0 && menuK.fokus, JSON.stringify(menuK));
+  // UX8-07 (czesc grafiki): brak klucza na serwerze (500 "Brak OPENAI_KEY na serwerze") nie jest ponawiany przez 15 s,
+  // a zwykly blad serwera (500 api_error) dalej jest ponawiany.
+  let grafik = 0, tryb = 'brak-klucza';
+  await s.route(/\/api\/images$/, async (route) => {
+    grafik++;
+    if (tryb === 'brak-klucza') return route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'Brak OPENAI_KEY na serwerze' }) });
+    if (tryb === 'przejsciowy' && grafik === 1) return route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: { type: 'api_error', message: 'Internal server error' } }) });
+    return route.continue();
+  });
+  await s.evaluate(() => { document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()); openImgPanelSmart(); document.getElementById('img-context').value = 'Heat pump in a detached house'; });
+  await s.waitForTimeout(400);
+  const t0 = Date.now();
+  await krok('R9-G grafika bez klucza', s.click('#img-gen-btn', { timeout: 3000 }));
+  await krok('R9-G grafika bez klucza: komunikat', s.waitForFunction(() => document.querySelectorAll('.powiadomienie').length > 0 && !document.getElementById('img-gen-btn').disabled, null, { timeout: 40000 }));
+  const bezKlucza = { zapytan: grafik, ms: Date.now() - t0, komunikat: await s.evaluate(() => (document.querySelector('.powiadomienie') || {}).textContent || '') };
+  tryb = 'przejsciowy'; grafik = 0;
+  await s.evaluate(() => { document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()); });
+  await krok('R9-G grafika po bledzie przejsciowym', s.click('#img-gen-btn', { timeout: 3000 }));
+  await krok('R9-G grafika gotowa po ponowieniu', s.waitForFunction(() => document.getElementById('img-result-wrap').style.display === 'block' && !document.getElementById('img-gen-btn').disabled, null, { timeout: 40000 }));
+  const przejsciowy = { zapytan: grafik };
+  await s.unroute(/\/api\/images$/);
+  await s.evaluate(() => closeImgPanelSmart());
+  wynik('komputer EN: R9-G UX8-07 grafika: brak klucza na serwerze bez 15 s ponawiania (jedno zapytanie, komunikat od razu), zwykly 500 dalej ponawiany',
+    bezKlucza.zapytan === 1 && bezKlucza.ms < 8000 && /key|klucz/i.test(bezKlucza.komunikat) && przejsciowy.zapytan === 2, JSON.stringify({ bezKlucza, przejsciowy }));
   wynik('komputer EN: R9-G bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow) await zrzut(s, 'komputer-r9g');
   await k2.close();
