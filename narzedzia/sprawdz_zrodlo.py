@@ -1230,6 +1230,10 @@ KONTROLE += [
      "if (file && file.size > LIMIT_PLIKU_TRANSKRYPCJI) throw new Error(_t('err-transkrypcja-za-duzy')", None, None),
     ("R9-F/transkrypcja-zadanie", "KOD8-16: transkrypcja przez zadanie w tle (zerwane polaczenie nie gubi wyniku)",
      "var res = await fetchZadania(OPENAI_STT_ENDPOINT, { method: 'POST', headers, body: fd });", None, None),
+    ("R9-F/baza-dlugi-pytanie", "KOD8-11: dokument dluzszy niz miesci Baza na serwerze - pytanie przed dodaniem, ile zostanie zapisane",
+     "if (tresc.length > limit && !window.confirm(tekst('kb-dlugi-pytanie', '')", None, ("proxy",)),
+    ("R9-F/baza-uciety", "KOD8-11: po zapisie informacja o ucieciu dokumentu (uciety z serwera albo z liczby fragmentow)",
+     "var uc = dokumentUciety(w.dane, tresc.length);", None, ("proxy",)),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna

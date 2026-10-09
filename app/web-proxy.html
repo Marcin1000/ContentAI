@@ -5466,6 +5466,7 @@ var I18N = {
     'img-step1-noref':'Krok 1 z 2: tworzenie promptu graficznego',
     'msg-no-api-resp':'Brak odpowiedzi z API. Sprawdź klucz API i połączenie.',
     'kb-na-serwerze':'Na serwerze','kb-wspolna':'Baza wspólna zespołu','kb-prywatna':'Twoja baza prywatna','kb-fragm':'fragm.','kb-lokalnie':'Tylko w tej przeglądarce','kb-przenies':'Przenieś na serwer','kb-dodano':'Dodano do bazy wiedzy na serwerze','kb-zostaje-lokalnie':'Dokument zapisano tylko w tej przeglądarce.','kb-przeniesiono':'Przeniesiono na serwer',
+    'kb-dlugi-pytanie':'Dokument „{nazwa}” ma {wszystko} znaków, a baza wiedzy zapisze z niego tylko pierwsze {limit} ({procent}%). Dalsza część nie będzie używana przy pisaniu ani w kontroli faktów. Dodać mimo to? Lepiej podzielić plik na części i dodać je osobno.','kb-uciety':'Dokument „{nazwa}” zapisano tylko częściowo: pierwsze {zapisano} z {wszystko} znaków. Reszta nie trafiła do bazy wiedzy: podziel plik na części i dodaj je osobno.',
     'pakiet-zostalo':'Zostało {n} z {m}','pakiet-zostalo-krotko':'zostało {n}','pakiet-od-standard':'Dostępne od pakietu Standard','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f}: poza pakietem {p}','pakiet-niedostepne':'niedostępne',
     'btn-przerwij':'Przerwij','msg-przerwano':'Generowanie przerwane. Formularz jest bez zmian: możesz poprawić brief i spróbować ponownie.','badge-przerwane':'przerwane','spin-ponawiam-za':'Dostawca AI ogranicza zapytania: ponawiam za {s} s','spin-proba':'próba {n} z {m}','spin-ponawiam':'Ponawiam zapytanie…','spin-wznawiam':'Połączenie było przerwane. Odbieram wynik z serwera…',
     'odzysk-spin':'Kończę artykuł rozpoczęty przed odświeżeniem strony…','odzysk-spin-sub':'Odbieram wynik z serwera','odzysk-gotowe':'Odebrano artykuł rozpoczęty przed odświeżeniem strony. Jest w Historii.','odzysk-blad':'Nie udało się odebrać artykułu rozpoczętego przed odświeżeniem strony: serwer nie ma już tego wyniku. Wygeneruj go ponownie.','odzysk-blad-prefiks':'Artykuł rozpoczęty przed odświeżeniem strony:',
@@ -6014,6 +6015,7 @@ var I18N = {
     'img-spin-sub':'Generation may take 30-60 seconds',
     'msg-no-api-resp':'No response from API. Check your API key and connection.',
     'kb-na-serwerze':'On the server','kb-wspolna':'Shared team base','kb-prywatna':'Your private base','kb-fragm':'passages','kb-lokalnie':'Only in this browser','kb-przenies':'Move to server','kb-dodano':'Added to the server knowledge base','kb-zostaje-lokalnie':'The document was saved only in this browser.','kb-przeniesiono':'Moved to the server',
+    'kb-dlugi-pytanie':'The document "{nazwa}" has {wszystko} characters, but the knowledge base will store only the first {limit} ({procent}%). The rest will not be used for writing or fact checking. Add it anyway? It is better to split the file into parts and add them separately.','kb-uciety':'The document "{nazwa}" was stored only partly: the first {zapisano} of {wszystko} characters. The rest did not reach the knowledge base: split the file into parts and add them separately.',
     'pakiet-zostalo':'{n} of {m} left','pakiet-zostalo-krotko':'{n} left','pakiet-od-standard':'Available from the Standard plan','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f}: not included in the {p} plan','pakiet-niedostepne':'not available',
     'btn-przerwij':'Stop','msg-przerwano':'Generation stopped. The form is unchanged, so you can adjust the brief and try again.','badge-przerwane':'stopped','spin-ponawiam-za':'The AI provider is limiting requests: retrying in {s} s','spin-proba':'attempt {n} of {m}','spin-ponawiam':'Retrying the request…','spin-wznawiam':'The connection dropped. Collecting the result from the server…',
     'odzysk-spin':'Finishing the article started before the page reloaded…','odzysk-spin-sub':'Collecting the result from the server','odzysk-gotowe':'The article started before the page reloaded has been collected. It is in History.','odzysk-blad':'Could not collect the article started before the page reloaded: the server no longer has this result. Generate it again.','odzysk-blad-prefiks':'Article started before the page reloaded:',
@@ -18450,6 +18452,7 @@ async function kbAudioTranscribeAndOpen(file) {
       var dokumenty = dane.dokumenty || [];
       window._bazaSerwer = dokumenty;
       window._bazaSerwerLiczba = dokumenty.length;
+      if (dane.limitZnakow > 0) window._bazaLimitZnakow = dane.limitZnakow; // R9-F (KOD8-11), gdy serwer go poda
       rysujBazeWPanelu();
       if (!dokumenty.length){
         cel.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:10px 0">'
@@ -18515,8 +18518,19 @@ async function kbAudioTranscribeAndOpen(file) {
         body: JSON.stringify({ zakres: 'prywatna', nazwa: nazwa, tresc: tresc, url: url || '' })
       });
       var dane = {}; try { dane = await odp.json(); } catch(e){}
-      return { ok: odp.ok, status: odp.status, blad: dane.error || '' };
+      return { ok: odp.ok, status: odp.status, blad: dane.error || '', dane: dane };
     } catch(e){ return { ok: false, status: 0, blad: '' }; }
+  }
+
+  // R9-F (KOD8-11): serwer zapisuje z dokumentu najwyzej 60 fragmentow po 1500 znakow (serwer/baza.js),
+  // reszte odrzucal bez slowa, a aplikacja mowila "Dodano". Limit z serwera (GET /api/baza: limitZnakow),
+  // gdy go poda; ucinanie z odpowiedzi zapisu (uciety, zapisanoZnakow), a do tego czasu z liczby fragmentow.
+  var LIMIT_ZNAKOW_DOKUMENTU = 90000;
+  function dokumentUciety(d, wyslano){
+    if (!d || d.uciety === false) return null;
+    if (d.uciety === true) return { zapisano: d.zapisanoZnakow || 0, wszystko: d.znakow || wyslano };
+    var fr = d.fragmentow || 0;
+    return (fr >= 60 && (d.znakow || 0) > fr * 1500) ? { zapisano: fr * 1500, wszystko: d.znakow } : null;
   }
 
   // Wszystko, co uzytkownik dodaje w panelu (pliki, strony, tekst, transkrypcje),
@@ -18528,9 +18542,15 @@ async function kbAudioTranscribeAndOpen(file) {
   window.addDoc = function(name, content, icon, url){
     if (icon === '⚠️' || !content) return dodajLokalnie(name, content, icon, url);
     var tresc = url ? ('Źródło: ' + url + '\n\n' + content) : content;
+    // R9-F (KOD8-11): za dlugi dokument - pytanie przed dodaniem, ile z niego trafi do Bazy.
+    var limit = window._bazaLimitZnakow || LIMIT_ZNAKOW_DOKUMENTU;
+    if (tresc.length > limit && !window.confirm(tekst('kb-dlugi-pytanie', '').replace('{nazwa}', name).replace('{wszystko}', formatujLiczbe(tresc.length, 0))
+      .replace('{limit}', formatujLiczbe(limit, 0)).replace('{procent}', Math.max(1, Math.floor(limit / tresc.length * 100))))) return;
     wyslijDoBazy(name, tresc, url).then(function(w){
       if (w.ok) {
-        pokazPowiadomienie(tekst('kb-dodano','Dodano do bazy wiedzy na serwerze') + ': ' + name, 'ok');
+        var uc = dokumentUciety(w.dane, tresc.length);
+        if (uc) pokazPowiadomienie(tekst('kb-uciety', '').replace('{nazwa}', name).replace('{zapisano}', formatujLiczbe(uc.zapisano, 0)).replace('{wszystko}', formatujLiczbe(uc.wszystko, 0)), 'uwaga', 15000);
+        else pokazPowiadomienie(tekst('kb-dodano','Dodano do bazy wiedzy na serwerze') + ': ' + name, 'ok');
         odswiezListeBazy();
       } else {
         dodajLokalnie(name, content, icon, url);
@@ -18586,7 +18606,10 @@ async function kbAudioTranscribeAndOpen(file) {
       } else if (odp.ok) {
         el('bazas-nazwa').value = '';
         el('bazas-tresc').value = '';
-        el('bazas-stan').textContent = '';
+        // R9-F (KOD8-11): informacja, gdy serwer zapisal tylko poczatek dokumentu.
+        var zapis = {}; try { zapis = await odp.json(); } catch(e){}
+        var uc = dokumentUciety(zapis, tresc.length);
+        el('bazas-stan').textContent = uc ? tekst('kb-uciety', '').replace('{nazwa}', nazwa).replace('{zapisano}', formatujLiczbe(uc.zapisano, 0)).replace('{wszystko}', formatujLiczbe(uc.wszystko, 0)) : '';
         await odswiezListeBazy();
       } else {
         el('bazas-stan').textContent = tekst('bazas-blad','Nie udało się połączyć z serwerem.');

@@ -1090,13 +1090,47 @@ async function scenariuszR9FTranskrypcja(b) {
   await k.close();
 }
 
+// KOD8-11: dokument dluzszy niz miesci Baza na serwerze (60 fragmentow po 1500 znakow) - pytanie przed
+// dodaniem (z liczbami), a po zapisie informacja, ile zapisano; wczesniej "Dodano do bazy" i cisza.
+async function scenariuszR9FDuzyDokument(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  const wyslane = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api\/baza$/.test(z.url())) wyslane.push(JSON.parse(z.postData() || '{}').nazwa || ''); });
+  const dodaj = (odpowiedz) => s.evaluate(async (odp) => {
+    document.querySelectorAll('.powiadomienie').forEach((p) => p.remove());
+    window.__pytania = []; window.confirm = (m) => { window.__pytania.push(m); return odp; };
+    let tresc = '';
+    for (let i = 1; tresc.length < 335000; i++) tresc += 'Rozdzial ' + i + '. Pompa ciepla model XYZ' + i + ' ma gwarancje producenta i serwis w calej Polsce. ';
+    tresc += 'Gwarancja producenta XYZ123 wynosi 10 lat.';
+    const przed = window._bazaSerwerLiczba || 0;
+    addDoc('Katalog produktow', tresc, '📄');
+    for (let i = 0; i < 40 && (window._bazaSerwerLiczba || 0) === przed && !document.querySelector('.powiadomienie'); i++) await new Promise((r) => setTimeout(r, 250));
+    await new Promise((r) => setTimeout(r, 500));
+    return { pytania: window.__pytania, liczba: window._bazaSerwerLiczba || 0, lokalne: docs.length, dlugosc: tresc.length,
+      pow: [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent.replace(/\s+/g, ' ').slice(0, 260)) };
+  }, odpowiedz);
+  const nie = await dodaj(false);
+  wynik('R9-F KOD8-11: dokument ponad limit Bazy - pytanie przed dodaniem z liczbami; "Anuluj" nic nie dodaje',
+    nie.pytania.length === 1 && /90[\s .,]?000/.test(nie.pytania[0]) && nie.liczba === 0 && nie.lokalne === 0 && !wyslane.length, JSON.stringify(nie).slice(0, 400));
+  const tak = await dodaj(true);
+  const wzor = await s.evaluate(() => _t('kb-uciety').split('{')[0]);
+  wynik('R9-F KOD8-11: po zgodzie dokument w Bazie i informacja, ile znakow zapisano (zamiast samego "Dodano")',
+    tak.pytania.length === 1 && tak.liczba === 1 && wyslane.length === 1 && !!wzor && tak.pow.some((p) => p.indexOf(wzor) !== -1 && /90[\s .,]?000/.test(p)), JSON.stringify(tak).slice(0, 500));
+  await s.evaluate(async () => { const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); });
+  wynik('R9-F KOD8-11: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-duzy-dokument');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
   ['stan', scenariuszStanu], ['r4-logika', scenariuszR4Logiki], ['bledy', scenariuszBledow], ['historia-r4', scenariuszHistoriiR4],
   ['r9f-keys', scenariuszR9FKeys], ['r9f-widocznosc', scenariuszR9FWidocznosc], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
   ['r9f-pause-turn', scenariuszR9FPauseTurn], ['r9f-przeladowanie', scenariuszR9FPrzeladowanie], ['r9f-fakty', scenariuszR9FFakty],
-  ['r9f-transkrypcja', scenariuszR9FTranskrypcja],
+  ['r9f-transkrypcja', scenariuszR9FTranskrypcja], ['r9f-duzy-dokument', scenariuszR9FDuzyDokument],
 ];
 (async () => {
   let b;
