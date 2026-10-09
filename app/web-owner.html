@@ -12323,7 +12323,8 @@ function odswiezInspektor() {
   document.body.classList.toggle('inspektor-otwarty', !!otwarty);
   // 1280-1439 px: brief + panel kontroli zostawialy artykulowi ~40 znakow w linii.
   // Przy otwartym panelu brief zwija sie do szyny (i wraca, gdy panel sie zamknie).
-  var b = document.body, sredni = window.innerWidth >= 1280 && window.innerWidth < 1440 && !b.classList.contains('is-mobile');
+  // R9-F (KOD8-14): klasa telefonu najpierw - odczyt innerWidth wymuszal przy starcie telefonu pelny uklad strony.
+  var b = document.body, sredni = !b.classList.contains('is-mobile') && window.innerWidth >= 1280 && window.innerWidth < 1440;
   if (otwarty && sredni && !b.classList.contains('brief-zwiniety')) { przelaczBrief(true); b.dataset.briefAuto = '1'; }
   else if (!otwarty && b.dataset.briefAuto === '1') { delete b.dataset.briefAuto; przelaczBrief(false); }
   var gr = otwarty ? INSPEKTOR[otwarty].gr : '';
@@ -18056,16 +18057,28 @@ async function kbAudioTranscribeAndOpen(file) {
   if(reduce) return;
   var MODULE={image:1,audio:1};
   var last='generator';
-  function anim(el,css){ if(el){ el.style.animation='none'; void el.offsetWidth; el.style.animation=css; } }
+  /* R9-F (KOD8-14): animacje wejscia przez Web Animations API, bez wymuszania ukladu. Wczesniej
+     animation='none' + odczyt offsetWidth przeliczal uklad calej strony (ok. 2200 elementow) dla panelu
+     i kazdego pola osobno: na telefonie ok. 1 s zamrozenia przy przejsciu na Pisz i przy starcie. */
+  var KLATKI={cinRise:[{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'none'}],
+    cinField:[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],
+    cinPop:[{opacity:0,transform:'scale(.82)'},{opacity:1,transform:'none'}]};
+  function anim(el,css,opoznienie){
+    if(!el) return;
+    var m=/^(\w+) ([\d.]+)s (cubic-bezier\([^)]*\))( both)?$/.exec(css);
+    if(!m||!KLATKI[m[1]]||typeof el.animate!=='function'){ el.style.animation=css; if(opoznienie) el.style.animationDelay=opoznienie+'s'; return; }
+    if(el._cinAnim) el._cinAnim.cancel();
+    el._cinAnim=el.animate(KLATKI[m[1]],{duration:parseFloat(m[2])*1000,delay:(opoznienie||0)*1000,easing:m[3],fill:m[4]?'backwards':'none'});
+  }
   function animateGen(){
     var p=document.getElementById('tab-generator'); anim(p,'cinRise .42s cubic-bezier(.2,.7,.2,1)');
     var fs=(p||document).querySelectorAll('.field');
-    for(var i=0;i<fs.length;i++){ anim(fs[i],'cinField .4s cubic-bezier(.2,.7,.2,1) both'); fs[i].style.animationDelay=(0.02+i*0.04)+'s'; }
+    for(var i=0;i<fs.length;i++){ anim(fs[i],'cinField .4s cubic-bezier(.2,.7,.2,1) both',0.02+i*0.04); }
   }
   function animateHistory(){
     anim(document.getElementById('tab-history'),'cinRise .42s cubic-bezier(.2,.7,.2,1)');
     var items=document.querySelectorAll('#h-list-inner .h-item');
-    for(var i=0;i<items.length && i<16;i++){ anim(items[i],'cinField .38s cubic-bezier(.2,.7,.2,1) both'); items[i].style.animationDelay=(0.02+i*0.03)+'s'; }
+    for(var i=0;i<items.length && i<16;i++){ anim(items[i],'cinField .38s cubic-bezier(.2,.7,.2,1) both',0.02+i*0.03); }
   }
   function onView(name){
     if(!MODULE[last]){ if(name==='generator') animateGen(); else if(name==='history') animateHistory(); }
@@ -18137,7 +18150,7 @@ async function kbAudioTranscribeAndOpen(file) {
   if(msb){ var wasOpen=msb.classList.contains('open');
     new MutationObserver(function(){ var open=msb.classList.contains('open');
       if(open&&!wasOpen){ var items=msb.querySelectorAll('.kb-item');
-        for(var i=0;i<items.length&&i<16;i++){ anim(items[i],'cinField .38s cubic-bezier(.2,.7,.2,1) both'); items[i].style.animationDelay=(0.02+i*0.03)+'s'; } }
+        for(var i=0;i<items.length&&i<16;i++){ anim(items[i],'cinField .38s cubic-bezier(.2,.7,.2,1) both',0.02+i*0.03); } }
       wasOpen=open;
     }).observe(msb,{attributes:true,attributeFilter:['class']}); }
 })();

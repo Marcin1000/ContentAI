@@ -1234,6 +1234,11 @@ KONTROLE += [
      "if (tresc.length > limit && !window.confirm(tekst('kb-dlugi-pytanie', '')", None, ("proxy",)),
     ("R9-F/baza-uciety", "KOD8-11: po zapisie informacja o ucieciu dokumentu (uciety z serwera albo z liczby fragmentow)",
      "var uc = dokumentUciety(w.dane, tresc.length);", None, ("proxy",)),
+    ("R9-F/animacje-waapi", "KOD8-14: animacje wejscia pol przez Web Animations API, bez offsetWidth na kazdym polu",
+     "el._cinAnim=el.animate(KLATKI[m[1]],{duration:parseFloat(m[2])*1000,delay:(opoznienie||0)*1000,easing:m[3],fill:m[4]?'backwards':'none'});",
+     "function anim(el,css){ if(el){ el.style.animation='none'; void el.offsetWidth; el.style.animation=css; } }", None),
+    ("R9-F/inspektor-telefon", "KOD8-14: odswiezInspektor na telefonie bez odczytu innerWidth (wymuszony uklad przy starcie)",
+     "sredni = !b.classList.contains('is-mobile') && window.innerWidth >= 1280 && window.innerWidth < 1440;", None, None),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna

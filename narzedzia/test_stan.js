@@ -827,6 +827,47 @@ async function scenariuszR9FKeys(b) {
   await k.close();
 }
 
+// KOD8-14: telefon, Historia -> Pisz. Animacja wejscia pol wymuszala pelny uklad strony osobno dla panelu
+// i kazdego pola (11 przeliczen w jednym zadaniu, ok. 1 s zamrozenia na CPU x4). Liczba przeliczen ukladu
+// (CDP Performance.LayoutCount) przy przejsciu to stala miara, niezalezna od szybkosci maszyny w CI.
+async function scenariuszR9FTelefonPisz(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true });
+  await k.addInitScript(() => { try { localStorage.setItem('cai_key_anthropic', 'sk-ant-atrapa'); localStorage.setItem('cai_lang', 'pl'); localStorage.setItem('cai_start_v1', '1'); sessionStorage.setItem('cin_splash', '1'); } catch (e) { /* bez magazynu */ } });
+  const s = await k.newPage();
+  const bledyJs = [];
+  s.on('pageerror', (e) => bledyJs.push(e.message.slice(0, 160)));
+  await s.goto(PLIK, { waitUntil: 'load' });
+  await s.waitForTimeout(1200);
+  const cdp = await k.newCDPSession(s);
+  await cdp.send('Performance.enable');
+  const uklady = async () => ((await cdp.send('Performance.getMetrics')).metrics.find((m) => m.name === 'LayoutCount') || {}).value || 0;
+  const pomiary = [];
+  for (let i = 0; i < 2; i++) {
+    await s.evaluate(() => switchMobileTab('history'));
+    await s.waitForTimeout(700);
+    const przed = await uklady();
+    await s.evaluate(() => new Promise((ok) => { switchMobileTab('generator'); requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(ok, 50))); }));
+    pomiary.push((await uklady()) - przed);
+  }
+  const pola = await s.evaluate(() => ({ n: document.querySelectorAll('#tab-generator .field').length,
+    animacje: [...document.querySelectorAll('#tab-generator .field')].filter((f) => f.getAnimations().length > 0).length }));
+  // Start na telefonie: odswiezInspektor czytal window.innerWidth (wymuszony uklad calej strony), choc na telefonie wynik jest bez znaczenia.
+  const odczyty = await s.evaluate(() => {
+    let n = 0;
+    const d = Object.getOwnPropertyDescriptor(window, 'innerWidth');
+    Object.defineProperty(window, 'innerWidth', { configurable: true, get() { n++; return d.get.call(window); } });
+    try { odswiezInspektor(); } finally { Object.defineProperty(window, 'innerWidth', d); }
+    return n;
+  });
+  wynik('R9-F KOD8-14: telefon - odswiezInspektor bez odczytu innerWidth (bez wymuszonego ukladu przy starcie)', odczyty === 0, 'odczytow: ' + odczyty);
+  wynik('R9-F KOD8-14: telefon Historia -> Pisz bez przeliczania ukladu dla kazdego pola (najwyzej 4 uklady)',
+    pomiary.every((n) => n <= 4), JSON.stringify({ pomiary, pola }));
+  wynik('R9-F KOD8-14: pola Pisz nadal wjezdzaja animacja', pola.n >= 5 && pola.animacje >= pola.n - 1, JSON.stringify(pola));
+  wynik('R9-F KOD8-14: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-telefon-pisz');
+  await k.close();
+}
+
 // KOD8-22: Widocznosc marki w AI. Zly klucz albo przeciazenie przy wszystkich zapytaniach to blad z powodem
 // (bez "0, obecnosc w 0/2" i bez zapisu do historii pomiarow); czesc nieudanych nie zaniza wyniku.
 async function scenariuszR9FWidocznosc(b) {
@@ -1128,7 +1169,7 @@ async function scenariuszR9FDuzyDokument(b) {
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
   ['stan', scenariuszStanu], ['r4-logika', scenariuszR4Logiki], ['bledy', scenariuszBledow], ['historia-r4', scenariuszHistoriiR4],
-  ['r9f-keys', scenariuszR9FKeys], ['r9f-widocznosc', scenariuszR9FWidocznosc], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
+  ['r9f-keys', scenariuszR9FKeys], ['r9f-telefon-pisz', scenariuszR9FTelefonPisz], ['r9f-widocznosc', scenariuszR9FWidocznosc], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
   ['r9f-pause-turn', scenariuszR9FPauseTurn], ['r9f-przeladowanie', scenariuszR9FPrzeladowanie], ['r9f-fakty', scenariuszR9FFakty],
   ['r9f-transkrypcja', scenariuszR9FTranskrypcja], ['r9f-duzy-dokument', scenariuszR9FDuzyDokument],
 ];
