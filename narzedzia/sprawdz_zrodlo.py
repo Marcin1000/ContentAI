@@ -1269,6 +1269,12 @@ KONTROLE += [
      "wiedza = await wiedzaDoPomocnika(opis, 3000);", None, None),
     ("R9-F/llms-baza-serwera", "KOD8-18: llms.txt - strony i kontekst z Bazy na serwerze, naglowki w jezyku tekstu",
      "document.getElementById('llms-out-full-ta').value = buildLlmsFullTxt(cfg, urls, zSerwera);", None, None),
+    ("R9-F/widocznosc-rynek", "KOD8-23: Widocznosc AI - rynek i jezyk z pola Jezyk tekstu (nie 'Polish market' na sztywno)",
+     "recommendation query for ' + rynekWidocznosci() + '. Use web search", "recommendation query for the Polish market.", None),
+    ("R9-F/narracja-jezyk", "KOD8-23: Narracja marki w jezyku tekstu (nie 'in Polish' i 'Opowiedz o marce' na sztywno)",
+     "120 to 180 words, in ' + jezykNarracji + ', plain text only", "120 to 180 words, in Polish, plain text only", None),
+    ("R9-F/narracja-baza-serwera", "KOD8-23: Narracja porownuje z Baza na serwerze, blad API z powodem",
+     "out.innerHTML = blokBledu(e, 'runNarrative()', 'vis-blad-narracji');", None, None),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna

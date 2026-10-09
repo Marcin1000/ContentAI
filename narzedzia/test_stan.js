@@ -1388,6 +1388,53 @@ async function scenariuszR9FPomocnicy(b) {
   await k.close();
 }
 
+// KOD8-23: Widocznosc AI i Narracja marki. Rynek i jezyk "Polish" na sztywno (anglojezyczny klient dostawal pomiar
+// polskiego rynku i polska narracje), Narracja porownywala z "(no documents)" przy Bazie na serwerze, a blad API
+// w kroku 1 dawal "Brak odpowiedzi z narracja" bez powodu.
+async function scenariuszR9FNarracja(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  await s.evaluate(async () => {
+    await fetch('/api/baza', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zakres: 'prywatna', nazwa: 'Oferta Termoplus',
+      tresc: 'Termoplus montuje pompy ciepla Vitocal w Krakowie w 48 godzin. Gwarancja 7 lat.' }) });
+    await odswiezListeBazy();
+    const l = document.getElementById('lang'); l.value = 'English'; l.dispatchEvent(new Event('change'));
+  });
+  const zap = [];
+  let blad401 = false;
+  await s.route(/\/api$/, (route) => {
+    const z = route.request();
+    let d = {}; try { d = JSON.parse(z.postData() || '{}'); } catch (e) { /* inne cialo */ }
+    zap.push({ sys: String(d.system || ''), tresc: JSON.stringify(d.messages || []) });
+    if (blad401 && /A user asks about the brand/.test(String(d.system || ''))) {
+      return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key' } }) });
+    }
+    return route.continue();
+  });
+  await s.evaluate(() => { openVisModal(); document.getElementById('vis-brand').value = 'Termoplus'; document.getElementById('vis-comp').value = 'Viessmann';
+    document.getElementById('vis-prompts').value = 'best heat pump installer'; document.getElementById('vis-iter').value = '1'; window.__w = runVisibility(); });
+  await s.waitForFunction(() => !document.getElementById('vis-run-btn').disabled, null, { timeout: 60000 }).catch(() => {});
+  const pomiar = zap.find((z) => /simulate an AI assistant/.test(z.sys)) || { sys: '' };
+  wynik('R9-F KOD8-23: Widocznosc - rynek z jezyka tekstu (English), nie "Polish market" na sztywno', !!pomiar.sys && !/Polish market/.test(pomiar.sys) && /English/.test(pomiar.sys), pomiar.sys.slice(0, 160));
+  await s.evaluate(() => { window.__n = runNarrative(); });
+  await s.waitForFunction(() => !document.getElementById('vis-narr-btn').disabled, null, { timeout: 60000 }).catch(() => {});
+  const krok1 = zap.find((z) => /A user asks about the brand/.test(z.sys)) || { sys: '', tresc: '' };
+  const krok2 = zap.find((z) => /GROUND TRUTH/.test(z.tresc)) || { tresc: '' };
+  wynik('R9-F KOD8-23: Narracja w jezyku tekstu (English), bez "in Polish" i "Opowiedz o marce"', /in English/.test(krok1.sys) && !/in Polish/.test(krok1.sys) && !/Opowiedz o marce/.test(krok1.tresc), krok1.sys.slice(-120) + ' | ' + krok1.tresc.slice(0, 80));
+  wynik('R9-F KOD8-23: Narracja porownuje z Baza na serwerze (nie "(no documents)")', /Vitocal/.test(krok2.tresc) && !/\(no documents\)/.test(krok2.tresc), krok2.tresc.slice(0, 200));
+  blad401 = true;
+  await s.evaluate(() => { window.__n = runNarrative(); });
+  await s.waitForFunction(() => !document.getElementById('vis-narr-btn').disabled, null, { timeout: 60000 }).catch(() => {});
+  const blad = await s.evaluate(() => { const kb = document.querySelector('#vis-results .komunikat-bledu'); return { tekst: kb ? kb.innerText.replace(/\s+/g, ' ') : (document.getElementById('vis-results').innerText || ''), wzor: _t('err-klucz') }; });
+  wynik('R9-F KOD8-23: Narracja - blad API (zly klucz) z powodem zamiast "Brak odpowiedzi z narracja"', blad.tekst.indexOf(blad.wzor) !== -1, blad.tekst.slice(0, 200));
+  await s.unroute(/\/api$/);
+  await s.evaluate(async () => { closeVisModal(); const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); });
+  wynik('R9-F KOD8-23: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-narracja');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
@@ -1398,6 +1445,7 @@ const SCENARIUSZE = [
   ['r9f-cms', scenariuszR9FCms], ['r9f-pdf', scenariuszR9FPdf],
   ['r9f-luki-darmowy', scenariuszR9FLukiDarmowy], ['r9f-bez-sieci', scenariuszR9FBezSieci],
   ['r9f-prompt-bazy', scenariuszR9FPromptBazy], ['r9f-pomocnicy', scenariuszR9FPomocnicy],
+  ['r9f-narracja', scenariuszR9FNarracja],
 ];
 (async () => {
   let b;

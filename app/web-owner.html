@@ -4972,7 +4972,7 @@ var I18N = {
     'vis-title':'Widoczność marki w AI','vis-desc':'Sprawdza czy marka pojawia się w odpowiedziach AI na zapytania zakupowe. Uruchamia każdy prompt przez Claude z wyszukiwaniem w sieci i raportuje obecność, pozycję, konkurentów i źródła. To migawka na żądanie z jednego modelu (Claude), nie ciągły monitoring wielu modeli. Każdy prompt zużywa zapytanie web search (płatne).',
     'vis-f-brand':'Marka do wykrycia','vis-f-comp':'Konkurenci (po przecinku)','vis-f-prompts':'Zapytania kontrolne (jedno na linię)','vis-run':'Sprawdź widoczność',
     'vis-f-iter':'Iteracje na prompt (stabilność)','vis-narr':'Narracja marki',
-    'vis-czesc-bledow':'Wynik z {n} z {m} zapytań: {k} nie powiodło się ({powod}).','vis-blad-wszystkie':'Żadne zapytanie nie dało czytelnego wyniku. Spróbuj ponownie za chwilę.','vis-zapytanie-blad':'Zapytanie nie powiodło się, więc nie wchodzi do wyniku.',
+    'vis-czesc-bledow':'Wynik z {n} z {m} zapytań: {k} nie powiodło się ({powod}).','vis-blad-wszystkie':'Żadne zapytanie nie dało czytelnego wyniku. Spróbuj ponownie za chwilę.','vis-zapytanie-blad':'Zapytanie nie powiodło się, więc nie wchodzi do wyniku.','vis-blad-narracji':'Błąd podczas sprawdzania narracji.',
     'settings-rep-title':'Raport widoczności','settings-rep-sub':'porównanie pomiarów i priorytety',
     'settings-trk-title':'Pomiar ruchu z AI','settings-trk-sub':'robots.txt, UTM, GA4',
     'trk-title':'Tracking ruchu z AI (przygotowanie)','trk-desc':'To nie jest pomiar ruchu. Generuje warunki wstępne: dyrektywy robots.txt dla botów AI, linki z UTM i wskazówkę konfiguracji GA4. Sam pomiar wymaga GA4 i analizy logów po stronie serwera.',
@@ -5609,7 +5609,7 @@ var I18N = {
     'vis-title':'Brand visibility in AI','vis-desc':'Checks whether the brand appears in AI answers to buyer queries. Runs each prompt through Claude with web search and reports presence, position, competitors and sources. This is an on-demand snapshot from a single model (Claude), not continuous multi-model monitoring. Each prompt consumes a web search request (billed).',
     'vis-f-brand':'Brand to detect','vis-f-comp':'Competitors (comma separated)','vis-f-prompts':'Control queries (one per line)','vis-run':'Check visibility',
     'vis-f-iter':'Iterations per prompt (stability)','vis-narr':'Brand narrative',
-    'vis-czesc-bledow':'Result from {n} of {m} queries: {k} failed ({powod}).','vis-blad-wszystkie':'No query returned a readable result. Try again in a moment.','vis-zapytanie-blad':'This query failed, so it is not counted in the score.',
+    'vis-czesc-bledow':'Result from {n} of {m} queries: {k} failed ({powod}).','vis-blad-wszystkie':'No query returned a readable result. Try again in a moment.','vis-zapytanie-blad':'This query failed, so it is not counted in the score.','vis-blad-narracji':'Error during narrative check.',
     'settings-rep-title':'Visibility report','settings-rep-sub':'measurement comparison and priorities',
     'settings-trk-title':'AI traffic setup','settings-trk-sub':'robots.txt, UTM, GA4',
     'trk-title':'AI traffic tracking (preparation)','trk-desc':'This does not measure traffic. It generates preconditions: robots.txt directives for AI bots, UTM links and a GA4 setup hint. Actual measurement requires GA4 and server-side log analysis.',
@@ -15088,8 +15088,15 @@ function _visExtractJson(text) {
   try { return parsujJsonModelu(text); } catch (e) { return null; }
 }
 
+// R9-F (KOD8-23): rynek i jezyk pomiaru z pola Jezyk tekstu. Wczesniej "Polish market" na sztywno: klient
+// anglojezyczny dostawal pomiar polskiego rynku.
+function rynekWidocznosci() {
+  const jezyk = jezykDlaModelu((document.getElementById('lang') || {}).value);
+  const rynek = ({ Polish: 'the Polish market', German: 'the German-speaking market', Czech: 'the Czech market' })[jezyk] || 'an English-speaking market';
+  return rynek + ' (the user writes and expects the answer in ' + jezyk + ')';
+}
 async function visQuery(query, brand, competitors) {
-  const sys = 'You simulate an AI assistant answering a user shopping or recommendation query for the Polish market. Use web search to ground the answer in current sources. The user is choosing a company or service. After researching, respond ONLY with a single JSON object, no prose and no markdown fences, with keys: '
+  const sys = 'You simulate an AI assistant answering a user shopping or recommendation query for ' + rynekWidocznosci() + '. Use web search to ground the answer in current sources. The user is choosing a company or service. After researching, respond ONLY with a single JSON object, no prose and no markdown fences, with keys: '
     + '"present" (true or false: does the brand "' + brand + '" appear among your recommended options), '
     + '"position" (integer rank of "' + brand + '" among recommended options, or null if absent), '
     + '"competitors" (array of competing brand names you would recommend, in order), '
@@ -15307,17 +15314,26 @@ async function runNarrative() {
   out.innerHTML = '';
   try {
     prog.textContent = en ? 'Step 1/2: how AI describes the brand...' : 'Krok 1/2: jak AI opisuje markę...';
-    const sys1 = 'You are an AI assistant. A user asks about the brand "' + brand + '". Using web search, write how you would describe ' + brand + ' to that user: what it does, main strengths, who it is for, and pricing positioning. 120 to 180 words, in Polish, plain text only, no markdown.';
+    // R9-F (KOD8-23): narracja w jezyku tekstu (wczesniej "in Polish" i "Opowiedz o marce" takze dla klienta EN).
+    const jezykNarracji = jezykDlaModelu((document.getElementById('lang') || {}).value);
+    const sys1 = 'You are an AI assistant. A user asks about the brand "' + brand + '". Using web search, write how you would describe ' + brand + ' to that user: what it does, main strengths, who it is for, and pricing positioning. 120 to 180 words, in ' + jezykNarracji + ', plain text only, no markdown.';
     const r1 = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 700, system: sys1, messages: [{ role: 'user', content: 'Opowiedz o marce: ' + brand }], tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] })
+      body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 700, system: sys1, messages: [{ role: 'user', content: (jezykNarracji === 'Polish' ? 'Opowiedz o marce: ' : 'Tell me about the brand: ') + brand }], tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] })
     });
     const d1 = await r1.json().catch(() => null);
+    // R9-F (KOD8-23): blad API (zly klucz, 529) z powodem, nie "Brak odpowiedzi z narracja".
+    if (!r1.ok || (d1 && d1.error)) throw bladOdpowiedzi(d1, r1.status);
     const narrative = (d1 && d1.content ? d1.content.filter(b => b.type === 'text').map(b => b.text).join('') : '').trim();
     if (!narrative) { out.innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'No narrative returned.' : 'Brak odpowiedzi z narracją.') + '</div>'; prog.textContent = ''; btn.disabled = false; btn.style.opacity = '1'; return; }
     prog.textContent = en ? 'Step 2/2: comparing with knowledge base...' : 'Krok 2/2: porównanie z bazą wiedzy...';
-    const kb = _visKb();
+    // R9-F (KOD8-23): prawda o firmie takze z Bazy na serwerze (w wariancie z serwerem tam sa dokumenty).
+    let kb = _visKb();
+    if (typeof wiedzaZSerwera === 'function' && (window._bazaSerwerLiczba || 0) > 0) {
+      const zSerwera = (await wiedzaZSerwera(brand)).replace(/^\s*## WIEDZA FIRMOWA\s*/, '').slice(0, 6000);
+      if (zSerwera) kb = zSerwera + (kb ? '\n\n' + kb : '');
+    }
     const sys2 = 'You evaluate how an AI assistant described a brand against the company ground truth documents. Respond ONLY with a JSON object, no prose and no fences, keys: "alignment" (integer 0-100: how well the description matches the company real offer and positioning), "factual_issues" (array of strings: claims in the description that are wrong or unsupported by the ground truth), "missing_strengths" (array of strings: key strengths from the ground truth that the description omitted), "note" (short string).';
     const user2 = 'GROUND TRUTH (company documents):\n' + (kb || '(no documents)') + '\n\nAI DESCRIPTION:\n' + narrative + '\n\nBrand: ' + brand;
     const r2 = await apiFetch({
@@ -15334,7 +15350,8 @@ async function runNarrative() {
   } catch (e) {
     prog.textContent = '';
     btn.disabled = false; btn.style.opacity = '1';
-    out.innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'Error during narrative check.' : 'Błąd podczas sprawdzania narracji.') + '</div>';
+    // R9-F (KOD8-23): komunikat z powodem (zly klucz: przejscie do kluczy, 529: Sprobuj ponownie).
+    out.innerHTML = blokBledu(e, 'runNarrative()', 'vis-blad-narracji');
   }
 }
 
