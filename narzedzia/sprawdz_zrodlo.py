@@ -1220,6 +1220,12 @@ KONTROLE += [
      "delete options.headers['X-Zadanie'];", None, None),
     ("R9-F/fakty-baza-serwera", "KOD8-17: Fakty dla artykulu z Historii (i po odswiezeniu) pobieraja fragmenty Bazy na serwerze",
      "ostatniaWiedzaSerwera = await wiedzaZSerwera(ka.frazy && ka.frazy.length ? ka.frazy.join(', ') : (ka.temat || ka.h1));", None, ("proxy",)),
+    ("R9-F/widocznosc-blad-api", "KOD8-22: Widocznosc AI - blad API zapytania niesie powod (nie 'marki nie ma')",
+     "if (!res.ok || (data && data.error)) throw bladOdpowiedzi(data, res.status);", None, None),
+    ("R9-F/widocznosc-same-bledy", "KOD8-22: Widocznosc AI - same bledy: komunikat z powodem, bez wyniku 0 i bez zapisu do historii pomiarow",
+     "document.getElementById('vis-results').innerHTML = blokBledu(ostatniBlad || new Error(_t('vis-blad-wszystkie')), 'runVisibility()');", None, None),
+    ("R9-F/widocznosc-mianownik", "KOD8-22: Widocznosc AI - nieudane zapytania poza mianownikiem wyniku",
+     "results = (results || []).filter(r => r && !r.error);", None, None),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna

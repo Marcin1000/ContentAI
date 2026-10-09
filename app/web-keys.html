@@ -4969,6 +4969,7 @@ var I18N = {
     'vis-title':'Widoczność marki w AI','vis-desc':'Sprawdza czy marka pojawia się w odpowiedziach AI na zapytania zakupowe. Uruchamia każdy prompt przez Claude z wyszukiwaniem w sieci i raportuje obecność, pozycję, konkurentów i źródła. To migawka na żądanie z jednego modelu (Claude), nie ciągły monitoring wielu modeli. Każdy prompt zużywa zapytanie web search (płatne).',
     'vis-f-brand':'Marka do wykrycia','vis-f-comp':'Konkurenci (po przecinku)','vis-f-prompts':'Zapytania kontrolne (jedno na linię)','vis-run':'Sprawdź widoczność',
     'vis-f-iter':'Iteracje na prompt (stabilność)','vis-narr':'Narracja marki',
+    'vis-czesc-bledow':'Wynik z {n} z {m} zapytań: {k} nie powiodło się ({powod}).','vis-blad-wszystkie':'Żadne zapytanie nie dało czytelnego wyniku. Spróbuj ponownie za chwilę.','vis-zapytanie-blad':'Zapytanie nie powiodło się, więc nie wchodzi do wyniku.',
     'settings-rep-title':'Raport widoczności','settings-rep-sub':'porównanie pomiarów i priorytety',
     'settings-trk-title':'Pomiar ruchu z AI','settings-trk-sub':'robots.txt, UTM, GA4',
     'trk-title':'Tracking ruchu z AI (przygotowanie)','trk-desc':'To nie jest pomiar ruchu. Generuje warunki wstępne: dyrektywy robots.txt dla botów AI, linki z UTM i wskazówkę konfiguracji GA4. Sam pomiar wymaga GA4 i analizy logów po stronie serwera.',
@@ -5608,6 +5609,7 @@ var I18N = {
     'vis-title':'Brand visibility in AI','vis-desc':'Checks whether the brand appears in AI answers to buyer queries. Runs each prompt through Claude with web search and reports presence, position, competitors and sources. This is an on-demand snapshot from a single model (Claude), not continuous multi-model monitoring. Each prompt consumes a web search request (billed).',
     'vis-f-brand':'Brand to detect','vis-f-comp':'Competitors (comma separated)','vis-f-prompts':'Control queries (one per line)','vis-run':'Check visibility',
     'vis-f-iter':'Iterations per prompt (stability)','vis-narr':'Brand narrative',
+    'vis-czesc-bledow':'Result from {n} of {m} queries: {k} failed ({powod}).','vis-blad-wszystkie':'No query returned a readable result. Try again in a moment.','vis-zapytanie-blad':'This query failed, so it is not counted in the score.',
     'settings-rep-title':'Visibility report','settings-rep-sub':'measurement comparison and priorities',
     'settings-trk-title':'AI traffic setup','settings-trk-sub':'robots.txt, UTM, GA4',
     'trk-title':'AI traffic tracking (preparation)','trk-desc':'This does not measure traffic. It generates preconditions: robots.txt directives for AI bots, UTM links and a GA4 setup hint. Actual measurement requires GA4 and server-side log analysis.',
@@ -14996,6 +14998,8 @@ async function visQuery(query, brand, competitors) {
     })
   });
   const data = await res.json().catch(() => null);
+  // R9-F (KOD8-22): blad API (zly klucz, przeciazenie, limit) to nie odpowiedz "marki nie ma" - idzie z powodem.
+  if (!res.ok || (data && data.error)) throw bladOdpowiedzi(data, res.status);
   if (!data || !data.content) return { present: false, position: null, competitors: [], sources: [], note: 'no response', error: true };
   // Bez separatora: przypis potrafi podzielic jeden JSON na kilka blokow
   // tekstu, a znak nowej linii w srodku napisu psul parsowanie.
@@ -15042,6 +15046,7 @@ async function runVisibility() {
 
   const iters = Math.max(1, Math.min(5, c.iterations || 1));
   const results = [];
+  let ostatniBlad = null; // R9-F (KOD8-22): powod nieudanych zapytan
   for (let i = 0; i < prompts.length; i++) {
     let presentCount = 0, errCount = 0;
     const positions = [], compFreq = {}, srcSet = {};
@@ -15049,7 +15054,7 @@ async function runVisibility() {
       prog.textContent = (en ? 'Checking ' : 'Sprawdzam ') + (i + 1) + '/' + prompts.length + (iters > 1 ? ' (' + (k + 1) + '/' + iters + ')' : '') + ': ' + prompts[i];
       let r;
       try { r = await visQuery(prompts[i], brand, c.competitors); }
-      catch (e) { r = { present: false, position: null, competitors: [], sources: [], error: true }; }
+      catch (e) { ostatniBlad = e; r = { present: false, position: null, competitors: [], sources: [], error: true }; }
       if (r.error) errCount++;
       if (r.present) presentCount++;
       if (r.present && r.position) positions.push(r.position);
@@ -15057,7 +15062,8 @@ async function runVisibility() {
       (r.sources || []).forEach(s => { const key = String(s).trim(); if (key) srcSet[key] = 1; });
     }
     results.push({
-      prompt: prompts[i], iterations: iters, presentCount,
+      // R9-F (KOD8-22): stabilnosc liczona z udanych iteracji (nieudana to nie "marki nie ma").
+      prompt: prompts[i], iterations: Math.max(1, iters - errCount), presentCount,
       present: presentCount > 0,
       avgPosition: positions.length ? Math.round(positions.reduce((a, b) => a + b, 0) / positions.length * 10) / 10 : null,
       competitors: Object.entries(compFreq).sort((a, b) => b[1] - a[1]).map(e => e[0]),
@@ -15068,7 +15074,14 @@ async function runVisibility() {
   prog.textContent = '';
   btn.disabled = false; btn.style.opacity = '1';
 
+  // R9-F (KOD8-22): zadne zapytanie sie nie udalo (zly klucz, przeciazenie) - komunikat z powodem, bez wyniku
+  // "0, obecnosc w 0/N" i bez zapisu do historii pomiarow (raporty i trend pokazywalyby falszywe zero).
+  if (!results.some(r => !r.error)) {
+    document.getElementById('vis-results').innerHTML = blokBledu(ostatniBlad || new Error(_t('vis-blad-wszystkie')), 'runVisibility()');
+    return;
+  }
   const run = { ts: Date.now(), brand, iterations: iters, results };
+  if (results.some(r => r.error)) run.bladOpis = ostatniBlad ? komunikatBleduApi(ostatniBlad) : _t('vis-blad-wszystkie');
   persistVisRun(run);
   renderVisResults(run);
 }
@@ -15110,14 +15123,16 @@ function _visWeight(r) {
   return w;
 }
 function visibilityScore(results) {
-  if (!results || !results.length) return 0;
+  // R9-F (KOD8-22): zapytanie, ktore sie nie udalo, nie wchodzi do mianownika (zanizalo wynik).
+  results = (results || []).filter(r => r && !r.error);
+  if (!results.length) return 0;
   return Math.round(results.reduce((a, r) => a + _visWeight(r), 0) / results.length * 100);
 }
 
 function renderVisResults(run) {
   const en = currentLang === 'en';
   const results = run.results;
-  const n = results.length;
+  const n = results.filter(r => !r.error).length; // R9-F (KOD8-22): tylko udane zapytania
   const present = results.filter(r => r.present).length;
   const pct = n ? Math.round(present / n * 100) : 0;
   const score = visibilityScore(results);
@@ -15134,6 +15149,12 @@ function renderVisResults(run) {
   html += '<div style="font-size:30px;font-weight:700;color:' + color + '">' + score + '</div>';
   html += '<div style="font-size:12px;color:var(--text2)">' + (en ? 'Visibility score (position-weighted)' : 'Wskaźnik widoczności (ważony pozycją)') + '<br>' + (en ? 'present in' : 'obecność w') + ' <strong>' + present + '/' + n + '</strong> ' + (en ? 'queries, avg position' : 'zapytań, śr. pozycja') + ' <strong>' + (avgPos == null ? (en ? 'n/a' : 'b.d.') : '#' + formatujLiczbe(avgPos)) + '</strong><br>' + _visEsc(run.brand) + '</div></div>';
   html += '<div style="font-size:11px;color:var(--text3);margin:0 0 12px">' + (en ? 'Presence alone is ' + pct + '%; the score lowers it for weak positions and instability.' : 'Sama obecność to ' + pct + '%; wskaźnik obniża ją za dalsze pozycje i niestabilność.') + '</div>';
+  // R9-F (KOD8-22): czesc zapytan sie nie udala - ile i dlaczego (wynik liczony z udanych).
+  const nieudane = results.length - n;
+  if (nieudane > 0) {
+    html += '<div class="vis-czesc-bledow" role="status" style="font-size:12px;color:var(--c-uwaga);margin:0 0 12px">' + ikona('triangle-alert', 'uwaga') + ' '
+      + escapeHtml(_t('vis-czesc-bledow').replace('{n}', n).replace('{m}', results.length).replace('{k}', nieudane).replace('{powod}', run.bladOpis || _t('vis-blad-wszystkie'))) + '</div>';
+  }
 
   if (topComp.length) {
     html += '<div style="font-size:12px;color:var(--text2);margin-bottom:6px"><strong>' + (en ? 'Competitors most cited' : 'Najczęściej cytowani konkurenci') + ':</strong> ';
@@ -15153,6 +15174,7 @@ function renderVisResults(run) {
     const srcs = (r.sources || []).slice(0, 4).map(_visEsc).join(', ');
     html += '<div style="border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px">';
     html += '<div style="font-size:13px;font-weight:600">' + icon + ' ' + _visEsc(r.prompt) + pos + stab + '</div>';
+    if (r.error) html += '<div style="font-size:11px;color:var(--c-uwaga);margin-top:3px">' + escapeHtml(_t('vis-zapytanie-blad')) + '</div>'; // R9-F (KOD8-22)
     if (comps) html += '<div style="font-size:11px;color:var(--text3);margin-top:3px">' + (en ? 'Recommended' : 'Polecani') + ': ' + comps + '</div>';
     if (srcs) html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + (en ? 'Sources' : 'Źródła') + ': ' + srcs + '</div>';
     html += '</div>';

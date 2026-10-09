@@ -827,6 +827,50 @@ async function scenariuszR9FKeys(b) {
   await k.close();
 }
 
+// KOD8-22: Widocznosc marki w AI. Zly klucz albo przeciazenie przy wszystkich zapytaniach to blad z powodem
+// (bez "0, obecnosc w 0/2" i bez zapisu do historii pomiarow); czesc nieudanych nie zaniza wyniku.
+async function scenariuszR9FWidocznosc(b) {
+  const st = {};
+  const { k, s, bledyJs } = await nowaStrona(b, 'pl', st);
+  // Czesciowy blad: zapytanie z "awaria" dostaje 529, pozostale ida do atrapy.
+  await k.route(/api\.anthropic\.com/, (route) => {
+    const z = route.request();
+    if (z.method() === 'POST' && /awaria/.test(z.postData() || '') && /simulate an AI assistant/.test(z.postData() || '')) {
+      return route.fulfill({ status: 529, contentType: 'application/json', headers: atrapa.CORS, body: JSON.stringify(BLEDY[529][1]) });
+    }
+    return route.fallback();
+  });
+  const pomiar = async (zapytania) => {
+    await s.evaluate((z) => { openVisModal(); document.getElementById('vis-brand').value = 'Termoplus'; document.getElementById('vis-comp').value = 'Viessmann, Daikin';
+      document.getElementById('vis-prompts').value = z; document.getElementById('vis-iter').value = '1'; window.__w = runVisibility(); }, zapytania);
+    await s.waitForFunction(() => !document.getElementById('vis-run-btn').disabled, null, { timeout: 60000 }).catch(() => {});
+    return s.evaluate(() => {
+      const w = document.getElementById('vis-results');
+      const kb = w.querySelector('.komunikat-bledu');
+      return { tekst: (w.innerText || '').replace(/\s+/g, ' ').slice(0, 260), blad: kb ? kb.innerText.replace(/\s+/g, ' ').slice(0, 200) : '',
+        ponow: !!(kb && kb.querySelector('.ponow-generowanie')), klucze: !!(kb && kb.querySelector('[onclick="otworzUstawieniaKlucza()"]')),
+        pomiarow: JSON.parse(magazyn.getItem('cai-vis-runs') || '[]').length };
+    });
+  };
+  for (const [blad, klucz, ponow, klucze] of [['401', 'err-klucz', false, true], ['529', 'err-overloaded', true, false]]) {
+    st.blad = blad; st.gdzie = 'anthropic';
+    const w = await pomiar('najlepsza pompa ciepla krakow\nmontaz pompy ciepla opinie');
+    const wzor = await s.evaluate((kl) => _t(kl), klucz);
+    wynik('R9-F KOD8-22: Widocznosc - wszystkie zapytania z bledem ' + blad + ': komunikat z powodem zamiast wyniku 0',
+      w.blad.indexOf(wzor) !== -1 && !/obecność w 0\/2/.test(w.tekst) && w.ponow === ponow && w.klucze === klucze, JSON.stringify(w));
+    wynik('R9-F KOD8-22: Widocznosc - pomiar z samych bledow (' + blad + ') nie trafia do historii pomiarow', w.pomiarow === 0, JSON.stringify(w));
+    await s.evaluate(() => closeVisModal());
+  }
+  st.blad = null;
+  const czesc = await pomiar('najlepsza pompa ciepla krakow\nawaria zapytania o montaz');
+  const notka = await s.evaluate(() => _t('vis-czesc-bledow').split('{')[0]);
+  wynik('R9-F KOD8-22: Widocznosc - czesc zapytan z bledem: wynik z udanych (obecnosc w N/1) i informacja, ile sie nie udalo',
+    /obecność w [01]\/1 /.test(czesc.tekst) && !!notka && czesc.tekst.indexOf(notka) !== -1 && czesc.pomiarow === 1, JSON.stringify(czesc));
+  wynik('R9-F KOD8-22: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-widocznosc');
+  await k.close();
+}
+
 // Wariant proxy: jeden serwer z atrapa na wszystkie scenariusze R9-F (uruchamiany przy pierwszym uzyciu).
 let SERWER = null;
 async function serwer() { if (!SERWER) SERWER = await serwerProxy(); return SERWER; }
@@ -1000,7 +1044,7 @@ async function scenariuszR9FFakty(b) {
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
   ['stan', scenariuszStanu], ['r4-logika', scenariuszR4Logiki], ['bledy', scenariuszBledow], ['historia-r4', scenariuszHistoriiR4],
-  ['r9f-keys', scenariuszR9FKeys], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
+  ['r9f-keys', scenariuszR9FKeys], ['r9f-widocznosc', scenariuszR9FWidocznosc], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
   ['r9f-pause-turn', scenariuszR9FPauseTurn], ['r9f-przeladowanie', scenariuszR9FPrzeladowanie], ['r9f-fakty', scenariuszR9FFakty],
 ];
 (async () => {
