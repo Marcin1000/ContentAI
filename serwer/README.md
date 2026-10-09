@@ -494,7 +494,7 @@ na „5" albo dołożenie grafik do standardu to edycja jednej linii.
 | Artykuły | 3 (bez odnawiania) | 50/mies. | bez limitu |
 | Grafiki | - | 50/mies. | bez limitu |
 | Audio, transkrypcja | - | 20/mies. | bez limitu |
-| Wywołania modelu (sufit) | 30 (na własnym kluczu: 90) | 750/mies. | bez limitu |
+| Wywołania modelu (sufit) | 30 (na własnym kluczu: 47) | 750/mies. | bez limitu |
 | Dokumenty w bazie | 3 | 50 | bez limitu |
 | Analiza SERP | - | tak | tak |
 | Dane z OpenSEO | - | - | tak |
@@ -512,9 +512,12 @@ Konta na **własnym kluczu** (`zrodlo_kluczy='wlasne'`, każde konto z rejestrac
 dwie różnice, a konta zespołu na kluczach serwera działają dokładnie jak dziś, także gdy
 mają ten sam pakiet:
 
-- sufit wywołań z `limityWlasneKlucze` (pakiet darmowy: 90 - pomiar na atrapie: pełny
-  artykuł z siecią, ocenami SEO/AIO/AEO/GEO, Faktami, Lukami z poprawą i samokorektą to
-  21 wywołań, trzy artykuły z zapasem 30% to 82; decyzja M-3),
+- sufit wywołań z `limityWlasneKlucze` (pakiet darmowy: 47, decyzja M-3: trzy pełne artykuły
+  z zapasem 30%). Pomiar na atrapie: artykuł z siecią i SERP, samokorektą, ocenami
+  SEO/AIO/AEO/GEO, Faktami i Lukami z poprawą to 9 wywołań modelu (typ Hybryda SEO + AIO),
+  w najgorszym zmierzonym wariancie 12 (Artykuł SEO z oceną i poprawą w trakcie generowania,
+  wyszukiwanie z `pause_turn`); 3 × 12 × 1,3 = 46,8, czyli 47. AEO i GEO liczy przeglądarka,
+  bez wywołań,
 - osobna pula zasobów opłacanych przez serwer, `limitySerwera` pakietu: `serp` (DataForSEO),
   `wektory` (wyszukiwanie po znaczeniu), `strony` (pobieranie stron i sprawdzanie odnośników),
   liczona w tej samej tabeli jako `serwer:<zasob>` (`plany.sprawdzLimitSerwera`, `plany.policzSerwer`).

@@ -509,7 +509,8 @@ function testyModulow(sprawdz) {
     sprawdz('M-3: sufit wywolan darmowego na wlasnym kluczu z limityWlasneKlucze, na kluczach serwera bez zmian (30)',
       plany.sprawdzLimit({ konto: klient, czynnosc: 'wywolanie' }).limit === plany.PLANY.darmowy.limityWlasneKlucze.wywolanie
       && plany.sprawdzLimit({ konto: zespol, czynnosc: 'wywolanie' }).limit === 30
-      && plany.PLANY.darmowy.limityWlasneKlucze.wywolanie >= 3 * 21);
+      // Pomiar M-3 (WYKONANIE-A0): najgorszy zmierzony pelny artykul to 12 wywolan modelu.
+      && plany.PLANY.darmowy.limityWlasneKlucze.wywolanie >= Math.ceil(3 * 12 * 1.3));
     sprawdz('limity serwera: konto na kluczach serwera zawsze wolno i nic nie liczy',
       plany.sprawdzLimitSerwera(zespol, 'strony').wolno && plany.sprawdzLimitSerwera(zespol, 'strony').limit === null
       && (plany.policzSerwer(zespol, 'strony', 5), Object.keys(magazyn.uzycieKonta(zespol.login)).length === 0));
@@ -673,7 +674,7 @@ async function testySerwera(sprawdz) {
       && statusJson.konfiguracja.rejestracja.wlaczona === false && statusJson.platnosci.wlaczone === false && statusJson.poczta.tryb === 'log');
     const pakietKlienta = await (await t.zadanie('/api/pakiet', { headers: { cookie: cKlient } })).json();
     sprawdz('/api/pakiet konta samoobslugowego: klucze wlasne, limity serwera, sufit wywolan M-3, bez OpenSEO',
-      pakietKlienta.zrodloKluczy === 'wlasne' && pakietKlienta.limitySerwera.strony.limit === 30 && pakietKlienta.uzycie.wywolanie.limit === 90
+      pakietKlienta.zrodloKluczy === 'wlasne' && pakietKlienta.limitySerwera.strony.limit === 30 && pakietKlienta.uzycie.wywolanie.limit === 47
       && pakietKlienta.funkcje.openseo === false && pakietKlienta.funkcje.wlasnyKlucz === true);
 
     console.log('\n  serwer R9 - kolejnosc tras i zaslepki modulow');

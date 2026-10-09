@@ -72,12 +72,15 @@ const PLANY = {
     },
     limitDokumentow: 3,
     // M-3 (DECYZJE-R9): sufit wywolan modelu dla kont na WLASNYM kluczu (zrodlo_kluczy
-    // 'wlasne'). Pomiar na atrapie: pelny artykul (siec, oceny SEO/AIO/AEO/GEO, Fakty,
-    // Luki z poprawa, samokorekta) to POMIAR wywolan; 3 artykuly + 30% zapasu.
+    // 'wlasne'): 3 pelne artykuly z zapasem 30%. Pomiar na atrapie (etap 0 R9, raport
+    // WYKONANIE-A0): artykul z siecia i SERP, samokorekta, oceny SEO/AIO/AEO/GEO, Fakty,
+    // Luki z poprawa to 9 wywolan (typ Hybryda), w najgorszym zmierzonym wariancie 12
+    // (Artykul SEO z ocena i poprawa w trakcie generowania, wyszukiwanie z pause_turn):
+    // 3 x 12 x 1,3 = 46,8, czyli 47. AEO i GEO licza sie w przegladarce (0 wywolan).
     // Konta na kluczach serwera dalej maja `limity.wywolanie` (30). Ten blok stoi PO
     // `limity`, bo buduj_strone.py czyta pierwsze `wywolanie:` w pakiecie.
     limityWlasneKlucze: {
-      wywolanie: 90,
+      wywolanie: 47,
     },
     sprzedaz: false,            // nie ma go w Checkout (ARCH8-13)
     kolejnosc: 0,               // wybor subskrypcji przy kilku zywych i kolejnosc kart
