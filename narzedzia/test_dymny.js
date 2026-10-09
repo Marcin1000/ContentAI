@@ -1584,6 +1584,27 @@ async function wariantR9Zrozumialosc(b) {
     typ: (document.getElementById('ctype-opis') || {}).textContent || '' }));
   wynik('komputer EN: R9-G UX8-14 i UX8-11 dopisek o pustej bazie i opis typu tresci po angielsku',
     en.web && /empty/.test(en.opis) && /recommended/.test(en.typ), JSON.stringify(en));
+  // UX8-24: przykladowy artykul z pustego ekranu - bez klucza i bez zapytania do modelu, nie trafia do Historii.
+  let zapytaniaPrzykladu = 0;
+  const liczPrzyklad = (z) => { if (z.method() === 'POST' && /\/api(\/|$)/.test(z.url())) zapytaniaPrzykladu++; };
+  s.on('request', liczPrzyklad);
+  const przykladOk = await krok('R9-G link do przykladu', s.click('#placeholder .start-przyklad', { timeout: 3000 }));
+  await s.waitForTimeout(400);
+  const przyklad = await s.evaluate(() => {
+    const m = document.getElementById('przyklad-modal'), d = m && m.querySelector('[role="dialog"]'), lb = d && d.getAttribute('aria-labelledby');
+    return { otwarte: !!m && m.classList.contains('open'), nazwa: lb ? (document.getElementById(lb) || {}).textContent : '',
+      h1: (document.querySelector('#przyklad-artykul h1') || {}).textContent || '', h2: document.querySelectorAll('#przyklad-artykul h2').length,
+      zrodla: !!document.querySelector('#przyklad-artykul .zrodla-box'), oceny: [...document.querySelectorAll('#przyklad-siatka .przyklad-ocena')].map((o) => o.textContent.slice(0, 12)),
+      fakty: (document.getElementById('przyklad-fakty') || {}).textContent || '', hist: history.length };
+  });
+  await s.keyboard.press('Escape');
+  await s.waitForTimeout(300);
+  const poPrzykladzie = await s.evaluate(() => ({ zamkniete: !document.getElementById('przyklad-modal') || !document.getElementById('przyklad-modal').classList.contains('open'), hist: history.length }));
+  s.off('request', liczPrzyklad);
+  wynik('komputer EN: R9-G UX8-24 przykladowy artykul z pustego ekranu: tekst ze zrodlami, cztery oceny z opisem, kontrola faktow, bez zapytania i bez Historii',
+    przykladOk && przyklad.otwarte && przyklad.nazwa === 'Sample article' && /CRM/.test(przyklad.h1) && przyklad.h2 >= 3 && przyklad.zrodla && przyklad.oceny.length === 4
+      && /^86SEO/.test(przyklad.oceny[0]) && /Fact check/.test(przyklad.fakty) && zapytaniaPrzykladu === 0 && poPrzykladzie.zamkniete && poPrzykladzie.hist === przyklad.hist,
+    JSON.stringify({ przyklad, poPrzykladzie, zapytaniaPrzykladu }));
   await s.evaluate(() => { if (!document.body.classList.contains('kb-collapsed')) toggleKbPanel(); });
   if (await s.evaluate(() => document.getElementById('use-web').checked)) await krok('R9-G komputer: wylacz siec', s.click('#use-web', { timeout: 3000 }));
   await s.fill('#topic', 'Heat pump sizing');

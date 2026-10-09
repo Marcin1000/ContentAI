@@ -3096,6 +3096,27 @@ body.is-mobile .hist-lokalnie { margin-top: var(--s-8); }
 /* UX8-15: kreator - "Krok n z m" tekstem nad tytulem; tytul przyjmuje fokus programowo (bez ramki jak pole) */
 #start-modal .start-postep { margin: calc(var(--s-10, 10px) * -1) 0 var(--s-8); }
 #start-modal #start-tytul:focus { outline: none; }
+/* UX8-24: przykladowy artykul - komputer: tekst z karta ocen z prawej; telefon: karta ocen nad tekstem */
+.start-przyklad { margin-top: var(--s-12); }
+.przyklad-okno { width: min(1040px, 100%); }
+#przyklad-modal .przyklad-pasek { padding: var(--s-12); border: 1px solid var(--c-akcent-ramka); border-radius: var(--r-md); background: var(--c-akcent-tlo); color: var(--c-tekst); }
+.przyklad-uklad { display: flex; flex-direction: row-reverse; align-items: flex-start; gap: var(--s-24); }
+.przyklad-uklad > .przyklad-artykul { display: block; flex: 1 1 auto; min-width: 0; margin: 0; }
+.przyklad-oceny { flex: 0 0 300px; position: sticky; top: 0; padding: var(--s-16); border: 1px solid var(--c-linia-2); border-radius: var(--r-lg); background: var(--c-panel); }
+.przyklad-siatka { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-8); margin: var(--s-12) 0; }
+body.is-mobile .przyklad-siatka { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.przyklad-ocena { display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-8) var(--s-12); border: 1px solid var(--c-linia-2); border-radius: var(--r-md); background: var(--c-pole); }
+.przyklad-ocena b { font-size: var(--t-2xl); line-height: 1.1; }
+.przyklad-ocena span { font-size: var(--t-xs); font-weight: var(--g-mocny); color: var(--c-tekst); }
+.przyklad-ocena small { font-size: var(--t-xs); line-height: 1.4; color: var(--c-tekst-2); }
+#przyklad-modal .przyklad-fakty { display: flex; gap: var(--s-8); align-items: flex-start; margin: 0; padding: var(--s-8) var(--s-12); border: 1px solid var(--c-uwaga-ramka); border-radius: var(--r-md);
+  background: var(--c-uwaga-tlo); font-size: var(--t-sm); color: var(--c-tekst); }
+.przyklad-fakty .ikona { flex: none; margin-top: 2px; color: var(--c-uwaga); }
+#przyklad-modal .modal-footer { justify-content: space-between; }
+.przyklad-stopka { flex: 1 1 260px; }
+body.is-mobile .przyklad-uklad { flex-direction: column; gap: var(--s-16); }
+body.is-mobile .przyklad-oceny { flex: none; position: static; width: 100%; box-sizing: border-box; }
+body.is-mobile #przyklad-modal .modal-footer > .btn-generate { width: 100%; justify-content: center; min-height: var(--h-dotyk); }
 }
 @layer widoki {
 /* ══ RUNDA 6, wykonawca F ══ */
@@ -3687,6 +3708,8 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
                   <li><span class="start-nr">2</span><span data-i18n="start-krok-2">Kliknij „Wygeneruj treść”. Przy pustej bazie AI oprze tekst na stronach z sieci i poda źródła.</span></li>
                   <li><span class="start-nr">3</span><span data-i18n="start-krok-3">Dodaj do bazy wiedzy pliki, strony albo notatki o firmie, żeby kolejne teksty mówiły o Twojej ofercie.</span></li>
                 </ol>
+                <!-- R9-G (UX8-24): przyklad wyniku bez klucza i bez generowania -->
+                <button type="button" class="btn-link start-przyklad" onclick="otworzPrzyklad()" data-i18n="przyklad-link" data-ikona="file-text"><svg class="ikona" aria-hidden="true"><use href="#i-file-text"/></svg>Zobacz przykładowy artykuł z ocenami</button>
               </div>
               <div class="start-ostatnie" id="start-ostatnie" hidden>
                 <div class="start-sekcja" data-i18n="start-ostatnie">Ostatnie</div>
@@ -4445,6 +4468,30 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
   </div>
 </div>
 
+<!-- R9-G (UX8-24): PRZYKLADOWY ARTYKUL - nowa osoba widzi wynik (tekst ze zrodlami, cztery oceny, kontrola
+     faktow), zanim zacznie pisac albo podlaczy klucz. Tylko do odczytu: nie trafia do Historii i nie zuzywa pakietu. -->
+<div class="overlay" id="przyklad-modal" onclick="if(event.target===this)zamknijPrzyklad()">
+  <div class="modal przyklad-okno">
+    <div class="modal-head">
+      <h3 data-i18n="przyklad-tytul">Przykładowy artykuł</h3>
+      <button class="modal-close" onclick="zamknijPrzyklad()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </div>
+    <p class="przyklad-pasek" data-i18n="przyklad-opis">To przykładowy artykuł: tak wygląda wynik, czyli tekst ze źródłami, cztery oceny i kontrola faktów. Swój napiszesz w briefie.</p>
+    <div class="przyklad-uklad">
+      <aside class="przyklad-oceny" aria-labelledby="przyklad-oceny-tytul">
+        <div class="panel-tytul" id="przyklad-oceny-tytul" data-i18n="przyklad-oceny-tytul">Ocena tekstu</div>
+        <div class="przyklad-siatka" id="przyklad-siatka"></div>
+        <p class="przyklad-fakty" id="przyklad-fakty"></p>
+      </aside>
+      <div class="article przyklad-artykul" id="przyklad-artykul"></div>
+    </div>
+    <div class="modal-footer">
+      <span class="tekst-pomoc przyklad-stopka" data-i18n="przyklad-stopka">W swoich artykułach możesz edytować, eksportować i publikować. Przykład przygotował zespół Content AI: nie trafia do Historii i nie zużywa pakietu.</span>
+      <button class="btn-generate" onclick="zamknijPrzyklad()" data-i18n="przyklad-zamknij">Zamknij przykład</button>
+    </div>
+  </div>
+</div>
+
 <!-- FINGERPRINT ERROR MODAL ─────────────────────────────────────────── -->
 <!-- CUSTOM CONTEXT MENU (right-click / long-press in edit mode) -->
 <div class="ctx-menu" id="ctx-menu">
@@ -4831,6 +4878,14 @@ var I18N = {
     'start-krok-2':'Kliknij „Wygeneruj treść”. Przy pustej bazie AI oprze tekst na stronach z sieci i poda źródła.',
     'start-krok-3':'Dodaj do bazy wiedzy pliki, strony albo notatki o firmie, żeby kolejne teksty mówiły o Twojej ofercie.',
     'start-ostatnie':'Ostatnie',
+    // R9-G (UX8-24): przykladowy artykul (tylko do odczytu, bez klucza)
+    'przyklad-link':'Zobacz przykładowy artykuł z ocenami','przyklad-tytul':'Przykładowy artykuł','przyklad-zamknij':'Zamknij przykład',
+    'przyklad-opis':'To przykładowy artykuł: tak wygląda wynik, czyli tekst ze źródłami, cztery oceny i kontrola faktów. Swój napiszesz w briefie.',
+    'przyklad-oceny-tytul':'Ocena tekstu','przyklad-nazwa-seo':'SEO · Google','przyklad-nazwa-aio':'AIO · podsumowania AI w Google',
+    'przyklad-nazwa-aeo':'AEO · odpowiedzi asystentów','przyklad-nazwa-geo':'GEO · cytowania w czatach AI',
+    'przyklad-fakty':'Kontrola faktów: 1 zdanie do sprawdzenia. „Da się uruchomić w kilka dni”: źródło mówi o 2 do 10 dniach roboczych.',
+    'przyklad-stopka':'W swoich artykułach możesz edytować, eksportować i publikować. Przykład przygotował zespół Content AI: nie trafia do Historii i nie zużywa pakietu.',
+    'przyklad-tresc':'<h1>Jak wybrać system CRM dla małej firmy: od czego zacząć</h1><p>System CRM to program, który zbiera w jednym miejscu kontakty z klientami, historię rozmów i etap każdej sprzedaży. Małej firmie zwykle wystarczy prosty system dla 3 do 5 osób, który da się uruchomić w kilka dni.</p><h2>Czym jest CRM i komu się opłaca?</h2><p>CRM (Customer Relationship Management) porządkuje pracę z klientami tam, gdzie kilka osób rozmawia z tymi samymi firmami, a ustalenia giną w skrzynkach pocztowych i arkuszach. Jeśli oferta wysłana w poniedziałek w piątek nie ma już właściciela, to znak, że czas na CRM.</p><h2>Jak wybrać system w czterech krokach?</h2><ol><li>Wypisz trzy czynności, które dziś zabierają zespołowi najwięcej czasu.</li><li>Sprawdź, czy system zaimportuje kontakty z pliku CSV.</li><li>Porównaj cenę za użytkownika i koszt dodatkowych modułów.</li><li>Przetestuj wersję próbną na jednym prawdziwym kliencie.</li></ol><h2>Ile kosztuje CRM dla małej firmy?</h2><p>Proste systemy kosztują zwykle od kilkudziesięciu do około 100 zł miesięcznie za użytkownika. Do ceny trzeba doliczyć czas wdrożenia: import kontaktów i ustawienie etapów sprzedaży zajmuje od 2 do 10 dni roboczych.</p><h2>Kluczowe wnioski</h2><ul><li>CRM opłaca się, gdy z tymi samymi klientami rozmawia więcej niż jedna osoba.</li><li>Wybór zacznij od trzech najbardziej czasochłonnych czynności, nie od listy funkcji.</li><li>Policz cały koszt: licencje za użytkownika i od 2 do 10 dni wdrożenia.</li></ul><div class="zrodla-box"><div class="zrodla-label">Źródła</div><ul><li>Oferta firmy (dokument z bazy wiedzy)</li><li>Poradnik o wdrażaniu CRM w małych firmach (strona z sieci)</li></ul></div><div class="meta-box"><p>Jak wybrać CRM dla małej firmy: komu się opłaca, ile kosztuje i jak wybrać system w czterech krokach, zanim zapłacisz za licencje.</p></div>',
     // nowy uklad (E4)
     'nav-pisz':'Pisz','widok-wynik':'Wynik','widok-etykieta':'Widok',
     'nav-widocznosc':'Widoczność AI',
@@ -5473,6 +5528,14 @@ var I18N = {
     'start-krok-2':'Click “Generate content”. With an empty knowledge base the AI bases the text on web pages and cites them.',
     'start-krok-3':'Add files, pages or notes about your company to the knowledge base so the next texts talk about your offer.',
     'start-ostatnie':'Recent',
+    // R9-G (UX8-24): sample article (read only, no key needed)
+    'przyklad-link':'See a sample article with scores','przyklad-tytul':'Sample article','przyklad-zamknij':'Close the sample',
+    'przyklad-opis':'This is a sample article: this is what a result looks like, a text with sources, four scores and a fact check. You write your own in the brief.',
+    'przyklad-oceny-tytul':'Text scores','przyklad-nazwa-seo':'SEO · Google','przyklad-nazwa-aio':'AIO · AI summaries in Google',
+    'przyklad-nazwa-aeo':'AEO · assistant answers','przyklad-nazwa-geo':'GEO · citations in AI chats',
+    'przyklad-fakty':'Fact check: 1 sentence to verify. “Up and running in a few days”: the source says 2 to 10 working days.',
+    'przyklad-stopka':'In your own articles you can edit, export and publish. The Content AI team prepared this sample: it does not go to History and does not use your plan.',
+    'przyklad-tresc':'<h1>How to choose a CRM for a small business: where to start</h1><p>A CRM is software that keeps customer contacts, conversation history and the stage of every sale in one place. A small business usually needs a simple system for 3 to 5 people that can be up and running in a few days.</p><h2>What is a CRM and who is it for?</h2><p>A CRM (Customer Relationship Management) system organises work with customers where several people talk to the same companies and agreements get lost in inboxes and spreadsheets. If an offer sent on Monday has no owner by Friday, it is time for a CRM.</p><h2>How do you choose a system in four steps?</h2><ol><li>List the three tasks that take your team the most time today.</li><li>Check that the system can import contacts from a CSV file.</li><li>Compare the price per user and the cost of add-on modules.</li><li>Try the trial version with one real customer.</li></ol><h2>How much does a CRM for a small business cost?</h2><p>Simple systems usually cost from a few euros to around 25 euros per user per month. Add the time it takes to set up: importing contacts and defining sales stages takes 2 to 10 working days.</p><h2>Key takeaways</h2><ul><li>A CRM pays off when more than one person talks to the same customers.</li><li>Start from your three most time-consuming tasks, not from a list of features.</li><li>Count the full cost: licences per user and 2 to 10 days of setup.</li></ul><div class="zrodla-box"><div class="zrodla-label">Sources</div><ul><li>Company offer (knowledge base document)</li><li>Guide to rolling out a CRM in small businesses (web page)</li></ul></div><div class="meta-box"><p>How to choose a CRM for a small business: who it is for, what it costs and how to pick a system in four steps before you pay for licences.</p></div>',
     // nowy uklad (E4)
     'nav-pisz':'Write','widok-wynik':'Result','widok-etykieta':'View',
     'nav-widocznosc':'AI visibility',
@@ -13453,6 +13516,28 @@ function openWpPublish() {
 function closeWpPublishModal() { document.getElementById('wp-publish-modal').classList.remove('open'); }
 
 function closeNoSourceModal() { document.getElementById('no-source-modal').classList.remove('open'); }
+// R9-G (UX8-24): przykladowy artykul z czterema ocenami i kontrola faktow, bez klucza i bez zapytania do modelu.
+// Tekst i liczby sa stale (przyklad), opisy ocen te same co pod przelacznikiem SEO/AIO/AEO/GEO. Zmiana jezyka
+// przy otwartym oknie rysuje przyklad od nowa (applyLang ustawia lang na <html>).
+const PRZYKLAD_OCENY = [['seo', 86], ['aio', 84], ['aeo', 90], ['geo', 88]];
+function rysujPrzyklad() {
+  const art = document.getElementById('przyklad-artykul'), siatka = document.getElementById('przyklad-siatka'), fakty = document.getElementById('przyklad-fakty');
+  if (art) art.innerHTML = _t('przyklad-tresc');
+  if (siatka) siatka.innerHTML = PRZYKLAD_OCENY.map(function (o) {
+    return '<div class="przyklad-ocena"><b style="color:' + kolorOceny(o[1]) + '">' + o[1] + '</b><span>' + escapeHtml(_t('przyklad-nazwa-' + o[0])) + '</span>'
+      + '<small>' + escapeHtml(_t('ocena-opis-' + o[0]).replace(/^[A-Z]{3}: /, '')) + '</small></div>';
+  }).join('');
+  if (fakty) fakty.innerHTML = ikona('triangle-alert', 'uwaga') + '<span>' + escapeHtml(_t('przyklad-fakty')) + '</span>';
+}
+function otworzPrzyklad() {
+  rysujPrzyklad();
+  document.getElementById('przyklad-modal').classList.add('open');
+}
+function zamknijPrzyklad() { document.getElementById('przyklad-modal').classList.remove('open'); }
+new MutationObserver(function () {
+  const m = document.getElementById('przyklad-modal');
+  if (m && m.classList.contains('open')) rysujPrzyklad();
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
 function noSourceGoToKB() {
   closeNoSourceModal();
