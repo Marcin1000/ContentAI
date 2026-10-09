@@ -1192,8 +1192,43 @@ KONTROLE += [
      "body:not(.is-mobile) .versions-bar.wiele-wersji .ver-wybor {", None, None),
 ]
 
+# R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna
+# z siecia, kategoria "Sprawdz na stronie", lista zrodel i ramka meta poza kontrola).
+# Osobny blok na koncu listy podpisow aplikacji (scalanie po liniach z innymi wykonawcami).
+KONTROLE += [
+    ("R7-I/fakty-bez-czesciowych", "Fakty: jeden stan ladowania do konca, bez czesciowego licznika i listy odnosnikow",
+     "let trescGotowa = false, linkiGotowe = false;", "if (u.length) pokazWynikFaktow(u, 'czesciowe');", None),
+    ("R7-I/fakty-w-toku-najpierw", "Fakty: kontrola w toku przed zapamietanym wynikiem (bez starej listy w trakcie)",
+     "    ladowanie.style.display = 'block';\n    return;\n  }\n  if (!wymus && faktyWynik && faktySygnatura === sygnatura) {", None, None),
+    ("R7-I/fakty-adres-link", "Fakty: adres w uwadze jako link (host i skrocona sciezka), nie URL kursywa w cudzyslowie",
+     "? '<div class=\"fakty-adres\" style=\"margin:3px 0\">' + linkUwagi(cytat.trim()) + '</div>'", None, None),
+    ("R7-I/fakty-link-karta", "Fakty: link w uwadze otwiera nowa karte (target _blank, rel noopener)",
+     "'\" target=\"_blank\" rel=\"noopener\" title=\"' + escapeHtml(tytul || adres) + '\">'", None, None),
+    ("R7-I/fakty-notka-siec", "Fakty: notka 'z wyszukiwaniem' tylko przy stronach z sieci, inaczej wariant bez stron",
+     "} else if (stan === 'gotowe' && trybUzupelniania && stronZSieci > 0) {", None, None),
+    ("R7-I/fakty-tryb-promptu", "Fakty: tryb promptu 'z siecia' tylko, gdy byly strony z sieci",
+     "const zSiecia = trybUzupelniania && sieciowe.length > 0;", None, None),
+    ("R7-I/fakty-strona-prompt", "Fakty: prompt wie, ze cytowane fragmenty stron sa niepelne (kategoria strona)",
+     "'whole pages: a detail missing from an excerpt is NOT evidence that the page lacks it. '", None, None),
+    ("R7-I/fakty-strona-adres", "Fakty: 'Sprawdz na stronie' z adresem wylacznie z listy stron z sieci",
+     "if (z) { kopia.rodzaj = 'strona'; kopia.adres = z.url; kopia.tytulStrony = z.tytul || ''; }", None, None),
+    ("R7-I/fakty-waga", "Fakty: kolejnosc wagi - 'Sprawdz na stronie' i niesprawdzony adres na koncu listy",
+     "const WAGA_UWAG = { strona: 1, 'link-niesprawdzony': 2 };", None, None),
+    ("R7-I/fakty-slownik", "Fakty: nowa kategoria i warianty notki w slowniku PL",
+     "'fakty-rodzaj-strona':'Sprawdź na stronie',", None, None),
+    ("R7-I/fakty-bez-listy-zrodel", "Fakty: lista zrodel aplikacji, ramka meta i notatki o lukach poza kontrola",
+     "const tekstArtykulu = tekstBlokami(kopiaDoStatystyk(art));", "const tekstArtykulu = art.innerText || art.textContent || '';", None),
+    # Poprawka pilna: OpenAI wylacza gpt-image-1 23.10.2026
+    ("PILNE/model-grafik", "grafiki na modelu, ktory OpenAI utrzymuje po 23.10.2026 (gpt-image-1 wylaczany)",
+     "const MODEL_GRAFIKI = 'gpt-image-2.5-flare';", "model:          'gpt-image-1',", None),
+    ("PILNE/typ-grafiki", "plik i schowek grafiki z prawdziwym typem obrazu (PNG, JPEG albo WebP)",
+     "const typ = (ia[0] === 0xFF && ia[1] === 0xD8) ? 'image/jpeg'", None, None),
+    ("PILNE/kreator-bez-pol", "kreator na koncie z kluczami serwera przechodzi przez krok kluczy (UX8-01)",
+     "    if (!el('start-k-anthropic')) return true;", None, ("proxy",)),
+]
+
 # R9-G: runda 9, wykonawca G - aplikacja zrozumiala dla nowej osoby (UX8-11 do UX8-16 z raportu agencja-ux
-# rundy 8). Osobny blok przed blokami innych wykonawcow (scalanie po liniach).
+# rundy 8). Osobny blok na koncu listy podpisow aplikacji (scalanie po liniach z innymi wykonawcami).
 KONTROLE += [
     ("R9-G/siec-dla-pustej-bazy", "UX8-14: przy pustej bazie wiedzy Szukaj w sieci wlaczone od wejscia (do recznej zmiany), z dopiskiem",
      "if (pusta && !w.checked) { w.checked = true; siecWlaczonaDlaPustej = true; }", None, None),
@@ -1264,41 +1299,6 @@ KONTROLE += [
      "region.id = 'gen-postep-sr'; region.className = 'sr-only';", None, None),
     ("R9-G/historia-kopia", "UX8-16: kopia Historii do pobrania (HTML z artykulami i danymi wpisow w JSON)",
      "dok += '<' + 'script type=\"application/json\" id=\"content-ai-historia\">' + dane + '<' + '/script></body></html>';", None, None),
-]
-
-# R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna
-# z siecia, kategoria "Sprawdz na stronie", lista zrodel i ramka meta poza kontrola).
-# Osobny blok na koncu listy podpisow aplikacji (scalanie po liniach z innymi wykonawcami).
-KONTROLE += [
-    ("R7-I/fakty-bez-czesciowych", "Fakty: jeden stan ladowania do konca, bez czesciowego licznika i listy odnosnikow",
-     "let trescGotowa = false, linkiGotowe = false;", "if (u.length) pokazWynikFaktow(u, 'czesciowe');", None),
-    ("R7-I/fakty-w-toku-najpierw", "Fakty: kontrola w toku przed zapamietanym wynikiem (bez starej listy w trakcie)",
-     "    ladowanie.style.display = 'block';\n    return;\n  }\n  if (!wymus && faktyWynik && faktySygnatura === sygnatura) {", None, None),
-    ("R7-I/fakty-adres-link", "Fakty: adres w uwadze jako link (host i skrocona sciezka), nie URL kursywa w cudzyslowie",
-     "? '<div class=\"fakty-adres\" style=\"margin:3px 0\">' + linkUwagi(cytat.trim()) + '</div>'", None, None),
-    ("R7-I/fakty-link-karta", "Fakty: link w uwadze otwiera nowa karte (target _blank, rel noopener)",
-     "'\" target=\"_blank\" rel=\"noopener\" title=\"' + escapeHtml(tytul || adres) + '\">'", None, None),
-    ("R7-I/fakty-notka-siec", "Fakty: notka 'z wyszukiwaniem' tylko przy stronach z sieci, inaczej wariant bez stron",
-     "} else if (stan === 'gotowe' && trybUzupelniania && stronZSieci > 0) {", None, None),
-    ("R7-I/fakty-tryb-promptu", "Fakty: tryb promptu 'z siecia' tylko, gdy byly strony z sieci",
-     "const zSiecia = trybUzupelniania && sieciowe.length > 0;", None, None),
-    ("R7-I/fakty-strona-prompt", "Fakty: prompt wie, ze cytowane fragmenty stron sa niepelne (kategoria strona)",
-     "'whole pages: a detail missing from an excerpt is NOT evidence that the page lacks it. '", None, None),
-    ("R7-I/fakty-strona-adres", "Fakty: 'Sprawdz na stronie' z adresem wylacznie z listy stron z sieci",
-     "if (z) { kopia.rodzaj = 'strona'; kopia.adres = z.url; kopia.tytulStrony = z.tytul || ''; }", None, None),
-    ("R7-I/fakty-waga", "Fakty: kolejnosc wagi - 'Sprawdz na stronie' i niesprawdzony adres na koncu listy",
-     "const WAGA_UWAG = { strona: 1, 'link-niesprawdzony': 2 };", None, None),
-    ("R7-I/fakty-slownik", "Fakty: nowa kategoria i warianty notki w slowniku PL",
-     "'fakty-rodzaj-strona':'Sprawdź na stronie',", None, None),
-    ("R7-I/fakty-bez-listy-zrodel", "Fakty: lista zrodel aplikacji, ramka meta i notatki o lukach poza kontrola",
-     "const tekstArtykulu = tekstBlokami(kopiaDoStatystyk(art));", "const tekstArtykulu = art.innerText || art.textContent || '';", None),
-    # Poprawka pilna: OpenAI wylacza gpt-image-1 23.10.2026
-    ("PILNE/model-grafik", "grafiki na modelu, ktory OpenAI utrzymuje po 23.10.2026 (gpt-image-1 wylaczany)",
-     "const MODEL_GRAFIKI = 'gpt-image-2.5-flare';", "model:          'gpt-image-1',", None),
-    ("PILNE/typ-grafiki", "plik i schowek grafiki z prawdziwym typem obrazu (PNG, JPEG albo WebP)",
-     "const typ = (ia[0] === 0xFF && ia[1] === 0xD8) ? 'image/jpeg'", None, None),
-    ("PILNE/kreator-bez-pol", "kreator na koncie z kluczami serwera przechodzi przez krok kluczy (UX8-01)",
-     "    if (!el('start-k-anthropic')) return true;", None, ("proxy",)),
 ]
 
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi
