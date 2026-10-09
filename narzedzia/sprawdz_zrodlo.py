@@ -1227,6 +1227,10 @@ KONTROLE += [
      "'aiv-modal-title':'Cytowania w AI',", "'aiv-modal-title':'Widoczność w AI (AEO/GEO)',", None),
     ("R9-G/openseo-telefon", "UX8-13: OpenSEO tez w arkuszu Konto na telefonie",
      "var pozTel = document.getElementById('openseo-item-tel');", None, ("proxy",)),
+    ("R9-G/historia-lokalnie", "UX8-16: Historia mowi, ze jest zapisana tylko w tej przegladarce",
+     '<div class="hist-lokalnie" id="hist-lokalnie">', None, None),
+    ("R9-G/historia-kopia", "UX8-16: kopia Historii do pobrania (HTML z artykulami i danymi wpisow w JSON)",
+     "dok += '<' + 'script type=\"application/json\" id=\"content-ai-historia\">' + dane + '<' + '/script></body></html>';", None, None),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna

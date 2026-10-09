@@ -1410,7 +1410,7 @@ async function uruchomSerwerPlikow() {
 // Kazda kontrola pada na 822d52d (main przed runda 9).
 async function wariantR9Zrozumialosc(b) {
   const bledy = [];
-  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, locale: 'pl-PL' });
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, locale: 'pl-PL', acceptDownloads: true });
   await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); if (!localStorage.getItem('cai_lang')) localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
   k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
   let s = await zaloguj(k, 'standard');
@@ -1502,6 +1502,20 @@ async function wariantR9Zrozumialosc(b) {
   const tVis = await oknoZMenu('openVisModal'), tAiv = await oknoZMenu('aivOpen');
   wynik('telefon: R9-G UX8-13 Widocznosc AI w arkuszu Konto: 4 narzedzia z podpisem "po co", okna nazwane jak w menu',
     wid.poz === 4 && wid.podpisy.every((t) => /^(czy|co|wejścia)/.test(t)) && tVis === 'Obecność marki w AI' && tAiv === 'Cytowania w AI', JSON.stringify({ wid, tVis, tAiv }));
+  // UX8-16: Historia mowi, ze jest tylko w tej przegladarce, i daje kopie do pobrania (HTML z artykulami i danymi wpisow).
+  await krok('R9-G Historia', s.click('#mnav-hist', { timeout: 3000 }));
+  await s.waitForTimeout(400);
+  const hist = await s.evaluate(() => { const n = document.getElementById('hist-lokalnie'); return { widac: !!n && n.getBoundingClientRect().height > 0, tekst: n ? n.textContent : '', wpisow: history.length }; });
+  let kopia = { plik: '', wpisy: -1, artykuly: -1 };
+  try {
+    const [pob] = await Promise.all([s.waitForEvent('download', { timeout: 5000 }), s.click('#hist-eksport-btn', { timeout: 3000 })]);
+    const tresc = fs.readFileSync(await pob.path(), 'utf8');
+    const dane = tresc.match(/<script type="application\/json" id="content-ai-historia">([\s\S]*?)<\/script>/);
+    kopia = { plik: pob.suggestedFilename(), wpisy: dane ? JSON.parse(dane[1]).wpisy.length : 0, artykuly: (tresc.match(/<article/g) || []).length };
+  } catch (e) { kopia.blad = String(e.message || e).split('\n')[0]; }
+  wynik('telefon: R9-G UX8-16 Historia: zdanie "tylko w tej przegladarce" i kopia do pobrania (plik HTML z artykulami i danymi wpisow)',
+    hist.widac && /tylko w tej przeglądarce/.test(hist.tekst) && hist.wpisow >= 2 && /^content-ai-historia-\d{4}-\d{2}-\d{2}\.html$/.test(kopia.plik) && kopia.wpisy === hist.wpisow && kopia.artykuly === hist.wpisow,
+    JSON.stringify({ hist, kopia }));
   wynik('telefon: R9-G bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow) await zrzut(s, 'telefon-r9g');
   await k.close();

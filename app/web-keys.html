@@ -3088,6 +3088,11 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
 .form-col .row2 > .ctype-opis[hidden] { display: none; }
 /* UX8-13: grupa Widocznosc AI w arkuszu Konto tylko na telefonie (komputer ma ja w gornym pasku obszarow) */
 body:not(.is-mobile) .menu-tel-widocznosc { display: none; }
+/* UX8-16: Historia tylko w tej przegladarce - zdanie i kopia do pobrania pod licznikami */
+.hist-lokalnie { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-4) var(--s-12); margin-top: var(--s-12); font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-2); }
+.hist-lokalnie > .ikona { flex: none; align-self: flex-start; margin-top: 2px; width: 14px; height: 14px; color: var(--c-tekst-3); }
+.hist-lokalnie > span { flex: 1 1 240px; min-width: 0; }
+body.is-mobile .hist-lokalnie { margin-top: var(--s-8); }
 }
 @layer widoki {
 /* ══ RUNDA 6, wykonawca F ══ */
@@ -3882,6 +3887,12 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
           <div class="hstat"><div class="hstat-val" id="h-docs">0</div><div class="hstat-lbl" data-i18n="hist-docs-base">Dokumenty w bazie</div></div>
           <div class="hstat"><div class="hstat-val" id="h-avg">-</div><div class="hstat-lbl" data-i18n="stat-avg-words">Średnia słów</div></div>
           <div class="hstat" id="h-cost-kafel"><div class="hstat-val" id="h-cost">$0.00</div><div class="hstat-lbl" id="h-cost-lbl" data-i18n="hist-cost">Szac. koszt API</div><div class="hstat-pod" id="h-cost-pod"></div></div>
+        </div>
+        <!-- R9-G (UX8-16): Historia zyje tylko w tej przegladarce - mowimy to wprost i dajemy kopie do pobrania -->
+        <div class="hist-lokalnie" id="hist-lokalnie">
+          <svg class="ikona" aria-hidden="true"><use href="#i-info"/></svg>
+          <span data-i18n="hist-lokalnie">Historia jest zapisana tylko w tej przeglądarce: nie zobaczysz jej na innym urządzeniu, a wyczyszczenie danych przeglądarki ją usuwa.</span>
+          <button type="button" class="btn-link" id="hist-eksport-btn" onclick="eksportujHistorie()" data-i18n="hist-eksport" data-ikona="download"><svg class="ikona" aria-hidden="true"><use href="#i-download"/></svg>Pobierz kopię historii</button>
         </div>
       </div>
       <!-- Split: list + preview -->
@@ -5204,6 +5215,9 @@ var I18N = {
     'sidebar-selected':'zaznaczonych - AI użyje tylko tych',
     'sidebar-none-selected':'Nic nie zaznaczono - dokumenty z tej przeglądarki nie zostaną użyte',
     'hist-usun':'Usuń wpis','hist-usun-pytanie':'Usunąć z historii artykuł "{t}"? Tego nie da się cofnąć.','hist-usuniety':'Wpis usunięty z historii.',
+    'hist-lokalnie':'Historia jest zapisana tylko w tej przeglądarce: nie zobaczysz jej na innym urządzeniu, a wyczyszczenie danych przeglądarki ją usuwa.',
+    'hist-eksport':'Pobierz kopię historii','hist-eksport-pusto':'Historia jest pusta: nie ma czego pobrać.',
+    'hist-eksport-tytul':'Content AI: historia artykułów ({data})','hist-eksport-opis':'Kopia z tej przeglądarki, artykułów: {n}. Plik otworzysz w każdej przeglądarce.',
     'msg-historia-przycieta':'Pamięć przeglądarki jest pełna. Usunięte najstarsze wpisy historii: {n}.',
     'improve-topic-label':'Temat (opcjonalnie)','improve-topic-ph':'Poprawa artykułu',
     'sidebar-of':'z',
@@ -5850,6 +5864,9 @@ var I18N = {
     'sidebar-selected':'selected - AI will use only these',
     'sidebar-none-selected':'Nothing selected - documents from this browser will not be used',
     'hist-usun':'Delete entry','hist-usun-pytanie':'Delete the article "{t}" from history? This cannot be undone.','hist-usuniety':'Entry deleted from history.',
+    'hist-lokalnie':'Your history is saved only in this browser: you will not see it on another device, and clearing browser data deletes it.',
+    'hist-eksport':'Download a copy of your history','hist-eksport-pusto':'Your history is empty: there is nothing to download.',
+    'hist-eksport-tytul':'Content AI: article history ({data})','hist-eksport-opis':'A copy from this browser, articles: {n}. The file opens in any browser.',
     'msg-historia-przycieta':'Browser storage is full. Oldest history entries removed: {n}.',
     'improve-topic-label':'Topic (optional)','improve-topic-ph':'Article improvement',
     'sidebar-of':'of',
@@ -10203,6 +10220,29 @@ function pobierzPlik(blob, nazwa) {
   a.click();
   a.remove();
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 10000);
+}
+// R9-G (UX8-16): Historia zyje tylko w tej przegladarce, wiec dajemy jej kopie: plik HTML, ktory
+// otworzy kazda przegladarka (artykuly z data, typem i liczba slow), z danymi wpisow w JSON na koncu
+// pliku (do wczytania w przyszlosci). Bez kolorow: dokument zostaje przy domyslnych barwach przegladarki.
+function eksportujHistorie() {
+  if (!history.length) { pokazPowiadomienie(_t('hist-eksport-pusto'), 'info'); return; }
+  const en = currentLang === 'en', data = dzisIso(), tytul = _t('hist-eksport-tytul').replace('{data}', data);
+  const wpisy = history.map(function (h) {
+    return { id: h.id, ts: h.ts || null, topic: h.topic || '', type: h.type || '', words: h.words || 0, time: h.time || '',
+      jezyk: h.jezyk || '', kontekst: h.kontekst || null, html: h.html || '' };
+  });
+  const dane = JSON.stringify({ aplikacja: 'Content AI', rodzaj: 'historia', wersja: 1, wyeksportowano: new Date().toISOString(), wpisy: wpisy }).replace(/</g, '\\u003c');
+  let dok = '<!doctype html><html lang="' + (en ? 'en' : 'pl') + '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<title>' + escapeHtml(tytul) + '</title><style>body{font:17px/1.6 Georgia,serif;max-width:46em;margin:2em auto;padding:0 1em}'
+    + 'header,.meta{font-family:system-ui,sans-serif}.meta{font-size:14px;opacity:.7}.wpis{border-top:1px solid;margin-top:3em;padding-top:1em}</style></head><body>'
+    + '<header><h1>' + escapeHtml(tytul) + '</h1><p class="meta">' + escapeHtml(_t('hist-eksport-opis').replace('{n}', history.length)) + '</p></header>';
+  history.forEach(function (h) {
+    dok += '<article class="wpis"><p class="meta">' + escapeHtml([czasWpisu(h), nazwaTypu(h.type), '~' + (h.words || 0) + ' ' + _t('hist-words-suffix')].filter(Boolean).join(' · ')) + '</p>'
+      + (h.html ? oczyscHtmlModelu(h.html) : '<h2>' + escapeHtml(h.topic || '') + '</h2>') + '</article>';
+  });
+  // Znacznik skryptu skladany z kawalkow: inaczej przegladarka (i kontrola budowania) wzielaby go za koniec skryptu aplikacji.
+  dok += '<' + 'script type="application/json" id="content-ai-historia">' + dane + '<' + '/script></body></html>';
+  pobierzPlik(new Blob([dok], { type: 'text/html;charset=utf-8' }), 'content-ai-' + (en ? 'history-' : 'historia-') + data + '.html');
 }
 
 // "154 znaki" / "154 characters" w jezyku etykiet dokumentu.
