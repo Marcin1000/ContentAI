@@ -1623,6 +1623,16 @@ async function scenariuszR9FPokrycie(b) {
     return { styl: (brandVoiceProfile && brandVoiceProfile.style) || '', zapisany: !!magazyn.getItem('cai-bv'), otwarte: document.getElementById('bv-modal').classList.contains('open') };
   });
   wynik('R9-F KOD8-28: Glos marki - profil stylu z probek zapisany, okno zamkniete', !!bv.styl && bv.zapisany && !bv.otwarte, JSON.stringify(bv));
+  // Podpis w menu ustawien: byl polski na sztywno (takze w interfejsie EN), a po zmianie jezyka "Nieaktywny".
+  const plakietka = await s.evaluate(() => {
+    const sub = () => document.getElementById('bv-menu-sub').textContent;
+    const w = { pl: sub(), wzorPl: _t('settings-bv-active') };
+    ustawJezyk('en'); w.en = sub(); w.wzorEn = _t('settings-bv-active');
+    ustawJezyk('pl'); w.znowuPl = sub();
+    return w;
+  });
+  wynik('R9-F KOD8-28: Glos marki - podpis "aktywny" w menu ze slownika, takze po zmianie jezyka',
+    plakietka.pl === plakietka.wzorPl && plakietka.en === plakietka.wzorEn && plakietka.en !== plakietka.pl && plakietka.znowuPl === plakietka.wzorPl, JSON.stringify(plakietka));
   await s.fill('#kw-input', 'pompy ciepla');
   await s.press('#kw-input', 'Enter');
   await s.evaluate(() => { document.getElementById('topic').value = 'Pompy ciepla w Krakowie'; document.getElementById('use-web').checked = false; generate(true); });

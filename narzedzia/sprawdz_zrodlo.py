@@ -1290,6 +1290,10 @@ KONTROLE += [
     ("R9-F/pdf-bez-emoji", "KOD8-35: emoji wypadaja z tekstu PDF (kroje nie maja tych znakow, zostawal pusty znak)",
      "const t = n.nodeValue.replace(EMOJI_PDF, '').replace(/[ \\t\\n\\r\\f]+/g, ' ');",
      "const t = n.nodeValue.replace(/[ \\t\\n\\r\\f]+/g, ' ');", None),
+    ("R9-F/glos-marki-podpis", "KOD8-28: podpis Glosu marki w menu ze slownika (nie polski na sztywno, po zmianie jezyka dalej 'aktywny')",
+     "ustawTekst(sub, 'settings-bv-active');", "sub.textContent = 'Aktywny - profil stylu ustawiony';", None),
+    ("R9-F/glos-marki-podpis-en", "KOD8-28: klucz settings-bv-active w slowniku EN",
+     "'settings-bv-active':'Active - style profile set',", None, None),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna

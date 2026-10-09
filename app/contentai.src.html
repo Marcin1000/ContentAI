@@ -5085,6 +5085,7 @@ var I18N = {
     'tab-generator':'Generator treści','tab-history':'Historia','nav-base':'Baza','nav-history':'Historia',
     'settings-cms-title':'Integracja CMS','settings-cms-sub':'WordPress / Drupal',
     'settings-bv-title':'Głos marki','settings-bv-inactive':'Nieaktywny',
+    'settings-bv-active':'Aktywny - profil stylu ustawiony',
     'out-placeholder':'Wpisz temat i kliknij „Wygeneruj treść”','out-placeholder-sub':'AI przeanalizuje bazę wiedzy i stworzy treść',
     'fog-title':'Indeks mglistości (wersja dla polszczyzny)','fog-easy':'poniżej 12: tekst przystępny, łatwy w odbiorze',
     'fog-medium':'12-15: tekst złożony, wymaga skupienia','fog-hard':'powyżej 15: tekst specjalistyczny / bardzo trudny',
@@ -5818,6 +5819,7 @@ var I18N = {
     'tab-generator':'Content generator','tab-history':'History','nav-base':'Sources','nav-history':'History',
     'settings-cms-title':'CMS integration','settings-cms-sub':'WordPress / Drupal',
     'settings-bv-title':'Brand voice','settings-bv-inactive':'Inactive',
+    'settings-bv-active':'Active - style profile set',
     'out-placeholder':'Enter a topic and click “Generate content”','out-placeholder-sub':'AI will analyze the knowledge base and create content',
     'fog-title':'Fog index (Polish variant)','fog-easy':'below 12: clear text, easy to read',
     'fog-medium':'12-15: complex text, requires focus','fog-hard':'above 15: specialist / very difficult',
@@ -14518,12 +14520,14 @@ function updateBvBadge() {
   const sub = document.getElementById('bv-menu-sub');
   const icon = document.getElementById('bv-menu-icon');
   if (!sub) return;
+  // R9-F (KOD8-28): napis ze slownika razem z data-i18n - wczesniej polski na sztywno w interfejsie EN,
+  // a po zmianie jezyka albo odswiezeniu "Nieaktywny" mimo ustawionego profilu.
   if (brandVoiceProfile) {
-    sub.textContent = 'Aktywny - profil stylu ustawiony';
+    ustawTekst(sub, 'settings-bv-active');
     sub.style.color = 'var(--c-sukces)';
     if (icon) icon.innerHTML = ikona('circle-dot', 'ok');
   } else {
-    sub.textContent = 'Nieaktywny';
+    ustawTekst(sub, 'settings-bv-inactive');
     sub.style.color = '';
     if (icon) icon.innerHTML = ikona('mic');
   }
