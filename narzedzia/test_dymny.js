@@ -1585,14 +1585,18 @@ async function wariantR9Zrozumialosc(b) {
   wynik('komputer EN: R9-G UX8-14 i UX8-11 dopisek o pustej bazie i opis typu tresci po angielsku',
     en.web && /empty/.test(en.opis) && /recommended/.test(en.typ), JSON.stringify(en));
   // UX8-14: dokument w bazie wylacza siec wlaczona dla pustej bazy (wraca zwykly dopisek), pusta baza znow ja wlacza.
+  // W trakcie generowania (spinner) przelacznik stoi: zmiana dopiero po nim.
   const przelacznik = () => s.evaluate(() => ({ web: document.getElementById('use-web').checked,
     klucz: document.querySelector('label[for="use-web"] .toggle-hint').getAttribute('data-i18n'), baza: window._bazaSerwerLiczba }));
   const idDok = await s.evaluate(async () => {
+    document.getElementById('spinner').style.display = 'flex';
     await fetch('/api/baza', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zakres: 'prywatna', nazwa: 'Oferta R9-G', tresc: 'Pompy ciepla: montaz i serwis w 7 dni.' }) });
     await odswiezListeBazy();
     return ((await (await fetch('/api/baza')).json()).dokumenty || []).map((x) => x.id);
   });
   await s.waitForTimeout(400);
+  const wTrakcie = await przelacznik();
+  await s.evaluate(() => { document.getElementById('spinner').style.display = 'none'; odswiezLiczniki(); });
   const zDok = await przelacznik();
   await s.evaluate(async (ids) => {
     for (const id of ids) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, zakres: 'prywatna' }) });
@@ -1600,8 +1604,9 @@ async function wariantR9Zrozumialosc(b) {
   }, idDok);
   await s.waitForTimeout(400);
   const bezDok = await przelacznik();
-  wynik('komputer EN: R9-G UX8-14 siec wlaczona dla pustej bazy wylacza sie, gdy w bazie jest dokument, i wraca, gdy baza znow jest pusta',
-    !zDok.web && zDok.klucz === 'toggle-web-hint' && zDok.baza === 1 && bezDok.web && bezDok.klucz === 'toggle-web-hint-pusta' && bezDok.baza === 0, JSON.stringify({ zDok, bezDok }));
+  wynik('komputer EN: R9-G UX8-14 siec wlaczona dla pustej bazy wylacza sie, gdy w bazie jest dokument (po generowaniu, nie w trakcie), i wraca, gdy baza znow jest pusta',
+    wTrakcie.web && wTrakcie.baza === 1 && !zDok.web && zDok.klucz === 'toggle-web-hint' && zDok.baza === 1 && bezDok.web && bezDok.klucz === 'toggle-web-hint-pusta' && bezDok.baza === 0,
+    JSON.stringify({ wTrakcie, zDok, bezDok }));
   // UX8-24: przykladowy artykul z pustego ekranu - bez klucza i bez zapytania do modelu, nie trafia do Historii.
   let zapytaniaPrzykladu = 0;
   const liczPrzyklad = (z) => { if (z.method() === 'POST' && /\/api(\/|$)/.test(z.url())) zapytaniaPrzykladu++; };
