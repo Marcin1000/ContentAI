@@ -4,7 +4,8 @@
 // Magazyn (node:sqlite), migracja z plikow JSON R8 i wycofanie (eksport-json),
 // CLI na bazie, kody bledow, ogranicznik prob, dzierzawy, plany z limitami serwera
 // i sufitem M-3, oznaczenia, kolejnosc tras i zaslepki modulow, kontrola
-// konfiguracji, pliki wdrozenia (uslugi systemd, cli.sh, tabela zmiennych w README).
+// konfiguracji, pliki wdrozenia (uslugi systemd, cli.sh, tabela zmiennych w README),
+// ksztalt atrap stripe.js i poczta.js.
 // Wolane z serwer/testy.js: require('./testy-magazyn.js').uruchom({ sprawdz }).
 
 const fs = require('node:fs');
@@ -762,6 +763,30 @@ function testyPlikowWdrozenia(sprawdz) {
     && !fs.readFileSync(path.join(korzen, 'serwer', 'contentai.service'), 'utf8').includes('USLUGODAWCA'));
 }
 
+// ─── Atrapy Stripe (B) i poczty (C): ksztalt modulu ─────────────────────────
+
+async function testyAtrap(sprawdz) {
+  console.log('\n  atrapy stripe.js i poczta.js (ksztalt modulu, zaslepki)');
+  const nasluch = (s) => new Promise((ok) => { if (s.listening) ok(); else s.once('listening', ok); });
+  for (const [nazwa, plik, sciezka] of [['stripe', 'stripe.js', '/v1/customers'], ['poczta', 'poczta.js', '/emails']]) {
+    const atrapa = require(path.join(__dirname, '..', 'narzedzia', 'atrapa', plik));
+    const serwer = atrapa.uruchom(0, { sekret: 'whsec_test', webhook: 'http://127.0.0.1:9/platnosci/webhook/stripe' });
+    try {
+      await nasluch(serwer);
+      const adres = `http://127.0.0.1:${serwer.address().port}`;
+      const zdrowie = await fetch(adres + '/zdrowie');
+      const api = await fetch(adres + sciezka, { method: 'POST', body: 'a=1' });
+      const wywolania = await (await fetch(adres + '/_atrapa/wywolania')).json();
+      const czysta = atrapa.obsluz('GET', '/zdrowie', {}, Buffer.alloc(0));
+      sprawdz(`atrapa ${nazwa}: obsluz i uruchom, /zdrowie 200, API 501 do czasu wykonawcy, dziennik wywolan`,
+        zdrowie.status === 200 && (await zdrowie.json()).atrapa === nazwa && api.status === 501
+        && wywolania.length === 1 && wywolania[0].sciezka === sciezka && czysta.status === 200 && typeof czysta.cialo === 'string');
+    } finally {
+      await new Promise((r) => serwer.close(r));
+    }
+  }
+}
+
 async function uruchom({ sprawdz }) {
   await testyMagazynu(sprawdz);
   await testyMigracji(sprawdz);
@@ -769,6 +794,7 @@ async function uruchom({ sprawdz }) {
   testyCli(sprawdz);
   await testySerwera(sprawdz);
   testyPlikowWdrozenia(sprawdz);
+  await testyAtrap(sprawdz);
 }
 
 module.exports = { uruchom, daneR8, ciasteczkoR8 };
