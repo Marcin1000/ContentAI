@@ -14176,7 +14176,8 @@ function otworzTematy() {
   if (propozycjeTematow.length) rysujPropozycje();
   // Checkbox bazy wiedzy pokazujemy tylko, gdy jest co brac - inaczej
   // proponowalibysmy opcje, ktora niczego nie zmienia.
-  var zaznaczone = docs.filter(function(d){ return d.selected; }).length;
+  // R9-F (KOD8-18): takze dokumenty w Bazie na serwerze (w wariancie z serwerem wszystkie sa tam).
+  var zaznaczone = docs.filter(function(d){ return d.selected; }).length + (window._bazaSerwerLiczba || 0);
   var wrap = document.getElementById('tematy-baza-wrap');
   wrap.style.display = zaznaczone ? 'flex' : 'none';
   if (zaznaczone) document.getElementById('tematy-baza').checked = true;
@@ -14265,8 +14266,7 @@ async function generujTematy() {
 
   var wiedza = '';
   if (document.getElementById('tematy-baza').checked) {
-    wiedza = docs.filter(function(d){ return d.selected; })
-      .map(function(d){ return d.content; }).join('\n').substring(0, 3000);
+    wiedza = await wiedzaDoPomocnika(opis, 3000); // R9-F (KOD8-18): takze Baza na serwerze
   }
 
   var isDemo = API_KEY === 'WSTAW_TUTAJ_KLUCZ_API' || API_KEY === 'WSTAW_TUTAJ_NOWY_KLUCZ_API';
@@ -14337,6 +14337,18 @@ function zapamietajBrief(temat, b) {
   magazyn.setItem('cai_briefy', JSON.stringify(wszystkie));
 }
 
+// R9-F (KOD8-18): wiedza dla pomocnikow (brief, Podpowiedz tematy): zaznaczone dokumenty z tej przegladarki
+// i fragmenty z Bazy na serwerze pasujace do zapytania. W wariancie z serwerem wszystkie dokumenty z panelu
+// sa na serwerze, wiec pomocnicy dostawali "Knowledge base:" z pusta trescia.
+async function wiedzaDoPomocnika(zapytanie, limit) {
+  let tekst = docs.filter(d => d.selected).map(d => d.content).join('\n');
+  if (typeof wiedzaZSerwera === 'function' && (window._bazaSerwerLiczba || 0) > 0) {
+    const zSerwera = await wiedzaZSerwera(zapytanie);
+    if (zSerwera) tekst = zSerwera + (tekst ? '\n' + tekst : '');
+  }
+  return tekst.substring(0, limit || 3000);
+}
+
 async function openBriefPanel(odswiez) {
   const topic = document.getElementById('topic').value.trim();
   if (!topic) { document.getElementById('topic').focus(); return; }
@@ -14348,7 +14360,7 @@ async function openBriefPanel(odswiez) {
   document.getElementById('brief-content').innerHTML = '<div class="seo-loading">' + _t('msg-loading-brief') + '</div>';
   briefKeywords = [];
 
-  const kbText = docs.filter(d=>d.selected).map(d=>d.content).join('\n').substring(0, 3000);
+  const kbText = await wiedzaDoPomocnika(topic, 3000); // R9-F (KOD8-18): takze Baza na serwerze
   const isDemo = API_KEY === 'WSTAW_TUTAJ_KLUCZ_API' || API_KEY === 'WSTAW_TUTAJ_NOWY_KLUCZ_API';
 
   if (isDemo) {
@@ -14366,7 +14378,9 @@ async function openBriefPanel(odswiez) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(600),
-        system: 'You are a content strategist. Analyze the topic and knowledge base and respond ONLY with valid JSON no markdown: {"keywords":["4-6 phrases"],"h2":["5-7 headings"],"gap":"one sentence about content gap","words":"recommended word count range"}. All text MUST be in ' + (currentLang === 'en' ? 'English' : 'Polish') + '.' + blokDaty(),
+        // R9-F (KOD8-18): frazy i naglowki w jezyku artykulu (pole Jezyk tekstu), nie interfejsu - "Uzyj slow
+        // kluczowych" wstawial polskie frazy do angielskiego tekstu.
+        system: 'You are a content strategist. Analyze the topic and knowledge base and respond ONLY with valid JSON no markdown: {"keywords":["4-6 phrases"],"h2":["5-7 headings"],"gap":"one sentence about content gap","words":"recommended word count range"}. All text MUST be in ' + jezykDlaModelu(document.getElementById('lang').value) + '.' + blokDaty(),
         messages: [{ role: 'user', content: `Topic: ${topic}\n\nKnowledge base:\n${kbText}` }]
       })
     });
@@ -15341,48 +15355,67 @@ function odswiezLicznikDomen() {
 }
 
 function harvestKbUrls() {
-  return docs.map(d => {
+  const lista = docs.map(d => {
     if (d.url) return { name: (d.name || '').replace(/^🔗\s*/, '') || d.url, url: d.url };
     const m = (d.content || '').match(/\[Źródło:\s*(https?:\/\/[^\]\n]+)/);
     if (m) return { name: (d.name || '').replace(/^🔗\s*/, '') || m[1].trim(), url: m[1].trim() };
     return null;
   }).filter(Boolean);
+  // R9-F (KOD8-18): strony firmy z Bazy na serwerze (w wariancie z serwerem tam sa wszystkie dokumenty).
+  (window._bazaSerwer || []).forEach(d => {
+    if (d && d.url && !lista.some(u => u.url === d.url)) lista.push({ name: d.nazwa || d.url, url: d.url });
+  });
+  return lista;
+}
+
+// R9-F (KOD8-18): naglowki pliku w jezyku tekstu (strona anglojezyczna dostawala "## O firmie").
+function naglowkiLlms() {
+  return ((document.getElementById('lang') || {}).value || 'Polski') === 'Polski'
+    ? { firma: 'O firmie', nazwa: 'Pełna nazwa', strona: 'Strona', linie: 'Linie biznesowe (rozróżnienie dla modeli AI)', uslugi: 'Kluczowe usługi',
+      strony: 'Ważne strony', kontekst: 'Kontekst marki (pełne źródła)', brak: 'Brak dokumentów w bazie wiedzy.' }
+    : { firma: 'About the company', nazwa: 'Legal name', strona: 'Website', linie: 'Business lines (disambiguation for AI models)', uslugi: 'Key services',
+      strony: 'Important pages', kontekst: 'Brand context (full sources)', brak: 'No documents in the knowledge base.' };
 }
 
 function buildLlmsTxt(cfg, urls) {
+  const N = naglowkiLlms();
   const out = [];
   out.push('# ' + (cfg.name || ''));
   out.push('');
   if (cfg.description) { out.push('> ' + cfg.description); out.push(''); }
-  out.push('## O firmie');
-  if (cfg.legalName) out.push('- Pełna nazwa: ' + cfg.legalName);
-  if (cfg.siteUrl)   out.push('- Strona: ' + cfg.siteUrl);
+  out.push('## ' + N.firma);
+  if (cfg.legalName) out.push('- ' + N.nazwa + ': ' + cfg.legalName);
+  if (cfg.siteUrl)   out.push('- ' + N.strona + ': ' + cfg.siteUrl);
   out.push('');
   const lineRules = (cfg.lines || '').split('\n').map(s => s.trim()).filter(Boolean);
   if (lineRules.length) {
-    out.push('## Linie biznesowe (rozróżnienie dla modeli AI)');
+    out.push('## ' + N.linie);
     lineRules.forEach(l => out.push('- ' + l));
     out.push('');
   }
   const services = (cfg.services || '').split('\n').map(s => s.trim()).filter(Boolean);
   if (services.length) {
-    out.push('## Kluczowe usługi');
+    out.push('## ' + N.uslugi);
     services.forEach(s => out.push('- ' + s));
     out.push('');
   }
   if (urls.length) {
-    out.push('## Ważne strony');
+    out.push('## ' + N.strony);
     urls.forEach(u => out.push('- [' + u.name + '](' + u.url + ')'));
     out.push('');
   }
   return out.join('\n').trim() + '\n';
 }
 
-function buildLlmsFullTxt(cfg, urls) {
+// zSerwera: fragmenty z Bazy na serwerze (blok "## WIEDZA FIRMOWA" z /api/baza/szukaj) albo ''.
+function buildLlmsFullTxt(cfg, urls, zSerwera) {
+  const N = naglowkiLlms();
   let out = buildLlmsTxt(cfg, urls).trim() + '\n\n';
-  out += '## Kontekst marki (pełne źródła)\n\n';
+  out += '## ' + N.kontekst + '\n\n';
   const ctxDocs = docs.filter(d => (d.content || '').trim().length > 0);
-  if (!ctxDocs.length) { out += 'Brak dokumentów w bazie wiedzy.\n'; return out.trim() + '\n'; }
+  const serwer = String(zSerwera || '').replace(/^\s*## WIEDZA FIRMOWA\s*/, '').split(/\n\n---\n\n/).map(s => s.trim()).filter(Boolean);
+  if (!ctxDocs.length && !serwer.length) { out += N.brak + '\n'; return out.trim() + '\n'; }
+  serwer.forEach(f => { out += f.replace(/\s*\n(?!### )/g, ' ').slice(0, 1300) + '\n\n'; });
   ctxDocs.forEach(d => {
     out += '### ' + (d.name || '').replace(/^🔗\s*/, '') + '\n';
     const full = (d.content || '').replace(/\s+/g, ' ').trim();
@@ -15391,11 +15424,16 @@ function buildLlmsFullTxt(cfg, urls) {
   return out.trim() + '\n';
 }
 
-function generateLlms() {
+async function generateLlms() {
   const cfg = saveLlmsConfig();
   const urls = harvestKbUrls();
   document.getElementById('llms-out-basic-ta').value = buildLlmsTxt(cfg, urls);
-  document.getElementById('llms-out-full-ta').value = buildLlmsFullTxt(cfg, urls);
+  // R9-F (KOD8-18): kontekst marki takze z Bazy na serwerze (fragmenty pasujace do nazwy, opisu i uslug).
+  let zSerwera = '';
+  if (typeof wiedzaZSerwera === 'function' && (window._bazaSerwerLiczba || 0) > 0) {
+    zSerwera = await wiedzaZSerwera([cfg.name, cfg.description, cfg.services].filter(Boolean).join(' ').slice(0, 400));
+  }
+  document.getElementById('llms-out-full-ta').value = buildLlmsFullTxt(cfg, urls, zSerwera);
   document.getElementById('llms-urls-hint').textContent = _t('llms-hint-urls').replace('{n}', urls.length);
 }
 

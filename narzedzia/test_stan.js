@@ -1345,6 +1345,49 @@ async function scenariuszR9FPromptBazy(b) {
   await k.close();
 }
 
+// KOD8-18: w wariancie z serwerem wszystkie dokumenty sa w Bazie na serwerze, a brief, Podpowiedz tematy i llms.txt
+// czytaly tylko dokumenty z przegladarki. Brief prosil o tekst w jezyku interfejsu, nie artykulu.
+async function scenariuszR9FPomocnicy(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  await s.evaluate(async () => {
+    await fetch('/api/baza', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zakres: 'prywatna', nazwa: 'Oferta Termoplus',
+      url: 'https://termoplus.example.com/oferta', tresc: 'Termoplus montuje pompy ciepla Vitocal w Krakowie w 48 godzin. Gwarancja 7 lat.' }) });
+    await odswiezListeBazy();
+    const l = document.getElementById('lang'); l.value = 'English'; l.dispatchEvent(new Event('change'));
+  });
+  const zap = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url())) { try { const d = JSON.parse(z.postData()); zap.push({ sys: String(d.system || ''), tresc: JSON.stringify(d.messages || []) }); } catch (e) { /* inne */ } } });
+  // Brief
+  await s.evaluate(() => { document.getElementById('topic').value = 'Pompy ciepla w Krakowie'; openBriefPanel(true); });
+  await s.waitForFunction(() => !document.querySelector('#brief-content .seo-loading'), null, { timeout: 30000 }).catch(() => {});
+  const brief = zap.find((z) => /content strategist/.test(z.sys) && !/EXACTLY 10 article topics/.test(z.sys)) || { sys: '', tresc: '' };
+  wynik('R9-F KOD8-18: brief dostaje wiedze z Bazy na serwerze i pisze w jezyku artykulu (English przy interfejsie PL)',
+    /Vitocal/.test(brief.tresc) && /MUST be in English/.test(brief.sys), JSON.stringify({ sys: brief.sys.slice(-60), tresc: brief.tresc.slice(0, 160) }));
+  await s.evaluate(() => { try { closeBriefPanel(); } catch (e) { /* zamkniety */ } });
+  // Podpowiedz tematy
+  await s.evaluate(() => otworzTematy());
+  const pole = await s.evaluate(() => getComputedStyle(document.getElementById('tematy-baza-wrap')).display !== 'none' && document.getElementById('tematy-baza').checked);
+  await s.evaluate(() => { document.getElementById('tematy-zapotrzebowanie').value = 'Klienci pytaja o pompy ciepla'; generujTematy(); });
+  await s.waitForFunction(() => !document.querySelector('#tematy-wynik .seo-loading'), null, { timeout: 30000 }).catch(() => {});
+  const tematy = zap.filter((z) => /EXACTLY 10 article topics/.test(z.sys)).pop() || { tresc: '' };
+  wynik('R9-F KOD8-18: Podpowiedz tematy - pole Bazy widoczne przy dokumentach na serwerze i wiedza w zapytaniu', pole && /Vitocal/.test(tematy.tresc), JSON.stringify({ pole, tresc: tematy.tresc.slice(0, 200) }));
+  await s.evaluate(() => zamknijTematy());
+  // llms.txt: adres strony z Bazy na serwerze, kontekst z serwera, naglowki w jezyku tekstu
+  const llms = await s.evaluate(async () => {
+    openLlmsModal(); document.getElementById('llms-name').value = 'Termoplus';
+    await generateLlms();
+    return { pelny: document.getElementById('llms-out-full-ta').value, podstawowy: document.getElementById('llms-out-basic-ta').value };
+  });
+  wynik('R9-F KOD8-18: llms.txt - strona z Bazy na serwerze w "Important pages", kontekst z serwera, naglowki po angielsku',
+    /termoplus\.example\.com\/oferta/.test(llms.podstawowy) && /Vitocal/.test(llms.pelny) && /## About the company/.test(llms.podstawowy) && !/O firmie|Brak dokumentów/.test(llms.pelny), JSON.stringify(llms).slice(0, 400));
+  await s.evaluate(async () => { try { closeLlmsModal(); } catch (e) { /* */ } const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); });
+  wynik('R9-F KOD8-18: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-pomocnicy');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
@@ -1354,7 +1397,7 @@ const SCENARIUSZE = [
   ['r9f-transkrypcja', scenariuszR9FTranskrypcja], ['r9f-duzy-dokument', scenariuszR9FDuzyDokument],
   ['r9f-cms', scenariuszR9FCms], ['r9f-pdf', scenariuszR9FPdf],
   ['r9f-luki-darmowy', scenariuszR9FLukiDarmowy], ['r9f-bez-sieci', scenariuszR9FBezSieci],
-  ['r9f-prompt-bazy', scenariuszR9FPromptBazy],
+  ['r9f-prompt-bazy', scenariuszR9FPromptBazy], ['r9f-pomocnicy', scenariuszR9FPomocnicy],
 ];
 (async () => {
   let b;

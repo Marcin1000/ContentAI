@@ -1260,6 +1260,15 @@ KONTROLE += [
     ("R9-F/prompt-zrodla-serwera", "KOD8-19: prompt artykulu liczy fragmenty z Bazy na serwerze jako zrodla (nie 'You have 0 knowledge source(s)')",
      "const userPrompt = `You have ${activeDocs.length + fragmentySerwera} knowledge source(s):",
      "const userPrompt = `You have ${docs.length} knowledge source(s):", None),
+    ("R9-F/brief-baza-serwera", "KOD8-18: brief z wiedza z Bazy na serwerze i w jezyku artykulu",
+     "const kbText = await wiedzaDoPomocnika(topic, 3000);",
+     "const kbText = docs.filter(d=>d.selected).map(d=>d.content).join('\\n').substring(0, 3000);", None),
+    ("R9-F/brief-jezyk-tekstu", "KOD8-18: brief w jezyku tekstu (pole Jezyk tekstu), nie interfejsu",
+     "All text MUST be in ' + jezykDlaModelu(document.getElementById('lang').value) + '.' + blokDaty(),", None, None),
+    ("R9-F/tematy-baza-serwera", "KOD8-18: Podpowiedz tematy - pole Bazy i wiedza takze z Bazy na serwerze",
+     "wiedza = await wiedzaDoPomocnika(opis, 3000);", None, None),
+    ("R9-F/llms-baza-serwera", "KOD8-18: llms.txt - strony i kontekst z Bazy na serwerze, naglowki w jezyku tekstu",
+     "document.getElementById('llms-out-full-ta').value = buildLlmsFullTxt(cfg, urls, zSerwera);", None, None),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna
