@@ -1554,6 +1554,10 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 @keyframes ramie { 0%, 100% { opacity: .22; } 20%, 45% { opacity: 1; } }
 .spinner-label { font-size: var(--t-lg); font-weight: var(--g-mocny); color: var(--c-tekst); }
 .spinner-sub { font-size: var(--t-sm); color: var(--c-tekst-3); }
+/* R9-F (KOD8-34): czekanie na siec zamiast etapow, ktore licznik dalej przestawial */
+#spinner.czeka-na-siec #spin-label, #spinner.czeka-na-siec #spin-sub { display: none; }
+#spinner:not(.czeka-na-siec) #spin-siec { display: none; }
+.spin-siec { color: var(--c-uwaga); text-align: center; }
 /* R6: dluzszy opis etapu ("szukam zrodel w sieci i sprawdzam...") zawija sie wysrodkowany, jak tytul nad nim */
 .spinner-wrap #spin-label, .spinner-sub { text-align: center; text-wrap: balance; max-width: 36em; }
 .spinner-czas { font-family: var(--f-mono); font-size: var(--t-xs); color: var(--c-tekst-3); margin-top: 0; }
@@ -2739,6 +2743,8 @@ input[type="text"], input[type="url"], input[type="search"], input[type="email"]
 /* wynik grafiki: Pobierz / Ponow zawijaja sie */
 #img-result-wrap > div { flex-wrap: wrap; }
 .h-item-topic { overflow-wrap: anywhere; }
+/* R9-F (KOD8-25): temat wpisu Historii najwyzej w dwoch liniach (wklejony akapit dawal wpis na kilka ekranow telefonu). */
+#h-list-inner .h-item-topic { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
 /* R4 (kod-17): usuwanie wpisu historii - przycisk po prawej, pole dotyku 44 px. */
 #h-list-inner .h-item { position: relative; padding-right: 52px; }
 .h-usun { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); width: var(--h-dotyk, 44px); height: var(--h-dotyk, 44px); display: inline-flex; align-items: center; justify-content: center; padding: 0; background: none; border: 0; border-radius: var(--r-sm); color: var(--c-tekst-3); cursor: pointer; }
@@ -4950,6 +4956,7 @@ var I18N = {
     'voice-save':'Zapisz','voice-dictate-title':'Dyktuj',
     'voice-no-key':'Brak klucza OpenAI - ustaw OPENAI_API_KEY lub przełącz na silnik przeglądarki.','voice-unsupported':'Ta przeglądarka nie wspiera tej funkcji głosowej.','voice-mic-denied':'Brak dostępu do mikrofonu.','voice-listening':'Słucham…','voice-tts-fail':'Nie udało się odtworzyć audio.',
     'label-topic':'Temat artykułu / strony','ph-topic':'np. Jak wybrać system CRM dla małej firmy',
+    'topic-za-dlugi':'Temat może mieć najwyżej 300 znaków. Dłuższe wskazówki wpisz w polu Dodatkowe wytyczne.','topic-pusty':'Wpisz temat artykułu.',
     'btn-templates':'Szablony','label-ctype':'Typ treści','label-length':'Długość',
     'btn-tematy':'Podpowiedz','btn-tematy-title':'Podpowiedz tematy na podstawie zapotrzebowania',
     'btn-templates-title':'Gotowe szablony formularza',
@@ -5132,6 +5139,7 @@ var I18N = {
     'gap-refresh':'Odśwież','gap-loading':'Porównuję artykuł z danymi SERP…',
     'gap-pts':'/100','gap-select-all':'Zaznacz wszystkie','gap-deselect':'Odznacz',
     'gap-no-serp':'Włącz Analizę SERP przed generowaniem, aby korzystać z analizy luk semantycznych.',
+    'gap-serp-pakiet':'Analiza luk korzysta z danych SERP, dostępnych od pakietu Standard.','gap-serp-pakiet-btn':'Zobacz pakiety',
     'links-title':'Sugestie linków wewnętrznych','links-loading':'Analizuję bazę wiedzy…',
     'versions-label':'Warianty:',
     'seo-panel-title':'Ocena SEO','aio-panel-title':'Ocena AIO',
@@ -5164,6 +5172,7 @@ var I18N = {
     'kd-optymalna':'Optymalna gęstość: 0,5-2,5%',
     // ── Komunikaty dynamiczne ──
     'msg-pdf-load-fail':'Nie udało się załadować biblioteki PDF. Sprawdź połączenie.',
+    'msg-pdf-przygotowuje':'Przygotowuję PDF… Za pierwszym razem trwa to kilka sekund.',
     'msg-docx-error':'Nie udało się przygotować pliku DOCX. Spróbuj ponownie.',
     'msg-no-article':'Najpierw wygeneruj artykuł.',
     'msg-bad-url':'Podaj pełny URL (https://…)',
@@ -5578,6 +5587,7 @@ var I18N = {
     'pakiet-zostalo':'Zostało {n} z {m}','pakiet-zostalo-krotko':'zostało {n}','pakiet-od-standard':'Dostępne od pakietu Standard','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f}: poza pakietem {p}','pakiet-niedostepne':'niedostępne',
     'btn-przerwij':'Przerwij','msg-przerwano':'Generowanie przerwane. Formularz jest bez zmian: możesz poprawić brief i spróbować ponownie.','badge-przerwane':'przerwane','spin-ponawiam-za':'Dostawca AI ogranicza zapytania: ponawiam za {s} s','spin-proba':'próba {n} z {m}','spin-ponawiam':'Ponawiam zapytanie…','spin-wznawiam':'Połączenie było przerwane. Odbieram wynik z serwera…',
     'odzysk-spin':'Kończę artykuł rozpoczęty przed odświeżeniem strony…','odzysk-spin-sub':'Odbieram wynik z serwera','odzysk-gotowe':'Odebrano artykuł rozpoczęty przed odświeżeniem strony. Jest w Historii.','odzysk-blad':'Nie udało się odebrać artykułu rozpoczętego przed odświeżeniem strony: serwer nie ma już tego wyniku. Wygeneruj go ponownie.','odzysk-blad-prefiks':'Artykuł rozpoczęty przed odświeżeniem strony:',
+    'spin-brak-sieci':'Brak internetu. Wynik odbiorę, gdy wróci połączenie.',
     'badge-historia':'z historii','hist-otworz':'Otwórz w generatorze',
     'msg-blad-prefiks':'Błąd:','menu-wyloguj':'Wyloguj się','menu-wyloguj-sub':'zakończ sesję na tym urządzeniu',
     'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Te dokumenty zapisano skrócone i po odświeżeniu będą krótsze: {lista}. Przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
@@ -5678,6 +5688,7 @@ var I18N = {
     'voice-save':'Save','voice-dictate-title':'Dictate',
     'voice-no-key':'Missing OpenAI key - set OPENAI_API_KEY or switch to the browser engine.','voice-unsupported':'This browser does not support this voice feature.','voice-mic-denied':'Microphone access denied.','voice-listening':'Listening…','voice-tts-fail':'Could not play audio.',
     'label-topic':'Article / page topic','ph-topic':'e.g. How to choose a CRM for a small business',
+    'topic-za-dlugi':'The topic can have at most 300 characters. Put longer guidance in Additional guidelines.','topic-pusty':'Enter the article topic.',
     'btn-templates':'Templates','label-ctype':'Content type','label-length':'Length',
     'btn-tematy':'Suggest','btn-tematy-title':'Suggest topics from your business need',
     'btn-templates-title':'Ready-made form templates',
@@ -5860,6 +5871,7 @@ var I18N = {
     'gap-refresh':'Refresh','gap-loading':'Comparing article with SERP data…',
     'gap-pts':'/100','gap-select-all':'Select all','gap-deselect':'Deselect',
     'gap-no-serp':'Enable SERP analysis before generating to use semantic gap analysis.',
+    'gap-serp-pakiet':'Gap analysis uses SERP data, available from the Standard plan.','gap-serp-pakiet-btn':'See plans',
     'links-title':'Internal link suggestions','links-loading':'Analyzing knowledge base…',
     'versions-label':'Variants:',
     'seo-panel-title':'SEO Score','aio-panel-title':'AIO Score',
@@ -5892,6 +5904,7 @@ var I18N = {
     'kd-optymalna':'Optimal density: 0.5-2.5%',
     // ── Dynamic messages ──
     'msg-pdf-load-fail':'Failed to load PDF library. Check your connection.',
+    'msg-pdf-przygotowuje':'Preparing the PDF… The first time takes a few seconds.',
     'msg-docx-error':'Could not create the DOCX file. Please try again.',
     'msg-no-article':'Generate an article first.',
     'msg-bad-url':'Provide a full URL (https://…)',
@@ -6144,6 +6157,7 @@ var I18N = {
     'pakiet-zostalo':'{n} of {m} left','pakiet-zostalo-krotko':'{n} left','pakiet-od-standard':'Available from the Standard plan','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f}: not included in the {p} plan','pakiet-niedostepne':'not available',
     'btn-przerwij':'Stop','msg-przerwano':'Generation stopped. The form is unchanged, so you can adjust the brief and try again.','badge-przerwane':'stopped','spin-ponawiam-za':'The AI provider is limiting requests: retrying in {s} s','spin-proba':'attempt {n} of {m}','spin-ponawiam':'Retrying the request…','spin-wznawiam':'The connection dropped. Collecting the result from the server…',
     'odzysk-spin':'Finishing the article started before the page reloaded…','odzysk-spin-sub':'Collecting the result from the server','odzysk-gotowe':'The article started before the page reloaded has been collected. It is in History.','odzysk-blad':'Could not collect the article started before the page reloaded: the server no longer has this result. Generate it again.','odzysk-blad-prefiks':'Article started before the page reloaded:',
+    'spin-brak-sieci':'No internet connection. The result will be collected when the connection is back.',
     'badge-historia':'from history','hist-otworz':'Open in generator',
     'msg-blad-prefiks':'Error:','menu-wyloguj':'Sign out','menu-wyloguj-sub':'end the session on this device',
     'msg-magazyn-pelny':'Browser storage is full. These documents were saved shortened and will be shorter after a refresh: {lista}. Move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
@@ -6878,6 +6892,23 @@ function poczekaj(ms, sygnal) {
     if (sygnal) sygnal.addEventListener('abort', przerwij, { once: true });
   });
 }
+// R9-F (KOD8-34): czekanie na siec widac w spinnerze. Licznik etapow generowania co sekunde nadpisywal
+// napis ("Generuje tresc... pisze artykul"), wiec bez zasiegu (pociag, winda) nie bylo widac, ze aplikacja
+// tylko czeka. Osobny wiersz zamiast etapow, dopoki trwa czekanie (licznik: kilka wywolan naraz).
+function czekamNaSiec(tak) {
+  czekamNaSiec.n = Math.max(0, (czekamNaSiec.n || 0) + (tak ? 1 : -1));
+  const sp = document.getElementById('spinner');
+  if (!sp) return;
+  let el = document.getElementById('spin-siec');
+  if (czekamNaSiec.n && !el) {
+    el = document.createElement('div'); el.id = 'spin-siec'; el.className = 'spinner-label spin-siec'; el.setAttribute('role', 'status');
+    const sub = document.getElementById('spin-sub'); if (sub) sub.after(el); else sp.appendChild(el);
+  }
+  if (el) el.textContent = _t(navigator.onLine === false ? 'spin-brak-sieci' : 'spin-wznawiam');
+  sp.classList.toggle('czeka-na-siec', czekamNaSiec.n > 0);
+}
+window.addEventListener('offline', function () { const el = document.getElementById('spin-siec'); if (el) el.textContent = _t('spin-brak-sieci'); });
+window.addEventListener('online', function () { const el = document.getElementById('spin-siec'); if (el) el.textContent = _t('spin-wznawiam'); });
 // fetch do serwera aplikacji odporny na zerwane polaczenie. `id` podaje wolajacy,
 // ktory sam ponawia (grafika): kolejna proba dolacza wtedy do tego samego zadania.
 // `anuluj`: przerwanie przez uzytkownika konczy tez zadanie na serwerze.
@@ -6897,7 +6928,8 @@ async function fetchZadania(url, opcje, id, anuluj) {
       bramaMs += przerwa;
       const sub = document.getElementById('spin-sub');
       if (sub) sub.textContent = _t('spin-wznawiam');
-      await poczekaj(przerwa, o.signal);
+      czekamNaSiec(true);
+      try { await poczekaj(przerwa, o.signal); } finally { czekamNaSiec(false); }
       proba--; // odpowiedz bramy nie liczy sie do limitu zerwanych polaczen
       continue;
     } catch (e) {
@@ -6907,13 +6939,14 @@ async function fetchZadania(url, opcje, id, anuluj) {
       }
       const sub = document.getElementById('spin-sub');
       if (sub) sub.textContent = _t('spin-wznawiam');
+      czekamNaSiec(true);
       try {
         await czekajNaPowrot(o.signal);
         await new Promise(r => setTimeout(r, Math.min(4000, 600 * (proba + 1))));
       } catch (e2) {
         if (anuluj) anulujZadanieWTle(id);
         throw e2;
-      }
+      } finally { czekamNaSiec(false); }
     }
   }
 }
@@ -8467,6 +8500,26 @@ function generowanieTrwa(zKolejki) {
 function ostrzezGenerowanieTrwa() {
   pokazPowiadomienie(_t('msg-generowanie-trwa'), 'uwaga');
 }
+// R9-F (KOD8-25): temat ma limit dlugosci (wklejony akapit rozsadzal Historie: wpis na kilka ekranow
+// telefonu) z podpowiedzia, gdzie wpisac dluzsze wskazowki, a pusty temat (same spacje) ma komunikat
+// przy polu zamiast samego fokusu.
+const LIMIT_TEMATU = 300;
+function podpowiedzTematu(klucz) {
+  const pole = document.getElementById('topic');
+  if (!pole) return;
+  let el = document.getElementById('topic-podpowiedz');
+  if (!klucz) { if (el) el.remove(); pole.removeAttribute('aria-invalid'); return; }
+  if (!el) { el = document.createElement('p'); el.id = 'topic-podpowiedz'; el.className = 'tekst-pomoc'; el.setAttribute('role', 'status'); (pole.closest('.pole-wiersz') || pole).after(el); }
+  el.textContent = _t(klucz);
+  el.classList.toggle('stan-blad', klucz === 'topic-pusty');
+  if (klucz === 'topic-pusty') pole.setAttribute('aria-invalid', 'true'); else pole.removeAttribute('aria-invalid');
+}
+(function () {
+  const pole = document.getElementById('topic');
+  if (!pole) return;
+  pole.maxLength = LIMIT_TEMATU;
+  pole.addEventListener('input', function () { podpowiedzTematu(pole.value.length >= LIMIT_TEMATU ? 'topic-za-dlugi' : null); });
+})();
 
 async function generate(skipPremiumModal = false, opcje = null) {
   if (generowanieTrwa(opcje && opcje.zKolejki)) { ostrzezGenerowanieTrwa(); return false; }
@@ -8484,6 +8537,7 @@ async function generate(skipPremiumModal = false, opcje = null) {
 
   // ── Blokada: brak tematu
   if (!topic) {
+    podpowiedzTematu('topic-pusty'); // R9-F (KOD8-25)
     document.getElementById('topic').focus();
     return false;
   }
@@ -11065,14 +11119,27 @@ function trescPdf(korzen) {
 }
 
 function zaladujPdfMake(gotowe) {
+  // R9-F (KOD8-32): pierwszy PDF dociaga 1,7 MB (na telefonie kilka sekund bez znaku zycia), a kolejne
+  // dotkniecie w tym czasie dawalo drugi plik. Teraz komunikat od razu i jedno pobranie: dotkniecia
+  // w trakcie ladowania czekaja na to samo ladowanie.
+  const czekajacy = zaladujPdfMake.czekajacy || (zaladujPdfMake.czekajacy = []);
+  let toast = null;
+  const koniec = function (ok) {
+    if (toast) { toast.classList.add('znika'); setTimeout(function () { toast.remove(); }, 200); }
+    const lista = czekajacy.splice(0);
+    if (ok) lista.forEach(function (f) { try { f(); } catch (e) { console.error('[pdf]', e); } });
+  };
   function wczytaj(src, cb) {
     const s = document.createElement('script');
     s.src = src; s.onload = cb;
-    s.onerror = function () { powiadomBlad(_t('msg-pdf-load-fail')); };
+    s.onerror = function () { koniec(false); powiadomBlad(_t('msg-pdf-load-fail')); };
     document.head.appendChild(s);
   }
   if (window.pdfMake && typeof window.pdfMake.createPdf === 'function') { gotowe(); return; }
-  wczytaj('pwa/lib/pdfmake.min.js', function () { wczytaj('pwa/lib/vfs_fonts.js', gotowe); });
+  if (czekajacy.length) return; // ladowanie trwa: kolejne dotkniecie nie robi drugiego pliku
+  czekajacy.push(gotowe);
+  toast = pokazPowiadomienie(_t('msg-pdf-przygotowuje'), 'info', 30000);
+  wczytaj('pwa/lib/pdfmake.min.js', function () { wczytaj('pwa/lib/vfs_fonts.js', function () { koniec(true); }); });
 }
 
 function dlPdf() {
@@ -11673,6 +11740,15 @@ async function runGapAnalysis() {
   const tematy = serpData ? (serpData.topics || []).map((t) => String(t).trim()).filter(Boolean) : [];
   if (!tematy.length) {
     noSerp.textContent = _t(serpBlad ? 'gap-serp-blad' : 'gap-no-serp');
+//@@IF proxy
+    // R9-F (KOD8-33): pakiet bez SERP (np. Darmowy, przelacznik zablokowany przez okno pakietu): "Wlacz
+    // Analize SERP" nie da sie wykonac - mowimy, od ktorego pakietu sa Luki, z przejsciem do pakietow.
+    const przelSerp = document.getElementById('use-serp');
+    if (przelSerp && przelSerp.disabled && przelSerp.closest('.zablokowane')) {
+      noSerp.innerHTML = '<span class="znacznik-pakietu">' + escapeHtml(_t('pakiet-od-standard-krotko')) + '</span> ' + escapeHtml(_t('gap-serp-pakiet'))
+        + ' <button type="button" class="btn-link" onclick="otworzPakiet()">' + escapeHtml(_t('gap-serp-pakiet-btn')) + '</button>';
+    }
+//@@ENDIF
     noSerp.style.display = 'block'; return;
   }
   if (!art || !art.innerHTML.trim()) return;
@@ -13818,12 +13894,29 @@ function openWpModal() {
 }
 function closeWpModal() { document.getElementById('wp-modal').classList.remove('open'); }
 
+// R9-F (KOD8-29): naglowek Basic w UTF-8 (RFC 7617). btoa przyjmuje tylko Latin-1, wiec login albo haslo
+// z polska litera (Drupal dopuszcza loginy Unicode, np. "Łukasz") konczylo sie surowym wyjatkiem przegladarki.
+function base64Utf8(s) {
+  const bajty = new TextEncoder().encode(String(s));
+  let bin = '';
+  for (let i = 0; i < bajty.length; i++) bin += String.fromCharCode(bajty[i]);
+  return btoa(bin);
+}
+// Adres CMS bez schematu dostaje https:// (wczesniej zapytanie szlo pod adres wzgledny, na serwer aplikacji),
+// bez koncowego /wp-admin i ukosnikow.
+function normalizujAdresCms(u) {
+  u = String(u || '').trim();
+  if (!u) return '';
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(u)) u = 'https://' + u.replace(/^\/+/, '');
+  return u.replace(/\/wp-admin(\/.*)?$/i, '').replace(/\/+$/, '');
+}
+
 function saveCmsSettings() {
   if (activeCms === 'wp') {
-    wpSettings = { url: document.getElementById('wp-url').value.trim().replace(/\/$/, ''), user: document.getElementById('wp-user').value.trim(), pass: document.getElementById('wp-pass').value.trim() };
+    wpSettings = { url: normalizujAdresCms(document.getElementById('wp-url').value), user: document.getElementById('wp-user').value.trim(), pass: document.getElementById('wp-pass').value.trim() };
     try { magazyn.setItem('cai-wp', JSON.stringify(wpSettings)); } catch(e) {}
   } else {
-    drupalSettings = { url: document.getElementById('drupal-url').value.trim().replace(/\/$/, ''), user: document.getElementById('drupal-user').value.trim(), pass: document.getElementById('drupal-pass').value.trim(), ctype: document.getElementById('drupal-ctype').value.trim() || 'article', format: document.getElementById('drupal-format').value };
+    drupalSettings = { url: normalizujAdresCms(document.getElementById('drupal-url').value), user: document.getElementById('drupal-user').value.trim(), pass: document.getElementById('drupal-pass').value.trim(), ctype: document.getElementById('drupal-ctype').value.trim() || 'article', format: document.getElementById('drupal-format').value };
     try { magazyn.setItem('cai-drupal', JSON.stringify(drupalSettings)); } catch(e) {}
   }
   try { magazyn.setItem('cai-active-cms', activeCms); } catch(e) {}
@@ -13904,18 +13997,18 @@ function cmsBezHttps(url) {
 async function testCmsConnection() {
   const res = document.getElementById('wp-test-result');
   res.innerHTML = _t('msg-loading-test');
-  const adresCms = document.getElementById(activeCms === 'wp' ? 'wp-url' : 'drupal-url').value.trim();
+  const adresCms = normalizujAdresCms(document.getElementById(activeCms === 'wp' ? 'wp-url' : 'drupal-url').value);
   if (cmsBezHttps(adresCms)) { res.innerHTML = `<span class="stan-blad">${escapeHtml(_t('msg-cms-https'))}</span>`; return; }
   try {
     if (activeCms === 'wp') {
-      const url = document.getElementById('wp-url').value.trim().replace(/\/$/, '');
-      const creds = btoa(`${document.getElementById('wp-user').value.trim()}:${document.getElementById('wp-pass').value.trim()}`);
+      const url = normalizujAdresCms(document.getElementById('wp-url').value);
+      const creds = base64Utf8(`${document.getElementById('wp-user').value.trim()}:${document.getElementById('wp-pass').value.trim()}`);
       const r = await fetch(`${url}/wp-json/wp/v2/users/me`, { headers: { 'Authorization': `Basic ${creds}` } });
       if (r.ok) { const d = await r.json(); res.innerHTML = `<span class="stan-ok">${escapeHtml(_t('wp-zalogowano').replace('{name}', String(d.name || '')))}</span>`; }
       else res.innerHTML = htmlBleduCms(r.status, await szczegolOdpowiedziCms(r), 'wp');
     } else {
-      const url = document.getElementById('drupal-url').value.trim().replace(/\/$/, '');
-      const creds = btoa(`${document.getElementById('drupal-user').value.trim()}:${document.getElementById('drupal-pass').value.trim()}`);
+      const url = normalizujAdresCms(document.getElementById('drupal-url').value);
+      const creds = base64Utf8(`${document.getElementById('drupal-user').value.trim()}:${document.getElementById('drupal-pass').value.trim()}`);
       const r = await fetch(`${url}/jsonapi`, { headers: { 'Authorization': `Basic ${creds}`, 'Accept': 'application/vnd.api+json' } });
       if (r.ok) res.innerHTML = `<span style="color:var(--c-sukces)">${_t('drupal-ok')}</span>`;
       else res.innerHTML = htmlBleduCms(r.status, await szczegolOdpowiedziCms(r), 'drupal');
@@ -13983,8 +14076,8 @@ async function publishToCms(status) {
 }
 
 async function publishToWordPress(title, content, excerpt, status, resEl) {
-  const creds = btoa(`${wpSettings.user}:${wpSettings.pass}`);
-  const r = await fetch(`${wpSettings.url}/wp-json/wp/v2/posts`, {
+  const creds = base64Utf8(`${wpSettings.user}:${wpSettings.pass}`);
+  const r = await fetch(`${normalizujAdresCms(wpSettings.url)}/wp-json/wp/v2/posts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${creds}` },
     body: JSON.stringify({ title, content, excerpt, status })
@@ -14000,7 +14093,7 @@ async function publishToWordPress(title, content, excerpt, status, resEl) {
 }
 
 async function publishToDrupal(title, content, excerpt, status, resEl) {
-  const creds = btoa(`${drupalSettings.user}:${drupalSettings.pass}`);
+  const creds = base64Utf8(`${drupalSettings.user}:${drupalSettings.pass}`);
   const ctype = drupalSettings.ctype || 'article';
   const fmt = drupalSettings.format || 'full_html';
   const drupalStatus = status === 'publish' ? 1 : 0;
@@ -14016,7 +14109,7 @@ async function publishToDrupal(title, content, excerpt, status, resEl) {
     }
   };
 
-  const r = await fetch(`${drupalSettings.url}/jsonapi/node/${ctype}`, {
+  const r = await fetch(`${normalizujAdresCms(drupalSettings.url)}/jsonapi/node/${ctype}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/vnd.api+json',
@@ -18917,16 +19010,27 @@ async function kbAudioTranscribeAndOpen(file) {
   // niz nie napisac wcale.
   window.wiedzaZSerwera = async function(zapytanie){
     if (!zapytanie) return '';
-    try {
-      var odp = await fetch('/api/baza/szukaj', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ zapytanie: zapytanie })
-      });
-      if (!odp.ok) return '';
-      var dane = await odp.json();
-      return dane.prompt || '';
-    } catch(e){ return ''; }
+    for (var proba = 0; proba < 2; proba++) {
+      try {
+        var odp = await fetch('/api/baza/szukaj', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ zapytanie: zapytanie })
+        });
+        if (!odp.ok) return '';
+        var dane = await odp.json();
+        return dane.prompt || '';
+      } catch(e){
+        // R9-F (KOD8-34): bez sieci artykul powstawal po cichu BEZ wiedzy firmowej. Czekamy na siec
+        // (z napisem w spinnerze) i pytamy jeszcze raz; Przerwij konczy czekanie.
+        if (proba > 0 || typeof czekajNaPowrot !== 'function') return '';
+        czekamNaSiec(true);
+        try { await czekajNaPowrot(typeof przerwanieGenerowania !== 'undefined' && przerwanieGenerowania ? przerwanieGenerowania.signal : null); }
+        catch(e2){ return ''; }
+        finally { czekamNaSiec(false); }
+      }
+    }
+    return '';
   };
 })();
 </script>

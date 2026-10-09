@@ -868,6 +868,39 @@ async function scenariuszR9FTelefonPisz(b) {
   await k.close();
 }
 
+// KOD8-25: temat bez limitu dlugosci (wklejony akapit) rozsadzal wpis Historii na telefonie; temat z samych
+// spacji: "Wygeneruj" nic nie mowil.
+async function scenariuszR9FTemat(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true });
+  await k.addInitScript(() => { try { localStorage.setItem('cai_key_anthropic', 'sk-ant-atrapa'); localStorage.setItem('cai_lang', 'pl'); localStorage.setItem('cai_start_v1', '1'); sessionStorage.setItem('cin_splash', '1'); } catch (e) { /* bez magazynu */ } });
+  await k.route(/api\.anthropic\.com|api\.openai\.com|api\.elevenlabs\.io/, atrapa.obsluzRoute);
+  const s = await k.newPage();
+  const bledyJs = [];
+  s.on('pageerror', (e) => bledyJs.push(e.message.slice(0, 160)));
+  await s.goto(PLIK, { waitUntil: 'load' });
+  await s.waitForTimeout(700);
+  await s.focus('#topic');
+  await s.keyboard.insertText('Pompy ciepla w domu jednorodzinnym, '.repeat(12));
+  const dlugi = await s.evaluate(() => ({ dl: document.getElementById('topic').value.length, podp: ((document.getElementById('topic-podpowiedz') || {}).textContent || '') }));
+  wynik('R9-F KOD8-25: temat najwyzej 300 znakow, z podpowiedzia o Dodatkowych wytycznych', dlugi.dl === 300 && /Dodatkowe wytyczne/.test(dlugi.podp), JSON.stringify(dlugi));
+  await s.evaluate(() => { document.getElementById('topic').value = '    '; generate(true); });
+  await s.waitForTimeout(300);
+  const pusty = await s.evaluate(() => ({ podp: ((document.getElementById('topic-podpowiedz') || {}).textContent || ''), spinner: getComputedStyle(document.getElementById('spinner')).display,
+    niepoprawne: document.getElementById('topic').getAttribute('aria-invalid') }));
+  wynik('R9-F KOD8-25: pusty temat - komunikat przy polu, bez generowania', pusty.podp === 'Wpisz temat artykułu.' && pusty.spinner === 'none' && pusty.niepoprawne === 'true', JSON.stringify(pusty));
+  // Wpis Historii z tematem-akapitem (np. sprzed limitu albo z kolejki): najwyzej dwie linie na liscie.
+  await s.evaluate(() => {
+    history.unshift({ id: 'hdlugi', ts: Date.now(), topic: 'Bardzo dlugi temat wklejony jako akapit. '.repeat(70), type: 'Artykuł blogowy', words: 800, time: '10:00', html: '<h1>T</h1><p>x</p>' });
+    renderHistory(); switchMobileTab('history');
+  });
+  await s.waitForTimeout(400);
+  const wpis = await s.evaluate(() => { const e = document.querySelector('#h-list-inner .h-item[data-id="hdlugi"] .h-item-topic'); return e ? Math.round(e.getBoundingClientRect().height) : -1; });
+  wynik('R9-F KOD8-25: wpis Historii z bardzo dlugim tematem ma najwyzej dwie linie tematu', wpis > 0 && wpis <= 48, 'wysokosc tematu: ' + wpis);
+  wynik('R9-F KOD8-25: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-temat');
+  await k.close();
+}
+
 // KOD8-22: Widocznosc marki w AI. Zly klucz albo przeciazenie przy wszystkich zapytaniach to blad z powodem
 // (bez "0, obecnosc w 0/2" i bez zapisu do historii pomiarow); czesc nieudanych nie zaniza wyniku.
 async function scenariuszR9FWidocznosc(b) {
@@ -1165,13 +1198,138 @@ async function scenariuszR9FDuzyDokument(b) {
   await k.close();
 }
 
+// KOD8-29: integracja CMS. Login Drupala z polska litera (btoa przyjmuje tylko Latin-1) i adres bez https://
+// (zapytanie szlo pod adres wzgledny, na serwer aplikacji). CMS udawany trasa.
+async function scenariuszR9FCms(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  const zapytania = [];
+  const naglowek = { 'access-control-allow-origin': '*' };
+  await k.route(/cms\.przyklad\.pl/, (route) => {
+    const z = route.request();
+    zapytania.push({ url: z.url(), auth: z.headers().authorization || '' });
+    if (/users\/me/.test(z.url())) return route.fulfill({ status: 200, contentType: 'application/json', headers: naglowek, body: JSON.stringify({ id: 1, name: 'Redakcja' }) });
+    if (/jsonapi/.test(z.url())) return route.fulfill({ status: 200, contentType: 'application/vnd.api+json', headers: naglowek, body: JSON.stringify({ data: [] }) });
+    return route.fulfill({ status: 404, headers: naglowek, body: '' });
+  });
+  const testuj = async (cms, url, user, pass) => {
+    await s.evaluate(({ cms, url, user, pass }) => {
+      openWpModal(); switchCmsTab(cms);
+      document.getElementById(cms + '-url').value = url; document.getElementById(cms + '-user').value = user; document.getElementById(cms + '-pass').value = pass;
+      document.getElementById('wp-test-result').innerHTML = '';
+      testCmsConnection();
+    }, { cms, url, user, pass });
+    await s.waitForFunction(() => { const r = document.getElementById('wp-test-result'); return r.textContent && r.textContent !== _t('msg-loading-test'); }, null, { timeout: 10000 }).catch(() => {});
+    return s.evaluate(() => (document.getElementById('wp-test-result').innerText || '').replace(/\s+/g, ' ').slice(0, 200));
+  };
+  const drupal = await testuj('drupal', 'https://cms.przyklad.pl', 'Łukasz', 'hasło');
+  const authDrupal = (zapytania.find((z) => /jsonapi/.test(z.url)) || {}).auth || '';
+  const oczekiwany = 'Basic ' + Buffer.from('Łukasz:hasło', 'utf8').toString('base64');
+  const drupalOk = await s.evaluate(() => _t('drupal-ok'));
+  wynik('R9-F KOD8-29: Drupal - login i haslo z polskimi literami w naglowku Basic (UTF-8), test polaczenia OK',
+    authDrupal === oczekiwany && drupal.indexOf(drupalOk.replace(/<[^>]+>/g, '').slice(0, 12)) !== -1 && !/btoa|Latin1/.test(drupal), JSON.stringify({ drupal, authDrupal }));
+  const wp = await testuj('wp', 'cms.przyklad.pl/wp-admin/', 'redakcja', 'abcd efgh');
+  const zapWp = zapytania.find((z) => /users\/me/.test(z.url)) || {};
+  wynik('R9-F KOD8-29: WordPress - adres bez https:// i z /wp-admin trafia do https://adres/wp-json',
+    zapWp.url === 'https://cms.przyklad.pl/wp-json/wp/v2/users/me' && /Redakcja/.test(wp), JSON.stringify({ wp, url: zapWp.url }));
+  const zapis = await s.evaluate(() => { switchCmsTab('wp'); document.getElementById('wp-url').value = ' cms.przyklad.pl//'; saveCmsSettings(); const u = wpSettings.url; magazyn.removeItem('cai-wp'); return u; });
+  wynik('R9-F KOD8-29: zapis ustawien dopisuje https:// i obcina ukosniki', zapis === 'https://cms.przyklad.pl', zapis);
+  wynik('R9-F KOD8-29: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-cms');
+  await k.close();
+}
+
+// KOD8-32: pierwszy PDF na telefonie - biblioteka (1,7 MB) laduje sie kilka sekund bez znaku zycia, a drugie
+// dotkniecie w tym czasie dawalo dwa pliki. Wolne ladowanie udaje trasa z opoznieniem.
+async function scenariuszR9FPdf(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b, { viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true, acceptDownloads: true });
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  await s.route(/\/pwa\/lib\/pdfmake\.min\.js$/, async (route) => { await new Promise((r) => setTimeout(r, 1500)); return route.continue(); });
+  let pobran = 0;
+  s.on('download', () => { pobran++; });
+  await s.evaluate(() => {
+    const art = document.getElementById('article');
+    art.innerHTML = '<h1>Pompy ciepla w domu</h1><p>Pompa ciepla obniza koszty ogrzewania.</p><h2>Jak dziala</h2><p>Pobiera cieplo z powietrza.</p>';
+    art.style.display = 'block';
+    document.querySelectorAll('.powiadomienie').forEach((p) => p.remove());
+    dlPdf();
+  });
+  await s.waitForTimeout(300);
+  const wTrakcie = await s.evaluate(() => [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent.slice(0, 80)));
+  await s.evaluate(() => dlPdf());
+  // Pierwsze pobranie biblioteki ze swiezego serwera trwa kilka sekund (kompresja przy pierwszym zapytaniu).
+  await s.waitForEvent('download', { timeout: 30000 }).catch(() => {});
+  await s.waitForTimeout(2000);
+  const wzor = await s.evaluate(() => _t('msg-pdf-przygotowuje').slice(0, 15));
+  wynik('R9-F KOD8-32: pierwszy PDF - komunikat od razu, w trakcie ladowania biblioteki', wTrakcie.some((p) => p.indexOf(wzor) === 0), JSON.stringify(wTrakcie));
+  wynik('R9-F KOD8-32: drugie dotkniecie w trakcie ladowania nie daje drugiego pliku', pobran === 1, 'pobran: ' + pobran);
+  wynik('R9-F KOD8-32: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-pdf');
+  await k.close();
+}
+
+// KOD8-33: konto darmowe (SERP poza pakietem) - zakladka Luki mowila tylko "Wlacz Analize SERP", czego nie da
+// sie zrobic. Ma mowic, od ktorego pakietu sa Luki, z przejsciem do pakietow.
+async function scenariuszR9FLukiDarmowy(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'darmowy');
+  await s.waitForFunction(() => { const p = document.getElementById('use-serp'); return p && p.disabled; }, null, { timeout: 10000 }).catch(() => {});
+  await generuj(s, 'Pompy ciepla w domu', false);
+  await krok('R9-F KOD8-33 artykul na koncie darmowym', czekajNaKoniec(s));
+  await s.evaluate(() => inspektorPokaz('luki'));
+  await s.waitForFunction(() => getComputedStyle(document.getElementById('gap-no-serp')).display === 'block', null, { timeout: 10000 }).catch(() => {});
+  const luki = await s.evaluate(() => { const e = document.getElementById('gap-no-serp'); return { tekst: (e.innerText || '').replace(/\s+/g, ' '), pakiety: !!e.querySelector('[onclick="otworzPakiet()"]'),
+    wzor: _t('gap-serp-pakiet'), stary: _t('gap-no-serp') }; });
+  wynik('R9-F KOD8-33: konto bez SERP - Luki mowia, od ktorego pakietu sa dostepne, z przejsciem do pakietow',
+    luki.tekst.indexOf(luki.wzor) !== -1 && luki.tekst.indexOf(luki.stary) === -1 && luki.pakiety, JSON.stringify(luki));
+  wynik('R9-F KOD8-33: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-luki-darmowy');
+  await k.close();
+}
+
+// KOD8-34: generowanie bez internetu (pociag, winda). Spinner mowi, ze aplikacja czeka na siec (zamiast
+// "Generuje tresc... pisze artykul"), a artykul po powrocie sieci powstaje Z wiedza z Bazy na serwerze.
+async function scenariuszR9FBezSieci(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b, { viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true });
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  await s.evaluate(async () => {
+    await fetch('/api/baza', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zakres: 'prywatna', nazwa: 'Oferta Termoplus',
+      tresc: 'Termoplus montuje pompy ciepla Vitocal w 48 godzin. Gwarancja 7 lat.' }) });
+    await odswiezListeBazy();
+  });
+  let zWiedza = null;
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url()) && z.headers()['x-cai-czynnosc'] === 'artykul') zWiedza = /Vitocal/.test(z.postData() || ''); });
+  await k.setOffline(true);
+  await s.evaluate(() => { document.getElementById('topic').value = 'Pompy ciepla Termoplus'; document.getElementById('use-web').checked = false; window.__g = generate(true); });
+  await s.waitForTimeout(2500);
+  const offline = await s.evaluate(() => {
+    const widac = (id) => { const e = document.getElementById(id); return !!e && getComputedStyle(e).display !== 'none' && e.getClientRects().length > 0; };
+    return { siec: widac('spin-siec') ? document.getElementById('spin-siec').textContent : '', etap: widac('spin-label'), wzor: _t('spin-brak-sieci') };
+  });
+  await k.setOffline(false);
+  await krok('R9-F KOD8-34 artykul po powrocie sieci', czekajNaKoniec(s, 40000));
+  const po = await s.evaluate(() => ({ odz: document.getElementById('out-badge').className, siec: !!document.querySelector('#spinner.czeka-na-siec') }));
+  wynik('R9-F KOD8-34: bez internetu spinner mowi, ze czeka na siec (etapy pisania schowane)', offline.siec === offline.wzor && !offline.etap, JSON.stringify(offline));
+  wynik('R9-F KOD8-34: po powrocie sieci artykul gotowy i napisany z wiedza z Bazy na serwerze', /ready/.test(po.odz) && !po.siec && zWiedza === true, JSON.stringify({ po, zWiedza }));
+  await s.evaluate(async () => { const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); });
+  wynik('R9-F KOD8-34: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-bez-sieci');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
   ['stan', scenariuszStanu], ['r4-logika', scenariuszR4Logiki], ['bledy', scenariuszBledow], ['historia-r4', scenariuszHistoriiR4],
-  ['r9f-keys', scenariuszR9FKeys], ['r9f-telefon-pisz', scenariuszR9FTelefonPisz], ['r9f-widocznosc', scenariuszR9FWidocznosc], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
+  ['r9f-keys', scenariuszR9FKeys], ['r9f-telefon-pisz', scenariuszR9FTelefonPisz], ['r9f-temat', scenariuszR9FTemat], ['r9f-widocznosc', scenariuszR9FWidocznosc], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
   ['r9f-pause-turn', scenariuszR9FPauseTurn], ['r9f-przeladowanie', scenariuszR9FPrzeladowanie], ['r9f-fakty', scenariuszR9FFakty],
   ['r9f-transkrypcja', scenariuszR9FTranskrypcja], ['r9f-duzy-dokument', scenariuszR9FDuzyDokument],
+  ['r9f-cms', scenariuszR9FCms], ['r9f-pdf', scenariuszR9FPdf],
+  ['r9f-luki-darmowy', scenariuszR9FLukiDarmowy], ['r9f-bez-sieci', scenariuszR9FBezSieci],
 ];
 (async () => {
   let b;
