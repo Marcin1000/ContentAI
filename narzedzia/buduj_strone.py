@@ -395,7 +395,9 @@ def zmienne_jezyka(jezyk, konf, wersje):
         'rejestracja_standard': rej + '?pakiet=standard' + ('&amp;lang=en' if en else ''),
         'rejestracja_premium': rej + '?pakiet=premium' + ('&amp;lang=en' if en else ''),
         'email': konf['email'],
-        'koszt_artykulu': html.escape(twarde_pl(konf['koszt']['pl']) if jezyk == 'pl' else konf['koszt']['en']),
+        # zakres kosztu w jednym wierszu („0,25-0,50 USD" nie lamie sie na lacznik)
+        'koszt_artykulu': '<span class="nw">%s</span>' % html.escape(
+            twarde_pl(konf['koszt']['pl']) if jezyk == 'pl' else konf['koszt']['en']),
         'data_stanu': data_slownie(konf['data_stanu'], jezyk),
     }
     for nazwa in DOKUMENTY:

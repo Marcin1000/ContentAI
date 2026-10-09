@@ -32,7 +32,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/fonty/literata-latin-pl.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonty/schibsted-grotesk-latin-pl.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/zasoby/strona.css?v=daf0784d8f">
+<link rel="stylesheet" href="/zasoby/strona.css?v=4a0c47ebf0">
 
 <script src="/zasoby/motyw.js?v=5fcd5d4153"></script>
 <script src="/zasoby/strona.js?v=43f0c7c7b1" defer></script>
@@ -341,7 +341,7 @@
           <a class="btn btn-drugi btn-duzy" href="#jak">See an example</a>
         </div>
         <p class="mala">Have an account? <a class="link" href="https://app.content-ai.net/?lang=en">Sign in</a></p>
-        <p class="mala mala-2">Free plan: 3 articles to start, no card needed. Your drafts run on your own Anthropic API key: you pay the model provider directly, roughly $0.25-0.50 per article. <a class="link" href="/en/api-key/">How to get an API key</a></p>
+        <p class="mala mala-2">Free plan: 3 articles to start, no card needed. Your drafts run on your own Anthropic API key: you pay the model provider directly, roughly <span class="nw">$0.25-0.50</span> per article. <a class="link" href="/en/api-key/">How to get an API key</a></p>
       </div>
 
       <figure class="ramka" id="ramka" aria-labelledby="ramka-opis">
@@ -879,7 +879,7 @@
         </article>
       </div>
       <div class="pakiety-noty wej">
-        <p class="pakiety-nota">Every plan requires your own Anthropic API key. You pay the model provider for usage on your own account, roughly $0.25-0.50 per article. You pay for a paid plan monthly in advance through Stripe and can change or cancel it in account settings. After cancelling, your plan stays active until the end of the paid month. The prices shown are final prices.</p>
+        <p class="pakiety-nota">Every plan requires your own Anthropic API key. You pay the model provider for usage on your own account, roughly <span class="nw">$0.25-0.50</span> per article. You pay for a paid plan monthly in advance through Stripe and can change or cancel it in account settings. After cancelling, your plan stays active until the end of the paid month. The prices shown are final prices.</p>
         <p class="pakiety-nota pakiety-nota-2">In the purchase window you can pay in euros or in Polish złoty: Standard PLN 79, Premium PLN 199 a month. Monthly counters reset on the first day of the month, and the Free and Standard plans also have a ceiling on model calls to prevent abuse. After each payment Stripe emails you a confirmation, and we issue a receipt on request.</p>
         <p class="pakiety-nota pakiety-nota-2">Payment, cancellation and withdrawal rules are in the <a class="link" href="https://app.content-ai.net/dokumenty/regulamin?lang=en">Terms of Service</a> and the <a class="link" href="https://app.content-ai.net/dokumenty/odstapienie?lang=en">information on the right of withdrawal</a>.</p>
         <p class="pakiety-klucz"><a class="link kafel-link" href="/en/api-key/">How to get an API key and what an article costs<svg class="ik" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></p>
@@ -920,7 +920,7 @@
       <div class="faq-lista wej">
         <details><summary>How is Content AI different from an AI chat?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>A chat answers from the model's memory. Content AI writes from your knowledge base, goes to the web only for missing information and cites it, then scores the draft for SEO, AIO, AEO and GEO and checks the facts. All in one workspace, from topic to publication.</p></details>
         <details><summary>What do I need to get started?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>A Content AI account (email and password) and an Anthropic API key, which powers your drafts. You need the key on every plan, including Free. OpenAI keys (images, voice-over, transcription) and ElevenLabs keys (better voice-over) are optional. The Free plan gives you 3 articles to start, no card needed.</p></details>
-        <details><summary>How do I get an API key, and what does the model cost?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>In the Anthropic console you create an account, add credit and create a key; it takes about 10 minutes. You pay the provider for the model on your own account, roughly $0.25-0.50 for an article of about 800 words with scores and a fact check. A step-by-step guide and the calculation are on the <a class="link" href="/en/api-key/">“How to get an API key”</a> page.</p></details>
+        <details><summary>How do I get an API key, and what does the model cost?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>In the Anthropic console you create an account, add credit and create a key; it takes about 10 minutes. You pay the provider for the model on your own account, roughly <span class="nw">$0.25-0.50</span> for an article of about 800 words with scores and a fact check. A step-by-step guide and the calculation are on the <a class="link" href="/en/api-key/">“How to get an API key”</a> page.</p></details>
         <details><summary>Where does my API key go?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Only your browser keeps it, in an encrypted cookie bound to your account; no other account can read it. With “Remember on this device” the key stays for 30 days, also after you sign out; without it, until you close the browser. It is removed by the “Remove key” button, signing out on all devices, changing your password and deleting your account. With each request the Content AI server passes the key to the AI provider and does not save it to disk or to logs.</p></details>
         <details><summary>Where do the facts come from?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>From the knowledge base. With web search on, missing information comes from the pages listed under the article. Information about your company always comes from the base only.</p></details>
         <details><summary>Will the text be error-free?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>No AI tool can guarantee that. Content AI reduces the risk: figures and links come from the sources, and the fact check lists the sentences the sources do not support, quoting each one. A person always has the final say.</p></details>
