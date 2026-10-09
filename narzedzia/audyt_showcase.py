@@ -7,10 +7,11 @@ Ta kontrola pilnuje rzeczy, ktorych nie widac golym okiem, a ktore psuja strone 
   1. wygenerowane pliki sa aktualne, a teksty kompletne w PL i EN
      (wola buduj_strone.py --sprawdz: brak tekstu, tekst nieuzyty, liczby z plany.js),
   2. zadnych zasobow z obcych serwerow: src=, srcset=, url(), <link href> do arkuszy,
-     fontow i ikon tylko z wlasnego hosta; linki i adres formularza tylko do content-ai.net,
+     fontow i ikon tylko z wlasnego hosta; linki tylko do content-ai.net i app.content-ai.net, a odnosniki
+     <a> wychodzace tylko do hostow z listy LINKI_WYCHODZACE (konsole i cenniki dostawcow AI) i z rel="noopener",
   3. bez dlugich myslnikow (U+2014, U+2013) i bez marki klienta (DHL),
-  4. kazda strona ma lang, title, meta description, canonical, hreflang pl/en/x-default
-     i dokladnie jeden naglowek h1,
+  4. kazda strona z listy STRONY w buduj_strone.py (jedno zrodlo listy stron, STR8-17) ma lang, title,
+     meta description, canonical, hreflang pl/en/x-default i dokladnie jeden naglowek h1,
   5. pod CSP: zadnych skryptow w tresci poza JSON-LD, zadnych onclick/onchange, zadnych style=,
      JSON-LD jest poprawnym JSON-em,
   6. budzet JS: wlasne skrypty razem <= 15 kB po gzip,
@@ -30,17 +31,19 @@ from pathlib import Path
 
 KORZEN = Path(__file__).resolve().parent.parent
 SHOWCASE = KORZEN / 'showcase'
-DOMENA = 'https://content-ai.net'
+sys.path.insert(0, str(KORZEN / 'narzedzia'))
+import buduj_strone  # noqa: E402 (lista stron z jednego miejsca)
 
-# strona -> (jezyk, adres kanoniczny)
-STRONY = {
-    'index.html': ('pl', DOMENA + '/'),
-    'en/index.html': ('en', DOMENA + '/en/'),
-    'prywatnosc/index.html': ('pl', DOMENA + '/prywatnosc/'),
-    'en/privacy/index.html': ('en', DOMENA + '/en/privacy/'),
-}
-# Adresy, do ktorych wolno LINKOWAC (nawigacja, formularz, kanoniczne). Zasobow stad nie ladujemy.
+DOMENA = buduj_strone.DOMENA
+
+# strona -> (jezyk, adres kanoniczny), z listy STRONY generatora
+STRONY = {sciezki[j][0]: (j, DOMENA + sciezki[j][1]) for _, sciezki in buduj_strone.STRONY for j in buduj_strone.JEZYKI}
+# Adresy, do ktorych wolno LINKOWAC (nawigacja, rejestracja, dokumenty, kanoniczne). Zasobow stad nie ladujemy.
 DOZWOLONE_LINKI = re.compile(r'^https://(app\.)?content-ai\.net(/|$|\?)')
+# Odnosniki <a> do innych serwisow: konsole i cenniki dostawcow na stronie o kluczu API, weryfikator oznaczen
+# na stronie AI Act. Tylko te hosty i tylko z rel="noopener"; zasoby z nich nigdy.
+LINKI_WYCHODZACE = {'platform.claude.com', 'platform.openai.com', 'openai.com', 'elevenlabs.io',
+                    'contentcredentials.org'}
 # Przestrzenie nazw i slowniki danych - nie sa zadaniami sieciowymi.
 NIE_SIEC = re.compile(r'^https?://(www\.w3\.org|schema\.org|www\.sitemaps\.org)/')
 TEKSTOWE = ('.html', '.css', '.js', '.json', '.svg', '.txt', '.xml', '.webmanifest')
@@ -92,8 +95,21 @@ def sprawdz_hosty(tresc, nazwa, bledy):
         nawigacyjny = rel and set(rel.group(1).split()) <= {'canonical', 'alternate'}
         if zewnetrzny(href.group(1)) and not (nawigacyjny and DOZWOLONE_LINKI.match(href.group(1))):
             bledy.append('%s: <link> do obcego serwera %s' % (nazwa, href.group(1)))
-    # linki, formularz, adres API: tylko content-ai.net i app.content-ai.net
-    for m in re.finditer(r'\b(href|action|data-api|content)\s*=\s*"(https?:[^"]*|//[^"]*)"', tresc):
+    # odnosniki <a>: content-ai.net albo host z listy LINKI_WYCHODZACE (z rel="noopener")
+    for m in re.finditer(r'<a\b[^>]*>', tresc):
+        href = re.search(r'\bhref\s*=\s*"(https?:[^"]*|//[^"]*)"', m.group(0))
+        if not href or DOZWOLONE_LINKI.match(href.group(1)):
+            continue
+        host = re.match(r'^(?:https?:)?//([^/:?#]+)', href.group(1))
+        if not host or host.group(1).lower() not in LINKI_WYCHODZACE:
+            bledy.append('%s: odnosnik do serwisu spoza listy LINKI_WYCHODZACE: %s' % (nazwa, href.group(1)))
+        elif not href.group(1).startswith('https://'):
+            bledy.append('%s: odnosnik wychodzacy bez https: %s' % (nazwa, href.group(1)))
+        elif not re.search(r'\brel="[^"]*\bnoopener\b', m.group(0)):
+            bledy.append('%s: odnosnik wychodzacy bez rel="noopener": %s' % (nazwa, href.group(1)))
+    bez_odnosnikow = re.sub(r'<a\b[^>]*>', '<a>', tresc)
+    # pozostale adresy (formularze, <link>, meta): tylko content-ai.net i app.content-ai.net
+    for m in re.finditer(r'\b(href|action|data-api|content)\s*=\s*"(https?:[^"]*|//[^"]*)"', bez_odnosnikow):
         adres = m.group(2)
         if not DOZWOLONE_LINKI.match(adres) and not NIE_SIEC.match(adres):
             bledy.append('%s: adres spoza content-ai.net %s="%s"' % (nazwa, m.group(1), adres))

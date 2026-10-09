@@ -756,7 +756,7 @@ html.js .kafel:not(.is-in) .frag i b{transform:scaleX(0)}
   .koniec-siatka{grid-template-columns:1fr}
   .stopka-siatka{grid-template-columns:1fr 1fr}
   .stopka-marka{grid-column:1 / -1}
-  .dokument-siatka{grid-template-columns:1fr}
+  .dokument-siatka{grid-template-columns:minmax(0,1fr)}
   .dokument-nag{position:static}
   .rel-tabela tbody th{width:38%}
 }
@@ -837,6 +837,8 @@ html.js .kafel:not(.is-in) .frag i b{transform:scaleX(0)}
   .dok-tabela td{margin-top:4px}
   .dok-lista a{min-height:var(--h-dotyk)}
   .dok-kroki li{padding-left:40px}
+  /* dlugie przyciski podstron (np. „Przeczytaj pelna polityke prywatnosci") zawijaja sie przy wiekszym pismie */
+  .dokument .btn{white-space:normal;text-align:center;padding-top:var(--s-8);padding-bottom:var(--s-8)}
   .sec-lista{grid-template-columns:1fr;gap:var(--s-24)}
   .kto{grid-template-columns:1fr}
   .faq-lista summary{font-size:var(--t-lg)}
