@@ -1192,6 +1192,32 @@ KONTROLE += [
      "body:not(.is-mobile) .versions-bar.wiele-wersji .ver-wybor {", None, None),
 ]
 
+# R9-G: runda 9, wykonawca G - aplikacja zrozumiala dla nowej osoby (UX8-11 do UX8-16 z raportu agencja-ux
+# rundy 8). Osobny blok przed blokami innych wykonawcow (scalanie po liniach).
+KONTROLE += [
+    ("R9-G/siec-dla-pustej-bazy", "UX8-14: przy pustej bazie wiedzy Szukaj w sieci wlaczone od wejscia (do recznej zmiany), z dopiskiem",
+     "if (pusta && !w.checked) { w.checked = true; siecWlaczonaDlaPustej = true; }", None, None),
+    ("R9-G/siec-dopisek", "UX8-14: dopisek o pustej bazie przy przelaczniku sieci (PL)",
+     "'toggle-web-hint-pusta':'Twoja baza wiedzy jest pusta, więc AI oprze tekst na stronach z sieci", None, None),
+    ("R9-G/bez-zrodel", "UX8-14: okno Brak zrodel wiedzy ma trzecie wyjscie (bez zrodel) z ostrzezeniem",
+     're:onclick="noSourceBezZrodel\\(\\)"[^>]*aria-describedby="no-source-bez-uwaga"', None, None),
+    ("R9-G/dodaj-zrodlo-otwiera-baze", "UX8-14: Dodaj zrodla do bazy wiedzy otwiera baze (takze zwinieta na komputerze)",
+     "  // R9-G (UX8-14): na komputerze baza bywa zwinieta - przewiniecie do ukrytego panelu nic nie pokazywalo.\n  otworzBazeWiedzy();",
+     "if (kb) kb.scrollIntoView({ behavior: 'smooth' });", None),
+    ("R9-G/kroki-startu", "UX8-14: pusty ekran: najpierw temat i Wygeneruj, potem materialy firmy",
+     "'start-krok-1':'Wpisz temat i słowa kluczowe w briefie.',",
+     "'start-krok-1':'Dodaj do bazy wiedzy pliki, strony albo notatki o firmie.',", None),
+    ("R9-G/opis-oceny", "UX8-11: pod przelacznikiem SEO/AIO/AEO/GEO jedno zdanie, co mierzy wybrana ocena",
+     "if (opisOceny) opisOceny.textContent = gr === 'ocena' ? _t('ocena-opis-' + otwarty) : '';", None, None),
+    ("R9-G/opisy-ocen", "UX8-11: przyciski ocen z podpowiedzia (jedno zdanie, PL i EN)",
+     "'ocena-opis-geo':'GEO: whether AI chats such as ChatGPT or Perplexity will cite the text and your brand as a source (nothing to do with geolocation).',",
+     None, None),
+    ("R9-G/opis-typu", "UX8-11: jedno zdanie pod Typem tresci dla typow SEO, AIO i Hybrydy",
+     "const kluczOpisu = { 'Hybryda SEO + AIO': 'ctype-opis-hybryda', 'Artykuł SEO': 'ctype-opis-seo', 'Treść AIO': 'ctype-opis-aio' }[sel.value];", None, None),
+    ("R9-G/filtry-historii", "UX8-11: filtry Historii SEO, AIO, Hybryda z podpowiedzia",
+     'data-i18n-title="ctype-opis-aio"', None, None),
+]
+
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna
 # z siecia, kategoria "Sprawdz na stronie", lista zrodel i ramka meta poza kontrola).
 # Osobny blok na koncu listy podpisow aplikacji (scalanie po liniach z innymi wykonawcami).
