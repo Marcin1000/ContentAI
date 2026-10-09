@@ -1552,6 +1552,24 @@ async function wariantR9Zrozumialosc(b) {
   wynik('telefon: R9-G UX8-16 Historia: zdanie "tylko w tej przegladarce" i kopia do pobrania (plik HTML z artykulami i danymi wpisow)',
     hist.widac && /tylko w tej przeglądarce/.test(hist.tekst) && hist.wpisow >= 2 && /^content-ai-historia-\d{4}-\d{2}-\d{2}\.html$/.test(kopia.plik) && kopia.wpisy === hist.wpisow && kopia.artykuly === hist.wpisow,
     JSON.stringify({ hist, kopia }));
+  // UX8-12: jedna nazwa na jedna rzecz - wejscie do narzedzia nazywa sie tak jak ekran, ktory otwiera, a cztery
+  // sposoby poprawiania maja cztery rozne nazwy (Samokorekta, Popraw ten tekst, Popraw wklejony tekst, Dopisz brakujace tematy).
+  const nazwy = await s.evaluate(() => {
+    const t = (sel) => { const e = document.querySelector(sel); return e ? e.textContent.replace(/\s+/g, ' ').trim() : '?'; };
+    return {
+      plan: [t('#grupa-brief-menu button[onclick="openBriefPanel()"]'), t('#brief-panel [data-i18n="brief-title"]')],
+      popraw: [t('#grupa-brief-menu button[onclick="openImproveModal()"]'), t('[data-i18n="start-karta-popraw"]'), t('#improve-modal h3')],
+      grafika: [t('#grupa-brief-menu button[onclick="openImgPanelSmart()"]'), t('#img-btn'), t('#img-panel .modul-tytul')],
+      audio: [t('#grupa-brief-menu button[onclick="openAudioPanel()"]'), t('#audio-panel .modul-tytul')],
+      baza: [t('#kb-tab [data-i18n="kb-reopen"]'), t('#mnav-kb [data-i18n="nav-base"]'), t('.layout > .sidebar h2'), t('#mobile-sidebar h2'), t('[data-i18n="bazas-menu-title"]'), t('#bazas-modal .tekst-tytul')],
+      glos: [t('[data-i18n="settings-voice-title"]'), t('#voice-modal h3')],
+      poprawianie: [t('#premium-btn [data-i18n="btn-premium"]'), t('#premium-fix-btn'), t('#grupa-brief-menu button[onclick="openImproveModal()"]'), t('#gap-improve-btn')],
+    };
+  });
+  const jednaNazwa = ['plan', 'popraw', 'grafika', 'audio', 'baza', 'glos'].every((n) => new Set(nazwy[n]).size === 1 && nazwy[n][0] !== '?');
+  wynik('telefon: R9-G UX8-12 jedna nazwa na jedna rzecz: Plan artykulu, Popraw wklejony tekst, Grafika, Audio, Baza wiedzy, czytanie na glos; cztery rozne nazwy poprawiania',
+    jednaNazwa && nazwy.plan[0] === 'Plan artykułu' && nazwy.baza[0] === 'Baza wiedzy' && new Set(nazwy.poprawianie).size === 4
+      && nazwy.poprawianie.join('|') === 'Samokorekta|Popraw ten tekst|Popraw wklejony tekst|Dopisz brakujące tematy', JSON.stringify(nazwy));
   wynik('telefon: R9-G bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow) await zrzut(s, 'telefon-r9g');
   await k.close();
