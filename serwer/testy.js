@@ -7,6 +7,7 @@
  *
  * Zakres: haszowanie hasel i tlumaczenie Anthropic <-> OpenAI. Sciezki HTTP
  * (logowanie, role, proxy) sprawdzamy recznie - wymagaja sieci i uruchomionego procesu.
+ * Runda 9: testy etapu 0 i wykonawcow w osobnych plikach serwer/testy-*.js (lista na koncu).
  */
 
 'use strict';
@@ -252,6 +253,13 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
     testyMarki();
     testyUsuwaniaKonta();
     await testyPoprawek();
+
+    // Runda 9: etap 0 (magazyn, migracja, kontrakty) i pliki testow wykonawcow A1, B, C, D.
+    // Kazdy plik eksportuje uruchom({ sprawdz }) - nowe testy dopisuje sie we wlasnym pliku.
+    for (const plik of ['./testy-magazyn.js', './testy-konta.js', './testy-dzierzawy.js', './testy-byok.js',
+      './testy-poczta.js', './testy-platnosci.js', './testy-oznaczenia.js']) {
+      await require(plik).uruchom({ sprawdz });
+    }
 
     console.log(`\n  ${zaliczone} zaliczonych, ${bledy.length} bledow\n`);
     if (bledy.length) {
