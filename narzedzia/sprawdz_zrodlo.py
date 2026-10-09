@@ -1218,6 +1218,13 @@ KONTROLE += [
      "'fakty-rodzaj-strona':'Sprawdź na stronie',", None, None),
     ("R7-I/fakty-bez-listy-zrodel", "Fakty: lista zrodel aplikacji, ramka meta i notatki o lukach poza kontrola",
      "const tekstArtykulu = tekstBlokami(kopiaDoStatystyk(art));", "const tekstArtykulu = art.innerText || art.textContent || '';", None),
+    # Poprawka pilna: OpenAI wylacza gpt-image-1 23.10.2026
+    ("PILNE/model-grafik", "grafiki na modelu, ktory OpenAI utrzymuje po 23.10.2026 (gpt-image-1 wylaczany)",
+     "const MODEL_GRAFIKI = 'gpt-image-2.5-flare';", "model:          'gpt-image-1',", None),
+    ("PILNE/typ-grafiki", "plik i schowek grafiki z prawdziwym typem obrazu (PNG, JPEG albo WebP)",
+     "const typ = (ia[0] === 0xFF && ia[1] === 0xD8) ? 'image/jpeg'", None, None),
+    ("PILNE/kreator-bez-pol", "kreator na koncie z kluczami serwera przechodzi przez krok kluczy (UX8-01)",
+     "    if (!el('start-k-anthropic')) return true;", None, ("proxy",)),
 ]
 
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi

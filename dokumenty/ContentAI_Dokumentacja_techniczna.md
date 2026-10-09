@@ -59,7 +59,7 @@ Nie ma bundlera ani kroku kompilacji - plik otwiera się bezpośrednio w przegl�
 albo jest opakowywany w Electron / Capacitor.
 
 Modele: `claude-sonnet-4-6` (treść), `claude-haiku-4-5` (zadania pomocnicze),
-`gpt-image-1` (grafiki), `gpt-4o-mini-tts` i ElevenLabs (audio), `gpt-4o-transcribe`
+`gpt-image-2.5-flare` (grafiki; do 23.10.2026 `gpt-image-1`, model zmienia `CAI_MODEL_GRAFIKI`), `gpt-4o-mini-tts` i ElevenLabs (audio), `gpt-4o-transcribe`
 (transkrypcja). Biblioteki do plików (mammoth, pdf.js, pdfmake, xlsx, html-docx-js) oraz kroje
 Schibsted Grotesk, Literata i JetBrains Mono (licencja OFL) leżą **w repozytorium**, w `app/pwa/lib/` i `app/pwa/fonty/` - aplikacja nie pobiera
 niczego z obcych serwerów.

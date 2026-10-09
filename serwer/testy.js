@@ -1574,6 +1574,7 @@ async function testyPoprawek() {
     CAI_URL_ANTHROPIC: `http://127.0.0.1:${portAtrapy}/v1/messages`, CAI_URL_OPENAI: `http://127.0.0.1:${portAtrapy}/v1`,
     CAI_CZAS_TRESCI_MS: '800', CAI_SERP: 'dataforseo', DATAFORSEO_LOGIN: 'x', DATAFORSEO_HASLO: 'y',
     CAI_STRONA_ORIGIN: 'https://content-ai.net,https://www.content-ai.net',
+    CAI_MODEL_GRAFIKI: 'gpt-image-2.5-flare',
   };
   const przedEnv = {};
   for (const [k, v] of Object.entries(ENV)) { przedEnv[k] = process.env[k]; process.env[k] = v; }
@@ -1754,6 +1755,9 @@ async function testyPoprawek() {
       sprawdz('/api/images z rozmiarem spoza listy -> 400', rozmiar.status === 400);
       const grafika = await zadanie('/api/images', json(cAdmin, { model: 'gpt-image-1', prompt: 'x', n: 1, size: '1536x1024' }));
       sprawdz('/api/images z rozmiarem aplikacji przechodzi', grafika.status === 200 && zapytaniaAtrapy.some((z) => z.url === '/v1/images/generations'));
+      // gpt-image-1 OpenAI wylacza 23.10.2026: CAI_MODEL_GRAFIKI podmienia model, ktory przyslala aplikacja
+      sprawdz('/api/images: CAI_MODEL_GRAFIKI podmienia model wyslany przez aplikacje',
+        zapytaniaAtrapy.filter((z) => z.url === '/v1/images/generations').every((z) => z.model === 'gpt-image-2.5-flare'));
     }
 
     console.log('\n  SERP a artykul z wyszukiwaniem (CAI_SERP=dataforseo)');

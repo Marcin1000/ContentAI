@@ -123,6 +123,7 @@ Wszystko przez zmienne środowiskowe.
 | `CAI_ZAUFANE_ADRESY` | pętla zwrotna | adresy, z których wolno przyjąć ten nagłówek |
 | `CAI_DOSTAWCA` | `anthropic` | `anthropic` albo `nvidia` |
 | `CAI_MODEL_NVIDIA` | `nvidia/llama-3.3-nemotron-super-49b-v1.5` | model przy `nvidia` |
+| `CAI_MODEL_GRAFIKI` | - (model z aplikacji: `gpt-image-2.5-flare`) | podmienia model grafik OpenAI w każdym zapytaniu, np. gdy dostawca wycofa model |
 | `CAI_URL_NVIDIA` | `https://integrate.api.nvidia.com/v1/chat/completions` | endpoint NIM |
 | `ANTHROPIC_KEY` | - | klucz treści (dostawca `anthropic`) |
 | `NVIDIA_KEY` | - | klucz treści (dostawca `nvidia`) |

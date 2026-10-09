@@ -6221,6 +6221,9 @@ function maDostepDoApi() {
 let OPENAI_API_KEY = magazyn.getItem('cai_key_openai') || 'WSTAW_TUTAJ_KLUCZ_OPENAI'; // klucz z panelu Klucze API (localStorage)
 let ELEVEN_API_KEY = magazyn.getItem('cai_key_eleven') || 'WSTAW_TUTAJ_KLUCZ_ELEVENLABS'; // klucz z panelu Klucze API (localStorage)
 const OPENAI_IMG_ENDPOINT = window.OPENAI_IMG_ENDPOINT_OVERRIDE || 'https://api.openai.com/v1/images/generations';
+// Model grafik. OpenAI wylacza gpt-image-1 23.10.2026; zamiennik z tej samej rodziny przyjmuje te same
+// pola (size, quality, output_format). W wariancie proxy serwer moze go podmienic (CAI_MODEL_GRAFIKI).
+const MODEL_GRAFIKI = 'gpt-image-2.5-flare';
 
 // ─── MODELE ──────────────────────────────────────────────────────────────────
 // Nazwa modelu byla wpisana na sztywno w ponad dwudziestu miejscach, wiec
@@ -16516,7 +16519,7 @@ async function generateImage() {
     if (useAzureImg)      imgHeaders['api-key'] = key;            // Azure OpenAI: nagłówek api-key
     else if (!isProxy)    imgHeaders['Authorization'] = 'Bearer ' + key;
     const imgBody = JSON.stringify({
-      model:          'gpt-image-1',
+      model:          MODEL_GRAFIKI,
       prompt:         aiPrompt,
       n:              1,
       size:           imgGetApiRatio(w, h),
@@ -16630,7 +16633,11 @@ async function imgResizeB64(b64, targetW, targetH) {
     const ab = new ArrayBuffer(byteStr.length);
     const ia = new Uint8Array(ab);
     for (let i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
-    resolve(new Blob([ab], { type: 'image/png' }));
+    // Typ z naglowka pliku: zamowiony jest PNG, ale gdyby dostawca oddal JPEG albo WebP, plik i schowek
+    // dostana prawdziwy typ zamiast falszywego image/png.
+    const typ = (ia[0] === 0xFF && ia[1] === 0xD8) ? 'image/jpeg'
+      : (ia[0] === 0x52 && ia[1] === 0x49 && ia[8] === 0x57 && ia[9] === 0x45) ? 'image/webp' : 'image/png';
+    resolve(new Blob([ab], { type: typ }));
   });
 }
 

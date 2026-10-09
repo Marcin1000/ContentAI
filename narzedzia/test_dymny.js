@@ -916,6 +916,34 @@ async function wariantR7Luki(b) {
   await k.close();
 }
 
+// Pilne (UX8-01): kreator startowy na koncie Darmowy (klucze serwera, krok kluczy bez pol) przechodzi dalej.
+// Wczesniej "Dalej" na kroku kluczy rzucal TypeError i kreator utykal na wszystkich kontach Darmowy.
+async function wariantPilneKreator(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  const bledy = [];
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  const s = await zaloguj(k, 'darmowy');
+  await krok('PILNE kreator widoczny', s.waitForFunction(() => {
+    const m = document.getElementById('start-modal');
+    if (m && getComputedStyle(m).display !== 'none') return true;
+    if (typeof window.otworzStart === 'function') window.otworzStart();
+    return false;
+  }, null, { timeout: 15000 }));
+  const przebieg = await s.evaluate(() => {
+    const kroki = [];
+    const tytul = () => (document.querySelector('#start-tresc h2, #start-tresc h3, #start-tresc [style*="font-weight:700"]') || {}).textContent || '';
+    for (let i = 0; i < 2; i++) {
+      try { window.startDalej(); kroki.push(tytul()); } catch (e) { kroki.push('BLAD: ' + e.message); }
+    }
+    return { kroki, polaKlucza: !!document.getElementById('start-k-anthropic') };
+  });
+  wynik('komputer: PILNE kreator na koncie Darmowy przechodzi przez krok kluczy',
+    przebieg.kroki.every((t) => t.indexOf('BLAD') !== 0) && !bledy.length && !przebieg.polaKlucza,
+    JSON.stringify({ przebieg, bledy }));
+  await k.close();
+}
+
 async function wariantR6F(b) {
   // Interfejs i artykul po polsku (komunikaty, odmiana i polski sklad w eksporcie sa sprawdzane po polsku).
   const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, acceptDownloads: true, locale: 'pl-PL' });
@@ -1396,6 +1424,7 @@ async function uruchomSerwerPlikow() {
     await wariantR7Luki(b);
     await wariantR7I(b);
     await wariantR7H(b);
+    await wariantPilneKreator(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));
