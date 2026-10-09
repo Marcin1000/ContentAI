@@ -100,18 +100,19 @@ zaznacz `<Ok>` i naciśnij Enter.
 
 ## 3. Node.js
 
-Content AI to program w Node.js. Potrzebna jest **wersja 18 lub nowsza**.
+Content AI to program w Node.js. Potrzebna jest **wersja 22.13 lub nowsza** (od tej wersji
+Node ma wbudowaną bazę SQLite, w której Content AI trzyma konta).
 
 ```bash
 apt install -y git nodejs
 node -v
 ```
 
-Ostatnie polecenie wypisze wersję, np. `v18.19.1`. **Sprawdź pierwszą liczbę:**
+Ostatnie polecenie wypisze wersję, np. `v18.19.1`. **Sprawdź liczby:**
 
-- **18 albo więcej** → w porządku, przejdź do kroku 4.
-- **mniej niż 18** (np. `v12.22.9`) → Twoja wersja Ubuntu ma stary pakiet. Zainstaluj
-  nowszy z oficjalnego źródła Node:
+- **22.13 albo więcej** (np. `v22.23.0`) → w porządku, przejdź do kroku 4.
+- **mniej niż 22.13** (np. `v18.19.1` albo `v12.22.9`) → Twoja wersja Ubuntu ma starszy pakiet.
+  Zainstaluj nowszy z oficjalnego źródła Node:
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_22.x | bash -

@@ -20,7 +20,7 @@ Stawiając Cosmosa, zrobiłeś już połowę roboty:
 | Krok z pełnej instrukcji | Stan | Dlaczego |
 |---|---|---|
 | Serwer VPS z Ubuntu | ✅ gotowe | Ten sam |
-| Node.js ≥ 18 | ✅ gotowe | Cosmos wymaga tego samego; sprawdź `node -v` |
+| Node.js ≥ 22.13 | ⚠️ do sprawdzenia | Content AI potrzebuje 22.13 lub nowszej (wbudowana baza SQLite); sprawdź `node -v`, starszą zaktualizuj jak w kroku 3 pełnej instrukcji |
 | Git | ✅ gotowe | Zainstalowany razem z Node |
 | Caddy i HTTPS | ⚠️ zależy | Gotowe, jeśli Cosmos chodzi na domenie. Jeśli tylko na Tailscale - patrz krok 4 |
 | Klucze API | ⚠️ do sprawdzenia | Możesz użyć tych samych, ale **nazwy zmiennych są inne** - patrz krok 5 |
