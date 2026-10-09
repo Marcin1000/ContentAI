@@ -87,6 +87,10 @@ const KONF = {
   // Dostawca tresci: 'anthropic' (domyslnie) albo 'nvidia' (modele open source przez NVIDIA NIM)
   dostawca: (process.env.CAI_DOSTAWCA || 'anthropic').toLowerCase(),
   modelNvidia: process.env.CAI_MODEL_NVIDIA || 'nvidia/llama-3.3-nemotron-super-49b-v1.5',
+  // Model grafik OpenAI. Pusty = ten, ktory wysle aplikacja. Ustawiony = serwer podmienia model
+  // w kazdym zapytaniu o grafike: dostawca wycofuje modele (gpt-image-1 konczy sie 23.10.2026),
+  // a zmiana tutaj nie wymaga nowej wersji aplikacji, tylko restartu uslugi.
+  modelGrafiki: (process.env.CAI_MODEL_GRAFIKI || '').trim(),
   urlNvidia: process.env.CAI_URL_NVIDIA || 'https://integrate.api.nvidia.com/v1/chat/completions',
   // Adresy pozostalych dostawcow. Domyslnie oficjalne API; nadpisanie sluzy
   // atrapie w testach calej aplikacji i bramom zgodnym z tym samym API.
@@ -1077,7 +1081,9 @@ async function proxyGrafika(req, res, sesja) {
   }
   const odmowa = odmowaKosztuGrafiki(body);
   if (odmowa) return odpowiedzJson(res, 400, { error: { message: odmowa, type: 'invalid_request_error' }, komunikat: odmowa });
-  return wolajOpenAi(res, KONF.urlOpenai + '/images/generations', klucz, JSON.stringify({ ...body, n: 1 }),
+  const cialo = { ...body, n: 1 };
+  if (KONF.modelGrafiki) cialo.model = KONF.modelGrafiki;
+  return wolajOpenAi(res, KONF.urlOpenai + '/images/generations', klucz, JSON.stringify(cialo),
     'application/json', KONF.czasy.obrazy, sesja, 'grafika');
 }
 
@@ -1915,6 +1921,7 @@ function start() {
   utworzSerwer().listen(KONF.port, KONF.host, () => {
     console.log(`Content AI: http://${KONF.host}:${KONF.port}`);
     console.log(`  dostawca tresci: ${KONF.dostawca}${KONF.dostawca === 'nvidia' ? ' (' + KONF.modelNvidia + ')' : ''}`);
+    if (KONF.modelGrafiki) console.log(`  model grafik: ${KONF.modelGrafiki} (CAI_MODEL_GRAFIKI)`);
     console.log(`  kont: ${uzytkownicy.length}, cookie Secure: ${KONF.cookieSecure ? 'tak' : 'NIE (tylko do testow lokalnych)'}`);
     console.log(`  modele: ${[...DOZWOLONE.modele].join(', ')}; max_tokens <= ${KONF.maxTokens}; kompresja: ${KONF.kompresja ? 'tak' : 'nie'}`);
   });
