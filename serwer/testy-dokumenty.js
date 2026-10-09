@@ -160,6 +160,23 @@ async function uruchom({ sprawdz }) {
     } finally {
       console.warn = oryginalWarn;
     }
+    {
+      const zapis = [];
+      const warn = console.warn;
+      console.warn = (...a) => zapis.push(a.join(' '));
+      try {
+        konf = { ...PELNE, regulaminWersja: '2026-09-v0', politykaWersja: dok.wersje().prywatnosc };
+        await pobierz('/dokumenty/regulamin?lang=pl');
+        await pobierz('/dokumenty/prywatnosc?lang=en');
+        await pobierz('/dokumenty/regulamin?lang=en');
+      } finally {
+        console.warn = warn;
+      }
+      sprawdz('CAI_REGULAMIN_WERSJA rozna od wersji szablonu: jedno ostrzezenie w dzienniku i rozjazdyWersji() dla startu; zgodna wersja polityki: cisza',
+        zapis.length === 1 && /CAI_REGULAMIN_WERSJA=2026-09-v0/.test(zapis[0]) && !/CAI_POLITYKA_WERSJA/.test(zapis[0])
+        && dok.rozjazdyWersji({ regulaminWersja: '2026-09-v0', politykaWersja: '' }).length === 1
+        && dok.rozjazdyWersji({ regulaminWersja: dok.wersje().regulamin, politykaWersja: dok.wersje().prywatnosc }).length === 0);
+    }
     sprawdz('brakujaceDane(konf) dla startu serwera: nazwy pustych zmiennych CAI_USLUGODAWCA_*',
       dok.brakujaceDane({ uslugodawca: { imieNazwisko: 'X', email: 'a@b.pl' } }).join(',') === 'CAI_USLUGODAWCA_ADRES,CAI_USLUGODAWCA_TELEFON'
       && dok.brakujaceDane(PELNE).length === 0);

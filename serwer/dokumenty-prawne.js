@@ -555,6 +555,29 @@ function ostrzezWTrybieLive(ust, luki, gdzie) {
   console.warn(`[dokumenty] tryb live: ${gdzie} pokazuje znacznik "do uzupelnienia": ${luki.join(', ')}`);
 }
 
+// ─── Wersje w konfiguracji a wersje szablonow ────────────────────────────────
+// A1 zapisuje przy zgodzie CAI_REGULAMIN_WERSJA i CAI_POLITYKA_WERSJA, a strona dokumentu pokazuje wersje
+// z naglowka szablonu. Rozjazd znaczylby zgode zapisana na inny tekst niz ten, ktory uzytkownik widzial.
+
+/** Lista rozjazdow (puste = zgodne albo wersja w konfiguracji nieustawiona); dla kontroli przy starcie. */
+function rozjazdyWersji(konf) {
+  const w = wersje();
+  const pary = [
+    ['regulamin', 'CAI_REGULAMIN_WERSJA', zKonf(konf, [(k) => k.regulaminWersja, (k) => k.CAI_REGULAMIN_WERSJA], 'CAI_REGULAMIN_WERSJA')],
+    ['prywatnosc', 'CAI_POLITYKA_WERSJA', zKonf(konf, [(k) => k.politykaWersja, (k) => k.CAI_POLITYKA_WERSJA], 'CAI_POLITYKA_WERSJA')],
+  ];
+  return pary.filter(([n, , v]) => tekst(v) && tekst(v) !== w[n])
+    .map(([n, zmienna, v]) => `${zmienna}=${tekst(v).slice(0, 40)}, a szablon ${n} ma wersje ${w[n]}`);
+}
+
+function ostrzezORozjazdach(konf) {
+  for (const r of rozjazdyWersji(konf)) {
+    if (OSTRZEZONE.has(r)) continue;
+    OSTRZEZONE.add(r);
+    console.warn(`[dokumenty] wersja w konfiguracji rozna od dokumentu: ${r} (zgoda zapisze inna wersje niz pokazana)`);
+  }
+}
+
 // Przy starcie serwera (modul laduje server.js): tryb live bez danych uslugodawcy widac od razu w dzienniku,
 // a nie dopiero po pierwszym otwarciu regulaminu.
 if (String(process.env.PLATNOSCI_TRYB || '').trim().toLowerCase() === 'live') {
@@ -735,6 +758,7 @@ function renderuj({ nazwa, jezyk, konf, format = 'html' } = {}) {
     if (p.bledy.length) console.error(`[dokumenty] szablon ${nazwa}.${j}.md: ${p.bledy.join(', ')}`);
     const luki = lukiDokumentu(p.znaczniki, ust);
     ostrzezWTrybieLive(ust, luki, `dokument ${nazwa} (${j})`);
+    if (nazwa === 'regulamin' || nazwa === 'prywatnosc') ostrzezORozjazdach(konf);
     if (format === 'txt') {
       const naglowek = `${p.meta.tytul}\n${t.wersja(p.meta.wersja, dataSlownie(p.meta.data, j))}\n${t.zrodlo}: ${adres(nazwa, j, ust.adres)}\n\n`;
       const tekstDok = naglowek + wstawZnaczniki(markdownNaTekst(p.tresc), p.znaczniki, (z) => tekstZnacznika(z, ust, t));
@@ -793,7 +817,7 @@ function obsluz(req, res, { nazwa, jezyk, konf } = {}) {
 }
 
 module.exports = {
-  obsluz, renderuj, wersje, adres, daneUslugodawcy, brakujaceDane, NAZWY, JEZYKI, POLA, ZMIENNE,
+  obsluz, renderuj, wersje, rozjazdyWersji, adres, daneUslugodawcy, brakujaceDane, NAZWY, JEZYKI, POLA, ZMIENNE,
   // do testow
   markdownNaHtml, markdownNaTekst, przygotuj, ustawienia, dataSlownie, KATALOG,
 };
