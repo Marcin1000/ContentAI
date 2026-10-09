@@ -10476,11 +10476,15 @@ function adresDoDokumentu(href) {
   } catch (e) { return ''; }
 }
 
+// R9-F (KOD8-35): kroje PDF (podzbior PL) nie maja emoji, wiec w pliku zostawal pusty znak \x00.
+// Emoji (z laczeniami, odcieniami skory, flagami i klawiszami) wypadaja z tekstu PDF razem ze spacja przed nimi
+// ("48 h <flaga>, serwis" -> "48 h, serwis"); (c), (R) i TM sa w kroju, wiec zostaja.
+const EMOJI_PDF = / ?(?:(?![©®™])\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}\u{1F1E6}-\u{1F1FF}\u{E0020}-\u{E007F}︎️‍⃣])+/gu;
 // Tekst akapitu z formatowaniem: pogrubienie, kursywa, linki (tylko http, https, mailto).
 function inlinePdf(wezly, f, out) {
   wezly.forEach(function (n) {
     if (n.nodeType === 3) {
-      const t = n.nodeValue.replace(/[ \t\n\r\f]+/g, ' ');
+      const t = n.nodeValue.replace(EMOJI_PDF, '').replace(/[ \t\n\r\f]+/g, ' ');
       if (t) out.push(Object.assign({ text: t }, f));
       return;
     }

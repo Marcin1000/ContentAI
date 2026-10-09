@@ -1287,6 +1287,9 @@ KONTROLE += [
      "dlugoscNagrania(file).then(function (s) { if (s) dodajKoszt('openai', s / 60 * CENA_TRANSKRYPCJI_MIN); });", None, None),
     ("R9-F/koszt-szacunek", "KOD8-31: etykieta kosztu na wlasnych kluczach mowi, ze to szacunek",
      "'hist-cost-wlasne':'Szacunkowy koszt na Twoich kluczach'", "'hist-cost-wlasne':'Koszt na Twoich kluczach'", None),
+    ("R9-F/pdf-bez-emoji", "KOD8-35: emoji wypadaja z tekstu PDF (kroje nie maja tych znakow, zostawal pusty znak)",
+     "const t = n.nodeValue.replace(EMOJI_PDF, '').replace(/[ \\t\\n\\r\\f]+/g, ' ');",
+     "const t = n.nodeValue.replace(/[ \\t\\n\\r\\f]+/g, ' ');", None),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna

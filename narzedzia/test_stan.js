@@ -1296,6 +1296,22 @@ async function scenariuszR9FPdf(b) {
   const wzor = await s.evaluate(() => _t('msg-pdf-przygotowuje').slice(0, 15));
   wynik('R9-F KOD8-32: pierwszy PDF - komunikat od razu, w trakcie ladowania biblioteki', wTrakcie.some((p) => p.indexOf(wzor) === 0), JSON.stringify(wTrakcie));
   wynik('R9-F KOD8-32: drugie dotkniecie w trakcie ladowania nie daje drugiego pliku', pobran === 1, 'pobran: ' + pobran);
+  // KOD8-35: emoji dopisane w Edytuj daly w PDF pusty znak \x00 (kroje PDF maja tylko lacinke PL/DE/CZ i typografie).
+  const emoji = await s.evaluate(() => {
+    const el = document.createElement('div');
+    el.innerHTML = '<h2>Oferta 🔥 na zimę</h2><p>👍🏽 Montaż w 48 h 🇵🇱, serwis 1️⃣ dzień. Marka Termoplus® i Vitocal™ © 2026.</p><ul><li>Gwarancja 👨‍👩‍👧 7 lat ✅</li></ul>';
+    const teksty = [];
+    (function zbierz(w) { if (Array.isArray(w)) { w.forEach(zbierz); return; } if (!w || typeof w !== 'object') { if (typeof w === 'string') teksty.push(w); return; }
+      ['text', 'stack', 'ul', 'ol', 'columns'].forEach((p) => { if (w[p] !== undefined) zbierz(w[p]); }); })(trescPdf(el));
+    const wszystko = teksty.join('|');
+    // Znaki w krojach PDF (cmap z pwa/lib/vfs_fonts.js): ASCII, U+00A0-017E i kilkanascie znakow typografii.
+    const TYPOGRAFIA = [0x2013, 0x2014, 0x2018, 0x2019, 0x201A, 0x201C, 0x201D, 0x201E, 0x2022, 0x2026, 0x20AC, 0x2122, 0x2212];
+    const wKroju = (c) => { const k = c.codePointAt(0); return k === 10 || (k >= 0x20 && k <= 0x7E) || (k >= 0xA0 && k <= 0x17E) || TYPOGRAFIA.includes(k); };
+    return { wszystko, poza: [...wszystko].filter((c) => !wKroju(c)).map((c) => c.codePointAt(0).toString(16)) };
+  });
+  wynik('R9-F KOD8-35: PDF - emoji wypadaja z tekstu (bez pustych znakow), litery, (R), TM i (c) zostaja',
+    !emoji.poza.length && /Oferta na zimę/.test(emoji.wszystko) && /Montaż w 48 h, serwis 1 dzień\. Marka Termoplus® i Vitocal™ © 2026\./.test(emoji.wszystko) && /Gwarancja 7 lat(\||$)/.test(emoji.wszystko),
+    JSON.stringify(emoji));
   wynik('R9-F KOD8-32: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
   if (bledow) await zrzut(s, 'r9f-pdf');
   await k.close();
