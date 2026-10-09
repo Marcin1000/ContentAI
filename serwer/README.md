@@ -521,6 +521,9 @@ mają ten sam pakiet:
 - osobna pula zasobów opłacanych przez serwer, `limitySerwera` pakietu: `serp` (DataForSEO),
   `wektory` (wyszukiwanie po znaczeniu), `strony` (pobieranie stron i sprawdzanie odnośników),
   liczona w tej samej tabeli jako `serwer:<zasob>` (`plany.sprawdzLimitSerwera`, `plany.policzSerwer`).
+  `0` znaczy "niedostępne w pakiecie": tak jest z `wektory` we wszystkich pakietach (decyzja D-09,
+  konta samoobsługowe szukają w bazie po słowach kluczowych, bez NVIDIA). Liczby z projektu
+  (20 / 1000 / 5000) wracają zmianą tej wartości w `plany.js`.
 
 Dwie rzeczy warte uwagi przy zmianach:
 

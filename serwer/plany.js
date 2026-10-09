@@ -86,9 +86,12 @@ const PLANY = {
     kolejnosc: 0,               // wybor subskrypcji przy kilku zywych i kolejnosc kart
     // Zasoby oplacane przez serwer, tylko konta zrodlo_kluczy='wlasne' (ARCH8-11);
     // okres jak `okres` pakietu, null = bez limitu, 0 = niedostepne w pakiecie.
+    // wektory: 0 we wszystkich pakietach (D-09 / PR8-28, DECYZJE-R9): konta samoobslugowe
+    // szukaja w bazie po slowach kluczowych, bez NVIDIA; propozycja z projektu (20 / 1000
+    // / 5000) wraca zmiana tych liczb, gdy NVIDIA trafi na liste podprzetwarzajacych.
     limitySerwera: {
       serp: 0,
-      wektory: 20,
+      wektory: 0,
       strony: 30,
     },
   },
@@ -118,7 +121,7 @@ const PLANY = {
     kolejnosc: 1,
     limitySerwera: {
       serp: 100,
-      wektory: 1000,
+      wektory: 0,
       strony: 1000,
     },
   },
@@ -148,7 +151,7 @@ const PLANY = {
     kolejnosc: 2,
     limitySerwera: {
       serp: 500,
-      wektory: 5000,
+      wektory: 0,
       strony: 5000,
     },
   },

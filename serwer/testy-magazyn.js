@@ -525,10 +525,13 @@ function testyModulow(sprawdz) {
     const stanKlienta = plany.stanPakietu({ konto: klient });
     const stanZespolu = plany.stanPakietu({ konto: zespol });
     sprawdz('stanPakietu: zrodloKluczy, limitySerwera tylko dla wlasne, wywolanie z sufitem M-3, pole subskrypcja',
-      stanKlienta.zrodloKluczy === 'wlasne' && stanKlienta.limitySerwera.strony.zuzyte === 30 && stanKlienta.limitySerwera.wektory.limit === 20
+      stanKlienta.zrodloKluczy === 'wlasne' && stanKlienta.limitySerwera.strony.zuzyte === 30 && stanKlienta.limitySerwera.wektory.limit === 0
       && stanKlienta.uzycie.wywolanie.limit === plany.PLANY.darmowy.limityWlasneKlucze.wywolanie && stanKlienta.funkcje.wlasnyKlucz === true
       && stanZespolu.zrodloKluczy === 'serwera' && stanZespolu.limitySerwera === null && stanZespolu.uzycie.wywolanie.limit === 30
       && 'subskrypcja' in stanZespolu);
+    sprawdz('D-09: wektory niedostepne dla kont na wlasnym kluczu w kazdym pakiecie, konta zespolu bez zmian',
+      Object.values(plany.PLANY).every((p) => p.limitySerwera.wektory === 0)
+      && !plany.sprawdzLimitSerwera({ ...klient, plan: 'premium' }, 'wektory').wolno && plany.sprawdzLimitSerwera(zespol, 'wektory').wolno);
     sprawdz('plany: pakiety na sprzedaz i kolejnosc w tabeli (limity i bramki bez zmian)',
       plany.PLANY.darmowy.sprzedaz === false && plany.PLANY.standard.sprzedaz && plany.PLANY.premium.kolejnosc === 2
       && plany.PLANY.darmowy.limity.artykul === 3 && plany.PLANY.standard.limity.wywolanie === 750);
