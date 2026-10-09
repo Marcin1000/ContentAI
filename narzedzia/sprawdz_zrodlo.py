@@ -1192,6 +1192,18 @@ KONTROLE += [
      "body:not(.is-mobile) .versions-bar.wiele-wersji .ver-wybor {", None, None),
 ]
 
+# R9-F: runda 9, wykonawca F - poprawki aplikacji z audytu kodu rundy 8 (KOD8-NN).
+# Osobny blok w srodku listy (D i G dopisuja swoje na koncu - scalanie po liniach bez konfliktu).
+KONTROLE += [
+    ("R9-F/fokus-okna-tekstu", "KOD8-03: okno tekstu bez opoznionego focus() (tekst Tresci nie trafia do pola nazwy)",
+     "function openTextModal() { document.getElementById('text-modal').classList.add('open'); bladPolaTekstu(null); }",
+     "setTimeout(()=>document.getElementById('m-name').focus(),80)", None),
+    ("R9-F/fokus-okna-adresu", "KOD8-03: okno adresu strony bez opoznionego focus()",
+     None, "setTimeout(() => document.getElementById('u-url').focus(), 80);", None),
+    ("R9-F/pusta-tresc", "KOD8-03: Dodaj bez nazwy albo tresci - komunikat przy polu zamiast cichego powrotu",
+     "bladPolaTekstu(document.getElementById(name ? 'm-content' : 'm-name'), name ? 'text-brak-tresci' : 'text-brak-nazwy');", None, None),
+]
+
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna
 # z siecia, kategoria "Sprawdz na stronie", lista zrodel i ramka meta poza kontrola).
 # Osobny blok na koncu listy podpisow aplikacji (scalanie po liniach z innymi wykonawcami).

@@ -5435,6 +5435,7 @@ var I18N = {
     'tpl-save-section':'Lub zapisz obecny formularz jako szablon','tpl-name-ph':'Nazwa szablonu…',
     'text-modal-title':'Dodaj tekst do bazy wiedzy','text-doc-name-label':'Nazwa dokumentu',
     'text-doc-name-ph':'np. Oferta firmy, FAQ zwroty…','text-content-label':'Treść',
+    'text-brak-nazwy':'Wpisz nazwę dokumentu.','text-brak-tresci':'Wklej albo wpisz treść dokumentu.',
     'url-label':'Adres URL',
     'bv-modal-full-title':'Głos marki (brand voice)',
     'bv-modal-desc-full':'Wklej 2-5 istniejących artykułów firmowych (lub innych tekstów). Aplikacja wyekstrahuje profil stylu i zastosuje go do wszystkich przyszłych generowań.',
@@ -6170,6 +6171,7 @@ var I18N = {
     'tpl-save-section':'Or save the current form as a template','tpl-name-ph':'Template name…',
     'text-modal-title':'Add text to knowledge base','text-doc-name-label':'Document name',
     'text-doc-name-ph':'e.g. company offer, FAQ returns…','text-content-label':'Content',
+    'text-brak-nazwy':'Enter a document name.','text-brak-tresci':'Paste or type the document content.',
     'url-label':'URL',
     'bv-modal-full-title':'Brand voice',
     'bv-modal-desc-full':'Paste 2-5 existing company articles (or other texts). The app will extract the style profile and apply it to all future generations.',
@@ -7842,13 +7844,26 @@ function switchTab(name, el) {
 }
 
 // ─── MODALS ───────────────────────────────────────────────────────────────────
-function openTextModal() { document.getElementById('text-modal').classList.add('open'); setTimeout(()=>document.getElementById('m-name').focus(),80); }
-function closeTextModal() { document.getElementById('text-modal').classList.remove('open'); document.getElementById('m-name').value=''; document.getElementById('m-content').value=''; }
+// R9-F (KOD8-03): fokus ustawia menedzer okien (pierwsze pole, bez kradziezy fokusu z pola, w ktorym juz
+// sie pisze). Drugi, opozniony focus() przenosil tekst wpisywany w Tresc do pola nazwy.
+function openTextModal() { document.getElementById('text-modal').classList.add('open'); bladPolaTekstu(null); }
+function closeTextModal() { document.getElementById('text-modal').classList.remove('open'); document.getElementById('m-name').value=''; document.getElementById('m-content').value=''; bladPolaTekstu(null); }
+// Komunikat przy pustym polu okna tekstu (pole = null czysci). Wczesniej Dodaj bez tresci nic nie robil i okno stalo bez slowa.
+function bladPolaTekstu(pole, klucz) {
+  ['m-name', 'm-content'].forEach(id => { const p = document.getElementById(id); if (p) p.removeAttribute('aria-invalid'); });
+  let el = document.getElementById('m-blad');
+  if (!pole) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement('p'); el.id = 'm-blad'; el.className = 'tekst-pomoc stan-blad'; el.setAttribute('role', 'alert'); }
+  (pole.closest('.field') || pole).after(el);
+  el.textContent = _t(klucz);
+  pole.setAttribute('aria-invalid', 'true');
+  pole.focus();
+}
 
 function saveText() {
   const name = document.getElementById('m-name').value.trim();
   const content = document.getElementById('m-content').value.trim();
-  if (!name || !content) return;
+  if (!name || !content) { bladPolaTekstu(document.getElementById(name ? 'm-content' : 'm-name'), name ? 'text-brak-tresci' : 'text-brak-nazwy'); return; }
   addDoc(name, content, '✏️');
   closeTextModal();
 }
@@ -7874,7 +7889,7 @@ function openUrlModal() {
   document.getElementById('url-info').style.display = 'none';
   document.getElementById('url-save-btn').disabled = false;
   document.getElementById('url-fill').style.width = '0%';
-  setTimeout(() => document.getElementById('u-url').focus(), 80);
+  // R9-F (KOD8-03): fokus na adresie ustawia menedzer okien (bez opoznionego drugiego focus()).
 }
 function closeUrlModal() {
   document.getElementById('url-modal').classList.remove('open');

@@ -48,6 +48,70 @@ async function zrzut(s, nazwa) {
   try { fs.mkdirSync(ZRZUTY, { recursive: true }); await s.screenshot({ path: path.join(ZRZUTY, nazwa + '.png') }); } catch (e) { /* bez zrzutu */ }
 }
 
+// ── R9-F: serwer aplikacji z kontami i atrapa dostawcow (wariant proxy, jak test_dymny) ──
+const http = require('http');
+const { spawn } = require('child_process');
+const HASLO = 'test-haslo-123';
+function wolnyPort() {
+  return new Promise((ok, zle) => {
+    const srv = require('net').createServer();
+    srv.once('error', zle);
+    srv.listen(0, '127.0.0.1', () => { const p = srv.address().port; srv.close(() => ok(p)); });
+  });
+}
+function czekajNaPort(port, ms) {
+  const koniec = Date.now() + ms;
+  return new Promise((resolve, reject) => {
+    (function proba() {
+      const r = http.get({ host: '127.0.0.1', port, path: '/' }, (o) => { o.resume(); resolve(); });
+      r.on('error', () => { if (Date.now() > koniec) reject(new Error('port ' + port + ' nie odpowiada')); else setTimeout(proba, 150); });
+    })();
+  });
+}
+// Serwer w katalogu tymczasowym: { port, kat, proces, zatrzymaj() }. Atrapa dostawcow na wlasnym porcie.
+async function serwerProxy() {
+  const portAtrapy = await wolnyPort();
+  const port = await wolnyPort();
+  const srvAtrapy = atrapa.uruchom(portAtrapy);
+  const kat = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-test-stan-'));
+  const { zahaszuj } = require(path.join(REPO, 'serwer', 'server.js'));
+  const konta = [['admin', 'admin', 'premium'], ['premium', 'uzytkownik', 'premium'], ['standard', 'uzytkownik', 'standard'], ['darmowy', 'uzytkownik', 'darmowy']]
+    .map(([login, rola, plan]) => Object.assign({ login, rola, plan, utworzony: '2026-01-01' }, zahaszuj(HASLO)));
+  fs.writeFileSync(path.join(kat, 'uzytkownicy.json'), JSON.stringify(konta, null, 2));
+  const env = Object.assign({}, process.env, {
+    CAI_UZYTKOWNICY: path.join(kat, 'uzytkownicy.json'), CAI_BAZA: path.join(kat, 'baza'), CAI_UZYCIE: path.join(kat, 'uzycie'),
+    CAI_MARKA: kat, CAI_SEKRET_PLIK: path.join(kat, 'sekret'), PORT: String(port), CAI_HOST: '127.0.0.1',
+    ANTHROPIC_KEY: 'test-anthropic', OPENAI_KEY: 'test-openai', ELEVEN_KEY: 'test-eleven',
+    CAI_URL_ANTHROPIC: 'http://127.0.0.1:' + portAtrapy + '/v1/messages', CAI_URL_OPENAI: 'http://127.0.0.1:' + portAtrapy + '/v1',
+    CAI_URL_ELEVEN: 'http://127.0.0.1:' + portAtrapy + '/eleven/v1', CAI_ZAUFANE_ADRESY: '127.0.0.1',
+  });
+  const proces = spawn(process.execPath, [path.join(REPO, 'serwer', 'server.js')], { cwd: REPO, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  let log = '';
+  proces.stdout.on('data', (d) => { log += d; });
+  proces.stderr.on('data', (d) => { log += d; });
+  await czekajNaPort(port, 15000);
+  return { port, kat, proces, log: () => log, zatrzymaj: () => { proces.kill(); srvAtrapy.close(); fs.rmSync(kat, { recursive: true, force: true }); } };
+}
+async function zalogujProxy(k, port, login) {
+  const s = await k.newPage();
+  await s.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'load' });
+  if (await s.$('input[name="login"]')) {
+    await s.fill('input[name="login"]', login);
+    await s.fill('input[type="password"]', HASLO);
+    await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"], input[type="submit"]')]);
+  }
+  await s.waitForFunction(() => typeof generate === 'function' && document.readyState === 'complete', null, { timeout: 15000 });
+  await s.evaluate(() => { if (typeof startPomin === 'function') startPomin(); });
+  return s;
+}
+async function kontekstProxy(b, opcje) {
+  const k = await b.newContext(Object.assign({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 } }, opcje || {}));
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); localStorage.setItem('cai_lang', 'pl'); localStorage.setItem('cai_start_v1', '1'); } catch (e) { /* bez magazynu */ } });
+  const bledyJs = [];
+  k.on('page', (p) => { p.on('pageerror', (e) => bledyJs.push(e.message.slice(0, 160))); p.on('dialog', (d) => d.accept().catch(() => {})); });
+  return { k, bledyJs };
+}
+
 // Bledy dostawcy w ksztalcie odpowiedzi API (tresc jak u Anthropic i OpenAI).
 const BLEDY = {
   401: [401, { type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key' } }],
@@ -735,14 +799,54 @@ async function scenariuszHistoriiR4(b) {
   await e.k.close();
 }
 
+// ── R9-F (runda 9, wykonawca F): poprawki z audytu kodu KOD8 ──────────────────────────────
+// Wariant keys z pliku: okno tekstu (KOD8-03).
+async function scenariuszR9FKeys(b) {
+  const { k, s, bledyJs } = await nowaStrona(b, 'pl', {});
+  // KOD8-03: fokus po otwarciu okna tekstu nie przeskakuje do nazwy, gdy autor pisze juz tresc
+  // (drugi, opozniony o 80 ms focus() przenosil reszte tekstu do pola nazwy).
+  // Autor przechodzi do Tresci 30 ms po otwarciu okna i pisze (20 ms na znak, przez znacznik 80 ms).
+  await s.evaluate(() => new Promise((ok) => { openTextModal(); setTimeout(() => { document.getElementById('m-content').focus(); ok(); }, 30); }));
+  await s.keyboard.type('Tresc wpisana od razu', { delay: 20 });
+  await s.waitForTimeout(200);
+  const fokus = await s.evaluate(() => ({ akt: (document.activeElement || {}).id || '', nazwa: document.getElementById('m-name').value, tresc: document.getElementById('m-content').value }));
+  wynik('R9-F KOD8-03: okno tekstu - wpisywana tresc zostaje w polu Tresc (fokus nie przeskakuje)',
+    fokus.akt === 'm-content' && fokus.nazwa === '' && fokus.tresc === 'Tresc wpisana od razu', JSON.stringify(fokus));
+  // Dodaj z pusta trescia: komunikat przy polu i fokus na nim (wczesniej okno stalo bez slowa).
+  await s.evaluate(() => { document.getElementById('m-name').value = 'Tylko nazwa'; document.getElementById('m-content').value = ''; saveText(); });
+  const pusta = await s.evaluate(() => { const m = document.getElementById('m-blad'); return { otwarte: document.getElementById('text-modal').classList.contains('open'),
+    komunikat: m ? m.textContent : '', wzor: typeof _t === 'function' ? _t('text-brak-tresci') : '', rola: m ? m.getAttribute('role') : '', akt: (document.activeElement || {}).id || '',
+    niepoprawne: document.getElementById('m-content').getAttribute('aria-invalid') }; });
+  wynik('R9-F KOD8-03: Dodaj bez tresci - komunikat przy polu Tresc i fokus na nim',
+    pusta.otwarte && !!pusta.komunikat && pusta.komunikat === pusta.wzor && pusta.rola === 'alert' && pusta.akt === 'm-content' && pusta.niepoprawne === 'true', JSON.stringify(pusta));
+  await s.evaluate(() => { document.getElementById('m-content').value = 'Montaz kosztuje od 18 do 35 tys. zl.'; saveText(); });
+  const zapis = await s.evaluate(() => ({ otwarte: document.getElementById('text-modal').classList.contains('open'), komunikat: !!document.getElementById('m-blad'), doc: docs.some((d) => d.name === 'Tylko nazwa') }));
+  wynik('R9-F KOD8-03: po uzupelnieniu tresci dokument zapisany, okno zamkniete, komunikat znika', !zapis.otwarte && !zapis.komunikat && zapis.doc, JSON.stringify(zapis));
+  wynik('R9-F keys: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-keys');
+  await k.close();
+}
+
+// Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
+// CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
+const SCENARIUSZE = [
+  ['stan', scenariuszStanu], ['r4-logika', scenariuszR4Logiki], ['bledy', scenariuszBledow], ['historia-r4', scenariuszHistoriiR4],
+  ['r9f-keys', scenariuszR9FKeys],
+];
 (async () => {
   let b;
+  const tylko = String(process.env.CAI_TEST_TYLKO || '').split(',').map((x) => x.trim()).filter(Boolean);
   try {
     b = await chromium.launch(process.env.CAI_CHROMIUM ? { executablePath: process.env.CAI_CHROMIUM } : {});
-    await scenariuszStanu(b);
-    await scenariuszR4Logiki(b);
-    await scenariuszBledow(b);
-    await scenariuszHistoriiR4(b);
+    for (const [nazwa, scenariusz] of SCENARIUSZE) {
+      if (tylko.length && tylko.indexOf(nazwa) < 0) continue;
+      const przed = new Set(b.contexts());
+      try { await scenariusz(b); }
+      catch (e) {
+        wynik('scenariusz ' + nazwa + ' przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
+        for (const k of b.contexts()) if (!przed.has(k)) await k.close().catch(() => {});
+      }
+    }
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
   } finally {

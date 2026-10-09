@@ -58,7 +58,33 @@ function wynik(nazwa, ok, szczegol) {
 // polkniety limit przenosil czerwien na nastepny scenariusz.
 async function krok(nazwa, obietnica) {
   try { await obietnica; return true; }
-  catch (e) { wynik('krok: ' + nazwa, false, (e && e.message || String(e)).split('\n')[0]); return false; }
+  catch (e) { wynik('krok: ' + nazwa, false, (e && e.message || String(e)).split('\n')[0]); await zamknijOkna(); return false; }
+}
+
+// R9-F (KOD8-03): po czerwonym kroku okno, ktore zostalo otwarte, przechwytywalo kazde nastepne
+// klikniecie (8 kolejnych limitow czasu), a wyjatek konczyl caly przebieg i 7 z 9 scenariuszy sie
+// nie wykonywalo. Teraz: po nieudanym kroku zamykamy otwarte okna, a kazdy scenariusz biegnie
+// osobno - wyjatek konczy sie bledem z nazwa scenariusza i zamknieciem jego kontekstow.
+let PRZEGLADARKA = null;
+async function zamknijOkna() {
+  if (!PRZEGLADARKA) return;
+  for (const k of PRZEGLADARKA.contexts()) {
+    for (const s of k.pages()) {
+      await s.evaluate(() => {
+        for (let i = 0; i < 10 && typeof window.zamknijGorneOkno === 'function' && window.zamknijGorneOkno();) i++;
+        document.querySelectorAll('.overlay.open').forEach((o) => o.classList.remove('open'));
+      }).catch(() => {});
+    }
+  }
+}
+async function osobno(scenariusz, b) {
+  PRZEGLADARKA = b;
+  const przed = new Set(b.contexts());
+  try { await scenariusz(b); }
+  catch (e) {
+    wynik('scenariusz ' + scenariusz.name + ' przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
+    for (const k of b.contexts()) if (!przed.has(k)) await k.close().catch(() => {});
+  }
 }
 
 function czekajNaPort(port, ms) {
@@ -455,8 +481,12 @@ async function wariantProxy(b) {
 
   // Jedna baza wiedzy: tekst z panelu idzie na serwer.
   await s.evaluate(() => openTextModal());
+  // R9-F (KOD8-03): okno gotowe, gdy fokus jest w polu nazwy (ustawia go menedzer okien).
+  await krok('okno tekstu z fokusem na nazwie', s.waitForFunction(() => (document.activeElement || {}).id === 'm-name', null, { timeout: 3000 }));
   await s.fill('#m-name', 'Cennik montazu');
   await s.fill('#m-content', 'Montaz kosztuje od 18 do 35 tys. zl. Gwarancja 7 lat.');
+  const polaTekstu = await s.evaluate(() => ({ nazwa: document.getElementById('m-name').value, tresc: document.getElementById('m-content').value.length }));
+  wynik('proxy: okno tekstu - nazwa i tresc w swoich polach', polaTekstu.nazwa === 'Cennik montazu' && polaTekstu.tresc > 20, JSON.stringify(polaTekstu));
   await s.evaluate(() => saveText());
   await krok('dokument w bazie serwera', s.waitForFunction(() => (window._bazaSerwerLiczba || 0) > 0, null, { timeout: 10000 }));
   wynik('proxy: dokument z panelu trafia do bazy na serwerze', await s.evaluate(() => window._bazaSerwerLiczba === 1 && docs.length === 0));
@@ -1415,15 +1445,15 @@ async function uruchomSerwerPlikow() {
   try {
     await czekajNaPort(PORT_SERWERA, 15000);
     b = await chromium.launch(process.env.CAI_CHROMIUM ? { executablePath: process.env.CAI_CHROMIUM } : {});
-    await wariantKeys(b);
-    await wariantProxy(b);
-    await wariantTelefonR6(b);
-    await wariantTelefonR6Luki(b);
-    await wariantNowyArtykul(b);
-    await wariantR6F(b);
-    await wariantR7Luki(b);
-    await wariantR7I(b);
-    await wariantR7H(b);
+    await osobno(wariantKeys, b);
+    await osobno(wariantProxy, b);
+    await osobno(wariantTelefonR6, b);
+    await osobno(wariantTelefonR6Luki, b);
+    await osobno(wariantNowyArtykul, b);
+    await osobno(wariantR6F, b);
+    await osobno(wariantR7Luki, b);
+    await osobno(wariantR7I, b);
+    await osobno(wariantR7H, b);
     await wariantPilneKreator(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
