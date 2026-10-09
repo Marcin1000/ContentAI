@@ -1537,7 +1537,7 @@ async function wariantR9Zrozumialosc(b) {
   };
   const tVis = await oknoZMenu('openVisModal'), tAiv = await oknoZMenu('aivOpen');
   wynik('telefon: R9-G UX8-13 Widocznosc AI w arkuszu Konto: 4 narzedzia z podpisem "po co", okna nazwane jak w menu',
-    wid.poz === 4 && wid.podpisy.every((t) => /^(czy|co|wejścia)/.test(t)) && tVis === 'Obecność marki w AI' && tAiv === 'Cytowania w AI', JSON.stringify({ wid, tVis, tAiv }));
+    wid.poz === 4 && /^czy AI poleca/.test(wid.podpisy[0]) && /^czy AI cytuje/.test(wid.podpisy[1]) && /^wejścia z czatów AI/.test(wid.podpisy[3]) && tVis === 'Obecność marki w AI' && tAiv === 'Cytowania w AI', JSON.stringify({ wid, tVis, tAiv }));
   // UX8-16: Historia mowi, ze jest tylko w tej przegladarce, i daje kopie do pobrania (HTML z artykulami i danymi wpisow).
   await krok('R9-G Historia', s.click('#mnav-hist', { timeout: 3000 }));
   await s.waitForTimeout(400);
