@@ -361,4 +361,8 @@ function stronaOpenSeoBezPakietu(jezyk) {
 module.exports = {
   stronaLogowania, stronaPotwierdzeniaWylogowania, stronaWylogowaniaZBramy, stronaBleduDanych,
   stronaOpenSeoBezPakietu, jezykZNaglowka, esc, T, DOSTEP,
+  // Wspolny wyglad ekranow serwera (etap 0 rundy 9): ekrany kont (A1) i platnosci (B)
+  // skladaja HTML z tych samych czesci co logowanie - szkielet(t, tytul, srodek, opcje),
+  // akapit(s) (escapowany tekst bez sierotek), teksty(jezyk) (slownik PL/EN tego pliku).
+  szkielet, akapit, teksty, STYL, IKONA_BLEDU, IKONA_INFO, STRZALKA,
 };

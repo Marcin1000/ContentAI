@@ -163,15 +163,13 @@ const KONF_PLANOW = {
   zaleglaDni: 7,
 };
 
-/** Ustawia konfiguracje; nieznany plan nowych kont -> darmowy + blad w dzienniku. */
+/**
+ * Ustawia konfiguracje. Nieznany plan nowych kont -> darmowy (blad zglasza
+ * kontrola konfiguracji przy starcie serwera, tu bez dziennika: modul czyta
+ * takze CLI i testy).
+ */
 function ustawKonfiguracje({ planNowych, trybPlatnosci, zaleglaDni } = {}) {
-  if (planNowych !== undefined) {
-    if (PLANY[planNowych]) KONF_PLANOW.planNowych = planNowych;
-    else {
-      console.error(`[plany] CAI_PLAN_NOWYCH="${String(planNowych).slice(0, 40)}" nie istnieje w PLANY - nowe konta dostaja ${DOMYSLNY}`);
-      KONF_PLANOW.planNowych = DOMYSLNY;
-    }
-  }
+  if (planNowych !== undefined) KONF_PLANOW.planNowych = PLANY[planNowych] ? planNowych : DOMYSLNY;
   if (trybPlatnosci !== undefined) KONF_PLANOW.trybPlatnosci = String(trybPlatnosci || '');
   if (zaleglaDni !== undefined && Number(zaleglaDni) >= 0) KONF_PLANOW.zaleglaDni = Number(zaleglaDni);
   return { ...KONF_PLANOW };
