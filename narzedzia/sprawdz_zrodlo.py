@@ -1210,6 +1210,8 @@ KONTROLE += [
      "window.addEventListener('storage', function (e) {", None, None),
     ("R9-F/historia-usuniete", "KOD8-09: usuniety wpis nie wraca z listy innej karty",
      "if (h.id) oznaczUsunietyWpis(h.id);", None, None),
+    ("R9-F/pause-turn-ciag", "KOD8-13: tura po pause_turn deklarowana jako artykul-ciag (nie drugi artykul z pakietu)",
+     "if (h['x-cai-czynnosc'] === 'artykul') h['x-cai-czynnosc'] = 'artykul-ciag';", None, ("proxy",)),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna

@@ -8829,8 +8829,16 @@ async function wywolajZWyszukiwaniem(cialo, naglowki, maxRund = 4) {
   const bloki = [];
 
   for (let runda = 0; runda < maxRund; runda++) {
+    // R9-F (KOD8-13): kolejna tura po pause_turn to ten sam artykul. Z deklaracja "artykul" serwer liczyl
+    // ja jako drugi artykul (konto darmowe: 2 z 3 za jeden tekst); "artykul-ciag" idzie tylko na licznik
+    // wywolan. Kazda tura to tez nowe zadanie w tle (identyfikator tury 0 oddalby jej wynik).
+    let h = naglowki;
+    if (runda > 0 && naglowki) {
+      h = Object.assign({}, naglowki);
+      delete h['X-Zadanie'];
+    }
     const res = await apiFetch({
-      method: 'POST', headers: naglowki,
+      method: 'POST', headers: h,
       body: JSON.stringify(Object.assign({}, cialo, { messages: wiadomosci })),
     });
     const dane = await res.json();

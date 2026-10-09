@@ -907,11 +907,34 @@ async function scenariuszR9FDwieKarty(b) {
   await k.close();
 }
 
+// KOD8-13: artykul z wyszukiwaniem, ktory API konczy pierwsza ture "pause_turn". Druga tura to ten sam
+// artykul: konto darmowe (3 artykuly) ma po nim zuzyte 1, nie 2.
+async function scenariuszR9FPauseTurn(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'darmowy');
+  const przed = ((await pakietUzycie(s)).artykul || {}).zuzyte || 0;
+  const deklaracje = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url())) deklaracje.push(z.headers()['x-cai-czynnosc'] || '-'); });
+  await generuj(s, 'Rowery elektryczne do miasta [atrapa:pause@artykul]', false);
+  await krok('R9-F KOD8-13 artykul z pause_turn', czekajNaKoniec(s));
+  const st = await s.evaluate(() => ({ odz: document.getElementById('out-badge').className, h2: document.querySelectorAll('#article h2').length }));
+  const po = ((await pakietUzycie(s)).artykul || {}).zuzyte || 0;
+  const artykul = deklaracje.filter((x) => x === 'artykul').length;
+  wynik('R9-F KOD8-13: artykul z tura pause_turn gotowy', /ready/.test(st.odz) && st.h2 >= 2, JSON.stringify(st));
+  wynik('R9-F KOD8-13: kontynuacja pause_turn nie deklaruje drugiego artykulu, pakiet -1 (nie -2)',
+    artykul === 1 && deklaracje.indexOf('artykul-ciag') !== -1 && po - przed === 1, JSON.stringify({ deklaracje, przed, po }));
+  wynik('R9-F KOD8-13: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-pause-turn');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
   ['stan', scenariuszStanu], ['r4-logika', scenariuszR4Logiki], ['bledy', scenariuszBledow], ['historia-r4', scenariuszHistoriiR4],
   ['r9f-keys', scenariuszR9FKeys], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
+  ['r9f-pause-turn', scenariuszR9FPauseTurn],
 ];
 (async () => {
   let b;
