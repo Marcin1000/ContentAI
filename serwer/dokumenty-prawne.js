@@ -607,8 +607,8 @@ main{padding:40px 0 56px}
 .etyk{margin:0 0 12px;font:600 12px/1.4 var(--f-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--c-tekst-2)}
 h1{margin:0 0 12px;font:560 clamp(30px,5vw,42px)/1.12 var(--f-tresc);letter-spacing:-.02em;text-wrap:balance}
 .wersja{margin:0;color:var(--c-tekst-2);font-size:15px}
-.akcje{margin:8px 0 0;color:var(--c-tekst-3);font-size:14px}
-.akcje a{display:inline-flex;align-items:center;min-height:44px;font-weight:600;margin-right:12px}
+.akcje{display:flex;flex-wrap:wrap;align-items:center;gap:0 16px;margin:8px 0 0;color:var(--c-tekst-3);font-size:14px}
+.akcje a{display:inline-flex;align-items:center;min-height:44px;font-weight:600}
 .spis{margin:28px 0 8px;padding:16px 20px;border:1px solid var(--c-linia-2);border-radius:var(--r-md);background:var(--c-panel)}
 .spis h2{margin:0 0 8px;font:600 12px/1.4 var(--f-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--c-tekst-3);border:0;padding:0}
 .spis ol{margin:0;padding:0;list-style:none;columns:2 16rem;column-gap:24px}
@@ -696,7 +696,7 @@ function stronaDokumentu(nazwa, jezyk, ust, p) {
   const srodek = `<p class="etyk">${esc(t.etykieta)}</p>
 <h1>${esc(p.meta.tytul)}</h1>
 <p class="wersja">${esc(t.wersja(p.meta.wersja, dataSlownie(p.meta.data, jezyk)))}</p>
-<p class="akcje"><a href="${esc(adres(nazwa, jezyk) + '&format=txt')}" download>${esc(t.pobierz)}</a> ${esc(t.pdf)}</p>
+<p class="akcje"><a href="${esc(adres(nazwa, jezyk) + '&format=txt')}" download>${esc(t.pobierz)}</a><span>${esc(t.pdf)}</span></p>
 ${spisHtml}
 <article class="tresc">
 ${tresc}
