@@ -175,7 +175,7 @@ Wszystko przez zmienne środowiskowe.
 | `DATAFORSEO_LOGIN` | - | login DataForSEO (przy `CAI_SERP=dataforseo`) |
 | `DATAFORSEO_HASLO` | - | hasło DataForSEO |
 | `CAI_BAZA` | `serwer/dane/baza` | katalog bazy wiedzy |
-| `CAI_UZYCIE` | `serwer/dane/uzycie` | liczniki pakietów w formacie R8 (tylko migracja i `eksport-json`; w działaniu liczniki są w bazie) |
+| `CAI_UZYCIE` | `serwer/dane/uzycie` | liczniki pakietów w formacie R8 (tylko migracja i `eksport-json`; w działaniu liczniki są w bazie). Migracja bierze ten katalog, gdy leży obok pliku kont albo jest wskazany tą zmienną; cudzego nie rusza |
 | `CAI_MODEL_EMBED` | `nvidia/nv-embedqa-e5-v5` | model wektorów |
 | `CAI_URL_EMBED` | `https://integrate.api.nvidia.com/v1/embeddings` | endpoint wektorów |
 | `CAI_COOKIE_DOMENA` | - | domena ciasteczka sesji, np. `.twojadomena.pl` |
@@ -185,7 +185,7 @@ Wszystko przez zmienne środowiskowe.
 | `CAI_OPENSEO_ADRES` | - | publiczny adres OpenSEO - dokłada pozycję w menu |
 | `CAI_MARKA` | `serwer/dane` | katalog z `marka.json` |
 | `CAI_SEKRET_PLIK` | `serwer/dane/sekret` | plik z sekretem sesji (gdy brak `CAI_SEKRET_SESJI`) |
-| `CAI_WYLOGOWANE` | `serwer/dane/wylogowane.json` | lista sesji wylogowanych w formacie R8 (tylko migracja i `eksport-json`) |
+| `CAI_WYLOGOWANE` | `serwer/dane/wylogowane.json` | lista sesji wylogowanych w formacie R8 (tylko migracja i `eksport-json`). Jak wyżej: migracja bierze plik obok pliku kont albo wskazany tą zmienną |
 | `CAI_PROSBY` | `serwer/dane/prosby.jsonl` | prośby o dostęp ze strony produktowej (JSON Lines) |
 | `CAI_STRONA_ORIGIN` | `https://content-ai.net,https://www.content-ai.net` | skąd wolno wysłać prośbę o dostęp (lista po przecinku) |
 | `CAI_PROSBY_DNI` | `365` | ile dni trzymać prośby o dostęp; starsze wypadają przy starcie i przy zapisie |

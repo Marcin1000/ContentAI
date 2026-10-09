@@ -387,6 +387,38 @@ async function testyMigracji(sprawdz) {
     magazyn.zamknij();
     fs.rmSync(kat2, { recursive: true, force: true });
   }
+
+  console.log('\n  migracja - cudze pliki R8 poza katalogiem pliku kont');
+  // Test albo serwer roli z CAI_UZYTKOWNICY w swoim katalogu i domyslnym CAI_WYLOGOWANE
+  // (dane/wylogowane.json repozytorium, wspolne z innym serwerem R8): ten plik zostaje.
+  const kat3 = tymczasowy('migracja-cudze');
+  try {
+    const wlasne = path.join(kat3, 'wlasne');
+    const cudze = path.join(kat3, 'repo-dane');
+    fs.mkdirSync(wlasne);
+    fs.mkdirSync(cudze);
+    const r8Cudze = daneR8(cudze);
+    const plikKont = path.join(wlasne, 'uzytkownicy.json');
+    fs.copyFileSync(r8Cudze.plikKont, plikKont);
+    const oryginalWyl = bajty(r8Cudze.plikWylogowanych);
+    const domyslne = migracja.zrodlaR8({ plikKont, katalogUzycia: r8Cudze.katalogUzycia, plikWylogowanych: r8Cudze.plikWylogowanych });
+    const jawne = migracja.zrodlaR8({ plikKont, katalogUzycia: r8Cudze.katalogUzycia, plikWylogowanych: r8Cudze.plikWylogowanych, jawneUzycie: true, jawneWylogowane: true });
+    const produkcja = migracja.zrodlaR8({ plikKont: r8Cudze.plikKont, katalogUzycia: r8Cudze.katalogUzycia, plikWylogowanych: r8Cudze.plikWylogowanych });
+    sprawdz('zrodlaR8: liczniki i wylogowania spoza katalogu kont tylko jawnie (zmienna), obok pliku kont zawsze',
+      domyslne.katalogUzycia === null && domyslne.plikWylogowanych === null && domyslne.pominiete.length === 2
+      && jawne.katalogUzycia === r8Cudze.katalogUzycia && jawne.plikWylogowanych === r8Cudze.plikWylogowanych
+      && produkcja.katalogUzycia === r8Cudze.katalogUzycia && produkcja.plikWylogowanych === r8Cudze.plikWylogowanych
+      && domyslne.katalogDanych === wlasne);
+    magazyn.otworz({ plik: path.join(wlasne, 'contentai.sqlite') });
+    const raport = migracja.migrujZJson({ ...domyslne, loguj: cicho });
+    sprawdz('migracja bez cudzych zrodel: konta przeniesione, cudze wylogowania i liczniki nietkniete (bez zmiany nazw)',
+      raport.wykonano && raport.kont === 3 && raport.sesji === 0 && raport.licznikow === 0
+      && bajty(r8Cudze.plikWylogowanych).equals(oryginalWyl) && fs.existsSync(path.join(r8Cudze.katalogUzycia, 'anna.json'))
+      && !fs.readdirSync(cudze).some((n) => n.includes('.zmigrowany-')) && !fs.existsSync(plikKont));
+  } finally {
+    magazyn.zamknij();
+    fs.rmSync(kat3, { recursive: true, force: true });
+  }
 }
 
 // ─── Moduly pomocnicze: bledy, limity, dzierzawy, plany, oznaczenia ──────────

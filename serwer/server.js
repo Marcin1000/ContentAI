@@ -2314,12 +2314,23 @@ function odpowiedzNaBlad(req, res, e, nazwa) {
  */
 function przygotujMagazyn({ loguj = (t) => console.log(t) } = {}) {
   magazyn.otworz({ plik: KONF.sqlite, timeoutMs: 2000 });
-  return migracja.migrujZJson({
-    plikKont: PLIK_UZYTKOWNIKOW,
-    katalogUzycia: KONF.katalogUzycia,
-    plikWylogowanych: PLIK_WYLOGOWANYCH,
-    katalogDanych: path.dirname(PLIK_UZYTKOWNIKOW),
-    loguj,
+  const zrodla = zrodlaMigracji();
+  if (fs.existsSync(PLIK_UZYTKOWNIKOW)) {
+    for (const p of zrodla.pominiete) {
+      loguj(`[magazyn] migracja: pomijam ${p} (poza katalogiem pliku kont i bez jawnej zmiennej CAI_UZYCIE/CAI_WYLOGOWANE)`);
+    }
+  }
+  return migracja.migrujZJson({ ...zrodla, loguj });
+}
+
+/**
+ * Pliki R8 do migracji (serwer i `uzytkownicy.js migruj`): liczniki i wylogowania tylko
+ * wskazane zmienna albo lezace obok pliku kont (migracja.zrodlaR8).
+ */
+function zrodlaMigracji() {
+  return migracja.zrodlaR8({
+    plikKont: PLIK_UZYTKOWNIKOW, katalogUzycia: KONF.katalogUzycia, plikWylogowanych: PLIK_WYLOGOWANYCH,
+    jawneUzycie: Boolean(process.env.CAI_UZYCIE), jawneWylogowane: Boolean(process.env.CAI_WYLOGOWANE),
   });
 }
 
@@ -2462,7 +2473,7 @@ module.exports = {
   zahaszuj, hasloPasuje, zahaszujAsync, hasloPasujeAsync, anthropicNaOpenai, openaiNaAnthropic, ROLE,
   PLIK_UZYTKOWNIKOW, PLIK_BAZY, poprawnyLogin, WZOR_LOGINU,
   // Sesje - wystawione do testow; produkcyjnie wola je tylko router.
-  utworzSesje, sesjaZadania, zapiszWylogowanie, wylogowane, PLIK_WYLOGOWANYCH, ciasteczkoSesji, ciasteczkoWylogowania,
+  utworzSesje, sesjaZadania, zapiszWylogowanie, wylogowane, PLIK_WYLOGOWANYCH, zrodlaMigracji, ciasteczkoSesji, ciasteczkoWylogowania,
   czynnosciTresci, parsujCiasteczka, adresIp, obcePochodzenie, jezykZadania, podpisz, skrotEmaila,
   wyzerujOstrzezenieIp: () => { ostatnieOstrzezenieIp = 0; },
   // Baza i konfiguracja (CLI, testy): otwarcie z migracja, kontrola konfiguracji.

@@ -40,6 +40,30 @@ function znacznik(teraz) {
   return new Date(teraz).toISOString().replace(/[:.]/g, '-');
 }
 
+/**
+ * Zrodla R8 nalezace do tego pliku kont. Katalog licznikow i plik wylogowan wchodza
+ * do migracji, gdy wskazano je jawnie (zmienna srodowiskowa) albo leza w katalogu
+ * pliku kont; inaczej null. Chroni cudze pliki: test albo serwer roli z CAI_UZYTKOWNICY
+ * w innym katalogu nie przenosi dane/wylogowane.json repozytorium, z ktorego korzysta
+ * inny serwer R8. Na produkcji (wszystko domyslnie w serwer/dane) bierze wszystko.
+ *   zrodlaR8({ plikKont, katalogUzycia, plikWylogowanych, jawneUzycie, jawneWylogowane })
+ *   -> { plikKont, katalogUzycia|null, plikWylogowanych|null, katalogDanych, pominiete: [sciezka] }
+ */
+function zrodlaR8({ plikKont, katalogUzycia, plikWylogowanych, jawneUzycie = false, jawneWylogowane = false }) {
+  const katalogDanych = path.dirname(path.resolve(plikKont));
+  const obok = (p) => Boolean(p) && path.dirname(path.resolve(p)) === katalogDanych;
+  const zrodla = {
+    plikKont,
+    katalogUzycia: jawneUzycie || obok(katalogUzycia) ? katalogUzycia : null,
+    plikWylogowanych: jawneWylogowane || obok(plikWylogowanych) ? plikWylogowanych : null,
+    katalogDanych,
+    pominiete: [],
+  };
+  if (katalogUzycia && !zrodla.katalogUzycia && fs.existsSync(katalogUzycia)) zrodla.pominiete.push(katalogUzycia);
+  if (plikWylogowanych && !zrodla.plikWylogowanych && fs.existsSync(plikWylogowanych)) zrodla.pominiete.push(plikWylogowanych);
+  return zrodla;
+}
+
 /** Czyta zrodla bez zmian na dysku. Uszkodzony plik -> pliki.BladDanych (i kopia obok). */
 function wczytajZrodla({ plikKont, katalogUzycia, plikWylogowanych }) {
   const skrot = crypto.createHash('sha256');
@@ -55,7 +79,7 @@ function wczytajZrodla({ plikKont, katalogUzycia, plikWylogowanych }) {
   const liczniki = [];
   let wpisy = [];
   try {
-    wpisy = fs.readdirSync(katalogUzycia, { withFileTypes: true });
+    if (katalogUzycia) wpisy = fs.readdirSync(katalogUzycia, { withFileTypes: true });
   } catch (e) {
     if (e.code !== 'ENOENT') throw new pliki.BladDanych(katalogUzycia, e.code || e.message);
   }
@@ -69,7 +93,7 @@ function wczytajZrodla({ plikKont, katalogUzycia, plikWylogowanych }) {
   }
 
   let wylogowane = [];
-  if (fs.existsSync(plikWylogowanych)) {
+  if (plikWylogowanych && fs.existsSync(plikWylogowanych)) {
     skrot.update('wylogowane\0').update(fs.readFileSync(plikWylogowanych));
     wylogowane = pliki.czytajJson(plikWylogowanych, [], pliki.czyTablica);
   }
@@ -146,10 +170,11 @@ function kopiujZrodlo(zrodlo, cel) {
 }
 
 /**
- * Migracja (albo jej sprawdzenie). Zrodla domyslnie z konfiguracji serwera.
+ * Migracja (albo jej sprawdzenie). Zrodla z serwera: server.zrodlaMigracji() (zrodlaR8).
  *   migrujZJson({ plikKont, katalogUzycia, plikWylogowanych, katalogDanych, teraz, tylkoSprawdz, poKoncie, loguj })
  *   -> { wykonano, powtorka, sprawdzenie, kont, nowych, zmienionych, licznikow, sesji, usuniete, pominiete,
  *        nieznanePola, katalogKopii, przeniesione, czas }
+ * katalogUzycia / plikWylogowanych = null: tego zrodla nie ma (nie czytamy, nie przenosimy).
  * Bez pliku kont: { wykonano: false, powod: 'brak-pliku' }.
  * poKoncie(konto, i): tylko testy (symulacja awarii w polowie transakcji).
  */
@@ -157,7 +182,9 @@ function migrujZJson({
   plikKont, katalogUzycia, plikWylogowanych, katalogDanych, teraz = Date.now(), tylkoSprawdz = false,
   poKoncie = null, loguj = (s) => console.log(s),
 } = {}) {
-  if (!plikKont || !katalogUzycia || !plikWylogowanych) throw new Error('migrujZJson: wymagane plikKont, katalogUzycia, plikWylogowanych');
+  if (!plikKont || katalogUzycia === undefined || plikWylogowanych === undefined) {
+    throw new Error('migrujZJson: wymagane plikKont, katalogUzycia, plikWylogowanych (null = brak zrodla)');
+  }
   if (!fs.existsSync(plikKont)) return { wykonano: false, powod: 'brak-pliku' };
   const katalog = katalogDanych || path.dirname(plikKont);
 
@@ -220,11 +247,12 @@ function migrujZJson({
   const czas = znacznik(teraz);
   const katalogKopii = path.join(katalog, `przed-migracja-${czas}`);
   fs.mkdirSync(katalogKopii, { recursive: true, mode: 0o700 });
-  for (const zrodlo of [plikKont, katalogUzycia, plikWylogowanych]) {
+  const doPrzeniesienia = [plikKont, katalogUzycia, plikWylogowanych].filter(Boolean);
+  for (const zrodlo of doPrzeniesienia) {
     kopiujZrodlo(zrodlo, path.join(katalogKopii, path.basename(zrodlo)));
   }
   raport.katalogKopii = katalogKopii;
-  for (const zrodlo of [plikKont, katalogUzycia, plikWylogowanych]) {
+  for (const zrodlo of doPrzeniesienia) {
     if (!fs.existsSync(zrodlo)) continue;
     const cel = `${zrodlo}.zmigrowany-${czas}`;
     fs.renameSync(zrodlo, cel);
@@ -289,4 +317,4 @@ function czekaNaMigracje(plikKont) {
   return Boolean(plikKont) && fs.existsSync(plikKont);
 }
 
-module.exports = { migrujZJson, eksportujDoJson, czekaNaMigracje, wczytajZrodla, zaplanuj, CZYNNOSCI_R8 };
+module.exports = { migrujZJson, eksportujDoJson, czekaNaMigracje, zrodlaR8, wczytajZrodla, zaplanuj, CZYNNOSCI_R8 };

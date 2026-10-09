@@ -38,7 +38,7 @@ const dzierzawy = require('./dzierzawy.js');
 const platnosciCli = require('./platnosci-cli.js');
 const poczta = require('./poczta.js');
 const {
-  zahaszuj, ROLE, PLIK_UZYTKOWNIKOW, PLIK_WYLOGOWANYCH, poprawnyLogin, skrotEmaila, KONF,
+  zahaszuj, ROLE, PLIK_UZYTKOWNIKOW, PLIK_WYLOGOWANYCH, zrodlaMigracji, poprawnyLogin, skrotEmaila, KONF,
 } = require('./server.js');
 
 // Dane konta na dysku: prywatna baza wiedzy (u-<login>.json) razem z kopiami
@@ -206,10 +206,11 @@ async function main() {
 
   if (polecenie === 'migruj') {
     const tylkoSprawdz = argumenty.includes('--sprawdz');
-    const raport = migracja.migrujZJson({
-      plikKont: PLIK_UZYTKOWNIKOW, katalogUzycia: KONF.katalogUzycia, plikWylogowanych: PLIK_WYLOGOWANYCH,
-      katalogDanych: path.dirname(PLIK_UZYTKOWNIKOW), tylkoSprawdz, loguj: (t) => console.log(t),
-    });
+    const zrodla = zrodlaMigracji();
+    if (migracja.czekaNaMigracje(PLIK_UZYTKOWNIKOW)) {
+      for (const p of zrodla.pominiete) console.log(`Pomijam ${p}: poza katalogiem pliku kont (wskaż go zmienną CAI_UZYCIE albo CAI_WYLOGOWANE).`);
+    }
+    const raport = migracja.migrujZJson({ ...zrodla, tylkoSprawdz, loguj: (t) => console.log(t) });
     if (raport.powod === 'brak-pliku') {
       console.log(`Nie ma pliku kont R8 (${PLIK_UZYTKOWNIKOW}) - nie ma czego migrować.`);
       return;
