@@ -1321,6 +1321,30 @@ async function scenariuszR9FBezSieci(b) {
   await k.close();
 }
 
+// KOD8-19: prompt artykulu w wariancie z serwerem mowil modelowi "You have 0 knowledge source(s)" i "Knowledge base
+// ONLY", a zaraz potem dawal fragmenty z Bazy na serwerze. Licznik zrodel ma liczyc te fragmenty.
+async function scenariuszR9FPromptBazy(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  await s.evaluate(async () => {
+    await fetch('/api/baza', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zakres: 'prywatna', nazwa: 'Oferta Termoplus',
+      tresc: 'Termoplus montuje pompy ciepla Vitocal w 48 godzin. Gwarancja 7 lat. Pompy ciepla w Krakowie od 28 000 zl.' }) });
+    await odswiezListeBazy();
+  });
+  const prompty = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url()) && z.headers()['x-cai-czynnosc'] === 'artykul') { try { prompty.push(JSON.parse(z.postData()).messages[0].content); } catch (e) { /* inne cialo */ } } });
+  await s.evaluate(() => { document.getElementById('topic').value = 'Pompy ciepla w Krakowie'; document.getElementById('use-web').checked = false; generate(true); });
+  await krok('R9-F KOD8-19 artykul z Bazy na serwerze', czekajNaKoniec(s));
+  const poczatek = (prompty[0] || '').split('\n')[0];
+  wynik('R9-F KOD8-19: prompt liczy fragmenty z Bazy na serwerze jako zrodla (nie "You have 0 knowledge source(s)")',
+    /WIEDZA FIRMOWA/.test(prompty[0] || '') && !/You have 0 knowledge source/.test(poczatek) && /passage\(s\) from the company knowledge base on the server/.test(poczatek), poczatek);
+  await s.evaluate(async () => { const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); });
+  wynik('R9-F KOD8-19: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-prompt-bazy');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
@@ -1330,6 +1354,7 @@ const SCENARIUSZE = [
   ['r9f-transkrypcja', scenariuszR9FTranskrypcja], ['r9f-duzy-dokument', scenariuszR9FDuzyDokument],
   ['r9f-cms', scenariuszR9FCms], ['r9f-pdf', scenariuszR9FPdf],
   ['r9f-luki-darmowy', scenariuszR9FLukiDarmowy], ['r9f-bez-sieci', scenariuszR9FBezSieci],
+  ['r9f-prompt-bazy', scenariuszR9FPromptBazy],
 ];
 (async () => {
   let b;

@@ -8361,7 +8361,13 @@ ${(ctype !== 'FAQ page' && !isPress) ? `- MANDATORY: End the article, immediatel
     if (typeof isPodcastType === 'function' && isPodcastType(ctype)) systemPrompt += podcastPromptBlock();
     else if (typeof isNewsletterAudioType === 'function' && isNewsletterAudioType(ctype)) systemPrompt += newsletterPromptBlock();
 
-    const userPrompt = `You have ${docs.length} knowledge source(s): ${files.length} file(s), ${urls.length} URL(s), ${texts.length} manual text(s).
+    // R9-F (KOD8-19): fragmenty z Bazy na serwerze tez sa zrodlami. Wczesniej prompt mowil "You have 0 knowledge
+    // source(s)" i "Knowledge base ONLY", a zaraz potem dawal te fragmenty - model mogl uznac baze za pusta.
+    const fragmentySerwera = (String(ostatniaWiedzaSerwera || '').match(/^### /gm) || []).length;
+    const opisZrodelSerwera = fragmentySerwera ? `, ${fragmentySerwera} passage(s) from the company knowledge base on the server` : '';
+    const bazaBezTrafien = !fragmentySerwera && (window._bazaSerwerLiczba || 0) > 0
+      ? '\nThe company knowledge base on the server has documents, but none of their passages matches this topic.' : '';
+    const userPrompt = `You have ${activeDocs.length + fragmentySerwera} knowledge source(s): ${files.length} file(s), ${urls.length} URL(s), ${texts.length} manual text(s)${opisZrodelSerwera}.${bazaBezTrafien}
 Mode: ${useWeb ? 'Knowledge base FIRST, supplement gaps with general knowledge where needed.' : 'Knowledge base ONLY - do not add anything outside provided sources.'}
 
 KNOWLEDGE BASE - always prioritize this content:

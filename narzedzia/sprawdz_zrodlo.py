@@ -1257,6 +1257,9 @@ KONTROLE += [
      "sp.classList.toggle('czeka-na-siec', czekamNaSiec.n > 0);", None, None),
     ("R9-F/baza-bez-sieci", "KOD8-34: wyszukiwanie w Bazie bez sieci czeka na polaczenie (artykul nie powstaje po cichu bez wiedzy)",
      "if (proba > 0 || typeof czekajNaPowrot !== 'function') return '';", None, ("proxy",)),
+    ("R9-F/prompt-zrodla-serwera", "KOD8-19: prompt artykulu liczy fragmenty z Bazy na serwerze jako zrodla (nie 'You have 0 knowledge source(s)')",
+     "const userPrompt = `You have ${activeDocs.length + fragmentySerwera} knowledge source(s):",
+     "const userPrompt = `You have ${docs.length} knowledge source(s):", None),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna
