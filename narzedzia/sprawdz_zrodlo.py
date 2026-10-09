@@ -1279,6 +1279,14 @@ KONTROLE += [
      "if (odpBazy.status === 401) {", None, ("proxy",)),
     ("R9-F/baza-sesja-dodanie", "KOD8-10: dodanie dokumentu przy wygaslej sesji - komunikat z 'Zaloguj sie', bez cichego zapisu lokalnego",
      "var toast = pokazPowiadomienie(tekst('kb-sesja-wygasla', ''), 'blad', 15000);", None, ("proxy",)),
+    ("R9-F/koszt-cennik-wersji", "KOD8-31: cennik modelu po przedrostku nazwy (nazwa wersji z data jak alias)",
+     "const cennik = cennikModelu(dane.model);", "const cennik = CENY_MODELI[dane.model] || CENY_MODELI['claude-sonnet-5'];", None),
+    ("R9-F/koszt-wyszukiwania", "KOD8-31: wyszukiwania w sieci wliczone do szacowanego kosztu",
+     "return (we * cennik[0] + wy * cennik[1]) / 1e6 + wyszukiwania * CENA_WYSZUKIWANIA;", None, None),
+    ("R9-F/koszt-transkrypcji", "KOD8-31: koszt transkrypcji z dlugosci nagrania",
+     "dlugoscNagrania(file).then(function (s) { if (s) dodajKoszt('openai', s / 60 * CENA_TRANSKRYPCJI_MIN); });", None, None),
+    ("R9-F/koszt-szacunek", "KOD8-31: etykieta kosztu na wlasnych kluczach mowi, ze to szacunek",
+     "'hist-cost-wlasne':'Szacunkowy koszt na Twoich kluczach'", "'hist-cost-wlasne':'Koszt na Twoich kluczach'", None),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna

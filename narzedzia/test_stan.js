@@ -901,6 +901,37 @@ async function scenariuszR9FTemat(b) {
   await k.close();
 }
 
+// KOD8-31: szacowany koszt na wlasnych kluczach. Nazwa modelu z data wersji (API zwraca ja dla aliasow) spadala
+// na stawke modelu pomocniczego, nie liczyly sie wyszukiwania w sieci ani transkrypcja, a etykieta nie mowila,
+// ze to szacunek.
+async function scenariuszR9FKoszt(b) {
+  const { k, s, bledyJs } = await nowaStrona(b, 'pl', {});
+  const ceny = await s.evaluate(() => ({
+    wersja: kosztOdpowiedzi({ model: 'claude-opus-5-20261001', usage: { input_tokens: 1000000, output_tokens: 0 } }),
+    alias: kosztOdpowiedzi({ model: 'claude-opus-5', usage: { input_tokens: 1000000, output_tokens: 0 } }),
+    siec: kosztOdpowiedzi({ model: 'claude-sonnet-5', usage: { input_tokens: 0, output_tokens: 0, server_tool_use: { web_search_requests: 5 } } }),
+    etykieta: _t('hist-cost-wlasne'),
+  }));
+  wynik('R9-F KOD8-31: cennik po nazwie modelu z data wersji (jak alias), nie stawka modelu pomocniczego', ceny.wersja === ceny.alias && ceny.alias > 0, JSON.stringify(ceny));
+  wynik('R9-F KOD8-31: wyszukiwania w sieci wliczone do kosztu (5 wyszukan = 0,05 USD)', Math.abs(ceny.siec - 0.05) < 1e-9, JSON.stringify(ceny));
+  wynik('R9-F KOD8-31: etykieta mowi, ze koszt na wlasnych kluczach to szacunek', /Szacunkowy/.test(ceny.etykieta), ceny.etykieta);
+  // Transkrypcja nagrania (2 s WAV) dolicza koszt OpenAI.
+  const transkrypcja = await s.evaluate(async () => {
+    const przed = (kosztyApi.wszystkie || {}).openai || 0;
+    const hz = 8000, n = hz * 2, b = new ArrayBuffer(44 + n * 2), v = new DataView(b);
+    const zapisz = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+    zapisz(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); zapisz(8, 'WAVE'); zapisz(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, hz, true); v.setUint32(28, hz * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); zapisz(36, 'data'); v.setUint32(40, n * 2, true);
+    const tekst = await transcribeMedia(new File([b], 'nagranie.wav', { type: 'audio/wav' }));
+    await new Promise((r) => setTimeout(r, 800));
+    return { tekst: String(tekst).slice(0, 30), koszt: ((kosztyApi.wszystkie || {}).openai || 0) - przed };
+  });
+  wynik('R9-F KOD8-31: transkrypcja dolicza koszt (z dlugosci nagrania)', transkrypcja.tekst.length > 0 && transkrypcja.koszt > 0, JSON.stringify(transkrypcja));
+  wynik('R9-F KOD8-31: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-koszt');
+  await k.close();
+}
+
 // KOD8-22: Widocznosc marki w AI. Zly klucz albo przeciazenie przy wszystkich zapytaniach to blad z powodem
 // (bez "0, obecnosc w 0/2" i bez zapisu do historii pomiarow); czesc nieudanych nie zaniza wyniku.
 async function scenariuszR9FWidocznosc(b) {
@@ -1476,7 +1507,7 @@ async function scenariuszR9FSesja(b) {
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
   ['stan', scenariuszStanu], ['r4-logika', scenariuszR4Logiki], ['bledy', scenariuszBledow], ['historia-r4', scenariuszHistoriiR4],
-  ['r9f-keys', scenariuszR9FKeys], ['r9f-telefon-pisz', scenariuszR9FTelefonPisz], ['r9f-temat', scenariuszR9FTemat], ['r9f-widocznosc', scenariuszR9FWidocznosc], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
+  ['r9f-keys', scenariuszR9FKeys], ['r9f-telefon-pisz', scenariuszR9FTelefonPisz], ['r9f-temat', scenariuszR9FTemat], ['r9f-koszt', scenariuszR9FKoszt], ['r9f-widocznosc', scenariuszR9FWidocznosc], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
   ['r9f-pause-turn', scenariuszR9FPauseTurn], ['r9f-przeladowanie', scenariuszR9FPrzeladowanie], ['r9f-fakty', scenariuszR9FFakty],
   ['r9f-transkrypcja', scenariuszR9FTranskrypcja], ['r9f-duzy-dokument', scenariuszR9FDuzyDokument],
   ['r9f-cms', scenariuszR9FCms], ['r9f-pdf', scenariuszR9FPdf],
