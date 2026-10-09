@@ -1482,6 +1482,26 @@ async function wariantR9Zrozumialosc(b) {
   wynik('telefon: R9-G UX8-14 okno "Brak zrodel wiedzy" ma trzy wyjscia, "Wygeneruj bez zrodel" z ostrzezeniem pisze tekst bez sieci',
     !okno2.web && okno2.wyjsc === 3 && /bez źródeł/.test(okno2.bez) && /Sprawdź/.test(okno2.uwaga) && artykuly.length === przed + 1 && !/web_search/.test(artykuly[przed] || '') && /ready/.test(bez.odz) && !bez.web && !bez.okno,
     JSON.stringify({ okno2, bez, zapytan: artykuly.length - przed }));
+  // UX8-13: na telefonie Widocznosc AI (4 narzedzia) w arkuszu Konto, nazwy okien jak w menu, podpis "po co".
+  await s.evaluate(() => { closeNoSourceModal(); ustawWidokMobilny('brief'); });
+  await krok('R9-G arkusz Konto', s.click('#mnav-konto', { timeout: 3000 }));
+  await s.waitForTimeout(400);
+  const wid = await s.evaluate(() => {
+    const poz = [...document.querySelectorAll('#settings-menu .settings-item')].filter((x) => x.offsetParent !== null && /openVisModal|aivOpen|openRepModal|openTrkModal/.test(x.getAttribute('onclick') || ''));
+    return { poz: poz.length, podpisy: poz.map((x) => (x.querySelector('.settings-item-opis') || {}).textContent || '') };
+  });
+  const oknoZMenu = async (fn) => {
+    await s.evaluate(() => { if (!document.getElementById('settings-menu').classList.contains('open')) otworzKontoMobilne(); });
+    await s.waitForTimeout(300);
+    const ok = await krok('R9-G pozycja ' + fn, s.click('#settings-menu .settings-item[onclick^="' + fn + '"]', { timeout: 3000 }));
+    await s.waitForTimeout(400);
+    const t = await s.evaluate(() => { const m = [...document.querySelectorAll('.overlay')].filter((o) => getComputedStyle(o).display !== 'none' && o.getClientRects().length).pop(); return m ? (m.querySelector('h3') || {}).textContent : ''; });
+    await s.keyboard.press('Escape');
+    return ok ? t : '';
+  };
+  const tVis = await oknoZMenu('openVisModal'), tAiv = await oknoZMenu('aivOpen');
+  wynik('telefon: R9-G UX8-13 Widocznosc AI w arkuszu Konto: 4 narzedzia z podpisem "po co", okna nazwane jak w menu',
+    wid.poz === 4 && wid.podpisy.every((t) => /^(czy|co|wejścia)/.test(t)) && tVis === 'Obecność marki w AI' && tAiv === 'Cytowania w AI', JSON.stringify({ wid, tVis, tAiv }));
   wynik('telefon: R9-G bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow) await zrzut(s, 'telefon-r9g');
   await k.close();
@@ -1506,6 +1526,13 @@ async function wariantR9Zrozumialosc(b) {
   const baza = await s.evaluate(() => ({ zwinieta: document.body.classList.contains('kb-collapsed'), okno: document.getElementById('no-source-modal').classList.contains('open'),
     panel: getComputedStyle(document.querySelector('.layout > .sidebar')).display !== 'none' && document.querySelector('.layout > .sidebar').getBoundingClientRect().width > 100 }));
   wynik('komputer EN: R9-G UX8-14 "Dodaj zrodla do bazy wiedzy" otwiera zwinieta baze wiedzy', !baza.zwinieta && !baza.okno && baza.panel, JSON.stringify(baza));
+  // UX8-13: na komputerze grupa z arkusza Konto jest ukryta (Widocznosc AI w gornym pasku), fokus menu na pierwszej widocznej pozycji.
+  await s.evaluate(() => toggleSettingsMenu());
+  await s.waitForTimeout(400);
+  const menuK = await s.evaluate(() => ({ grupa: [...document.querySelectorAll('#settings-menu .settings-item')].filter((x) => x.offsetParent !== null && /openVisModal/.test(x.getAttribute('onclick') || '')).length,
+    fokus: !!document.activeElement && document.activeElement.classList.contains('settings-item') && document.activeElement.offsetParent !== null }));
+  await s.evaluate(() => closeSettingsMenu());
+  wynik('komputer EN: R9-G UX8-13 menu konta bez kopii Widocznosci AI, fokus na pierwszej widocznej pozycji', menuK.grupa === 0 && menuK.fokus, JSON.stringify(menuK));
   wynik('komputer EN: R9-G bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow) await zrzut(s, 'komputer-r9g');
   await k2.close();

@@ -1216,6 +1216,17 @@ KONTROLE += [
      "const kluczOpisu = { 'Hybryda SEO + AIO': 'ctype-opis-hybryda', 'Artykuł SEO': 'ctype-opis-seo', 'Treść AIO': 'ctype-opis-aio' }[sel.value];", None, None),
     ("R9-G/filtry-historii", "UX8-11: filtry Historii SEO, AIO, Hybryda z podpowiedzia",
      'data-i18n-title="ctype-opis-aio"', None, None),
+    ("R9-G/widocznosc-telefon", "UX8-13: Widocznosc AI (cztery narzedzia) w arkuszu Konto na telefonie",
+     '<div class="menu-tel-widocznosc">', None, None),
+    ("R9-G/widocznosc-tylko-telefon", "UX8-13: kopia grupy w menu konta ukryta na komputerze (tam jest gorny pasek)",
+     "body:not(.is-mobile) .menu-tel-widocznosc { display: none; }", None, None),
+    ("R9-G/fokus-menu-konta", "UX8-13: fokus menu konta na pierwszej widocznej pozycji",
+     "const p = [...menu.querySelectorAll('.settings-item')].find(function (x) { return x.offsetParent !== null; });",
+     "const p = menu.querySelector('.settings-item'); if (p) p.focus", None),
+    ("R9-G/widocznosc-nazwy", "UX8-13: podpis 'po co' przy narzedziach Widocznosci AI, okna nazwane jak pozycje menu",
+     "'aiv-modal-title':'Cytowania w AI',", "'aiv-modal-title':'Widoczność w AI (AEO/GEO)',", None),
+    ("R9-G/openseo-telefon", "UX8-13: OpenSEO tez w arkuszu Konto na telefonie",
+     "var pozTel = document.getElementById('openseo-item-tel');", None, ("proxy",)),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna

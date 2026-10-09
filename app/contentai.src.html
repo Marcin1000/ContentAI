@@ -3109,6 +3109,8 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
 .ins-oceny .ins-ocena-opis:empty { display: none; }
 .form-col .row2 > .ctype-opis { grid-column: 1 / -1; margin: calc(var(--s-10, 10px) * -1) 0 0; }
 .form-col .row2 > .ctype-opis[hidden] { display: none; }
+/* UX8-13: grupa Widocznosc AI w arkuszu Konto tylko na telefonie (komputer ma ja w gornym pasku obszarow) */
+body:not(.is-mobile) .menu-tel-widocznosc { display: none; }
 }
 @layer widoki {
 /* ══ RUNDA 6, wykonawca F ══ */
@@ -3179,10 +3181,10 @@ document.addEventListener('DOMContentLoaded', function () {
       <button type="button" class="obszar" aria-haspopup="true" aria-expanded="false" aria-controls="grupa-widocznosc-menu" onclick="przelaczGrupe('widocznosc')"><svg class="ikona" aria-hidden="true"><use href="#i-radio-tower"/></svg><span data-i18n="nav-widocznosc">Widoczność AI</span><svg class="ikona ikona-s" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
       <div class="grupa-backdrop" onclick="przelaczGrupe('widocznosc')"></div>
       <div class="grupa-menu" id="grupa-widocznosc-menu">
-          <button type="button" class="poz-menu" onclick="openVisModal()"><svg class="ikona" aria-hidden="true"><use href="#i-scan-search"/></svg><span><b data-i18n="settings-vis-title">Obecność marki w AI</b><small data-i18n="settings-vis-sub">zapytania zakupowe, pozycja, konkurenci</small></span></button>
-          <button type="button" class="poz-menu" onclick="aivOpen()"><svg class="ikona" aria-hidden="true"><use href="#i-radio-tower"/></svg><span><b data-i18n="settings-aiv-title">Cytowania w AI</b><small data-i18n="settings-aiv-sub">Twoje zapytania, trend w czasie</small></span></button>
-          <button type="button" class="poz-menu" onclick="openRepModal()"><svg class="ikona" aria-hidden="true"><use href="#i-chart-column"/></svg><span><b data-i18n="settings-rep-title">Raport widoczności</b><small data-i18n="settings-rep-sub">porównanie pomiarów i priorytety</small></span></button>
-          <button type="button" class="poz-menu" onclick="openTrkModal()"><svg class="ikona" aria-hidden="true"><use href="#i-bot"/></svg><span><b data-i18n="settings-trk-title">Pomiar ruchu z AI</b><small data-i18n="settings-trk-sub">robots.txt, UTM, GA4</small></span></button>
+          <button type="button" class="poz-menu" onclick="openVisModal()"><svg class="ikona" aria-hidden="true"><use href="#i-scan-search"/></svg><span><b data-i18n="settings-vis-title">Obecność marki w AI</b><small data-i18n="settings-vis-sub">czy AI poleca Twoją markę przy zakupach</small></span></button>
+          <button type="button" class="poz-menu" onclick="aivOpen()"><svg class="ikona" aria-hidden="true"><use href="#i-radio-tower"/></svg><span><b data-i18n="settings-aiv-title">Cytowania w AI</b><small data-i18n="settings-aiv-sub">czy AI cytuje Twoje strony, trend</small></span></button>
+          <button type="button" class="poz-menu" onclick="openRepModal()"><svg class="ikona" aria-hidden="true"><use href="#i-chart-column"/></svg><span><b data-i18n="settings-rep-title">Raport widoczności</b><small data-i18n="settings-rep-sub">co się zmieniło i co poprawić</small></span></button>
+          <button type="button" class="poz-menu" onclick="openTrkModal()"><svg class="ikona" aria-hidden="true"><use href="#i-bot"/></svg><span><b data-i18n="settings-trk-title">Pomiar ruchu z AI</b><small data-i18n="settings-trk-sub">wejścia z czatów AI: robots.txt, UTM</small></span></button>
 <!--@@IF proxy-->
           <button type="button" class="poz-menu btn-secondary" id="openseo-item" style="display:none" onclick="otworzOpenSeo()"><svg class="ikona" aria-hidden="true"><use href="#i-trending-up"/></svg><span><b data-i18n="openseo-menu-title">OpenSEO</b><small data-i18n="openseo-menu-sub">pozycje, backlinki, audyty</small></span></button>
 <!--@@ENDIF-->
@@ -3202,6 +3204,32 @@ document.addEventListener('DOMContentLoaded', function () {
       <div class="settings-menu" id="settings-menu" role="menu" aria-label="Konto" data-i18n-label="konto-menu">
         <div class="menu-konto"><span class="konto-awatar" id="konto-awatar-menu"><svg class="ikona" aria-hidden="true"><use href="#i-user"/></svg></span><div><b id="konto-nazwa" data-i18n="konto-gosc">To urządzenie</b><span id="konto-opis" data-i18n="konto-opis">Ustawienia aplikacji</span></div></div>
         <hr>
+        <!-- R9-G (UX8-13): telefon nie ma paska obszarow, wiec Widocznosc AI stoi w arkuszu Konto (na komputerze w gornym pasku) -->
+        <div class="menu-tel-widocznosc">
+        <div class="menu-naglowek" data-i18n="nav-widocznosc">Widoczność AI</div>
+        <div class="settings-item" onclick="openVisModal();closeSettingsMenu()">
+          <span><svg class="ikona" aria-hidden="true"><use href="#i-scan-search"/></svg></span>
+          <div><div class="settings-item-tytul" data-i18n="settings-vis-title">Obecność marki w AI</div><div class="settings-item-opis" data-i18n="settings-vis-sub">czy AI poleca Twoją markę przy zakupach</div></div>
+        </div>
+        <div class="settings-item" onclick="aivOpen();closeSettingsMenu()">
+          <span><svg class="ikona" aria-hidden="true"><use href="#i-radio-tower"/></svg></span>
+          <div><div class="settings-item-tytul" data-i18n="settings-aiv-title">Cytowania w AI</div><div class="settings-item-opis" data-i18n="settings-aiv-sub">czy AI cytuje Twoje strony, trend</div></div>
+        </div>
+        <div class="settings-item" onclick="openRepModal();closeSettingsMenu()">
+          <span><svg class="ikona" aria-hidden="true"><use href="#i-chart-column"/></svg></span>
+          <div><div class="settings-item-tytul" data-i18n="settings-rep-title">Raport widoczności</div><div class="settings-item-opis" data-i18n="settings-rep-sub">co się zmieniło i co poprawić</div></div>
+        </div>
+        <div class="settings-item" onclick="openTrkModal();closeSettingsMenu()">
+          <span><svg class="ikona" aria-hidden="true"><use href="#i-bot"/></svg></span>
+          <div><div class="settings-item-tytul" data-i18n="settings-trk-title">Pomiar ruchu z AI</div><div class="settings-item-opis" data-i18n="settings-trk-sub">wejścia z czatów AI: robots.txt, UTM</div></div>
+        </div>
+<!--@@IF proxy-->
+        <div class="settings-item" id="openseo-item-tel" style="display:none" onclick="otworzOpenSeo();closeSettingsMenu()">
+          <span><svg class="ikona" aria-hidden="true"><use href="#i-trending-up"/></svg></span>
+          <div><div class="settings-item-tytul" data-i18n="openseo-menu-title">OpenSEO</div><div class="settings-item-opis" data-i18n="openseo-menu-sub">pozycje, backlinki, audyty</div></div>
+        </div>
+<!--@@ENDIF-->
+        </div>
         <div class="menu-naglowek" data-i18n="menu-gr-marka">Marka</div>
         <div class="settings-item" onclick="openLlmsModal();closeSettingsMenu()">
           <span><svg class="ikona" aria-hidden="true"><use href="#i-briefcase"/></svg></span>
@@ -4151,7 +4179,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <div class="overlay" id="vis-modal" onclick="if(event.target===this)closeVisModal()">
   <div class="modal" style="width:680px">
     <div class="modal-head">
-      <h3 data-i18n="vis-title">Widoczność marki w AI</h3>
+      <h3 data-i18n="vis-title">Obecność marki w AI</h3>
       <button class="modal-close" onclick="closeVisModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
     </div>
     <p data-i18n="vis-desc">Sprawdza czy marka pojawia się w odpowiedziach AI na zapytania zakupowe. Uruchamia każdy prompt przez Claude z wyszukiwaniem w sieci i raportuje obecność, pozycję, konkurentów i źródła. To migawka na żądanie z jednego modelu (Claude), nie ciągły monitoring wielu modeli. Każdy prompt zużywa zapytanie web search (płatne).</p>
@@ -4203,7 +4231,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <div class="overlay" id="trk-modal" onclick="if(event.target===this)closeTrkModal()">
   <div class="modal" style="width:660px">
     <div class="modal-head">
-      <h3 data-i18n="trk-title">Tracking ruchu z AI (przygotowanie)</h3>
+      <h3 data-i18n="trk-title">Pomiar ruchu z AI (przygotowanie)</h3>
       <button class="modal-close" onclick="closeTrkModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
     </div>
     <p data-i18n="trk-desc">To nie jest pomiar ruchu. Generuje warunki wstępne: dyrektywy robots.txt dla botów AI, linki z UTM i wskazówkę konfiguracji GA4. Sam pomiar wymaga GA4 i analizy logów po stronie serwera.</p>
@@ -4300,7 +4328,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <!-- BRAND VOICE MODAL -->
 <div class="overlay" id="aiv-modal" onclick="if(event.target===this)aivClose()">
   <div class="modal" style="width:560px;max-width:94vw">
-    <div class="modal-head"><h3 data-i18n="aiv-modal-title">Widoczność w AI (AEO/GEO)</h3><button class="modal-close" onclick="aivClose()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+    <div class="modal-head"><h3 data-i18n="aiv-modal-title">Cytowania w AI</h3><button class="modal-close" onclick="aivClose()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
     <p class="tekst-2" style="margin-top:0" data-i18n="aiv-modal-desc">Sprawdza, czy odpowiedzi AI (Claude z web search) na Twoje zapytania przywołują markę - w treści lub w cytowanych źródłach. Wynik i historia zapisują się lokalnie, więc widać trend w czasie. To przybliżenie jednym silnikiem, nie pomiar wszystkich wyszukiwarek AI.</p>
     <div style="display:flex;align-items:center;gap:10px;margin:8px 0 12px;padding:8px 12px;background:var(--surface2);border-radius:8px">
       <span class="tekst-pomoc" data-i18n="aiv-score-label">Wynik widoczności:</span>
@@ -4934,8 +4962,8 @@ var I18N = {
     'ins-linki':'Linki',
     'ins-serp':'SERP',
     'ins-zamknij':'Zamknij panel',
-    'settings-aiv-title':'Cytowania w AI','settings-aiv-sub':'Twoje zapytania, trend w czasie',
-    'aiv-modal-title':'Widoczność w AI (AEO/GEO)','aiv-modal-desc':'Sprawdza, czy odpowiedzi AI (Claude z web search) na Twoje zapytania przywołują markę - w treści lub w cytowanych źródłach. Wynik i historia zapisują się lokalnie, więc widać trend w czasie. To przybliżenie jednym silnikiem, nie pomiar wszystkich wyszukiwarek AI.',
+    'settings-aiv-title':'Cytowania w AI','settings-aiv-sub':'czy AI cytuje Twoje strony, trend',
+    'aiv-modal-title':'Cytowania w AI','aiv-modal-desc':'Sprawdza, czy odpowiedzi AI (Claude z web search) na Twoje zapytania przywołują markę - w treści lub w cytowanych źródłach. Wynik i historia zapisują się lokalnie, więc widać trend w czasie. To przybliżenie jednym silnikiem, nie pomiar wszystkich wyszukiwarek AI.',
     'aiv-score-label':'Wynik widoczności:','aiv-add-ph':'np. najlepsza firma [branża] w Polsce','aiv-add-btn':'Dodaj','aiv-domains-label':'Domeny marki (do wykrywania w źródłach)','aiv-export':'Eksport CSV',
     'aiv-check-all':'Sprawdź wszystkie','aiv-check-one':'Sprawdź','aiv-checking':'Sprawdzam','aiv-status-cited':'Cytowane w źródłach','aiv-status-mentioned':'Wspomniane w treści','aiv-status-none':'Brak',
     'aiv-never':'Nie sprawdzono','aiv-last':'Ostatnio:','aiv-srcword':'zr.','aiv-empty':'Dodaj zapytania, które chcesz monitorować w odpowiedziach AI.','aiv-del-title':'Usuń','aiv-gpt-na':'Tracking nie działa w trybie GPT-only (brak web search).','aiv-no-key':'Brak klucza API Anthropic. Wpisz go w menu konta → Klucze API.',
@@ -5082,13 +5110,13 @@ var I18N = {
     'llms-tylko-odczyt':'Konfigurację marki ustawia administrator - pola są tylko do odczytu.',
     'llms-zapis-lokalny':'Zapisane tylko na tym urządzeniu. Konfigurację dla całego zespołu ustawia administrator.',
     'llms-generate':'Wygeneruj pliki','llms-out-basic':'llms.txt','llms-out-full':'llms-full.txt','llms-copy':'Kopiuj','llms-download':'Pobierz','llms-hint-urls':'URL-e pobrane z bazy wiedzy: {n}',
-    'settings-vis-title':'Obecność marki w AI','settings-vis-sub':'zapytania zakupowe, pozycja, konkurenci',
-    'vis-title':'Widoczność marki w AI','vis-desc':'Sprawdza czy marka pojawia się w odpowiedziach AI na zapytania zakupowe. Uruchamia każdy prompt przez Claude z wyszukiwaniem w sieci i raportuje obecność, pozycję, konkurentów i źródła. To migawka na żądanie z jednego modelu (Claude), nie ciągły monitoring wielu modeli. Każdy prompt zużywa zapytanie web search (płatne).',
+    'settings-vis-title':'Obecność marki w AI','settings-vis-sub':'czy AI poleca Twoją markę przy zakupach',
+    'vis-title':'Obecność marki w AI','vis-desc':'Sprawdza czy marka pojawia się w odpowiedziach AI na zapytania zakupowe. Uruchamia każdy prompt przez Claude z wyszukiwaniem w sieci i raportuje obecność, pozycję, konkurentów i źródła. To migawka na żądanie z jednego modelu (Claude), nie ciągły monitoring wielu modeli. Każdy prompt zużywa zapytanie web search (płatne).',
     'vis-f-brand':'Marka do wykrycia','vis-f-comp':'Konkurenci (po przecinku)','vis-f-prompts':'Zapytania kontrolne (jedno na linię)','vis-run':'Sprawdź widoczność',
     'vis-f-iter':'Iteracje na prompt (stabilność)','vis-narr':'Narracja marki',
-    'settings-rep-title':'Raport widoczności','settings-rep-sub':'porównanie pomiarów i priorytety',
-    'settings-trk-title':'Pomiar ruchu z AI','settings-trk-sub':'robots.txt, UTM, GA4',
-    'trk-title':'Tracking ruchu z AI (przygotowanie)','trk-desc':'To nie jest pomiar ruchu. Generuje warunki wstępne: dyrektywy robots.txt dla botów AI, linki z UTM i wskazówkę konfiguracji GA4. Sam pomiar wymaga GA4 i analizy logów po stronie serwera.',
+    'settings-rep-title':'Raport widoczności','settings-rep-sub':'co się zmieniło i co poprawić',
+    'settings-trk-title':'Pomiar ruchu z AI','settings-trk-sub':'wejścia z czatów AI: robots.txt, UTM',
+    'trk-title':'Pomiar ruchu z AI (przygotowanie)','trk-desc':'To nie jest pomiar ruchu. Generuje warunki wstępne: dyrektywy robots.txt dla botów AI, linki z UTM i wskazówkę konfiguracji GA4. Sam pomiar wymaga GA4 i analizy logów po stronie serwera.',
     'trk-robots-h':'1. robots.txt dla botów AI','trk-robots-gen':'Generuj robots.txt','trk-copy':'Kopiuj','trk-download':'Pobierz',
     'trk-utm-h':'2. Generator linku z UTM','trk-utm-base':'Adres docelowy (URL)','trk-utm-source':'Źródło (model AI)','trk-utm-medium':'Medium','trk-utm-campaign':'Kampania (opcjonalnie)','trk-utm-gen':'Zbuduj link',
     'trk-ga4-h':'3. Wskazówka GA4','trk-ga4-note':'W GA4 utwórz grupę kanałów lub segment dla ruchu z AI: dopasuj wymiar Źródło lub Host odsyłający regexem chatgpt|openai|perplexity|gemini|copilot|claude. Wykrywa to odesłania z modeli AI, o ile zachowują referrer. Linki z UTM powyżej zapewniają atrybucję także gdy referrer jest pusty.',
@@ -5666,8 +5694,8 @@ var I18N = {
     'ins-linki':'Links',
     'ins-serp':'SERP',
     'ins-zamknij':'Close panel',
-    'settings-aiv-title':'AI citations','settings-aiv-sub':'your queries, trend over time',
-    'aiv-modal-title':'AI visibility (AEO/GEO)','aiv-modal-desc':'Checks whether AI answers (Claude with web search) to your queries surface the brand - in the text or in cited sources. Results and history are stored locally, so you can see the trend over time. This is a single-engine approximation, not a measurement of every AI search engine.',
+    'settings-aiv-title':'AI citations','settings-aiv-sub':'does AI cite your pages, trend',
+    'aiv-modal-title':'AI citations','aiv-modal-desc':'Checks whether AI answers (Claude with web search) to your queries surface the brand - in the text or in cited sources. Results and history are stored locally, so you can see the trend over time. This is a single-engine approximation, not a measurement of every AI search engine.',
     'aiv-score-label':'Visibility score:','aiv-add-ph':'e.g. best [industry] company in your market','aiv-add-btn':'Add','aiv-domains-label':'Brand domains (for source detection)','aiv-export':'Export CSV',
     'aiv-check-all':'Check all','aiv-check-one':'Check','aiv-checking':'Checking','aiv-status-cited':'Cited in sources','aiv-status-mentioned':'Mentioned in answer','aiv-status-none':'Absent',
     'aiv-never':'Not checked','aiv-last':'Last:','aiv-srcword':'src','aiv-empty':'Add queries you want to monitor in AI answers.','aiv-del-title':'Delete','aiv-gpt-na':'Tracking is unavailable in GPT-only mode (no web search).','aiv-no-key':'Missing Anthropic API key. Enter it in the account menu → API keys.',
@@ -5814,13 +5842,13 @@ var I18N = {
     'llms-tylko-odczyt':'An administrator sets the brand configuration - these fields are read-only.',
     'llms-zapis-lokalny':'Saved on this device only. An administrator sets the configuration for the whole team.',
     'llms-generate':'Generate files','llms-out-basic':'llms.txt','llms-out-full':'llms-full.txt','llms-copy':'Copy','llms-download':'Download','llms-hint-urls':'URLs harvested from knowledge base: {n}',
-    'settings-vis-title':'Brand presence in AI','settings-vis-sub':'buyer queries, position, competitors',
-    'vis-title':'Brand visibility in AI','vis-desc':'Checks whether the brand appears in AI answers to buyer queries. Runs each prompt through Claude with web search and reports presence, position, competitors and sources. This is an on-demand snapshot from a single model (Claude), not continuous multi-model monitoring. Each prompt consumes a web search request (billed).',
+    'settings-vis-title':'Brand presence in AI','settings-vis-sub':'does AI recommend your brand to buyers',
+    'vis-title':'Brand presence in AI','vis-desc':'Checks whether the brand appears in AI answers to buyer queries. Runs each prompt through Claude with web search and reports presence, position, competitors and sources. This is an on-demand snapshot from a single model (Claude), not continuous multi-model monitoring. Each prompt consumes a web search request (billed).',
     'vis-f-brand':'Brand to detect','vis-f-comp':'Competitors (comma separated)','vis-f-prompts':'Control queries (one per line)','vis-run':'Check visibility',
     'vis-f-iter':'Iterations per prompt (stability)','vis-narr':'Brand narrative',
-    'settings-rep-title':'Visibility report','settings-rep-sub':'measurement comparison and priorities',
-    'settings-trk-title':'AI traffic setup','settings-trk-sub':'robots.txt, UTM, GA4',
-    'trk-title':'AI traffic tracking (preparation)','trk-desc':'This does not measure traffic. It generates preconditions: robots.txt directives for AI bots, UTM links and a GA4 setup hint. Actual measurement requires GA4 and server-side log analysis.',
+    'settings-rep-title':'Visibility report','settings-rep-sub':'what changed and what to fix',
+    'settings-trk-title':'AI traffic setup','settings-trk-sub':'visits from AI chats: robots.txt, UTM',
+    'trk-title':'AI traffic setup','trk-desc':'This does not measure traffic. It generates preconditions: robots.txt directives for AI bots, UTM links and a GA4 setup hint. Actual measurement requires GA4 and server-side log analysis.',
     'trk-robots-h':'1. robots.txt for AI bots','trk-robots-gen':'Generate robots.txt','trk-copy':'Copy','trk-download':'Download',
     'trk-utm-h':'2. UTM link builder','trk-utm-base':'Target address (URL)','trk-utm-source':'Source (AI model)','trk-utm-medium':'Medium','trk-utm-campaign':'Campaign (optional)','trk-utm-gen':'Build link',
     'trk-ga4-h':'3. GA4 hint','trk-ga4-note':'In GA4 create a channel group or segment for AI traffic: match the Source or Referring host dimension with the regex chatgpt|openai|perplexity|gemini|copilot|claude. This detects AI referrals when they keep a referrer. The UTM links above provide attribution even when the referrer is empty.',
@@ -13684,7 +13712,8 @@ function toggleSettingsMenu() {
   menu.classList.add('open');
   document.getElementById('settings-btn')?.setAttribute('aria-expanded', 'true');
   // Z klawiatury fokus wchodzi do menu na pierwsza pozycje (strzalki chodza dalej).
-  requestAnimationFrame(function () { const p = menu.querySelector('.settings-item'); if (p) p.focus({ preventScroll: true }); });
+  // R9-G: pierwsza WIDOCZNA - grupa Widocznosc AI w tym menu jest tylko na telefonie.
+  requestAnimationFrame(function () { const p = [...menu.querySelectorAll('.settings-item')].find(function (x) { return x.offsetParent !== null; }); if (p) p.focus({ preventScroll: true }); });
 }
 // Przycisk otwierajacy menu, w ktorym lezy element (fokus wraca na niego po zamknieciu).
 function przyciskMenuDla(el) {
@@ -18794,6 +18823,8 @@ async function kbAudioTranscribeAndOpen(file) {
     if (!wdrozone) return;
     var poz = document.getElementById('openseo-item');
     if (poz) poz.style.display = '';
+    var pozTel = document.getElementById('openseo-item-tel'); // R9-G (UX8-13): ta sama pozycja w arkuszu Konto na telefonie
+    if (pozTel) pozTel.style.display = '';
   });
 })();
 </script>
