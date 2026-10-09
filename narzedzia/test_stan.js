@@ -30,6 +30,13 @@ const REPO = path.resolve(__dirname, '..');
 let chromium;
 try { ({ chromium } = require('playwright')); }
 catch (e) { console.error('Brak pakietu playwright: npm install --no-save playwright && npx playwright install chromium'); process.exit(1); }
+// R9-F (KOD8-35): dziennik atrapy w katalogu przebiegu, sprzatany po zielonym przebiegu. Wczesniej
+// /tmp/atrapa-wywolania-9199.log, czyli ten sam plik co wspolnej atrapy na porcie 9199.
+let KAT_DZIENNIKA = null;
+if (!process.env.ATRAPA_DZIENNIK) {
+  KAT_DZIENNIKA = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-test-atrapa-'));
+  process.env.ATRAPA_DZIENNIK = path.join(KAT_DZIENNIKA, 'atrapa-wywolania.log');
+}
 const atrapa = require('./atrapa/dostawcy.js');
 
 const ZRZUTY = process.env.CAI_TEST_ZRZUTY || path.join(os.tmpdir(), 'cai-test-stan');
@@ -1703,6 +1710,7 @@ const SCENARIUSZE = [
   } finally {
     if (b) await b.close();
     if (SERWER) { if (bledow) console.log(SERWER.log().split('\n').slice(-15).join('\n')); SERWER.zatrzymaj(); }
+    if (KAT_DZIENNIKA) { if (bledow) console.log('Dziennik atrapy: ' + process.env.ATRAPA_DZIENNIK); else fs.rmSync(KAT_DZIENNIKA, { recursive: true, force: true }); }
   }
   console.log(bledow ? '\nBLEDOW: ' + bledow : '\nWszystkie scenariusze przeszly.');
   process.exit(bledow ? 1 : 0);

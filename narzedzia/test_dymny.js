@@ -31,7 +31,7 @@ catch (e) { console.error('Brak pakietu playwright: npm install --no-save playwr
 
 // Porty z ATRAPA_PORT / CAI_TEST_PORT albo wolne, wskazane przez system (rownolegle
 // przebiegi nie koliduja). Atrapa czyta port przy require, wiec ladujemy ja po wyborze.
-let atrapa, PORT_ATRAPY, PORT_SERWERA;
+let atrapa, PORT_ATRAPY, PORT_SERWERA, KAT_DZIENNIKA;
 function wolnyPort() {
   return new Promise((ok, zle) => {
     const srv = require('net').createServer();
@@ -43,6 +43,12 @@ async function przygotujPorty() {
   PORT_ATRAPY = Number(process.env.ATRAPA_PORT) || await wolnyPort();
   PORT_SERWERA = Number(process.env.CAI_TEST_PORT) || await wolnyPort();
   process.env.ATRAPA_PORT = String(PORT_ATRAPY);
+  // R9-F (KOD8-35): dziennik atrapy w katalogu przebiegu, sprzatany po zielonym przebiegu
+  // (wczesniej po kazdym przebiegu zostawal /tmp/atrapa-wywolania-<port>.log).
+  if (!process.env.ATRAPA_DZIENNIK) {
+    KAT_DZIENNIKA = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-test-atrapa-'));
+    process.env.ATRAPA_DZIENNIK = path.join(KAT_DZIENNIKA, 'atrapa-wywolania.log');
+  }
   atrapa = require('./atrapa/dostawcy.js');
 }
 const ZRZUTY = process.env.CAI_TEST_ZRZUTY || path.join(os.tmpdir(), 'cai-test-zrzuty');
@@ -1467,6 +1473,7 @@ async function uruchomSerwerPlikow() {
     serwerAtrapy.close();
     serwerPlikow.close();
     fs.rmSync(kat, { recursive: true, force: true });
+    if (KAT_DZIENNIKA) { if (bledow) console.log('Dziennik atrapy: ' + process.env.ATRAPA_DZIENNIK); else fs.rmSync(KAT_DZIENNIKA, { recursive: true, force: true }); }
   }
   console.log(bledow ? '\nBLEDOW: ' + bledow : '\nWszystkie scenariusze przeszly.');
   process.exit(bledow ? 1 : 0);
