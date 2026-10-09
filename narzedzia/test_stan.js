@@ -929,12 +929,45 @@ async function scenariuszR9FPauseTurn(b) {
   await k.close();
 }
 
+// KOD8-30: telefon ubija karte (albo strona sie przeladowuje) w trakcie generowania. Serwer konczy
+// zadanie i liczy artykul; po powrocie aplikacja odbiera ten sam artykul (Historia +1, licznik +1, nie +2).
+// Zapis sprzed 15 minut albo zadanie, ktorego serwer juz nie ma: komunikat, bez nowego platnego artykulu.
+async function scenariuszR9FPrzeladowanie(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b, { viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true });
+  const s = await zalogujProxy(k, srv.port, 'standard');
+  const przed = { hist: await s.evaluate(() => history.length), art: ((await pakietUzycie(s)).artykul || {}).zuzyte || 0 };
+  await s.evaluate(() => { document.getElementById('topic').value = 'Artykul ubity w tle [atrapa:opoznienie=4000@artykul]'; document.getElementById('use-web').checked = true; generate(true); });
+  await s.waitForTimeout(1500);
+  await s.reload({ waitUntil: 'load' });
+  await krok('R9-F KOD8-30 artykul odebrany po przeladowaniu', s.waitForFunction(() => history.some((h) => /Artykul ubity w tle/.test(h.topic)) && /ready/.test(document.getElementById('out-badge').className), null, { timeout: 40000 }));
+  const po = await s.evaluate(() => ({ hist: history.length, temat: (history[0] || {}).topic || '', odz: document.getElementById('out-badge').className,
+    h2: document.querySelectorAll('#article h2').length, zapis: (() => { try { return sessionStorage.getItem('cai_artykul_w_toku'); } catch (e) { return 'blad'; } })(),
+    pow: [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent.slice(0, 120)) }));
+  po.art = ((await pakietUzycie(s)).artykul || {}).zuzyte || 0;
+  wynik('R9-F KOD8-30: przeladowanie w trakcie generowania - artykul odebrany z zadania (Historia +1, na ekranie)',
+    po.hist === przed.hist + 1 && /Artykul ubity w tle/.test(po.temat) && /ready/.test(po.odz) && po.h2 >= 2, JSON.stringify({ przed, po }));
+  wynik('R9-F KOD8-30: artykul policzony raz (bez drugiego generowania), zapis w karcie usuniety', po.art === przed.art + 1 && po.zapis === null, JSON.stringify({ przed: przed.art, po: po.art, zapis: po.zapis }));
+  // Zadanie, ktorego serwer nie ma (np. restart uslugi): komunikat i bez nowego artykulu.
+  await s.evaluate(() => { try { sessionStorage.setItem('cai_artykul_w_toku', JSON.stringify({ id: 'brakzadania' + Date.now(), konto: magazyn.konto, start: Date.now(), temat: 'Zgubione zadanie', frazy: [], formularz: {} })); } catch (e) { /* bez magazynu */ } });
+  await s.reload({ waitUntil: 'load' });
+  await krok('R9-F KOD8-30 komunikat o zgubionym zadaniu', s.waitForFunction(() => [...document.querySelectorAll('.powiadomienie')].some((p) => p.textContent.indexOf(_t('odzysk-blad')) !== -1), null, { timeout: 20000 }));
+  const zgubione = await s.evaluate(() => ({ hist: history.length, temat: (history[0] || {}).topic || '', spinner: getComputedStyle(document.getElementById('spinner')).display,
+    przycisk: document.getElementById('gen-btn').disabled, zapis: (() => { try { return sessionStorage.getItem('cai_artykul_w_toku'); } catch (e) { return 'blad'; } })() }));
+  zgubione.art = ((await pakietUzycie(s)).artykul || {}).zuzyte || 0;
+  wynik('R9-F KOD8-30: zadania nie ma na serwerze - komunikat, bez nowego artykulu i bez wpisu',
+    zgubione.hist === po.hist && !/Zgubione/.test(zgubione.temat) && zgubione.spinner === 'none' && !zgubione.przycisk && zgubione.zapis === null && zgubione.art === po.art, JSON.stringify(zgubione));
+  wynik('R9-F KOD8-30: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-przeladowanie');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
   ['stan', scenariuszStanu], ['r4-logika', scenariuszR4Logiki], ['bledy', scenariuszBledow], ['historia-r4', scenariuszHistoriiR4],
   ['r9f-keys', scenariuszR9FKeys], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
-  ['r9f-pause-turn', scenariuszR9FPauseTurn],
+  ['r9f-pause-turn', scenariuszR9FPauseTurn], ['r9f-przeladowanie', scenariuszR9FPrzeladowanie],
 ];
 (async () => {
   let b;

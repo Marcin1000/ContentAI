@@ -1212,6 +1212,12 @@ KONTROLE += [
      "if (h.id) oznaczUsunietyWpis(h.id);", None, None),
     ("R9-F/pause-turn-ciag", "KOD8-13: tura po pause_turn deklarowana jako artykul-ciag (nie drugi artykul z pakietu)",
      "if (h['x-cai-czynnosc'] === 'artykul') h['x-cai-czynnosc'] = 'artykul-ciag';", None, ("proxy",)),
+    ("R9-F/artykul-w-toku-zapis", "KOD8-30: identyfikator zadania artykulu i brief zapamietane w karcie do konca generowania",
+     "zapiszArtykulWToku(naglowkiArtykulu['X-Zadanie'], topic, frazy,", None, ("proxy",)),
+    ("R9-F/artykul-w-toku-odbior", "KOD8-30: po ubiciu karty albo przeladowaniu aplikacja odbiera artykul z zadania na serwerze",
+     "window.addEventListener('load', function () { setTimeout(odbierzArtykulWToku, 400); });", None, ("proxy",)),
+    ("R9-F/zadanie-po-429", "KOD8-30: ponowienie po 429 jako nowe zadanie (nie zapamietane 429 pod tym samym identyfikatorem)",
+     "delete options.headers['X-Zadanie'];", None, None),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna

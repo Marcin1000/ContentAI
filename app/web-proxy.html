@@ -5465,6 +5465,7 @@ var I18N = {
     'kb-na-serwerze':'Na serwerze','kb-wspolna':'Baza wspólna zespołu','kb-prywatna':'Twoja baza prywatna','kb-fragm':'fragm.','kb-lokalnie':'Tylko w tej przeglądarce','kb-przenies':'Przenieś na serwer','kb-dodano':'Dodano do bazy wiedzy na serwerze','kb-zostaje-lokalnie':'Dokument zapisano tylko w tej przeglądarce.','kb-przeniesiono':'Przeniesiono na serwer',
     'pakiet-zostalo':'Zostało {n} z {m}','pakiet-zostalo-krotko':'zostało {n}','pakiet-od-standard':'Dostępne od pakietu Standard','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f}: poza pakietem {p}','pakiet-niedostepne':'niedostępne',
     'btn-przerwij':'Przerwij','msg-przerwano':'Generowanie przerwane. Formularz jest bez zmian: możesz poprawić brief i spróbować ponownie.','badge-przerwane':'przerwane','spin-ponawiam-za':'Dostawca AI ogranicza zapytania: ponawiam za {s} s','spin-proba':'próba {n} z {m}','spin-ponawiam':'Ponawiam zapytanie…','spin-wznawiam':'Połączenie było przerwane. Odbieram wynik z serwera…',
+    'odzysk-spin':'Kończę artykuł rozpoczęty przed odświeżeniem strony…','odzysk-spin-sub':'Odbieram wynik z serwera','odzysk-gotowe':'Odebrano artykuł rozpoczęty przed odświeżeniem strony. Jest w Historii.','odzysk-blad':'Nie udało się odebrać artykułu rozpoczętego przed odświeżeniem strony: serwer nie ma już tego wyniku. Wygeneruj go ponownie.','odzysk-blad-prefiks':'Artykuł rozpoczęty przed odświeżeniem strony:',
     'badge-historia':'z historii','hist-otworz':'Otwórz w generatorze',
     'msg-blad-prefiks':'Błąd:','menu-wyloguj':'Wyloguj się','menu-wyloguj-sub':'zakończ sesję na tym urządzeniu',
     'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Te dokumenty zapisano skrócone i po odświeżeniu będą krótsze: {lista}. Przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
@@ -6010,6 +6011,7 @@ var I18N = {
     'kb-na-serwerze':'On the server','kb-wspolna':'Shared team base','kb-prywatna':'Your private base','kb-fragm':'passages','kb-lokalnie':'Only in this browser','kb-przenies':'Move to server','kb-dodano':'Added to the server knowledge base','kb-zostaje-lokalnie':'The document was saved only in this browser.','kb-przeniesiono':'Moved to the server',
     'pakiet-zostalo':'{n} of {m} left','pakiet-zostalo-krotko':'{n} left','pakiet-od-standard':'Available from the Standard plan','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f}: not included in the {p} plan','pakiet-niedostepne':'not available',
     'btn-przerwij':'Stop','msg-przerwano':'Generation stopped. The form is unchanged, so you can adjust the brief and try again.','badge-przerwane':'stopped','spin-ponawiam-za':'The AI provider is limiting requests: retrying in {s} s','spin-proba':'attempt {n} of {m}','spin-ponawiam':'Retrying the request…','spin-wznawiam':'The connection dropped. Collecting the result from the server…',
+    'odzysk-spin':'Finishing the article started before the page reloaded…','odzysk-spin-sub':'Collecting the result from the server','odzysk-gotowe':'The article started before the page reloaded has been collected. It is in History.','odzysk-blad':'Could not collect the article started before the page reloaded: the server no longer has this result. Generate it again.','odzysk-blad-prefiks':'Article started before the page reloaded:',
     'badge-historia':'from history','hist-otworz':'Open in generator',
     'msg-blad-prefiks':'Error:','menu-wyloguj':'Sign out','menu-wyloguj-sub':'end the session on this device',
     'msg-magazyn-pelny':'Browser storage is full. These documents were saved shortened and will be shorter after a refresh: {lista}. Move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
@@ -6705,7 +6707,8 @@ function poczekaj(ms, sygnal) {
 // `anuluj`: przerwanie przez uzytkownika konczy tez zadanie na serwerze.
 async function fetchZadania(url, opcje, id, anuluj) {
   if (!window.API_ENDPOINT_OVERRIDE || !/^\/api(\/|$)/.test(String(url))) return fetch(url, opcje);
-  id = id || noweIdZadania();
+  // R9-F (KOD8-30): identyfikator ustalony przez wolajacego w naglowku (artykul zapamietany w karcie).
+  id = id || (opcje && opcje.headers && opcje.headers['X-Zadanie']) || noweIdZadania();
   const o = Object.assign({}, opcje, { headers: Object.assign({}, opcje && opcje.headers, { 'X-Zadanie': id }) });
   const przerwane = (e) => e && (e.name === 'AbortError' || (o.signal && o.signal.aborted));
   let bramaMs = 0, bramaProb = 0;
@@ -6738,6 +6741,71 @@ async function fetchZadania(url, opcje, id, anuluj) {
     }
   }
 }
+
+// R9-F (KOD8-30): telefon ubija karte w tle (brak pamieci), strona sie przeladowuje albo autor cofa sie
+// w trakcie generowania. Serwer konczyl artykul i liczyl go do pakietu, a aplikacja po powrocie nic
+// o nim nie wiedziala (identyfikator zadania zyl tylko w pamieci strony). Teraz identyfikator zadania
+// artykulu i brief leza w sessionStorage tej karty do konca generowania. Po ponownym otwarciu pytamy
+// serwer o to samo zadanie (bez tresci zapytania: gdy serwer go juz nie ma, nic nie generuje i nie liczy),
+// a gdy wynik jest, dalsze kroki (oceny, poprawa, samokorekta) ida jak przy zwyklym generowaniu.
+const ARTYKUL_W_TOKU = 'cai_artykul_w_toku';
+const POLA_ODZYSKU = ['extra', 'ctype', 'length', 'length-custom', 'tone', 'lang', 'audience', 'dir-country'];
+function zapiszArtykulWToku(id, temat, frazy, start) {
+  const formularz = {};
+  POLA_ODZYSKU.forEach(p => { const el = document.getElementById(p); if (el) formularz[p] = el.value; });
+  ['use-web', 'use-aeo'].forEach(p => { const el = document.getElementById(p); if (el) formularz[p] = !!el.checked; });
+  try {
+    sessionStorage.setItem(ARTYKUL_W_TOKU, JSON.stringify({ id: id, konto: magazyn.konto, start: start || Date.now(),
+      temat: temat, frazy: (frazy || []).slice(0, 50), formularz: formularz, premium: !!premiumMode }));
+  } catch (e) { /* bez sessionStorage: zostaje dotychczasowe zachowanie */ }
+}
+function usunArtykulWToku() { try { sessionStorage.removeItem(ARTYKUL_W_TOKU); } catch (e) { /* brak magazynu */ } }
+async function odbierzArtykulWToku() {
+  let rec = null;
+  try { rec = JSON.parse(sessionStorage.getItem(ARTYKUL_W_TOKU) || 'null'); } catch (e) { rec = null; }
+  // Zapis tej strony (generowanie ruszylo, zanim minelo 400 ms od wczytania) albo generowanie w toku: nie ruszamy.
+  if (!rec || !rec.id || generowanieTrwa() || rec.start >= Math.floor(performance.timeOrigin || 0)) return;
+  if (rec.konto !== magazyn.konto || !(Date.now() - rec.start < 15 * 60 * 1000)) { usunArtykulWToku(); return; }
+  const el = (id) => document.getElementById(id);
+  const sp = el('spinner'), art = el('article'), ph = el('placeholder'), ob = el('out-badge'), btn = el('gen-btn');
+  const bylo = { art: art.style.display, ph: ph.style.display, odz: ob.className, klucz: ob.getAttribute('data-i18n') };
+  ph.style.display = 'none'; art.style.display = 'none'; sp.style.display = 'flex'; btn.disabled = true;
+  ustawTekst(ob, 'badge-generating'); ob.className = 'badge running';
+  el('spin-label').textContent = _t('odzysk-spin'); el('spin-sub').textContent = _t('odzysk-spin-sub');
+  przerwanieGenerowania = new AbortController();
+  let blad = null;
+  try {
+    const res = await fetchZadania('/api', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Zadanie': rec.id },
+      body: '{}', signal: przerwanieGenerowania.signal }, rec.id, true);
+    const dane = await res.json().catch(() => null);
+    if (!res.ok || !dane || dane.error || !Array.isArray(dane.content)) blad = bladOdpowiedzi(dane, res.status);
+  } catch (e) { blad = e; }
+  przerwanieGenerowania = null;
+  sp.style.display = 'none'; btn.disabled = false;
+  if (blad) {
+    usunArtykulWToku();
+    art.style.display = bylo.art; ph.style.display = bylo.ph; ob.className = bylo.odz;
+    if (bylo.klucz) ustawTekst(ob, bylo.klucz);
+    if (blad.name === 'AbortError') return;
+    // 400 z pustym modelem = serwer nie ma juz tego zadania (minelo 15 minut albo restart uslugi)
+    // i odrzucil puste zapytanie; 409 = zadanie przerwane.
+    const brak = blad.status === 409 || (blad.status === 400 && /Model ""/.test(String(blad.szczegol || blad.message || '')));
+    if (brak) pokazPowiadomienie(_t('odzysk-blad'), 'uwaga', 15000);
+    else powiadomBladApi(blad, null, null, _t('odzysk-blad-prefiks') + ' ');
+    return;
+  }
+  // Wynik jest na serwerze: generowanie z tym samym briefem, a zapytanie o artykul z tym samym X-Zadanie
+  // oddaje zapamietany wynik (bez nowego wywolania i liczenia). Bez analizy SERP: byla przy pierwszym podejsciu.
+  const f = rec.formularz || {};
+  POLA_ODZYSKU.forEach(p => { const e = el(p); if (e && typeof f[p] === 'string') e.value = f[p]; });
+  ['use-web', 'use-aeo'].forEach(p => { const e = el(p); if (e && typeof f[p] === 'boolean') e.checked = f[p]; });
+  const serp = el('use-serp'); if (serp) serp.checked = false;
+  premiumMode = !!rec.premium;
+  skipSourceCheck = true;
+  const ok = await generate(true, { temat: rec.temat, frazy: Array.isArray(rec.frazy) ? rec.frazy : [], odzyskaj: rec });
+  if (ok) pokazPowiadomienie(_t('odzysk-gotowe'), 'ok', 10000);
+}
+window.addEventListener('load', function () { setTimeout(odbierzArtykulWToku, 400); });
 
 // R6 (E-08): odliczanie przed ponowieniem po 429 trafia tez tam, gdzie patrzy autor (np. przycisk
 // Luk) - spinner generowania jest wtedy ukryty. Funkcja (sekundy, proba, z ilu) albo null.
@@ -6782,6 +6850,11 @@ async function apiFetch(options, maxRetries = 3) {
   const sygnal = options.signal || (przerwanieGenerowania && przerwanieGenerowania.signal) || null;
   if (sygnal && !options.signal) options = Object.assign({}, options, { signal: sygnal });
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    // R9-F (KOD8-30): po 429 nowe zadanie - pod identyfikatorem z naglowka serwer oddalby zapamietane 429.
+    if (attempt > 0 && options.headers && options.headers['X-Zadanie']) {
+      options = Object.assign({}, options, { headers: Object.assign({}, options.headers) });
+      delete options.headers['X-Zadanie'];
+    }
     const res = await fetchZadania(endpoint, options, null, true);
     if (res.status !== 429) {
       // Tryb GPT: przekształć odpowiedź OpenAI → format Anthropic, by reszta kodu działała bez zmian
@@ -8485,6 +8558,10 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
       'anthropic-version': '2023-06-01',
       'anthropic-dangerous-direct-browser-access': 'true'
     };
+    // R9-F (KOD8-30): identyfikator zadania artykulu znany z gory i zapamietany w tej karcie do konca
+    // generowania; po ubiciu karty albo przeladowaniu odbieramy ten sam artykul z serwera.
+    naglowkiArtykulu['X-Zadanie'] = (opcje && opcje.odzyskaj && opcje.odzyskaj.id) || noweIdZadania();
+    zapiszArtykulWToku(naglowkiArtykulu['X-Zadanie'], topic, frazy, opcje && opcje.odzyskaj && opcje.odzyskaj.start);
     const cialoArtykulu = {
       model: MODEL_TRESCI,
       max_tokens: zRezerwa(getMaxTokens()),
@@ -8708,6 +8785,7 @@ ${html}`;
 
   clearInterval(iv);
   przerwanieGenerowania = null;
+  usunArtykulWToku(); // R9-F (KOD8-30): generowanie skonczone (wynik, blad albo Przerwij)
 
   if (webEnabledByModal) {
     document.getElementById('use-web').checked = false;

@@ -5390,6 +5390,7 @@ var I18N = {
     'kb-na-serwerze':'Na serwerze','kb-wspolna':'Baza wspólna zespołu','kb-prywatna':'Twoja baza prywatna','kb-fragm':'fragm.','kb-lokalnie':'Tylko w tej przeglądarce','kb-przenies':'Przenieś na serwer','kb-dodano':'Dodano do bazy wiedzy na serwerze','kb-zostaje-lokalnie':'Dokument zapisano tylko w tej przeglądarce.','kb-przeniesiono':'Przeniesiono na serwer',
     'pakiet-zostalo':'Zostało {n} z {m}','pakiet-zostalo-krotko':'zostało {n}','pakiet-od-standard':'Dostępne od pakietu Standard','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f}: poza pakietem {p}','pakiet-niedostepne':'niedostępne',
     'btn-przerwij':'Przerwij','msg-przerwano':'Generowanie przerwane. Formularz jest bez zmian: możesz poprawić brief i spróbować ponownie.','badge-przerwane':'przerwane','spin-ponawiam-za':'Dostawca AI ogranicza zapytania: ponawiam za {s} s','spin-proba':'próba {n} z {m}','spin-ponawiam':'Ponawiam zapytanie…','spin-wznawiam':'Połączenie było przerwane. Odbieram wynik z serwera…',
+    'odzysk-spin':'Kończę artykuł rozpoczęty przed odświeżeniem strony…','odzysk-spin-sub':'Odbieram wynik z serwera','odzysk-gotowe':'Odebrano artykuł rozpoczęty przed odświeżeniem strony. Jest w Historii.','odzysk-blad':'Nie udało się odebrać artykułu rozpoczętego przed odświeżeniem strony: serwer nie ma już tego wyniku. Wygeneruj go ponownie.','odzysk-blad-prefiks':'Artykuł rozpoczęty przed odświeżeniem strony:',
     'badge-historia':'z historii','hist-otworz':'Otwórz w generatorze',
     'msg-blad-prefiks':'Błąd:','menu-wyloguj':'Wyloguj się','menu-wyloguj-sub':'zakończ sesję na tym urządzeniu',
     'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Te dokumenty zapisano skrócone i po odświeżeniu będą krótsze: {lista}. Przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
@@ -5885,6 +5886,7 @@ var I18N = {
     'kb-na-serwerze':'On the server','kb-wspolna':'Shared team base','kb-prywatna':'Your private base','kb-fragm':'passages','kb-lokalnie':'Only in this browser','kb-przenies':'Move to server','kb-dodano':'Added to the server knowledge base','kb-zostaje-lokalnie':'The document was saved only in this browser.','kb-przeniesiono':'Moved to the server',
     'pakiet-zostalo':'{n} of {m} left','pakiet-zostalo-krotko':'{n} left','pakiet-od-standard':'Available from the Standard plan','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f}: not included in the {p} plan','pakiet-niedostepne':'not available',
     'btn-przerwij':'Stop','msg-przerwano':'Generation stopped. The form is unchanged, so you can adjust the brief and try again.','badge-przerwane':'stopped','spin-ponawiam-za':'The AI provider is limiting requests: retrying in {s} s','spin-proba':'attempt {n} of {m}','spin-ponawiam':'Retrying the request…','spin-wznawiam':'The connection dropped. Collecting the result from the server…',
+    'odzysk-spin':'Finishing the article started before the page reloaded…','odzysk-spin-sub':'Collecting the result from the server','odzysk-gotowe':'The article started before the page reloaded has been collected. It is in History.','odzysk-blad':'Could not collect the article started before the page reloaded: the server no longer has this result. Generate it again.','odzysk-blad-prefiks':'Article started before the page reloaded:',
     'badge-historia':'from history','hist-otworz':'Open in generator',
     'msg-blad-prefiks':'Error:','menu-wyloguj':'Sign out','menu-wyloguj-sub':'end the session on this device',
     'msg-magazyn-pelny':'Browser storage is full. These documents were saved shortened and will be shorter after a refresh: {lista}. Move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
@@ -6566,7 +6568,8 @@ function poczekaj(ms, sygnal) {
 // `anuluj`: przerwanie przez uzytkownika konczy tez zadanie na serwerze.
 async function fetchZadania(url, opcje, id, anuluj) {
   if (!window.API_ENDPOINT_OVERRIDE || !/^\/api(\/|$)/.test(String(url))) return fetch(url, opcje);
-  id = id || noweIdZadania();
+  // R9-F (KOD8-30): identyfikator ustalony przez wolajacego w naglowku (artykul zapamietany w karcie).
+  id = id || (opcje && opcje.headers && opcje.headers['X-Zadanie']) || noweIdZadania();
   const o = Object.assign({}, opcje, { headers: Object.assign({}, opcje && opcje.headers, { 'X-Zadanie': id }) });
   const przerwane = (e) => e && (e.name === 'AbortError' || (o.signal && o.signal.aborted));
   let bramaMs = 0, bramaProb = 0;
@@ -6643,6 +6646,11 @@ async function apiFetch(options, maxRetries = 3) {
   const sygnal = options.signal || (przerwanieGenerowania && przerwanieGenerowania.signal) || null;
   if (sygnal && !options.signal) options = Object.assign({}, options, { signal: sygnal });
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    // R9-F (KOD8-30): po 429 nowe zadanie - pod identyfikatorem z naglowka serwer oddalby zapamietane 429.
+    if (attempt > 0 && options.headers && options.headers['X-Zadanie']) {
+      options = Object.assign({}, options, { headers: Object.assign({}, options.headers) });
+      delete options.headers['X-Zadanie'];
+    }
     const res = await fetchZadania(endpoint, options, null, true);
     if (res.status !== 429) {
       // Tryb GPT: przekształć odpowiedź OpenAI → format Anthropic, by reszta kodu działała bez zmian
