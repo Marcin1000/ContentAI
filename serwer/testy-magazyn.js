@@ -454,7 +454,7 @@ function testyModulow(sprawdz) {
     'zakup-niedozwolony', 'plan-niedostepny', 'subskrypcja-istnieje', 'brak-subskrypcji', 'dostawca-platnosci-niedostepny', 'za-duzo-prob'];
   sprawdz('lista kodow z rozdz. 5 kompletna, komunikaty PL i EN bez dlugich myslnikow',
     wymagane.every((k) => bledy.KODY[k] && bledy.KODY[k].pl && bledy.KODY[k].en)
-    && !Object.values(bledy.KODY).some((k) => /[–—]/.test(k.pl + k.en)));
+    && !Object.values(bledy.KODY).some((k) => /[\u2013\u2014]/.test(k.pl + k.en)));
 
   console.log('\n  ogolny ogranicznik prob (limity.js)');
   const rej = limity.utworz('test-rejestracja', [
