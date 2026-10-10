@@ -99,15 +99,31 @@
     <header class="dokument-nag">
       <p class="etyk">Transparency</p>
       <h1>AI Act and transparency</h1>
-      <p class="lead">In Content AI, drafts, images and recordings are created with the help of AI models. This page explains who is responsible for what under the EU AI Act, what you see in the app and what is up to you when you publish such content. This page is not legal advice.</p>
+      <p class="lead">In Content AI, drafts, images and recordings are created with the help of AI models. This page explains how we label such content, what you see in the app and what is up to you when you publish it. Content AI supports the transparency requirements of the EU AI Act (Article 50). This page is not legal advice.</p>
       <p class="mala">As of 9 October 2026</p>
     </header>
     <div class="dokument-tresc">
       <section aria-labelledby="ai-0"><h2 id="ai-0"><span class="etyk-nr">01</span>Who is who</h2><p>Content AI is an AI system for creating content, built on models from Anthropic, OpenAI and ElevenLabs. We offer it under our own name, so under the AI Act we are the provider of the AI system and responsible for marking its outputs. When you use Content AI and publish its outputs, you are the deployer of the AI system: whether published content needs a visible AI disclosure depends on you.</p></section>
       <section aria-labelledby="ai-1"><h2 id="ai-1"><span class="etyk-nr">02</span>What Content AI does</h2><p>Content AI is a tool for writing and reviewing content. Drafts, scores and the fact check come from an Anthropic model; images, voice-over and transcription from OpenAI models; and the better voice-over from an ElevenLabs model. The model writes from the documents you add to the knowledge base and, if you turn on web search, from pages it finds online. A person always decides what gets published: you can edit the draft, revise it based on the scores and run the fact check before publishing.</p></section>
 
-      <section aria-labelledby="ai-3"><h2 id="ai-3"><span class="etyk-nr">03</span>What you see in the app</h2><p>For voice-over, the app says the voice is synthetic, not a human recording. We will describe other labels here once they are available in the app.</p></section>
-      <section aria-labelledby="ai-4"><h2 id="ai-4"><span class="etyk-nr">04</span>What is up to you when you publish</h2><p>Whoever publishes content prepared with AI is responsible for the publication. The AI Act (Article 50(4)) gives publishers two disclosure duties:</p>
+      <section aria-labelledby="ai-2"><h2 id="ai-2"><span class="etyk-nr">03</span>Labels in files</h2><p>Files you download or publish from Content AI carry information, in a machine-readable form, that the content was created with the help of AI. Ordinary readers do not see it, but search engines, platforms and verification tools can read it. We use open standards: the IPTC Digital Source Type vocabulary, schema.org and document metadata; the labels contain no personal data about you.</p>
+        <table class="dok-tabela">
+          <thead><tr><th scope="col">Format</th><th scope="col">What we record</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">DOCX</th><td>In the document properties: a note that the content was created with AI (a code from the IPTC Digital Source Type vocabulary), the tool name and the keywords “AI-generated”.</td></tr>
+            <tr><th scope="row">PDF</th><td>In the file metadata (keywords): a note that the content was created with AI and the tool name.</td></tr>
+            <tr><th scope="row">WordPress and Drupal</th><td>A post has no room for file metadata: the content gets data-ai-* attributes with the AI note (WordPress keeps them, Drupal with the full_html format), and you can add a visible label under the text when publishing.</td></tr>
+            <tr><th scope="row">JSON-LD</th><td>In the article's structured data: a digitalSourceType field saying the text was created with AI.</td></tr>
+            <tr><th scope="row">PNG images</th><td>The file stays exactly as the provider sent it, including its provenance credentials (Content Credentials, C2PA). If the provider did not add them, the app writes an AI note into the XMP metadata.</td></tr>
+            <tr><th scope="row">MP3 recordings</th><td>In the ID3 tags at the start of the file: a note that the recording was generated with AI (an IPTC vocabulary code) and the tool name.</td></tr>
+            <tr><th scope="row">Copied text and TXT</th><td>Plain text has no metadata. If you want, the app adds a short visible note at the end.</td></tr>
+          </tbody>
+        </table>
+        <p class="dok-uwaga">Do not remove the labels: the terms of service prohibit it, and in many cases they are what shows the content has been labelled.</p>
+      </section>
+
+      <section aria-labelledby="ai-3"><h2 id="ai-3"><span class="etyk-nr">04</span>What you see in the app</h2><p>For every generated draft, image and recording, the app shows that it was created with AI. For voice-over it says the voice is synthetic, and by default a recording starts with a short spoken note that a synthetic voice is reading it. You turn on a visible label for texts and images when exporting and publishing; before you download an image, the app asks whether it shows real people, places or events.</p></section>
+      <section aria-labelledby="ai-4"><h2 id="ai-4"><span class="etyk-nr">05</span>What is up to you when you publish</h2><p>Whoever publishes content prepared with AI is responsible for the publication. The AI Act (Article 50(4)) gives publishers two disclosure duties:</p>
         <ul class="dok-lista-tekst">
           <li>An image, recording or video that resembles real people, places, objects or events and that viewers could take as genuine: you must disclose that it was generated or altered artificially. In clearly artistic, satirical or fictional work, a disclosure that does not get in the way of the work is enough.</li>
           <li>Text published to inform the public on matters of public interest: you must disclose that it was generated by AI, unless it has gone through human review or editorial control and someone holds editorial responsibility for it. A spelling check alone is not such a review.</li>
@@ -115,12 +131,21 @@
         <p>A typical advertising text or product description is usually not “informing the public on matters of public interest”, but topics such as health, consumer safety, finance or the environment can be. If in doubt, label the text or ask a lawyer. Also tell listeners that a recording is read by a synthetic voice.</p>
       </section>
 
-      <section aria-labelledby="ai-6"><h2 id="ai-6"><span class="etyk-nr">05</span>What we do not promise</h2><p>Content AI does not assess whether your publication complies with the law and does not replace legal advice. The fact check is automated and does not replace reading the text before publishing.</p>
-
+      <section aria-labelledby="ai-5"><h2 id="ai-5"><span class="etyk-nr">06</span>How to check a label</h2>
+        <ul class="dok-lista-tekst">
+          <li>DOCX: in your editor, open File, then Info and Properties (in LibreOffice: File, Properties).</li>
+          <li>PDF: open Document Properties in your PDF viewer.</li>
+          <li>Image: upload the file to the <a class="link" href="https://contentcredentials.org/verify" rel="noopener">Content Credentials</a> verifier or read its metadata with exiftool.</li>
+          <li>MP3: a player that shows tags, or exiftool, will display them.</li>
+        </ul>
       </section>
-      <section aria-labelledby="ai-7"><h2 id="ai-7"><span class="etyk-nr">06</span>Prohibited uses</h2><p>Content AI must not be used to create realistic intimate images of identifiable persons without their consent or child sexual abuse material (the AI Act prohibits such uses from 2 December 2026), to impersonate others, to create fake reviews or to remove AI labels. The full list is in the <a class="link" href="https://app.content-ai.net/dokumenty/regulamin?lang=en">Terms of Service</a> (section 7).</p></section>
-      <section aria-labelledby="ai-8"><h2 id="ai-8"><span class="etyk-nr">07</span>Supervision and contact</h2><p>The market surveillance authority for AI systems in Poland is the Commission for the Development and Safety of Artificial Intelligence (Polish Act of 3 July 2026 on artificial intelligence systems, Journal of Laws 2026, item 1003); at EU level, the AI Office of the European Commission. Questions about content labelling in Content AI: <a class="link" href="mailto:kontakt@content-ai.net">kontakt@content-ai.net</a>.</p></section>
-      <section aria-labelledby="ai-9"><h2 id="ai-9"><span class="etyk-nr">08</span>Legal basis</h2><p>Regulation (EU) 2024/1689 (the AI Act), Article 50, as amended by Regulation (EU) 2026/1744; Commission guidelines on the transparency obligations under Article 50 (C(2026) 5054); the Code of Practice on Transparency of AI-generated Content of 10 June 2026 (Content AI is not a signatory); the IPTC Digital Source Type vocabulary; schema.org; the C2PA specification.</p></section>
+
+      <section aria-labelledby="ai-6"><h2 id="ai-6"><span class="etyk-nr">07</span>What we do not promise</h2><p>Content AI does not assess whether your publication complies with the law and does not replace legal advice. The fact check is automated and does not replace reading the text before publishing.</p>
+        <p>A label in a file can disappear when the file passes through tools that strip metadata, such as some editors, image compressors or social networks. An image copied to the clipboard loses its label: download the file to keep it. Text pasted as plain text carries no label unless you add a visible note.</p>
+      </section>
+      <section aria-labelledby="ai-7"><h2 id="ai-7"><span class="etyk-nr">08</span>Prohibited uses</h2><p>Content AI must not be used to create realistic intimate images of identifiable persons without their consent or child sexual abuse material (the AI Act prohibits such uses from 2 December 2026), to impersonate others, to create fake reviews or to remove AI labels. The full list is in the <a class="link" href="https://app.content-ai.net/dokumenty/regulamin?lang=en">Terms of Service</a> (section 7).</p></section>
+      <section aria-labelledby="ai-8"><h2 id="ai-8"><span class="etyk-nr">09</span>Supervision and contact</h2><p>The market surveillance authority for AI systems in Poland is the Commission for the Development and Safety of Artificial Intelligence (Polish Act of 3 July 2026 on artificial intelligence systems, Journal of Laws 2026, item 1003); at EU level, the AI Office of the European Commission. Questions about content labelling in Content AI: <a class="link" href="mailto:kontakt@content-ai.net">kontakt@content-ai.net</a>.</p></section>
+      <section aria-labelledby="ai-9"><h2 id="ai-9"><span class="etyk-nr">10</span>Legal basis</h2><p>Regulation (EU) 2024/1689 (the AI Act), Article 50, as amended by Regulation (EU) 2026/1744; Commission guidelines on the transparency obligations under Article 50 (C(2026) 5054); the Code of Practice on Transparency of AI-generated Content of 10 June 2026 (Content AI is not a signatory); the IPTC Digital Source Type vocabulary; schema.org; the C2PA specification.</p></section>
       <p class="cta">
         <a class="btn btn-glowny" href="https://app.content-ai.net/dokumenty/regulamin?lang=en">Read the Terms of Service<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
         <a class="btn btn-drugi" href="/en/">Back to the home page</a>

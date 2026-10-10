@@ -99,15 +99,31 @@
     <header class="dokument-nag">
       <p class="etyk">Przejrzystość</p>
       <h1>AI Act i przejrzystość</h1>
-      <p class="lead">W Content AI teksty, grafiki i nagrania powstają z pomocą modeli AI. Opisujemy tu, kto za co odpowiada według AI Act, co widzisz w aplikacji i co należy do Ciebie, gdy publikujesz takie treści. Ta strona nie jest poradą prawną.</p>
+      <p class="lead">W Content AI teksty, grafiki i nagrania powstają z pomocą modeli AI. Opisujemy tu, jak takie treści oznaczamy, co widzisz w aplikacji i co należy do Ciebie, gdy je publikujesz. Content AI wspiera wymogi przejrzystości AI Act (art. 50). Ta strona nie jest poradą prawną.</p>
       <p class="mala">Stan na 9 października 2026</p>
     </header>
     <div class="dokument-tresc">
       <section aria-labelledby="ai-0"><h2 id="ai-0"><span class="etyk-nr">01</span>Kto jest kim</h2><p>Content AI to system AI do tworzenia treści, zbudowany na modelach firm Anthropic, OpenAI i ElevenLabs. Oferujemy go pod własną nazwą, więc w rozumieniu AI Act jesteśmy dostawcą systemu AI i odpowiadamy za oznaczanie wyników. Ty, korzystając z Content AI i publikując wyniki, jesteś podmiotem stosującym system AI: od Ciebie zależy, czy publikowana treść wymaga widocznej informacji o AI.</p></section>
       <section aria-labelledby="ai-1"><h2 id="ai-1"><span class="etyk-nr">02</span>Co robi Content AI</h2><p>Content AI to narzędzie do pisania i oceniania treści. Tekst, oceny i kontrolę faktów przygotowuje model firmy Anthropic, grafiki, lektora i transkrypcję modele OpenAI, a lepszego lektora model ElevenLabs. Model pisze z dokumentów, które dodajesz do bazy wiedzy, i ze stron znalezionych w sieci, jeśli włączysz wyszukiwanie. O tym, co zostanie opublikowane, zawsze decyduje człowiek: tekst możesz edytować, poprawiać według ocen i sprawdzić w kontroli faktów przed publikacją.</p></section>
 
-      <section aria-labelledby="ai-3"><h2 id="ai-3"><span class="etyk-nr">03</span>Co widzisz w aplikacji</h2><p>Przy lektorze aplikacja informuje, że głos jest syntetyczny, a nie nagraniem człowieka. Pozostałe oznaczenia opiszemy tutaj, gdy będą dostępne w aplikacji.</p></section>
-      <section aria-labelledby="ai-4"><h2 id="ai-4"><span class="etyk-nr">04</span>Co należy do Ciebie, gdy publikujesz</h2><p>Kto publikuje treść przygotowaną z pomocą AI, ten odpowiada za publikację. AI Act (art. 50 ust. 4) nakłada na publikujących dwa obowiązki ujawnienia:</p>
+      <section aria-labelledby="ai-2"><h2 id="ai-2"><span class="etyk-nr">03</span>Oznaczenia w plikach</h2><p>Pliki, które pobierasz albo publikujesz z Content AI, niosą informację, że treść powstała z pomocą AI, w formie czytelnej dla programów. Zwykły czytelnik jej nie widzi, ale wyszukiwarki, platformy i narzędzia do weryfikacji mogą ją odczytać. Używamy otwartych standardów: słownika IPTC Digital Source Type, schema.org i metadanych dokumentów; oznaczenia nie zawierają Twoich danych osobowych.</p>
+        <table class="dok-tabela">
+          <thead><tr><th scope="col">Format</th><th scope="col">Co zapisujemy</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">DOCX</th><td>We właściwościach dokumentu: informacja, że treść powstała z pomocą AI (kod ze słownika IPTC Digital Source Type), nazwa narzędzia i słowa kluczowe „AI-generated”.</td></tr>
+            <tr><th scope="row">PDF</th><td>W metadanych pliku (słowa kluczowe): informacja, że treść powstała z pomocą AI, i nazwa narzędzia.</td></tr>
+            <tr><th scope="row">WordPress i Drupal</th><td>Wpis nie ma miejsca na metadane pliku: treść dostaje atrybuty data-ai-* z informacją o AI (WordPress je zachowuje, Drupal przy formacie full_html), a widoczną etykietę pod tekstem możesz dodać przy publikacji.</td></tr>
+            <tr><th scope="row">Kod JSON-LD</th><td>W danych strukturalnych artykułu: pole digitalSourceType z informacją, że tekst powstał z pomocą AI.</td></tr>
+            <tr><th scope="row">Grafiki PNG</th><td>Plik zostaje taki, jaki przysłał dostawca, razem z jego poświadczeniem pochodzenia (Content Credentials, C2PA). Jeśli dostawca go nie dodał, aplikacja zapisuje informację o AI w metadanych XMP.</td></tr>
+            <tr><th scope="row">Nagrania MP3</th><td>W znacznikach ID3 na początku pliku: informacja, że nagranie wygenerowała AI (kod ze słownika IPTC), i nazwa narzędzia.</td></tr>
+            <tr><th scope="row">Tekst kopiowany i TXT</th><td>Zwykły tekst nie ma metadanych. Jeśli chcesz, aplikacja dopisze na końcu krótką widoczną notkę.</td></tr>
+          </tbody>
+        </table>
+        <p class="dok-uwaga">Oznaczeń nie usuwaj: regulamin tego zabrania, a w wielu przypadkach to one pozwalają wykazać, że treść jest oznaczona.</p>
+      </section>
+
+      <section aria-labelledby="ai-3"><h2 id="ai-3"><span class="etyk-nr">04</span>Co widzisz w aplikacji</h2><p>Przy każdym wygenerowanym tekście, grafice i nagraniu aplikacja pokazuje, że powstały z pomocą AI. Przy lektorze informuje, że głos jest syntetyczny, a nagranie domyślnie zaczyna się krótką zapowiedzią, że czyta je syntetyczny głos. Widoczną etykietę przy tekście i grafice włączasz przy eksporcie i publikacji; przed pobraniem grafiki aplikacja pyta, czy przedstawia ona realne osoby, miejsca albo zdarzenia.</p></section>
+      <section aria-labelledby="ai-4"><h2 id="ai-4"><span class="etyk-nr">05</span>Co należy do Ciebie, gdy publikujesz</h2><p>Kto publikuje treść przygotowaną z pomocą AI, ten odpowiada za publikację. AI Act (art. 50 ust. 4) nakłada na publikujących dwa obowiązki ujawnienia:</p>
         <ul class="dok-lista-tekst">
           <li>Grafika, nagranie albo wideo, które przypomina prawdziwe osoby, miejsca, przedmioty albo zdarzenia i które odbiorca mógłby uznać za autentyczne: trzeba ujawnić, że powstało albo zostało zmienione sztucznie. W treściach wyraźnie artystycznych, satyrycznych albo fikcyjnych wystarczy ujawnienie, które nie przeszkadza w odbiorze.</li>
           <li>Tekst publikowany po to, by informować opinię publiczną o sprawach interesu publicznego: trzeba ujawnić, że wygenerowało go AI, chyba że przeszedł przegląd człowieka albo kontrolę redakcyjną i ktoś ponosi za niego odpowiedzialność redakcyjną. Sama korekta pisowni nie jest takim przeglądem.</li>
@@ -115,12 +131,21 @@
         <p>Typowy tekst reklamowy albo opis produktu zwykle nie jest „informowaniem o sprawach interesu publicznego”, ale tematy takie jak zdrowie, bezpieczeństwo konsumentów, finanse czy środowisko mogą nim być. W razie wątpliwości oznacz tekst albo zapytaj prawnika. Informuj też słuchaczy, że nagranie odczytuje syntetyczny głos.</p>
       </section>
 
-      <section aria-labelledby="ai-6"><h2 id="ai-6"><span class="etyk-nr">05</span>Czego nie obiecujemy</h2><p>Content AI nie ocenia, czy Twoja publikacja jest zgodna z prawem, i nie zastępuje porady prawnej. Kontrola faktów jest automatyczna i nie zastępuje przeczytania tekstu przed publikacją.</p>
-
+      <section aria-labelledby="ai-5"><h2 id="ai-5"><span class="etyk-nr">06</span>Jak sprawdzić oznaczenie</h2>
+        <ul class="dok-lista-tekst">
+          <li>DOCX: w edytorze otwórz Plik, a potem Informacje i Właściwości (w LibreOffice: Plik, Właściwości).</li>
+          <li>PDF: w przeglądarce plików otwórz Właściwości dokumentu.</li>
+          <li>Grafika: wgraj plik do weryfikatora <a class="link" href="https://contentcredentials.org/verify" rel="noopener">Content Credentials</a> albo odczytaj metadane programem exiftool.</li>
+          <li>MP3: znaczniki pokaże odtwarzacz z podglądem tagów albo program exiftool.</li>
+        </ul>
       </section>
-      <section aria-labelledby="ai-7"><h2 id="ai-7"><span class="etyk-nr">06</span>Zakazane zastosowania</h2><p>Content AI nie wolno używać do tworzenia realistycznych wizerunków intymnych rozpoznawalnych osób bez ich zgody ani treści przedstawiających seksualne wykorzystywanie dzieci (AI Act zakazuje takich zastosowań od 2 grudnia 2026 r.), do podszywania się pod inne osoby, tworzenia fałszywych opinii ani usuwania oznaczeń AI. Pełna lista jest w <a class="link" href="https://app.content-ai.net/dokumenty/regulamin?lang=pl">regulaminie</a> (§ 7).</p></section>
-      <section aria-labelledby="ai-8"><h2 id="ai-8"><span class="etyk-nr">07</span>Nadzór i kontakt</h2><p>Organem nadzoru rynku systemów AI w Polsce jest Komisja Rozwoju i Bezpieczeństwa Sztucznej Inteligencji (ustawa z 3 lipca 2026 r. o systemach sztucznej inteligencji, Dz.U. 2026 poz. 1003); na poziomie UE działa Urząd ds. AI przy Komisji Europejskiej. Pytania o oznaczanie treści w Content AI: <a class="link" href="mailto:kontakt@content-ai.net">kontakt@content-ai.net</a>.</p></section>
-      <section aria-labelledby="ai-9"><h2 id="ai-9"><span class="etyk-nr">08</span>Podstawy</h2><p>Rozporządzenie (UE) 2024/1689 (AI Act), art. 50, w brzmieniu po zmianie rozporządzeniem (UE) 2026/1744; wytyczne Komisji w sprawie obowiązków przejrzystości z art. 50 (C(2026) 5054); Kodeks praktyk w zakresie przejrzystości treści generowanych przez AI z 10 czerwca 2026 r. (Content AI nie jest jego sygnatariuszem); słownik IPTC Digital Source Type; schema.org; specyfikacja C2PA.</p></section>
+
+      <section aria-labelledby="ai-6"><h2 id="ai-6"><span class="etyk-nr">07</span>Czego nie obiecujemy</h2><p>Content AI nie ocenia, czy Twoja publikacja jest zgodna z prawem, i nie zastępuje porady prawnej. Kontrola faktów jest automatyczna i nie zastępuje przeczytania tekstu przed publikacją.</p>
+        <p>Oznaczenie w pliku może zniknąć, gdy plik przejdzie przez narzędzia, które usuwają metadane, na przykład niektóre edytory, kompresory obrazów albo media społecznościowe. Grafika skopiowana do schowka traci oznaczenie: żeby je zachować, pobierz plik. Tekst wklejony jako zwykły tekst nie niesie oznaczenia, chyba że dodasz widoczną notkę.</p>
+      </section>
+      <section aria-labelledby="ai-7"><h2 id="ai-7"><span class="etyk-nr">08</span>Zakazane zastosowania</h2><p>Content AI nie wolno używać do tworzenia realistycznych wizerunków intymnych rozpoznawalnych osób bez ich zgody ani treści przedstawiających seksualne wykorzystywanie dzieci (AI Act zakazuje takich zastosowań od 2 grudnia 2026 r.), do podszywania się pod inne osoby, tworzenia fałszywych opinii ani usuwania oznaczeń AI. Pełna lista jest w <a class="link" href="https://app.content-ai.net/dokumenty/regulamin?lang=pl">regulaminie</a> (§ 7).</p></section>
+      <section aria-labelledby="ai-8"><h2 id="ai-8"><span class="etyk-nr">09</span>Nadzór i kontakt</h2><p>Organem nadzoru rynku systemów AI w Polsce jest Komisja Rozwoju i Bezpieczeństwa Sztucznej Inteligencji (ustawa z 3 lipca 2026 r. o systemach sztucznej inteligencji, Dz.U. 2026 poz. 1003); na poziomie UE działa Urząd ds. AI przy Komisji Europejskiej. Pytania o oznaczanie treści w Content AI: <a class="link" href="mailto:kontakt@content-ai.net">kontakt@content-ai.net</a>.</p></section>
+      <section aria-labelledby="ai-9"><h2 id="ai-9"><span class="etyk-nr">10</span>Podstawy</h2><p>Rozporządzenie (UE) 2024/1689 (AI Act), art. 50, w brzmieniu po zmianie rozporządzeniem (UE) 2026/1744; wytyczne Komisji w sprawie obowiązków przejrzystości z art. 50 (C(2026) 5054); Kodeks praktyk w zakresie przejrzystości treści generowanych przez AI z 10 czerwca 2026 r. (Content AI nie jest jego sygnatariuszem); słownik IPTC Digital Source Type; schema.org; specyfikacja C2PA.</p></section>
       <p class="cta">
         <a class="btn btn-glowny" href="https://app.content-ai.net/dokumenty/regulamin?lang=pl">Przeczytaj regulamin<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
         <a class="btn btn-drugi" href="/">Wróć na stronę główną</a>
