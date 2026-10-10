@@ -1977,6 +1977,103 @@ async function wariantMotywR9D(b) {
   await k.close();
 }
 
+// R9-D: zakup z okna pakietow w aplikacji na prawdziwych modulach A1 (rejestracja, /api/konto) i B (/api/platnosci/*,
+// atrapa Stripe): konto z rejestracji, ceny z /api/konto.platnosci, obie zgody w POST /api/platnosci/zakup (zapisane
+// w zgodach konta), Checkout, powrot do aplikacji z aktywnym pakietem, Konto: panel Stripe z powrotem (?konto=1)
+// i odstapienie na ekranie serwera z powrotem do aplikacji. Osobny serwer z CAI_REJESTRACJA=1 i PLATNOSCI=stripe.
+async function wariantR9DZakupWAplikacji(b) {
+  const atrapaStripe = require('./atrapa/stripe.js');
+  const portStripe = await wolnyPort();
+  const portSerwera = await wolnyPort();
+  const sekret = 'whsec_dymny_r9d_123456';
+  const adres = 'http://127.0.0.1:' + portSerwera;
+  const urlStripe = 'http://127.0.0.1:' + portStripe;
+  const srvStripe = atrapaStripe.uruchom(portStripe, { sekret, webhook: adres + '/platnosci/webhook/stripe' });
+  const kat = przygotujDane();
+  const env = Object.assign({}, process.env, {
+    CAI_UZYTKOWNICY: path.join(kat, 'uzytkownicy.json'), CAI_BAZA: path.join(kat, 'baza'), CAI_UZYCIE: path.join(kat, 'uzycie'),
+    CAI_MARKA: kat, CAI_SEKRET_PLIK: path.join(kat, 'sekret'), PORT: String(portSerwera), CAI_HOST: '127.0.0.1', CAI_ZAUFANE_ADRESY: '127.0.0.1',
+    ANTHROPIC_KEY: 'test-anthropic', CAI_URL_ANTHROPIC: 'http://127.0.0.1:' + PORT_ATRAPY + '/v1/messages',
+    CAI_REJESTRACJA: '1', CAI_ADRES_PUBLICZNY: adres, CAI_POCZTA_LOG: path.join(kat, 'poczta.jsonl'),
+    CAI_REGULAMIN_WERSJA: '2026-10-v1', CAI_POLITYKA_WERSJA: '2026-10-v1', CAI_KLUCZ_CIASTEK: require('crypto').randomBytes(32).toString('base64'),
+    PLATNOSCI: 'stripe', PLATNOSCI_TRYB: 'test', STRIPE_KLUCZ: 'rk_test_atrapa', STRIPE_SEKRET_WEBHOOKA: sekret,
+    STRIPE_CENA_STANDARD: 'price_atrapa_standard', STRIPE_CENA_PREMIUM: 'price_atrapa_premium', STRIPE_URL_API: urlStripe,
+    STRIPE_HOSTY_PRZEKIEROWAN: urlStripe, PLATNOSCI_CENY_WYSWIETLANE: 'standard:eur=19,pln=79;premium:eur=49,pln=199',
+    CAI_USLUGODAWCA_IMIE_NAZWISKO: 'Jan Testowy', CAI_USLUGODAWCA_ADRES: 'ul. Testowa 1, 00-001 Warszawa', CAI_USLUGODAWCA_EMAIL: 'kontakt@example.com',
+  });
+  const serwer = spawn(process.execPath, [path.join(REPO, 'serwer', 'server.js')], { cwd: REPO, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  let log = '';
+  serwer.stdout.on('data', (d) => { log += d; });
+  serwer.stderr.on('data', (d) => { log += d; });
+  const bledy = [];
+  const zakupy = [];
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  k.on('request', (z) => { if (z.method() === 'POST' && /\/api\/platnosci\/zakup$/.test(z.url())) zakupy.push(z.postData() || ''); });
+  let s;
+  try {
+    await czekajNaPort(portSerwera, 15000);
+    s = await k.newPage();
+    await s.goto(adres + '/rejestracja', { waitUntil: 'load' });
+    await krok('R9-D formularz rejestracji (A1)', s.waitForSelector('#email', { timeout: 5000 }));
+    await s.fill('#email', 'zakup.w.aplikacji@firma-przyklad.pl');
+    await s.fill('#haslo', 'mocne-haslo-do-testu-42');
+    await s.check('#zgoda_regulamin');
+    await s.check('#zgoda_wiek');
+    await s.waitForTimeout(3200);                       // podpisany znacznik: formularz szybszy niz 3 s to automat
+    await krok('R9-D rejestracja (A1)', Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"]')]));
+    await krok('R9-D stan konta z prawdziwego /api/konto', s.waitForFunction(() => !!(window.STAN_KONTA && window.STAN_KONTA.pochodzenie === 'samoobsluga' && !window.STAN_KONTA._zapas), null, { timeout: 10000 }));
+    // Klucz nie jest potrzebny do zakupu: kreator klucza (otwiera sie sam na koncie bez klucza) zamykamy.
+    await s.waitForTimeout(800);
+    await s.evaluate(() => { if (getComputedStyle(document.getElementById('start-modal')).display === 'flex') startPomin(); });
+    await s.evaluate(() => otworzPakiet('zakup'));
+    await krok('R9-D okno pakietow z cenami z serwera', s.waitForSelector('#zakup .zakup-karta', { timeout: 8000 }));
+    const okno = await s.evaluate(() => ({ karty: [...document.querySelectorAll('#zakup .zakup-karta')].map((x) => x.textContent), test: !!document.querySelector('#pakiet-zakup .zakup-test'),
+      waluta: (document.querySelector('#zakup .segmenty [aria-pressed="true"]') || {}).textContent || '' }));
+    wynik('R9-D na serwerze A1+B: okno pakietow z cenami z /api/konto.platnosci (79 zl, 199 zl), PLN dla interfejsu PL, pasek trybu testowego',
+      okno.karty.length === 2 && /79\s?zł/.test(okno.karty[0]) && /199\s?zł/.test(okno.karty[1]) && okno.waluta === 'PLN' && okno.test, JSON.stringify(okno));
+    await s.check('#zakup-zgoda-regulamin');
+    await s.check('#zakup-zgoda-wykonanie');
+    await krok('R9-D przejscie do Checkout', Promise.all([s.waitForURL((u) => String(u).startsWith(urlStripe), { timeout: 15000 }), s.click('#zakup-przycisk')]));
+    await krok('R9-D zaplata w Checkout i powrot do aplikacji', Promise.all([
+      s.waitForNavigation({ url: (u) => String(u).startsWith(adres + '/?platnosc='), waitUntil: 'load', timeout: 15000 }), s.click('#zaplac')]));
+    await krok('R9-D pakiet aktywny po powrocie', s.waitForFunction(() => /Pakiet Standard jest aktywny do/.test((document.getElementById('platnosc-tresc') || {}).textContent || ''), null, { timeout: 20000 }));
+    const po = await s.evaluate(async () => {
+      const stan = await (await fetch('/api/platnosci/stan')).json();
+      const eksport = await (await fetch('/konto/eksport')).json();
+      return { adres: location.search, sub: stan.subskrypcja, zgody: (eksport.zgody || []).filter((z) => z.zrodlo === 'zakup').map((z) => z.rodzaj) };
+    });
+    wynik('R9-D na serwerze A1+B: zakup z aplikacji - obie zgody zapisane w koncie (regulamin i natychmiastowe wykonanie), subskrypcja aktywna, adres bez ?platnosc',
+      zakupy.length === 1 && /"zgodaRegulamin":true/.test(zakupy[0]) && po.sub.stan === 'aktywna' && po.sub.plan === 'standard'
+      && po.zgody.indexOf('regulamin') >= 0 && po.zgody.indexOf('natychmiastowe-wykonanie') >= 0 && !/platnosc/.test(po.adres), JSON.stringify({ zakupy, po }));
+    await s.evaluate(() => zamknijPlatnosc());
+    // Konto: panel klienta Stripe i powrot z niego na ekran Konto (?konto=1).
+    await s.evaluate(() => otworzKonto());
+    await krok('R9-D Konto z panelem Stripe', s.waitForFunction(() => /Zarządzaj subskrypcją/.test(document.getElementById('konto-tresc').textContent)
+      && !!document.querySelector('#konto-tresc a[href="/konto/odstapienie?z=app&lang=pl"]'), null, { timeout: 8000 }));
+    await krok('R9-D panel klienta Stripe', Promise.all([s.waitForURL((u) => String(u).startsWith(urlStripe + '/p/session/'), { timeout: 15000 }),
+      s.evaluate(() => { [...document.querySelectorAll('#konto-tresc button')].filter((x) => /Zarządzaj subskrypcją/.test(x.textContent))[0].click(); })]));
+    await krok('R9-D powrot z panelu', Promise.all([s.waitForNavigation({ url: (u) => String(u).startsWith(adres + '/?konto=1'), waitUntil: 'load', timeout: 15000 }), s.click('#wroc')]));
+    await krok('R9-D ekran Konto po powrocie z panelu', s.waitForSelector('#konto-modal.open', { timeout: 10000 }));
+    // Odstapienie: ekran serwera B w dwoch krokach, powrot do aplikacji (z=app).
+    await krok('R9-D ekran odstapienia', Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('#konto-tresc a[href="/konto/odstapienie?z=app&lang=pl"]')]));
+    const odst = await s.evaluate(() => ({ przycisk: !!document.getElementById('potwierdz-odstapienie'), tekst: document.body.textContent, adres: location.pathname + location.search }));
+    wynik('R9-D na serwerze A1+B: z Konta panel Stripe z powrotem na ekran Konto, odstapienie na ekranie serwera z drugim krokiem i powrotem do aplikacji',
+      odst.przycisk && /Wróć do aplikacji/.test(odst.tekst) && /^\/konto\/odstapienie\?z=app/.test(odst.adres), JSON.stringify({ przycisk: odst.przycisk, adres: odst.adres }));
+    wynik('R9-D na serwerze A1+B: bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+    if (bledow) await zrzut(s, 'r9d-zakup-aplikacja');
+  } catch (e) {
+    wynik('R9-D zakup w aplikacji na serwerze A1+B przerwany', false, (e && e.message || String(e)).split('\n')[0] + ' | ' + log.split('\n').slice(-5).join(' '));
+    if (s) await zrzut(s, 'r9d-zakup-aplikacja').catch(() => {});
+  } finally {
+    await k.close();
+    serwer.kill();
+    await new Promise((r) => srvStripe.close(r));
+    fs.rmSync(kat, { recursive: true, force: true });
+  }
+}
+
 // R9-A1: rejestracja w przegladarce na osobnym serwerze (CAI_REJESTRACJA=1, poczta w dzienniku CAI_POCZTA_LOG):
 // "Zaloz konto" z ekranu logowania, formularz, aplikacja od razu po rejestracji, link z e-maila i przycisk
 // potwierdzenia (GET niczego nie zmienia), logowanie e-mailem. Ekrany kont bez naruszen CSP. Pada przed A1.
@@ -2184,6 +2281,7 @@ async function wariantR9Zakup(b) {
     await wariantR9Zakup(b);
     await osobno(wariantMotywR9D, b);
     await osobno(wariantSamoobsluga, b);
+    await osobno(wariantR9DZakupWAplikacji, b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));

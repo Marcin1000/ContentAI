@@ -21955,11 +21955,16 @@ async function kbAudioTranscribeAndOpen(file) {
     })();
   }
   function powrotZPlatnosci(){
+    // Konta zespolu kupuja (jesli w ogole) na ekranach serwera: w aplikacji jak dzis.
+    if (!samoobsluga()) return;
     var q; try { q = new URLSearchParams(location.search); } catch(e){ return; }
-    var w = q.get('platnosc'); if (!w) return;
-    q.delete('platnosc');
+    // ?konto=1: powrot z panelu klienta Stripe (kontrakt B) - z powrotem na ekran Konto.
+    var w = q.get('platnosc'), doKonta = q.get('konto') === '1';
+    if (!w && !doKonta) return;
+    q.delete('platnosc'); q.delete('konto');
     // window.history: w aplikacji `history` to lista artykulow (Historia).
     try { window.history.replaceState(window.history.state, '', location.pathname + (q.toString() ? '?' + q.toString() : '') + location.hash); } catch(e){}
+    if (!w) { window.otworzKonto(); return; }
     if (w === 'ok' || w === 'oczekuje') czekajNaPakiet();
     else if (w === 'kraj') odrzuconyKraj();
     else pokazPowiadomienie(tekst('plat-przerwana', ''), 'info', 9000);
