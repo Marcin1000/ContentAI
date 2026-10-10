@@ -138,7 +138,8 @@ function cli(...argumenty) {
   });
 }
 
-const bezMyslnikow = (s) => !/[–—]/.test(s);
+const DLUGIE_MYSLNIKI = new RegExp('[\\u2013\\u2014]');
+const bezMyslnikow = (s) => !DLUGIE_MYSLNIKI.test(s);
 
 // ─── 1. Bez sieci: adapter, podpis, czas polski, zwroty, ekrany ──────────────
 
