@@ -355,6 +355,23 @@ Wpisz (podmień `contentai.twojadomena.pl` na swój adres):
 
 ```
 {
+    # Dziennik Caddy bez kluczy API użytkowników (SEC8-01): przy błędzie 502 Caddy zapisuje
+    # całe żądanie z nagłówkami; filtr usuwa nagłówki z kluczami i ciasteczka.
+    log default {
+        output stderr
+        format filter {
+            wrap json
+            fields {
+                request>headers>X-Api-Key delete
+                request>headers>X-Openai-Key delete
+                request>headers>X-Eleven-Key delete
+                request>headers>Xi-Api-Key delete
+                request>headers>Cookie delete
+                request>headers>Authorization delete
+                resp_headers>Set-Cookie delete
+            }
+        }
+    }
     servers {
         # Tylko gdy przed serwerem stoi Cloudflare z pomarańczową chmurką; bez niego
         # ten blok niczego nie zmienia. Lista adresów: https://www.cloudflare.com/ips/
@@ -372,6 +389,9 @@ contentai.twojadomena.pl {
         # Prawdziwy adres klienta dla licznika prób logowania. NADPISUJE nagłówek
         # od klienta - bez tej linii limit prób da się obejść, a wszyscy dzielą jeden licznik.
         header_up X-Real-IP {client_ip}
+        # Restart przy aktualizacji: przez 10 s Caddy ponawia połączenie zamiast od razu oddać 502.
+        lb_try_duration 10s
+        lb_try_interval 250ms
     }
 }
 ```

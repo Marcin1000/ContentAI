@@ -983,6 +983,103 @@ async function wariantPilneKreator(b) {
   await k.close();
 }
 
+// R9-C: wlasne klucze w zaszyfrowanym ciasteczku (BYOK, SEC8-04, M-10). Osobny serwer
+// z CAI_KLUCZ_CIASTEK i kontem samoobslugowym na wlasnym kluczu: zapis klucza z aplikacji
+// (/api/klucze, ciasteczko HttpOnly niewidoczne dla skryptu strony), artykul z interfejsu
+// idzie do dostawcy z kluczem uzytkownika, nigdy z kluczem serwera, zwykle wylogowanie klucza
+// nie usuwa, a po usunieciu klucza wywolanie konczy sie 403 brak-klucza bez dostawcy.
+// Pada na r9-integracja 4140c95: brak /api/klucze, konto wlasne dostaje klucz serwera.
+async function wariantR9Klucze(b) {
+  const crypto = require('crypto');
+  const KLUCZ = 'sk-ant-api03-DYMNY-' + 'k'.repeat(40);
+  const kat = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-test-byok-'));
+  const port = await wolnyPort();
+  const adres = 'http://127.0.0.1:' + port;
+  // Konto samoobslugowe zakladamy w bazie przed startem serwera (rejestracja to zakres A1).
+  const magazyn = require(path.join(REPO, 'serwer', 'magazyn.js'));
+  const { zahaszuj } = require(path.join(REPO, 'serwer', 'server.js'));
+  magazyn.otworz({ plik: path.join(kat, 'contentai.sqlite') });
+  const h = zahaszuj(HASLO);
+  const konto = magazyn.utworzOrganizacjeIKonto({ email: 'byok@dymny.example', hash: h.hash, sol: h.sol, jezyk: 'pl', plan: 'premium', zrodloKluczy: 'wlasne' });
+  magazyn.zmienKonto(konto.login, { emailPotwierdzony: Date.now() });
+  magazyn.zamknij();
+  const env = Object.assign({}, process.env, {
+    CAI_SQLITE: path.join(kat, 'contentai.sqlite'), CAI_UZYTKOWNICY: path.join(kat, 'uzytkownicy.json'),
+    CAI_KOPIE: path.join(kat, 'kopie'), CAI_BAZA: path.join(kat, 'baza'), CAI_UZYCIE: path.join(kat, 'uzycie'),
+    CAI_MARKA: kat, CAI_SEKRET_PLIK: path.join(kat, 'sekret'), PORT: String(port), CAI_HOST: '127.0.0.1',
+    ANTHROPIC_KEY: 'SERWER-anthropic-dymny', OPENAI_KEY: 'SERWER-openai-dymny', ELEVEN_KEY: 'SERWER-eleven-dymny',
+    CAI_URL_ANTHROPIC: 'http://127.0.0.1:' + PORT_ATRAPY + '/v1/messages', CAI_URL_OPENAI: 'http://127.0.0.1:' + PORT_ATRAPY + '/v1',
+    CAI_URL_ELEVEN: 'http://127.0.0.1:' + PORT_ATRAPY + '/eleven/v1', CAI_ZAUFANE_ADRESY: '127.0.0.1',
+    CAI_KLUCZ_CIASTEK: crypto.randomBytes(32).toString('base64'),
+  });
+  const p = spawn(process.execPath, [path.join(REPO, 'serwer', 'server.js')], { cwd: REPO, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  let log = '';
+  p.stdout.on('data', (d) => { log += d; });
+  p.stderr.on('data', (d) => { log += d; });
+  const zapisujPrzed = atrapa.KONF.zapisujKlucze;
+  atrapa.KONF.zapisujKlucze = true;
+  // Pamiec wywolan atrapy ma 200 wpisow i po wczesniejszych scenariuszach jest pelna.
+  atrapa.ostatnie.length = 0;
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 } });
+  const bledy = [];
+  k.on('page', (s) => s.on('pageerror', (e) => bledy.push(e.message)));
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  const zaloguj = async (s) => {
+    await s.goto(adres + '/', { waitUntil: 'load' });
+    await s.fill('input[name="login"]', konto.login);
+    await s.fill('input[type="password"]', HASLO);
+    await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"], input[type="submit"]')]);
+    await s.waitForTimeout(800);
+    await s.evaluate(() => { if (typeof startPomin === 'function') startPomin(); });
+  };
+  try {
+    await czekajNaPort(port, 15000);
+    let s = await k.newPage();
+    await zaloguj(s);
+    const zapis = await s.evaluate(async (klucz) => {
+      const o = await fetch('/api/klucze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dostawca: 'anthropic', klucz }) });
+      const stan = await (await fetch('/api/klucze')).json();
+      return { status: o.status, widocznyDlaSkryptu: /cai_k_/.test(document.cookie), stan: stan.anthropic, zrodlo: stan.zrodloKluczy };
+    }, KLUCZ);
+    wynik('R9-C klucze: zapis z aplikacji - ciasteczko HttpOnly (niewidoczne dla skryptu), stan z koncowka, konto wlasne',
+      zapis.status === 200 && !zapis.widocznyDlaSkryptu && zapis.stan && zapis.stan.ustawiony && zapis.stan.koncowka === KLUCZ.slice(-4) && zapis.zrodlo === 'wlasne',
+      JSON.stringify(zapis));
+    const odWywolania = atrapa.ostatnie.length;
+    const r = await generuj(s, 'Artykul na wlasnym kluczu z ciasteczka');
+    const wywolania = atrapa.ostatnie.slice(odWywolania).filter((w) => /\/v1\/messages/.test(w.sciezka || ''));
+    wynik('R9-C klucze: artykul z interfejsu idzie do dostawcy z kluczem uzytkownika, ani razu z kluczem serwera',
+      /ready/.test(r.odznaka) && wywolania.length > 0 && wywolania.every((w) => w.klucz === KLUCZ) && !wywolania.some((w) => /SERWER-/.test(w.klucz || '')),
+      JSON.stringify({ odznaka: r.odznaka, klucze: [...new Set(wywolania.map((w) => w.klucz))] }));
+    // M-10: zwykle wylogowanie nie usuwa zapamietanych kluczy.
+    await s.evaluate(async () => { await fetch('/auth/logout', { method: 'POST' }).catch(() => null); });
+    await s.close();
+    s = await k.newPage();
+    await zaloguj(s);
+    const poWylogowaniu = await s.evaluate(async () => (await (await fetch('/api/klucze')).json()).anthropic);
+    wynik('R9-C klucze: po zwyklym wylogowaniu i ponownym logowaniu klucz dalej zapisany (M-10)',
+      Boolean(poWylogowaniu && poWylogowaniu.ustawiony), JSON.stringify(poWylogowaniu));
+    const odUsuniecia = atrapa.ostatnie.length;
+    const poUsunieciu = await s.evaluate(async () => {
+      await fetch('/api/klucze?dostawca=anthropic', { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+      const o = await fetch('/api', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': 'sk-ant-api03-NAGLOWEK-' + 'n'.repeat(30) },
+        body: JSON.stringify({ model: 'claude-sonnet-5', max_tokens: 20, messages: [{ role: 'user', content: 'test bez klucza' }] }) });
+      return { status: o.status, kod: o.headers.get('x-cai-kod'), stan: (await (await fetch('/api/klucze')).json()).anthropic };
+    });
+    wynik('R9-C klucze: po usunieciu klucza 403 brak-klucza bez wywolania dostawcy (klucz w naglowku x-api-key nie wystarcza)',
+      poUsunieciu.status === 403 && poUsunieciu.kod === 'brak-klucza' && poUsunieciu.stan && !poUsunieciu.stan.ustawiony && atrapa.ostatnie.length === odUsuniecia,
+      JSON.stringify(poUsunieciu));
+    wynik('R9-C klucze: bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+    if (bledow) await zrzut(s, 'r9c-klucze');
+  } catch (e) {
+    wynik('R9-C klucze: scenariusz przerwany wyjatkiem', false, (e && e.message || String(e)).split('\n')[0] + ' | ' + log.split('\n').slice(-5).join(' / '));
+  } finally {
+    atrapa.KONF.zapisujKlucze = zapisujPrzed;
+    await k.close();
+    p.kill();
+    fs.rmSync(kat, { recursive: true, force: true });
+  }
+}
+
 async function wariantR6F(b) {
   // Interfejs i artykul po polsku (komunikaty, odmiana i polski sklad w eksporcie sa sprawdzane po polsku).
   const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, acceptDownloads: true, locale: 'pl-PL' });
@@ -1919,6 +2016,7 @@ async function wariantR9Zakup(b) {
     await wariantR9Zrozumialosc(b);
     await wariantR9Rejestracja(b);
     await wariantR9Zakup(b);
+    await wariantR9Klucze(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));

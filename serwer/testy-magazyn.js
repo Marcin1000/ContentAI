@@ -693,7 +693,9 @@ async function testySerwera(sprawdz) {
     sprawdz('platnosci wylaczone: trasy zakupu i panelu -> 404 platnosci-wylaczone (aplikacja chowa przyciski)',
       zakup.status === 404 && zakup.headers.get('x-cai-kod') === 'platnosci-wylaczone' && panel.status === 404);
     const kluczSprawdz = await t.zadanie('/api/klucze/sprawdz', t.json(cKlient, { dostawca: 'anthropic' }));
-    sprawdz('trasy kluczy (C) maja kontrakt: 501 niezaimplementowane', kluczSprawdz.status === 501 && kluczSprawdz.headers.get('x-cai-kod') === 'niezaimplementowane');
+    // C wdrozyl /api/klucze (testy-byok.js): bez klucza sprawdzenie mowi to wprost, bez wywolania dostawcy.
+    sprawdz('trasy kluczy (C): /api/klucze/sprawdz bez klucza -> 200 { ok: false, powod: brak-klucza }',
+      kluczSprawdz.status === 200 && (await kluczSprawdz.json()).powod === 'brak-klucza');
     const rejestracja = await t.zadanie('/rejestracja');
     const webhook = await t.zadanie('/platnosci/webhook/stripe', { method: 'POST', headers: { 'Content-Type': 'application/json', 'stripe-signature': 't=1,v1=x' }, body: '{}' });
     sprawdz('bez CAI_REJESTRACJA i PLATNOSCI publiczne trasy dzialaja jak dzis (ekran logowania)',
@@ -802,27 +804,9 @@ function testyPlikowWdrozenia(sprawdz) {
 
 // ─── Atrapy Stripe (B) i poczty (C): ksztalt modulu ─────────────────────────
 
-async function testyAtrap(sprawdz) {
-  console.log('\n  atrapy stripe.js i poczta.js (ksztalt modulu, zaslepki)');
-  const nasluch = (s) => new Promise((ok) => { if (s.listening) ok(); else s.once('listening', ok); });
-  // stripe.js: pelna atrapa wykonawcy B, testy ksztaltu i API w testy-platnosci.js
-  for (const [nazwa, plik, sciezka] of [['poczta', 'poczta.js', '/emails']]) {
-    const atrapa = require(path.join(__dirname, '..', 'narzedzia', 'atrapa', plik));
-    const serwer = atrapa.uruchom(0, { sekret: 'whsec_test', webhook: 'http://127.0.0.1:9/platnosci/webhook/stripe' });
-    try {
-      await nasluch(serwer);
-      const adres = `http://127.0.0.1:${serwer.address().port}`;
-      const zdrowie = await fetch(adres + '/zdrowie');
-      const api = await fetch(adres + sciezka, { method: 'POST', body: 'a=1' });
-      const wywolania = await (await fetch(adres + '/_atrapa/wywolania')).json();
-      const czysta = atrapa.obsluz('GET', '/zdrowie', {}, Buffer.alloc(0));
-      sprawdz(`atrapa ${nazwa}: obsluz i uruchom, /zdrowie 200, API 501 do czasu wykonawcy, dziennik wywolan`,
-        zdrowie.status === 200 && (await zdrowie.json()).atrapa === nazwa && api.status === 501
-        && wywolania.length === 1 && wywolania[0].sciezka === sciezka && czysta.status === 200 && typeof czysta.cialo === 'string');
-    } finally {
-      await new Promise((r) => serwer.close(r));
-    }
-  }
+async function testyAtrap() {
+  // Obie atrapy sa juz pelne: stripe.js (wykonawca B, testy w testy-platnosci.js) i poczta.js
+  // (wykonawca C, testy w testy-poczta.js). Zaslepek 501 z etapu 0 nie ma, wiec nie ma tu czego sprawdzac.
 }
 
 async function uruchom({ sprawdz }) {
