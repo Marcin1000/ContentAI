@@ -779,7 +779,7 @@ async function testyCli(sprawdz) {
       && t.magazyn.konto(klient.login).email === 'ewa.klient@firma.pl');
     const usunZespolu = cli('email', 'ola.zespol@firma.pl', '-');
     sprawdz('CLI email <login> -: konto zespolu bez adresu loguje sie dalej loginem',
-      usunZespolu.status === 0 && t.magazyn.konto('standard').email === null && t.magazyn.konto('standard').emailPotwierdzony === null
+      usunZespolu.status === 0 && /nie ma już adresu/.test(usunZespolu.stdout) && t.magazyn.konto('standard').email === null && t.magazyn.konto('standard').emailPotwierdzony === null
       && (await t.zadanie('/auth/login', t.formularz(null, { login: 'standard', haslo: HASLO }, { 'x-real-ip': nowyIp() }))).status === 302);
 
     // klucze: zmiana dziala od nastepnego zapytania (konto czytane z bazy przy kazdym zadaniu).
