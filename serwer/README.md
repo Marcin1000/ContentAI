@@ -1067,8 +1067,51 @@ w `CAI_POCZTA_LOG`), adapter Resend to zaślepka.
 
 ## Oznaczanie treści AI
 
-Wykonawca D (`serwer/oznaczenia.js`, aplikacja): konfiguracja oznaczeń (stała z rozdz. 9.1
-projektu, domyślne etykiety wg decyzji M-5) wysyłana aplikacji w `/api/konto.oznaczenia`.
+Content AI oznacza wyniki zgodnie z art. 50 AI Act w dwóch warstwach (projekt, rozdz. 9).
+Wykonawca D: `serwer/oznaczenia.js`, aplikacja (`app/contentai.src.html`, blok „OZNACZENIA AI”)
+i `app/pwa/lib/docx-natywny-2.js`.
+
+**Warstwa maszynowa** (zawsze, gdy rodzaj ma `metadane: true`), kod źródła z IPTC Digital Source
+Type: `trainedAlgorithmicMedia` dla treści z AI, `compositeWithTrainedAlgorithmicMedia` dla tekstu
+użytkownika istotnie przerobionego przez AI („Popraw wklejony tekst”):
+
+| Format | Co niesie plik |
+|---|---|
+| DOCX | `docProps/custom.xml` (AIGenerated, AISystem, DigitalSourceType, AIMarkingVersion; AIEditedByHuman po ręcznej poprawce w trybie Edytuj) i `cp:keywords` |
+| PDF | `/Keywords` i `/DigitalSourceType` w informacjach dokumentu oraz pakiet XMP (`Iptc4xmpExt:DigitalSourceType`, `xmp:CreatorTool`) dopisany aktualizacją przyrostową |
+| WordPress, Drupal | treść wpisu w `<div data-ai-generated data-ai-system data-ai-source-type>` (Drupal zachowuje atrybuty w formacie `full_html`, `basic_html` je usuwa: aplikacja o tym mówi) |
+| JSON-LD | `digitalSourceType` ze schema.org; bez domyślnego autora „Redakcja” (autor tylko z konfiguracji marki) |
+| PNG | XMP we fragmencie `iTXt` (`XML:com.adobe.xmp`) zaraz po `IHDR`; plik z manifestem C2PA dostawcy (`caBX`) zostaje bajt w bajt |
+| MP3 | ID3v2.4 na początku sklejonego pliku: `TXXX AI_GENERATED`, `TXXX DIGITAL_SOURCE_TYPE`, `TSSE`, `TIT2`, `COMM` z informacją o syntetycznym głosie; znaczniki fragmentów od dostawcy są zdejmowane |
+
+**Etykiety widoczne** (art. 50 ust. 4 to obowiązek publikującego): przełączniki tekstu, grafiki
+i audio z wartościami domyślnymi z decyzji M-5 / D-08: tekst wyłączona, grafika wyłączona
+(przed pobraniem pytanie, czy przedstawia prawdziwe osoby, miejsca albo zdarzenia), audio
+(zapowiedź głosowa na początku nagrania) włączona. Etykieta tekstu jest w języku artykułu
+(pl, en, de, cs) i trafia tylko do kopii dla klienta: TXT, DOCX, PDF, schowek, wpis w CMS,
+krótka wersja przy kopiowaniu przeróbek. Napis na grafice to nowy plik PNG z naszym XMP.
+Zapowiedź audio jest doklejona do pierwszego fragmentu nagrania, więc nie kosztuje osobnego
+wywołania dostawcy. Ten sam stan przełącznika widać w menu Eksport, oknie publikacji do CMS,
+przy grafice, w module audio, przy przeróbkach i w Koncie.
+
+**W aplikacji**: informacja o AI pod artykułem, przy grafice i w module audio, „Syntetyczny głos
+AI” na pasku odtwarzania, przypomnienie o art. 50 ust. 4 w oknie publikacji do CMS i komunikat
+przy kopiowaniu grafiki do schowka (kopia nie niesie oznaczenia, D-07).
+
+Konfiguracja: stała `OZNACZENIA` w `serwer/oznaczenia.js` (wersja, kody IPTC i schema.org,
+słowa kluczowe plików, teksty etykiet PL/EN/DE/CS, wartość każdego przełącznika:
+`zawsze`, `domyslnie-wlaczona`, `domyslnie-wylaczona` albo `nigdy`). Ta sama stała jest w aplikacji
+jako `OZNACZENIA_DOMYSLNE`, bo warianty keys i owner działają bez serwera; `serwer/testy-oznaczenia.js`
+pilnuje, że obie są równe (zmiana tekstu etykiety = ta sama zmiana w obu plikach). Za serwerem
+aplikacja dostaje stałą razem z wyborem użytkownika w `/api/konto.oznaczenia`, a zmianę przełącznika
+zapisuje `POST /api/konto/ustawienia { "oznaczenia": { "tekst"?, "grafika"?, "audio"? } }` (tylko
+znane pola logiczne). Bez modułu kont wybór zostaje w tej przeglądarce. `CAI_OZNACZENIA=0` wyłącza
+obie warstwy awaryjnie (ślad w dzienniku przy starcie).
+
+Sprawdzenie: `node narzedzia/test_eksport.js` (scenariusze „AI”: każdy format) i `node serwer/testy.js`
+(sekcja „oznaczenia AI (D)”). Ręcznie: `exiftool plik.png` albo `exiftool plik.mp3`, w PDF
+`python3 -c "import pymupdf,sys; d=pymupdf.open(sys.argv[1]); print(d.metadata, d.get_xml_metadata())" plik.pdf`,
+w Wordzie Plik, Informacje, Właściwości, Właściwości zaawansowane, Niestandardowe.
 
 ## Strona i dokumenty
 
