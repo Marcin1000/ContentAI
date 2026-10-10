@@ -13,6 +13,30 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://content-ai.net/en/"/>
   </url>
   <url>
+    <loc>https://content-ai.net/klucz-api/</loc>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://content-ai.net/klucz-api/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://content-ai.net/en/api-key/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://content-ai.net/en/api-key/"/>
+  </url>
+  <url>
+    <loc>https://content-ai.net/en/api-key/</loc>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://content-ai.net/klucz-api/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://content-ai.net/en/api-key/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://content-ai.net/en/api-key/"/>
+  </url>
+  <url>
+    <loc>https://content-ai.net/ai-act/</loc>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://content-ai.net/ai-act/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://content-ai.net/en/ai-act/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://content-ai.net/en/ai-act/"/>
+  </url>
+  <url>
+    <loc>https://content-ai.net/en/ai-act/</loc>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://content-ai.net/ai-act/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://content-ai.net/en/ai-act/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://content-ai.net/en/ai-act/"/>
+  </url>
+  <url>
     <loc>https://content-ai.net/prywatnosc/</loc>
     <xhtml:link rel="alternate" hreflang="pl" href="https://content-ai.net/prywatnosc/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://content-ai.net/en/privacy/"/>
@@ -23,5 +47,17 @@
     <xhtml:link rel="alternate" hreflang="pl" href="https://content-ai.net/prywatnosc/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://content-ai.net/en/privacy/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://content-ai.net/en/privacy/"/>
+  </url>
+  <url>
+    <loc>https://content-ai.net/regulamin/</loc>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://content-ai.net/regulamin/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://content-ai.net/en/terms/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://content-ai.net/en/terms/"/>
+  </url>
+  <url>
+    <loc>https://content-ai.net/en/terms/</loc>
+    <xhtml:link rel="alternate" hreflang="pl" href="https://content-ai.net/regulamin/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://content-ai.net/en/terms/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://content-ai.net/en/terms/"/>
   </url>
 </urlset>

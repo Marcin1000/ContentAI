@@ -7,6 +7,7 @@
  *
  * Zakres: haszowanie hasel i tlumaczenie Anthropic <-> OpenAI. Sciezki HTTP
  * (logowanie, role, proxy) sprawdzamy recznie - wymagaja sieci i uruchomionego procesu.
+ * Runda 9: testy etapu 0 i wykonawcow w osobnych plikach serwer/testy-*.js (lista na koncu).
  */
 
 'use strict';
@@ -252,6 +253,14 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
     testyMarki();
     testyUsuwaniaKonta();
     await testyPoprawek();
+    await require('./testy-dokumenty.js').uruchom({ sprawdz });
+
+    // Runda 9: etap 0 (magazyn, migracja, kontrakty) i pliki testow wykonawcow A1, B, C, D.
+    // Kazdy plik eksportuje uruchom({ sprawdz }) - nowe testy dopisuje sie we wlasnym pliku.
+    for (const plik of ['./testy-magazyn.js', './testy-konta.js', './testy-dzierzawy.js', './testy-byok.js',
+      './testy-poczta.js', './testy-platnosci.js', './testy-oznaczenia.js']) {
+      await require(plik).uruchom({ sprawdz });
+    }
 
     console.log(`\n  ${zaliczone} zaliczonych, ${bledy.length} bledow\n`);
     if (bledy.length) {
@@ -551,26 +560,22 @@ function testySesji() {
   const fs = require('node:fs');
   const path = require('node:path');
   const srv = require('./server.js');
+  const magazyn = require('./magazyn.js');
 
   console.log('\n  sesje - podpis i odczyt');
 
+  // Od rundy 9 konta i wylogowania leza w bazie (serwer/magazyn.js). Test stawia
+  // wlasna baze w katalogu tymczasowym - serwer czyta konto przy kazdej kontroli sesji.
   const katalog = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'cai-sesje-'));
-  const plikKont = path.join(katalog, 'uzytkownicy.json');
-  const oryginalneKonta = process.env.CAI_UZYTKOWNICY;
-
-  // Podmieniamy plik kont tak, jak robi to serwer przy starcie
-  const konta = [
-    { login: 'marcin', hash: 'x', sol: 'y', rola: 'admin' },
-    { login: 'anna', hash: 'x', sol: 'y', rola: 'uzytkownik' },
-  ];
-  fs.writeFileSync(plikKont, JSON.stringify(konta));
-
-  // wczytajUzytkownikow czyta ze stalej PLIK_UZYTKOWNIKOW ustalonej przy
-  // wczytaniu modulu, wiec testujemy wobec prawdziwego pliku serwera
-  const plikSerwera = srv.PLIK_UZYTKOWNIKOW;
-  fs.mkdirSync(path.dirname(plikSerwera), { recursive: true });
-  const kopia = fs.existsSync(plikSerwera) ? fs.readFileSync(plikSerwera) : null;
-  fs.writeFileSync(plikSerwera, JSON.stringify(konta));
+  const plikBazy = path.join(katalog, 'contentai.sqlite');
+  magazyn.otworz({ plik: plikBazy });
+  const zalozKonta = () => {
+    for (const [login, rola] of [['marcin', 'admin'], ['anna', 'uzytkownik']]) {
+      if (!magazyn.konto(login)) magazyn.utworzKonto({ login, hash: 'aa', sol: 'y', rola });
+      else magazyn.zmienKonto(login, { rola, sesjeOd: null });
+    }
+  };
+  zalozKonta();
 
   const zCiasteczkiem = (token) => ({ headers: { cookie: `cai_auth=${token}` } });
 
@@ -581,7 +586,7 @@ function testySesji() {
 
   const s = srv.sesjaZadania(zCiasteczkiem(token));
   sprawdz('poprawny token przechodzi', s !== null && s.login === 'marcin');
-  sprawdz('rola odczytana z pliku kont', s.rola === 'admin');
+  sprawdz('rola odczytana z bazy kont', s.rola === 'admin');
 
   sprawdz('brak ciasteczka to brak sesji', srv.sesjaZadania({ headers: {} }) === null);
   sprawdz('smiec zamiast tokenu odrzucony', srv.sesjaZadania(zCiasteczkiem('abc')) === null);
@@ -614,65 +619,56 @@ function testySesji() {
     const o = JSON.parse(Buffer.from(c.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString());
     sprawdz('token niesie date wygasniecia', o.wygasa > Date.now());
 
-    // 2. Usuniecie konta - weryfikacja siega do pliku kont
-    fs.writeFileSync(plikSerwera, JSON.stringify(konta.filter((k) => k.login !== 'marcin')));
+    // 2. Usuniecie konta - weryfikacja siega do bazy kont
+    magazyn.usunKonto('marcin');
     sprawdz('usuniete konto konczy sesje natychmiast', srv.sesjaZadania(zCiasteczkiem(token)) === null);
-    fs.writeFileSync(plikSerwera, JSON.stringify(konta));
+    zalozKonta();
     sprawdz('przywrocone konto znow przechodzi', srv.sesjaZadania(zCiasteczkiem(token)) !== null);
 
     // 3. Degradacja roli dziala od razu, bez czekania na wygasniecie
-    fs.writeFileSync(plikSerwera, JSON.stringify([
-      { login: 'marcin', hash: 'x', sol: 'y', rola: 'uzytkownik' },
-    ]));
+    magazyn.zmienKonto('marcin', { rola: 'uzytkownik' });
     const poDegradacji = srv.sesjaZadania(zCiasteczkiem(token));
     sprawdz('degradacja admina dziala natychmiast', poDegradacji !== null && poDegradacji.rola === 'uzytkownik');
-    fs.writeFileSync(plikSerwera, JSON.stringify(konta));
+    zalozKonta();
 
     // 4. Znacznik sesjeOd - zmiana hasla uniewaznia starsze sesje
-    fs.writeFileSync(plikSerwera, JSON.stringify([
-      { login: 'marcin', hash: 'x', sol: 'y', rola: 'admin', sesjeOd: Date.now() + 1000 },
-    ]));
+    magazyn.zmienKonto('marcin', { sesjeOd: Date.now() + 1000 });
     sprawdz('sesjeOd odcina sesje wydane wczesniej', srv.sesjaZadania(zCiasteczkiem(token)) === null);
     const poZmianie = srv.utworzSesje({ login: 'marcin', rola: 'admin' });
-    fs.writeFileSync(plikSerwera, JSON.stringify([
-      { login: 'marcin', hash: 'x', sol: 'y', rola: 'admin', sesjeOd: Date.now() - 1000 },
-    ]));
+    magazyn.zmienKonto('marcin', { sesjeOd: Date.now() - 1000 });
     sprawdz('sesja wydana po zmianie hasla dziala', srv.sesjaZadania(zCiasteczkiem(poZmianie)) !== null);
-    fs.writeFileSync(plikSerwera, JSON.stringify(konta));
+    zalozKonta();
   }
 
   console.log('\n  sesje - wylogowanie przezywa restart');
   {
-    const kopiaWylog = fs.existsSync(srv.PLIK_WYLOGOWANYCH) ? fs.readFileSync(srv.PLIK_WYLOGOWANYCH) : null;
-    try { fs.unlinkSync(srv.PLIK_WYLOGOWANYCH); } catch (e) { /* moze nie istniec */ }
-
     const t = srv.utworzSesje({ login: 'marcin', rola: 'admin' });
     const sesja = srv.sesjaZadania(zCiasteczkiem(t));
     sprawdz('sesja przed wylogowaniem dziala', sesja !== null);
 
     srv.zapiszWylogowanie(sesja.id, sesja.wygasa);
     sprawdz('po wylogowaniu token nie przechodzi', srv.sesjaZadania(zCiasteczkiem(t)) === null);
-    sprawdz('wylogowanie zapisane na dysku', fs.existsSync(srv.PLIK_WYLOGOWANYCH));
-    sprawdz('lista wylogowanych czytana z pliku', srv.wylogowane().some((w) => w.id === sesja.id));
+    // "Restart": baza zamknieta i otwarta od nowa z pliku na dysku.
+    magazyn.zamknij();
+    magazyn.otworz({ plik: plikBazy });
+    sprawdz('wylogowanie zapisane na dysku (przezywa ponowne otwarcie bazy)', srv.sesjaZadania(zCiasteczkiem(t)) === null);
+    sprawdz('lista wylogowanych czytana z bazy', srv.wylogowane().some((w) => w.id === sesja.id));
 
     // Inna sesja tej samej osoby ma dzialac dalej
     const t2 = srv.utworzSesje({ login: 'marcin', rola: 'admin' });
     sprawdz('wylogowanie dotyczy jednej sesji, nie konta', srv.sesjaZadania(zCiasteczkiem(t2)) !== null);
 
-    // Wpisy po terminie wypadaja przy kolejnym zapisie
+    // Wpisy po terminie wypadaja przy sprzataniu dobowym
     srv.zapiszWylogowanie('stary', Date.now() - 1000);
     srv.zapiszWylogowanie('nowy', Date.now() + 60_000);
-    sprawdz('przeterminowane wpisy sa sprzatane', !srv.wylogowane().some((w) => w.id === 'stary'));
-
-    if (kopiaWylog) fs.writeFileSync(srv.PLIK_WYLOGOWANYCH, kopiaWylog);
-    else { try { fs.unlinkSync(srv.PLIK_WYLOGOWANYCH); } catch (e) { /* nic */ } }
+    magazyn.sprzataj();
+    sprawdz('przeterminowane wpisy sa sprzatane', !srv.wylogowane().some((w) => w.id === 'stary')
+      && !magazyn.sesjaOdwolana('stary') && magazyn.sesjaOdwolana('nowy'));
   }
 
   // Sprzatanie
-  if (kopia) fs.writeFileSync(plikSerwera, kopia);
-  else { try { fs.unlinkSync(plikSerwera); } catch (e) { /* nic */ } }
+  magazyn.zamknij();
   fs.rmSync(katalog, { recursive: true, force: true });
-  if (oryginalneKonta === undefined) delete process.env.CAI_UZYTKOWNICY;
 }
 
 // ─── Logowanie przez bramę ────────────────────────────────────────────────────
@@ -696,13 +692,12 @@ function testyBramy() {
   process.env.CAI_ZAUFANY_NAGLOWEK = 'Remote-User';
   const srvBrama = require('./server.js');
 
-  const plikKont = srvBrama.PLIK_UZYTKOWNIKOW;
-  const kopiaKont = fs.existsSync(plikKont) ? fs.readFileSync(plikKont) : null;
-  fs.mkdirSync(path.dirname(plikKont), { recursive: true });
-  fs.writeFileSync(plikKont, JSON.stringify([
-    { login: 'marcin', hash: 'x', sol: 'y', rola: 'admin' },
-    { login: 'anna', hash: 'x', sol: 'y', rola: 'uzytkownik' },
-  ]));
+  // Konta w bazie testu (od rundy 9 brama tez czyta konto z serwer/magazyn.js).
+  const magazyn = require('./magazyn.js');
+  const katalogBazy = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'cai-brama-'));
+  magazyn.otworz({ plik: path.join(katalogBazy, 'contentai.sqlite') });
+  magazyn.utworzKonto({ login: 'marcin', hash: 'aa', sol: 'y', rola: 'admin' });
+  magazyn.utworzKonto({ login: 'anna', hash: 'aa', sol: 'y', rola: 'uzytkownik' });
 
   const zadanie = (naglowki, adres) => ({
     headers: naglowki,
@@ -711,7 +706,7 @@ function testyBramy() {
 
   const zBramy = srvBrama.sesjaZadania(zadanie({ 'remote-user': 'marcin' }, '127.0.0.1'));
   sprawdz('brama wpuszcza znane konto', zBramy !== null && zBramy.login === 'marcin');
-  sprawdz('rola nadal z pliku kont, nie z naglowka', zBramy.rola === 'admin');
+  sprawdz('rola nadal z bazy kont, nie z naglowka', zBramy.rola === 'admin');
   sprawdz('sesja oznaczona jako z bramy', zBramy.zBramy === true);
 
   const anna = srvBrama.sesjaZadania(zadanie({ 'remote-user': 'anna' }, '127.0.0.1'));
@@ -739,8 +734,8 @@ function testyBramy() {
     srvBrama.sesjaZadania(zadanie({ cookie: `cai_auth=${wlasnyToken}` }, '127.0.0.1')) === null);
 
   // Sprzatanie i powrot do stanu domyslnego
-  if (kopiaKont) fs.writeFileSync(plikKont, kopiaKont);
-  else { try { fs.unlinkSync(plikKont); } catch (e) { /* nic */ } }
+  magazyn.zamknij();
+  fs.rmSync(katalogBazy, { recursive: true, force: true });
   if (przedNaglowek === undefined) delete process.env.CAI_ZAUFANY_NAGLOWEK;
   else process.env.CAI_ZAUFANY_NAGLOWEK = przedNaglowek;
   delete require.cache[require.resolve('./server.js')];
@@ -756,11 +751,18 @@ function testyPlanow() {
   const os = require('node:os');
   const path = require('node:path');
   const plany = require('./plany.js');
+  const magazyn = require('./magazyn.js');
 
+  // Liczniki leza w bazie (runda 9); konta testu zakladamy w bazie tymczasowej.
   const katalog = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-plany-'));
+  magazyn.otworz({ plik: path.join(katalog, 'contentai.sqlite') });
   const wolny = { login: 'nowy', rola: 'uzytkownik', plan: 'darmowy' };
   const platny = { login: 'anna', rola: 'uzytkownik', plan: 'standard' };
   const szef = { login: 'marcin', rola: 'admin', plan: 'darmowy' };
+  for (const k of [wolny, platny, szef, { login: 'kowal', rola: 'uzytkownik', plan: 'standard' },
+    { login: 'nowak', rola: 'uzytkownik', plan: 'darmowy' }]) {
+    magazyn.utworzKonto({ login: k.login, hash: 'aa', sol: 'b', rola: k.rola, plan: k.plan });
+  }
 
   console.log('\n  plany - przypisanie');
   {
@@ -801,7 +803,7 @@ function testyPlanow() {
       plany.sprawdzLimit({ katalog, uzytkownik: szef, czynnosc: 'artykul' }).limit === null);
     plany.policz({ katalog, uzytkownik: szef, czynnosc: 'artykul' });
     sprawdz('przy braku limitu nic sie nie zapisuje',
-      Object.keys(plany.wczytajUzycie(katalog, 'marcin')).length === 0);
+      Object.keys(magazyn.uzycieKonta('marcin')).length === 0);
   }
 
   console.log('\n  plany - okres miesieczny');
@@ -898,6 +900,7 @@ function testyPlanow() {
     sprawdz('pusty login odrzucony', pusty !== null);
   }
 
+  magazyn.zamknij();
   fs.rmSync(katalog, { recursive: true, force: true });
 }
 
@@ -1241,8 +1244,10 @@ function testyMarki() {
     sprawdz('trasa zapisu istnieje',
       zrodlo.includes("sciezka === '/api/marka' && req.method === 'POST'"));
     const odPost = zrodlo.indexOf("sciezka === '/api/marka' && req.method === 'POST'");
-    sprawdz('zapis tylko dla administratora',
-      odPost > 0 && zrodlo.slice(odPost, odPost + 400).includes("sesja.rola !== 'admin'"));
+    // R9-C (dzierzawy, ARCH8-09): zapis dla zarzadzajacego organizacja - w glownej admin
+    // (dzierzawy.mozeZarzadzac), w samoobslugowej jej wlasciciel; dzialanie w testy-dzierzawy.js.
+    sprawdz('zapis tylko dla zarzadzajacego organizacja (glowna: administrator)',
+      odPost > 0 && zrodlo.slice(odPost, odPost + 400).includes('dzierzawy.mozeZarzadzac(konto, konto.org)'));
     // Trasy musza lezec ZA brama logowania, inaczej konfiguracja marki jest
     // czytelna dla kazdego, kto zna adres.
     sprawdz('trasy marki za brama logowania',
@@ -1268,6 +1273,7 @@ function testyUsuwaniaKonta() {
   const os = require('node:os');
   const path = require('node:path');
   const { spawnSync } = require('node:child_process');
+  const magazyn = require('./magazyn.js');
 
   console.log('\n  usuwanie konta z danymi (uzytkownicy.js usun)');
   const kat = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-usun-'));
@@ -1290,26 +1296,42 @@ function testyUsuwaniaKonta() {
       marka: path.join(kat, 'marka.json'),
     };
     Object.values(pliki).forEach((p) => fs.writeFileSync(p, '[]'));
+    // Liczniki w formacie R8 (obiekt okresow): migracja przenosi je do bazy.
+    fs.writeFileSync(pliki.uzycieJana, '{"zawsze":{"artykul":2}}');
+    fs.writeFileSync(pliki.uzycieJanka, '{"zawsze":{"artykul":1}}');
     const env = Object.assign({}, process.env, {
       CAI_UZYTKOWNICY: path.join(kat, 'uzytkownicy.json'), CAI_BAZA: kBaza, CAI_UZYCIE: kUzycie,
       CAI_MARKA: kat, CAI_SEKRET_PLIK: path.join(kat, 'sekret'), CAI_PROSBY: path.join(kat, 'prosby.jsonl'),
+      CAI_WYLOGOWANE: path.join(kat, 'wylogowane.json'),
     });
-    const r = spawnSync(process.execPath, [path.join(__dirname, 'uzytkownicy.js'), 'usun', 'jan'], { env, encoding: 'utf8' });
-    const po = JSON.parse(fs.readFileSync(path.join(kat, 'uzytkownicy.json'), 'utf8')).map((u) => u.login);
-    sprawdz('usun: konto znika z pliku kont', r.status === 0 && po.join(',') === 'admin,janek');
+    const cli = (...a) => spawnSync(process.execPath, [path.join(__dirname, 'uzytkownicy.js'), ...a], { env, encoding: 'utf8' });
+    const wBazie = () => {
+      magazyn.otworz({ plik: path.join(kat, 'contentai.sqlite') });
+      try {
+        return { loginy: magazyn.listaKont().map((k) => k.login).sort(), jan: magazyn.uzycieKonta('jan'), janek: magazyn.uzycieKonta('janek') };
+      } finally { magazyn.zamknij(); }
+    };
+    // Runda 9: konta z JSON najpierw trafiaja do bazy (usluga przy starcie albo `migruj`).
+    const m = cli('migruj');
+    const r = cli('usun', 'jan');
+    const po = wBazie();
+    sprawdz('usun: konto znika z bazy kont', m.status === 0 && r.status === 0 && po.loginy.join(',') === 'admin,janek');
     sprawdz('usun: prywatna baza wiedzy konta usunieta (z kopia uszkodzonej i plikiem tymczasowym)',
       !fs.existsSync(pliki.bazaJana) && !fs.existsSync(pliki.kopiaBazyJana) && !fs.existsSync(pliki.tmpBazyJana));
-    sprawdz('usun: liczniki uzycia konta usuniete', !fs.existsSync(pliki.uzycieJana));
+    sprawdz('usun: liczniki uzycia konta usuniete', Object.keys(po.jan).length === 0);
     sprawdz('usun: dane innego konta o podobnym loginie, baza wspolna i marka zostaja',
-      fs.existsSync(pliki.bazaJanka) && fs.existsSync(pliki.uzycieJanka) && fs.existsSync(pliki.wspolna) && fs.existsSync(pliki.marka));
+      fs.existsSync(pliki.bazaJanka) && Object.keys(po.janek).length === 1 && fs.existsSync(pliki.wspolna) && fs.existsSync(pliki.marka));
     sprawdz('usun: komunikat wymienia usuniete pliki i mowi, ze marka zostaje',
-      r.stdout.includes(pliki.bazaJana) && r.stdout.includes(pliki.uzycieJana) && /marki są wspólne/.test(r.stdout));
-    const r2 = spawnSync(process.execPath, [path.join(__dirname, 'uzytkownicy.js'), 'usun', 'janek'], { env, encoding: 'utf8' });
-    sprawdz('usun: drugie konto tez czysci swoje dane', r2.status === 0 && !fs.existsSync(pliki.bazaJanka) && !fs.existsSync(pliki.uzycieJanka));
-    fs.writeFileSync(path.join(kat, 'uzytkownicy.json'), JSON.stringify(konta.slice(0, 1).concat([Object.assign({}, konta[1], { login: 'ola' })])));
-    const r3 = spawnSync(process.execPath, [path.join(__dirname, 'uzytkownicy.js'), 'usun', 'ola'], { env, encoding: 'utf8' });
+      r.stdout.includes(pliki.bazaJana) && /liczniki użycia w bazie: 1/.test(r.stdout) && /marki są wspólne/.test(r.stdout));
+    const r2 = cli('usun', 'janek');
+    sprawdz('usun: drugie konto tez czysci swoje dane', r2.status === 0 && !fs.existsSync(pliki.bazaJanka) && Object.keys(wBazie().janek).length === 0);
+    magazyn.otworz({ plik: path.join(kat, 'contentai.sqlite') });
+    magazyn.utworzKonto(Object.assign({ login: 'ola', rola: 'uzytkownik' }, zahaszuj('test-haslo-123')));
+    magazyn.zamknij();
+    const r3 = cli('usun', 'ola');
     sprawdz('usun: konto bez danych - komunikat, ze nie bylo czego usuwac', r3.status === 0 && /nie miało na serwerze/.test(r3.stdout));
   } finally {
+    magazyn.zamknij();
     fs.rmSync(kat, { recursive: true, force: true });
   }
 }
@@ -1383,16 +1405,24 @@ async function testyPoprawek() {
       sprawdz('baza: dodanie do uszkodzonej bazy odmawia', bladDodania instanceof pliki.BladDanych);
       sprawdz('baza: uszkodzony plik zostaje nietkniety (resztki A i B nie zniszczone)', fs.readFileSync(plik, 'utf8') === uciete);
 
-      const konto = { login: 'ola', plan: 'darmowy', rola: 'uzytkownik' };
-      plany.policz({ katalog: kat, uzytkownik: konto, czynnosc: 'artykul' });
-      fs.writeFileSync(plany.plikUzycia(kat, 'ola'), '{"zawsze":{"artykul":');
+      // Runda 9: liczniki leza w bazie, a pliki liczy R8 czyta tylko migracja. Uszkodzony
+      // plik licznikow przerywa migracje: konto nie trafia do bazy z wyzerowanym limitem,
+      // a plik zostaje nietkniety (i nie zmienia nazwy).
+      const migracja = require('./migracja.js');
+      const magazyn = require('./magazyn.js');
+      const katUzycia = path.join(kat, 'uzycie');
+      fs.mkdirSync(katUzycia);
+      fs.writeFileSync(path.join(kat, 'uzytkownicy.json'), JSON.stringify([{ login: 'ola', hash: 'aa', sol: 'b', rola: 'uzytkownik', plan: 'darmowy' }]));
+      fs.writeFileSync(plany.plikUzycia(katUzycia, 'ola'), '{"zawsze":{"artykul":');
+      magazyn.otworz({ plik: path.join(kat, 'contentai.sqlite') });
       let bladLimitu = null;
-      try { plany.sprawdzLimit({ katalog: kat, uzytkownik: konto, czynnosc: 'artykul' }); } catch (e) { bladLimitu = e; }
-      sprawdz('plany: uszkodzone liczniki nie zeruja limitu po cichu', bladLimitu instanceof pliki.BladDanych);
-      let bladZapisu = null;
-      try { plany.policz({ katalog: kat, uzytkownik: konto, czynnosc: 'artykul' }); } catch (e) { bladZapisu = e; }
+      try {
+        migracja.migrujZJson({ plikKont: path.join(kat, 'uzytkownicy.json'), katalogUzycia: katUzycia, plikWylogowanych: path.join(kat, 'wylogowane.json'), loguj: () => {} });
+      } catch (e) { bladLimitu = e; }
+      sprawdz('plany: uszkodzone liczniki nie zeruja limitu po cichu', bladLimitu instanceof pliki.BladDanych && magazyn.konto('ola') === null);
       sprawdz('plany: zliczenie nie nadpisuje uszkodzonego pliku',
-        bladZapisu instanceof pliki.BladDanych && fs.readFileSync(plany.plikUzycia(kat, 'ola'), 'utf8') === '{"zawsze":{"artykul":');
+        fs.readFileSync(plany.plikUzycia(katUzycia, 'ola'), 'utf8') === '{"zawsze":{"artykul":' && fs.existsSync(path.join(kat, 'uzytkownicy.json')));
+      magazyn.zamknij();
     } finally {
       fs.rmSync(kat, { recursive: true, force: true });
     }
@@ -1583,7 +1613,9 @@ async function testyPoprawek() {
   for (const m of modulySerwera) delete require.cache[m];
   const srv = require('./server.js');
   const prosby = require('./prosby.js');
+  const magazyn = require('./magazyn.js');
 
+  // Plik kont w formacie R8: serwer przenosi go do bazy przy utworzSerwer() (migracja).
   const { hash, sol } = srv.zahaszuj('test-haslo-123');
   fs.writeFileSync(ENV.CAI_UZYTKOWNICY, JSON.stringify([
     { login: 'admin', hash, sol, rola: 'admin', plan: 'premium' },
@@ -1625,7 +1657,8 @@ async function testyPoprawek() {
       const logowanie = await zadanie('/');
       sprawdz('ekran logowania ma CSP i no-store', Boolean(logowanie.headers.get('content-security-policy')) && logowanie.headers.get('cache-control') === 'no-store');
       const app = await zadanie('/', { headers: { cookie: cStd } });
-      sprawdz('strona aplikacji zostaje private, no-store', app.headers.get('cache-control') === 'private, no-store');
+      // R9-D (KOD8-06): aplikacja bierze konto z /konto.js, wiec strona jest jedna dla kont: prywatna, z ETag i rewalidacja.
+      sprawdz('strona aplikacji zostaje prywatna: private, no-cache z ETag (jedna dla wszystkich kont)', app.headers.get('cache-control') === 'private, no-cache' && Boolean(app.headers.get('etag')));
     }
 
     console.log('\n  ekran logowania');
@@ -1717,7 +1750,7 @@ async function testyPoprawek() {
       const wyl = await zadanie('/auth/logout', { method: 'POST', headers: { cookie: cWyl, origin: ADRES, 'sec-fetch-site': 'same-origin', 'Content-Type': 'application/x-www-form-urlencoded' } });
       sprawdz('wylogowanie formularzem POST z wlasnej strony -> 302', wyl.status === 302);
       sprawdz('po wylogowaniu stare ciasteczko nie dziala', (await zadanie('/auth/me', { headers: { cookie: cWyl } })).status === 401);
-      sprawdz('wylogowanie zapisane w CAI_WYLOGOWANE', fs.existsSync(ENV.CAI_WYLOGOWANE));
+      sprawdz('wylogowanie zapisane w bazie (sesje_odwolane, przezywa restart)', magazyn.liczbaOdwolanych() > 0);
       const cGet = await zaloguj('standard');
       const getWlasny = await zadanie('/auth/logout', { headers: { cookie: cGet, 'sec-fetch-site': 'same-origin' } });
       sprawdz('GET /auth/logout z wlasnej strony nadal dziala (zgodnosc)', getWlasny.status === 302
@@ -1796,10 +1829,8 @@ async function testyPoprawek() {
       sprawdz('dlugie generowanie ma limit co najmniej 300 s', srv.KONF.czasy.dlugi >= 300000);
 
       // Zerwanie: klient odchodzi po 1 s, dostawca odpowiedzialby po 2,5 s.
-      const plikUzycia = path.join(ENV.CAI_UZYCIE, 'standard.json');
-      const licznik = () => {
-        try { const d = JSON.parse(fs.readFileSync(plikUzycia, 'utf8')); return Object.values(d).reduce((s, o) => s + (o.artykul || 0) + (o.wywolanie || 0), 0); } catch { return 0; }
-      };
+      // Liczniki konta "standard" z bazy (runda 9; dawniej plik uzycie/standard.json).
+      const licznik = () => Object.values(magazyn.uzycieKonta('standard')).reduce((s, o) => s + (o.artykul || 0) + (o.wywolanie || 0), 0);
       const przed = licznik();
       const ster = new AbortController();
       setTimeout(() => ster.abort(), 1000);
@@ -2078,21 +2109,31 @@ async function testyPoprawek() {
       const dod = await zadanie('/api/baza', json(cStd, { nazwa: 'nowy', tresc: 'tresc nowego dokumentu' }));
       sprawdz('uszkodzona baza: dodanie -> 503 i plik nietkniety', dod.status === 503 && fs.readFileSync(plikBazy, 'utf8') === zawartosc.slice(0, 20));
       fs.writeFileSync(plikBazy, zawartosc);
-      const konta = fs.readFileSync(ENV.CAI_UZYTKOWNICY, 'utf8');
-      fs.writeFileSync(ENV.CAI_UZYTKOWNICY, konta.slice(0, 40));
+      // Runda 9: konta leza w bazie SQLite. Uszkodzony plik bazy (ucieta polowa) nie
+      // daje "nikt nie istnieje" ani ekranu logowania, tylko 503 z wyjasnieniem; plik
+      // zostaje nietkniety, obok kopia; po przywroceniu pliku wszystko wraca.
+      const plikKont = srv.KONF.sqlite;
+      magazyn.zamknij();
+      const konta = fs.readFileSync(plikKont);
+      const uciete = konta.subarray(0, Math.floor(konta.length / 2));
+      fs.writeFileSync(plikKont, uciete);
+      let bladOtwarcia = null;
+      try { magazyn.otworz({ plik: plikKont }); } catch (e) { bladOtwarcia = e; }
       const strona503 = await zadanie('/', { headers: { cookie: cStd } });
       const strona503Html = await strona503.text();
-      sprawdz('uszkodzony plik kont: 503 z wyjasnieniem zamiast "nikt nie istnieje"', strona503.status === 503 && /chwilowo niedostępne/.test(strona503Html));
+      sprawdz('uszkodzony plik kont: 503 z wyjasnieniem zamiast "nikt nie istnieje"',
+        bladOtwarcia instanceof pliki.BladDanych && strona503.status === 503 && /chwilowo niedostępne/.test(strona503Html));
       sprawdz('uszkodzony plik kont: plik nietkniety, kopia obok',
-        fs.readFileSync(ENV.CAI_UZYTKOWNICY, 'utf8') === konta.slice(0, 40)
-        && fs.readdirSync(kat).some((n) => n.startsWith('uzytkownicy.json.uszkodzony-')));
-      fs.writeFileSync(ENV.CAI_UZYTKOWNICY, konta);
+        fs.readFileSync(plikKont).equals(uciete) && fs.readdirSync(kat).some((n) => n.startsWith('contentai.sqlite.uszkodzony-')));
+      fs.writeFileSync(plikKont, konta);
+      magazyn.otworz({ plik: plikKont });
       sprawdz('po przywroceniu pliku wszystko wraca', (await zadanie('/auth/me', { headers: { cookie: cStd } })).status === 200);
     }
   } finally {
     await new Promise((r) => serwer.close(r));
     await new Promise((r) => atrapa.close(r));
     await new Promise((r) => atrapaOpenSeo.close(r));
+    magazyn.zamknij();
     for (const [k, v] of Object.entries(przedEnv)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
     modulySerwera.forEach((m, i) => { delete require.cache[m]; if (kopieModulow[i]) require.cache[m] = kopieModulow[i]; });
     fs.rmSync(kat, { recursive: true, force: true });

@@ -8,11 +8,14 @@
 // a nowa osoba w zespole zaczynala od pustej konfiguracji i generowala teksty
 // bez zadnych regul o marce. Przy jednej osobie to dzialalo, przy zespole nie.
 //
-// Konfiguracja jest JEDNA dla calego wdrozenia: pisze ja administrator,
-// czytaja wszyscy. Zwykly plik JSON, jak reszta danych tej aplikacji.
+// Konfiguracja jest jedna na ORGANIZACJE (dzierzawy, ARCH8-09, SEC8-51): zespol glowny
+// ma dzisiejszy plik <katalog>/marka.json (pisze admin, czytaja wszyscy w zespole), a kazde
+// konto samoobslugowe wlasna marke w <katalog>/marki/<id organizacji>.json, ktora edytuje
+// jej wlasciciel. Obce konto nigdy nie dostaje marki zespolu (nazwa, domeny, wykluczenia).
+// Zwykly plik JSON, jak reszta danych tej aplikacji.
 
-const path = require('node:path');
 const pliki = require('./pliki.js');
+const dzierzawy = require('./dzierzawy.js');
 
 // Tylko te pola. Cokolwiek innego przyjdzie w zadaniu, zostanie pominiete -
 // konfiguracja trafia prosto do promptow, wiec nie moze byc workiem na
@@ -28,8 +31,9 @@ const POLA = {
   blockedDomains: 4000,
 };
 
-function plik(katalog) {
-  return path.join(katalog, 'marka.json');
+/** Plik marki organizacji: 'glowna' (domyslnie) -> marka.json, inne -> marki/<id>.json. */
+function plik(katalog, organizacja = dzierzawy.GLOWNA) {
+  return dzierzawy.plikMarki(katalog, organizacja || dzierzawy.GLOWNA);
 }
 
 /** Przyciecie do dozwolonych pol i dlugosci. Zwraca zawsze obiekt. */
@@ -46,19 +50,19 @@ function oczysc(dane) {
   return wynik;
 }
 
-function wczytaj(katalog) {
+function wczytaj(katalog, organizacja) {
   // Brak pliku to normalny stan przed pierwszym zapisem, nie blad. Uszkodzony
   // plik to BladDanych (kopia .uszkodzony-*), a nie "marki nie ma" - inaczej
   // zespol pisalby po cichu bez regul marki.
-  return oczysc(pliki.czytajJson(plik(katalog), {}, pliki.czyObiekt));
+  return oczysc(pliki.czytajJson(plik(katalog, organizacja), {}, pliki.czyObiekt));
 }
 
-function zapisz(katalog, dane) {
+function zapisz(katalog, dane, organizacja) {
   const czyste = oczysc(dane);
   // 0o600: konfiguracja marki nie jest sekretem, ale lezy w tym samym
   // katalogu co sekret sesji i konta, wiec trzyma sie tych samych uprawnien.
   // Zapis atomowy: zapis przerwany w polowie nie zostawi polowy pliku.
-  pliki.zapiszJson(plik(katalog), czyste, 1);
+  pliki.zapiszJson(plik(katalog, organizacja), czyste, 1);
   return czyste;
 }
 
@@ -67,4 +71,4 @@ function pusta(dane) {
   return !dane || !Object.keys(dane).some((k) => String(dane[k] || '').trim());
 }
 
-module.exports = { wczytaj, zapisz, oczysc, pusta, POLA };
+module.exports = { wczytaj, zapisz, oczysc, pusta, plik, POLA };

@@ -5,9 +5,10 @@
  *
  * Kontrole tekstow i plikow (audyt_showcase.py) nie widza, jak strona sie ULOZY: rzad liczb
  * wychodzacy za ekran telefonu, karta karuzeli ucinajaca tekst w pol wiersza, pasek CTA
- * zaslaniajacy pole formularza - wszystko to przechodzilo dotad CI na zielono. Ten test
- * otwiera strone w Chromium na kazdym rozmiarze z macierzy (telefon, tablet, komputer),
- * w motywie jasnym i ciemnym, po polsku i po angielsku, i sprawdza kryteria:
+ * zaslaniajacy przycisk - wszystko to przechodzilo dotad CI na zielono. Ten test otwiera
+ * kazda strone z showcase/sitemap.xml (lista STRONY w buduj_strone.py, jedno zrodlo) w Chromium
+ * na kazdym rozmiarze z macierzy (telefon, tablet, komputer), w motywie jasnym i ciemnym,
+ * po polsku i po angielsku, i sprawdza kryteria:
  *
  *   1. brak poziomego przewijania strony (scrollingElement.scrollWidth <= innerWidth),
  *   2. zaden widoczny tekst ani element interaktywny nie wychodzi poza ekran ani poza
@@ -23,11 +24,12 @@
  *      a w tresci nie ma pustego pasa wyzszego niz 40% okna,
  *   9. interakcje: na kazdej szerokosci naglowek ma nawigacje po sekcjach (linki albo menu),
  *      menu otwiera sie bez przewijania strony i zamyka po wyborze, kazdy link menu
- *      (i nawigacji na komputerze) prowadzi do sekcji z tytulem pod naglowkiem strony, pasek
- *      akcji na telefonie jest ukryty w hero, przy formularzu, przy stopce i przy przewijaniu
- *      w gore, a pola formularza sa widoczne przy klawiaturze ekranowej (okno nizsze o 42%).
+ *      (i nawigacji na komputerze) prowadzi do sekcji z tytulem pod naglowkiem strony, a pasek
+ *      akcji na telefonie jest ukryty w hero, przy zakonczeniu strony (#start z wlasnym
+ *      przyciskiem), przy stopce i przy przewijaniu w gore.
  *  10. telefon 412x700 z pismem powiekszonym o 20% (ustawienie rozmiaru tekstu w przegladarce):
- *      kontrole 1-8 (bez poziomego przewijania i bez uciec).
+ *      kontrole 1-8 (bez poziomego przewijania i bez uciec) na stronie glownej i podstronach
+ *      z tabelami.
  *
  * Kryteria 1-9 wziete z rundy 3 (zlecenie koordynatora, pkt 2) i ze skryptu audytowego
  * agencja-strona-frontend (r3/uklad-strony.js), ktory zostaje niezaleznym audytem krzyzowym.
@@ -39,8 +41,8 @@
  *   CAI_CHROMIUM          sciezka do Chromium (domyslnie z Playwright)
  *   CAI_UKLAD_BAZA        adres gotowej strony (domyslnie: wlasny serwer plikow showcase/)
  *   CAI_UKLAD_ROZMIARY    np. "412x700,1440x900" - tylko te rozmiary
- *   CAI_UKLAD_PELNY=1     cala macierz: 16 rozmiarow x 4 strony x 2 motywy (domyslnie tryb szybki do CI:
- *                         320, 390, 412x700, 768, 1280x720, 1440, 2560; PL i EN; ciemny i polityka przy 390 i 1440)
+ *   CAI_UKLAD_PELNY=1     cala macierz: 16 rozmiarow x wszystkie strony x 2 motywy (domyslnie tryb szybki do CI:
+ *                         320, 390, 412x700, 768, 1280x720, 1440, 2560; PL i EN; ciemny i podstrony przy 390 i 1440)
  *   CAI_UKLAD_ROWNOLEGLE  ile kart naraz (domyslnie 3)
  *   CAI_TEST_ZRZUTY       katalog na zrzuty ekranu przy bledzie
  * Kod wyjscia: 0 gdy wszystko przeszlo, 1 gdy cokolwiek nie.
@@ -66,8 +68,8 @@ const MACIERZ = [
 const TELEFON = 600;          // ponizej: kontekst mobilny (dotyk), cele dotyku 44 px
 const ZRZUTY = process.env.CAI_TEST_ZRZUTY || path.join(os.tmpdir(), 'cai-test-uklad');
 
-// Tryb szybki (domyslny, CI, ok. 1-2 min): rozsadny podzbior macierzy; EN i PL wszedzie, ciemny motyw i polityka
-// przy 390 i 1440, pismo 120% przy 412x700. CAI_UKLAD_PELNY=1: cala macierz x 4 strony x 2 motywy (128 kombinacji).
+// Tryb szybki (domyslny, CI, ok. 2-3 min): rozsadny podzbior macierzy; EN i PL wszedzie, ciemny motyw i podstrony
+// przy 390 i 1440, pismo 120% przy 412x700. CAI_UKLAD_PELNY=1: cala macierz x wszystkie strony x 2 motywy.
 const SZYBKA = [[320, 568], [390, 844], [412, 700], [768, 1024], [1280, 720], [1440, 900], [2560, 1440]];
 const PELNY = process.env.CAI_UKLAD_PELNY === '1';
 
@@ -77,12 +79,23 @@ function rozmiary() {
   return filtr.map(s => s.split('x').map(Number));
 }
 
+// Strony z mapy witryny (buduj_strone.py zapisuje ja z listy STRONY), wiec nowa podstrona trafia do testu sama.
+function sciezkiStron() {
+  const mapa = fs.readFileSync(path.join(SHOWCASE, 'sitemap.xml'), 'utf8');
+  const sciezki = [...mapa.matchAll(/<loc>https:\/\/content-ai\.net(\/[^<]*)<\/loc>/g)].map(m => m[1]);
+  if (!sciezki.includes('/') || !sciezki.includes('/en/')) throw new Error('showcase/sitemap.xml bez strony glownej PL i EN');
+  return sciezki;
+}
+// Podstrony z tabelami i dlugimi listami: sprawdzane tez z pismem powiekszonym o 20%.
+const Z_TABELAMI = ['/klucz-api/', '/ai-act/', '/prywatnosc/'];
+
 // Lista zadan: [rozmiar, motyw, sciezka, skala pisma, czy interakcje]
 function zadania() {
   const lista = [];
+  const strony = sciezkiStron();
   for (const [w, h] of rozmiary()) {
     const wazny = PELNY || w === 390 || w === 1440;
-    for (const sciezka of ['/', '/en/', '/prywatnosc/', '/en/privacy/']) {
+    for (const sciezka of strony) {
       const glowna = sciezka === '/' || sciezka === '/en/';
       if (!glowna && !wazny) continue;
       for (const motyw of ['light', 'dark']) {
@@ -92,8 +105,8 @@ function zadania() {
         lista.push([[w, h], motyw, sciezka, 0, interakcje]);
       }
     }
-    // telefon Marcina z pismem powiekszonym o 20% (strona glowna i polityka)
-    if (w === 412 && h === 700) for (const sciezka of ['/', '/prywatnosc/']) lista.push([[w, h], 'light', sciezka, 1.2, false]);
+    // telefon Marcina z pismem powiekszonym o 20% (strona glowna i podstrony z tabelami)
+    if (w === 412 && h === 700) for (const sciezka of ['/', ...Z_TABELAMI.filter(x => strony.includes(x))]) lista.push([[w, h], 'light', sciezka, 1.2, false]);
   }
   return lista;
 }
@@ -282,7 +295,8 @@ async function kontroleFokusu() {
   const problemy = [];
   const klatka = () => new Promise(ok => requestAnimationFrame(() => requestAnimationFrame(ok)));
   const sel = 'main a[href], main button, main input:not([type="hidden"]):not([tabindex="-1"]), main select, main textarea, main summary, main [tabindex="0"], footer a[href]';
-  const widoczny = e => { for (let x = e; x && x.nodeType === 1; x = x.parentElement) { const s = getComputedStyle(x); if (x.hidden || s.display === 'none' || s.visibility === 'hidden') return false; } const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+  // tresc zwinietego <details> (np. link w odpowiedzi FAQ) nie dostaje fokusu klawiatura, wiec jej nie sprawdzamy
+  const widoczny = e => { for (let x = e; x && x.nodeType === 1; x = x.parentElement) { const s = getComputedStyle(x); if (x.hidden || s.display === 'none' || s.visibility === 'hidden') return false; if (x.parentElement && x.parentElement.tagName === 'DETAILS' && !x.parentElement.open && x.tagName !== 'SUMMARY') return false; } const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
   const lista = [...document.querySelectorAll(sel)].filter(e => !e.closest('.pulapka, [aria-hidden="true"], fieldset[disabled]') && widoczny(e));
   for (const e of lista) {
     e.focus();
@@ -379,7 +393,7 @@ async function kontroleInterakcji(ctx, baza, sciezka, [w, h], telefon) {
   });
   if (!tryb) problemy.push('brak nawigacji po sekcjach w naglowku (ani linkow, ani przycisku menu)');
   const linki = !tryb ? [] : await strona.evaluate(m => [...document.querySelectorAll(m ? '#menu-panel a[href*="#"]' : '.nav-linki a[href*="#"]')]
-    .map(a => a.getAttribute('href')).filter(h => !/#dostep$/.test(h)), tryb === 'menu');
+    .map(a => a.getAttribute('href')).filter(h => !/#(dostep|start)$/.test(h)), tryb === 'menu');
   for (const href of linki) {
     const id = href.slice(href.indexOf('#') + 1);
     await strona.evaluate(() => window.scrollTo(0, 0)); await strona.waitForTimeout(80);
@@ -399,7 +413,7 @@ async function kontroleInterakcji(ctx, baza, sciezka, [w, h], telefon) {
     if (tryb === 'menu' && s.menu === 'true') problemy.push('menu zostaje otwarte po kliknieciu ' + href);
   }
   if (telefon) {
-    // 9b. pasek akcji: ukryty w hero, widoczny po minieciu hero przy przewijaniu w dol, ukryty przy przewijaniu w gore, przy formularzu i stopce
+    // 9b. pasek akcji: ukryty w hero, widoczny po minieciu hero przy przewijaniu w dol, ukryty przy przewijaniu w gore, przy zakonczeniu strony i stopce
     const pasek = () => strona.evaluate(() => { const p = document.getElementById('pasek-cta'); if (!p) return null; const s = getComputedStyle(p); return s.visibility !== 'hidden' && parseFloat(s.opacity) > 0.5 && p.classList.contains('widoczny'); });
     const przewin = async (ile, krok) => { for (let i = 0; i < ile; i++) { await strona.evaluate(d => window.scrollBy(0, d), krok); await strona.waitForTimeout(40); } await strona.waitForTimeout(250); };
     await strona.evaluate(() => window.scrollTo(0, 0)); await strona.waitForTimeout(300);
@@ -409,28 +423,14 @@ async function kontroleInterakcji(ctx, baza, sciezka, [w, h], telefon) {
     if (!await pasek()) problemy.push('pasek akcji niewidoczny po minieciu hero (przewijanie w dol)');
     await przewin(3, -40);
     if (await pasek()) problemy.push('pasek akcji widoczny przy przewijaniu w gore');
-    await strona.evaluate(() => { const f = document.getElementById('dostep'); window.scrollTo(0, scrollY + f.getBoundingClientRect().top + 40); }); await strona.waitForTimeout(400);
-    if (await pasek()) problemy.push('pasek akcji widoczny przy formularzu');
+    const doKonca = await strona.evaluate(() => { const k = document.getElementById('start'); return k ? Math.round(scrollY + k.getBoundingClientRect().top + 40) : null; });
+    if (doKonca === null) problemy.push('brak zakonczenia strony #start');
+    else {
+      await strona.evaluate(y => window.scrollTo(0, y), doKonca); await strona.waitForTimeout(400);
+      if (await pasek()) problemy.push('pasek akcji widoczny przy zakonczeniu strony (#start)');
+    }
     await strona.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight)); await strona.waitForTimeout(400);
     if (await pasek()) problemy.push('pasek akcji widoczny przy stopce');
-    // 9c. formularz przy klawiaturze ekranowej: okno nizsze o 42%, kazde pole widoczne i niezasloniete
-    await strona.setViewportSize({ width: w, height: Math.round(h * 0.58) });
-    await strona.waitForTimeout(200);
-    const zaslonione = await strona.evaluate(async () => {
-      const klatka = () => new Promise(ok => requestAnimationFrame(() => requestAnimationFrame(ok)));
-      const wynikZ = [];
-      for (const e of document.querySelectorAll('#formularz input:not([type="hidden"]):not([tabindex="-1"]), #formularz select, #formularz textarea')) {
-        if (e.closest('.pulapka')) continue;
-        e.focus(); await klatka(); await klatka();
-        const r = e.getBoundingClientRect(), nav = document.getElementById('nav').getBoundingClientRect();
-        const x = r.left + Math.min(r.width / 2, 20), y = r.top + Math.min(r.height / 2, 12);
-        const traf = document.elementFromPoint(x, y);
-        if (r.top < nav.bottom - 1 || r.top + 12 > innerHeight || !traf || !(traf === e || e.contains(traf) || (traf.closest('label') && traf.closest('label').contains(e))))
-          wynikZ.push(e.name || e.id);
-      }
-      return wynikZ;
-    });
-    for (const n of zaslonione) problemy.push('pole formularza „' + n + '" zasloniete albo poza oknem przy klawiaturze ekranowej');
   }
   await strona.close();
   return problemy;
@@ -472,7 +472,7 @@ async function sprawdzStrone(przegladarka, baza, [w, h], motyw, sciezka, zFokuse
     problemy.push(...await strona.evaluate(kontroleNieruchomych));
   }
   if (zFokusem) problemy.push(...await strona.evaluate(kontroleFokusu));
-  // interakcje (menu, kotwice, pasek akcji, formularz) na wybranych stronach glownych
+  // interakcje (menu, kotwice, pasek akcji) na wybranych stronach glownych
   if (interakcje) problemy.push(...await kontroleInterakcji(ctx, baza, sciezka, [w, h], telefon));
   const unikalne = [...new Set(problemy)];
   if (unikalne.length) {

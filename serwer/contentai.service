@@ -7,36 +7,78 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=/srv/contentai
-ExecStart=/usr/bin/node /srv/contentai/serwer/server.js
+# Node >= 22.13: konta w bazie node:sqlite (status 1.1 - ostrzezenie ExperimentalWarning
+# wyciszone, test magazynu w CI pilnuje API). Sterta V8 ograniczona ponizej MemoryMax,
+# zeby proces konczyl sie czytelnym bledem sterty, a nie zabiciem przez jadro.
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning --max-old-space-size=900 /srv/contentai/serwer/server.js
 
 # Klucze i konfiguracja - plik ma miec uprawnienia 600
 EnvironmentFile=/etc/contentai/srodowisko
 
 Restart=always
 RestartSec=5
+# Czas na lagodne zatrzymanie (dokonczenie trwajacych generowan po SIGTERM, KOD8-07).
+TimeoutStopSec=150
 
 # Wlasne konto systemowe, zalozone przy instalacji:
 #   sudo useradd --system --home-dir /srv/contentai --shell /usr/sbin/nologin contentai
 #   sudo chown -R contentai:contentai /srv/contentai/serwer/dane
 #
-# Swiadomie NIE uzywamy DynamicUser=yes. Systemd nadaje wtedy uslugze zmienny
+# Swiadomie NIE uzywamy DynamicUser=yes. Systemd nadaje wtedy usludze zmienny
 # UID i nie przejmuje na wlasnosc katalogu z ReadWritePaths - proces nie moglby
-# zapisac ani sekretu sesji, ani licznikow pakietow. Serwer to przezywa po cichu
-# (ostrzezenie w logu), wiec objawem byloby wylogowywanie po kazdym restarcie
-# i limity, ktore nic nie licza. Stale konto usuwa cala te klase problemow.
+# zapisac ani sekretu sesji, ani bazy kont. Serwer to przezywa po cichu
+# (ostrzezenie w logu), wiec objawem byloby wylogowywanie po kazdym restarcie.
+# Stale konto usuwa cala te klase problemow. Polecenia CLI: sudo serwer/cli.sh
+# (srodowisko uslugi i to samo konto, wiec pliki bazy nie powstaja jako root).
 User=contentai
 Group=contentai
+# Pliki tworzone przez usluge (baza i jej -wal, -shm, kopie, sekret) tylko dla konta uslugi.
+UMask=0077
 
-# Ograniczenia: usluga nie potrzebuje uprawnien roota ani dostepu do reszty systemu
+# ── Tozsamosc i przywileje (SEC8-41) ─────────────────────────────────────
 NoNewPrivileges=yes
-PrivateTmp=yes
+# Serwer slucha na porcie > 1024 (3100), wiec nie potrzebuje zadnej capability.
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictSUIDSGID=yes
+LockPersonality=yes
+# UWAGA: NIE ustawiac MemoryDenyWriteExecute=yes - V8 (JIT Node) wymaga stron W+X
+# i usluga nie wstanie.
+
+# ── System plikow ────────────────────────────────────────────────────────
 ProtectSystem=strict
 ProtectHome=yes
-ProtectKernelTunables=yes
-ProtectControlGroups=yes
-RestrictSUIDSGID=yes
-# Jedyny katalog do zapisu: konta, sekret sesji, baza wiedzy, liczniki pakietow
+# Jedyny katalog do zapisu: baza kont (contentai.sqlite z -wal i -shm), kopie bazy,
+# kopia i pliki R8 przy migracji, sekret sesji, baza wiedzy, marka, prosby o dostep.
 ReadWritePaths=/srv/contentai/serwer/dane
+PrivateTmp=yes
+PrivateDevices=yes
+
+# ── Jadro i procesy ──────────────────────────────────────────────────────
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RemoveIPC=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+# Serwer laczy sie z dostawcami po TCP/IP i slucha na petli zwrotnej.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+# ── Pamiec i zrzuty (SEC8-02, SEC8-32, ARCH8-25) ─────────────────────────
+# 3,7 GB RAM dzielone z Cosmosem i BirdNET, bez swapu: limit zabija tylko Content AI
+# (Restart=always podnosi go po 5 s), reszta maszyny zostaje.
+MemoryHigh=1200M
+MemoryMax=1500M
+# Zrzut pamieci przy awarii zapisalby klucze z zapytan na dysk.
+LimitCORE=0
 
 StandardOutput=journal
 StandardError=journal

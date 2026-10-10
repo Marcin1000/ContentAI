@@ -1,0 +1,15 @@
+{
+ "_opis": "Ustawienia strony content-ai.net dla narzedzia narzedzia/buduj_strone.py. Opis pol: serwer/README.md, sekcja Strona i dokumenty. Po zmianie: python3 narzedzia/buduj_strone.py",
+ "aplikacja": "https://app.content-ai.net/",
+ "rejestracja": "https://app.content-ai.net/rejestracja",
+ "dokumenty": "https://app.content-ai.net/dokumenty/",
+ "email_kontakt": "kontakt@content-ai.net",
+ "ceny": "standard:eur=19,pln=79;premium:eur=49,pln=199",
+ "koszt_artykulu": {
+  "pl": "0,25-0,50 USD",
+  "en": "$0.25-0.50"
+ },
+ "data_stanu": "2026-10-09",
+ "audio_liczone": "fragmenty",
+ "oznaczenia": ["docx", "pdf", "cms", "jsonld", "png", "mp3", "txt", "etykiety"]
+}

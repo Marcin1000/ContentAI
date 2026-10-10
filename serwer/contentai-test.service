@@ -1,0 +1,72 @@
+[Unit]
+Description=Content AI - srodowisko testowe (test.content-ai.net, klucze testowe, tryb test platnosci)
+Documentation=https://github.com/Marcin1000/ContentAI
+After=network-online.target
+Wants=network-online.target
+
+# Kopia uslugi produkcyjnej dla srodowiska testowego (PROJEKT-TECHNICZNY 12.1 D):
+#   sudo git clone /srv/contentai /srv/contentai-test
+#   sudo mkdir -p /srv/contentai-test/serwer/dane && sudo chown -R contentai:contentai /srv/contentai-test/serwer/dane
+#   sudo install -m 600 /dev/null /etc/contentai/srodowisko-test    # klucze TESTOWE, PLATNOSCI_TRYB=test
+#   sudo cp /srv/contentai-test/serwer/contentai-test.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now contentai-test
+# CLI srodowiska testowego: sudo /srv/contentai-test/serwer/cli.sh --srodowisko /etc/contentai/srodowisko-test lista
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/contentai-test
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning --max-old-space-size=400 /srv/contentai-test/serwer/server.js
+# Port domyslny srodowiska testowego (Caddy: test.content-ai.net -> 127.0.0.1:3101);
+# plik srodowiska moze go nadpisac.
+Environment=PORT=3101
+EnvironmentFile=/etc/contentai/srodowisko-test
+
+Restart=always
+RestartSec=5
+TimeoutStopSec=150
+
+User=contentai
+Group=contentai
+UMask=0077
+
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictSUIDSGID=yes
+LockPersonality=yes
+
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/srv/contentai-test/serwer/dane
+# To samo konto co produkcja, ale bez wgladu w jej dane (konta, baza, sekret).
+InaccessiblePaths=-/srv/contentai/serwer/dane
+PrivateTmp=yes
+PrivateDevices=yes
+
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RemoveIPC=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+# Srodowisko testowe na tej samej maszynie co produkcja: mniejszy limit pamieci.
+MemoryHigh=400M
+MemoryMax=600M
+LimitCORE=0
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=contentai-test
+
+[Install]
+WantedBy=multi-user.target

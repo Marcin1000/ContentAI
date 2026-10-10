@@ -7,7 +7,7 @@
  *  2. pilnuje logowania - konta z rolami, hasla haszowane scryptem, sesje w cookie,
  *  3. posredniczy w wywolaniach API, dzieki czemu klucze nigdy nie trafiaja do przegladarki.
  *
- * Zero zaleznosci npm - tylko moduly wbudowane Node >= 18 (fetch jest globalny).
+ * Zero zaleznosci npm - tylko moduly wbudowane Node >= 22.13 (fetch, node:sqlite).
  *
  * Endpointy proxy odtwarzaja kontrakt app/worker.js, wiec aplikacja dziala bez zmian:
  *   POST /api               -> generowanie tresci
@@ -18,9 +18,16 @@
  *
  * Wlasne endpointy serwera (poza kontraktem workera):
  *   POST /api/prosba-o-dostep -> formularz strony produktowej (bez logowania, CORS) - prosby.js
- *   GET  /api/admin/prosby    -> lista prosb o dostep (admin)
+ *   GET  /api/admin/prosby    -> lista prosb o dostep (operator)
  *   POST /api/zadanie/anuluj  -> Przerwij dla zadania w tle (X-Zadanie) - zadania.js
  *   oraz /api/baza, /api/strona, /api/odnosniki, /api/marka, /api/pakiet, /api/seo/* - opis w README
+ *
+ * Runda 9 (konta samoobslugowe, platnosci, wlasne klucze): trasy nowych modulow
+ * wola router w ustalonej kolejnosci (PROJEKT-TECHNICZNY 4.1); kazdy modul
+ * eksportuje `async obsluz(sciezka, req, res, kontekst) -> true, gdy obsluzone`:
+ *   konta.js (A1), platnosci.js (B), klucze.js (C), dokumenty-prawne.js (E).
+ * Konta, liczniki, sesje odwolane, tokeny, zgody i platnosci leza w bazie
+ * node:sqlite za jednym modulem serwer/magazyn.js (Node >= 22.13).
  *
  * Konfiguracja przez zmienne srodowiskowe - patrz serwer/README.md.
  */
@@ -44,10 +51,26 @@ const plany = require('./plany.js');
 const strona = require('./strona.js');
 const marka = require('./marka.js');
 const zadaniaWTle = require('./zadania.js');
+const magazyn = require('./magazyn.js');
+const migracja = require('./migracja.js');
+const bledy = require('./bledy.js');
+const limity = require('./limity.js');
+const dzierzawy = require('./dzierzawy.js');
+const konta = require('./konta.js');
+const klucze = require('./klucze.js');
+const poczta = require('./poczta.js');
+const platnosci = require('./platnosci.js');
+const oznaczenia = require('./oznaczenia.js');
+const dokumentyPrawne = require('./dokumenty-prawne.js');
 
 const KATALOG = __dirname;
 const APP = path.join(KATALOG, '..', 'app');
+// Plik kont w formacie R8. Od rundy 9 czyta go tylko migracja przy starcie
+// (serwer/migracja.js); po niej lezy jako uzytkownicy.json.zmigrowany-<czas>.
 const PLIK_UZYTKOWNIKOW = process.env.CAI_UZYTKOWNICY || path.join(KATALOG, 'dane', 'uzytkownicy.json');
+// Baza kont (SQLite) domyslnie obok pliku kont: serwer/dane/contentai.sqlite. Kto
+// przeniosl konta zmienna CAI_UZYTKOWNICY, ma baze w tym samym katalogu.
+const PLIK_BAZY = process.env.CAI_SQLITE || path.join(path.dirname(PLIK_UZYTKOWNIKOW), 'contentai.sqlite');
 
 const KONF = {
   port: Number(process.env.PORT || 3100),
@@ -157,6 +180,117 @@ const KONF = {
   // Domyslnie apex i www: gdyby www nie przekierowywalo (Caddy), formularz
   // z www dostawalby 403 bez CORS i pokazywal mylace "sprobuj za chwile".
   stronaOrigin: lista(process.env.CAI_STRONA_ORIGIN || 'https://content-ai.net,https://www.content-ai.net'),
+
+  // ─── Runda 9: wszystkie zmienne z PROJEKT-TECHNICZNY rozdz. 6 ──────────────
+  // Zasada: bez tych zmiennych serwer dziala dokladnie jak dzis. Funkcja z bledna
+  // albo niepelna konfiguracja jest wylaczana (KONF.funkcje, sprawdzKonfiguracje),
+  // z wpisem w dzienniku bez wartosci sekretow, a serwer startuje dla istniejacych kont.
+
+  // Magazyn (serwer/magazyn.js): plik bazy i katalog kopii co godzine (48 ostatnich).
+  sqlite: PLIK_BAZY,
+  kopie: process.env.CAI_KOPIE || path.join(path.dirname(PLIK_BAZY), 'kopie'),
+
+  // Konta samoobslugowe (wykonawca A1, konta.js i ekrany-kont.js).
+  rejestracja: process.env.CAI_REJESTRACJA === '1',
+  // Jedyne zrodlo adresow w e-mailach i adresow powrotu platnosci; nigdy naglowek Host.
+  adresPubliczny: String(process.env.CAI_ADRES_PUBLICZNY || '').trim().replace(/\/+$/, ''),
+  planNowych: String(process.env.CAI_PLAN_NOWYCH || 'darmowy').trim(),
+  emailPotwierdzenieGodzin: liczba(process.env.CAI_EMAIL_POTWIERDZENIE_GODZIN, 48),
+  resetMinut: liczba(process.env.CAI_RESET_MINUT, 60),
+  resetAdmin: process.env.CAI_RESET_ADMIN === '1',
+  niepotwierdzoneDni: liczba(process.env.CAI_NIEPOTWIERDZONE_DNI, 30),
+  usuwanieStarych: process.env.CAI_USUWANIE_STARYCH === '1',
+  regulaminWersja: String(process.env.CAI_REGULAMIN_WERSJA || '').trim(),
+  politykaWersja: String(process.env.CAI_POLITYKA_WERSJA || '').trim(),
+  regulaminUrl: process.env.CAI_REGULAMIN_URL || 'https://content-ai.net/regulamin/',
+  politykaUrl: process.env.CAI_POLITYKA_URL || 'https://content-ai.net/prywatnosc/',
+  wymusAkceptacje: process.env.CAI_WYMUS_AKCEPTACJE === '1',
+  zgodyDlaStarych: process.env.CAI_ZGODY_DLA_STARYCH === '1',
+  zgodyIp: process.env.CAI_ZGODY_IP === '1',
+  // Cloudflare Turnstile na rejestracji i resecie (opcja, domyslnie wylaczona; SEC8-20).
+  turnstile: {
+    klucz: String(process.env.CAI_TURNSTILE_KLUCZ || '').trim(),
+    sekret: String(process.env.CAI_TURNSTILE_SEKRET || '').trim(),
+  },
+  // Dane uslugodawcy (osoba fizyczna, decyzja 2): tylko w srodowisku serwera, nigdy
+  // w repozytorium. Uzywaja ich ekrany, e-maile, /api/konto i dokumenty prawne (E).
+  // CAI_USLUGODAWCA_NAZWA to starsza nazwa imienia i nazwiska z projektu - dziala tak samo.
+  uslugodawca: {
+    imieNazwisko: String(process.env.CAI_USLUGODAWCA_IMIE_NAZWISKO || process.env.CAI_USLUGODAWCA_NAZWA || '').trim(),
+    adres: String(process.env.CAI_USLUGODAWCA_ADRES || '').trim(),
+    telefon: String(process.env.CAI_USLUGODAWCA_TELEFON || '').trim(),
+    email: String(process.env.CAI_USLUGODAWCA_EMAIL || '').trim(),
+    www: String(process.env.CAI_USLUGODAWCA_WWW || '').trim(),
+  },
+
+  // Dzierzawy, wlasne klucze i zasoby serwera (wykonawca C).
+  // Zrodlo SERP dla organizacji innych niz 'glowna'; 'openseo' odrzucane (projekt zespolu).
+  serpSamoobsluga: String(process.env.CAI_SERP_SAMOOBSLUGA
+    || (process.env.DATAFORSEO_LOGIN && process.env.DATAFORSEO_HASLO ? 'dataforseo' : 'model')).trim().toLowerCase(),
+  zadaniaMb: liczba(process.env.CAI_ZADANIA_MB, 200),
+  // Klucz szyfrujacy ciasteczek z kluczami uzytkownikow (SEC8-04): 32 bajty w base64,
+  // `openssl rand -base64 32`. Zmiana = wszystkie zapamietane klucze niewazne.
+  kluczCiastek: kluczZBase64(process.env.CAI_KLUCZ_CIASTEK),
+
+  // Poczta (wykonawca C, poczta.js): 'log' (domyslnie) albo 'resend'.
+  poczta: {
+    tryb: String(process.env.CAI_POCZTA || 'log').trim().toLowerCase(),
+    klucz: String(process.env.CAI_POCZTA_KLUCZ || '').trim(),
+    od: String(process.env.CAI_POCZTA_OD || '').trim(),
+    odpowiedz: String(process.env.CAI_POCZTA_ODPOWIEDZ || process.env.CAI_USLUGODAWCA_EMAIL || '').trim(),
+    url: String(process.env.CAI_POCZTA_URL || 'https://api.resend.com').trim().replace(/\/+$/, ''),
+    log: String(process.env.CAI_POCZTA_LOG || '').trim(),
+  },
+
+  // Platnosci (wykonawca B, platnosci.js + adapter): puste PLATNOSCI = wylaczone, serwer jak dzis.
+  platnosci: {
+    dostawca: String(process.env.PLATNOSCI || '').trim().toLowerCase(),
+    tryb: String(process.env.PLATNOSCI_TRYB || '').trim().toLowerCase(),
+    sprzedaz: process.env.PLATNOSCI_SPRZEDAZ !== '0',
+    waluty: lista(process.env.PLATNOSCI_WALUTY || 'eur,pln').map((w) => w.toLowerCase()),
+    walutaDomyslna: String(process.env.PLATNOSCI_WALUTA_DOMYSLNA || 'eur').trim().toLowerCase(),
+    walutaPl: String(process.env.PLATNOSCI_WALUTA_PL || 'pln').trim().toLowerCase(),
+    // "standard:eur=19,pln=79;premium:eur=49,pln=199" - tylko do wyswietlania, obciazenie zawsze wg ceny u dostawcy.
+    cenyWyswietlane: String(process.env.PLATNOSCI_CENY_WYSWIETLANE || '').trim(),
+    zaleglaDni: liczba(process.env.PLATNOSCI_ZALEGLA_DNI, 7),
+    dlaStarych: process.env.PLATNOSCI_DLA_STARYCH === '1',
+    probaDni: liczba(process.env.PLATNOSCI_PROBA_DNI, 0, true),
+    kodyRabatowe: process.env.PLATNOSCI_KODY_RABATOWE === '1',
+    nipKlienta: process.env.PLATNOSCI_NIP_KLIENTA === '1',
+    podatki: process.env.PLATNOSCI_PODATKI === '1',
+    // Limit kwartalny dzialalnosci nierejestrowanej (DECYZJE-R9 PR8-09) i progi ostrzezen w procentach.
+    progKwartalPln: liczba(process.env.PLATNOSCI_PROG_KWARTAL_PLN, 10813.5),
+    progiOstrzezen: lista(process.env.PLATNOSCI_PROGI_OSTRZEZEN || '60,80').map(Number).filter((n) => n > 0 && n <= 100),
+    wstrzymajPoProgu: process.env.PLATNOSCI_WSTRZYMAJ_PO_PROGU === '1',
+    progUeEur: liczba(process.env.PLATNOSCI_PROG_UE_EUR, 10000),
+    kursEurPln: liczba(process.env.PLATNOSCI_KURS_EUR_PLN, 4.25),
+    // Sprzedaz tylko klientom z krajow UE (D-04), kody ISO 3166-1 alfa-2.
+    kraje: lista(process.env.PLATNOSCI_KRAJE
+      || 'AT,BE,BG,HR,CY,CZ,DK,EE,FI,FR,DE,GR,HU,IE,IT,LV,LT,LU,MT,NL,PL,PT,RO,SK,SI,ES,SE').map((k) => k.toUpperCase()),
+    // Metody platnosci (D-12): domyslnie karta; np. "card,blik" (BLIK tylko dla PLN, jesli konto Stripe go ma).
+    metody: lista(process.env.PLATNOSCI_METODY || 'card').map((m) => m.toLowerCase()),
+    // Odstapienie w 14 dni (D-03): 'proporcjonalny' (zgodny z ustawa) albo 'pelny'.
+    zwrot: String(process.env.PLATNOSCI_ZWROT || 'proporcjonalny').trim().toLowerCase(),
+    stripe: {
+      klucz: String(process.env.STRIPE_KLUCZ || '').trim(),
+      sekretWebhooka: lista(process.env.STRIPE_SEKRET_WEBHOOKA),
+      // STRIPE_CENA_<PLAN> dla kazdego pakietu: "price_..." albo "eur:price_a,pln:price_b".
+      ceny: Object.fromEntries(Object.keys(plany.PLANY)
+        .map((p) => [p, String(process.env[`STRIPE_CENA_${p.toUpperCase()}`] || '').trim()])),
+      wersjaApi: String(process.env.STRIPE_WERSJA_API || '').trim(),
+      urlApi: String(process.env.STRIPE_URL_API || 'https://api.stripe.com').trim().replace(/\/+$/, ''),
+      portalKonfiguracja: String(process.env.STRIPE_PORTAL_KONFIGURACJA || '').trim(),
+      hostyPrzekierowan: String(process.env.STRIPE_HOSTY_PRZEKIEROWAN || 'https://checkout.stripe.com https://billing.stripe.com')
+        .trim().split(/\s+/).filter(Boolean),
+    },
+  },
+
+  // Oznaczanie tresci AI (wykonawca D): '0' = awaryjne wylaczenie (slad w dzienniku i /api/status).
+  oznaczenia: process.env.CAI_OZNACZENIA !== '0',
+
+  // Stan funkcji po kontroli konfiguracji: { rejestracja, platnosci, poczta, kluczeCiastek,
+  // serpSamoobsluga, planNowych } -> { wlaczona, bledy[], ostrzezenia[] }. Ustawia sprawdzKonfiguracje().
+  funkcje: {},
 };
 
 function liczbaMs(wartosc, domyslnie) {
@@ -164,27 +298,149 @@ function liczbaMs(wartosc, domyslnie) {
   return Number.isFinite(n) && n > 0 ? n : domyslnie;
 }
 
+/** Liczba ze zmiennej; puste albo niepoprawne -> domyslnie (zero dozwolone, gdy zeroOk). */
+function liczba(wartosc, domyslnie, zeroOk = false) {
+  if (wartosc === undefined || wartosc === null || String(wartosc).trim() === '') return domyslnie;
+  const n = Number(String(wartosc).trim().replace(',', '.'));
+  return Number.isFinite(n) && (n > 0 || (zeroOk && n === 0)) ? n : domyslnie;
+}
+
 function lista(tekst) {
   return String(tekst || '').split(',').map((s) => s.trim()).filter(Boolean);
 }
 
+/** CAI_KLUCZ_CIASTEK: 32 bajty w base64 -> { klucz: Buffer|null, ustawiony, poprawny }. */
+function kluczZBase64(tekst) {
+  const surowy = String(tekst || '').trim();
+  if (!surowy) return { klucz: null, ustawiony: false, poprawny: false };
+  const bajty = /^[A-Za-z0-9+/_-]+={0,2}$/.test(surowy) ? Buffer.from(surowy, 'base64') : Buffer.alloc(0);
+  return bajty.length === 32 ? { klucz: bajty, ustawiony: true, poprawny: true } : { klucz: null, ustawiony: true, poprawny: false };
+}
+
+/** Czy adres nadaje sie na CAI_ADRES_PUBLICZNY: https, a http tylko dla petli zwrotnej (testy). */
+function poprawnyAdresPubliczny(adres) {
+  let u;
+  try { u = new URL(adres); } catch { return false; }
+  if (u.pathname !== '/' || u.search || u.hash || u.username || u.password) return false;
+  if (u.protocol === 'https:') return true;
+  return u.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(u.hostname);
+}
+
+/**
+ * Kontrola konfiguracji nowych funkcji (rozdz. 6). Nie przerywa startu: funkcja
+ * z bledem zostaje wylaczona. Komunikaty podaja NAZWY zmiennych, nigdy wartosci.
+ * Wynik w KONF.funkcje; start() wypisuje go w dzienniku, /api/status pokazuje operatorowi.
+ */
+function sprawdzKonfiguracje(konf = KONF) {
+  const wynik = {};
+  const dodaj = (nazwa, zadana, bledy, ostrzezenia = []) => {
+    wynik[nazwa] = { zadana, wlaczona: zadana && !bledy.length, bledy, ostrzezenia };
+  };
+  const brakUslugodawcy = () => ['imieNazwisko', 'adres', 'email']
+    .filter((p) => !konf.uslugodawca[p])
+    .map((p) => `brak CAI_USLUGODAWCA_${{ imieNazwisko: 'IMIE_NAZWISKO', adres: 'ADRES', email: 'EMAIL' }[p]}`);
+
+  // Poczta: 'resend' bez klucza albo nadawcy schodzi na 'log' (wysylki nie ma, jest dziennik).
+  {
+    const bledy = [];
+    if (!['log', 'resend'].includes(konf.poczta.tryb)) bledy.push('CAI_POCZTA musi byc "log" albo "resend"');
+    if (konf.poczta.tryb === 'resend' && !konf.poczta.klucz) bledy.push('brak CAI_POCZTA_KLUCZ');
+    if (konf.poczta.tryb === 'resend' && !konf.poczta.od) bledy.push('brak CAI_POCZTA_OD');
+    dodaj('poczta', konf.poczta.tryb !== 'log', bledy);
+    if (bledy.length) konf.poczta.tryb = 'log';
+  }
+
+  // Klucz ciasteczek z kluczami uzytkownikow (C, SEC8-04).
+  dodaj('kluczeCiastek', konf.kluczCiastek.ustawiony,
+    konf.kluczCiastek.ustawiony && !konf.kluczCiastek.poprawny ? ['CAI_KLUCZ_CIASTEK musi miec 32 bajty w base64 (openssl rand -base64 32)'] : []);
+
+  // Rejestracja (A1): adres publiczny, dane uslugodawcy, wersje dokumentow, klucz ciasteczek; nie w trybie bramy.
+  {
+    const bledy = [];
+    if (konf.zaufanyNaglowek) bledy.push('tryb bramy (CAI_ZAUFANY_NAGLOWEK) wyklucza wlasna rejestracje i reset hasla');
+    if (!konf.adresPubliczny) bledy.push('brak CAI_ADRES_PUBLICZNY');
+    else if (!poprawnyAdresPubliczny(konf.adresPubliczny)) bledy.push('CAI_ADRES_PUBLICZNY musi byc adresem https://host bez sciezki');
+    bledy.push(...brakUslugodawcy());
+    if (!konf.regulaminWersja) bledy.push('brak CAI_REGULAMIN_WERSJA');
+    if (!konf.politykaWersja) bledy.push('brak CAI_POLITYKA_WERSJA');
+    if (!konf.kluczCiastek.poprawny) bledy.push('brak poprawnego CAI_KLUCZ_CIASTEK (konta samoobslugowe pracuja na wlasnych kluczach)');
+    const ostrzezenia = konf.poczta.tryb === 'log' ? ['CAI_POCZTA=log: e-maile z linkami trafiaja tylko do dziennika, nie do skrzynek'] : [];
+    dodaj('rejestracja', konf.rejestracja, konf.rejestracja ? bledy : [], konf.rejestracja ? ostrzezenia : []);
+  }
+
+  // Platnosci (B): rdzen tutaj, szczegoly adaptera (prefiks klucza a tryb, ceny, sekret) w platnosci.sprawdzKonfiguracje.
+  {
+    const p = konf.platnosci;
+    const bledy = [];
+    if (p.dostawca) {
+      if (!platnosci.DOSTAWCY.includes(p.dostawca)) bledy.push(`PLATNOSCI: nieznany dostawca (znane: ${platnosci.DOSTAWCY.join(', ')})`);
+      if (!['test', 'live'].includes(p.tryb)) bledy.push('PLATNOSCI_TRYB musi byc "test" albo "live"');
+      if (!konf.adresPubliczny || !poprawnyAdresPubliczny(konf.adresPubliczny)) bledy.push('brak poprawnego CAI_ADRES_PUBLICZNY (adresy powrotu)');
+      bledy.push(...brakUslugodawcy());
+      if (!p.waluty.length || !p.waluty.every((w) => /^[a-z]{3}$/.test(w))) bledy.push('PLATNOSCI_WALUTY: lista kodow walut, np. eur,pln');
+      if (!p.waluty.includes(p.walutaDomyslna)) bledy.push('PLATNOSCI_WALUTA_DOMYSLNA spoza PLATNOSCI_WALUTY');
+      if (!p.waluty.includes(p.walutaPl)) bledy.push('PLATNOSCI_WALUTA_PL spoza PLATNOSCI_WALUTY');
+      if (!['proporcjonalny', 'pelny'].includes(p.zwrot)) bledy.push('PLATNOSCI_ZWROT musi byc "proporcjonalny" albo "pelny"');
+      if (!bledy.length) bledy.push(...platnosci.sprawdzKonfiguracje(konf));
+    }
+    dodaj('platnosci', Boolean(p.dostawca), bledy);
+  }
+
+  // Zrodlo SERP organizacji samoobslugowych: 'openseo' to projekt zespolu - odrzucamy.
+  {
+    const bledy = [];
+    if (!['model', 'dataforseo'].includes(konf.serpSamoobsluga)) {
+      bledy.push('CAI_SERP_SAMOOBSLUGA musi byc "model" albo "dataforseo" ("openseo" to projekt zespolu glownego)');
+      konf.serpSamoobsluga = konf.dataForSeo.login && konf.dataForSeo.haslo ? 'dataforseo' : 'model';
+    }
+    dodaj('serpSamoobsluga', Boolean(process.env.CAI_SERP_SAMOOBSLUGA), bledy);
+  }
+
+  // Plan nowych kont (decyzja 3): musi istniec w plany.js.
+  {
+    const bledy = plany.PLANY[konf.planNowych] ? [] : ['CAI_PLAN_NOWYCH: nie ma takiego pakietu w serwer/plany.js - nowe konta dostaja darmowy'];
+    if (bledy.length) konf.planNowych = plany.DOMYSLNY;
+    dodaj('planNowych', Boolean(process.env.CAI_PLAN_NOWYCH), bledy);
+  }
+
+  konf.funkcje = wynik;
+  plany.ustawKonfiguracje({ planNowych: konf.planNowych, trybPlatnosci: konf.platnosci.tryb, zaleglaDni: konf.platnosci.zaleglaDni });
+  return wynik;
+}
+
+/** Stan funkcji dla /api/status: czy zadana, czy dziala i dlaczego nie (bez wartosci zmiennych). */
+function stanKonfiguracji() {
+  const wynik = {};
+  for (const [nazwa, f] of Object.entries(KONF.funkcje)) {
+    wynik[nazwa] = { zadana: f.zadana, wlaczona: f.wlaczona, bledy: f.bledy, ostrzezenia: f.ostrzezenia };
+  }
+  return wynik;
+}
+
+/** Czy funkcja jest wlaczona po kontroli konfiguracji ('rejestracja', 'platnosci', ...). */
+function funkcjaWlaczona(nazwa) {
+  return Boolean(KONF.funkcje[nazwa] && KONF.funkcje[nazwa].wlaczona);
+}
+
+/** Wpisy do dziennika przy starcie: co wylaczone i dlaczego (bez wartosci sekretow). */
+function zglosKonfiguracje(loguj = console) {
+  for (const [nazwa, f] of Object.entries(KONF.funkcje)) {
+    if (f.zadana && !f.wlaczona) loguj.error(`[konfiguracja] ${nazwa} WYLACZONE: ${f.bledy.join('; ')}`);
+    else if (f.bledy.length) loguj.error(`[konfiguracja] ${nazwa}: ${f.bledy.join('; ')}`);
+    for (const o of f.ostrzezenia) loguj.warn(`[konfiguracja] ${nazwa}: ${o}`);
+  }
+  if (!KONF.oznaczenia) loguj.warn('[konfiguracja] CAI_OZNACZENIA=0: oznaczenia tresci AI wylaczone awaryjnie');
+}
+
+sprawdzKonfiguracje(KONF);
+
 // ─── Uzytkownicy ──────────────────────────────────────────────────────────────
-// Plik JSON: [{ login, hash, sol, rola, utworzony }]. Rola: 'admin' | 'uzytkownik'.
-// Admin widzi /api/status i moze zarzadzac kontami; uzytkownik tylko korzysta z aplikacji.
+// Konta leza w bazie (serwer/magazyn.js, tabela konta): magazyn.konto(login) zwraca
+// obiekt { login, hash, sol, rola, plan, sesjeOd, organizacja, pochodzenie,
+// zrodloKluczy, email, ... }. Rola: 'admin' | 'uzytkownik'; operator serwera to
+// admin organizacji 'glowna' (dzierzawy.operator) - widzi /api/status i prosby.
 
 const ROLE = ['admin', 'uzytkownik'];
-
-// Brak pliku = brak kont (start poprosi o pierwsze). Uszkodzony plik to
-// BladDanych: zadania dostaja 503, a `uzytkownicy.js dodaj` nie zapisze listy
-// z jednym kontem na miejscu calej reszty.
-function wczytajUzytkownikow() {
-  return pliki.czytajJson(PLIK_UZYTKOWNIKOW, [], pliki.czyTablica);
-}
-
-function zapiszUzytkownikow(lista) {
-  // 0600 - plik z hashami hasel nie powinien byc czytelny dla innych kont na serwerze
-  pliki.zapiszJson(PLIK_UZYTKOWNIKOW, lista, 2);
-}
 
 // Login: male litery, cyfry, kropka, podkreslnik, myslnik; 2-40 znakow.
 // Baza wiedzy i liczniki trzymaja login w nazwie pliku po oczyszczeniu, wiec
@@ -194,6 +450,9 @@ function poprawnyLogin(login) {
   return typeof login === 'string' && WZOR_LOGINU.test(login);
 }
 
+// Wersje synchroniczne zostaja dla CLI i skryptow (zakladanie kont testowych).
+// W sciezkach HTTP tylko asynchroniczne: scryptSync blokowal petle zdarzen na
+// ok. 53 ms przy kazdej probie logowania, czyli wszystkim naraz (ARCH8-05, SEC8-23).
 function zahaszuj(haslo, sol) {
   const s = sol || crypto.randomBytes(16).toString('hex');
   const hash = crypto.scryptSync(haslo, s, 64).toString('hex');
@@ -202,17 +461,65 @@ function zahaszuj(haslo, sol) {
 
 function hasloPasuje(haslo, uzytkownik) {
   const { hash } = zahaszuj(haslo, uzytkownik.sol);
-  const a = Buffer.from(hash, 'hex');
-  const b = Buffer.from(String(uzytkownik.hash || ''), 'hex');
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+  return rowneSkroty(hash, uzytkownik.hash);
+}
+
+function rowneSkroty(policzony, zapisany) {
+  const a = Buffer.from(String(policzony || ''), 'hex');
+  const b = Buffer.from(String(zapisany || ''), 'hex');
+  return a.length === b.length && a.length > 0 && crypto.timingSafeEqual(a, b);
+}
+
+// scrypt w puli watkow libuv (4 watki, dziela je tez DNS i zlib): najwyzej dwa
+// naraz, zeby fala logowan nie zabrala watkow wywolaniom dostawcow; kolejka
+// ograniczona, ponad nia odmowa (429 na ekranie logowania) zamiast rosnacej pamieci.
+const SCRYPT_RAZEM = 2;
+const SCRYPT_KOLEJKA = 200;
+let scryptTrwa = 0;
+const scryptCzeka = [];
+
+class BladZajety extends Error {
+  constructor() {
+    super('Za duzo rownoczesnych operacji na haslach');
+    this.name = 'BladZajety';
+    this.status = 429;
+  }
+}
+
+function scryptAsync(haslo, sol) {
+  return new Promise((ok, zle) => {
+    const uruchom = () => {
+      scryptTrwa += 1;
+      crypto.scrypt(String(haslo), sol, 64, (e, klucz) => {
+        scryptTrwa -= 1;
+        const nastepny = scryptCzeka.shift();
+        if (nastepny) nastepny();
+        if (e) zle(e); else ok(klucz);
+      });
+    };
+    if (scryptTrwa < SCRYPT_RAZEM) uruchom();
+    else if (scryptCzeka.length >= SCRYPT_KOLEJKA) zle(new BladZajety());
+    else scryptCzeka.push(uruchom);
+  });
+}
+
+/** Ten sam format co zahaszuj (scrypt N=16384, 64 bajty hex, sol 16 bajtow hex), bez blokowania petli. */
+async function zahaszujAsync(haslo, sol) {
+  const s = sol || crypto.randomBytes(16).toString('hex');
+  return { hash: (await scryptAsync(haslo, s)).toString('hex'), sol: s };
+}
+
+async function hasloPasujeAsync(haslo, uzytkownik) {
+  const { hash } = await zahaszujAsync(haslo, uzytkownik.sol);
+  return rowneSkroty(hash, uzytkownik.hash);
 }
 
 // Konto-atrapa do logowania na nieistniejacy login: scrypt liczy sie zawsze,
 // wiec po czasie odpowiedzi nie da sie odroznic istniejacego loginu od zmyslonego.
 let ATRAPA_KONTA = null;
-function atrapaKonta() {
+function atrapaKontaAsync() {
   if (!ATRAPA_KONTA) {
-    ATRAPA_KONTA = zahaszuj(crypto.randomBytes(16).toString('hex'));
+    ATRAPA_KONTA = zahaszujAsync(crypto.randomBytes(16).toString('hex')).catch((e) => { ATRAPA_KONTA = null; throw e; });
   }
   return ATRAPA_KONTA;
 }
@@ -229,11 +536,14 @@ function atrapaKonta() {
 //
 // Cena za brak stanu: samo wygasniecie nie odbiera dostepu natychmiast.
 // Dlatego sa dwie drogi uniewaznienia, obie przezywajace restart:
-//   - wylogowanie dopisuje identyfikator sesji do serwer/dane/wylogowane.json,
-//   - zmiana hasla, roli albo usuniecie konta podnosi znacznik sesjeOd
-//     w pliku kont, co uniewaznia wszystkie starsze sesje tej osoby naraz.
+//   - wylogowanie dopisuje identyfikator sesji do tabeli sesje_odwolane w bazie,
+//   - zmiana hasla, roli, "wyloguj wszedzie" albo usuniecie konta podnosi znacznik
+//     sesjeOd konta, co uniewaznia wszystkie starsze sesje tej osoby naraz.
+// Sekret podpisu nie zmienil sie przy przejsciu na baze, wiec ciasteczka sprzed
+// migracji sa wazne po niej.
 
 const PLIK_SEKRETU = process.env.CAI_SEKRET_PLIK || path.join(KATALOG, 'dane', 'sekret');
+// Lista wylogowan w formacie R8: czyta ja juz tylko migracja (i zapisuje eksport-json).
 const PLIK_WYLOGOWANYCH = process.env.CAI_WYLOGOWANE || path.join(KATALOG, 'dane', 'wylogowane.json');
 
 /**
@@ -273,6 +583,18 @@ function podpis(dane) {
   return b64u(crypto.createHmac('sha256', SEKRET || (SEKRET = sekretSesji())).update(dane).digest());
 }
 
+/** HMAC-SHA256 z sekretu sesji, base64url - do znacznika czasu formularzy (A1) i podobnych podpisow. */
+function podpisz(dane) {
+  return podpis(String(dane));
+}
+
+/** Skrot e-maila bez jawnego adresu (konta_usuniete, naduzycia darmowego pakietu). */
+function skrotEmaila(email) {
+  const e = magazyn.normalizujEmail(email);
+  if (!e) return null;
+  return crypto.createHmac('sha256', SEKRET || (SEKRET = sekretSesji())).update(`email:${e}`).digest('hex');
+}
+
 function utworzSesje(uzytkownik) {
   const opis = {
     login: uzytkownik.login,
@@ -286,22 +608,17 @@ function utworzSesje(uzytkownik) {
 }
 
 /**
- * Identyfikatory sesji wylogowanych recznie. Maly plik, czytany z dysku.
- * Uszkodzony plik to BladDanych, nie pusta lista: pusta oznaczalaby, ze
- * wszystkie uniewaznione sesje znow sa wazne az do wygasniecia.
+ * Sesje wylogowane recznie i jeszcze nieprzeterminowane: [{ id, wygasa }].
+ * Baza niedostepna to BladMagazynu (503), nie pusta lista: pusta oznaczalaby,
+ * ze wszystkie uniewaznione sesje znow sa wazne az do wygasniecia.
  */
 function wylogowane() {
-  return pliki.czytajJson(PLIK_WYLOGOWANYCH, [], pliki.czyTablica);
+  return magazyn.sesjeOdwolane();
 }
 
 function zapiszWylogowanie(id, wygasa) {
-  // Wpisy starsze niz ich wlasne wygasniecie sa juz bez znaczenia - podpisana
-  // sesja i tak nie przejdzie kontroli daty. Sprzatamy przy okazji zapisu,
-  // zeby plik nie rosl w nieskonczonosc.
-  const teraz = Date.now();
-  const lista = wylogowane().filter((w) => w.wygasa > teraz);
-  lista.push({ id, wygasa });
-  pliki.zapiszJson(PLIK_WYLOGOWANYCH, lista);
+  // Wpisy po terminie wypadaja przy sprzataniu dobowym (magazyn.sprzataj).
+  magazyn.odwolajSesje(id, wygasa);
 }
 
 /**
@@ -320,7 +637,7 @@ function zapiszWylogowanie(id, wygasa) {
  * Dlatego domyslnie ufamy wylacznie petli zwrotnej: brama i serwer stoja na tej
  * samej maszynie, a port nie jest wystawiony na zewnatrz.
  *
- * Konta zostaja u nas. Brama mowi KTO przyszedl, role nadal czytamy z pliku
+ * Konta zostaja u nas. Brama mowi KTO przyszedl, role nadal czytamy z bazy
  * kont - inaczej trzeba by trzymac uprawnienia w dwoch miejscach naraz.
  */
 function tozsamoscZBramy(req) {
@@ -335,14 +652,14 @@ function tozsamoscZBramy(req) {
   const login = String(req.headers[KONF.zaufanyNaglowek] || '').trim();
   if (!login) return null;
 
-  const uzytkownik = wczytajUzytkownikow().find((u) => u.login === login);
+  const uzytkownik = magazyn.kontoZOrganizacja(login);
   if (!uzytkownik) {
     // Swiadomie nie zakladamy konta z marszu: rola musi byc czyjas decyzja,
     // a nie skutkiem ubocznym pierwszego wejscia.
-    console.warn(`[brama] brama wpuscila "${login}", ale nie ma takiego konta`);
+    console.warn(`[brama] brama wpuscila "${login.slice(0, 60)}", ale nie ma takiego konta`);
     return null;
   }
-  return { login: uzytkownik.login, rola: uzytkownik.rola, token: null, id: null, zBramy: true };
+  return { login: uzytkownik.login, rola: uzytkownik.rola, token: null, id: null, zBramy: true, konto: uzytkownik };
 }
 
 function sesjaZadania(req) {
@@ -375,16 +692,17 @@ function sesjaZadania(req) {
   if (!opis || !opis.login || !(opis.wygasa > Date.now())) return null;
 
   // Konto moglo w miedzyczasie zniknac, zmienic role albo zostac uniewaznione
-  // zmiana hasla. Czytamy stan biezacy, nie ten sprzed wydania ciasteczka.
-  const uzytkownik = wczytajUzytkownikow().find((u) => u.login === opis.login);
+  // zmiana hasla. Czytamy stan biezacy z bazy, nie ten sprzed wydania ciasteczka.
+  const uzytkownik = magazyn.kontoZOrganizacja(opis.login);
   if (!uzytkownik) return null;
   if (uzytkownik.sesjeOd && opis.wydana < uzytkownik.sesjeOd) return null;
 
-  if (wylogowane().some((w) => w.id === opis.id)) return null;
+  if (magazyn.sesjaOdwolana(opis.id)) return null;
 
-  // Rola bierze sie z pliku kont, nie z ciasteczka - degradacja admina
-  // dziala natychmiast, bez czekania na wygasniecie sesji.
-  return { login: uzytkownik.login, rola: uzytkownik.rola, token, id: opis.id, wygasa: opis.wygasa };
+  // Rola bierze sie z bazy kont, nie z ciasteczka - degradacja admina dziala
+  // natychmiast, bez czekania na wygasniecie sesji. `konto` to ten sam odczyt,
+  // zeby trasy nie czytaly konta drugi raz (kontoSesji).
+  return { login: uzytkownik.login, rola: uzytkownik.rola, token, id: opis.id, wygasa: opis.wygasa, konto: uzytkownik };
 }
 
 function parsujCiasteczka(naglowek) {
@@ -527,6 +845,12 @@ function wczytajAplikacje() {
   return htmlAplikacji;
 }
 
+/** Do testow: podstawia gotowy HTML aplikacji (np. bez miejsca na konto) i czysci pamiec stron. */
+function ustawHtmlAplikacji(html) {
+  htmlAplikacji = html;
+  PAMIEC_STRONY.clear();
+}
+
 // ─── Koszt: dozwolone modele, sufit tokenow, rozmiary grafik ─────────────────
 // /api przepuszczal dowolny model i max_tokens 128000 nawet z konta
 // darmowego, a /api/images dowolne n i size. Na koncie serwera to my placimy,
@@ -568,16 +892,27 @@ function odmowaKosztuGrafiki(body) {
   return null;
 }
 
-// ─── Klucze: serwerowy domyslnie, wlasny uzytkownika gdy przyszedl w naglowku ──
-// Aplikacja w wariancie proxy wysyla pusty naglowek x-api-key. Jesli uzytkownik
-// wpisze wlasny klucz, przyjdzie tu niepusty i uzyjemy jego zamiast serwerowego.
+// ─── Klucze: wybor w serwer/klucze.js (BYOK, ARCH8-10) ──────────────────────
+// Konto 'wlasne' bierze wylacznie wlasny klucz z zaszyfrowanego ciasteczka i nie ma
+// sciezki do klucza serwera; konto zespolu ('serwera') ciasteczko, potem przejsciowo
+// naglowek x-*-key z aplikacji R8, na koncu klucz serwera jak dzis. Klucz uzytkownika
+// Anthropic idzie zawsze do Anthropic, nawet przy CAI_DOSTAWCA=nvidia (SEC8-03).
 
-function kluczDoUzycia(req, naglowek, kluczSerwera) {
-  const wlasny = req.headers[naglowek];
-  if (typeof wlasny === 'string' && wlasny.trim() && !wlasny.startsWith('WSTAW')) {
-    return { klucz: wlasny.trim(), czyj: 'uzytkownika' };
-  }
-  return { klucz: kluczSerwera, czyj: 'serwera' };
+/** 403 brak-klucza (kreator klucza w aplikacji) z nazwa dostawcy; cialo zapytania doczytane. */
+function odmowaKlucza(req, res, blad) {
+  if (req && typeof req.resume === 'function') req.resume();
+  if (!res.headersSent && typeof res.setHeader === 'function') res.setHeader('X-CAI-Dostawca', blad.dostawca);
+  return bledy.bladCai(res, blad.kod, blad.status, { dostawca: blad.dostawca, ...(blad.niewazny ? { niewazny: true } : {}) });
+}
+
+/**
+ * Odpowiedz dostawcy odrzucajaca klucz UZYTKOWNIKA (401, 403 z brakiem uprawnien) idzie
+ * bez zmian, z dodanym X-CAI-Kod: zly-klucz i X-CAI-Dostawca (aplikacja otwiera kreator).
+ * Odrzucenie klucza serwera to sprawa administratora - bez tych naglowkow.
+ */
+function naglowkiZlegoKlucza(k, status, cialo, dostawca) {
+  return k.czyj === 'uzytkownika' && klucze.odrzucenieKlucza(status, cialo)
+    ? { 'X-CAI-Kod': 'zly-klucz', 'X-CAI-Dostawca': dostawca } : {};
 }
 
 // ─── Tlumaczenie Anthropic <-> OpenAI (dla dostawcy nvidia) ───────────────────
@@ -629,8 +964,8 @@ function odpowiedzJson(res, status, dane) {
 }
 
 function odpowiedzTekst(res, status, tekst, typ = 'text/plain; charset=utf-8') {
-  if (res.headersSent || res.destroyed) return;
-  wyslij(res, status, { 'Content-Type': typ }, Buffer.from(tekst, 'utf8'));
+  if (res.headersSent || res.destroyed) return undefined;
+  return wyslij(res, status, { 'Content-Type': typ }, Buffer.from(tekst, 'utf8'));
 }
 
 // ─── Naglowki bezpieczenstwa ─────────────────────────────────────────────────
@@ -667,10 +1002,13 @@ const NAGLOWKI_BEZPIECZENSTWA = {
   'Cross-Origin-Opener-Policy': 'same-origin',
 };
 
+// Strony osobiste albo z tokenem w adresie (konto, rejestracja, reset, platnosci).
+const OSOBISTE = /^\/(konto(\/|\.js$|$)|rejestracja\/?$|potwierdz\/?$|haslo(\/|$)|do-widzenia\/?$|platnosci\/)/;
+
 function ustawNaglowkiBezpieczenstwa(res, sciezka) {
   for (const [k, v] of Object.entries(NAGLOWKI_BEZPIECZENSTWA)) res.setHeader(k, v);
   // Odpowiedzi API i logowania sa osobiste - zadna pamiec podreczna ich nie trzyma.
-  if (sciezka === '/api' || sciezka.startsWith('/api/') || sciezka.startsWith('/auth/')) {
+  if (sciezka === '/api' || sciezka.startsWith('/api/') || sciezka.startsWith('/auth/') || OSOBISTE.test(sciezka)) {
     res.setHeader('Cache-Control', 'no-store');
   }
 }
@@ -710,26 +1048,83 @@ function spakuj(bufor, kodowanie, jakosc) {
   return zlib.gzipSync(bufor, { level: 6 });
 }
 
+// Pakowanie w puli watkow libuv (F, KOD8-32): brotli 11 dla pwa/lib/pdfmake.min.js to 2-4 s,
+// a liczone synchronicznie po kazdym restarcie zatrzymywalo serwer dla wszystkich. Male
+// odpowiedzi (do 256 kB, ulamki milisekundy) dalej pakujemy od razu.
+const PROG_PAKOWANIA_W_TLE = 256 * 1024;
+
+function spakujAsync(bufor, kodowanie, jakosc) {
+  return new Promise((ok, zle) => {
+    const gotowe = (e, wynik) => (e ? zle(e) : ok(wynik));
+    if (kodowanie === 'br') {
+      zlib.brotliCompress(bufor, {
+        params: {
+          [zlib.constants.BROTLI_PARAM_QUALITY]: jakosc || 5,
+          [zlib.constants.BROTLI_PARAM_SIZE_HINT]: bufor.length,
+        },
+      }, gotowe);
+    } else {
+      zlib.gzip(bufor, { level: 6 }, gotowe);
+    }
+  });
+}
+
+/**
+ * Wersja spakowana wpisu pamieci (plik statyczny, strona aplikacji) -> obietnica bufora.
+ * Gotowa: od razu. Liczona: ta sama obietnica dla wszystkich czekajacych (jedno pakowanie
+ * na plik i kodowanie). Brotli powyzej 9 (sekundy na duzy plik) liczy sie w tle, a do tego
+ * czasu klienci dostaja szybka wersje (brotli 5, dziesiatki milisekund w puli watkow).
+ */
+function spakowanaWersja(wpis, kod, jakosc = 5) {
+  if (wpis.spakowane[kod]) return Promise.resolve(wpis.spakowane[kod]);
+  if (!wpis.liczone) wpis.liczone = {};
+  const licz = (klucz, q, poPakowaniu) => {
+    if (!wpis.liczone[klucz]) {
+      wpis.liczone[klucz] = spakujAsync(wpis.dane, kod, q).then(poPakowaniu)
+        .finally(() => { delete wpis.liczone[klucz]; });
+    }
+    return wpis.liczone[klucz];
+  };
+  const docelowa = () => licz(kod, jakosc, (b) => {
+    wpis.spakowane[kod] = b;
+    if (wpis.szybkie) delete wpis.szybkie[kod];
+    return b;
+  });
+  if (kod !== 'br' || jakosc <= 9) return docelowa();
+  docelowa().catch((e) => console.error('[kompresja]', e.message));
+  if (wpis.szybkie && wpis.szybkie[kod]) return Promise.resolve(wpis.szybkie[kod]);
+  return licz(`${kod}:szybka`, 5, (b) => {
+    if (!wpis.spakowane[kod]) wpis.szybkie = { ...(wpis.szybkie || {}), [kod]: b };
+    return b;
+  });
+}
+
+/** Wysyla gotowe cialo (spakowane albo nie), o ile klient jeszcze czeka. */
+function wyslijCialo(res, status, naglowki, cialo, bezCiala) {
+  if (res.headersSent || res.destroyed) return;
+  res.writeHead(status, { ...naglowki, 'Content-Length': cialo.length });
+  res.end(bezCiala ? undefined : cialo);
+}
+
 /**
  * Wysyla bufor, w razie potrzeby spakowany. `gotowe` pozwala podac wersje
  * spakowane wczesniej (pliki statyczne liczymy raz, nie przy kazdym zadaniu).
+ * Duze cialo bez gotowej wersji pakuje w puli watkow i zwraca obietnice.
  */
 function wyslij(res, status, naglowki, bufor, gotowe) {
   const typ = String(naglowki['Content-Type'] || '');
   const doKompresji = TYPY_DO_KOMPRESJI.test(typ) && bufor.length > 1024;
-  let cialo = bufor;
   const out = { ...naglowki };
-  if (doKompresji) {
-    out.Vary = 'Accept-Encoding';
-    const kod = wybierzKodowanie(res.req);
-    if (kod) {
-      cialo = (gotowe && gotowe[kod]) || spakuj(bufor, kod);
-      out['Content-Encoding'] = kod;
-    }
-  }
-  out['Content-Length'] = cialo.length;
-  res.writeHead(status, out);
-  res.end(res.req && res.req.method === 'HEAD' ? undefined : cialo);
+  const bezCiala = Boolean(res.req && res.req.method === 'HEAD');
+  const kod = doKompresji ? wybierzKodowanie(res.req) : null;
+  if (doKompresji) out.Vary = 'Accept-Encoding';
+  if (!kod) return wyslijCialo(res, status, out, bufor, bezCiala);
+  const spakowane = { ...out, 'Content-Encoding': kod };
+  if (gotowe && gotowe[kod]) return wyslijCialo(res, status, spakowane, gotowe[kod], bezCiala);
+  if (bufor.length <= PROG_PAKOWANIA_W_TLE) return wyslijCialo(res, status, spakowane, spakuj(bufor, kod), bezCiala);
+  return spakujAsync(bufor, kod).then(
+    (cialo) => wyslijCialo(res, status, spakowane, cialo, bezCiala),
+    () => wyslijCialo(res, status, out, bufor, bezCiala));
 }
 
 /**
@@ -852,14 +1247,23 @@ function dlugieGenerowanie(body, czynnosci) {
 
 // ─── Proxy do dostawcow ───────────────────────────────────────────────────────
 
+// Budzet pamieci wynikow zadan w tle (ARCH8-12, CAI_ZADANIA_MB, domyslnie 200 MB).
+zadaniaWTle.ustaw({ budzetMb: KONF.zadaniaMb });
+
 /**
  * Kontekst SERP. Zwraca { status, dane } gdy obsluzylismy zapytanie tutaj,
  * albo null gdy ma poleciec dotychczasowa sciezka do modelu.
  *
  * Aplikacja parsuje tresc bloku tekstowego jako JSON, wiec odpowiedz musi miec
  * ksztalt Anthropic z JSON-em w srodku - inaczej fetchSerpContext nic nie zrozumie.
+ *
+ * zrodlo: zrodlo SERP organizacji konta (dzierzawy.zrodloSerp: 'glowna' -> CAI_SERP,
+ * inne -> CAI_SERP_SAMOOBSLUGA, nigdy 'openseo'); celModelu: dokad pojdzie wywolanie
+ * modelu ('anthropic' albo 'nvidia' - klucz uzytkownika zawsze 'anthropic').
+ * Po premierze (DECYZJE-R9) wlasne konto DataForSEO klienta: klucze.kluczDla(...,
+ * 'dataforseo') zamiast KONF.dataForSeo w galezi 'dataforseo', bez innych zmian.
  */
-async function obsluzSerp(body) {
+async function obsluzSerp(body, zrodlo = KONF.serp, celModelu = KONF.dostawca) {
   const wAnthropic = (obiekt) => ({
     content: [{ type: 'text', text: JSON.stringify(obiekt) }],
     usage: { input_tokens: 0, output_tokens: 0 },
@@ -868,7 +1272,7 @@ async function obsluzSerp(body) {
   // Przez OpenSEO: te same dane DataForSEO, ale zapytanie idzie przez kontener,
   // wiec wynik laduje tez w jego historii i widac go w panelu SEO. Wymaga
   // wskazania projektu (CAI_SEO_PROJEKT), bo narzedzia OpenSEO sa projektowe.
-  if (KONF.serp === 'openseo') {
+  if (zrodlo === 'openseo') {
     const fraza = serp.frazaZZadania(body);
     if (!fraza) return { status: 200, dane: wAnthropic({ context: '', topics: [], phrases: [] }) };
     if (!KONF.openseo.portNasluchu || !KONF.seoProjekt) {
@@ -895,7 +1299,7 @@ async function obsluzSerp(body) {
     }
   }
 
-  if (KONF.serp === 'dataforseo') {
+  if (zrodlo === 'dataforseo') {
     if (!KONF.dataForSeo.login || !KONF.dataForSeo.haslo) {
       console.error('[serp] CAI_SERP=dataforseo, ale brak DATAFORSEO_LOGIN/DATAFORSEO_HASLO');
       return { status: 500, dane: { content: [], error: { komunikat: 'Brak danych dostepowych DataForSEO' } } };
@@ -918,8 +1322,8 @@ async function obsluzSerp(body) {
 
   // CAI_SERP=model, ale dostawca nie ma web_search - lepiej powiedziec to wprost,
   // niz pozwolic modelowi zmyslic dane SERP i podac je dalej jako fakty.
-  if (KONF.dostawca !== 'anthropic') {
-    console.error(`[serp] dostawca ${KONF.dostawca} nie obsluguje web_search; ustaw CAI_SERP=dataforseo albo openseo`);
+  if (celModelu !== 'anthropic') {
+    console.error(`[serp] dostawca ${celModelu} nie obsluguje web_search; ustaw CAI_SERP=dataforseo albo openseo`);
     return {
       status: 501,
       dane: {
@@ -934,9 +1338,10 @@ async function obsluzSerp(body) {
 
 // ─── Pakiety: limity i zliczanie ──────────────────────────────────────────────
 
-/** Konto z pliku - plan i rola sa tam, nie w ciasteczku. */
+/** Konto z bazy (odczytane juz przy kontroli sesji) - plan i rola sa tam, nie w ciasteczku. */
 function kontoSesji(sesja) {
-  return wczytajUzytkownikow().find((u) => u.login === sesja.login) || { login: sesja.login, rola: sesja.rola };
+  if (sesja && sesja.konto) return sesja.konto;
+  return magazyn.kontoZOrganizacja(sesja.login) || { login: sesja.login, rola: sesja.rola };
 }
 
 /**
@@ -946,7 +1351,7 @@ function kontoSesji(sesja) {
  */
 function odmowaLimitu(sesja, czynnosc) {
   const konto = kontoSesji(sesja);
-  const wynik = plany.sprawdzLimit({ katalog: KONF.katalogUzycia, uzytkownik: konto, czynnosc });
+  const wynik = plany.sprawdzLimit({ konto, czynnosc });
   if (wynik.wolno) return null;
 
   if (wynik.powod === 'nieznana-czynnosc') {
@@ -979,10 +1384,21 @@ function czynnosciTresci(req) {
   return deklaracja === 'artykul' ? ['wywolanie', 'artykul'] : ['wywolanie'];
 }
 
-/** Dopisuje uzycie po udanej odpowiedzi dostawcy. */
+/**
+ * KOD8-20: limit rezerwowany przed wywolaniem dostawcy (atomowo w bazie), wiec zapytania wyslane
+ * naraz nie omijaja limitu. -> { rezerwacja } albo { odmowa } w dzisiejszym ksztalcie 402.
+ * Potwierdzenie: policzUzycie po sukcesie; zwolnienie: finally w wykonaj (blad, przerwanie, czas).
+ */
+function zarezerwujLimit(sesja, czynnosci) {
+  const r = plany.zarezerwuj({ konto: kontoSesji(sesja), czynnosci: czynnosci.filter(Boolean) });
+  if (r.wolno) return { rezerwacja: r.rezerwacja };
+  return { odmowa: odmowaLimitu(sesja, r.czynnosc) || { error: 'Limit pakietu wyczerpany', czynnosc: r.czynnosc } };
+}
+
+/** Dopisuje uzycie po udanej odpowiedzi dostawcy (z rezerwacja: potwierdza zarezerwowana sztuke). */
 function policzUzycie(sesja, czynnosc) {
   try {
-    plany.policz({ katalog: KONF.katalogUzycia, uzytkownik: kontoSesji(sesja), czynnosc });
+    plany.policz({ konto: kontoSesji(sesja), czynnosc, rezerwacja: sesja && sesja.rezerwacja });
   } catch (e) {
     // Blad licznika nie moze zabrac uzytkownikowi gotowego wyniku - lepiej
     // policzyc o jedno mniej niz oddac blad na juz wykonana prace.
@@ -991,11 +1407,96 @@ function policzUzycie(sesja, czynnosc) {
 }
 
 
+// ─── Zasoby oplacane przez serwer dla kont na wlasnym kluczu (ARCH8-11) ──────
+// Konto 'wlasne' placi samo za model, ale serwer nadal placi za dane SERP z DataForSEO,
+// wektory NVIDIA i pobieranie stron (pasmo i adres IP serwera). Dla takich kont te zasoby
+// maja pule z pakietu (plany.limitySerwera), a konto samoobslugowe najpierw potwierdza
+// e-mail (zasoby serwera dopiero po potwierdzeniu, ARCH8-05). Konta zespolu ('serwera')
+// dzialaja jak dzis: bez puli i bez warunku.
+
+/** Czy konto musi najpierw potwierdzic e-mail, zeby uzyc zasobow serwera. */
+function czekaNaPotwierdzenie(konto) {
+  return plany.naWlasnymKluczu(konto) && konto.pochodzenie === 'samoobsluga' && !konto.emailPotwierdzony;
+}
+
+/**
+ * Odmowa uzycia zasobu serwera albo null (wolno).
+ *   -> { kod: 'email-niepotwierdzony', status: 403, pola } | { kod: 'zasob-serwera-wyczerpany', status: 402, pola }
+ */
+function odmowaZasobu(konto, zasob, akcja) {
+  if (!plany.naWlasnymKluczu(konto)) return null;
+  if (czekaNaPotwierdzenie(konto)) {
+    return { kod: 'email-niepotwierdzony', status: 403, pola: { akcja, error: 'Potwierdź adres e-mail, żeby korzystać z tej funkcji.' } };
+  }
+  const s = plany.sprawdzLimitSerwera(konto, zasob);
+  if (s.wolno) return null;
+  return {
+    kod: 'zasob-serwera-wyczerpany',
+    status: 402,
+    pola: { zasob, limit: s.limit, zuzyte: s.zuzyte, odnawialny: s.okres === 'miesiac', akcja, error: 'Wyczerpano pulę zasobów serwera w Twoim pakiecie.' },
+  };
+}
+
+/** Dopisuje uzycie zasobu serwera (konta 'serwera': nic); blad licznika nie zabiera wyniku. */
+function policzZasob(konto, zasob, ile = 1) {
+  try {
+    plany.policzSerwer(konto, zasob, ile);
+  } catch (e) {
+    console.error('[plany] zapis zasobu serwera:', e.message);
+  }
+}
+
+/**
+ * Wektory bazy wiedzy dla konta. Konto 'wlasne' bez potwierdzonego e-maila albo bez puli
+ * (D-09: pula 0 we wszystkich pakietach) szuka po slowach kluczowych - bez NVIDIA.
+ *   -> { konf, liczyc, powod: null|'email-niepotwierdzony'|'limit-pakietu' }
+ */
+function wektoryDla(konto) {
+  if (!plany.naWlasnymKluczu(konto) || !KONF.wektory.klucz) return { konf: KONF.wektory, liczyc: false, powod: null };
+  if (czekaNaPotwierdzenie(konto)) return { konf: { ...KONF.wektory, klucz: '' }, liczyc: false, powod: 'email-niepotwierdzony' };
+  if (!plany.sprawdzLimitSerwera(konto, 'wektory').wolno) return { konf: { ...KONF.wektory, klucz: '' }, liczyc: false, powod: 'limit-pakietu' };
+  return { konf: KONF.wektory, liczyc: true, powod: null };
+}
+
+/**
+ * 403 dla zmiany ustawien organizacji (marka, baza wspolna) przez kogos, kto nia nie
+ * zarzadza (ARCH8-09). W glownej jak dzis ({ error } z napisem), w samoobslugowej kod
+ * uprawnienia-organizacji.
+ */
+function odmowaOrganizacji(req, res, konto, napisGlownej) {
+  if (req && req.readable) req.resume();
+  if (dzierzawy.idOrganizacji(konto) === dzierzawy.GLOWNA) return odpowiedzJson(res, 403, { error: napisGlownej });
+  return bledy.bladCai(res, 'uprawnienia-organizacji', 403);
+}
+
+/**
+ * Cialo zapytania proxy. Kopia zadania w tle niesie juz przeczytane cialo (cialoGotowe):
+ * bez drugiego czytania i drugiej kopii w pamieci (do 25 MB nagrania, KOD8-05).
+ */
+function cialoZadania(req, limitBajtow = 25 * 1024 * 1024) {
+  if (req && Buffer.isBuffer(req.cialoGotowe)) {
+    if (req.cialoGotowe.length > limitBajtow) {
+      const e = new Error('cialo zadania za duze');
+      e.status = 413;
+      e.limitMB = Math.round(limitBajtow / 1024 / 1024);
+      return Promise.reject(e);
+    }
+    return Promise.resolve(req.cialoGotowe);
+  }
+  return czytajCialo(req, limitBajtow).catch((e) => {
+    // Limit trasy (grafika 1 MB, reszta 25 MB) do komunikatu 413.
+    if (e && e.status === 413) e.limitMB = Math.round(limitBajtow / 1024 / 1024);
+    throw e;
+  });
+}
+
 async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
+  const konto = kontoSesji(sesja);
   let body;
   try {
-    body = JSON.parse((await czytajCialo(req)).toString('utf8'));
-  } catch {
+    body = JSON.parse((await cialoZadania(req)).toString('utf8'));
+  } catch (e) {
+    if (e && e.status === 413) throw e;
     return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' });
   }
 
@@ -1005,35 +1506,58 @@ async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
     return odpowiedzJson(res, 400, { type: 'error', error: { type: 'invalid_request_error', message: odmowa }, komunikat: odmowa });
   }
 
+  // Klucz (BYOK): konto 'wlasne' bez wlasnego klucza konczy sie odmowa, nigdy kluczem
+  // serwera; klucz uzytkownika idzie zawsze do Anthropic (cel 'anthropic', SEC8-03).
+  const k = klucze.kluczDla(req, konto, 'anthropic', KONF);
+
   // Zapytanie o kontekst SERP obslugujemy osobno - patrz serwer/serp.js.
   // Rozpoznajemy je po tresci (prompt analizy SERP), a nie po samym narzedziu
   // web_search: to dostaje tez artykul z przelacznikiem sieci i monitor AI.
   if (serp.czyZapytanieSerp(body, req.headers)) {
     // Analiza SERP kosztuje osobno (DataForSEO albo dluzsze wywolanie modelu),
     // wiec jest funkcja pakietowa, a nie czescia limitu artykulow.
-    if (sesja && !plany.maFunkcje(kontoSesji(sesja), 'serp')) {
-      return odpowiedzJson(res, 402, {
+    if (sesja && !plany.maFunkcje(konto, 'serp')) {
+      return bledy.bladCai(res, 'funkcja-poza-pakietem', 402, {
         content: [],
         error: { komunikat: 'Analiza SERP jest dostępna od pakietu Standard.' },
         funkcja: 'serp',
       });
     }
-    const wynik = await obsluzSerp(body);
+    // Zrodlo SERP organizacji konta: 'glowna' -> CAI_SERP, inne -> CAI_SERP_SAMOOBSLUGA (ARCH8-09).
+    const zrodlo = dzierzawy.zrodloSerp(konto, KONF);
+    if (zrodlo === 'dataforseo' || zrodlo === 'openseo') {
+      // Dane SERP oplaca serwer: konto na wlasnym kluczu ma na nie pule pakietu (ARCH8-11).
+      const odmowaSerp = odmowaZasobu(konto, 'serp', 'serp');
+      if (odmowaSerp) return bledy.bladCai(res, odmowaSerp.kod, odmowaSerp.status, { content: [], ...odmowaSerp.pola });
+      const wynik = await obsluzSerp(body, zrodlo);
+      if (wynik.status < 400 && !res.destroyed) {
+        policzUzycie(sesja, 'wywolanie');
+        policzZasob(konto, 'serp');
+      }
+      return odpowiedzJson(res, wynik.status, wynik.dane);
+    }
+    // 'model': SERP to wywolanie modelu z web_search na kluczu konta (koszt wyszukiwania
+    // po stronie klucza uzytkownika przy BYOK), bez puli serwera.
+    if (k.blad) return odmowaKlucza(req, res, k.blad);
+    const wynik = await obsluzSerp(body, zrodlo, k.cel);
     if (wynik) {
       if (wynik.status < 400 && !res.destroyed) policzUzycie(sesja, 'wywolanie');
       return odpowiedzJson(res, wynik.status, wynik.dane);
     }
-    // null = zostaw dotychczasowa sciezke (dostawca anthropic z web_search)
+    // null = zostaw dotychczasowa sciezke (Anthropic z web_search)
   }
+
+  if (k.blad) return odmowaKlucza(req, res, k.blad);
 
   const h = hamulec(res, dlugieGenerowanie(body, czynnosci) ? KONF.czasy.dlugi : KONF.czasy.tresc);
   try {
-    if (KONF.dostawca === 'nvidia') {
-      const { klucz } = kluczDoUzycia(req, 'x-api-key', KONF.klucze.nvidia);
-      if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak NVIDIA_KEY na serwerze' });
+    // NVIDIA tylko z kluczem serwera (konto zespolu przy CAI_DOSTAWCA=nvidia): klucz
+    // uzytkownika ma zawsze cel 'anthropic' i do NVIDIA nie trafia (SEC8-03).
+    if (k.cel === 'nvidia') {
+      if (!k.klucz) return odpowiedzJson(res, 500, { error: 'Brak NVIDIA_KEY na serwerze' });
       const { odp, cialo: surowe } = await fetchZHamulcem(KONF.urlNvidia, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + klucz },
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + k.klucz },
         body: JSON.stringify(anthropicNaOpenai(body)),
       }, h);
       let dane = null;
@@ -1051,70 +1575,76 @@ async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
       return odpowiedzJson(res, 200, openaiNaAnthropic(dane));
     }
 
-    const { klucz } = kluczDoUzycia(req, 'x-api-key', KONF.klucze.anthropic);
-    if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak ANTHROPIC_KEY na serwerze' });
+    if (!k.klucz) return odpowiedzJson(res, 500, { error: 'Brak ANTHROPIC_KEY na serwerze' });
     const { odp, cialo: tekst } = await fetchZHamulcem(KONF.urlAnthropic, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': klucz,
+        'x-api-key': k.klucz,
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify(body),
     }, h);
     if (!h.klientCzeka()) return undefined;
     if (odp.ok) for (const czynnosc of czynnosci) policzUzycie(sesja, czynnosc);
-    return wyslij(res, odp.status, { 'Content-Type': 'application/json; charset=utf-8' }, Buffer.from(tekst, 'utf8'));
+    return wyslij(res, odp.status, {
+      'Content-Type': 'application/json; charset=utf-8', ...naglowkiZlegoKlucza(k, odp.status, tekst, 'anthropic'),
+    }, Buffer.from(tekst, 'utf8'));
   } finally {
     h.zwolnij();
   }
 }
 
 async function proxyGrafika(req, res, sesja) {
-  const { klucz } = kluczDoUzycia(req, 'x-openai-key', KONF.klucze.openai);
-  if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak OPENAI_KEY na serwerze' });
+  const k = klucze.kluczDla(req, kontoSesji(sesja), 'openai', KONF);
+  if (k.blad) return odmowaKlucza(req, res, k.blad);
+  if (!k.klucz) return odpowiedzJson(res, 500, { error: 'Brak OPENAI_KEY na serwerze' });
   let body;
   try {
-    body = JSON.parse((await czytajCialo(req, 1024 * 1024)).toString('utf8'));
-  } catch {
+    body = JSON.parse((await cialoZadania(req, 1024 * 1024)).toString('utf8'));
+  } catch (e) {
+    if (e && e.status === 413) throw e;
     return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' });
   }
   const odmowa = odmowaKosztuGrafiki(body);
   if (odmowa) return odpowiedzJson(res, 400, { error: { message: odmowa, type: 'invalid_request_error' }, komunikat: odmowa });
   const cialo = { ...body, n: 1 };
   if (KONF.modelGrafiki) cialo.model = KONF.modelGrafiki;
-  return wolajOpenAi(res, KONF.urlOpenai + '/images/generations', klucz, JSON.stringify(cialo),
+  return wolajOpenAi(res, KONF.urlOpenai + '/images/generations', k, JSON.stringify(cialo),
     'application/json', KONF.czasy.obrazy, sesja, 'grafika');
 }
 
 async function proxyOpenAiJson(req, res, url, sesja, czynnosc, czasMs) {
-  const { klucz } = kluczDoUzycia(req, 'x-openai-key', KONF.klucze.openai);
-  if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak OPENAI_KEY na serwerze' });
-  const cialo = await czytajCialo(req);
-  return wolajOpenAi(res, url, klucz, cialo, 'application/json', czasMs, sesja, czynnosc);
+  const k = klucze.kluczDla(req, kontoSesji(sesja), 'openai', KONF);
+  if (k.blad) return odmowaKlucza(req, res, k.blad);
+  if (!k.klucz) return odpowiedzJson(res, 500, { error: 'Brak OPENAI_KEY na serwerze' });
+  const cialo = await cialoZadania(req);
+  return wolajOpenAi(res, url, k, cialo, 'application/json', czasMs, sesja, czynnosc);
 }
 
 async function proxyTranskrypcja(req, res, sesja) {
-  const { klucz } = kluczDoUzycia(req, 'x-openai-key', KONF.klucze.openai);
-  if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak OPENAI_KEY na serwerze' });
-  const cialo = await czytajCialo(req);
-  return wolajOpenAi(res, KONF.urlOpenai + '/audio/transcriptions', klucz, cialo,
-    req.headers['content-type'] || 'multipart/form-data', KONF.czasy.transkrypcja, sesja, 'transkrypcja');
+  const k = klucze.kluczDla(req, kontoSesji(sesja), 'openai', KONF);
+  if (k.blad) return odmowaKlucza(req, res, k.blad);
+  if (!k.klucz) return odpowiedzJson(res, 500, { error: 'Brak OPENAI_KEY na serwerze' });
+  const typ = req.headers['content-type'] || 'multipart/form-data';
+  const cialo = await cialoZadania(req);
+  return wolajOpenAi(res, KONF.urlOpenai + '/audio/transcriptions', k, cialo, typ, KONF.czasy.transkrypcja, sesja, 'transkrypcja');
 }
 
 /** Wspolna droga do OpenAI: hamulec, liczenie po sukcesie, odpowiedz bez zmian. */
-async function wolajOpenAi(res, url, klucz, cialo, typ, czasMs, sesja, czynnosc) {
+async function wolajOpenAi(res, url, k, cialo, typ, czasMs, sesja, czynnosc) {
   const h = hamulec(res, czasMs);
   try {
     const { odp, cialo: bufor } = await fetchZHamulcem(url, {
       method: 'POST',
-      headers: { 'Content-Type': typ, Authorization: 'Bearer ' + klucz },
+      headers: { 'Content-Type': typ, Authorization: 'Bearer ' + k.klucz },
       body: cialo,
     }, h, 'bufor');
     if (!h.klientCzeka()) return undefined;
     if (odp.ok) policzUzycie(sesja, czynnosc);
     return wyslij(res, odp.status, {
       'Content-Type': odp.headers.get('content-type') || 'application/json; charset=utf-8',
+      ...naglowkiZlegoKlucza(k, odp.status, bufor, 'openai'),
     }, bufor);
   } finally {
     h.zwolnij();
@@ -1122,12 +1652,14 @@ async function wolajOpenAi(res, url, klucz, cialo, typ, czasMs, sesja, czynnosc)
 }
 
 async function proxyEleven(req, res, sesja) {
-  const { klucz } = kluczDoUzycia(req, 'x-eleven-key', KONF.klucze.eleven);
-  if (!klucz) return odpowiedzJson(res, 500, { error: 'Brak ELEVEN_KEY na serwerze' });
+  const k = klucze.kluczDla(req, kontoSesji(sesja), 'eleven', KONF);
+  if (k.blad) return odmowaKlucza(req, res, k.blad);
+  if (!k.klucz) return odpowiedzJson(res, 500, { error: 'Brak ELEVEN_KEY na serwerze' });
   let dane;
   try {
-    dane = JSON.parse((await czytajCialo(req)).toString('utf8'));
-  } catch {
+    dane = JSON.parse((await cialoZadania(req)).toString('utf8'));
+  } catch (e) {
+    if (e && e.status === 413) throw e;
     return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' });
   }
   const glos = dane.voice_id || '21m00Tcm4TlvDq8ikWAM';
@@ -1138,7 +1670,7 @@ async function proxyEleven(req, res, sesja) {
       KONF.urlEleven + '/text-to-speech/' + encodeURIComponent(glos) + '?output_format=' + encodeURIComponent(format),
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'xi-api-key': klucz },
+        headers: { 'Content-Type': 'application/json', 'xi-api-key': k.klucz },
         body: JSON.stringify({
           text: dane.text || '',
           model_id: dane.model_id || 'eleven_multilingual_v2',
@@ -1149,12 +1681,89 @@ async function proxyEleven(req, res, sesja) {
     );
     if (!h.klientCzeka()) return undefined;
     if (odp.ok) policzUzycie(sesja, 'audio');
-    return wyslij(res, odp.status, { 'Content-Type': odp.headers.get('content-type') || 'audio/mpeg' }, bufor);
+    return wyslij(res, odp.status, {
+      'Content-Type': odp.headers.get('content-type') || 'audio/mpeg', ...naglowkiZlegoKlucza(k, odp.status, bufor, 'eleven'),
+    }, bufor);
   } finally {
     h.zwolnij();
   }
 }
 
+
+// ─── Lagodne zatrzymanie (KOD8-07) ───────────────────────────────────────────
+// systemctl restart (kazde wdrozenie) wysyla SIGTERM. Dawniej proces konczyl sie od razu
+// i ucinal w pol kazde wywolanie dostawcy (artykul z siecia trwa 1-4 min), a Caddy oddawal
+// przegladarce 502. Teraz po SIGTERM:
+//   - nowe wywolania dostawcow dostaja 503 bez JSON-a z Retry-After (aplikacja ponawia je
+//     jak odpowiedz bramy w oknie restartu), a reszta zapytan (strona, pakiet, baza) dziala,
+//   - trwajace wywolania i zadania w tle koncza sie normalnie; wynik zadania w tle mozna
+//     odebrac ponowieniem z tym samym X-Zadanie, dopoki proces zyje,
+//   - wynik zadania gotowy, ale nieodebrany (klient zerwal polaczenie) czeka jeszcze do 15 s
+//     na ponowienie, zeby oplacony artykul nie zginal razem z procesem,
+//   - gdy nic juz nie trwa (najwyzej 120 s; TimeoutStopSec=150 w uslugach), serwer zamyka
+//     port i baze, a proces konczy sie kodem 0. Drugi SIGTERM albo SIGINT konczy od razu.
+// Port jest otwarty az do konca pracy, wiec nowy proces wstaje dopiero po starym: okno
+// bez serwera to sam start (1-2 s), ktore Caddy przeczekuje dla GET (lb_try_duration).
+
+const ZATRZYMANIE = { trwa: false, aktywne: 0, odMs: 0, obietnica: null };
+const ZATRZYMANIE_MAKS_MS = 120_000;
+const ZATRZYMANIE_NA_ODBIOR_MS = 15_000;
+
+/** 413 z rozmiarem i rada zamiast 502 "blad dostawcy" (KOD8-16): nagranie, plik albo zapytanie za duze. */
+function odpowiedzZaDuze(res, sciezka, mb = 25) {
+  const komunikat = sciezka === '/api/transcribe'
+    ? `Nagranie jest za duże: serwer przyjmuje najwyżej ${mb} MB. Skróć je albo zapisz w lżejszym formacie (np. MP3) i spróbuj ponownie.`
+    : `Zapytanie jest za duże: serwer przyjmuje najwyżej ${mb} MB.`;
+  return odpowiedzJson(res, 413, {
+    type: 'error', error: { type: 'request_too_large', message: komunikat }, komunikat, limitMB: mb,
+  });
+}
+
+/** 503 na czas zatrzymania: tekst (nie JSON), zeby aplikacja ponowila jak przy restarcie bramy. */
+function odpowiedzRestartu(res) {
+  if (res.headersSent || res.destroyed) return;
+  wyslij(res, 503, { 'Content-Type': 'text/plain; charset=utf-8', 'Retry-After': '5', 'Cache-Control': 'no-store' },
+    Buffer.from('Serwer właśnie się aktualizuje. Spróbuj ponownie za kilka sekund.\n', 'utf8'));
+}
+
+/**
+ * Konczy prace w toku, potem zamyka serwery i baze. -> obietnica kodu wyjscia (0).
+ *   lagodneZatrzymanie([serwerAplikacji, bramaOpenSeo], { maksMs, naOdbiorMs, coIleMs, loguj })
+ */
+function lagodneZatrzymanie(serwery, {
+  maksMs = ZATRZYMANIE_MAKS_MS, naOdbiorMs = ZATRZYMANIE_NA_ODBIOR_MS, coIleMs = 200, loguj = console,
+} = {}) {
+  if (ZATRZYMANIE.obietnica) return ZATRZYMANIE.obietnica;
+  ZATRZYMANIE.trwa = true;
+  ZATRZYMANIE.odMs = Date.now();
+  loguj.log(`[serwer] zatrzymanie: czekam na ${ZATRZYMANIE.aktywne} zapytan i ${zadaniaWTle.trwajace()} zadan w tle `
+    + `(najwyzej ${Math.round(maksMs / 1000)} s), nowe wywolania dostawcow -> 503`);
+  ZATRZYMANIE.obietnica = new Promise((ok) => {
+    let wyszlo = false;
+    const wyjdz = () => {
+      if (wyszlo) return;
+      wyszlo = true;
+      try { magazyn.zamknij(); } catch (e) { loguj.error('[serwer] zamkniecie bazy:', e.message); }
+      ok(0);
+    };
+    const zakoncz = (opis) => {
+      clearInterval(zegar);
+      loguj.log(`[serwer] zatrzymanie: ${opis}, zamykam port`);
+      let zamkniete = 0;
+      for (const s of serwery) s.close(() => { zamkniete += 1; if (zamkniete >= serwery.length) wyjdz(); });
+      // Polaczenia, ktore nie skoncza sie same (zawieszony klient), konczymy po 5 s.
+      setTimeout(() => { for (const s of serwery) if (typeof s.closeAllConnections === 'function') s.closeAllConnections(); }, 5000).unref();
+      setTimeout(wyjdz, 8000).unref();
+    };
+    const zegar = setInterval(() => {
+      const zostalo = ZATRZYMANIE.aktywne + zadaniaWTle.trwajace();
+      const doOdbioru = zostalo === 0 ? zadaniaWTle.nieodebrane(naOdbiorMs) : 0;
+      if (zostalo === 0 && doOdbioru === 0) zakoncz(`praca w toku skonczona po ${Math.round((Date.now() - ZATRZYMANIE.odMs) / 100) / 10} s`);
+      else if (Date.now() - ZATRZYMANIE.odMs >= maksMs) zakoncz(`limit ${Math.round(maksMs / 1000)} s, przerwane: ${zostalo}`);
+    }, coIleMs);
+  });
+  return ZATRZYMANIE.obietnica;
+}
 
 // ─── Logowanie ────────────────────────────────────────────────────────────────
 // Wydzielone z routera, bo tego samego ekranu uzywa port OpenSEO - jedno konto
@@ -1167,6 +1776,16 @@ function atrybutyCiasteczka() {
     (KONF.cookieDomena ? `; Domain=${KONF.cookieDomena}` : '') +
     (KONF.cookieSecure ? '; Secure' : '')
   );
+}
+
+/** Naglowek Set-Cookie z nowa sesja konta (logowanie, rejestracja, reset hasla). */
+function ciasteczkoSesji(konto) {
+  return `cai_auth=${utworzSesje(konto)}${atrybutyCiasteczka()}; Max-Age=${KONF.sesjaGodzin * 3600}`;
+}
+
+/** Naglowek Set-Cookie kasujacy sesje w przegladarce (wylogowanie, wyloguj wszedzie, usuniecie konta). */
+function ciasteczkoWylogowania() {
+  return `cai_auth=${atrybutyCiasteczka()}; Max-Age=0`;
 }
 
 /** Jezyk ekranow serwera: ?lang=, pole formularza, potem Accept-Language. */
@@ -1184,8 +1803,24 @@ function stronaLogowania(kod, req, jezyk, login) {
   return logowanie.stronaLogowania({
     kod, jezyk: jezyk || (req ? jezykZadania(req) : 'pl'), sciezka: '/auth/login',
     // Login wraca do pola tylko w poprawnym formacie - nic obcego nie trafia do HTML.
-    login: poprawnyLogin(login) ? login : '',
+    login: poprawnyLogin(login) || konta.emailDoPola(login) ? login : '',
+    // R9-A1: "Zaloz konto" przy otwartej rejestracji, "Nie pamietasz hasla?" zawsze poza trybem
+    // bramy (bez poczty /haslo mowi, ze haslo konta zespolu zmienia administrator). Port OpenSEO
+    // ma inny host, wiec tam odnosniki prowadza na adres aplikacji (albo ich nie ma).
+    rejestracja: funkcjaWlaczona('rejestracja'),
+    reset: !KONF.zaufanyNaglowek && (kod !== 'openseo' || Boolean(KONF.adresPubliczny)),
+    bazaLinkow: kod === 'openseo' ? KONF.adresPubliczny : '',
   });
+}
+
+/**
+ * Konto z pola `login` formularza (ARCH8-04): ze znakiem @ to e-mail (konto po adresie
+ * znormalizowanym jak przy zapisie), bez niego dzisiejszy login. Nazwa pola zostaje
+ * `login` (kontrakt bramy OpenSEO i testow).
+ */
+function kontoDoLogowania(login) {
+  if (login.includes('@')) return login.length <= 254 ? magazyn.kontoPoEmailu(login) : null;
+  return poprawnyLogin(login) ? magazyn.konto(login) : null;
 }
 
 async function obslugaLogowania(req, res) {
@@ -1203,20 +1838,43 @@ async function obslugaLogowania(req, res) {
   const login = (dane.get('login') || '').trim();
   const haslo = dane.get('haslo') || '';
   const jezyk = jezykZadania(req, dane.get('jezyk'));
-  const uzytkownik = wczytajUzytkownikow().find((u) => u.login === login);
+  const uzytkownik = kontoDoLogowania(login);
+
+  // Licznik nieudanych prob per konto (ARCH8-05, SEC8-24): e-mail jest publiczny, wiec
+  // zgadywanie hasla z wielu adresow IP ograniczamy tez na koncie (20 na godzine ->
+  // 15 minut blokady). Nieistniejacy adres ma licznik po wpisanym tekscie i zachowuje
+  // sie tak samo, wiec blokada nie zdradza, czy konto istnieje. Reset hasla dziala mimo niej.
+  const kluczProb = konta.probyLogowania.klucz(uzytkownik, login);
+  if (konta.probyLogowania.zablokowane(kluczProb)) {
+    return odpowiedzTekst(res, 429, stronaLogowania('za-duzo-prob-konto', req, jezyk, login), html);
+  }
 
   // scrypt liczy sie zawsze, takze dla nieistniejacego loginu - inaczej czas
-  // odpowiedzi (1 ms wobec 50 ms) zdradzalby, ktore loginy istnieja.
-  const pasuje = hasloPasuje(haslo, uzytkownik || atrapaKonta());
+  // odpowiedzi (1 ms wobec 50 ms) zdradzalby, ktore loginy istnieja. Liczony
+  // asynchronicznie (pula watkow), wiec nie zatrzymuje generowania innym.
+  let pasuje = false;
+  try {
+    pasuje = await hasloPasujeAsync(haslo, uzytkownik || await atrapaKontaAsync());
+  } catch (e) {
+    if (e instanceof BladZajety) return odpowiedzTekst(res, 429, stronaLogowania('za-duzo-prob', req, jezyk, login), html);
+    throw e;
+  }
   if (!uzytkownik || !pasuje) {
     nieudanaProba(ip);
+    konta.probyLogowania.porazka(kluczProb);
     return odpowiedzTekst(res, 401, stronaLogowania('zle-dane', req, jezyk, login), html);
   }
 
   proby.delete(ip);
-  const token = utworzSesje(uzytkownik);
-  const ciasteczko = `cai_auth=${token}${atrybutyCiasteczka()}; Max-Age=${KONF.sesjaGodzin * 3600}`;
-  res.writeHead(302, { Location: '/', 'Set-Cookie': ciasteczko });
+  konta.probyLogowania.sukces(kluczProb);
+  try {
+    magazyn.zmienKonto(uzytkownik.login, { ostatnieLogowanie: Date.now() });
+  } catch (e) {
+    // Znacznik ostatniego logowania (sprzatanie kont niepotwierdzonych) nie moze zablokowac wejscia.
+    if (!(e instanceof pliki.BladDanych)) throw e;
+    console.error('[logowanie] zapis ostatniego logowania:', e.message);
+  }
+  res.writeHead(302, { Location: '/', 'Set-Cookie': ciasteczkoSesji(uzytkownik) });
   return res.end();
 }
 
@@ -1391,22 +2049,70 @@ async function cialoJson(req, limitBajtow) {
 
 // ─── Router ───────────────────────────────────────────────────────────────────
 
+// ─── Kontekst dla modulow tras (rozdz. 4.1) ─────────────────────────────────
+// Moduly nowych tras (konta, platnosci, klucze) nie wymagaja server.js (bez
+// petli w require) - wszystko, czego potrzebuja, dostaja tutaj.
+
+const POMOCNICY = {
+  // moduly
+  magazyn, plany, dzierzawy, limity, bledy, poczta, platnosci, oznaczenia, klucze, logowanie,
+  bladCai: bledy.bladCai,
+  // odpowiedzi i zapytania
+  odpowiedzJson, odpowiedzTekst, wyslij, czytajCialo, cialoJson, typJson, obcePochodzenie, adresIp, jezykZadania,
+  // sesje i hasla
+  utworzSesje, ciasteczkoSesji, ciasteczkoWylogowania, atrybutyCiasteczka, zapiszWylogowanie,
+  zahaszujAsync, hasloPasujeAsync, atrapaKontaAsync, BladZajety, podpisz, skrotEmaila,
+  idKonta, poprawnyLogin, stronaLogowania, funkcjaWlaczona,
+  // A1: publiczne ekrany kont rozpoznaja zalogowanego (np. /rejestracja -> aplikacja)
+  sesjaZadania,
+};
+
+/**
+ * Kontekst zapytania przekazywany modulom: { KONF, url, sciezka, jezyk, sesja, konto, ...POMOCNICY }.
+ * konto = konto z organizacja (pole org) albo null bez sesji.
+ */
+function kontekstZadania(req, url, sesja = null) {
+  return {
+    ...POMOCNICY,
+    KONF,
+    url,
+    sciezka: url.pathname,
+    jezyk: jezykZadania(req),
+    sesja,
+    konto: sesja ? kontoSesji(sesja) : null,
+  };
+}
+
 async function obsluz(req, res) {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const sciezka = url.pathname;
   const html = 'text/html; charset=utf-8';
+  // 1. Naglowki bezpieczenstwa (ekrany platnosci nadpisuja CSP u siebie, ARCH8-19).
   ustawNaglowkiBezpieczenstwa(res, sciezka);
 
-  // ─── Prosba o dostep ze strony produktowej ─────────────────────────────────
-  // Jedyny endpoint bez logowania i jedyny wolany z innego pochodzenia
-  // (content-ai.net), wiec ma wlasne CORS zamiast kontroli CSRF.
+  // ─── 2. Prosba o dostep ze strony produktowej ──────────────────────────────
+  // Endpoint bez logowania wolany z innego pochodzenia (content-ai.net), wiec ma
+  // wlasne CORS zamiast kontroli CSRF. Zostaje dla zgodnosci (M-11).
   if (sciezka === '/api/prosba-o-dostep') {
     return prosby.obsluz(req, res, {
       dozwoloneOrigin: KONF.stronaOrigin, adresIp, czytajCialo, odpowiedzJson, typJson,
     });
   }
 
-  // ─── CSRF: zadania zmieniajace stan tylko z naszej strony ──────────────────
+  // ─── 3. Webhook platnosci (B): bez sesji, bez kontroli CSRF, surowe cialo ───
+  // Bezpieczenstwo to wylacznie podpis dostawcy (ARCH8-15). Wylaczone platnosci:
+  // modul zwraca false i zapytanie idzie dalej jak dzis.
+  if (sciezka.startsWith('/platnosci/webhook/')
+    && await platnosci.obsluzWebhook(sciezka, req, res, kontekstZadania(req, url))) return undefined;
+
+  // ─── 4. Publiczne ekrany kont (A1) z wlasna kontrola pochodzenia ────────────
+  // /rejestracja, /potwierdz, /haslo, /haslo/nowe, /do-widzenia (GET i POST):
+  // formularze sprawdzaja obcePochodzenie() same i odpowiadaja strona HTML 403,
+  // jak logowanie. Rejestracja wylaczona: modul zwraca false, dalej jak dzis.
+  if (konta.SCIEZKI_PUBLICZNE.includes(sciezka)
+    && await konta.obsluzPubliczne(sciezka, req, res, kontekstZadania(req, url))) return undefined;
+
+  // ─── 5. CSRF: zadania zmieniajace stan tylko z naszej strony ───────────────
   const zmienia = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
   if (zmienia && sciezka !== '/auth/login') {
     const powod = obcePochodzenie(req);
@@ -1422,7 +2128,23 @@ async function obsluz(req, res) {
     }
   }
 
-  // Logowanie
+  // ─── 6. Publiczne GET: dokumenty prawne (E) ─────────────────────────────────
+  // /dokumenty/<nazwa> i /en/dokumenty/<nazwa> (regulamin, prywatnosc, odstapienie,
+  // dpa, uslugodawca): bez logowania, dane uslugodawcy z konfiguracji (nie z repo).
+  // Jezyk: przedrostek /en/, potem ?lang=pl|en, domyslnie polski.
+  const dokument = /^\/(?:(en)\/)?dokumenty\/([a-z0-9-]{1,40})\/?$/.exec(sciezka);
+  if (dokument) {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      res.setHeader('Allow', 'GET, HEAD');
+      return odpowiedzTekst(res, 405, 'Metoda niedozwolona');
+    }
+    const lang = url.searchParams.get('lang');
+    const jezykDokumentu = dokument[1] === 'en' ? 'en' : (lang === 'en' || lang === 'pl' ? lang : 'pl');
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    return dokumentyPrawne.obsluz(req, res, { nazwa: dokument[2], jezyk: jezykDokumentu, konf: KONF });
+  }
+
+  // Logowanie (sekcja A1: obslugaLogowania, stronaLogowania)
   if (sciezka === '/auth/login' && req.method === 'POST') {
     // W trybie bramy nasz wlasny ekran logowania jest wylaczony - hasla
     // sprawdza brama, a przyjmowanie ich takze tutaj tworzyloby druga,
@@ -1462,12 +2184,13 @@ async function obsluz(req, res) {
     return res.end();
   }
 
-  // Wszystko ponizej wymaga zalogowania
+  // ─── 7. Wszystko ponizej wymaga zalogowania ─────────────────────────────────
   const sesja = sesjaZadania(req);
   if (!sesja) {
     // Endpointy programistyczne odpowiadaja JSON-em; strony - ekranem logowania.
+    // `error` zostaje napisem: po nim aplikacja rozpoznaje blad wlasny serwera.
     if (sciezka.startsWith('/api') || sciezka.startsWith('/auth/')) {
-      return odpowiedzJson(res, 401, { error: 'Niezalogowany' });
+      return bledy.bladCai(res, 'sesja', 401, { error: 'Niezalogowany' });
     }
     // Manifest i ikony musza byc dostepne przed zalogowaniem (instalacja PWA,
     // ikona karty na ekranie logowania); nie zawieraja nic osobistego.
@@ -1476,21 +2199,37 @@ async function obsluz(req, res) {
     return odpowiedzTekst(res, 200, stronaLogowania('', req), html);
   }
 
+  // ─── 8. Trasy z sesja: najpierw nowe moduly, potem dzisiejsze trasy ─────────
+  const konto = kontoSesji(sesja);
+  const kontekst = kontekstZadania(req, url, sesja);
+  // B: /konto/zakup, /konto/panel, /konto/platnosc, /api/platnosci/* (ARCH8-19)
+  if (await platnosci.obsluz(sciezka, req, res, kontekst)) return undefined;
+  // C: /api/klucze, /api/klucze/* (BYOK, SEC8-04)
+  if (await klucze.obsluz(sciezka, req, res, kontekst)) return undefined;
+  // A1: /konto, /konto/*, /api/konto, /api/konto/*
+  if (await konta.obsluz(sciezka, req, res, kontekst)) return undefined;
+  // C: GET /konto.js (ARCH8-24) - w sekcji "Aplikacja i pliki statyczne" ponizej.
+
   if (sciezka === '/auth/me') {
-    return odpowiedzJson(res, 200, { login: sesja.login, rola: sesja.rola });
+    return odpowiedzJson(res, 200, {
+      login: sesja.login,
+      rola: sesja.rola,
+      email: konto.email || null,
+      organizacja: dzierzawy.opisDlaAplikacji(konto),
+    });
   }
 
-  // Prosby o dostep - lista dla administratora.
+  // Prosby o dostep - lista dla operatora serwera.
   if (sciezka === '/api/admin/prosby' && req.method === 'GET') {
-    if (sesja.rola !== 'admin') return odpowiedzJson(res, 403, { error: 'Wymagana rola admin' });
+    if (!dzierzawy.operator(konto)) return odpowiedzJson(res, 403, { error: 'Wymagana rola admin' });
     const ile = Math.min(Math.max(Number(url.searchParams.get('ile')) || 200, 1), 1000);
     const { wpisy, pominiete } = prosby.lista(ile);
     return odpowiedzJson(res, 200, { prosby: wpisy, pominiete });
   }
 
-  // Status - tylko admin. Nie pokazuje kluczy, wylacznie czy sa ustawione.
+  // Status - tylko operator. Nie pokazuje kluczy, wylacznie czy sa ustawione.
   if (sciezka === '/api/status') {
-    if (sesja.rola !== 'admin') return odpowiedzJson(res, 403, { error: 'Wymagana rola admin' });
+    if (!dzierzawy.operator(konto)) return odpowiedzJson(res, 403, { error: 'Wymagana rola admin' });
     return odpowiedzJson(res, 200, {
       dostawca: KONF.dostawca,
       model: KONF.dostawca === 'nvidia' ? KONF.modelNvidia : 'claude (wg aplikacji)',
@@ -1508,33 +2247,43 @@ async function obsluz(req, res) {
       openseoOdpowiada: KONF.openseo.portNasluchu ? await openseoMcp.czyDziala(KONF.openseo) : false,
       seoProjekt: Boolean(KONF.seoProjekt),
       cookieDomena: Boolean(KONF.cookieDomena),
-      uzytkownikow: wczytajUzytkownikow().length,
+      uzytkownikow: magazyn.liczbaKont(),
       // Sesji nie da sie zliczyc - sa bezstanowe, po stronie przegladarek.
       // Zamiast tego pokazujemy, ile jest recznych wylogowan w mocy.
-      wylogowanychSesji: wylogowane().length,
+      wylogowanychSesji: magazyn.liczbaOdwolanych(),
+      // Runda 9 (ARCH8-25): magazyn, wylaczone funkcje z powodem, platnosci, poczta.
+      magazyn: magazyn.stan(),
+      konfiguracja: stanKonfiguracji(),
+      platnosci: platnosci.stan(),
+      poczta: poczta.stan(),
+      oznaczenia: KONF.oznaczenia,
+      // C: zapis kluczy uzytkownikow (liczniki, bez wartosci) i pamiec zadan w tle.
+      kluczeUzytkownikow: klucze.stan(KONF),
+      zadania: zadaniaWTle.stan(),
     });
   }
 
   // Wlasny pakiet: limity, zuzycie i dostepne funkcje. Kazdy widzi swoj.
   if (sciezka === '/api/pakiet' && req.method === 'GET') {
-    return odpowiedzJson(res, 200, plany.stanPakietu({
-      katalog: KONF.katalogUzycia,
-      uzytkownik: kontoSesji(sesja),
-    }));
+    return odpowiedzJson(res, 200, plany.stanPakietu({ konto }));
   }
 
   // ─── Konfiguracja marki ────────────────────────────────────────────────────
-  // Jedna dla calego wdrozenia: czytaja wszyscy, pisze administrator.
-  // Wczesniej siedziala w localStorage przegladarki, wiec kazdy uzytkownik
-  // mial wlasna kopie, a nowa osoba w zespole zaczynala od pustej.
+  // Jedna na organizacje (dzierzawy, ARCH8-09, SEC8-51): zespol glowny ma dzisiejszy plik
+  // (czytaja wszyscy w zespole, pisze administrator), konto samoobslugowe wlasna marke,
+  // ktora edytuje jej wlasciciel. Wczesniej siedziala w localStorage przegladarki, wiec
+  // kazdy uzytkownik mial wlasna kopie, a nowa osoba w zespole zaczynala od pustej.
   if (sciezka === '/api/marka' && req.method === 'GET') {
-    return odpowiedzJson(res, 200, { marka: marka.wczytaj(KONF.katalogMarki) });
+    return odpowiedzJson(res, 200, {
+      marka: marka.wczytaj(KONF.katalogMarki, dzierzawy.idOrganizacji(konto)),
+      zakres: dzierzawy.opisDlaAplikacji(konto).rodzaj,
+      mozeEdytowac: dzierzawy.mozeZarzadzac(konto, konto.org),
+    });
   }
 
   if (sciezka === '/api/marka' && req.method === 'POST') {
-    if (sesja.rola !== 'admin') {
-      return odpowiedzJson(res, 403, { error: 'Konfiguracje marki zmienia administrator' });
-    }
+    // Zapis: w glownej administrator jak dzis, w samoobslugowej jej wlasciciel.
+    if (!dzierzawy.mozeZarzadzac(konto, konto.org)) return odmowaOrganizacji(req, res, konto, 'Konfiguracje marki zmienia administrator');
     let dane;
     try {
       // Po oczyszczeniu konfiguracja ma najwyzej okolo 18 kB - 64 kB to zapas
@@ -1543,12 +2292,13 @@ async function obsluz(req, res) {
     } catch (e) {
       return odpowiedzJson(res, e.status || 400, { error: e.message });
     }
-    return odpowiedzJson(res, 200, { marka: marka.zapisz(KONF.katalogMarki, dane) });
+    return odpowiedzJson(res, 200, { marka: marka.zapisz(KONF.katalogMarki, dane, dzierzawy.idOrganizacji(konto)) });
   }
 
   // ─── Pobranie strony WWW do bazy wiedzy ────────────────────────────────────
-  // Zwyklym zadaniem HTTP, bez modelu. Nie liczy sie do pakietu, bo nie
-  // kosztuje ani jednego tokenu.
+  // Zwyklym zadaniem HTTP, bez modelu. Nie liczy sie do pakietu artykulow, bo nie
+  // kosztuje ani jednego tokenu; konto na wlasnym kluczu ma na to pule serwera
+  // (pasmo i adres IP serwera, ARCH8-11) i potrzebuje potwierdzonego e-maila.
   if (sciezka === '/api/strona' && req.method === 'POST') {
     let dane;
     try {
@@ -1559,8 +2309,12 @@ async function obsluz(req, res) {
     if (!wolnoWyjsc(sesja.login)) {
       return odpowiedzJson(res, 429, { error: 'Za duzo pobran w krotkim czasie. Sprobuj za chwile.' });
     }
+    const odmowaStron = odmowaZasobu(konto, 'strony', 'strona');
+    if (odmowaStron) return bledy.bladCai(res, odmowaStron.kod, odmowaStron.status, odmowaStron.pola);
     try {
-      return odpowiedzJson(res, 200, await strona.pobierz(String(dane.adres || '')));
+      const pobrana = await strona.pobierz(String(dane.adres || ''));
+      policzZasob(konto, 'strony', 1);
+      return odpowiedzJson(res, 200, pobrana);
     } catch (e) {
       // 502, bo blad jest po stronie pobieranej witryny, nie zadania. Do
       // przegladarki idzie tylko nasz wlasny komunikat - komunikat bledu sieci
@@ -1572,7 +2326,8 @@ async function obsluz(req, res) {
 
   // ─── Sprawdzenie odnosnikow z gotowego artykulu ────────────────────────────
   // Przegladarka nie sprawdzi obcego adresu, bo nie wolno jej czytac
-  // odpowiedzi. Serwer moze. Nie liczy sie do pakietu - to samo HTTP.
+  // odpowiedzi. Serwer moze. Nie liczy sie do pakietu - to samo HTTP; dla konta
+  // na wlasnym kluczu kazdy adres to jedna sztuka z puli stron serwera.
   if (sciezka === '/api/odnosniki' && req.method === 'POST') {
     let dane;
     try {
@@ -1585,23 +2340,42 @@ async function obsluz(req, res) {
     if (!wolnoWyjsc(sesja.login, adresy.length || 1)) {
       return odpowiedzJson(res, 429, { error: 'Za duzo sprawdzen w krotkim czasie. Sprobuj za chwile.' });
     }
-    return odpowiedzJson(res, 200, { odnosniki: await strona.sprawdzOdnosniki(adresy) });
+    const odmowaStron = odmowaZasobu(konto, 'strony', 'odnosniki');
+    if (odmowaStron) return bledy.bladCai(res, odmowaStron.kod, odmowaStron.status, odmowaStron.pola);
+    // Pula prawie pusta: sprawdzamy tyle adresow, ile zostalo, reszta "nieznany" z powodem
+    // (ta sama dlugosc i kolejnosc, ktorej oczekuje aplikacja).
+    const pula = plany.sprawdzLimitSerwera(konto, 'strony');
+    const doSprawdzenia = pula.zostalo === null ? adresy : adresy.slice(0, pula.zostalo);
+    const odnosniki = await strona.sprawdzOdnosniki(doSprawdzenia);
+    policzZasob(konto, 'strony', doSprawdzenia.length);
+    const pominiete = adresy.slice(doSprawdzenia.length).map((adres) => ({
+      adres, status: 0, stan: 'nieznany', dziala: false, powod: 'limit-pakietu', blad: 'Wyczerpano pulę sprawdzeń w pakiecie',
+    }));
+    return odpowiedzJson(res, 200, pominiete.length ? { odnosniki: [...odnosniki, ...pominiete], pominiete: pominiete.length } : { odnosniki });
   }
 
   // ─── Baza wiedzy ───────────────────────────────────────────────────────────
+  // Baza wspolna jest per organizacja (ARCH8-09, SEC8-50): konto widzi wspolna swojej
+  // organizacji i swoja prywatna; do wspolnej pisze ten, kto organizacja zarzadza.
+  const orgBazy = dzierzawy.idOrganizacji(konto);
   if (sciezka === '/api/baza' && req.method === 'GET') {
-    return odpowiedzJson(res, 200, { dokumenty: baza.lista({ katalog: KONF.katalogBazy, login: sesja.login }) });
+    return odpowiedzJson(res, 200, {
+      dokumenty: baza.lista({ katalog: KONF.katalogBazy, login: sesja.login, organizacja: orgBazy }),
+      // KOD8-11: ile znakow dokumentu trafia do bazy (aplikacja pyta przed dodaniem dluzszego).
+      limitZnakow: baza.LIMIT_ZNAKOW,
+    });
   }
 
   if (sciezka === '/api/baza' && req.method === 'POST') {
     // Limit dokumentow jest pakietowy: darmowy ma trzy, premium bez ograniczenia.
-    const konto = kontoSesji(sesja);
+    // W organizacji samoobslugowej liczy dokumenty prywatne i wspolne: wlasciciel pisze
+    // do obu, wiec "wspolna" nie moze omijac limitu pakietu.
     const limitDok = plany.planKonta(konto).limitDokumentow;
     if (limitDok !== null) {
-      const wlasne = baza.lista({ katalog: KONF.katalogBazy, login: sesja.login })
-        .filter((d) => d.zakres !== baza.WSPOLNA).length;
+      const wlasne = baza.lista({ katalog: KONF.katalogBazy, login: sesja.login, organizacja: orgBazy })
+        .filter((d) => orgBazy !== dzierzawy.GLOWNA || d.zakres !== baza.WSPOLNA).length;
       if (wlasne >= limitDok) {
-        return odpowiedzJson(res, 402, {
+        return bledy.bladCai(res, 'limit-pakietu', 402, {
           error: `Limit dokumentów w tym pakiecie: ${limitDok}.`,
           limit: limitDok,
           zuzyte: wlasne,
@@ -1613,18 +2387,28 @@ async function obsluz(req, res) {
     catch { return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' }); }
 
     const zakres = dane.zakres === baza.WSPOLNA ? baza.WSPOLNA : 'prywatna';
-    // Do bazy wspolnej pisze wylacznie admin - inaczej kazdy zmienialby wiedze zespolu.
-    if (zakres === baza.WSPOLNA && sesja.rola !== 'admin') {
-      return odpowiedzJson(res, 403, { error: 'Do bazy wspólnej dodaje wyłącznie admin' });
+    // Do bazy wspolnej pisze tylko zarzadzajacy organizacja (glowna: admin) - inaczej
+    // kazdy zmienialby wiedze zespolu.
+    if (zakres === baza.WSPOLNA && !dzierzawy.mozeZarzadzac(konto, konto.org)) {
+      return odmowaOrganizacji(req, res, konto, 'Do bazy wspólnej dodaje wyłącznie admin');
     }
+    // KOD8-15: stary .doc, obraz albo zle odczytane kodowanie - jasny komunikat zamiast smieci w bazie.
+    const zlaTresc = baza.sprawdzTresc(dane.nazwa, dane.tresc);
+    if (zlaTresc) {
+      const komunikat = jezykZadania(req) === 'en' ? zlaTresc.komunikatEn : zlaTresc.komunikat;
+      return odpowiedzJson(res, 422, { error: komunikat, komunikat, powod: zlaTresc.powod });
+    }
+    const wektory = wektoryDla(konto);
     try {
       // R6-F (E-13): adres strony (pole url albo "Zrodlo: URL" w tresci) wraca w liscie /api/baza.
       const opis = await baza.dodaj({
-        katalog: KONF.katalogBazy, zakres, login: sesja.login,
-        nazwa: dane.nazwa, tresc: dane.tresc, url: dane.url, konfWektorow: KONF.wektory,
+        katalog: KONF.katalogBazy, zakres, login: sesja.login, organizacja: orgBazy,
+        nazwa: dane.nazwa, tresc: dane.tresc, url: dane.url, konfWektorow: wektory.konf,
       });
-      console.log(`[baza] +${zakres} "${opis.nazwa}" (${opis.fragmentow} fragm., wektory: ${opis.zWektorami})`);
-      return odpowiedzJson(res, 200, opis);
+      if (wektory.liczyc && opis.zWektorami) policzZasob(konto, 'wektory', 1);
+      // Dziennik bez nazwy dokumentu (dane klienta, SEC8-54): zakres i liczby wystarcza.
+      console.log(`[baza] +${zakres} (${opis.fragmentow} fragm., wektory: ${opis.zWektorami}${opis.uciety ? `, uciety do ${opis.zapisanoZnakow} z ${opis.znakow} znakow` : ''})`);
+      return odpowiedzJson(res, 200, wektory.powod ? { ...opis, powodWektorow: wektory.powod } : opis);
     } catch (e) {
       if (e instanceof pliki.BladDanych) throw e;
       return odpowiedzJson(res, 400, { error: e.message });
@@ -1636,10 +2420,10 @@ async function obsluz(req, res) {
     try { dane = JSON.parse((await czytajCialo(req)).toString('utf8')); }
     catch { return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' }); }
     const zakres = dane.zakres === baza.WSPOLNA ? baza.WSPOLNA : 'prywatna';
-    if (zakres === baza.WSPOLNA && sesja.rola !== 'admin') {
-      return odpowiedzJson(res, 403, { error: 'Z bazy wspólnej usuwa wyłącznie admin' });
+    if (zakres === baza.WSPOLNA && !dzierzawy.mozeZarzadzac(konto, konto.org)) {
+      return odmowaOrganizacji(req, res, konto, 'Z bazy wspólnej usuwa wyłącznie admin');
     }
-    const usuniety = baza.usun({ katalog: KONF.katalogBazy, zakres, login: sesja.login, id: dane.id });
+    const usuniety = baza.usun({ katalog: KONF.katalogBazy, zakres, login: sesja.login, id: dane.id, organizacja: orgBazy });
     return odpowiedzJson(res, usuniety ? 200 : 404, usuniety ? { ok: true } : { error: 'Nie znaleziono dokumentu' });
   }
 
@@ -1647,13 +2431,17 @@ async function obsluz(req, res) {
     let dane;
     try { dane = JSON.parse((await czytajCialo(req)).toString('utf8')); }
     catch { return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' }); }
+    const wektory = wektoryDla(konto);
     const wynik = await baza.szukaj({
-      katalog: KONF.katalogBazy, login: sesja.login,
+      katalog: KONF.katalogBazy, login: sesja.login, organizacja: orgBazy,
       zapytanie: String(dane.zapytanie || ''),
       ile: Math.min(Number(dane.ile) || baza.DOMYSLNIE_FRAGMENTOW, 30),
-      konfWektorow: KONF.wektory,
+      konfWektorow: wektory.konf,
     });
-    return odpowiedzJson(res, 200, { ...wynik, prompt: baza.doPromptu(wynik) });
+    if (wektory.liczyc && wynik.metoda === 'wektory') policzZasob(konto, 'wektory', 1);
+    // Konto na wlasnym kluczu bez puli wektorow (D-09) szuka po slowach kluczowych: powod jawnie.
+    const powod = wektory.powod && wynik.metoda === 'slowa-kluczowe' ? { powod: wektory.powod } : {};
+    return odpowiedzJson(res, 200, { ...wynik, ...powod, prompt: baza.doPromptu(wynik) });
   }
 
   // ─── Dane z OpenSEO ────────────────────────────────────────────────────────
@@ -1670,8 +2458,10 @@ async function obsluz(req, res) {
       }
       return odpowiedzJson(res, 501, { error: 'OpenSEO nie jest wdrozone na tym serwerze.' });
     }
-    if (!plany.maFunkcje(kontoSesji(sesja), 'openseo')) {
-      return odpowiedzJson(res, 402, { error: 'Dane z OpenSEO są dostępne w pakiecie Premium.', funkcja: 'openseo' });
+    // Jeden kontener i jeden projekt zespolu (SEC8-52): maFunkcje daje 'openseo' tylko
+    // organizacji glownej, wiec konto samoobslugowe dostaje odmowe takze w Premium.
+    if (!plany.maFunkcje(konto, 'openseo')) {
+      return bledy.bladCai(res, 'funkcja-poza-pakietem', 402, { error: 'Dane z OpenSEO są dostępne w pakiecie Premium.', funkcja: 'openseo' });
     }
     try {
       return await obsluzSeo(sciezka, req, res, sesja);
@@ -1688,6 +2478,16 @@ async function obsluz(req, res) {
   // padnie na bledzie API, uzytkownik nie traci sztuki z pakietu.
   // Przerwij w aplikacji konczy zadanie w tle (serwer/zadania.js) - bez tego
   // generowanie trwaloby dalej i liczylo sie do pakietu.
+  // KOD8-30: jawny stan zadania w tle (aplikacja po powrocie karty sprawdza, czy jest co
+  // odebrac, zanim wysle ponowienie z tym samym X-Zadanie). Bez tresci i bez kosztu.
+  //   GET /api/zadanie?id=<id> albo /api/zadanie/<id> -> { id, stan: trwa|gotowe|przerwane|brak, status? }
+  const zadanieStan = /^\/api\/zadanie(?:\/([A-Za-z0-9_-]{8,64}))?$/.exec(sciezka);
+  if (zadanieStan && req.method === 'GET') {
+    const id = zadanieStan[1] || String(url.searchParams.get('id') || '');
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(id)) return odpowiedzJson(res, 400, { error: 'Niepoprawny identyfikator zadania' });
+    return odpowiedzJson(res, 200, { id, ...zadaniaWTle.stanZadania(sesja.login, id) });
+  }
+
   if (sciezka === '/api/zadanie/anuluj' && req.method === 'POST') {
     let dane = {};
     try { dane = JSON.parse((await czytajCialo(req, 4096)).toString('utf8')); } catch { /* puste cialo */ }
@@ -1706,6 +2506,19 @@ async function obsluz(req, res) {
       return zadaniaWTle.odbierz(bylo, res);
     }
 
+    // KOD8-07: w trakcie lagodnego zatrzymania nowe wywolania dostawcow czekaja na nowy
+    // proces (aplikacja ponawia 503 bez JSON-a jak odpowiedz bramy w oknie restartu),
+    // a wyniki trwajacych zadan nadal mozna odebrac (wyzej).
+    if (ZATRZYMANIE.trwa) {
+      req.resume();
+      return odpowiedzRestartu(res);
+    }
+
+    // BYOK (ARCH8-10): konto na wlasnych kluczach bez klucza dostaje 403 od razu - przed
+    // limitem pakietu i przed zadaniem w tle, ktore inaczej oddaloby odmowe jako wynik.
+    const brak = klucze.brakKlucza(sciezka, req, konto, KONF);
+    if (brak) return odmowaKlucza(req, res, brak);
+
     const CZYNNOSCI = {
       '/api/images': 'grafika',
       '/api/tts': 'audio',
@@ -1714,11 +2527,9 @@ async function obsluz(req, res) {
     };
     // /api obsluguje zarowno artykul, jak i wywolania pomocnicze - patrz czynnosciTresci()
     const czynnosci = sciezka === '/api' ? czynnosciTresci(req) : [CZYNNOSCI[sciezka]];
-    for (const czynnosc of czynnosci) {
-      if (!czynnosc) continue;
-      const odmowa = odmowaLimitu(sesja, czynnosc);
-      if (odmowa) return odpowiedzJson(res, 402, odmowa);
-    }
+    const { rezerwacja, odmowa } = zarezerwujLimit(sesja, czynnosci);
+    if (odmowa) return bledy.bladCai(res, 'limit-pakietu', 402, odmowa);
+    sesja.rezerwacja = rezerwacja;
 
     const wykonaj = async (cel, zad = req) => {
       try {
@@ -1738,11 +2549,23 @@ async function obsluz(req, res) {
           console.error(`[proxy] ${sciezka}: ${e.message}`);
           return odpowiedzCzasu(cel, e);
         }
+        // KOD8-16: za duze nagranie albo zapytanie to 413 z rozmiarem, a nie 502 "blad dostawcy".
+        if (e && e.status === 413) return odpowiedzZaDuze(cel, sciezka, e.limitMB);
         if (e instanceof pliki.BladDanych) throw e;
         console.error(`[proxy] ${sciezka}:`, e.message);
         return odpowiedzJson(cel, 502, { error: 'Błąd połączenia z dostawcą API' });
+      } finally {
+        rezerwacja.zwolnij();
       }
       return undefined;
+    };
+    // Zwykle wywolanie (bez trybu w tle); kopia zapytania traci klucze zaraz po nim.
+    const wykonajTeraz = async (cel, zad) => {
+      try {
+        return await wykonaj(cel, zad);
+      } finally {
+        if (zad !== req) zadaniaWTle.wyczyscKopie(zad);
+      }
     };
     // Z identyfikatorem zadanie idzie w tle: konczy sie mimo zerwanego polaczenia.
     // Cialo czytamy najpierw w calosci - zadanie zapisujemy dopiero, gdy doszlo cale,
@@ -1752,30 +2575,62 @@ async function obsluz(req, res) {
       try {
         cialo = await czytajCialo(req);
       } catch (e) {
-        if (e.status === 413) return odpowiedzJson(res, 413, { error: 'Za duże zapytanie' });
+        rezerwacja.zwolnij();
+        if (e.status === 413) return odpowiedzZaDuze(res, sciezka);
         return undefined;
       }
-      const kopia = Object.assign(Readable.from([cialo]), { headers: req.headers, method: req.method, url: req.url, socket: req.socket });
-      return zadaniaWTle.odbierz(zadaniaWTle.uruchom(sesja.login, idZadania, kopia, (cel) => wykonaj(cel, kopia)), res);
+      // Kopia z WLASNYM obiektem naglowkow (ARCH8-12): po wywolaniu dostawcy zadania.js
+      // usuwa z niej naglowki z kluczami i ciasteczka; oryginal zapytania zostaje nietkniety.
+      // Cialo idzie gotowe (cialoGotowe), bez drugiego czytania i drugiej kopii w pamieci.
+      const kopia = Object.assign(Readable.from([cialo]), {
+        headers: { ...req.headers }, method: req.method, url: req.url, socket: req.socket, cialoGotowe: cialo,
+      });
+      const wpis = zadaniaWTle.uruchom(sesja.login, idZadania, kopia, (cel) => wykonaj(cel, kopia));
+      if (wpis) return zadaniaWTle.odbierz(wpis, res);
+      // Budzet pamieci wynikow (CAI_ZADANIA_MB) zajety przez zadania w toku: zwykle wywolanie.
+      return wykonajTeraz(res, kopia);
     }
-    return wykonaj(res);
+    return wykonajTeraz(res, req);
   }
 
   // Aplikacja i pliki statyczne
-  if (sciezka === '/' || sciezka === '/index.html') {
-    const id = idKonta(sesja.login);
-    // Strona zawiera identyfikator konta - nie moze trafic do wspolnej pamieci podrecznej.
+  // ARCH8-24: identyfikator konta dla aplikacji osobnym, malym skryptem (przed pierwszym
+  // skryptem aplikacji), dzieki czemu strona aplikacji moze byc jedna dla wszystkich kont.
+  if (sciezka === '/konto.js' && (req.method === 'GET' || req.method === 'HEAD')) {
     res.setHeader('Cache-Control', 'private, no-store');
-    // HTML jest staly w obrebie procesu, rozni sie tylko identyfikatorem konta,
-    // wiec gotowa i spakowana wersje trzymamy per konto (pakowanie to ~30 ms).
-    let wpis = PAMIEC_STRONY.get(id);
+    return odpowiedzTekst(res, 200, `window.CAI_KONTO=${JSON.stringify(idKonta(sesja.login))};\n`, 'text/javascript; charset=utf-8');
+  }
+
+  if (sciezka === '/' || sciezka === '/index.html') {
+    const tresc = htmlAplikacji || wczytajAplikacje();
+    // Aplikacja, ktora bierze identyfikator z /konto.js, nie ma w HTML miejsca na konto:
+    // wtedy jedna wersja (i jedna spakowana) dla wszystkich kont zamiast do 200 kopii
+    // po ok. 1,9 MB. Starsza aplikacja (z miejscem na konto) dziala jak dotad.
+    const id = tresc.includes(PLACEHOLDER_KONTO) ? idKonta(sesja.login) : '';
+    // HTML jest staly w obrebie procesu, rozni sie najwyzej identyfikatorem konta,
+    // wiec gotowa i spakowana wersje trzymamy raz (albo per konto, pakowanie to ~30 ms).
+    let wpis = PAMIEC_STRONY.get(id || '*');
     if (!wpis) {
-      wpis = { dane: Buffer.from((htmlAplikacji || wczytajAplikacje()).split(PLACEHOLDER_KONTO).join(id), 'utf8'), spakowane: {} };
+      const dane = Buffer.from(id ? tresc.split(PLACEHOLDER_KONTO).join(id) : tresc, 'utf8');
+      wpis = { dane, spakowane: {}, etag: id ? null : '"' + crypto.createHash('sha256').update(dane).digest('base64url').slice(0, 27) + '"' };
       if (PAMIEC_STRONY.size >= 200) PAMIEC_STRONY.delete(PAMIEC_STRONY.keys().next().value);
-      PAMIEC_STRONY.set(id, wpis);
+      PAMIEC_STRONY.set(id || '*', wpis);
+    }
+    // Strona z identyfikatorem konta nie moze trafic do zadnej pamieci podrecznej. Wspolna
+    // wersja (KOD8-06) ma ETag: przegladarka pyta przy kazdym wejsciu i dostaje 304.
+    res.setHeader('Cache-Control', wpis.etag ? 'private, no-cache' : 'private, no-store');
+    if (wpis.etag) {
+      res.setHeader('ETag', wpis.etag);
+      const ifNone = String(req.headers['if-none-match'] || '');
+      if (ifNone && ifNone.split(',').map((t) => t.trim().replace(/^W\//, '')).includes(wpis.etag)) {
+        res.writeHead(304, { Vary: 'Accept-Encoding' });
+        return res.end();
+      }
     }
     const kod = wybierzKodowanie(req);
-    if (kod && !wpis.spakowane[kod]) wpis.spakowane[kod] = spakuj(wpis.dane, kod);
+    if (kod && !wpis.spakowane[kod]) {
+      try { await spakowanaWersja(wpis, kod); } catch (e) { console.error('[aplikacja] pakowanie:', e.message); }
+    }
     return wyslij(res, 200, { 'Content-Type': html }, wpis.dane, wpis.spakowane);
   }
 
@@ -1851,9 +2706,17 @@ function plikStatyczny(req, res, sciezka) {
     res.writeHead(304, { ETag: wpis.etag, 'Cache-Control': naglowki['Cache-Control'], Vary: 'Accept-Encoding' });
     return res.end();
   }
-  // Wersje spakowane liczymy raz, z najwyzsza jakoscia brotli - plik sie nie zmienia.
+  // Wersje spakowane liczymy raz, z najwyzsza jakoscia brotli - plik sie nie zmienia. Liczymy
+  // je w puli watkow, a do czasu najlepszej wersji klient dostaje szybka (spakowanaWersja).
   const kod = TYPY_DO_KOMPRESJI.test(naglowki['Content-Type']) && wpis.dane.length > 1024 ? wybierzKodowanie(req) : null;
-  if (kod && !wpis.spakowane[kod]) wpis.spakowane[kod] = spakuj(wpis.dane, kod, 11);
+  if (kod && !wpis.spakowane[kod]) {
+    return spakowanaWersja(wpis, kod, 11).then(
+      (cialo) => wyslij(res, 200, naglowki, wpis.dane, { [kod]: cialo }),
+      (e) => {
+        console.error('[pliki] pakowanie:', e.message);
+        return wyslijCialo(res, 200, { ...naglowki, Vary: 'Accept-Encoding' }, wpis.dane, req.method === 'HEAD');
+      });
+  }
   return wyslij(res, 200, naglowki, wpis.dane, wpis.spakowane);
 }
 
@@ -1879,11 +2742,66 @@ function odpowiedzNaBlad(req, res, e, nazwa) {
   else res.end();
 }
 
+/**
+ * Otwiera baze (KONF.sqlite) i, gdy lezy jeszcze plik kont R8, migruje go
+ * (serwer/migracja.js: jedna transakcja, pliki JSON nietkniete przy awarii,
+ * kopia w dane/przed-migracja-<czas>/). Idempotentne: druga proba niczego nie
+ * robi. Blad (uszkodzony plik, baza niedostepna) leci dalej: start() konczy proces,
+ * a pliki R8 zostaja na miejscu.
+ */
+function przygotujMagazyn({ loguj = (t) => console.log(t) } = {}) {
+  magazyn.otworz({ plik: KONF.sqlite, timeoutMs: 2000 });
+  const zrodla = zrodlaMigracji();
+  if (fs.existsSync(PLIK_UZYTKOWNIKOW)) {
+    for (const p of zrodla.pominiete) {
+      loguj(`[magazyn] migracja: pomijam ${p} (poza katalogiem pliku kont i bez jawnej zmiennej CAI_UZYCIE/CAI_WYLOGOWANE)`);
+    }
+  }
+  return migracja.migrujZJson({ ...zrodla, loguj });
+}
+
+/**
+ * Pliki R8 do migracji (serwer i `uzytkownicy.js migruj`): liczniki i wylogowania tylko
+ * wskazane zmienna albo lezace obok pliku kont (migracja.zrodlaR8).
+ */
+function zrodlaMigracji() {
+  return migracja.zrodlaR8({
+    plikKont: PLIK_UZYTKOWNIKOW, katalogUzycia: KONF.katalogUzycia, plikWylogowanych: PLIK_WYLOGOWANYCH,
+    jawneUzycie: Boolean(process.env.CAI_UZYCIE), jawneWylogowane: Boolean(process.env.CAI_WYLOGOWANE),
+  });
+}
+
 /** Serwer aplikacji bez nasluchu - start() go uruchamia, testy stawiaja na porcie 0. */
 function utworzSerwer() {
+  // Testy tworza serwer bez start(): baza (i migracja plikow testu) tutaj.
+  if (magazyn.sciezkaBazy() !== path.resolve(KONF.sqlite)) przygotujMagazyn();
   return http.createServer((req, res) => {
+    // Zapytania w toku (lagodne zatrzymanie czeka, az skoncza sie wszystkie, KOD8-07).
+    ZATRZYMANIE.aktywne += 1;
+    res.once('close', () => { ZATRZYMANIE.aktywne -= 1; });
+    if (ZATRZYMANIE.trwa) res.setHeader('Connection', 'close');
     obsluz(req, res).catch((e) => odpowiedzNaBlad(req, res, e, 'serwer'));
   });
+}
+
+/** Kopia bazy co godzine (48 ostatnich, ARCH8-02) i sprzatanie dobowe; zegary nie trzymaja procesu. */
+function uruchomZegaryMagazynu() {
+  const kopia = () => magazyn.kopiaOkresowa({ katalog: KONF.kopie, zostaw: 48 })
+    .catch((e) => console.error('[magazyn] kopia:', e.message));
+  const sprzataj = () => {
+    try {
+      const w = magazyn.sprzataj();
+      if (w.sesje || w.tokeny || w.zdarzenia || w.liczniki) {
+        console.log(`[magazyn] sprzatanie: sesje ${w.sesje}, tokeny ${w.tokeny}, zdarzenia ${w.zdarzenia}, liczniki ${w.liczniki}`);
+      }
+    } catch (e) {
+      console.error('[magazyn] sprzatanie:', e.message);
+    }
+  };
+  setTimeout(kopia, 60_000).unref();
+  setInterval(kopia, 3600_000).unref();
+  sprzataj();
+  setInterval(sprzataj, 24 * 3600_000).unref();
 }
 
 function start() {
@@ -1896,17 +2814,21 @@ function start() {
     process.exit(1);
   }
 
-  let uzytkownicy;
+  let kont = 0;
   try {
-    uzytkownicy = wczytajUzytkownikow();
+    przygotujMagazyn();
+    kont = magazyn.liczbaKont();
   } catch (e) {
     console.error('BLAD:', e.message);
+    if (!(e instanceof pliki.BladDanych)) console.error(e.stack);
     process.exit(1);
   }
-  if (uzytkownicy.length === 0) {
-    console.error('BLAD: brak kont. Zaloz pierwsze: node serwer/uzytkownicy.js dodaj <login> admin');
+  if (kont === 0) {
+    console.error('BLAD: brak kont. Zaloz pierwsze: sudo serwer/cli.sh dodaj <login> admin '
+      + '(albo node serwer/uzytkownicy.js dodaj <login> admin jako konto uslugi)');
     process.exit(1);
   }
+  zglosKonfiguracje();
 
   if (KONF.dostawca === 'nvidia' && !KONF.klucze.nvidia) {
     console.warn('UWAGA: CAI_DOSTAWCA=nvidia, ale brak NVIDIA_KEY - generowanie tresci nie zadziala.');
@@ -1918,15 +2840,41 @@ function start() {
   // Prosby o dostep (dane osobowe) trzymamy najwyzej CAI_PROSBY_DNI dni.
   try { prosby.sprzataj(); } catch (e) { console.error('[prosby] sprzatanie:', e.message); }
 
-  utworzSerwer().listen(KONF.port, KONF.host, () => {
-    console.log(`Content AI: http://${KONF.host}:${KONF.port}`);
+  uruchomZegaryMagazynu();
+  // Moduly rundy 9: zegary (uzgadnianie platnosci, sprzatanie kont), kontrole przy starcie.
+  const kontekstSerwera = { ...POMOCNICY, KONF };
+  for (const [nazwa, modul] of Object.entries({ konta, klucze, poczta, platnosci })) {
+    try {
+      if (typeof modul.inicjuj === 'function') modul.inicjuj(kontekstSerwera);
+    } catch (e) {
+      console.error(`[${nazwa}] inicjalizacja:`, e.message);
+    }
+  }
+
+  const serwer = utworzSerwer();
+  serwer.listen(KONF.port, KONF.host, () => {
+    // Port z gniazda (CAI_PORT=0 w testach to port wybrany przez system).
+    console.log(`Content AI: http://${KONF.host}:${serwer.address().port}`);
     console.log(`  dostawca tresci: ${KONF.dostawca}${KONF.dostawca === 'nvidia' ? ' (' + KONF.modelNvidia + ')' : ''}`);
     if (KONF.modelGrafiki) console.log(`  model grafik: ${KONF.modelGrafiki} (CAI_MODEL_GRAFIKI)`);
-    console.log(`  kont: ${uzytkownicy.length}, cookie Secure: ${KONF.cookieSecure ? 'tak' : 'NIE (tylko do testow lokalnych)'}`);
+    console.log(`  kont: ${kont}, baza: ${KONF.sqlite}, cookie Secure: ${KONF.cookieSecure ? 'tak' : 'NIE (tylko do testow lokalnych)'}`);
+    console.log(`  rejestracja: ${funkcjaWlaczona('rejestracja') ? 'otwarta' : 'zamknieta'}, platnosci: ${funkcjaWlaczona('platnosci') ? `${KONF.platnosci.dostawca} (${KONF.platnosci.tryb})` : 'wylaczone'}, poczta: ${KONF.poczta.tryb}`);
     console.log(`  modele: ${[...DOZWOLONE.modele].join(', ')}; max_tokens <= ${KONF.maxTokens}; kompresja: ${KONF.kompresja ? 'tak' : 'nie'}`);
   });
 
-  if (KONF.openseo.portNasluchu) startOpenSeo();
+  const brama = KONF.openseo.portNasluchu ? startOpenSeo() : null;
+
+  // KOD8-07: wdrozenie (SIGTERM) konczy prace w toku zamiast ucinac generowanie w pol.
+  const zatrzymaj = (sygnal) => {
+    if (ZATRZYMANIE.trwa) {
+      console.log(`[serwer] ${sygnal} w trakcie zatrzymania: koniec od razu`);
+      process.exit(0);
+    }
+    console.log(`[serwer] ${sygnal}`);
+    lagodneZatrzymanie([serwer, brama].filter(Boolean)).then((kod) => process.exit(kod));
+  };
+  process.on('SIGTERM', () => zatrzymaj('SIGTERM'));
+  process.on('SIGINT', () => zatrzymaj('SIGINT'));
 }
 
 /** Brama przed OpenSEO - wydzielona, zeby testy mogly ja postawic na porcie 0. */
@@ -1939,7 +2887,10 @@ function utworzBrameOpenSeo() {
     // Brama sprawdza pakiet: OpenSEO w kontenerze nie ma wlasnego logowania,
     // wiec bez tego kazde konto (takze darmowe) mialo pelne OpenSEO.
     kontoSesji,
-    maDostepDoOpenSeo: (konto) => konto.rola === 'admin' || plany.maFunkcje(konto, 'openseo'),
+    // Dzierzawy (ARCH8-09, SEC8-52): jeden kontener i jeden projekt zespolu, wiec tylko
+    // organizacja glowna - operator albo konto glownej z OpenSEO w pakiecie.
+    maDostepDoOpenSeo: (konto) => dzierzawy.operator(konto)
+      || (dzierzawy.idOrganizacji(konto) === dzierzawy.GLOWNA && plany.maFunkcje(konto, 'openseo')),
     stronaBezPakietu: (req) => logowanie.stronaOpenSeoBezPakietu(jezykZadania(req)),
     // Strony samej bramy (logowanie, 402, blad) - ten sam zestaw co aplikacja.
     naglowkiBezpieczenstwa: NAGLOWKI_BEZPIECZENSTWA,
@@ -1964,7 +2915,7 @@ function utworzBrameOpenSeo() {
  * (seo.twojadomena.pl) i wlasny korzen; szczegoly i uzasadnienie w openseo.js.
  */
 function startOpenSeo() {
-  utworzBrameOpenSeo().listen(KONF.openseo.portNasluchu, KONF.host, () => {
+  return utworzBrameOpenSeo().listen(KONF.openseo.portNasluchu, KONF.host, () => {
     console.log(`OpenSEO za logowaniem: http://${KONF.host}:${KONF.openseo.portNasluchu}`);
     console.log(`  kontener: http://${KONF.openseo.host}:${KONF.openseo.port}`);
     if (!KONF.cookieDomena) {
@@ -1977,12 +2928,14 @@ if (require.main === module) start();
 
 module.exports = {
   wolnoWyjsc,
-  zahaszuj, hasloPasuje, anthropicNaOpenai, openaiNaAnthropic, ROLE,
-  PLIK_UZYTKOWNIKOW, wczytajUzytkownikow, zapiszUzytkownikow, poprawnyLogin, WZOR_LOGINU,
+  zahaszuj, hasloPasuje, zahaszujAsync, hasloPasujeAsync, anthropicNaOpenai, openaiNaAnthropic, ROLE,
+  PLIK_UZYTKOWNIKOW, PLIK_BAZY, poprawnyLogin, WZOR_LOGINU,
   // Sesje - wystawione do testow; produkcyjnie wola je tylko router.
-  utworzSesje, sesjaZadania, zapiszWylogowanie, wylogowane, PLIK_WYLOGOWANYCH,
-  czynnosciTresci, parsujCiasteczka, adresIp, obcePochodzenie, jezykZadania,
+  utworzSesje, sesjaZadania, zapiszWylogowanie, wylogowane, PLIK_WYLOGOWANYCH, zrodlaMigracji, ciasteczkoSesji, ciasteczkoWylogowania,
+  czynnosciTresci, parsujCiasteczka, adresIp, obcePochodzenie, jezykZadania, podpisz, skrotEmaila,
   wyzerujOstrzezenieIp: () => { ostatnieOstrzezenieIp = 0; },
+  // Baza i konfiguracja (CLI, testy): otwarcie z migracja, kontrola konfiguracji.
+  przygotujMagazyn, sprawdzKonfiguracje, funkcjaWlaczona, stanKonfiguracji, kontekstZadania,
   // Serwer do testow integracyjnych (port 0, bez start()).
-  utworzSerwer, utworzBrameOpenSeo, wczytajAplikacje, KONF, DOZWOLONE, CSP,
+  utworzSerwer, utworzBrameOpenSeo, wczytajAplikacje, ustawHtmlAplikacji, KONF, DOZWOLONE, CSP,
 };

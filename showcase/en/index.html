@@ -32,10 +32,10 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/fonty/literata-latin-pl.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonty/schibsted-grotesk-latin-pl.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/zasoby/strona.css?v=5c27e08805">
+<link rel="stylesheet" href="/zasoby/strona.css?v=4a0c47ebf0">
 
 <script src="/zasoby/motyw.js?v=5fcd5d4153"></script>
-<script src="/zasoby/strona.js?v=0c555d47e7" defer></script>
+<script src="/zasoby/strona.js?v=43f0c7c7b1" defer></script>
 
 <script type="application/ld+json">
 {
@@ -45,8 +45,10 @@
    "@type": "Organization",
    "@id": "https://content-ai.net/#organizacja",
    "name": "Content AI",
+   "alternateName": "content-ai.net",
    "url": "https://content-ai.net/",
-   "logo": "https://content-ai.net/obrazy/icon-512.png"
+   "logo": "https://content-ai.net/obrazy/icon-512.png",
+   "email": "kontakt@content-ai.net"
   },
   {
    "@type": "SoftwareApplication",
@@ -59,7 +61,44 @@
    "description": "Content AI writes articles from your knowledge base, scores them for SEO, AIO, AEO and GEO, checks facts and links, and publishes to WordPress or Drupal.",
    "publisher": {
     "@id": "https://content-ai.net/#organizacja"
-   }
+   },
+   "offers": [
+    {
+     "@type": "Offer",
+     "name": "Free",
+     "price": "0",
+     "priceCurrency": "EUR",
+     "url": "https://content-ai.net/en/#cennik"
+    },
+    {
+     "@type": "Offer",
+     "name": "Standard",
+     "price": "19",
+     "priceCurrency": "EUR",
+     "url": "https://content-ai.net/en/#cennik",
+     "priceSpecification": {
+      "@type": "UnitPriceSpecification",
+      "price": "19",
+      "priceCurrency": "EUR",
+      "billingDuration": "P1M",
+      "unitCode": "MON"
+     }
+    },
+    {
+     "@type": "Offer",
+     "name": "Premium",
+     "price": "49",
+     "priceCurrency": "EUR",
+     "url": "https://content-ai.net/en/#cennik",
+     "priceSpecification": {
+      "@type": "UnitPriceSpecification",
+      "price": "49",
+      "priceCurrency": "EUR",
+      "billingDuration": "P1M",
+      "unitCode": "MON"
+     }
+    }
+   ]
   },
   {
    "@type": "FAQPage",
@@ -72,6 +111,30 @@
      "acceptedAnswer": {
       "@type": "Answer",
       "text": "A chat answers from the model's memory. Content AI writes from your knowledge base, goes to the web only for missing information and cites it, then scores the draft for SEO, AIO, AEO and GEO and checks the facts. All in one workspace, from topic to publication."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What do I need to get started?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "A Content AI account (email and password) and an Anthropic API key, which powers your drafts. You need the key on every plan, including Free. OpenAI keys (images, voice-over, transcription) and ElevenLabs keys (better voice-over) are optional. The Free plan gives you 3 articles to start, no card needed."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How do I get an API key, and what does the model cost?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "In the Anthropic console you create an account, add credit and create a key; it takes about 10 minutes. You pay the provider for the model on your own account, roughly $0.25-0.50 for an article of about 800 words with scores and a fact check. A step-by-step guide and the calculation are on the “How to get an API key” page."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Where does my API key go?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Only your browser keeps it, in an encrypted cookie bound to your account; no other account can read it. With “Remember on this device” the key stays for 30 days, also after you sign out; without it, until you close the browser. It is removed by the “Remove key” button, signing out on all devices, changing or resetting your password and deleting your account. With each request the Content AI server passes the key to the AI provider and does not save it to disk or to logs."
      }
     },
     {
@@ -92,18 +155,34 @@
     },
     {
      "@type": "Question",
-     "name": "Which AI models does Content AI use?",
+     "name": "How do I pay for a plan?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Drafts are written by Anthropic's Claude. The server can switch to open-source models through NVIDIA NIM with no change to the app. Images, voice-over and transcription use OpenAI, with an optional ElevenLabs voice."
+      "text": "You pay for paid plans through Stripe, monthly in advance, in euros or Polish złoty: you choose the currency in the purchase window. You enter your card details on Stripe's page, and Content AI never sees them. Paid plans are available to customers with a billing address in the European Union. After each payment Stripe emails you a confirmation."
      }
     },
     {
      "@type": "Question",
-     "name": "Can I use my own API key?",
+     "name": "What document do I get after paying?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Yes, on the Standard and Premium plans, for Anthropic, OpenAI and ElevenLabs. Model costs then go to your own provider account. The key is saved only in your browser; the server passes it to the provider with each request and stores nothing. Plan limits still apply."
+      "text": "After each payment Stripe emails you a payment confirmation. We issue a receipt on request: write to kontakt@content-ai.net within 3 months of the end of the month in which you paid, giving the payment date. Prices on the site are final prices."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How do I change or cancel my plan?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "In the account settings of the app you open the Stripe billing portal: there you can change your plan or card and cancel your subscription. After cancelling, your plan stays active until the end of the paid month, then your account moves to the Free plan, and your text history and documents stay. Within 14 days of purchase you can also withdraw from the contract: see the withdrawal information."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How does Content AI handle the EU AI Act?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Content AI supports the transparency requirements of the AI Act (Article 50): downloaded and published files carry a note that the content was created with AI, and you can add a visible label for readers when exporting and publishing. The publisher is responsible for the publication: realistic images and recordings, and texts informing the public on matters of public interest without editorial review, must be labelled. Details are on the “AI Act and transparency” page."
      }
     },
     {
@@ -111,7 +190,15 @@
      "name": "Where do my documents go?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Knowledge base documents live on the Content AI server: private ones are visible only to their owner, shared ones to the whole team. When generating, the model provider receives only the passages from them that match the topic. Text history stays in your browser."
+      "text": "Knowledge base documents are stored on the Content AI server and only your account can see them. When writing, the model provider receives only the passages that match the topic. Finished texts and their history stay in your browser."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Which AI models does Content AI use?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Drafts, scores and the fact check come from Anthropic models. Images, voice-over and transcription use OpenAI models, and the better voice-over uses ElevenLabs. Each provider bills usage to your own API key."
      }
     },
     {
@@ -119,7 +206,15 @@
      "name": "Where does the SERP data come from?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "It depends on the server setup: either a web search run by the model (an estimate) or the DataForSEO API (measured organic results). SERP analysis is available from the Standard plan up."
+      "text": "The Google results analysis is run by the model with web search, on your API key. It is an estimate of the results, not a ranking measurement. SERP analysis is available from the Standard plan up."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "My account was created by an administrator. What changes?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "You sign in as before, and your plan, limits and documents stay. Your drafts still run on the server keys, so you do not need your own key or a paid plan. You can still enter your own key if you prefer to pay for the model on your own account."
      }
     },
     {
@@ -128,14 +223,6 @@
      "acceptedAnswer": {
       "@type": "Answer",
       "text": "The interface is in Polish and English. Content can be written in Polish, English, German and Czech."
-     }
-    },
-    {
-     "@type": "Question",
-     "name": "How do I get an account?",
-     "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "Through the “Request access” form on this page. An administrator creates the account, and new accounts start on the Free plan: 3 articles to try it out."
      }
     }
    ]
@@ -156,7 +243,9 @@
 <symbol id="i-bot" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 8V4H8" /> <rect vector-effect="non-scaling-stroke" width="16" height="12" x="4" y="8" rx="2" /> <path vector-effect="non-scaling-stroke" d="M2 14h2" /> <path vector-effect="non-scaling-stroke" d="M20 14h2" /> <path vector-effect="non-scaling-stroke" d="M15 13v2" /> <path vector-effect="non-scaling-stroke" d="M9 13v2" /></symbol>
 <symbol id="i-chart-column" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 3v16a2 2 0 0 0 2 2h16" /> <path vector-effect="non-scaling-stroke" d="M18 17V9" /> <path vector-effect="non-scaling-stroke" d="M13 17V5" /> <path vector-effect="non-scaling-stroke" d="M8 17v-3" /></symbol>
 <symbol id="i-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 6 9 17l-5-5" /></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m6 9 6 6 6-6" /></symbol>
 <symbol id="i-circle-check" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="10" /> <path vector-effect="non-scaling-stroke" d="m16 9-5.5 5.5L8 12" /></symbol>
+<symbol id="i-credit-card" viewBox="0 0 24 24"><rect vector-effect="non-scaling-stroke" width="20" height="14" x="2" y="5" rx="2" /> <path vector-effect="non-scaling-stroke" d="M2 10h20" /></symbol>
 <symbol id="i-file-down" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M12 18v-6" /> <path vector-effect="non-scaling-stroke" d="m9 15 3 3 3-3" /></symbol>
 <symbol id="i-file-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <circle vector-effect="non-scaling-stroke" cx="11.5" cy="14.5" r="2.5" /> <path vector-effect="non-scaling-stroke" d="M13.3 16.3 15 18" /></symbol>
 <symbol id="i-file-text" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path vector-effect="non-scaling-stroke" d="M14 2v5a1 1 0 0 0 1 1h5" /> <path vector-effect="non-scaling-stroke" d="M10 9H8" /> <path vector-effect="non-scaling-stroke" d="M16 13H8" /> <path vector-effect="non-scaling-stroke" d="M16 17H8" /></symbol>
@@ -183,7 +272,6 @@
 <symbol id="i-play" viewBox="0 0 24 24"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /> <path vector-effect="non-scaling-stroke" d="M12 5v14" /></symbol>
 <symbol id="i-refresh-cw" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path vector-effect="non-scaling-stroke" d="M21 3v5h-5" /> <path vector-effect="non-scaling-stroke" d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path vector-effect="non-scaling-stroke" d="M8 16H3v5" /></symbol>
-<symbol id="i-scan-search" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M3 7V5a2 2 0 0 1 2-2h2" /> <path vector-effect="non-scaling-stroke" d="M17 3h2a2 2 0 0 1 2 2v2" /> <path vector-effect="non-scaling-stroke" d="M21 17v2a2 2 0 0 1-2 2h-2" /> <path vector-effect="non-scaling-stroke" d="M7 21H5a2 2 0 0 1-2-2v-2" /> <circle vector-effect="non-scaling-stroke" cx="12" cy="12" r="3" /> <path vector-effect="non-scaling-stroke" d="m16 16-1.9-1.9" /></symbol>
 <symbol id="i-server" viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></symbol>
 <symbol id="i-share-2" viewBox="0 0 24 24"><circle vector-effect="non-scaling-stroke" cx="18" cy="5" r="3" /> <circle vector-effect="non-scaling-stroke" cx="6" cy="12" r="3" /> <circle vector-effect="non-scaling-stroke" cx="18" cy="19" r="3" /> <line vector-effect="non-scaling-stroke" x1="8.59" x2="15.42" y1="13.51" y2="17.49" /> <line vector-effect="non-scaling-stroke" x1="15.41" x2="8.59" y1="6.51" y2="10.49" /></symbol>
 <symbol id="i-shield-check" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /> <path vector-effect="non-scaling-stroke" d="m9 12 2 2 4-4" /></symbol>
@@ -191,7 +279,6 @@
 <symbol id="i-trending-up" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 7h6v6" /> <path vector-effect="non-scaling-stroke" d="m22 7-8.5 8.5-5-5L2 17" /></symbol>
 <symbol id="i-triangle-alert" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path vector-effect="non-scaling-stroke" d="M12 9v4" /> <path vector-effect="non-scaling-stroke" d="M12 17h.01" /></symbol>
 <symbol id="i-upload" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 3v12" /> <path vector-effect="non-scaling-stroke" d="m17 8-5-5-5 5" /> <path vector-effect="non-scaling-stroke" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></symbol>
-<symbol id="i-users" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path vector-effect="non-scaling-stroke" d="M16 3.128a4 4 0 0 1 0 7.744" /> <path vector-effect="non-scaling-stroke" d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle vector-effect="non-scaling-stroke" cx="9" cy="7" r="4" /></symbol>
 <symbol id="i-x" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M18 6 6 18" /> <path vector-effect="non-scaling-stroke" d="m6 6 12 12" /></symbol>
 </svg>
 
@@ -206,7 +293,7 @@
       <a href="/en/#funkcje">Features</a>
       <a href="/en/#niezawodnosc">Reliability</a>
       <a href="/en/#bezpieczenstwo">Security</a>
-      <a href="/en/#pakiety">Plans</a>
+      <a href="/en/#cennik">Pricing</a>
       <a href="/en/#faq">FAQ</a>
     </nav>
     <div class="nav-akcje">
@@ -218,7 +305,7 @@
         <svg class="ik ik-ksiezyc" aria-hidden="true" focusable="false"><use href="#i-moon"/></svg>
       </button>
       <a class="zaloguj" href="https://app.content-ai.net/?lang=en">Sign in</a>
-      <a class="btn btn-glowny nav-cta" href="/en/#dostep">Request access</a>
+      <a class="btn btn-glowny nav-cta" href="https://app.content-ai.net/rejestracja?lang=en">Create account</a>
       <a class="ikona-btn menu-btn" href="#stopka-spis" aria-label="Open menu" data-otworz="Open menu" data-zamknij="Close menu">
         <svg class="ik ik-menu" aria-hidden="true" focusable="false"><use href="#i-menu"/></svg>
         <svg class="ik ik-x" aria-hidden="true" focusable="false"><use href="#i-x"/></svg>
@@ -231,11 +318,11 @@
       <a href="/en/#funkcje">Features</a>
       <a href="/en/#niezawodnosc">Reliability</a>
       <a href="/en/#bezpieczenstwo">Security</a>
-      <a href="/en/#pakiety">Plans</a>
+      <a href="/en/#cennik">Pricing</a>
       <a href="/en/#faq">FAQ</a>
       <div class="menu-dol">
         <a href="/" hreflang="pl" lang="pl">Polski</a>
-        <a class="btn btn-glowny" href="/en/#dostep">Request access</a>
+        <a class="btn btn-glowny" href="https://app.content-ai.net/rejestracja?lang=en">Create account</a>
       </div>
     </nav>
   </div>
@@ -246,15 +333,15 @@
   <section class="hero" aria-labelledby="h1">
     <div class="kont hero-siatka">
       <div class="hero-tekst">
-        <p class="etyk">Content for SEO, AIO, AEO and GEO</p>
+        <p class="etyk">For marketing teams, SEO agencies and writers</p>
         <h1 id="h1">Content for Google and AI answers. <span class="zakr">Written from your sources.</span></h1>
-        <p class="lead">Content AI writes articles from your knowledge base and looks up anything the base is missing on the web, citing the page. Then it scores the draft for SEO, AIO, AEO and GEO, checks facts and links, and shows what to fix.</p>
+        <p class="lead">Content AI writes articles from your own documents, not from the model's memory. Whatever they lack, it looks up on the web and cites. Then it scores the draft for SEO, AIO, AEO and GEO, checks facts and links, and shows what to fix.</p>
         <div class="cta">
-          <a class="btn btn-glowny btn-duzy" href="#dostep">Request access<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
-          <a class="btn btn-drugi btn-duzy" href="#jak">See how it works</a>
+          <a class="btn btn-glowny btn-duzy" href="https://app.content-ai.net/rejestracja?lang=en">Create account<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn-drugi btn-duzy" href="#jak">See an example</a>
         </div>
         <p class="mala">Have an account? <a class="link" href="https://app.content-ai.net/?lang=en">Sign in</a></p>
-        <p class="mala mala-2">An administrator creates each account. New accounts start on the Free plan: 3 articles to try it out.</p>
+        <p class="mala mala-2">Free plan: 3 articles to start, no card needed. Your drafts run on your own Anthropic API key: you pay the model provider directly, roughly <span class="nw">$0.25-0.50</span> per article. <a class="link" href="/en/api-key/">How to get an API key</a></p>
       </div>
 
       <figure class="ramka" id="ramka" aria-labelledby="ramka-opis">
@@ -310,8 +397,8 @@
       <ul class="dowody" aria-label="Product facts">
         <li><b>4 scores</b><span>SEO, AIO, AEO and GEO for every draft</span></li>
         <li><b>Fact check</b><span>figures, claims and links against your sources</span></li>
-        
-        <li><b class="licz" data-cel="468">468</b><span>server tests on every code change</span></li>
+
+        <li><b class="licz" data-cel="962">962</b><span>server tests on every code change</span></li>
         <li><b>0</b><span>npm dependencies on the server</span></li>
         <li><b>PL · EN · DE · CS</b><span>content languages</span></li>
       </ul>
@@ -386,9 +473,9 @@
             <div class="ekran-pasek"><svg class="ik"><use href="#i-library"/></svg>Sources</div>
             <div class="ekran-tresc">
               <ul class="baza">
-                <li><svg class="ik"><use href="#i-file-text"/></svg><span>crm-offer.pdf</span><em>shared</em><i class="trafnosc"><b class="w92"></b></i></li>
-                <li><svg class="ik"><use href="#i-file-text"/></svg><span>customer-survey.xlsx</span><em>private</em><i class="trafnosc"><b class="w86"></b></i></li>
-                <li><svg class="ik"><use href="#i-file-text"/></svg><span>plan-pricing.pdf</span><em>shared</em><i class="trafnosc"><b class="w71"></b></i></li>
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>crm-offer.pdf</span><em>PDF</em><i class="trafnosc"><b class="w92"></b></i></li>
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>customer-survey.xlsx</span><em>XLSX</em><i class="trafnosc"><b class="w86"></b></i></li>
+                <li><svg class="ik"><use href="#i-file-text"/></svg><span>plan-pricing.pdf</span><em>PDF</em><i class="trafnosc"><b class="w71"></b></i></li>
                 <li class="baza-slaby"><svg class="ik"><use href="#i-globe"/></svg><span>example.com/crm</span><em>URL</em><i class="trafnosc"><b class="w24"></b></i></li>
               </ul>
               <p class="ekran-meta">passages that match the topic</p>
@@ -398,7 +485,7 @@
             <span class="krok-nr">2</span>
             <h3>Sources</h3>
             <p>PDF, DOCX, XLSX, PPTX, TXT and CSV files, web pages by address, notes and recordings to transcribe. From the server knowledge base, only passages that match the topic reach the draft.</p>
-            <p class="krok-cap">Private and shared knowledge base, on the server</p>
+            <p class="krok-cap">Knowledge base on the server, for your account only</p>
           </div>
         </li>
         <li class="krok" id="krok-3">
@@ -488,7 +575,7 @@
             <p><span class="z" data-z="aio aeo">A CRM is software that keeps customer contacts, conversation history and the stage of every sale in one place.</span> <span class="z" data-z="aio geo">In a survey of 120 customers, 7 in 10 businesses adopted one once offers started getting lost in the inbox.</span></p>
             <h4><span class="z" data-z="aeo seo">What does a CRM for 5 people cost?</span></h4>
             <p><span class="z" data-z="aeo">The Start plan covers up to 5 users and contact import from a CSV file.</span> <span class="z" data-z="geo">Three things matter when choosing: contact import, email integration and the price per user.</span></p>
-            <p class="k-opis-meta"><span class="z" data-z="seo">How to choose a CRM for a small business: contact import, email and price per user, based on the offer and a survey.</span> <span class="mono">meta, 121 chars</span></p>
+            <p class="k-opis-meta"><span class="z" data-z="seo">How to choose a CRM for a small business: contact import, email integration and the price per user, based on the offer and on a survey of 120 customers.</span> <span class="mono">meta, 152 chars</span></p>
           </article>
           <aside class="margines" aria-live="polite">
             <div class="pow-opis" data-dla="seo">
@@ -606,7 +693,7 @@
         <article class="kafel kb5 wej">
           <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-library"/></svg></span>
           <h3>Knowledge base</h3>
-          <p>Private, and shared with the team. Documents live on the server, so they are available on any device, and only matching passages reach the draft.</p>
+          <p>Your company documents live on the server, so they are available on any device, and only matching passages reach the draft.</p>
           <div class="podglad frag" aria-hidden="true">
             <div><span>crm-offer.pdf</span><i><b class="w92"></b></i><span class="mono">0,92</span></div>
             <div><span>customer-survey.xlsx</span><i><b class="w86"></b></i><span class="mono">0,86</span></div>
@@ -668,7 +755,7 @@
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Brand voice: paste 2-5 of your company texts and the model adopts their style</li>
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Self-review: the model scores the finished draft and revises it accordingly (takes 2-3 times longer)</li>
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Bulk generation: a list of topics, one per line</li>
-          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Export market pages: Germany, Czechia, Slovakia, the Netherlands and France</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Content types: article, blog post, FAQ page, landing page, product or service copy and press release</li>
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Brand visibility in AI answers: an on-demand snapshot</li>
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>llms.txt files, robots.txt rules for AI bots and UTM links</li>
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Dictation and read-aloud</li>
@@ -707,25 +794,25 @@
       <header class="sek-nag wej">
         <p class="etyk"><span class="etyk-nr">07</span>Security</p>
         <h2 id="h-sec">Keys and data under control.</h2>
-        <p class="sek-lead">Content AI holds API keys and company documents, so it keeps the places where something could go wrong to a minimum.</p>
+        <p class="sek-lead">Here is exactly what stays in your browser, what reaches the Content AI server and what goes to the AI provider.</p>
       </header>
       <div class="sec-siatka">
         <figure class="droga wej" aria-labelledby="droga-tytul">
           <figcaption id="droga-tytul" class="droga-tytul">How a request travels</figcaption>
           <ol class="droga-lista">
-            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-monitor"/></svg></span><b>Browser</b><span>sends the topic and settings, without the server key</span></li>
-            <li class="droga-srodek"><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-server"/></svg></span><b>Content AI server</b><span>checks the session and plan limit, adds the key</span><span class="droga-klucz"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg></span></li>
-            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-bot"/></svg></span><b>AI provider</b><span>receives the topic and matching passages</span></li>
+            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-monitor"/></svg></span><b>Browser</b><span>sends the topic, settings and matching knowledge base passages, plus your API key in an encrypted cookie</span></li>
+            <li class="droga-srodek"><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-server"/></svg></span><b>Content AI server</b><span>checks the session and plan limit, decrypts the key for the duration of the request and forwards it</span><span class="droga-klucz"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg></span></li>
+            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-bot"/></svg></span><b>AI provider</b><span>answers the request and bills it to your account</span></li>
           </ol>
-          <p class="droga-nota"><svg class="znacznik ik" aria-hidden="true"><use href="#i-info"/></svg>Your own key passes through the server with each request and is never stored.</p>
+          <p class="droga-nota"><svg class="znacznik ik" aria-hidden="true"><use href="#i-info"/></svg>The server does not save your key: it decrypts it only for the duration of the request.</p>
         </figure>
         <ul class="sec-lista">
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg><h3>Server keys stay on the server</h3><p>The browser never receives them: the app sends each request to the server, and only the server talks to the AI provider.</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-lock"/></svg><h3>Your own key, never stored on the server</h3><p>On the Standard and Premium plans you can use your own key. It is saved only in your browser; the server passes it to the provider with each request and stores nothing.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg><h3>Only your browser keeps your API key</h3><p>You save the key in the app, and your browser keeps it in an encrypted cookie that no script on the page and no other account can read. With each request it travels over an encrypted connection to the Content AI server, which passes it to the AI provider. The server does not save the key to disk or to logs and does not use it for anything else.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-chart-column"/></svg><h3>Model costs on your own account</h3><p>Every model request is billed to your account with the provider, not ours. You set a spend limit in the provider console and can see the estimated cost of each draft in the app.</p></li>
           <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-shield-check"/></svg><h3>Passwords and sessions</h3><p>Passwords are hashed with scrypt and a random salt. After 8 failed attempts from one address, sign-in is blocked for 15 minutes. The session lives in a signed HttpOnly cookie.</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-users"/></svg><h3>Document access</h3><p>A private base is visible only to its owner, the shared one to the whole team. Only an administrator adds to the shared base.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-lock"/></svg><h3>Only your account sees your documents</h3><p>Your knowledge base documents are stored on the Content AI server and only your account can see them. When writing, the model provider receives only the passages that match the topic.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-credit-card"/></svg><h3>Payments through Stripe</h3><p>You enter your card details on Stripe's page. Content AI never sees or stores them; from Stripe it receives only the payment status and the details needed to account for it.</p></li>
           <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-package"/></svg><h3>Nothing from third-party servers</h3><p>The app loads no scripts or fonts from outside: libraries and typefaces come from the same server. The server has zero npm dependencies.</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-scan-search"/></svg><h3>Safe page fetching</h3><p>An address added to the knowledge base is checked at every redirect, so the server never queries an internal network.</p></li>
         </ul>
       </div>
     </div>
@@ -738,55 +825,89 @@
         <h2 id="h-who">For teams that write a lot and cannot afford mistakes.</h2>
       </header>
       <ul class="kto">
-        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-megaphone"/></svg><h3>Marketing teams</h3><p>A shared knowledge base, one brand configuration for everyone and separate accounts. A new team member writes by the same rules from day one.</p></li>
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-megaphone"/></svg><h3>Marketing teams</h3><p>A knowledge base with your company documents, brand voice and brand rules in one place. Every draft follows the same rules.</p></li>
         <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-trending-up"/></svg><h3>SEO agencies</h3><p>SERP analysis, gaps, scores for four surfaces and bulk generation. Finished drafts go straight to WordPress or Drupal.</p></li>
         <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-notebook-pen"/></svg><h3>Writers and editors</h3><p>Dictation, a fact check that quotes the fragment, and versions before and after self-review. Copy ready to publish, not to rewrite.</p></li>
-        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-languages"/></svg><h3>Companies selling abroad</h3><p>Content in Polish, English, German and Czech, plus market pages for five export destinations.</p></li>
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-languages"/></svg><h3>Companies selling abroad</h3><p>Content in Polish, English, German and Czech from the same knowledge base, written directly in the chosen language.</p></li>
       </ul>
     </div>
   </section>
 
-  <section class="sekcja" id="pakiety" aria-labelledby="h-plan">
+  <section class="sekcja" id="cennik" aria-labelledby="h-plan">
+    <span class="kotwica" id="pakiety"></span>
     <div class="kont">
       <header class="sek-nag wej">
-        <p class="etyk"><span class="etyk-nr">09</span>Plans</p>
-        <h2 id="h-plan">Three plans. Usage is always visible in the app.</h2>
+        <p class="etyk"><span class="etyk-nr">09</span>Pricing</p>
+        <h2 id="h-plan">You pay us for the tool and the provider for the model.</h2>
+        <p class="sek-lead">Every plan runs on your own Anthropic API key, so model usage is billed to your account with the provider. Your plan sets how many articles, images and recordings you can produce and which features you get.</p>
       </header>
       <div class="pakiety">
         <article class="pakiet wej" aria-labelledby="pk-free">
           <h3 id="pk-free">Free</h3>
-          <p class="pakiet-opis">To try it out.</p>
+          <p class="pakiet-cena"><b>€0</b> <span>no card needed</span></p>
+          <p class="pakiet-opis">To try it out, on your own API key.</p>
           <ul>
-            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>3 articles, no renewal</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>3 articles to start, no renewal</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>up to 3 documents in the knowledge base</li>
-            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>scores, fact check, repurposing and file export</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>SEO, AIO, AEO and GEO scores, fact check, repurposing and file export</li>
           </ul>
-          <a class="btn btn-drugi" href="#dostep" data-pakiet="darmowy" aria-label="Request access: plan Free">Request access</a>
+          <a class="btn btn-drugi" href="https://app.content-ai.net/rejestracja?lang=en">Start for free</a>
         </article>
         <article class="pakiet pakiet-wyroz wej" aria-labelledby="pk-std">
           <h3 id="pk-std">Standard</h3>
+          <p class="pakiet-cena"><b>€19</b> <span>per month</span></p>
           <p class="pakiet-opis">For regular content work.</p>
           <ul>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>50 articles a month</li>
-            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>50 images, 20 audio pieces and 20 transcriptions a month</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>50 images, 20 transcriptions and 20 audio segments a month (a segment is up to 2,400 characters of narrated text or one podcast turn)</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>up to 50 documents in the knowledge base</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>SERP analysis and gaps</li>
-            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>your own API key and CMS publishing</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>publishing to WordPress and Drupal</li>
           </ul>
-          <a class="btn btn-glowny" href="#dostep" data-pakiet="standard" aria-label="Request access: plan Standard">Request access</a>
+          <a class="btn btn-glowny" href="https://app.content-ai.net/rejestracja?pakiet=standard&amp;lang=en">Choose Standard</a>
         </article>
         <article class="pakiet wej" aria-labelledby="pk-pro">
           <h3 id="pk-pro">Premium</h3>
+          <p class="pakiet-cena"><b>€49</b> <span>per month</span></p>
           <p class="pakiet-opis">Everything, with no per-item limits.</p>
           <ul>
-            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>unlimited articles, images, audio and documents</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>unlimited articles, images, audio and transcriptions</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>unlimited documents in the knowledge base</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>everything in Standard</li>
-            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>OpenSEO data: keywords and rankings</li>
           </ul>
-          <a class="btn btn-drugi" href="#dostep" data-pakiet="premium" aria-label="Request access: plan Premium">Request access</a>
+          <a class="btn btn-drugi" href="https://app.content-ai.net/rejestracja?pakiet=premium&amp;lang=en">Choose Premium</a>
         </article>
       </div>
-      <p class="pakiety-nota wej">Plans are assigned by an administrator. Monthly counters reset on the first day of the month. Each plan also has a ceiling on model calls (30 to start, 750 a month, unlimited), because one article takes several calls. Limits also apply with your own key.</p>
+      <div class="pakiety-noty wej">
+        <p class="pakiety-nota">Every plan requires your own Anthropic API key. You pay the model provider for usage on your own account, roughly <span class="nw">$0.25-0.50</span> per article. You pay for a paid plan monthly in advance through Stripe and can change or cancel it in account settings. After cancelling, your plan stays active until the end of the paid month. The prices shown are final prices.</p>
+        <p class="pakiety-nota pakiety-nota-2">In the purchase window you can pay in euros or in Polish złoty: Standard PLN 79, Premium PLN 199 a month. Monthly counters reset on the first day of the month, and the Free and Standard plans also have a ceiling on model calls to prevent abuse. After each payment Stripe emails you a confirmation, and we issue a receipt on request.</p>
+        <p class="pakiety-nota pakiety-nota-2">Payment, cancellation and withdrawal rules are in the <a class="link" href="https://app.content-ai.net/dokumenty/regulamin?lang=en">Terms of Service</a> and the <a class="link" href="https://app.content-ai.net/dokumenty/odstapienie?lang=en">information on the right of withdrawal</a>.</p>
+        <p class="pakiety-klucz"><a class="link kafel-link" href="/en/api-key/">How to get an API key and what an article costs<svg class="ik" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></p>
+      </div>
+
+      <details class="porownanie wej" open>
+        <summary>Compare plans<svg class="ik" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+        <table class="cennik-tabela">
+          <caption class="sr">Plan comparison</caption>
+          <thead><tr><th scope="col">What's included</th><th scope="col">Free</th><th scope="col">Standard</th><th scope="col">Premium</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Price</th><td data-et="Free">€0</td><td data-et="Standard">€19 a month</td><td data-et="Premium">€49 a month</td></tr>
+            <tr><th scope="row">Articles</th><td data-et="Free">3 to start</td><td data-et="Standard">50 a month</td><td data-et="Premium">unlimited</td></tr>
+            <tr><th scope="row">Images</th><td data-et="Free">no</td><td data-et="Standard">50 a month</td><td data-et="Premium">unlimited</td></tr>
+            <tr><th scope="row">Audio segments</th><td data-et="Free">no</td><td data-et="Standard">20 a month</td><td data-et="Premium">unlimited</td></tr>
+            <tr><th scope="row">Transcriptions</th><td data-et="Free">no</td><td data-et="Standard">20 a month</td><td data-et="Premium">unlimited</td></tr>
+            <tr><th scope="row">Documents in the knowledge base</th><td data-et="Free">up to 3</td><td data-et="Standard">up to 50</td><td data-et="Premium">unlimited</td></tr>
+            <tr><th scope="row">SEO, AIO, AEO and GEO scores, fact check</th><td data-et="Free">yes</td><td data-et="Standard">yes</td><td data-et="Premium">yes</td></tr>
+            <tr><th scope="row">Repurposing and export: DOCX, PDF, TXT, JSON-LD</th><td data-et="Free">yes</td><td data-et="Standard">yes</td><td data-et="Premium">yes</td></tr>
+
+            <tr><th scope="row">SERP analysis and gaps</th><td data-et="Free">no</td><td data-et="Standard">yes</td><td data-et="Premium">yes</td></tr>
+            <tr><th scope="row">Publishing to WordPress and Drupal</th><td data-et="Free">no</td><td data-et="Standard">yes</td><td data-et="Premium">yes</td></tr>
+            <tr><th scope="row">Anthropic API key (text)</th><td data-et="Free">required</td><td data-et="Standard">required</td><td data-et="Premium">required</td></tr>
+            <tr><th scope="row">OpenAI API key (images, voice-over, transcription)</th><td data-et="Free">not applicable</td><td data-et="Standard">optional</td><td data-et="Premium">optional</td></tr>
+            <tr><th scope="row">ElevenLabs API key (better voice-over)</th><td data-et="Free">not applicable</td><td data-et="Standard">optional</td><td data-et="Premium">optional</td></tr>
+          </tbody>
+        </table>
+      </details>
     </div>
   </section>
 
@@ -798,96 +919,47 @@
       </header>
       <div class="faq-lista wej">
         <details><summary>How is Content AI different from an AI chat?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>A chat answers from the model's memory. Content AI writes from your knowledge base, goes to the web only for missing information and cites it, then scores the draft for SEO, AIO, AEO and GEO and checks the facts. All in one workspace, from topic to publication.</p></details>
+        <details><summary>What do I need to get started?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>A Content AI account (email and password) and an Anthropic API key, which powers your drafts. You need the key on every plan, including Free. OpenAI keys (images, voice-over, transcription) and ElevenLabs keys (better voice-over) are optional. The Free plan gives you 3 articles to start, no card needed.</p></details>
+        <details><summary>How do I get an API key, and what does the model cost?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>In the Anthropic console you create an account, add credit and create a key; it takes about 10 minutes. You pay the provider for the model on your own account, roughly <span class="nw">$0.25-0.50</span> for an article of about 800 words with scores and a fact check. A step-by-step guide and the calculation are on the <a class="link" href="/en/api-key/">“How to get an API key”</a> page.</p></details>
+        <details><summary>Where does my API key go?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Only your browser keeps it, in an encrypted cookie bound to your account; no other account can read it. With “Remember on this device” the key stays for 30 days, also after you sign out; without it, until you close the browser. It is removed by the “Remove key” button, signing out on all devices, changing or resetting your password and deleting your account. With each request the Content AI server passes the key to the AI provider and does not save it to disk or to logs.</p></details>
         <details><summary>Where do the facts come from?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>From the knowledge base. With web search on, missing information comes from the pages listed under the article. Information about your company always comes from the base only.</p></details>
         <details><summary>Will the text be error-free?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>No AI tool can guarantee that. Content AI reduces the risk: figures and links come from the sources, and the fact check lists the sentences the sources do not support, quoting each one. A person always has the final say.</p></details>
-        <details><summary>Which AI models does Content AI use?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Drafts are written by Anthropic's Claude. The server can switch to open-source models through NVIDIA NIM with no change to the app. Images, voice-over and transcription use OpenAI, with an optional ElevenLabs voice.</p></details>
-        <details><summary>Can I use my own API key?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Yes, on the Standard and Premium plans, for Anthropic, OpenAI and ElevenLabs. Model costs then go to your own provider account. The key is saved only in your browser; the server passes it to the provider with each request and stores nothing. Plan limits still apply.</p></details>
-        <details><summary>Where do my documents go?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Knowledge base documents live on the Content AI server: private ones are visible only to their owner, shared ones to the whole team. When generating, the model provider receives only the passages from them that match the topic. Text history stays in your browser.</p></details>
-        <details><summary>Where does the SERP data come from?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>It depends on the server setup: either a web search run by the model (an estimate) or the DataForSEO API (measured organic results). SERP analysis is available from the Standard plan up.</p></details>
+        <details><summary>How do I pay for a plan?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>You pay for paid plans through Stripe, monthly in advance, in euros or Polish złoty: you choose the currency in the purchase window. You enter your card details on Stripe's page, and Content AI never sees them. Paid plans are available to customers with a billing address in the European Union. After each payment Stripe emails you a confirmation.</p></details>
+        <details><summary>What document do I get after paying?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>After each payment Stripe emails you a payment confirmation. We issue a receipt on request: write to <a class="link" href="mailto:kontakt@content-ai.net">kontakt@content-ai.net</a> within 3 months of the end of the month in which you paid, giving the payment date. Prices on the site are final prices.</p></details>
+        <details><summary>How do I change or cancel my plan?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>In the account settings of the app you open the Stripe billing portal: there you can change your plan or card and cancel your subscription. After cancelling, your plan stays active until the end of the paid month, then your account moves to the Free plan, and your text history and documents stay. Within 14 days of purchase you can also withdraw from the contract: see the <a class="link" href="https://app.content-ai.net/dokumenty/odstapienie?lang=en">withdrawal information</a>.</p></details>
+        <details><summary>How does Content AI handle the EU AI Act?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Content AI supports the transparency requirements of the AI Act (Article 50): downloaded and published files carry a note that the content was created with AI, and you can add a visible label for readers when exporting and publishing. The publisher is responsible for the publication: realistic images and recordings, and texts informing the public on matters of public interest without editorial review, must be labelled. Details are on the <a class="link" href="/en/ai-act/">“AI Act and transparency”</a> page.</p></details>
+        <details><summary>Where do my documents go?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Knowledge base documents are stored on the Content AI server and only your account can see them. When writing, the model provider receives only the passages that match the topic. Finished texts and their history stay in your browser.</p></details>
+        <details><summary>Which AI models does Content AI use?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Drafts, scores and the fact check come from Anthropic models. Images, voice-over and transcription use OpenAI models, and the better voice-over uses ElevenLabs. Each provider bills usage to your own API key.</p></details>
+        <details><summary>Where does the SERP data come from?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>The Google results analysis is run by the model with web search, on your API key. It is an estimate of the results, not a ranking measurement. SERP analysis is available from the Standard plan up.</p></details>
+        <details><summary>My account was created by an administrator. What changes?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>You sign in as before, and your plan, limits and documents stay. Your drafts still run on the server keys, so you do not need your own key or a paid plan. You can still enter your own key if you prefer to pay for the model on your own account.</p></details>
         <details><summary>Which languages does Content AI support?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>The interface is in Polish and English. Content can be written in Polish, English, German and Czech.</p></details>
-        <details><summary>How do I get an account?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Through the “Request access” form on this page. An administrator creates the account, and new accounts start on the Free plan: 3 articles to try it out.</p></details>
       </div>
     </div>
   </section>
 
-  <section class="koniec" id="dostep" aria-labelledby="h-dostep">
+  <section class="koniec" id="start" aria-labelledby="h-start">
+    <span class="kotwica" id="dostep"></span>
     <div class="kont koniec-siatka">
       <div class="koniec-tekst wej">
-        <h2 id="h-dostep">Your next piece: from your sources, not from guesses.</h2>
-        <p class="sek-lead">Draft, scores, fact check, image, audio and publishing. From topic to finished article in one workspace.</p>
+        <h2 id="h-start">Your next piece: from your sources, not from guesses.</h2>
+        <p class="sek-lead">You create the account yourself, in a minute. Your first 3 articles are on the Free plan, and you pick a paid plan only when you need one.</p>
         <div class="koniec-nota" aria-hidden="true">
           <span class="kn-linia"><span class="kn-zakr">A CRM for a small business: where to start</span></span>
           <span class="notka notka-ok"><svg class="znacznik ik"><use href="#i-circle-check"/></svg><span><b>Ready to publish</b></span></span>
         </div>
-        <p class="mala">Already have an account? <a class="link" href="https://app.content-ai.net/?lang=en">Sign in</a></p>
       </div>
-      
-      <form class="formularz wej" id="formularz" data-api="https://app.content-ai.net/api/prosba-o-dostep" data-jezyk="en" novalidate aria-labelledby="form-tytul"
-            data-wysylanie="Sending…" data-b-imie="Enter your first name." data-b-email="Enter an email address, e.g. hello@company.com."
-            data-b-zgoda="Tick the box so we can reply." data-b-dlugie="This text is too long." data-b-pakiet="Choose a plan from the list."
-            data-b-ogolny="Check the form fields and try again." data-b-429="Too many attempts. Please try again later." data-b-siec="The request could not be sent. Try again in a moment.">
-        <h3 class="form-tytul" id="form-tytul">Request access to Content AI</h3>
-        <p class="form-nojs" id="form-nojs"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg><span>This form needs JavaScript. Turn it on in your browser to send an access request. Already have an account? <a class="link" href="https://app.content-ai.net/?lang=en">Sign in</a></span></p>
-        <fieldset class="pola" id="form-pola" disabled>
-          <div class="dwa">
-            <div class="pole-f">
-              <label for="f-imie">First name</label>
-              <input id="f-imie" name="imie" autocomplete="given-name" required maxlength="100" aria-describedby="b-imie">
-              <p class="blad" id="b-imie" hidden></p>
-            </div>
-            <div class="pole-f">
-              <label for="f-email">Work email</label>
-              <input id="f-email" name="email" type="email" autocomplete="email" required maxlength="200" aria-describedby="b-email" inputmode="email">
-              <p class="blad" id="b-email" hidden></p>
-            </div>
-          </div>
-          <div class="dwa">
-            <div class="pole-f">
-              <label for="f-firma">Company or team <span class="opc">(optional)</span></label>
-              <input id="f-firma" name="firma" autocomplete="organization" maxlength="200" aria-describedby="b-firma">
-              <p class="blad" id="b-firma" hidden></p>
-            </div>
-            <div class="pole-f">
-              <label for="f-pakiet">Plan</label>
-              <select id="f-pakiet" name="pakiet" aria-describedby="b-pakiet">
-                <option value="nie-wiem">Not sure yet</option>
-                <option value="darmowy">Free</option>
-                <option value="standard">Standard</option>
-                <option value="premium">Premium</option>
-              </select>
-              <p class="blad" id="b-pakiet" hidden></p>
-            </div>
-          </div>
-          <div class="pole-f">
-            <label for="f-wiadomosc">Message <span class="opc">(optional)</span></label>
-            <textarea id="f-wiadomosc" name="wiadomosc" rows="3" maxlength="2000" placeholder="Who will write, and what kind of content?" aria-describedby="b-wiadomosc"></textarea>
-            <p class="blad" id="b-wiadomosc" hidden></p>
-          </div>
-          
-          <div class="pulapka" aria-hidden="true">
-            <label for="f-strona">Leave this field empty</label>
-            <input id="f-strona" name="strona" tabindex="-1" autocomplete="off">
-          </div>
-          <div class="pole-f">
-            <label class="zgoda" for="f-zgoda"><input id="f-zgoda" name="zgoda" type="checkbox" required aria-describedby="b-zgoda"><span>I agree to be contacted about this request. <a class="link" href="/en/privacy/">How we handle your data</a></span></label>
-            <p class="blad" id="b-zgoda" hidden></p>
-          </div>
-          <div class="form-dol">
-            <button class="btn btn-glowny btn-duzy form-wyslij" type="submit"><span class="fw-tekst">Send request</span><svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></button>
-            <p class="form-komunikat" id="form-komunikat" role="alert" hidden></p>
-          </div>
-        </fieldset>
-        <div class="wyslano" id="wyslano" hidden tabindex="-1">
-          <p class="wyslano-tytul"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>Request sent.</p>
-          <p>We will reply to <b class="wyslano-email"></b>.</p>
-          <p class="wyslano-et">What happens next</p>
-          <ol>
-            <li>An administrator creates the account and assigns a plan.</li>
-            <li>Our reply includes the sign-in address and account details.</li>
-            <li>You sign in at app.content-ai.net and write your first piece.</li>
-          </ol>
-        </div>
-      </form>
+      <div class="koniec-start wej">
+        <h3 class="koniec-start-t">Three steps to your first article</h3>
+        <ol class="koniec-kroki">
+          <li>Create an account: email and password, no card.</li>
+          <li>Connect your Anthropic API key. The setup guide takes you through it step by step.</li>
+          <li>Enter a topic, add your documents and generate your first article.</li>
+        </ol>
+        <p class="cta koniec-cta"><a class="btn btn-glowny btn-duzy" href="https://app.content-ai.net/rejestracja?lang=en">Create account<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a></p>
+        <p class="mala">No API key yet? <a class="link" href="/en/api-key/">See how to get one and what it costs</a>.</p>
+        <p class="mala">Already have an account? <a class="link" href="https://app.content-ai.net/?lang=en">Sign in</a></p>
+        <p class="mala">Before you sign up, you can read the <a class="link" href="https://app.content-ai.net/dokumenty/regulamin?lang=en">Terms of Service</a> and the <a class="link" href="https://app.content-ai.net/dokumenty/prywatnosc?lang=en">Privacy Policy</a>.</p>
+      </div>
     </div>
   </section>
 </main>
@@ -909,7 +981,7 @@
         <li><a href="/en/#funkcje">Features</a></li>
         <li><a href="/en/#niezawodnosc">Reliability</a></li>
         <li><a href="/en/#bezpieczenstwo">Security</a></li>
-        <li><a href="/en/#pakiety">Plans</a></li>
+        <li><a href="/en/#cennik">Pricing</a></li>
         <li><a href="/en/#faq">FAQ</a></li>
       </ul>
     </nav>
@@ -917,14 +989,18 @@
       <h2 id="st-app">App</h2>
       <ul>
         <li><a href="https://app.content-ai.net/?lang=en">Sign in</a></li>
-        <li><a href="/en/#dostep">Request access</a></li>
+        <li><a href="https://app.content-ai.net/rejestracja?lang=en">Create account</a></li>
+        <li><a href="/en/api-key/">How to get an API key</a></li>
       </ul>
     </nav>
     <nav class="stopka-kol" aria-labelledby="st-info">
       <h2 id="st-info">Information</h2>
       <ul>
-        <li><a href="/en/privacy/">Privacy policy</a></li>
-        <li><a href="/en/#dostep">Contact</a></li>
+        <li><a href="https://app.content-ai.net/dokumenty/regulamin?lang=en">Terms of Service</a></li>
+        <li><a href="https://app.content-ai.net/dokumenty/prywatnosc?lang=en">Privacy Policy</a></li>
+        <li><a href="/en/ai-act/">AI Act and transparency</a></li>
+        <li><a href="https://app.content-ai.net/dokumenty/uslugodawca?lang=en">Service provider details</a></li>
+        <li><a href="mailto:kontakt@content-ai.net">Contact: kontakt@content-ai.net</a></li>
         <li><a href="/" hreflang="pl" lang="pl">Czytaj po polsku</a></li>
       </ul>
     </nav>
@@ -936,7 +1012,7 @@
 </footer>
 
 <div class="pasek-cta" id="pasek-cta" role="region" aria-label="Quick actions" hidden>
-  <a class="btn btn-glowny" href="#dostep">Request access<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
+  <a class="btn btn-glowny" href="https://app.content-ai.net/rejestracja?lang=en">Create account<svg class="ik strz" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
 </div>
 </body>
 </html>
