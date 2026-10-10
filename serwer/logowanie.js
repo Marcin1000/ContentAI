@@ -23,11 +23,17 @@ const T = {
     tytul: 'Logowanie · Content AI',
     naglowek: 'Zaloguj się',
     wstep: 'Konto zakłada administrator Twojego zespołu.',
-    login: 'Login',
+    // R9-A1: pole przyjmuje e-mail (konta samoobslugowe) albo login (konta zespolu).
+    login: 'E-mail lub login',
     haslo: 'Hasło',
     przycisk: 'Zaloguj się',
     brakKonta: 'Nie masz konta?',
     popros: 'Poproś o dostęp',
+    // R9-A1: przy otwartej rejestracji (CAI_REJESTRACJA=1) zamiast "Popros o dostep" i zdania o administratorze.
+    zapomniane: 'Nie pamiętasz hasła?',
+    zaloz: 'Załóż konto',
+    wstepSamoobsluga: 'Zaloguj się adresem e-mail i hasłem.',
+    stopkaSamoobsluga: 'Twój klucz API zapisuje tylko Twoja przeglądarka.',
     przelacz: 'English',
     przelaczOpis: 'Switch to English',
     przelaczLang: 'en',
@@ -37,7 +43,9 @@ const T = {
     powierzchnie: 'Cztery powierzchnie wyszukiwania',
     komunikaty: {
       'zle-dane': 'Niepoprawny login lub hasło.',
+      'zle-dane-email': 'Niepoprawny e-mail, login lub hasło.',
       'za-duzo-prob': 'Za dużo prób logowania. Spróbuj ponownie za 15 minut.',
+      'za-duzo-prob-konto': 'Za dużo nieudanych prób logowania na to konto. Spróbuj ponownie za 15 minut albo ustaw nowe hasło.',
       'obce-zrodlo': 'Logowanie odrzucone: formularz nie pochodził z tej strony. Odśwież stronę i spróbuj ponownie.',
       openseo: 'Zaloguj się, żeby wejść do OpenSEO.',
     },
@@ -58,11 +66,15 @@ const T = {
     tytul: 'Sign in · Content AI',
     naglowek: 'Sign in',
     wstep: 'Your team administrator creates accounts.',
-    login: 'Username',
+    login: 'Email or username',
     haslo: 'Password',
     przycisk: 'Sign in',
     brakKonta: 'No account yet?',
     popros: 'Request access',
+    zapomniane: 'Forgot your password?',
+    zaloz: 'Create one',
+    wstepSamoobsluga: 'Sign in with your email and password.',
+    stopkaSamoobsluga: 'Only your browser saves your API key.',
     przelacz: 'Polski',
     przelaczOpis: 'Przełącz na polski',
     przelaczLang: 'pl',
@@ -72,7 +84,9 @@ const T = {
     powierzchnie: 'Four search surfaces',
     komunikaty: {
       'zle-dane': 'Incorrect username or password.',
+      'zle-dane-email': 'Incorrect email, username or password.',
       'za-duzo-prob': 'Too many sign-in attempts. Try again in 15 minutes.',
+      'za-duzo-prob-konto': 'Too many failed sign-in attempts for this account. Try again in 15 minutes or set a new password.',
       'obce-zrodlo': 'Sign-in rejected: the form did not come from this site. Refresh the page and try again.',
       openseo: 'Sign in to open OpenSEO.',
     },
@@ -93,19 +107,21 @@ const T = {
 // Komunikaty informacyjne (nie bledy) - inny wyglad, bez aria-invalid na polach.
 const INFORMACJE = new Set(['openseo']);
 
-/** Jezyk z Accept-Language: pierwszy z pl/en wg wag q; domyslnie polski. */
+/**
+ * Jezyk z Accept-Language: decyduje jezyk przegladarki z najwyzsza waga q, tak jak
+ * w aplikacji (navigator.language): polski -> pl, kazdy inny -> en (KOD8-26: klient
+ * z Niemiec dostawal polski ekran logowania, a po zalogowaniu angielska aplikacje).
+ * Brak naglowka (curl, skrypt) -> polski, jak dotad.
+ */
 function jezykZNaglowka(naglowek) {
   const pozycje = String(naglowek || '').split(',').map((c, i) => {
     const [tag, ...param] = c.trim().toLowerCase().split(';');
     const q = param.map((p) => p.trim()).find((p) => p.startsWith('q='));
     return { tag: tag.trim(), q: q ? Number(q.slice(2)) || 0 : 1, i };
-  }).filter((p) => p.tag && p.q > 0);
+  }).filter((p) => p.tag && p.tag !== '*' && p.q > 0);
   pozycje.sort((a, b) => b.q - a.q || a.i - b.i);
-  for (const p of pozycje) {
-    if (p.tag === 'pl' || p.tag.startsWith('pl-')) return 'pl';
-    if (p.tag === 'en' || p.tag.startsWith('en-')) return 'en';
-  }
-  return 'pl';
+  if (!pozycje.length) return 'pl';
+  return pozycje[0].tag === 'pl' || pozycje[0].tag.startsWith('pl-') ? 'pl' : 'en';
 }
 
 function esc(s) {
@@ -228,6 +244,16 @@ button svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;str
 .wtorny{display:flex;align-items:center;justify-content:center;height:48px;margin-top:12px;border:1px solid var(--c-linia-2);
   border-radius:var(--r-sm);color:var(--c-tekst);font:500 15px/1 var(--f-ui);text-decoration:none}
 .wtorny:hover{border-color:var(--c-ramka)}
+.wiersz-r{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;margin:0 0 2px}
+.wiersz-r label{margin:0}
+.wiersz-r a{display:inline-flex;align-items:center;min-height:44px;font-size:13px;white-space:nowrap}
+.kroki{display:none}
+@media (min-width:960px){
+  .kroki{display:block;margin:28px 0 0;padding:0;list-style:none;counter-reset:krok;max-width:46ch}
+  .kroki li{counter-increment:krok;display:flex;gap:12px;align-items:baseline;margin:0 0 12px;font:400 16px/1.5 var(--f-tresc);color:var(--c-tekst-2)}
+  .kroki li::before{content:counter(krok);flex:none;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+    border:1px solid var(--c-linia-2);border-radius:50%;background:var(--c-tlo);font:600 13px/1 var(--f-ui);color:var(--c-akcent-mocny)}
+}
 @media (min-width:960px){
   .uklad{grid-template-columns:minmax(0,1.08fr) minmax(440px,1fr)}
   .redakcja{display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;
@@ -258,10 +284,23 @@ function teksty(jezyk) {
   return T[jezyk === 'en' ? 'en' : 'pl'];
 }
 
-/** Szkielet wspolny dla wszystkich ekranow: panel redakcyjny + kolumna z trescia. */
+/**
+ * Szkielet wspolny dla wszystkich ekranow: panel redakcyjny + kolumna z trescia.
+ * opcje (wszystkie nieobowiazkowe):
+ *   przelacznik: false        bez przelacznika jezyka
+ *   przelacznikHref           adres przelacznika (domyslnie /?lang=<drugi jezyk>), np. /rejestracja?lang=en
+ *   kroki: ['...', ...]       lista krokow w panelu redakcyjnym (ekrany rejestracji)
+ *   stopka                    zdanie w stopce zamiast t.stopka
+ *   styl                      dodatkowy CSS ekranu (doklejany po STYL)
+ *   glowa                     dodatkowy HTML w <head> (zaufany, od wolajacego: np. skrypt Turnstile)
+ */
 function szkielet(t, tytul, srodek, opcje = {}) {
+  const hrefJezyka = opcje.przelacznikHref || `/?lang=${t.przelaczLang}`;
   const przelacznik = opcje.przelacznik === false ? '<span></span>'
-    : `<a class="jezyk" href="/?lang=${t.przelaczLang}" hreflang="${t.przelaczLang}" lang="${t.przelaczLang}" aria-label="${esc(t.przelaczOpis)}">${esc(t.przelacz)}</a>`;
+    : `<a class="jezyk" href="${esc(hrefJezyka)}" hreflang="${t.przelaczLang}" lang="${t.przelaczLang}" aria-label="${esc(t.przelaczOpis)}">${esc(t.przelacz)}</a>`;
+  const stopka = opcje.stopka || t.stopka;
+  const kroki = Array.isArray(opcje.kroki) && opcje.kroki.length
+    ? `\n      <ol class="kroki">${opcje.kroki.map((k) => `<li>${akapit(k)}</li>`).join('')}</ol>` : '';
   return `<!DOCTYPE html>
 <html lang="${t.lang}"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -271,16 +310,16 @@ function szkielet(t, tytul, srodek, opcje = {}) {
 <meta name="robots" content="noindex">
 <title>${esc(tytul)}</title>
 <link rel="icon" href="data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="#F6A623"><path d="${ZNAK_SCIEZKA}"/><circle cx="16" cy="16" r="1.6"/></svg>`)}">
-<style>${STYL}</style></head><body>
+<style>${STYL}${opcje.styl || ''}</style>${opcje.glowa || ''}</head><body>
 <div class="uklad">
   <aside class="redakcja" aria-label="Content AI">
     ${logo()}
     <div class="tresc">
       <ul class="powierzchnie" aria-label="${esc(t.powierzchnie)}"><li>SEO</li><li>AIO</li><li>AEO</li><li>GEO</li></ul>
       <p class="haslo-tytul">${akapit(t.hasloTytul)}</p>
-      <p class="haslo-opis">${akapit(t.hasloOpis)}</p>
+      <p class="haslo-opis">${akapit(t.hasloOpis)}</p>${kroki}
     </div>
-    <p class="dol">${esc(t.stopka)}</p>
+    <p class="dol">${esc(stopka)}</p>
     ${znak('tlo-znak', 640)}
   </aside>
   <main class="strona">
@@ -288,7 +327,7 @@ function szkielet(t, tytul, srodek, opcje = {}) {
     <div class="srodek"><div class="karta">
 ${srodek}
     </div></div>
-    <p class="dol">${esc(t.stopka)}</p>
+    <p class="dol">${esc(stopka)}</p>
   </main>
 </div>
 </body></html>`;
@@ -296,35 +335,51 @@ ${srodek}
 
 /**
  * Ekran logowania. `kod` to klucz komunikatu ('zle-dane', 'za-duzo-prob',
- * 'obce-zrodlo', 'openseo') albo pusty. Nazwy pol (login, haslo) i przycisk
- * submit sa kontraktem: uzywaja ich brama OpenSEO i testy end-to-end.
+ * 'za-duzo-prob-konto', 'obce-zrodlo', 'openseo') albo pusty. Nazwy pol (login,
+ * haslo) i przycisk submit sa kontraktem: uzywaja ich brama OpenSEO i testy end-to-end.
+ * R9-A1 (konta samoobslugowe):
+ *   rejestracja: true  "Nie masz konta? Zaloz konto" (/rejestracja) zamiast "Popros o dostep",
+ *                      wstep bez zdania o administratorze, stopka o kluczu w przegladarce
+ *   reset: true        odnosnik "Nie pamietasz hasla?" (/haslo) nad polem hasla
+ *   bazaLinkow         przedrostek tych odnosnikow (adres aplikacji na porcie OpenSEO); domyslnie wzgledne
  */
-function stronaLogowania({ kod = '', jezyk = 'pl', login = '', sciezka = '/auth/login' } = {}) {
+function stronaLogowania({
+  kod = '', jezyk = 'pl', login = '', sciezka = '/auth/login', rejestracja = false, reset = false, bazaLinkow = '',
+} = {}) {
   const t = teksty(jezyk);
-  const tekst = kod ? (t.komunikaty[kod] || '') : '';
+  // Konta samoobslugowe loguja sie e-mailem: komunikat wymienia go obok loginu.
+  const kodTekstu = rejestracja && kod === 'zle-dane' ? 'zle-dane-email' : kod;
+  const tekst = kodTekstu ? (t.komunikaty[kodTekstu] || '') : '';
   const info = INFORMACJE.has(kod);
   const blad = Boolean(tekst) && !info;
   const komunikat = `<p class="komunikat${info ? ' info' : ''}" id="komunikat" role="${info ? 'status' : 'alert'}" aria-live="${info ? 'polite' : 'assertive'}">`
     + (tekst ? `${info ? IKONA_INFO : IKONA_BLEDU}<span>${esc(tekst)}</span>` : '') + '</p>';
   const opisPol = blad ? ' aria-invalid="true" aria-describedby="komunikat"' : '';
+  const jezykLinku = `?lang=${t.lang}`;
+  const etykietaHasla = reset
+    ? `<div class="wiersz-r"><label for="haslo">${esc(t.haslo)}</label><a href="${esc(bazaLinkow + '/haslo' + jezykLinku)}">${esc(t.zapomniane)}</a></div>`
+    : `<label for="haslo">${esc(t.haslo)}</label>`;
+  const dol = rejestracja
+    ? `<p class="dostep">${esc(t.brakKonta)} <a href="${esc(bazaLinkow + '/rejestracja' + jezykLinku)}">${esc(t.zaloz)}</a></p>`
+    : `<p class="dostep">${esc(t.brakKonta)} <a href="${DOSTEP[t.lang]}">${esc(t.popros)}</a></p>`;
   const srodek = `      <h1>${esc(t.naglowek)}</h1>
-      <p class="wstep">${akapit(t.wstep)}</p>
+      <p class="wstep">${akapit(rejestracja ? t.wstepSamoobsluga : t.wstep)}</p>
       ${komunikat}
       <form method="POST" action="${esc(sciezka)}" novalidate>
         <input type="hidden" name="jezyk" value="${t.lang}">
         <div class="pole">
           <label for="login">${esc(t.login)}</label>
           <input id="login" name="login" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"
-            required maxlength="40" value="${esc(login)}"${login ? '' : ' autofocus'}${opisPol}>
+            required maxlength="254" value="${esc(login)}"${login ? '' : ' autofocus'}${opisPol}>
         </div>
         <div class="pole">
-          <label for="haslo">${esc(t.haslo)}</label>
+          ${etykietaHasla}
           <input id="haslo" name="haslo" type="password" autocomplete="current-password" required${login ? ' autofocus' : ''}${opisPol}>
         </div>
         <button type="submit">${esc(t.przycisk)}${STRZALKA}</button>
       </form>
-      <p class="dostep">${esc(t.brakKonta)} <a href="${DOSTEP[t.lang]}">${esc(t.popros)}</a></p>`;
-  return szkielet(t, t.tytul, srodek);
+      ${dol}`;
+  return szkielet(t, t.tytul, srodek, rejestracja ? { stopka: t.stopkaSamoobsluga } : {});
 }
 
 /** Wylogowanie wywolane spoza aplikacji (link, obrazek): pytamy o potwierdzenie. */

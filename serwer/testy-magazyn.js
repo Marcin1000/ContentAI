@@ -684,9 +684,10 @@ async function testySerwera(sprawdz) {
     const konto = await t.zadanie('/api/konto', { headers: { cookie: cKlient } });
     const kontoJson = await konto.json();
     const ekranKonta = await t.zadanie('/konto', { headers: { cookie: cKlient } });
-    sprawdz('trasy kont (A1) maja kontrakt: 501 niezaimplementowane z X-CAI-Kod; /konto bez pamieci podrecznej',
-      konto.status === 501 && konto.headers.get('x-cai-kod') === 'niezaimplementowane' && kontoJson.modul === 'konta'
-      && ekranKonta.status === 501 && ekranKonta.headers.get('cache-control') === 'no-store');
+    // R9-A1: trasy kont wdrozone (szczegoly w testy-konta.js); tu tylko, ze trafiaja do modulu kont.
+    sprawdz('trasy kont (A1) trafiaja do modulu kont: /api/konto ze stanem konta; /konto bez pamieci podrecznej',
+      konto.status === 200 && kontoJson.login === klient.login && kontoJson.organizacja.rodzaj === 'samoobsluga'
+      && ekranKonta.status === 200 && ekranKonta.headers.get('cache-control') === 'no-store');
     const zakup = await t.zadanie('/api/platnosci/zakup', t.json(cKlient, { plan: 'standard', waluta: 'pln', zgodaNaWykonanie: true }));
     const panel = await t.zadanie('/konto/panel', t.formularz(cKlient, { z: 'konto' }));
     sprawdz('platnosci wylaczone: trasy zakupu i panelu -> 404 platnosci-wylaczone (aplikacja chowa przyciski)',
@@ -751,9 +752,9 @@ async function testySerwera(sprawdz) {
   });
   try {
     const rej = await dobra.zadanie('/rejestracja');
-    sprawdz('pelna konfiguracja rejestracji: funkcja wlaczona, trasa trafia do modulu kont (zaslepka 501), ostrzezenie o poczcie log',
-      dobra.KONF.funkcje.rejestracja.wlaczona && rej.status === 501 && dobra.KONF.funkcje.rejestracja.ostrzezenia.length === 1
-      && dobra.KONF.uslugodawca.imieNazwisko === 'Jan Testowy');
+    sprawdz('pelna konfiguracja rejestracji: funkcja wlaczona, trasa trafia do modulu kont (formularz A1), ostrzezenie o poczcie log',
+      dobra.KONF.funkcje.rejestracja.wlaczona && rej.status === 200 && /action="\/rejestracja"/.test(await rej.text())
+      && dobra.KONF.funkcje.rejestracja.ostrzezenia.length === 1 && dobra.KONF.uslugodawca.imieNazwisko === 'Jan Testowy');
   } finally {
     await dobra.zamknij();
   }

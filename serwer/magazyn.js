@@ -732,6 +732,20 @@ function zuzyjToken(token, rodzaj, { teraz = Date.now() } = {}) {
   return w ? { login: w.login, email: w.email } : null;
 }
 
+/**
+ * Uniewaznia niezuzyte tokeny konta wybranych rodzajow (A1): zmiana adresu e-mail
+ * odcina link resetu wyslany na stary adres, zmiana i reset hasla odcinaja inne linki resetu.
+ *   usunTokeny(login, ['reset', ...]) -> liczba usunietych
+ */
+function usunTokeny(login, rodzaje) {
+  if (!login || !Array.isArray(rodzaje) || !rodzaje.length) return 0;
+  let usuniete = 0;
+  for (const rodzaj of rodzaje) {
+    usuniete += zap('DELETE FROM tokeny WHERE login = ? AND rodzaj = ? AND uzyty IS NULL').run(login, rodzaj).changes;
+  }
+  return usuniete;
+}
+
 // ─── Zgody (ARCH8-08) ────────────────────────────────────────────────────────
 
 /** dopiszZgode({ login, rodzaj, wersja, wartosc, zrodlo, ip, teraz }) -> id wpisu */
@@ -1004,6 +1018,7 @@ const API = {
   uzycie, uzycieKonta, policz, zarezerwuj, ustawUzycie,
   odwolajSesje, sesjaOdwolana, sesjeOdwolane, liczbaOdwolanych,
   zapiszToken, sprawdzToken, zuzyjToken, skrotTokenu,
+  usunTokeny,
   dopiszZgode, zgody,
   zapiszZdarzenie, oznaczZdarzenie, zdarzeniaNieprzetworzone, powiazKlienta, zastosujStanSubskrypcji,
   dopiszPlatnosc, ustawZwrot, sumyPlatnosci, platnosciWOkresie, platnosciKonta, kontaDoUzgodnienia,
