@@ -128,9 +128,36 @@ wpuszczać na porty 80 i 443 tylko adresy Cloudflare (raport SEC8-42, wariant He
 Firewall albo `ufw`). Jeśli `app` jest szary (DNS only), NIE ograniczaj portów, bo aplikacja
 przestanie działać; wtedy najpierw przełącz `app` na proxy i sprawdź logowanie w aplikacji.
 
+### 1.9 Bez zrzutów pamięci na dysk (SEC8-02)
+
+Zrzut pamięci po awarii procesu zapisałby na dysk klucze z ostatnich zapytań. Usługa ma już
+`LimitCORE=0`; to samo dla całego systemu:
+
+```bash
+cat /proc/sys/kernel/core_pattern
+sudo mkdir -p /etc/systemd/coredump.conf.d
+printf '[Coredump]\nStorage=none\nProcessSizeMax=0\n' | sudo tee /etc/systemd/coredump.conf.d/bez-zrzutow.conf
+sudo systemctl disable --now apport.service 2>/dev/null; sudo sed -i 's/^enabled=1/enabled=0/' /etc/default/apport 2>/dev/null
+sudo systemctl daemon-reload
+```
+
 ---
 
 ## Etap 2. Caddy: dziennik bez kluczy i nowe podstrony (PRZED aktualizacją kodu)
+
+Najpierw sprawdź, czy klucze API nie trafiły już do dzienników (Caddy przy błędzie 502 zapisuje
+nagłówki zapytania, SEC8-01):
+
+```bash
+sudo journalctl -u caddy --no-pager -o cat | grep -c -E 'X-Api-Key|X-Openai-Key|X-Eleven-Key'
+sudo zgrep -c -E 'X-Api-Key|X-Openai-Key|X-Eleven-Key' /var/log/syslog* 2>/dev/null
+```
+
+Oczekiwane: same zera. Jeśli gdzieś jest więcej niż 0: osoby, które używały własnych kluczy, muszą je
+unieważnić u dostawców (wpisu nie da się usunąć wybiórczo), a Ty po zmianach z tego etapu czyścisz stare
+dzienniki: `sudo journalctl --rotate && sudo journalctl --vacuum-time=1s` (archiwalne dzienniki wszystkich
+usług) oraz pliki wskazane przez `sudo zgrep -l -E 'X-Api-Key|X-Openai-Key|X-Eleven-Key' /var/log/syslog*`
+(`sudo rm <plik>`; bieżący /var/log/syslog najpierw `sudo logrotate -f /etc/logrotate.d/rsyslog`).
 
 Wzorzec jest w repozytorium: `dokumenty/Caddyfile.content-ai`. Najpierw kopia, potem zmiany:
 
@@ -147,7 +174,8 @@ W pliku `/etc/caddy/Caddyfile`:
 2. W bloku `content-ai.net` zamień linię zaczynającą się od `@html path` na `@html path */ *.html`
    (nowe podstrony: klucz API, AI Act, regulamin).
 3. W bloku `app.content-ai.net`, wewnątrz `reverse_proxy 127.0.0.1:3100 { ... }`, dopisz
-   `lb_try_duration 10s` i `lb_try_interval 250ms`.
+   `lb_try_duration 10s` i `lb_try_interval 250ms`. Sprawdź też, że jest tam linia
+   `header_up X-Real-IP {client_ip}` (bez niej wszyscy dzielą jeden licznik prób logowania i rejestracji).
 
 Sprawdzenie i przeładowanie:
 
@@ -229,6 +257,13 @@ curl -s https://app.content-ai.net/dokumenty/uslugodawca | grep -c 'do uzupełni
 
 Oczekiwane: `0` (wszystkie dane uzupełnione). Dokumenty: `https://app.content-ai.net/dokumenty/regulamin`,
 `/dokumenty/prywatnosc`, `/dokumenty/odstapienie`, `/dokumenty/dpa`.
+
+Konta zespołu logują się dalej loginem. Żeby ktoś z zespołu mógł się logować także e-mailem
+i sam zresetować hasło, przypisz mu adres (po etapie 5, bo reset wysyła e-mail):
+
+```bash
+sudo serwer/cli.sh email <login> <adres@e-mail>
+```
 
 ---
 
@@ -318,6 +353,8 @@ Oczekiwane: kod 0 i `rejestracja: otwarta, platnosci: stripe (live)`.
 
 - Wstrzymanie nowych zakupów (klienci z pakietem dalej działają): `PLATNOSCI_SPRZEDAZ=0` i restart.
 - Zamknięcie rejestracji (konta już założone działają): `CAI_REJESTRACJA=0` i restart.
+- Gdyby oznaczenia AI psuły jakiś plik u klienta: `CAI_OZNACZENIA=0` i restart (wyłącza oznaczenia
+  awaryjnie, dziennik startu to odnotuje); potem napisz do mnie, bo oznaczenia są wymagane od 2.08.2026.
 - Wycofanie kodu: tylko przy błędzie danych, według etapu 3 (najpierw `eksport-json`).
 
 ## Etap 9. Pierwszy tydzień
