@@ -1510,6 +1510,8 @@ KONTROLE += [
      "odp.clone().json().then(function(d){ if (d && d.wersja) window.poOdmowieSerwera('zgoda-wymagana'); }).catch(function(){});", None, ('proxy',)),
     ('R9-D/zakup-regulamin', 'A1: zgoda-wymagana z wersja przy zakupie to nowy regulamin, nie pola zgody zakupu',
      "if (kod === 'zgoda-wymagana' && d && d.wersja) k = 'err-zgoda-wymagana';", None, ('proxy',)),
+    ('R9-D/klucz-niewazny', 'C: ciasteczko klucza nie do odszyfrowania (niewazny bez klucza) - inny tekst niz odrzucenie u dostawcy',
+     "esc(tekst(ka.niewazny ? (ka.ustawiony ? 'e1-odrzucony' : 'e1-niewazny') : 'e1-tytul', ''))", None, ('proxy',)),
     ('R9-D/klucze-przeniesienie', 'SEC8-04: jednorazowe przeniesienie kluczy z localStorage do ciasteczek',
      'function przeniesKluczeZMagazynu(){', None, ('proxy',)),
     ('R9-D/kreator-byok', 'UX8-19: kreator konta BYOK w trzech krokach (klucz, firma, pierwszy artykul)',

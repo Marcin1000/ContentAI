@@ -2090,6 +2090,18 @@ async function wariantSamoobsluga(b) {
   st.kluczeBlad = false;
   wynik('R9-D: stan kluczy nieczytelny (GET /api/klucze 500) - bez karty i odmowy w przegladarce, klucz zapisany przez /api/klucze, nic w localStorage',
     nieznany.karta && !nieznany.bez && nieznany.zapis && !nieznany.magazyn.length, JSON.stringify(nieznany));
+  // Ciasteczko klucza, ktorego serwer nie odszyfruje (C: inne konto, zmiana hasla, "wyloguj wszedzie"): inny tekst niz odrzucenie u dostawcy.
+  const niewazny = await s.evaluate(() => {
+    const zapas = window.STAN_KLUCZY;
+    window.STAN_KLUCZY = { zrodloKluczy: 'wlasne', anthropic: { ustawiony: false, niewazny: true }, openai: { ustawiony: false }, eleven: { ustawiony: false } };
+    window.rysujStanKonta();
+    const t = document.getElementById('konto-karta').textContent;
+    window.STAN_KLUCZY = zapas;
+    window.rysujStanKonta();
+    return t;
+  });
+  wynik('R9-D: nieczytelne ciasteczko klucza (C: niewazny bez klucza) - karta "nie dziala juz na tym urzadzeniu", nie "odrzucil"',
+    /nie działa już na tym urządzeniu/.test(niewazny) && !/odrzucił/.test(niewazny), niewazny);
   // 7a. Powrot ze Stripe z krajem spoza listy (D-04, kontrakt B): komunikat z krajem z platnosci.odrzucenie, bez czekania na pakiet.
   st.odrzucenie = { powod: 'kraj', kraj: 'US', czas: Date.now() };
   await s.goto(BAZA + '/?platnosc=kraj', { waitUntil: 'load' });
