@@ -3713,6 +3713,9 @@ document.addEventListener('DOMContentLoaded', function () {
               <div class="grupa-backdrop" onclick="przelaczGrupe('pobierz')"></div>
               <div class="grupa-menu" id="grupa-pobierz-menu">
                 <div class="arkusz-tytul"><span data-i18n="grupa-pobierz">Eksport</span><button type="button" class="przycisk-ikona arkusz-zamknij" onclick="zamknijGrupyPaska()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+                <!-- R9-D (PR8-19): widoczna informacja o AI w plikach i przy kopiowaniu (domyslnie wylaczona, M-5) -->
+                <button type="button" class="btn-secondary menu-przelacznik ozn-wiersz grupa-opcja" id="ozn-tekst-btn" data-oznaczenie="tekst" role="switch" aria-checked="false" aria-describedby="ozn-tekst-opis" onclick="ustawWyborOznaczenia('tekst', this.getAttribute('aria-checked') !== 'true')"><svg class="ikona" aria-hidden="true"><use href="#i-info"/></svg><span class="menu-przelacznik-tekst"><span data-i18n="ozn-tekst-przelacznik">Dodaj informację o AI</span><small id="ozn-tekst-opis" data-i18n="ozn-tekst-opis">Zdanie na końcu tekstu w TXT, DOCX, PDF i przy kopiowaniu</small></span><span class="menu-przelacznik-tor" aria-hidden="true"></span></button>
+                <div class="grupa-sep grupa-opcja"></div>
                 <button class="btn-secondary" id="dl-btn" style="display:none" onclick="dlTxt()"><svg class="ikona" aria-hidden="true"><use href="#i-file-down"/></svg>TXT</button>
                 <button class="btn-secondary" id="dl-docx-btn" style="display:none" onclick="dlDocx()"><svg class="ikona" aria-hidden="true"><use href="#i-file-down"/></svg>DOCX</button>
                                 <button class="btn-secondary" id="dl-pdf-btn" style="display:none" onclick="dlPdf()"><svg class="ikona" aria-hidden="true"><use href="#i-file-down"/></svg>PDF</button>
@@ -3755,7 +3758,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <option value="organization">Organization</option>
                 <option value="service">Service</option>
                 <option value="localbusiness">LocalBusiness</option>
-                <option value="article">Article + Person</option>
+                <option value="article">Article</option>
                 <option value="breadcrumb">BreadcrumbList</option>
               </select>
             </div>
@@ -4521,11 +4524,27 @@ document.addEventListener('DOMContentLoaded', function () {
   <div class="modal" style="width:420px">
     <div class="modal-head"><h3 id="pub-modal-title">Publikuj w CMS</h3><button class="modal-close" onclick="closeWpPublishModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
     <div class="field" style="margin-bottom:14px"><label for="wp-category" class="field-label">Tagi / kategoria (opcjonalnie)</label><input type="text" id="wp-category" placeholder="e-commerce, logistyka..." /></div>
+    <!-- R9-D (PR8-19, art. 50 ust. 4 AI Act): widoczna informacja o AI pod wpisem i przypomnienie o obowiazku publikujacego -->
+    <label class="ozn-wiersz ozn-wiersz-ramka" for="ozn-tekst-cms"><input type="checkbox" id="ozn-tekst-cms" data-oznaczenie="tekst" onchange="ustawWyborOznaczenia('tekst', this.checked)"><span><b data-i18n="ozn-cms-przelacznik">Dodaj informację o AI na końcu wpisu</b><small id="ozn-cms-przypomnienie"><span data-i18n="ozn-cms-przypomnienie">Jeśli publikujesz tekst, który informuje o sprawach publicznych (np. zdrowie, finanse, polityka), a nikt w Twojej redakcji go nie sprawdził merytorycznie, musisz zaznaczyć, że powstał z pomocą AI.</span> <a class="link-akcent" id="ozn-cms-wiecej" href="https://content-ai.net/ai-act/" target="_blank" rel="noopener" data-i18n="ozn-wiecej">Więcej</a></small></span></label>
+    <p class="tekst-pomoc" id="ozn-cms-drupal" hidden data-i18n="ozn-cms-drupal">Drupal zachowa oznaczenie AI w kodzie wpisu przy formacie full_html. Format basic_html je usuwa.</p>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn-secondary" onclick="publishToCms('draft')" data-i18n="btn-save-draft" data-ikona="save"><svg class="ikona" aria-hidden="true"><use href="#i-save"/></svg>Zapisz jako szkic</button>
       <button class="btn-generate" style="width:auto" onclick="publishToCms('publish')"><svg class="ikona" aria-hidden="true"><use href="#i-rocket"/></svg>Opublikuj</button>
     </div>
     <div class="tekst-pomoc" id="wp-pub-result" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- R9-D (D-08, prawo 3.5): pytanie przed pobraniem grafiki bez napisu AI -->
+<div class="overlay" id="ozn-grafika-modal" onclick="if(event.target===this)odpowiedzOGrafice(null)">
+  <div class="modal" style="width:460px">
+    <div class="modal-head"><h3 id="ozn-grafika-tytul" data-i18n="ozn-grafika-pytanie">Czy grafika przedstawia prawdziwe osoby, miejsca albo zdarzenia?</h3><button class="modal-close" onclick="odpowiedzOGrafice(null)"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+    <p class="tekst-zwykly" style="margin:0 0 10px" data-i18n="ozn-grafika-pytanie-opis">Jeśli tak i ktoś mógłby uznać ją za prawdziwą, przed publikacją trzeba zaznaczyć, że powstała z pomocą AI (AI Act, art. 50 ust. 4). Możemy dodać w rogu napis „Grafika wygenerowana przez AI”. Informacja o AI w metadanych pliku jest zawsze.</p>
+    <p class="tekst-pomoc" style="margin:0 0 16px"><a class="link-akcent" id="ozn-grafika-wiecej" href="https://content-ai.net/ai-act/" target="_blank" rel="noopener" data-i18n="ozn-wiecej-ai-act">Więcej o oznaczaniu treści AI</a></p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+      <button type="button" class="btn-secondary" onclick="odpowiedzOGrafice(false)" data-i18n="ozn-grafika-bez">Nie, pobierz bez napisu</button>
+      <button type="button" class="btn-generate" style="width:auto" onclick="odpowiedzOGrafice(true)" data-i18n="ozn-grafika-z">Tak, pobierz z napisem</button>
+    </div>
   </div>
 </div>
 
@@ -4776,9 +4795,12 @@ document.addEventListener('DOMContentLoaded', function () {
                   <div class="tekst-zwykly" id="img-result-label"></div>
                   <div class="tekst-pomoc" id="img-result-size"></div>
                   <div class="tekst-pomoc" id="img-result-hint"></div>
+                  <!-- R9-D (art. 50 AI Act): informacja przy wyniku i przelacznik napisu na pobranym pliku -->
+                  <div class="tekst-pomoc ai-info" id="img-ai-info"><svg class="ikona" aria-hidden="true"><use href="#i-info"/></svg><span data-i18n="ozn-grafika-info">Grafikę wygenerowała AI (OpenAI). Pobrany plik niesie oznaczenie AI w metadanych.</span></div>
+                  <label class="ozn-wiersz" for="ozn-grafika"><input type="checkbox" id="ozn-grafika" data-oznaczenie="grafika" onchange="ustawWyborOznaczenia('grafika', this.checked)"><span data-i18n="ozn-grafika-przelacznik">Napis „Grafika wygenerowana przez AI” na pobranym pliku</span></label>
                 </div>
                 <div class="img-wynik-akcje">
-                  <a class="btn-generate" id="img-download-link" href="#" download><span data-i18n="img-download-btn" data-ikona="download"><svg class="ikona" aria-hidden="true"><use href="#i-download"/></svg>Pobierz PNG</span></a>
+                  <a class="btn-generate" id="img-download-link" href="#" download onclick="return pobierzGrafikeAI(event, this)"><span data-i18n="img-download-btn" data-ikona="download"><svg class="ikona" aria-hidden="true"><use href="#i-download"/></svg>Pobierz PNG</span></a>
                   <button type="button" class="btn-secondary" id="img-copy-btn" onclick="imgCopyResult()"><span data-i18n="img-copy-btn-lbl" data-ikona="clipboard-list"><svg class="ikona" aria-hidden="true"><use href="#i-clipboard-list"/></svg>Kopiuj</span></button>
                   <button type="button" class="btn-secondary" onclick="generateImage()"><span data-i18n="img-retry" data-ikona="refresh-cw"><svg class="ikona" aria-hidden="true"><use href="#i-refresh-cw"/></svg>Ponów</span></button>
                 </div>
@@ -6858,8 +6880,11 @@ function kontekstZWpisu(h) {
     temat: k.temat || (h && h.topic) || '', frazy: Array.isArray(k.frazy) ? k.frazy.slice() : [],
     typ: k.typ || (h && h.type) || '', jezyk: k.jezyk || nazwaJezykaZKodu(h && h.jezyk),
     ton: k.ton || '', dlugosc: k.dlugosc || '', extra: typeof k.extra === 'string' ? k.extra : null,
+    ai: k.ai && typeof k.ai === 'object' ? Object.assign({}, k.ai) : null, // R9-D: wpisy sprzed oznaczen = tresc z AI
   };
 }
+// R9-D (PR8-18): "Popraw wklejony tekst" przerabia tekst uzytkownika (compositeWithTrainedAlgorithmicMedia).
+let poprawaWklejonego = false;
 function kontekstArtykulu() {
   const art = document.getElementById('article');
   const h1El = art && art.querySelector('h1');
@@ -9114,7 +9139,8 @@ ${html}`;
   // Do historii idzie artykul tak, jak go widac (ze zrodlami), bez elementow tylko ekranowych.
   history.unshift({ topic: topic || _t('hist-default-name'), type: ctype, words: wordCount, time: new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}), html: htmlDoZapisu(art), jezyk: KODY_JEZYKOW[lang] || '' });
   // R4 (kod-08, kod-09, kod-17): trwale id, czas z data i kontekst artykulu we wpisie.
-  kontekstArt = { temat: topic, frazy: frazy.slice(0, 50), typ: ctype, jezyk: lang, ton: tone, dlugosc: length, extra: extra };
+  kontekstArt = { temat: topic, frazy: frazy.slice(0, 50), typ: ctype, jezyk: lang, ton: tone, dlugosc: length, extra: extra,
+    ai: nowePochodzenieAI(poprawaWklejonego ? 'zlozone' : 'ai') }; // R9-D (PR8-18): pochodzenie tekstu do oznaczen
   Object.assign(history[0], { id: noweIdWpisu(), ts: Date.now(), kontekst: kontekstArt });
   biezacyHist = history[0].id;
   magazyn.setItem('cai_biezacy', biezacyHist);
@@ -10429,6 +10455,420 @@ function jezykDokumentu() {
   return ({ pl: 'pl-PL', en: 'en-US', de: 'de-DE', cs: 'cs-CZ' })[kodJezykaArtykulu()] || 'pl-PL';
 }
 
+// ─── OZNACZENIA AI (R9-D: art. 50 AI Act, PROJEKT-TECHNICZNY rozdz. 9) ──────────
+// Dwie warstwy. Maszynowa (zawsze, gdy `metadane: true`): IPTC Digital Source Type
+// w XMP grafiki, ID3 w MP3, wlasciwosciach DOCX i PDF, atrybutach data-ai-* w HTML do
+// CMS i schema.org digitalSourceType w JSON-LD. Widoczna (art. 50 ust. 4 to obowiazek
+// uzytkownika): przelaczniki etykiet tekstu, grafiki i zapowiedzi audio, z wartosciami
+// domyslnymi z konfiguracji (M-5 / D-08). Stala jest ta sama co serwer/oznaczenia.js
+// (testy-oznaczenia.js porownuje obie); za serwerem przychodzi w /api/konto.oznaczenia
+// razem z wyborem uzytkownika, w wariantach keys i owner wybor zostaje w tej przegladarce.
+const OZNACZENIA_DOMYSLNE = {
+  wersja: 1,
+  system: 'Content AI',
+  adresInformacji: 'https://content-ai.net/ai-act/',
+  adresInformacjiEn: 'https://content-ai.net/en/ai-act/',
+  zrodloIptc: 'http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia',
+  zrodloSchema: 'https://schema.org/TrainedAlgorithmicMediaDigitalSource',
+  zrodloIptcZlozone: 'http://cv.iptc.org/newscodes/digitalsourcetype/compositeWithTrainedAlgorithmicMedia',
+  zrodloSchemaZlozone: 'https://schema.org/CompositeWithTrainedAlgorithmicMediaDigitalSource',
+  slowaKluczowe: 'AI-generated; trainedAlgorithmicMedia; Content AI',
+  tekst: {
+    metadane: true,
+    etykieta: 'domyslnie-wylaczona',
+    miejsce: 'koniec',
+    tresc: {
+      pl: 'Ten tekst powstał z pomocą sztucznej inteligencji (Content AI).',
+      en: 'This text was created with the help of artificial intelligence (Content AI).',
+      de: 'Dieser Text wurde mit Hilfe künstlicher Intelligenz erstellt (Content AI).',
+      cs: 'Tento text vznikl s pomocí umělé inteligence (Content AI).',
+    },
+    krotka: {
+      pl: 'Przygotowano z pomocą AI.',
+      en: 'Prepared with the help of AI.',
+      de: 'Mit Hilfe von KI erstellt.',
+      cs: 'Připraveno s pomocí AI.',
+    },
+  },
+  grafika: {
+    metadane: true,
+    etykieta: 'domyslnie-wylaczona',
+    miejsce: 'prawy-dol',
+    tresc: {
+      pl: 'Grafika wygenerowana przez AI',
+      en: 'AI-generated image',
+      de: 'KI-generiertes Bild',
+      cs: 'Obrázek vytvořený umělou inteligencí',
+    },
+  },
+  audio: {
+    metadane: true,
+    etykieta: 'domyslnie-wlaczona',
+    tresc: {
+      pl: 'Ten materiał odczytuje syntetyczny głos wygenerowany przez sztuczną inteligencję.',
+      en: 'This audio is read by an AI-generated synthetic voice.',
+      de: 'Dieses Audio wird von einer KI-generierten synthetischen Stimme gelesen.',
+      cs: 'Tento záznam čte syntetický hlas vytvořený umělou inteligencí.',
+    },
+  },
+  publikacja: { atrybuty: true },
+};
+const PAMIEC_OZNACZEN = 'cai_oznaczenia';
+const RODZAJE_OZNACZEN = ['tekst', 'grafika', 'audio'];
+// Konfiguracja z serwera (nowsza wersja stalej wygrywa), brakujace pola z wartosci domyslnych.
+function konfigOznaczen() {
+  const zKonta = (window.STAN_KONTA && window.STAN_KONTA.oznaczenia && typeof window.STAN_KONTA.oznaczenia === 'object') ? window.STAN_KONTA.oznaczenia : null;
+  if (!zKonta) return OZNACZENIA_DOMYSLNE;
+  const k = Object.assign({}, OZNACZENIA_DOMYSLNE, zKonta);
+  RODZAJE_OZNACZEN.forEach(function (r) { k[r] = Object.assign({}, OZNACZENIA_DOMYSLNE[r], zKonta[r] || {}); });
+  return k;
+}
+// CAI_OZNACZENIA=0 na serwerze wylacza calosc awaryjnie (pliki bez znacznikow i bez etykiet).
+function oznaczeniaWlaczone() { return konfigOznaczen().wlaczone !== false; }
+function metadaneAI(rodzaj) { const k = konfigOznaczen(); return oznaczeniaWlaczone() && !!(k[rodzaj] && k[rodzaj].metadane); }
+function trybEtykiety(rodzaj) { const k = konfigOznaczen(); return (k[rodzaj] && k[rodzaj].etykieta) || 'domyslnie-wylaczona'; }
+// Przelacznik widac tylko dla wartosci, ktore uzytkownik moze zmienic.
+function etykietaDoWyboru(rodzaj) { const t = trybEtykiety(rodzaj); return oznaczeniaWlaczone() && (t === 'domyslnie-wlaczona' || t === 'domyslnie-wylaczona'); }
+function wyborOznaczenia(rodzaj) {
+  if (!oznaczeniaWlaczone()) return false;
+  const t = trybEtykiety(rodzaj);
+  if (t === 'zawsze') return true;
+  if (t === 'nigdy') return false;
+  // Za serwerem wybor zyje w koncie (kazde urzadzenie); bez serwera albo przed scaleniem kont - w tej przegladarce.
+  const k = konfigOznaczen();
+  if (k.uzytkownik && typeof k.uzytkownik[rodzaj] === 'boolean' && !(window.STAN_KONTA && window.STAN_KONTA._zapas)) return k.uzytkownik[rodzaj];
+  const lokalne = czytajJson(PAMIEC_OZNACZEN, null);
+  if (lokalne && typeof lokalne[rodzaj] === 'boolean') return lokalne[rodzaj];
+  return t === 'domyslnie-wlaczona';
+}
+function ustawWyborOznaczenia(rodzaj, wartosc) {
+  if (RODZAJE_OZNACZEN.indexOf(rodzaj) < 0) return;
+  const v = !!wartosc;
+  const lokalne = czytajJson(PAMIEC_OZNACZEN, null) || {};
+  lokalne[rodzaj] = v;
+  magazyn.setItem(PAMIEC_OZNACZEN, JSON.stringify(lokalne));
+  const k = window.STAN_KONTA && window.STAN_KONTA.oznaczenia;
+  if (k && typeof k === 'object') { k.uzytkownik = Object.assign({}, k.uzytkownik || {}); k.uzytkownik[rodzaj] = v; }
+  rysujPrzelacznikiOznaczen();
+  if (typeof window.zapiszUstawieniaKonta === 'function') window.zapiszUstawieniaKonta({ oznaczenia: { [rodzaj]: v } });
+}
+// Przelaczniki w eksporcie, publikacji, grafice i audio maja jeden stan: wybor uzytkownika.
+function rysujPrzelacznikiOznaczen() {
+  document.querySelectorAll('[data-oznaczenie]').forEach(function (pole) {
+    const r = pole.getAttribute('data-oznaczenie');
+    const wiersz = pole.closest('.ozn-wiersz') || pole;
+    const wybor = wyborOznaczenia(r);
+    wiersz.hidden = !etykietaDoWyboru(r);
+    if (pole.type === 'checkbox') pole.checked = wybor;
+    else if (pole.getAttribute('role') === 'switch') { pole.setAttribute('aria-checked', String(wybor)); pole.classList.toggle('active', wybor); }
+  });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', rysujPrzelacznikiOznaczen); else setTimeout(rysujPrzelacznikiOznaczen, 0);
+// Pochodzenie tekstu (PR8-18, tabela 3.2 prawa): tresc z AI albo tekst uzytkownika przerobiony przez AI.
+function nowePochodzenieAI(rodzaj) {
+  const k = konfigOznaczen();
+  return { pochodzenie: rodzaj === 'zlozone' ? 'zlozone' : 'ai', system: k.system, wersja: k.wersja, czas: new Date().toISOString() };
+}
+function pochodzenieArtykulu() {
+  const ai = typeof kontekstArt !== 'undefined' && kontekstArt && kontekstArt.ai;
+  return ai && ai.pochodzenie === 'zlozone' ? 'zlozone' : 'ai';
+}
+function zrodloAI(pochodzenie) {
+  const k = konfigOznaczen();
+  return pochodzenie === 'zlozone' ? { iptc: k.zrodloIptcZlozone, schema: k.zrodloSchemaZlozone } : { iptc: k.zrodloIptc, schema: k.zrodloSchema };
+}
+// Etykieta w jezyku TRESCI (pl, en, de, cs), nie interfejsu.
+function tekstEtykietyAI(rodzaj, kod, krotka) {
+  const k = konfigOznaczen()[rodzaj] || {};
+  const t = (krotka && k.krotka) || k.tresc || {};
+  return t[kod] || t.en || t.pl || '';
+}
+function adresInformacjiAI() { const k = konfigOznaczen(); return currentLang === 'en' ? (k.adresInformacjiEn || k.adresInformacji) : k.adresInformacji; }
+// Reczna poprawka tekstu w trybie Edytuj: zrodlem jest nadal AI, ale DOCX niesie AIEditedByHuman.
+function oznaczEdycjeCzlowieka() {
+  if (typeof kontekstArt === 'undefined' || !kontekstArt) return;
+  kontekstArt.ai = Object.assign({}, kontekstArt.ai || nowePochodzenieAI('ai'), { edytowany: true });
+  const w = typeof wpisHistorii === 'function' ? wpisHistorii(biezacyHist) : null;
+  if (w) { w.kontekst = w.kontekst || {}; w.kontekst.ai = kontekstArt.ai; }
+}
+document.getElementById('article')?.addEventListener('input', function () { if (editMode) oznaczEdycjeCzlowieka(); });
+
+// Kopia dla klienta: atrybuty data-ai-* na korzeniu (CMS bierze je do opakowania wpisu)
+// i widoczna etykieta wedlug przelacznika. Etykieta nie istnieje w zywym artykule ani w Historii.
+function dodajOznaczenieAI(kopia, cel) {
+  if (!kopia || !cel || !oznaczeniaWlaczone()) return kopia;
+  const zr = zrodloAI(pochodzenieArtykulu());
+  if (metadaneAI('tekst')) {
+    kopia.setAttribute('data-ai-generated', 'true');
+    kopia.setAttribute('data-ai-system', konfigOznaczen().system);
+    kopia.setAttribute('data-ai-source-type', zr.iptc);
+  }
+  if (!wyborOznaczenia('tekst')) return kopia;
+  const p = document.createElement('p');
+  p.className = 'oznaczenie-ai';
+  p.setAttribute('data-ai-label', 'true');
+  p.textContent = tekstEtykietyAI('tekst', kodJezykaArtykulu());
+  if (konfigOznaczen().tekst.miejsce === 'poczatek') {
+    const h1 = kopia.querySelector(':scope > h1');
+    if (h1) h1.after(p); else kopia.prepend(p);
+  } else {
+    // Koniec tekstu: przed lista zrodel i ramka meta (to nie sa czesci artykulu).
+    const po = Array.from(kopia.children).find(function (el) { return el.classList.contains('zrodla-box') || el.classList.contains('meta-box'); });
+    if (po) po.before(p); else kopia.appendChild(p);
+  }
+  return kopia;
+}
+// Wlasciwosci dokumentu (DOCX: custom.xml i cp:keywords, PDF: /Keywords i XMP) albo null, gdy wylaczone.
+function wlasciwosciAI(pochodzenie) {
+  if (!metadaneAI('tekst')) return null;
+  const k = konfigOznaczen();
+  const edytowany = !!(typeof kontekstArt !== 'undefined' && kontekstArt && kontekstArt.ai && kontekstArt.ai.edytowany);
+  return { zrodlo: zrodloAI(pochodzenie || pochodzenieArtykulu()).iptc, system: k.system, wersja: String(k.wersja), slowa: k.slowaKluczowe, edytowany: edytowany };
+}
+function xmlAI(s) { return String(s == null ? '' : s).replace(/[<>&"']/g, function (z) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[z]; }); }
+// Pakiet XMP (IPTC Digital Source Type + xmp:CreatorTool): ten sam w PNG i PDF.
+function xmpAI(zrodlo, system) {
+  return '<?xpacket begin="﻿" id="W5M0MpCehiHzreSzNTczkc9d"?>'
+    + '<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+    + '<rdf:Description rdf:about="" xmlns:Iptc4xmpExt="http://iptc.org/std/Iptc4xmpExt/2008-02-29/" xmlns:xmp="http://ns.adobe.com/xap/1.0/"'
+    + ' Iptc4xmpExt:DigitalSourceType="' + xmlAI(zrodlo) + '" xmp:CreatorTool="' + xmlAI(system) + '"/>'
+    + '</rdf:RDF></x:xmpmeta><?xpacket end="r"?>';
+}
+
+// ── PNG: XMP po IHDR; plik z manifestem C2PA dostawcy (fragment caBX) zostaje nietkniety ──
+let TABLICA_CRC_AI = null;
+function crc32AI(bajty, od, ile) {
+  if (!TABLICA_CRC_AI) {
+    TABLICA_CRC_AI = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); TABLICA_CRC_AI[n] = c >>> 0; }
+  }
+  let crc = 0xFFFFFFFF;
+  const koniec = (od || 0) + (ile == null ? bajty.length : ile);
+  for (let i = od || 0; i < koniec; i++) crc = TABLICA_CRC_AI[(crc ^ bajty[i]) & 0xFF] ^ (crc >>> 8);
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+function fragmentyPng(b) {
+  const SYG = [137, 80, 78, 71, 13, 10, 26, 10];
+  if (!b || b.length < 33 || SYG.some(function (x, i) { return b[i] !== x; })) return null;
+  const lista = [];
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  let p = 8;
+  while (p + 12 <= b.length) {
+    const dl = dv.getUint32(p);
+    const typ = String.fromCharCode(b[p + 4], b[p + 5], b[p + 6], b[p + 7]);
+    lista.push({ typ: typ, od: p, dl: dl });
+    p += 12 + dl;
+    if (typ === 'IEND') break;
+  }
+  return lista;
+}
+function oznaczPng(b, zrodlo, system) {
+  const lista = fragmentyPng(b);
+  if (!lista || !lista.length || lista[0].typ !== 'IHDR') return { bajty: b, zmieniony: false, powod: 'nie-png' };
+  if (lista.some(function (f) { return f.typ === 'caBX'; })) return { bajty: b, zmieniony: false, powod: 'c2pa-dostawcy' };
+  const jestXmp = lista.some(function (f) {
+    if (f.typ !== 'iTXt') return false;
+    let s = ''; for (let i = 0; i < 17 && f.od + 8 + i < b.length; i++) s += String.fromCharCode(b[f.od + 8 + i]);
+    return s === 'XML:com.adobe.xmp';
+  });
+  if (jestXmp) return { bajty: b, zmieniony: false, powod: 'xmp-jest' };
+  // iTXt: slowo kluczowe \0, flaga i metoda kompresji (0, 0), jezyk \0, tlumaczenie \0, tekst UTF-8.
+  const slowo = 'XML:com.adobe.xmp';
+  const tekst = new TextEncoder().encode(xmpAI(zrodlo || zrodloAI('ai').iptc, system || konfigOznaczen().system));
+  const dl = slowo.length + 5 + tekst.length;
+  const frag = new Uint8Array(12 + dl);
+  const dv = new DataView(frag.buffer);
+  dv.setUint32(0, dl);
+  for (let i = 0; i < 4; i++) frag[4 + i] = 'iTXt'.charCodeAt(i);
+  for (let i = 0; i < slowo.length; i++) frag[8 + i] = slowo.charCodeAt(i);
+  frag.set(tekst, 8 + slowo.length + 5);
+  dv.setUint32(8 + dl, crc32AI(frag, 4, 4 + dl));
+  const po = lista[0].od + 12 + lista[0].dl;
+  const wynik = new Uint8Array(b.length + frag.length);
+  wynik.set(b.subarray(0, po), 0);
+  wynik.set(frag, po);
+  wynik.set(b.subarray(po), po + frag.length);
+  return { bajty: wynik, zmieniony: true, powod: 'xmp-dodany' };
+}
+async function oznaczBlobPng(blob) {
+  if (!blob || !metadaneAI('grafika') || !/png/.test(blob.type || '')) return blob;
+  const w = oznaczPng(new Uint8Array(await blob.arrayBuffer()));
+  return w.zmieniony ? new Blob([w.bajty], { type: 'image/png' }) : blob;
+}
+// Widoczna etykieta to nowe kodowanie przez canvas: wersja z napisem niesie nasze XMP zamiast C2PA dostawcy.
+// kolory-eksportu:start (napis na grafice ma stale kolory pliku, nie motywu)
+async function grafikaZEtykieta(blob, tekst) {
+  const adres = URL.createObjectURL(blob);
+  try {
+    const obraz = await new Promise(function (ok, zle) { const i = new Image(); i.onload = function () { ok(i); }; i.onerror = zle; i.src = adres; });
+    const c = document.createElement('canvas');
+    c.width = obraz.naturalWidth; c.height = obraz.naturalHeight;
+    const g = c.getContext('2d');
+    g.drawImage(obraz, 0, 0);
+    const pt = Math.max(14, Math.round(Math.min(c.width, c.height) * 0.032));
+    g.font = '600 ' + pt + 'px "Schibsted Grotesk", system-ui, sans-serif';
+    const marg = Math.round(pt * 0.8), wew = Math.round(pt * 0.55);
+    const szer = Math.ceil(g.measureText(tekst).width) + wew * 2, wys = Math.round(pt * 1.7);
+    const x = c.width - szer - marg, y = c.height - wys - marg;
+    g.fillStyle = 'rgba(17, 17, 16, 0.72)';
+    if (typeof g.roundRect === 'function') { g.beginPath(); g.roundRect(x, y, szer, wys, Math.round(pt * 0.35)); g.fill(); }
+    else g.fillRect(x, y, szer, wys);
+    g.fillStyle = 'rgba(255, 255, 255, 0.96)';
+    g.textBaseline = 'middle';
+    g.fillText(tekst, x + wew, y + wys / 2);
+    const png = await new Promise(function (ok) { c.toBlob(ok, 'image/png'); });
+    if (!png) return blob;
+    const w = oznaczPng(new Uint8Array(await png.arrayBuffer()));
+    return new Blob([w.bajty], { type: 'image/png' });
+  } finally { URL.revokeObjectURL(adres); }
+}
+// kolory-eksportu:koniec
+
+// ── MP3: znacznik ID3v2.4 na poczatku sklejonego pliku, bez znacznikow w srodku strumienia ──
+function synchsafeAI(n) { return [(n >>> 21) & 0x7F, (n >>> 14) & 0x7F, (n >>> 7) & 0x7F, n & 0x7F]; }
+function ramkaId3(id, dane) {
+  const r = new Uint8Array(10 + dane.length);
+  for (let i = 0; i < 4; i++) r[i] = id.charCodeAt(i);
+  r.set(synchsafeAI(dane.length), 4);
+  r.set(dane, 10);
+  return r;
+}
+function polaczBajty(czesci) {
+  const razem = new Uint8Array(czesci.reduce(function (s, c) { return s + c.length; }, 0));
+  let p = 0;
+  czesci.forEach(function (c) { razem.set(c, p); p += c.length; });
+  return razem;
+}
+function znacznikId3AI(opcje) {
+  const o = opcje || {};
+  const k = konfigOznaczen();
+  const utf8 = function (s) { return new TextEncoder().encode(String(s || '')); };
+  const txxx = function (opis, wartosc) { return ramkaId3('TXXX', polaczBajty([new Uint8Array([3]), utf8(opis), new Uint8Array([0]), utf8(wartosc)])); };
+  const tekst = function (id, wartosc) { return ramkaId3(id, polaczBajty([new Uint8Array([3]), utf8(wartosc)])); };
+  const jezyk = ({ pl: 'pol', en: 'eng', de: 'deu', cs: 'ces' })[o.jezyk] || 'eng';
+  const ramki = [txxx('AI_GENERATED', 'true'), txxx('DIGITAL_SOURCE_TYPE', o.zrodlo || zrodloAI('ai').iptc), tekst('TSSE', k.system)];
+  if (o.tytul) ramki.push(tekst('TIT2', o.tytul));
+  // COMM: informacja dla odtwarzaczy, ze glos jest syntetyczny (kodowanie UTF-8, jezyk, pusty opis).
+  const uwaga = tekstEtykietyAI('audio', o.jezyk || 'en');
+  if (uwaga) ramki.push(ramkaId3('COMM', polaczBajty([new Uint8Array([3]), utf8(jezyk), new Uint8Array([0]), utf8(uwaga)])));
+  const cialo = polaczBajty(ramki);
+  return polaczBajty([new Uint8Array([0x49, 0x44, 0x33, 4, 0, 0].concat(synchsafeAI(cialo.length))), cialo]);
+}
+// Fragment od dostawcy bez wlasnych znacznikow (ID3v2 na poczatku, ID3v1 na koncu): w srodku pliku myla odtwarzacze.
+function bezId3(b) {
+  let od = 0, doK = b.length;
+  if (b.length > 10 && b[0] === 0x49 && b[1] === 0x44 && b[2] === 0x33) {
+    od = 10 + ((b[6] & 0x7F) << 21 | (b[7] & 0x7F) << 14 | (b[8] & 0x7F) << 7 | (b[9] & 0x7F)) + ((b[5] & 0x10) ? 10 : 0);
+  }
+  if (doK - od > 128 && b[doK - 128] === 0x54 && b[doK - 127] === 0x41 && b[doK - 126] === 0x47) doK -= 128;
+  return od > 0 || doK < b.length ? b.subarray(Math.min(od, doK), doK) : b;
+}
+async function zbudujMp3(czesci, opcje) {
+  const bajty = [];
+  for (const c of czesci) { if (c) bajty.push(bezId3(new Uint8Array(await c.arrayBuffer()))); }
+  if (metadaneAI('audio')) bajty.unshift(znacznikId3AI(opcje));
+  return new Blob(bajty, { type: 'audio/mpeg' });
+}
+
+// ── PDF: pakiet XMP dopisany aktualizacja przyrostowa (pdfmake nie zapisuje XMP) ──
+// Nowy obiekt strumienia /Metadata i nowa wersja katalogu z odnosnikiem do niego, nowa tablica xref
+// z /Prev. Tresc pliku przed dopisanym fragmentem zostaje bajt w bajt (czytniki skladaja wersje).
+function pdfZXmp(bajty, xmp) {
+  const latin = function (od, doK) { let s = ''; for (let i = od; i < doK; i++) s += String.fromCharCode(bajty[i]); return s; };
+  const ogon = latin(Math.max(0, bajty.length - 2048), bajty.length);
+  const sx = /startxref\s+(\d+)\s+%%EOF\s*$/.exec(ogon);
+  const tr = /trailer\s*<<([\s\S]*?)>>\s*startxref/.exec(ogon);
+  if (!sx || !tr) return bajty;
+  const rozmiar = /\/Size\s+(\d+)/.exec(tr[1]), root = /\/Root\s+(\d+)\s+(\d+)\s+R/.exec(tr[1]);
+  if (!rozmiar || !root) return bajty;
+  const calosc = latin(0, bajty.length);
+  const wzor = new RegExp('(^|[\\r\\n])' + root[1] + '\\s+' + root[2] + '\\s+obj\\s*([\\s\\S]*?)\\s*endobj', 'g');
+  let m, katalog = null;
+  while ((m = wzor.exec(calosc))) katalog = m[2];
+  if (!katalog || !/^<</.test(katalog) || /\/Metadata\s/.test(katalog)) return bajty;
+  const nr = Number(rozmiar[1]);
+  const kod = new TextEncoder();
+  const xmpB = kod.encode(xmp);
+  const czesci = [];
+  let pozycja = bajty.length;
+  const dopisz = function (s) { const b = typeof s === 'string' ? kod.encode(s) : s; czesci.push(b); pozycja += b.length; };
+  dopisz('\n');
+  const offMeta = pozycja;
+  dopisz(nr + ' 0 obj\n<< /Type /Metadata /Subtype /XML /Length ' + xmpB.length + ' >>\nstream\n');
+  dopisz(xmpB);
+  dopisz('\nendstream\nendobj\n');
+  const offKat = pozycja;
+  dopisz(root[1] + ' ' + root[2] + ' obj\n<< /Metadata ' + nr + ' 0 R' + katalog.slice(2) + '\nendobj\n');
+  const offXref = pozycja;
+  const wpis = function (o) { return String(o).padStart(10, '0') + ' 00000 n \n'; };
+  const trailer = tr[1].replace(/\/Size\s+\d+/, '/Size ' + (nr + 1)).replace(/\/Prev\s+\d+/, '');
+  dopisz('xref\n' + root[1] + ' 1\n' + wpis(offKat) + nr + ' 1\n' + wpis(offMeta)
+    + 'trailer\n<<' + trailer + ' /Prev ' + sx[1] + ' >>\nstartxref\n' + offXref + '\n%%EOF\n');
+  return polaczBajty([bajty].concat(czesci));
+}
+
+// HTML do WordPressa i Drupala: tresc w <div data-ai-*> (publikacja.atrybuty). WordPress zachowuje atrybuty
+// data-* w tresci wpisu, Drupal w formacie full_html (basic_html je usuwa: informacja w oknie publikacji).
+function opakowanieCmsAI(kopia, html) {
+  const k = konfigOznaczen();
+  if (!kopia || !kopia.hasAttribute('data-ai-generated') || !k.publikacja || !k.publikacja.atrybuty) return html;
+  return '<div data-ai-generated="true" data-ai-system="' + xmlAI(k.system) + '" data-ai-source-type="'
+    + xmlAI(kopia.getAttribute('data-ai-source-type') || zrodloAI(pochodzenieArtykulu()).iptc) + '">' + html + '</div>';
+}
+
+// Pobranie grafiki: wersja wedlug przelacznika, a gdy napis jest wylaczony - pytanie, czy grafika
+// przedstawia prawdziwe osoby, miejsca albo zdarzenia (prawo 1.4 i 3.5: wtedy publikujacy musi ja oznaczyc).
+// Odpowiedz pamietamy dla tej grafiki, zeby kolejne pobranie nie pytalo drugi raz.
+const odpowiedziOGrafice = new WeakMap();
+function pobierzGrafikeAI(e, link) {
+  const blob = (link && link.blobGrafiki) || imgCurrentBlob;
+  if (!blob) return true;
+  if (e) e.preventDefault();
+  pobierzGrafikeZOznaczeniem(blob, (link && link.getAttribute('download')) || nazwaPlikuEksportu('', 'png'));
+  return false;
+}
+async function pobierzGrafikeZOznaczeniem(blob, nazwa) {
+  let napis = wyborOznaczenia('grafika');
+  if (!napis && etykietaDoWyboru('grafika')) {
+    const odp = odpowiedziOGrafice.has(blob) ? odpowiedziOGrafice.get(blob) : await zapytajOGrafike();
+    if (odp === null) return;
+    odpowiedziOGrafice.set(blob, odp);
+    napis = odp;
+  }
+  let plik = blob;
+  if (napis) {
+    try { plik = await grafikaZEtykieta(blob, tekstEtykietyAI('grafika', kodJezykaArtykulu())); }
+    catch (er) { console.warn('[grafika] bez napisu AI:', er && er.message); powiadomBlad(_t('ozn-grafika-blad')); return; }
+  }
+  pobierzPlik(plik, nazwa);
+}
+let zapytanieOGrafike = null;
+function zapytajOGrafike() {
+  const okno = document.getElementById('ozn-grafika-modal');
+  if (!okno) return Promise.resolve(false);
+  const link = document.getElementById('ozn-grafika-wiecej');
+  if (link) link.href = adresInformacjiAI();
+  okno.classList.add('open');
+  return new Promise(function (ok) { zapytanieOGrafike = ok; });
+}
+function odpowiedzOGrafice(wartosc) {
+  const okno = document.getElementById('ozn-grafika-modal');
+  if (okno) okno.classList.remove('open');
+  const ok = zapytanieOGrafike;
+  zapytanieOGrafike = null;
+  if (ok) ok(wartosc);
+}
+// Miniatury z historii grafik sesji: pobranie ta sama droga (kafel wie, ktora to grafika).
+document.addEventListener('click', function (e) {
+  const a = e.target && e.target.closest && e.target.closest('#img-history-grid .img-hist-pobierz');
+  if (!a) return;
+  const kafle = Array.from(document.querySelectorAll('#img-history-grid .img-hist-kafel'));
+  const poz = typeof imgHistory !== 'undefined' ? imgHistory[kafle.indexOf(a.closest('.img-hist-kafel'))] : null;
+  if (!poz || !poz.blob) return;
+  e.preventDefault();
+  pobierzGrafikeZOznaczeniem(poz.blob, a.getAttribute('download') || nazwaPlikuEksportu('', 'png'));
+});
+
 // ─── EKSPORT: wspolny potok (PDF, DOCX, TXT, schowek, WordPress, historia) ───
 // Kazdy eksport bierze KOPIE artykulu przygotowana tutaj, wiec PDF, DOCX, TXT,
 // schowek, WordPress i zapis do historii widza ten sam tekst: bez elementow tylko
@@ -10574,7 +11014,8 @@ function twardeSpacjePl(korzen) {
 // a do tego bez tresci niewidocznej na ekranie, bez notatek o lukach, z naglowkiem
 // zrodel, etykieta ramki meta i datami w jezyku ARTYKULU. Pominiete notatki
 // sygnalizujemy raz, krotkim komunikatem - plik rozni sie wtedy od ekranu.
-function kopiaDoEksportu(zrodlo) {
+// R9-D: cel ('pdf', 'docx', 'txt', 'schowek', 'cms') dokleja oznaczenie AI (dodajOznaczenieAI).
+function kopiaDoEksportu(zrodlo, cel) {
   const kopia = zrodlo.cloneNode(true);
   const ukryte = niewidoczneWArtykule(zrodlo);
   if (ukryte.length) {
@@ -10597,7 +11038,7 @@ function kopiaDoEksportu(zrodlo) {
   const j = jezykEtykiet();
   uporzadkujArtykul(kopia, j);
   kopia.querySelectorAll('.zrodla-box > .zrodla-label').forEach(function (l) { l.textContent = tekstWJezyku('eksport-zrodla', j); });
-  return kopia;
+  return dodajOznaczenieAI(kopia, cel);
 }
 
 function tytulEksportu(kopia) {
@@ -10754,8 +11195,10 @@ function tekstEksportu(korzen) {
 }
 
 // DOCX z biblioteki docx-natywny.js (prawdziwy WordprocessingML; wczytywana przy pierwszym uzyciu).
+// R9-D: wersja 2 pliku (pliki pwa/lib ida z immutable na rok, wiec nowa tresc = nowa nazwa) zapisuje
+// oznaczenie AI we wlasciwosciach dokumentu (docProps/custom.xml, cp:keywords) z opcje.wlasciwosciAI.
 async function pobierzDocx(element, opcje, nazwa) {
-  await wczytajSkrypt('pwa/lib/docx-natywny.js');
+  await wczytajSkrypt('pwa/lib/docx-natywny-2.js');
   if (!window.DocxNatywny || typeof window.DocxNatywny.zbuduj !== 'function') throw new Error('docx-natywny.js');
   const blob = await window.DocxNatywny.zbuduj(element, opcje);
   pobierzPlik(blob, nazwa);
@@ -10771,6 +11214,7 @@ function opcjeDocxArtykulu(kopia) {
     naglowek: nazwaMarki() || '', stopka: skrotTekstu(tytul, 70),
     etykietaMeta: tekstWJezyku('meta-etykieta', j), etykietaZrodel: tekstWJezyku('eksport-zrodla', j),
     znaki: function (n) { return formaZnakow(n, j); },
+    wlasciwosciAI: wlasciwosciAI(),
   };
 }
 
@@ -10821,13 +11265,17 @@ function stylePdf() {
 }
 
 // Wspolna rama dokumentu PDF (artykul i raport widocznosci).
-function dokumentPdf(tresc, tytul, opis, jezyk) {
+// R9-D: `ai` (wlasciwosciAI) dokleja /Keywords i wlasny klucz /DigitalSourceType (pdfmake przepuszcza
+// klucze Info bez spacji); pakiet XMP dopisuje pdfZXmp po zbudowaniu pliku.
+function dokumentPdf(tresc, tytul, opis, jezyk, ai) {
   const marka = nazwaMarki();
+  const info = { title: tytul, author: marka || '', subject: opis || '', creator: 'Content AI', producer: 'Content AI' };
+  if (ai) { info.keywords = ai.slowa; info.DigitalSourceType = ai.zrodlo; }
   return {
     pageSize: 'A4',
     pageMargins: [71, 72, 71, 64],
     language: jezyk,
-    info: { title: tytul, author: marka || '', subject: opis || '', creator: 'Content AI', producer: 'Content AI' },
+    info: info,
     defaultStyle: { font: 'Literata', fontSize: 11, lineHeight: 0.96, color: DRUK.tekst },
     styles: stylePdf(),
     // Naglowek H2/H3 nie zostaje sam na dole strony.
@@ -11039,6 +11487,8 @@ function trescPdf(korzen) {
     if (tag === 'H1') { const t = tekstPdf(el); if (t.length) { out.push({ text: t, style: 'h1' }); poTytule = true; } return; }
     if (tag === 'H2') { out.push({ text: tekstPdf(el), style: 'h2', headlineLevel: 1 }); return; }
     if (/^H[3-6]$/.test(tag)) { out.push({ text: tekstPdf(el), style: 'h3', headlineLevel: 1 }); return; }
+    // R9-D: widoczna etykieta AI drobnym pismem (jak stopka), nie jako akapit tresci.
+    if (tag === 'P' && el.classList.contains('oznaczenie-ai')) { const t = tekstPdf(el); if (t.length) out.push({ text: t, style: 'meta2', margin: [0, 10, 0, 6] }); return; }
     if (tag === 'P') {
       const t = tekstPdf(el);
       if (!t.length) return;
@@ -11105,15 +11555,26 @@ function dlPdf() {
   zaladujPdfMake(function () {
     // Model mogl nadac elementowi id="pdfMake" - wtedy window.pdfMake to element, nie biblioteka.
     if (!window.pdfMake || typeof window.pdfMake.createPdf !== 'function') { powiadomBlad(_t('msg-pdf-load-fail')); return; }
-    const kopia = kopiaDoEksportu(art);
+    const kopia = kopiaDoEksportu(art, 'pdf');
     const czysta = document.createElement('div');
     czysta.innerHTML = oczyscHtmlModelu(kopia.innerHTML);
     const tytul = tytulEksportu(kopia);
     // R6-F (E-18): twarde spacje w tresci strony, metadane (tytul, opis) bez zmian.
     twardeSpacjePl(czysta);
-    const dd = dokumentPdf(trescPdf(czysta), tytul, metaEksportu(kopia), jezykDokumentu());
+    const ai = wlasciwosciAI();
+    const dd = dokumentPdf(trescPdf(czysta), tytul, metaEksportu(kopia), jezykDokumentu(), ai);
     ustawKrojePdf();
-    pdfMake.createPdf(dd).download(nazwaPlikuEksportu(tytul, 'pdf'));
+    pobierzPdf(dd, nazwaPlikuEksportu(tytul, 'pdf'), ai);
+  });
+}
+// R9-D: plik PDF przez bufor - z oznaczeniem AI dopisujemy do niego pakiet XMP (pdfZXmp), potem pobranie.
+function pobierzPdf(dd, nazwa, ai) {
+  const doc = pdfMake.createPdf(dd);
+  if (!ai || typeof doc.getBuffer !== 'function') { doc.download(nazwa); return; }
+  doc.getBuffer(function (bufor) {
+    let bajty = new Uint8Array(bufor.buffer || bufor, bufor.byteOffset || 0, bufor.byteLength || bufor.length);
+    try { bajty = pdfZXmp(bajty, xmpAI(ai.zrodlo, ai.system)); } catch (e) { console.warn('[pdf] bez XMP:', e && e.message); }
+    pobierzPlik(new Blob([bajty], { type: 'application/pdf' }), nazwa);
   });
 }
 // kolory-eksportu:koniec
@@ -12732,7 +13193,7 @@ function saveTemplate() {
 // pochodzil z konca generowania - w trakcie edycji kopiowal tekst sprzed zmian.
 function copyOut() {
   const art = document.getElementById('article');
-  const tekst = art && art.innerHTML.trim() ? tekstEksportu(kopiaDoEksportu(art)) : currentText;
+  const tekst = art && art.innerHTML.trim() ? tekstEksportu(kopiaDoEksportu(art, 'schowek')) : currentText;
   navigator.clipboard.writeText(tekst).then(() => {
     const btn = document.getElementById('copy-btn');
     btn.innerHTML = ikona('check', 'ok') + '<span>' + _t('btn-copied') + '</span>';
@@ -12744,7 +13205,7 @@ function copyOut() {
 function dlTxt() {
   const art = document.getElementById('article');
   if (!art || !art.innerHTML.trim()) return;
-  const kopia = kopiaDoEksportu(art);
+  const kopia = kopiaDoEksportu(art, 'txt');
   const nazwa = nazwaPlikuEksportu(tytulEksportu(kopia), 'txt');
   // R6-F (E-18): polski sklad w pliku (twarde spacje po wyrazach jednoliterowych).
   const blob = new Blob([tekstEksportu(twardeSpacjePl(kopia))], { type: 'text/plain;charset=utf-8' });
@@ -12760,7 +13221,7 @@ async function dlDocx() {
   const przycisk = btn ? btn.innerHTML : '';
   if (btn) { btn.innerHTML = _t('msg-loading-docx'); btn.disabled = true; }
   try {
-    const kopia = kopiaDoEksportu(art);
+    const kopia = kopiaDoEksportu(art, 'docx');
     // R6-F (E-18): metadane (tytul, opis) przed twardymi spacjami, tresc dokumentu po nich.
     const opcje = opcjeDocxArtykulu(kopia), nazwa = nazwaPlikuEksportu(tytulEksportu(kopia), 'docx');
     await pobierzDocx(twardeSpacjePl(kopia), opcje, nazwa);
@@ -13910,6 +14371,11 @@ function openWpPublish() {
   if (!hasActive) { openWpModal(); return; }
   const cms = activeCms === 'drupal' ? 'Drupal' : 'WordPress';
   document.getElementById('pub-modal-title').textContent = (currentLang === 'en' ? 'Publish to ' : 'Publikuj w ') + cms;
+  // R9-D (PR8-19): przelacznik etykiety AI, przypomnienie o art. 50 ust. 4 i uwaga o formacie Drupala.
+  rysujPrzelacznikiOznaczen();
+  const wiecej = document.getElementById('ozn-cms-wiecej'); if (wiecej) wiecej.href = adresInformacjiAI();
+  const drupal = document.getElementById('ozn-cms-drupal');
+  if (drupal) drupal.hidden = !(activeCms === 'drupal' && metadaneAI('tekst') && (drupalSettings.format || 'full_html') !== 'full_html');
   document.getElementById('wp-publish-modal').classList.add('open');
 }
 function closeWpPublishModal() { document.getElementById('wp-publish-modal').classList.remove('open'); }
@@ -13994,13 +14460,14 @@ async function publishToCms(status) {
     const metaEl = art.querySelector('.meta-box p');
     const excerpt = metaEl ? metaEl.textContent.replace(/\s+/g, ' ').trim() : '';
     // Ta sama kopia co do plikow: bez data-tylko-ekran, notatek o lukach i tresci niewidocznej.
-    const artClone = kopiaDoEksportu(art);
+    const artClone = kopiaDoEksportu(art, 'cms');
     artClone.querySelector('.meta-box')?.remove();
     // Tytul idzie osobnym polem; H1 w tresci dalby wpis z dwoma H1.
     const h1 = artClone.querySelector('h1');
     const title = (h1 && h1.textContent.trim()) || document.getElementById('topic').value.trim() || _t('wp-default-title');
     if (h1) h1.remove();
-    const content = oczyscHtmlModelu(artClone.innerHTML);
+    // R9-D: tresc wpisu w <div data-ai-*> (filtr czysci atrybuty, wiec opakowanie po nim).
+    const content = opakowanieCmsAI(artClone, oczyscHtmlModelu(artClone.innerHTML));
 
     if (activeCms === 'wp') {
       await publishToWordPress(title, content, excerpt, status, res);
@@ -14526,8 +14993,9 @@ function odswiezGrupyPaska() {
     const menu = document.getElementById('grupa-' + n + '-menu');
     const wrap = document.getElementById('grupa-' + n + '-wrap');
     if (!menu || !wrap) return;
+    // R9-D: opcja eksportu (przelacznik etykiety AI) sama nie pokazuje grupy - tylko przyciski formatow.
     const cos = [...menu.children].some(function(e) {
-      return e.style.display !== 'none' && !e.classList.contains('grupa-sep') && !e.classList.contains('arkusz-tytul');
+      return e.style.display !== 'none' && !e.classList.contains('grupa-sep') && !e.classList.contains('arkusz-tytul') && !e.classList.contains('grupa-opcja');
     });
     wrap.style.display = cos ? 'inline-flex' : 'none';
   });
@@ -14858,8 +15326,10 @@ async function runImprove() {
   try {
     // true: okno samokorekty konczylo generate() od razu, a wklejony tekst znikal
     // z bazy, zanim ktokolwiek go uzyl (kod-07). Popraw to swiadomy wybor.
+    poprawaWklejonego = true;
     await generate(true);
   } finally {
+    poprawaWklejonego = false;
     document.getElementById('topic').value = tematBriefu;
     // Przywróć bazę bez temp doca (po tozsamosci: lista mogla sie zmienic w trakcie)
     const k = docs.indexOf(tempDoc);
@@ -14896,7 +15366,8 @@ const SCHEMA_ENTITY = {
   postalCode: BRAND.postalCode || '',
   addressLocality: BRAND.addressLocality || '',
   addressCountry: BRAND.addressCountry || 'PL',
-  defaultAuthor: BRAND.defaultAuthor || 'Redakcja',
+  // R9-D (PR8-20): bez domyslnego autora "Redakcja" (to nie osoba); autor tylko z konfiguracji marki.
+  defaultAuthor: BRAND.defaultAuthor || '',
   sameAs: (BRAND.sameAs && BRAND.sameAs.length) ? BRAND.sameAs.slice() : []
 };
 
@@ -14926,7 +15397,7 @@ function buildFaqSchema() {
     if (answer.trim()) pairs.push({ q, a: answer.trim().substring(0, 300) });
   });
   if (!pairs.length) return null;
-  return {
+  return schemaZOznaczeniemAI({
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": pairs.map(p => ({
@@ -14934,7 +15405,13 @@ function buildFaqSchema() {
       "name": p.q,
       "acceptedAnswer": { "@type": "Answer", "text": p.a }
     }))
-  };
+  });
+}
+// R9-D (PR8-17, PR8-20): tresc z AI w danych strukturalnych - schema.org digitalSourceType (Article, FAQPage).
+// Organization, Service, LocalBusiness i BreadcrumbList to szablony z danych marki: bez oznaczenia.
+function schemaZOznaczeniemAI(schema) {
+  if (schema && metadaneAI('tekst')) schema.digitalSourceType = zrodloAI(pochodzenieArtykulu()).schema;
+  return schema;
 }
 
 function buildOrganizationSchema(cfg) {
@@ -15003,15 +15480,18 @@ function buildArticleSchema(cfg) {
   const e = SCHEMA_ENTITY;
   const headline = _articleHeadline() || (nazwaMarki() + " - artykuł");
   const today = new Date().toISOString().slice(0, 10);
-  return {
+  const schema = {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": headline,
     "datePublished": today,
     "dateModified": today,
-    "author": { "@type": "Person", "name": e.defaultAuthor },
     "publisher": { "@type": "Organization", "@id": _orgId(cfg), "name": cfg.name || "" }
   };
+  // Autor: osoba z konfiguracji marki albo wydawca (organizacja), nigdy zmyslona "Redakcja".
+  if (e.defaultAuthor) schema.author = { "@type": "Person", "name": e.defaultAuthor };
+  else if (cfg.name) schema.author = { "@type": "Organization", "@id": _orgId(cfg), "name": cfg.name };
+  return schemaZOznaczeniemAI(schema);
 }
 
 function buildBreadcrumbSchema(cfg) {
@@ -15436,8 +15916,8 @@ const HTML_ATRYBUTY = new Set(['class','id','title','colspan','rowspan','scope',
 // mogla trafic na jedna z kilkudziesieciu regul CSS, ktore chowaja tekst (.sr-only,
 // .tab-panel...): na ekranie nic nie widac, a eksport i WordPress wynosza tresc
 // (it-bezpieczenstwo, R3). data-tylko-ekran z modelu kasowalby z kolei tresc z eksportu.
-const HTML_KLASY = new Set(['meta-box', 'meta-label', 'zrodla-box', 'zrodla-label', 'zrodlo-data']);
-const HTML_DATA = new Set(['data-brak']);
+const HTML_KLASY = new Set(['meta-box', 'meta-label', 'zrodla-box', 'zrodla-label', 'zrodlo-data', 'oznaczenie-ai']);
+const HTML_DATA = new Set(['data-brak', 'data-ai-label']);
 function oczyscHtmlModelu(html) {
   if (!html) return '';
   let dok;
@@ -17386,6 +17866,9 @@ async function imgResizeB64(b64, targetW, targetH) {
     // dostana prawdziwy typ zamiast falszywego image/png.
     const typ = (ia[0] === 0xFF && ia[1] === 0xD8) ? 'image/jpeg'
       : (ia[0] === 0x52 && ia[1] === 0x49 && ia[8] === 0x57 && ia[9] === 0x45) ? 'image/webp' : 'image/png';
+    // R9-D (PR8-17): jedyne miejsce, gdzie bajty dostawcy staja sie plikiem - tu XMP z IPTC Digital Source Type.
+    // PNG z manifestem C2PA dostawcy (caBX) zostaje bajt w bajt (kazda zmiana uniewaznia podpis).
+    if (typ === 'image/png' && metadaneAI('grafika')) { resolve(new Blob([oznaczPng(ia).bajty], { type: typ })); return; }
     resolve(new Blob([ab], { type: typ }));
   });
 }
@@ -17433,6 +17916,8 @@ async function imgCopyResult() {
   if (!imgCurrentBlob) return;
   try {
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': imgCurrentBlob })]);
+    // R9-D (D-07, PR8-21): przegladarka zapisuje do schowka same piksele - bez XMP i bez C2PA.
+    if (oznaczeniaWlaczone()) pokazPowiadomienie(_t('ozn-grafika-schowek'), 'info', 9000);
     const btn = document.getElementById('img-copy-btn');
     btn.textContent = _t('msg-copied-2');
     setTimeout(() => { btn.innerHTML = ikona('copy') + _t('btn-copy'); }, 2000);
@@ -18373,8 +18858,10 @@ async function audioDownloadDocx(btn){
   var old=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="au-spin"></span>';
   try{
     var kopia=czyscKopie(sc.cloneNode(true));
+    // R9-D: skrypt napisal model - oznaczenie AI we wlasciwosciach (bez AIEditedByHuman: edycji skryptu nie sledzimy).
+    var aiSkryptu=wlasciwosciAI('ai'); if(aiSkryptu) delete aiSkryptu.edytowany;
     await pobierzDocx(kopia, { tytul: skrotTekstu(tytul, 200), autor: nazwaMarki()||'', jezyk: ({ pl:'pl-PL', en:'en-US', de:'de-DE', cs:'cs-CZ' })[kod]||'pl-PL',
-      naglowek: nazwaMarki()||'', stopka: skrotTekstu(tytul, 70) }, nazwaPlikuEksportu(tytul, 'docx', currentLang==='en' ? '-script' : '-skrypt'));
+      naglowek: nazwaMarki()||'', stopka: skrotTekstu(tytul, 70), wlasciwosciAI: aiSkryptu }, nazwaPlikuEksportu(tytul, 'docx', currentLang==='en' ? '-script' : '-skrypt'));
   }catch(e){ console.error('[docx]', e); powiadomBlad(_t('msg-docx-error')); }
   btn.innerHTML=old; btn.disabled=false;
 }
