@@ -1244,8 +1244,10 @@ function testyMarki() {
     sprawdz('trasa zapisu istnieje',
       zrodlo.includes("sciezka === '/api/marka' && req.method === 'POST'"));
     const odPost = zrodlo.indexOf("sciezka === '/api/marka' && req.method === 'POST'");
-    sprawdz('zapis tylko dla administratora',
-      odPost > 0 && zrodlo.slice(odPost, odPost + 400).includes("sesja.rola !== 'admin'"));
+    // R9-C (dzierzawy, ARCH8-09): zapis dla zarzadzajacego organizacja - w glownej admin
+    // (dzierzawy.mozeZarzadzac), w samoobslugowej jej wlasciciel; dzialanie w testy-dzierzawy.js.
+    sprawdz('zapis tylko dla zarzadzajacego organizacja (glowna: administrator)',
+      odPost > 0 && zrodlo.slice(odPost, odPost + 400).includes('dzierzawy.mozeZarzadzac(konto, konto.org)'));
     // Trasy musza lezec ZA brama logowania, inaczej konfiguracja marki jest
     // czytelna dla kazdego, kto zna adres.
     sprawdz('trasy marki za brama logowania',

@@ -6,9 +6,10 @@
 #
 # NIE NADPISUJ /etc/caddy/Caddyfile tym plikiem. Na serwerze moga stac inne uslugi
 # (np. Cosmos). Zrob kopie, a potem:
-#   1. blok globalny { servers { ... } } - jesli plik ma juz blok globalny (nawiasy
-#      klamrowe bez nazwy na samej gorze), DOPISZ do niego sekcje servers; jesli
-#      nie ma - wklej go NA SAMA GORE pliku (Caddy przyjmuje tylko jeden, pierwszy),
+#   1. blok globalny { log default { ... } servers { ... } } - jesli plik ma juz blok
+#      globalny (nawiasy klamrowe bez nazwy na samej gorze), DOPISZ do niego sekcje
+#      log default i servers (gdy jest juz log default: dopisz do niego format filter);
+#      jesli nie ma - wklej go NA SAMA GORE pliku (Caddy przyjmuje tylko jeden, pierwszy),
 #   2. bloki content-ai.net, www.content-ai.net i app.content-ai.net - ZASTAP nimi
 #      dotychczasowe bloki tych domen (albo dopisz, jesli ich nie bylo),
 #   3. sprawdz i przeladuj:
@@ -24,6 +25,27 @@
 #   caddy version
 
 {
+    # Dziennik Caddy bez kluczy API uzytkownikow (SEC8-01). Przy bledzie 502 (restart Node)
+    # Caddy zapisuje do journald cale zadanie z naglowkami; sam ukrywa tylko Cookie
+    # i Authorization, a X-Api-Key, X-Openai-Key i X-Eleven-Key szlyby jawnym tekstem.
+    # Filtr usuwa je ze wszystkich wpisow (bledy i dziennik dostepu kazdej domeny); Cookie
+    # (zaszyfrowane klucze BYOK), Authorization i Set-Cookie tez, na wypadek log_credentials.
+    # NIE dodawaj w blokach domen log { output file ... } bez tego samego filtra.
+    log default {
+        output stderr
+        format filter {
+            wrap json
+            fields {
+                request>headers>X-Api-Key delete
+                request>headers>X-Openai-Key delete
+                request>headers>X-Eleven-Key delete
+                request>headers>Xi-Api-Key delete
+                request>headers>Cookie delete
+                request>headers>Authorization delete
+                resp_headers>Set-Cookie delete
+            }
+        }
+    }
     servers {
         # Adresy Cloudflare. Tylko z nich Caddy przyjmie adres klienta z naglowka;
         # od kazdego innego polaczenia {client_ip} to adres samego polaczenia.
@@ -52,7 +74,8 @@ content-ai.net {
 
     # --- Pamiec podreczna ---
     # HTML: przegladarka zawsze pyta (ETag); krawedz Cloudflare trzyma 10 minut.
-    @html path / /en/ /prywatnosc/ /en/privacy/ *.html
+    # Podstrony to katalogi z index.html, wiec kazdy adres zakonczony ukosnikiem.
+    @html path */ *.html
     header @html Cache-Control "public, max-age=0, must-revalidate"
     header @html CDN-Cache-Control "max-age=600"
     # CSS i JS maja w adresie ?v=<skrot tresci> (buduj_strone.py): nowa wersja = nowy adres.
@@ -100,8 +123,35 @@ app.content-ai.net {
         # bez zmian i Node mu ufa (limit prob logowania do ominiecia), a bez naglowka
         # wszyscy uzytkownicy sa dla Node jednym adresem 127.0.0.1.
         header_up X-Real-IP {client_ip}
+        # Restart przy wdrozeniu (ARCH8-25): przez 10 s Caddy ponawia polaczenie co 250 ms
+        # zamiast od razu oddac 502; strony i odczyty przeczekuja start nowego procesu.
+        lb_try_duration 10s
+        lb_try_interval 250ms
     }
 }
+
+# ── Srodowisko testowe (M-9; tylko gdy wdrozone: contentai-test na 127.0.0.1:3101) ──
+# Calosc za haslem Caddy poza webhookiem Stripe (ten podpisuje sie sam, HMAC). Haslo:
+# caddy hash-password, wynik zamiast WSTAW_TUTAJ_HASH_BCRYPT (Caddy 2.7: basicauth).
+# Naglowek Authorization z basic_auth nie idzie dalej do Node. Dziennik: filtr z bloku globalnego.
+#
+# test.content-ai.net {
+#     header {
+#         Strict-Transport-Security "max-age=31536000; includeSubDomains"
+#         X-Robots-Tag "noindex, nofollow"
+#         -Server
+#     }
+#     @chronione not path /platnosci/webhook/*
+#     basic_auth @chronione {
+#         WSTAW_TUTAJ_LOGIN WSTAW_TUTAJ_HASH_BCRYPT
+#     }
+#     reverse_proxy 127.0.0.1:3101 {
+#         header_up X-Real-IP {client_ip}
+#         header_up -Authorization
+#         lb_try_duration 10s
+#         lb_try_interval 250ms
+#     }
+# }
 
 # ── OpenSEO (tylko gdy wdrozone, CAI_OPENSEO_PORT=3110) ──────────────────────
 # Port 3110 (brama Content AI), NIGDY 3001 (goly kontener bez logowania).
@@ -128,3 +178,4 @@ app.content-ai.net {
 #   curl -sI https://www.content-ai.net/ | head -3                       (301 -> https://content-ai.net/)
 #   curl -sI https://app.content-ai.net/ | grep -iE 'strict|content-security'
 #   journalctl -u contentai -n 50 --no-pager | grep -i 'x-real-ip'      (pusto = dobrze)
+#   journalctl -u caddy --no-pager -o cat | grep -c -E 'X-Api-Key|X-Openai-Key|X-Eleven-Key'   (0 = dobrze)

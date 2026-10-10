@@ -10,16 +10,27 @@
  *   POST /v1/audio/transcriptions           OpenAI STT (json / verbose_json / text / srt / vtt)
  *   POST /eleven/v1/text-to-speech/:glos    ElevenLabs TTS (MP3), tez /v1/text-to-speech/:glos
  *   POST /v1/embeddings                     NVIDIA / OpenAI embeddings (wektory z hasha)
+ *   GET  /v1/models                         Anthropic (x-api-key) i OpenAI (Bearer): sprawdzenie klucza bez kosztu
+ *   GET  /eleven/v1/user, /v1/user          ElevenLabs (xi-api-key): sprawdzenie klucza bez kosztu
  *   GET  /zdrowie                           200 + lista obslugiwanych rodzajow
  *   GET  /_atrapa/wywolania                 ostatnie wywolania (do 200), ?n=20
+ *
+ * Klucze (testy BYOK, runda 9): klucz zawierajacy "zly" albo "deadbeef" (szesnastkowy klucz ElevenLabs)
+ * -> 401 w formacie dostawcy (kazda sciezka),
+ * "bez-uprawnien" -> klucz rozpoznany, ale bez uprawnienia (Anthropic 403 permission_error, OpenAI 401
+ * "Missing scopes", ElevenLabs 401 missing_permissions). ATRAPA_ZAPISUJ_KLUCZE=1 (albo KONF.zapisujKlucze
+ * = true w module) dopisuje do dziennika wywolan pole `klucz` z naglowka autoryzacji - TYLKO testy
+ * (kontrola "konto na wlasnym kluczu nigdy nie dostaje klucza serwera").
  *
  * Start:  node narzedzia/atrapa/dostawcy.js  (port z ATRAPA_PORT, domyslnie 9199)
  * Zmienne: ATRAPA_PORT, ATRAPA_OPOZNIENIE_MS (np. 300 albo 200-800), ATRAPA_BLAD (429|500|529),
  *          ATRAPA_BLAD_RODZAJ (lista rodzajow, puste = wszystkie), ATRAPA_BLAD_RAZY (ile razy, potem normalnie),
  *          ATRAPA_BLAD_CO (co ktore pasujace wywolanie), ATRAPA_WYSZUKIWANIE (tak|nie|blad),
  *          ATRAPA_PAUSE_TURN=1, ATRAPA_WSTEP=1 (tekst przed wyszukiwaniem), ATRAPA_MYSLENIE (tak|nie),
- *          ATRAPA_DZIENNIK (plik dziennika wywolan).
+ *          ATRAPA_DZIENNIK (plik dziennika wywolan; uruchom(0) w procesie testow bez tej zmiennej
+ *          trzyma wywolania tylko w pamieci, w tablicy `ostatnie`).
  * Znaczniki w tresci zapytania (dzialaja tylko dla tego wywolania): [atrapa:429] [atrapa:500] [atrapa:529]
+ *   [atrapa:c2pa] (grafika: PNG z fragmentem caBX jak manifest C2PA dostawcy)
  *   [atrapa:opoznienie=3000] [atrapa:bez-sieci] [atrapa:siec-blad] [atrapa:pause] [atrapa:max-tokens]
  *   [atrapa:pusty] [atrapa:zly-json] [atrapa:ocena=55] [atrapa:wstep] [atrapa:bez-uwag] [atrapa:fetch-blad]
  *   Kazdy mozna zawezic do rodzaju: [atrapa:529@artykul].
@@ -58,10 +69,12 @@ const KONF = {
   myslenie: String(process.env.ATRAPA_MYSLENIE || 'tak').toLowerCase() !== 'nie',
   cytatWJson: process.env.ATRAPA_CYTAT_W_JSON === '1',
   dziennik: process.env.ATRAPA_DZIENNIK || '',
+  zapisujKlucze: process.env.ATRAPA_ZAPISUJ_KLUCZE === '1',
 };
 if (!KONF.dziennik) {
   KONF.dziennik = path.join(require('os').tmpdir(), 'atrapa-wywolania-' + KONF.port + '.log');
 }
+const DZIENNIK_DOMYSLNY = KONF.dziennik;
 
 // ─── Narzedzia ogolne ────────────────────────────────────────────────────────
 
@@ -1451,14 +1464,23 @@ function obrazPng(szer, wys, ziarno) {
   ]);
 }
 
+/** PNG z fragmentem caBX zaraz po IHDR (tak dostawcy osadzaja manifest C2PA w JUMBF). */
+function zFragmentemC2pa(png) {
+  const poIhdr = 8 + 4 + 4 + 13 + 4;
+  const jumbf = Buffer.concat([Buffer.from([0, 0, 0, 40]), Buffer.from('jumb', 'ascii'), Buffer.from([0, 0, 0, 32]),
+    Buffer.from('jumdc2pa', 'ascii'), Buffer.alloc(8), Buffer.from('atrapa-c2pa', 'ascii'), Buffer.alloc(1)]);
+  return Buffer.concat([png.subarray(0, poIhdr), kawalekPng('caBX', jumbf), png.subarray(poIhdr)]);
+}
+
 function odpObraz(cialo, zn) {
   const rozm = String(cialo.size || '1024x1024');
   let [s, w] = rozm.split('x').map(Number);
   if (!s || !w) { s = 1024; w = 1024; }
   const n = Math.max(1, Math.min(4, Number(cialo.n) || 1));
   const data = [];
+  const c2pa = /\[atrapa:c2pa\]/i.test(String(cialo.prompt || ''));
   for (let i = 0; i < n; i++) {
-    const png = obrazPng(s, w, String(cialo.prompt || '') + i);
+    const png = c2pa ? zFragmentemC2pa(obrazPng(s, w, String(cialo.prompt || '') + i)) : obrazPng(s, w, String(cialo.prompt || '') + i);
     if (cialo.response_format === 'url') data.push({ url: 'data:image/png;base64,' + png.toString('base64'), revised_prompt: cialo.prompt || '' });
     else data.push({ b64_json: png.toString('base64'), revised_prompt: cialo.prompt || '' });
   }
@@ -1569,6 +1591,7 @@ const ostatnie = [];
 function zapiszWywolanie(wpis) {
   ostatnie.push(wpis);
   if (ostatnie.length > 200) ostatnie.shift();
+  if (!KONF.dziennik) return;
   try { fs.mkdirSync(path.dirname(KONF.dziennik), { recursive: true }); fs.appendFileSync(KONF.dziennik, JSON.stringify(wpis) + '\n'); } catch { /* dziennik nie moze zatrzymac atrapy */ }
 }
 
@@ -1580,6 +1603,35 @@ function listaRodzajow() {
  * Wspolna obsluga: (metoda, sciezka z query, naglowki, bufor ciala) -> { status, naglowki, cialo(Buffer|string), rodzaj }
  * Bez opoznienia - opoznienie dokłada warstwa wywolujaca.
  */
+const ZLY_KLUCZ = /zly|deadbeef/i;
+
+/** Klucz z naglowka autoryzacji zapytania (Anthropic, OpenAI/NVIDIA, ElevenLabs) albo ''. */
+function kluczZapytania(naglowki) {
+  const n = naglowki || {};
+  const wartosc = n['x-api-key'] || n['xi-api-key'] || n.authorization || n.Authorization || '';
+  return String(wartosc).replace(/^Bearer\s+/i, '');
+}
+
+/** Sprawdzenie klucza bez kosztu: GET /v1/models (Anthropic, OpenAI) i GET /v1/user (ElevenLabs). */
+function odpSprawdzenieKlucza(sc, naglowki, json) {
+  const klucz = kluczZapytania(naglowki);
+  const eleven = /\/user$/.test(sc);
+  const anthropic = !eleven && Boolean(naglowki && naglowki['x-api-key']);
+  const rodzaj = eleven ? 'eleven-klucz' : anthropic ? 'anthropic-klucz' : 'openai-klucz';
+  if (!klucz || ZLY_KLUCZ.test(klucz)) {
+    if (eleven) return json(401, bladEleven(401).json, rodzaj);
+    return json(401, (anthropic ? bladAnthropic(401) : bladOpenAi(401)).json, rodzaj);
+  }
+  if (/bez-uprawnien/i.test(klucz)) {
+    if (eleven) return json(401, { detail: { status: 'missing_permissions', message: 'The API key you used is missing the permission user_read (atrapa)' } }, rodzaj);
+    if (anthropic) return json(403, { type: 'error', error: { type: 'permission_error', message: 'Your API key does not have permission to use the specified resource (atrapa)' } }, rodzaj);
+    return json(401, { error: { message: 'You have insufficient permissions for this operation. Missing scopes: api.model.read (atrapa)', type: 'invalid_request_error', param: null, code: null } }, rodzaj);
+  }
+  if (eleven) return json(200, { subscription: { tier: 'free', character_count: 0, character_limit: 10000 }, is_new_user: false, xi_api_key: null }, rodzaj);
+  if (anthropic) return json(200, { data: [{ type: 'model', id: 'claude-sonnet-5', display_name: 'Model Anthropic (atrapa)', created_at: '2026-01-01T00:00:00Z' }], has_more: false, first_id: 'claude-sonnet-5', last_id: 'claude-sonnet-5' }, rodzaj);
+  return json(200, { object: 'list', data: [{ id: 'gpt-image-2.5-flare', object: 'model', created: 1767225600, owned_by: 'atrapa' }] }, rodzaj);
+}
+
 function obsluz(metoda, sciezkaPelna, naglowki, bufor) {
   const [sciezka] = String(sciezkaPelna || '/').split('?');
   const sc = sciezka.replace(/\/+$/, '') || '/';
@@ -1587,6 +1639,7 @@ function obsluz(metoda, sciezkaPelna, naglowki, bufor) {
   const json = (status, obiekt, rodzaj, dod = {}) => ({ status, naglowki: Object.assign({ 'content-type': 'application/json; charset=utf-8' }, dod), cialo: JSON.stringify(obiekt), rodzaj });
 
   if (metoda === 'OPTIONS') return { status: 204, naglowki: {}, cialo: '', rodzaj: 'cors' };
+  if (metoda === 'GET' && (/\/v1\/models$/.test(sc) || /\/v1\/user$/.test(sc))) return odpSprawdzenieKlucza(sc, naglowki, json);
   if (metoda === 'GET' && (sc === '/zdrowie' || sc === '/health')) {
     return json(200, { ok: true, atrapa: 'dostawcy-ai', wersja: WERSJA, port: KONF.port, rodzaje: listaRodzajow(), opisy: RODZAJE_OPIS, ustawienia: { opoznienie_ms: KONF.opoznienie, blad: KONF.blad || null, blad_rodzaj: KONF.bladRodzaj, blad_razy: KONF.bladRazy, wyszukiwanie: KONF.wyszukiwanie, pause_turn: KONF.pauseTurn, wstep: KONF.wstep, myslenie: KONF.myslenie, dziennik: KONF.dziennik } }, 'zdrowie');
   }
@@ -1595,6 +1648,13 @@ function obsluz(metoda, sciezkaPelna, naglowki, bufor) {
     return json(200, ostatnie.slice(-n), 'wywolania');
   }
   if (metoda !== 'POST') return json(404, { error: 'atrapa: nieznana sciezka ' + sc }, 'brak');
+
+  // Klucz odrzucony przez dostawce (testy zly-klucz): "zly" w kluczu -> 401 w formacie dostawcy.
+  if (ZLY_KLUCZ.test(kluczZapytania(naglowki))) {
+    if (/text-to-speech/.test(sc)) return json(401, bladEleven(401).json, 'zly-klucz');
+    if (/\/messages$/.test(sc)) return json(401, bladAnthropic(401).json, 'zly-klucz');
+    return json(401, bladOpenAi(401).json, 'zly-klucz');
+  }
 
   let cialo = null;
   const tekst = bufor ? bufor.toString('utf8') : '';
@@ -1663,6 +1723,9 @@ function opoznienieDla(tekst, rodzaj) {
 // ─── Serwer ─────────────────────────────────────────────────────────────────
 
 function uruchom(port = KONF.port, host = KONF.host) {
+  // Atrapa w procesie testow serwera (port 0, bez ATRAPA_DZIENNIK) nie dopisuje do dziennika
+  // wspolnej atrapy 9199: wywolania zostaja w pamieci (ostatnie), test moze podac wlasny plik.
+  if (Number(port) === 0 && KONF.dziennik === DZIENNIK_DOMYSLNY && !process.env.ATRAPA_DZIENNIK) KONF.dziennik = '';
   const serwer = http.createServer((req, res) => {
     const kawalki = [];
     req.on('data', (c) => kawalki.push(c));
@@ -1681,16 +1744,23 @@ function uruchom(port = KONF.port, host = KONF.host) {
         const cialo = Buffer.isBuffer(wynik.cialo) ? wynik.cialo : Buffer.from(String(wynik.cialo || ''), 'utf8');
         res.writeHead(wynik.status, Object.assign({}, CORS, wynik.naglowki, { 'content-length': cialo.length }));
         res.end(cialo);
-        if (req.method === 'POST') {
+        if (req.method === 'POST' || /-klucz$/.test(wynik.rodzaj || '')) {
           let fragment = '';
-          try { const c = JSON.parse(bufor.toString('utf8')); fragment = (tekstBlokow(c.system) || (c.messages && tekstBlokow(c.messages[0] && c.messages[0].content)) || c.prompt || c.input || c.text || '').slice(0, 140); } catch { fragment = ''; }
-          zapiszWywolanie({ czas: new Date().toISOString(), rodzaj: wynik.rodzaj, sciezka: req.url, status: wynik.status, ms: Date.now() - start, bajty: cialo.length, poczatek: fragment.replace(/\s+/g, ' ') });
+          try {
+            const c = JSON.parse(bufor.toString('utf8'));
+            const f = tekstBlokow(c.system) || (c.messages && tekstBlokow(c.messages[0] && c.messages[0].content)) || c.prompt || c.input || c.text || '';
+            // input embeddings bywa tablica: do dziennika idzie tekst
+            fragment = (typeof f === 'string' ? f : JSON.stringify(f)).slice(0, 140);
+          } catch { fragment = ''; }
+          const wpis = { czas: new Date().toISOString(), rodzaj: wynik.rodzaj, sciezka: req.url, status: wynik.status, ms: Date.now() - start, bajty: cialo.length, poczatek: fragment.replace(/\s+/g, ' ') };
+          if (KONF.zapisujKlucze) wpis.klucz = kluczZapytania(req.headers);
+          zapiszWywolanie(wpis);
         }
       }, czekaj);
     });
   });
   serwer.listen(port, host, () => {
-    console.log(`[atrapa] dostawcy AI na http://${host}:${port} (wersja ${WERSJA}), dziennik: ${KONF.dziennik}`);
+    console.log(`[atrapa] dostawcy AI na http://${host}:${serwer.address().port} (wersja ${WERSJA}), dziennik: ${KONF.dziennik || 'tylko w pamieci'}`);
   });
   return serwer;
 }
@@ -1706,10 +1776,12 @@ async function obsluzRoute(route) {
   const wynik = obsluz(req.method(), sciezka, req.headers(), bufor);
   const czekaj = req.method() === 'POST' ? opoznienieDla(bufor.toString('utf8').slice(0, 200000), wynik.rodzaj) : 0;
   if (czekaj) await new Promise((r) => setTimeout(r, czekaj));
-  zapiszWywolanie({ czas: new Date().toISOString(), rodzaj: wynik.rodzaj, sciezka: 'route:' + url.hostname + url.pathname, status: wynik.status, ms: czekaj, bajty: (wynik.cialo || '').length });
+  const wpis = { czas: new Date().toISOString(), rodzaj: wynik.rodzaj, sciezka: 'route:' + url.hostname + url.pathname, status: wynik.status, ms: czekaj, bajty: (wynik.cialo || '').length };
+  if (KONF.zapisujKlucze) wpis.klucz = kluczZapytania(req.headers());
+  zapiszWywolanie(wpis);
   return route.fulfill({ status: wynik.status, headers: Object.assign({}, CORS, wynik.naglowki), body: Buffer.isBuffer(wynik.cialo) ? wynik.cialo : String(wynik.cialo || '') });
 }
 
-module.exports = { odpowiedz, odpowiedzAnthropic, obsluz, obsluzRoute, uruchom, rozpoznaj, obrazPng, mp3Cisza, KONF, CORS, listaRodzajow };
+module.exports = { odpowiedz, odpowiedzAnthropic, obsluz, obsluzRoute, uruchom, rozpoznaj, obrazPng, mp3Cisza, KONF, CORS, listaRodzajow, kluczZapytania, ostatnie };
 
 if (require.main === module) uruchom();

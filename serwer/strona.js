@@ -225,6 +225,13 @@ async function zPrzekierowaniami(adres, opcje, fetchImpl) {
 }
 
 // ─── HTML na tekst ───────────────────────────────────────────────────────────
+// KOD8-02: kazdy krok to jedno przejscie po tekscie (szukanie od biezacej pozycji).
+// Dawne wyrazenia z leniwym [\s\S]*? (i samo <[^>]+>) szukaly zamkniecia za KAZDYM
+// otwarciem az do konca dokumentu, wiec strona z tysiacami niedomknietych znacznikow
+// (<nav>, <h1>, <!--, sam "<") zatrzymywala petle zdarzen calego serwera na dziesiatki
+// sekund (32 000 x <nav>: 21 s). Kroki i ich kolejnosc sa te same co dawniej, wiec
+// zwykla strona daje ten sam tekst. Zasada wspolna: gdy za otwarciem nie ma juz
+// zamkniecia (albo znaku '>'), nie ma go tez za zadnym dalszym otwarciem - koniec.
 
 const ENCJE = {
   amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
@@ -232,46 +239,214 @@ const ENCJE = {
   laquo: '"', raquo: '"', bdquo: '"', ldquo: '"', rdquo: '"', sbquo: ',',
 };
 
+/** Znak z encji liczbowej albo null poza zakresem Unicode (dawniej wyjatek i blad pobrania). */
+function znakZKodu(kod) {
+  return Number.isInteger(kod) && kod > 0 && kod <= 0x10ffff && (kod < 0xd800 || kod > 0xdfff)
+    ? String.fromCodePoint(kod) : null;
+}
+
 function odkodujEncje(tekst) {
   return tekst
-    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
-    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
-    .replace(/&([a-z]+);/gi, (calosc, nazwa) => (nazwa in ENCJE ? ENCJE[nazwa] : calosc));
+    .replace(/&#x([0-9a-f]+);/gi, (calosc, h) => znakZKodu(parseInt(h, 16)) ?? calosc)
+    .replace(/&#(\d+);/g, (calosc, d) => znakZKodu(Number(d)) ?? calosc)
+    .replace(/&([a-z]+);/gi, (calosc, nazwa) => (Object.prototype.hasOwnProperty.call(ENCJE, nazwa) ? ENCJE[nazwa] : calosc));
+}
+
+const ZNAK_SLOWA = /[A-Za-z0-9_]/;
+
+/** Wzor napisu bez rozrozniania wielkosci liter (do szukania od pozycji). */
+function wzorNapisu(napis) {
+  return new RegExp(napis.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&'), 'gi');
+}
+
+/** Pozycja nastepnego wystapienia wzoru (flagi g, i) od miejsca `od` albo -1. */
+function nastepny(wzor, t, od) {
+  wzor.lastIndex = od;
+  const m = wzor.exec(t);
+  return m ? m.index : -1;
+}
+
+/**
+ * Bloki od otwarcia do najblizszego zamkniecia -> zamiana. `znacznik`: za nazwa granica slowa
+ * i znak '>' (jak /<nav\b[^>]*>[\s\S]*?<\/nav>/gi); bez niego sam napis (jak /<!--[\s\S]*?-->/g).
+ */
+function usunBloki(t, otwarcie, zamkniecie, zamiana, znacznik) {
+  const wzorOtwarcia = wzorNapisu(otwarcie);
+  const wzorZamkniecia = wzorNapisu(zamkniecie);
+  let wynik = '';
+  let pos = 0;
+  let od = 0;
+  for (;;) {
+    const i = nastepny(wzorOtwarcia, t, od);
+    if (i < 0) break;
+    let koniec = i + otwarcie.length;
+    if (znacznik) {
+      if (koniec < t.length && ZNAK_SLOWA.test(t[koniec])) { od = koniec; continue; }
+      const gt = t.indexOf('>', koniec);
+      if (gt < 0) break;
+      koniec = gt + 1;
+    }
+    const k = nastepny(wzorZamkniecia, t, koniec);
+    if (k < 0) break;
+    wynik += t.slice(pos, i) + zamiana;
+    pos = k + zamkniecie.length;
+    od = pos;
+  }
+  return pos === 0 ? t : wynik + t.slice(pos);
+}
+
+/** Tresc pierwszego <main> albo <article> do najblizszego zamkniecia ktoregokolwiek, albo null. */
+function trescGlowna(t) {
+  const wMain = /<main/gi;
+  const wArticle = /<article/gi;
+  let a = nastepny(wMain, t, 0);
+  let b = nastepny(wArticle, t, 0);
+  for (;;) {
+    if (a < 0 && b < 0) return null;
+    const zMain = a >= 0 && (b < 0 || a < b);
+    const i = zMain ? a : b;
+    const po = i + (zMain ? 5 : 8);
+    if (po < t.length && ZNAK_SLOWA.test(t[po])) {
+      if (zMain) a = nastepny(wMain, t, i + 1); else b = nastepny(wArticle, t, i + 1);
+      continue;
+    }
+    const gt = t.indexOf('>', po);
+    if (gt < 0) return null;
+    const k1 = nastepny(/<\/main>/gi, t, gt + 1);
+    const k2 = nastepny(/<\/article>/gi, t, gt + 1);
+    if (k1 < 0 && k2 < 0) return null;
+    return t.slice(gt + 1, k1 < 0 ? k2 : k2 < 0 ? k1 : Math.min(k1, k2));
+  }
+}
+
+/** Kazdy znacznik "<...>" (co najmniej jeden znak w srodku) -> zamiana (jak /<[^>]+>/g). */
+function bezZnacznikow(t, zamiana) {
+  let wynik = '';
+  let pos = 0;
+  let od = 0;
+  for (;;) {
+    const i = t.indexOf('<', od);
+    if (i < 0) break;
+    const gt = t.indexOf('>', i + 1);
+    if (gt < 0) break;
+    if (gt === i + 1) { od = gt; continue; }
+    wynik += t.slice(pos, i) + zamiana;
+    pos = gt + 1;
+    od = pos;
+  }
+  return pos === 0 ? t : wynik + t.slice(pos);
+}
+
+/** Kazde otwarcie <znacznik ...> (granica slowa, do najblizszego '>') -> zamiana (jak /<li\b[^>]*>/gi). */
+function zamienOtwarcia(t, znacznik, zamiana) {
+  const wzor = wzorNapisu('<' + znacznik);
+  let wynik = '';
+  let pos = 0;
+  let od = 0;
+  for (;;) {
+    const i = nastepny(wzor, t, od);
+    if (i < 0) break;
+    const po = i + 1 + znacznik.length;
+    if (po < t.length && ZNAK_SLOWA.test(t[po])) { od = po; continue; }
+    const gt = t.indexOf('>', po);
+    if (gt < 0) break;
+    wynik += t.slice(pos, i) + zamiana;
+    pos = gt + 1;
+    od = pos;
+  }
+  return pos === 0 ? t : wynik + t.slice(pos);
+}
+
+/**
+ * Naglowki h1-h6: dla kazdego otwarcia najblizsze zamkniecie tego samego poziomu (jak
+ * /<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi). Ostatnio znalezione zamkniecie kazdego poziomu
+ * i znak '>' sa pamietane, wiec niedomkniete naglowki nie skanuja dokumentu od nowa.
+ */
+function zamienNaglowki(t, zamiana) {
+  const wzor = /<h([1-6])/gi;
+  const zamkniecia = new Map();   // poziom -> pozycja zamkniecia (-1: brak do konca)
+  let gt = -2;                    // ostatnio znaleziony '>' (-1: brak do konca)
+  let wynik = '';
+  let pos = 0;
+  for (let m = wzor.exec(t); m; m = wzor.exec(t)) {
+    const i = m.index;
+    const poziom = m[1];
+    const po = i + 3;
+    if (po < t.length && ZNAK_SLOWA.test(t[po])) continue;
+    if (gt !== -1 && gt < po) gt = t.indexOf('>', po);
+    if (gt < 0) break;
+    let k = zamkniecia.has(poziom) ? zamkniecia.get(poziom) : -2;
+    if (k !== -1 && k <= gt) {
+      k = nastepny(new RegExp(`</h${poziom}>`, 'gi'), t, gt + 1);
+      zamkniecia.set(poziom, k);
+    }
+    if (k < 0) continue;
+    wynik += t.slice(pos, i) + zamiana(poziom, t.slice(gt + 1, k));
+    pos = k + 5;
+    wzor.lastIndex = pos;
+  }
+  return pos === 0 ? t : wynik + t.slice(pos);
 }
 
 function tytulStrony(html) {
-  const m = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-  return m ? odkodujEncje(m[1]).replace(/\s+/g, ' ').trim().slice(0, 120) : '';
+  const i = nastepny(/<title/gi, html, 0);
+  const gt = i < 0 ? -1 : html.indexOf('>', i + 6);
+  const k = gt < 0 ? -1 : nastepny(/<\/title>/gi, html, gt + 1);
+  return k < 0 ? '' : odkodujEncje(html.slice(gt + 1, k)).replace(/\s+/g, ' ').trim().slice(0, 120);
 }
 
 function naTekst(html) {
   let t = html;
   // Najpierw wszystko, co nie jest trescia dla czytelnika. Bez tego w bazie
   // wiedzy ladowal kod JavaScriptu i menu powtorzone na kazdej podstronie.
-  t = t.replace(/<!--[\s\S]*?-->/g, ' ');
+  t = usunBloki(t, '<!--', '-->', ' ', false);
   for (const znacznik of ['script', 'style', 'noscript', 'svg', 'template',
     'nav', 'header', 'footer', 'form', 'iframe', 'aside']) {
-    t = t.replace(new RegExp('<' + znacznik + '\\b[^>]*>[\\s\\S]*?<\\/' + znacznik + '>', 'gi'), ' ');
+    t = usunBloki(t, '<' + znacznik, '</' + znacznik + '>', ' ', true);
   }
   // Jesli strona wyroznia tresc glowna, bierzemy tylko ja.
-  const glowna = t.match(/<(?:main|article)\b[^>]*>([\s\S]*?)<\/(?:main|article)>/i);
-  if (glowna && glowna[1].length > 500) t = glowna[1];
+  const glowna = trescGlowna(t);
+  if (glowna !== null && glowna.length > 500) t = glowna;
 
   // Naglowki dostaja wlasna linie z krzyzykami - dzieki temu struktura strony
   // przezywa konwersje i model widzi, co bylo naglowkiem, a co akapitem.
-  t = t.replace(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi,
-    (_, poziom, tresc) => '\n\n' + '#'.repeat(Number(poziom)) + ' ' + tresc.replace(/<[^>]+>/g, ' ') + '\n');
-  t = t.replace(/<li\b[^>]*>/gi, '\n- ');
+  t = zamienNaglowki(t, (poziom, tresc) => '\n\n' + '#'.repeat(Number(poziom)) + ' ' + bezZnacznikow(tresc, ' ') + '\n');
+  t = zamienOtwarcia(t, 'li', '\n- ');
   t = t.replace(/<\/(p|div|tr|section|ul|ol|table|li|h[1-6])>/gi, '\n');
   t = t.replace(/<br\s*\/?>/gi, '\n');
   t = t.replace(/<\/t[dh]>/gi, ' | ');
-  t = t.replace(/<[^>]+>/g, ' ');
+  t = bezZnacznikow(t, ' ');
 
   t = odkodujEncje(t);
   t = t.replace(/[ \t ]+/g, ' ');
   t = t.replace(/ *\n */g, '\n');
   t = t.replace(/\n{3,}/g, '\n\n');
   return t.trim();
+}
+
+// ─── Kodowanie strony (KOD8-15) ──────────────────────────────────────────────
+// Strona w windows-1250 albo ISO-8859-2 (starsze polskie witryny) czytana jako UTF-8
+// dawala w bazie "Pompa ciep?a" (znak zastepczy). Kolejnosc jak w przegladarce: znacznik BOM, charset
+// z naglowka Content-Type, <meta charset> albo <meta http-equiv> w pierwszych 4 kB,
+// domyslnie UTF-8. Nieznana nazwa kodowania -> UTF-8 (TextDecoder z pelnym ICU w Node).
+
+function kodowanieStrony(bufor, typ) {
+  if (bufor.length >= 3 && bufor[0] === 0xef && bufor[1] === 0xbb && bufor[2] === 0xbf) return 'utf-8';
+  const zNaglowka = /charset\s*=\s*["']?([\w.:-]+)/i.exec(typ || '');
+  if (zNaglowka) return zNaglowka[1];
+  const poczatek = bufor.subarray(0, 4096).toString('latin1');
+  const zMeta = /<meta\b[^>]*?charset\s*=\s*["']?([\w.:-]+)/i.exec(poczatek);
+  // Deklaracja UTF-16 w <meta> pliku czytanego bajtami to w praktyce UTF-8 (tak robi przegladarka).
+  if (zMeta && !/^utf-?16/i.test(zMeta[1])) return zMeta[1];
+  return 'utf-8';
+}
+
+function odkodujStrone(bufor, typ) {
+  try {
+    return new TextDecoder(kodowanieStrony(bufor, typ)).decode(bufor);
+  } catch {
+    return bufor.toString('utf8');
+  }
 }
 
 // ─── Pobranie ────────────────────────────────────────────────────────────────
@@ -298,7 +473,7 @@ async function pobierz(adres, fetchImpl = zapytanieHttp) {
   if (dlugosc && dlugosc > LIMIT_BAJTOW) { porzuc(odp); throw new BladStrony('Strona jest za duza'); }
 
   const bufor = await czytajZLimitem(odp, LIMIT_BAJTOW);
-  const html = bufor.toString('utf8');
+  const html = odkodujStrone(bufor, typ);
 
   const tekst = naTekst(html).slice(0, LIMIT_ZNAKOW);
   const slowa = tekst.split(/\s+/).filter(Boolean).length;

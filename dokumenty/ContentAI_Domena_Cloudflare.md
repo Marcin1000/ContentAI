@@ -83,8 +83,9 @@ prawdy - ten sam blok jest niżej, w `ContentAI_obok_Cosmosa.md` i w `serwer/REA
 > nano /etc/caddy/Caddyfile
 > ```
 > - **blok globalny** (nawiasy `{ }` bez nazwy domeny): Caddy przyjmuje tylko jeden i musi
->   on stać **na samej górze** pliku. Jeśli plik już go ma, dopisz do niego sekcję
->   `servers { ... }`; jeśli nie ma, wklej go jako pierwszy,
+>   on stać **na samej górze** pliku. Jeśli plik już go ma, dopisz do niego sekcje
+>   `log default { ... }` (filtr dziennika bez kluczy API, SEC8-01) i `servers { ... }`;
+>   jeśli nie ma, wklej go jako pierwszy,
 > - bloki `www.content-ai.net`, `content-ai.net` i `app.content-ai.net` **zastępują**
 >   dotychczasowe wpisy tych domen (np. stare `content-ai.net, www.content-ai.net { ... }`),
 > - wpisów innych usług nie ruszasz.
@@ -101,6 +102,27 @@ Bloki do wklejenia (wymagają Caddy 2.7 lub nowszego - sprawdź `caddy version`)
 
 ```
 {
+    # Dziennik Caddy bez kluczy API uzytkownikow (SEC8-01). Przy bledzie 502 (restart Node)
+    # Caddy zapisuje do journald cale zadanie z naglowkami; sam ukrywa tylko Cookie
+    # i Authorization, a X-Api-Key, X-Openai-Key i X-Eleven-Key szlyby jawnym tekstem.
+    # Filtr usuwa je ze wszystkich wpisow (bledy i dziennik dostepu kazdej domeny); Cookie
+    # (zaszyfrowane klucze BYOK), Authorization i Set-Cookie tez, na wypadek log_credentials.
+    # NIE dodawaj w blokach domen log { output file ... } bez tego samego filtra.
+    log default {
+        output stderr
+        format filter {
+            wrap json
+            fields {
+                request>headers>X-Api-Key delete
+                request>headers>X-Openai-Key delete
+                request>headers>X-Eleven-Key delete
+                request>headers>Xi-Api-Key delete
+                request>headers>Cookie delete
+                request>headers>Authorization delete
+                resp_headers>Set-Cookie delete
+            }
+        }
+    }
     servers {
         # Adresy Cloudflare. Tylko z nich Caddy przyjmie adres klienta z naglowka;
         # od kazdego innego polaczenia {client_ip} to adres samego polaczenia.
@@ -129,7 +151,8 @@ content-ai.net {
 
     # --- Pamiec podreczna ---
     # HTML: przegladarka zawsze pyta (ETag); krawedz Cloudflare trzyma 10 minut.
-    @html path / /en/ /prywatnosc/ /en/privacy/ *.html
+    # Podstrony to katalogi z index.html, wiec kazdy adres zakonczony ukosnikiem.
+    @html path */ *.html
     header @html Cache-Control "public, max-age=0, must-revalidate"
     header @html CDN-Cache-Control "max-age=600"
     # CSS i JS maja w adresie ?v=<skrot tresci> (buduj_strone.py): nowa wersja = nowy adres.
@@ -177,8 +200,35 @@ app.content-ai.net {
         # bez zmian i Node mu ufa (limit prob logowania do ominiecia), a bez naglowka
         # wszyscy uzytkownicy sa dla Node jednym adresem 127.0.0.1.
         header_up X-Real-IP {client_ip}
+        # Restart przy wdrozeniu (ARCH8-25): przez 10 s Caddy ponawia polaczenie co 250 ms
+        # zamiast od razu oddac 502; strony i odczyty przeczekuja start nowego procesu.
+        lb_try_duration 10s
+        lb_try_interval 250ms
     }
 }
+
+# ── Srodowisko testowe (M-9; tylko gdy wdrozone: contentai-test na 127.0.0.1:3101) ──
+# Calosc za haslem Caddy poza webhookiem Stripe (ten podpisuje sie sam, HMAC). Haslo:
+# caddy hash-password, wynik zamiast WSTAW_TUTAJ_HASH_BCRYPT (Caddy 2.7: basicauth).
+# Naglowek Authorization z basic_auth nie idzie dalej do Node. Dziennik: filtr z bloku globalnego.
+#
+# test.content-ai.net {
+#     header {
+#         Strict-Transport-Security "max-age=31536000; includeSubDomains"
+#         X-Robots-Tag "noindex, nofollow"
+#         -Server
+#     }
+#     @chronione not path /platnosci/webhook/*
+#     basic_auth @chronione {
+#         WSTAW_TUTAJ_LOGIN WSTAW_TUTAJ_HASH_BCRYPT
+#     }
+#     reverse_proxy 127.0.0.1:3101 {
+#         header_up X-Real-IP {client_ip}
+#         header_up -Authorization
+#         lb_try_duration 10s
+#         lb_try_interval 250ms
+#     }
+# }
 
 # ── OpenSEO (tylko gdy wdrozone, CAI_OPENSEO_PORT=3110) ──────────────────────
 # Port 3110 (brama Content AI), NIGDY 3001 (goly kontener bez logowania).
@@ -210,6 +260,8 @@ Co robi każdy fragment:
 |---|---|
 | `trusted_proxies` + `client_ip_headers CF-Connecting-IP` | strona idzie przez Cloudflare (pomarańczowa chmurka); bez tego Caddy widziałby adres Cloudflare zamiast odwiedzającego |
 | `header_up X-Real-IP {client_ip}` | prawdziwy adres klienta dla Node (licznik prób logowania, limit próśb o dostęp); **nadpisuje** nagłówek wysłany przez klienta |
+| `log default` z `format filter` | dziennik Caddy (journald) bez nagłówków z kluczami API, ciasteczek i `Authorization`: przy błędzie 502 Caddy zapisuje całe żądanie (SEC8-01) |
+| `lb_try_duration 10s` | restart Content AI przy wdrożeniu: Caddy przez 10 s ponawia połączenie zamiast od razu oddać 502 |
 | `www.content-ai.net` → `redir` | jeden adres kanoniczny; formularz „Poproś o dostęp" działa z jednego pochodzenia, wyszukiwarka nie widzi duplikatu |
 | `@zrodlo` → 404 | źródła generatora strony (`showcase/zrodlo/`) nie są publikowane |
 | `Content-Security-Policy` strony | strona ładuje wyłącznie własne pliki; jedyne połączenie na zewnątrz to formularz do `app.content-ai.net` |

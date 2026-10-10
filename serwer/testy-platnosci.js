@@ -393,6 +393,10 @@ async function testyZakupu(sprawdz) {
     sprawdz('GET /konto/zakup?waluta=eur (PL): wybrana waluta wygrywa z jezykiem', /49,00\s*€/.test(przelacznik));
     const me = await t.zadanie('/auth/me', { headers: { cookie: a.cookie } });
     sprawdz('form-action z hostami dostawcy tylko na ekranach platnosci (/auth/me ma CSP bazowa)', /form-action 'self';/.test(me.headers.get('content-security-policy')));
+    // Ekran /konto (A1) ma formularz panelu klienta, ktory przekierowuje do hosta dostawcy: CSP z ekranu platnosci.
+    const ekranKonta = await t.zadanie('/konto', { headers: { cookie: a.cookie } });
+    sprawdz('GET /konto z wlaczonymi platnosciami: CSP form-action z hostem dostawcy (przycisk panelu klienta dziala)',
+      ekranKonta.status === 200 && (ekranKonta.headers.get('content-security-policy') || '').includes(`form-action 'self' ${URL_ATRAPY}`));
     const sesjePrzed = atrapa.stan().sesje.size;
     const bezZgody = await t.zadanie('/konto/zakup', t.formularz(a.cookie, { plan: 'standard', waluta: 'pln', zgoda_regulamin: '1' }));
     sprawdz('POST /konto/zakup bez zgody na natychmiastowe wykonanie: 400, komunikat przy polach, bez sesji u dostawcy',
