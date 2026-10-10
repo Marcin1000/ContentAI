@@ -1675,6 +1675,95 @@ async function wariantR9Zrozumialosc(b) {
   await k2.close();
 }
 
+// R9-B: zakup na atrapie Stripe w przegladarce (ARCH8-19): ekran zakupu z dwiema zgodami, przekierowanie
+// formularza do Checkout (CSP form-action z hostem dostawcy), zaplata, powrot bez czekania na webhook,
+// panel klienta (anulowanie na koniec okresu), odstapienie w drugim kroku. Osobny serwer z PLATNOSCI=stripe.
+async function wariantR9Zakup(b) {
+  const atrapaStripe = require('./atrapa/stripe.js');
+  const portStripe = await wolnyPort();
+  const portSerwera = await wolnyPort();
+  const sekret = 'whsec_dymny_123456789';
+  const adres = 'http://127.0.0.1:' + portSerwera;
+  const urlStripe = 'http://127.0.0.1:' + portStripe;
+  const srvStripe = atrapaStripe.uruchom(portStripe, { sekret, webhook: adres + '/platnosci/webhook/stripe' });
+  const kat = przygotujDane();
+  const env = Object.assign({}, process.env, {
+    CAI_UZYTKOWNICY: path.join(kat, 'uzytkownicy.json'), CAI_BAZA: path.join(kat, 'baza'), CAI_UZYCIE: path.join(kat, 'uzycie'),
+    CAI_MARKA: kat, CAI_SEKRET_PLIK: path.join(kat, 'sekret'), PORT: String(portSerwera), CAI_HOST: '127.0.0.1',
+    ANTHROPIC_KEY: 'test-anthropic', OPENAI_KEY: 'test-openai', ELEVEN_KEY: 'test-eleven', CAI_ZAUFANE_ADRESY: '127.0.0.1',
+    CAI_URL_ANTHROPIC: 'http://127.0.0.1:' + PORT_ATRAPY + '/v1/messages',
+    PLATNOSCI: 'stripe', PLATNOSCI_TRYB: 'test', PLATNOSCI_DLA_STARYCH: '1', STRIPE_KLUCZ: 'rk_test_atrapa', STRIPE_SEKRET_WEBHOOKA: sekret,
+    STRIPE_CENA_STANDARD: 'price_atrapa_standard', STRIPE_CENA_PREMIUM: 'price_atrapa_premium', STRIPE_URL_API: urlStripe,
+    STRIPE_HOSTY_PRZEKIEROWAN: urlStripe, CAI_ADRES_PUBLICZNY: adres, PLATNOSCI_CENY_WYSWIETLANE: 'standard:eur=19,pln=79;premium:eur=49,pln=199',
+    CAI_USLUGODAWCA_IMIE_NAZWISKO: 'Jan Testowy', CAI_USLUGODAWCA_ADRES: 'ul. Testowa 1, 00-001 Warszawa', CAI_USLUGODAWCA_EMAIL: 'kontakt@example.com',
+  });
+  const serwer = spawn(process.execPath, [path.join(REPO, 'serwer', 'server.js')], { cwd: REPO, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  let log = '';
+  serwer.stdout.on('data', (d) => { log += d; });
+  serwer.stderr.on('data', (d) => { log += d; });
+  const bledy = [];
+  const csp = [];
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 }, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  k.on('page', (p) => {
+    p.on('pageerror', (e) => bledy.push(e.message));
+    p.on('console', (m) => { if (/Content Security Policy|form-action/i.test(m.text())) csp.push(m.text()); });
+  });
+  const stan = (s) => s.evaluate(async () => (await fetch('/api/platnosci/stan')).json());
+  try {
+    await czekajNaPort(portSerwera, 15000);
+    const s = await k.newPage();
+    await s.goto(adres + '/', { waitUntil: 'load' });
+    await s.fill('input[name="login"]', 'darmowy');
+    await s.fill('input[type="password"]', HASLO);
+    await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"], input[type="submit"]')]);
+    await s.goto(adres + '/konto/zakup?plan=standard&z=app', { waitUntil: 'load' });
+    const ekran = await s.evaluate(() => ({ cena: document.getElementById('cena').textContent, test: Boolean(document.querySelector('.pasek-testowy')),
+      zgody: document.querySelectorAll('input[type="checkbox"]').length, skrypty: document.scripts.length }));
+    wynik('R9-B ekran zakupu: cena w PLN, pasek trybu testowego, dwa pola zgody, bez skryptow',
+      /79,00/.test(ekran.cena) && ekran.test && ekran.zgody === 2 && ekran.skrypty === 0, JSON.stringify(ekran));
+    await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('#do-platnosci')]);
+    wynik('R9-B bez zgod: zostajemy na ekranie z komunikatem przy polach', /Zaznacz oba pola zgody/.test(await s.textContent('body')) && s.url().startsWith(adres));
+    await s.check('#zgoda-regulamin');
+    await s.check('#zgoda-wykonanie');
+    await Promise.all([s.waitForURL((u) => String(u).startsWith(urlStripe), { timeout: 15000 }), s.click('#do-platnosci')]);
+    wynik('R9-B formularz przekierowany do Checkout (CSP form-action z hostem dostawcy)', s.url().startsWith(urlStripe + '/c/pay/cs_test_') && !csp.length, csp.join(' | '));
+    await Promise.all([s.waitForURL((u) => String(u).startsWith(adres + '/?platnosc='), { timeout: 15000 }), s.click('#zaplac')]);
+    const poZakupie = await stan(s);
+    const pakiet = await s.evaluate(async () => (await fetch('/api/pakiet')).json());
+    wynik('R9-B powrot z Checkout: /?platnosc=ok, subskrypcja aktywna, pakiet Standard',
+      /platnosc=ok/.test(s.url()) && poZakupie.subskrypcja.stan === 'aktywna' && poZakupie.subskrypcja.plan === 'standard' && pakiet.plan === 'standard',
+      JSON.stringify({ url: s.url(), stan: poZakupie.subskrypcja, plan: pakiet.plan }));
+    await s.goto(adres + '/konto/zakup?plan=premium', { waitUntil: 'load' });
+    await Promise.all([s.waitForURL((u) => String(u).startsWith(urlStripe + '/p/session/'), { timeout: 15000 }), s.click('#panel-subskrypcji')]);
+    await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('#anuluj')]);
+    await Promise.all([s.waitForURL((u) => String(u).startsWith(adres), { timeout: 15000 }), s.click('#wroc')]);
+    const poAnulowaniu = await stan(s);
+    wynik('R9-B panel klienta: "Masz juz subskrypcje" -> panel, anulowanie na koniec okresu, powrot -> anulowana do daty',
+      poAnulowaniu.subskrypcja.stan === 'anulowana' && poAnulowaniu.subskrypcja.dostepDo > Date.now(), JSON.stringify(poAnulowaniu.subskrypcja));
+    await s.goto(adres + '/konto/odstapienie', { waitUntil: 'load' });
+    const zwrot = await s.textContent('#zwrot');
+    await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('#potwierdz-odstapienie')]);
+    const tekst = await s.textContent('body');
+    const poOdstapieniu = await stan(s);
+    const zwroty = [...atrapaStripe.stan().zwroty.values()];
+    wynik('R9-B odstapienie w drugim kroku: przyjete, subskrypcja zakonczona, zwrot proporcjonalny zlecony u dostawcy',
+      /Odstąpienie przyjęte/.test(tekst) && poOdstapieniu.subskrypcja.stan === 'wygasla' && zwroty.length === 1 && zwroty[0].amount > 7000 && zwroty[0].amount < 7900
+      && zwrot.includes((zwroty[0].amount / 100).toFixed(2).replace('.', ',')),
+      JSON.stringify({ zwrot, stan: poOdstapieniu.subskrypcja.stan, zwroty: zwroty.map((z) => z.amount) }));
+    wynik('R9-B bez bledow JavaScript i naruszen CSP', !bledy.length && !csp.length, [...bledy, ...csp].join(' | '));
+    if (bledow) await zrzut(s, 'r9b-zakup');
+  } catch (e) {
+    wynik('R9-B zakup na atrapie przerwany', false, (e && e.message || String(e)).split('\n')[0]);
+    console.log(log.split('\n').slice(-15).join('\n'));
+  } finally {
+    await k.close();
+    serwer.kill();
+    await new Promise((r) => srvStripe.close(r));
+    fs.rmSync(kat, { recursive: true, force: true });
+  }
+}
+
 (async () => {
   await przygotujPorty();
   const serwerPlikow = await uruchomSerwerPlikow();
@@ -1696,6 +1785,7 @@ async function wariantR9Zrozumialosc(b) {
     await wariantR7H(b);
     await wariantPilneKreator(b);
     await wariantR9Zrozumialosc(b);
+    await wariantR9Zakup(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));
