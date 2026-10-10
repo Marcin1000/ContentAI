@@ -4906,7 +4906,7 @@ var magazyn = (function () {
     var m = document.querySelector('meta[name="cai-konto"]');
     if (m && m.content && !/^WSTAW/.test(m.content)) konto = m.content;
   } catch (e) {}
-  // R9-D (ARCH8-24): identyfikator z /konto.js wygrywa, meta to zapas dla serwera bez tej trasy.
+  // R9-D (ARCH8-24): identyfikator z /konto.js wygrywa; meta cai-konto (starsza strona z miejscem na konto) to zapas.
   if (typeof window.CAI_KONTO === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(window.CAI_KONTO)) konto = window.CAI_KONTO;
   var prefiks = konto ? 'u:' + konto + ':' : '';
   var WSPOLNE = { 'cai_lang': 1, 'cai-dark': 1 };

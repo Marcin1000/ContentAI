@@ -185,13 +185,16 @@ async function testyKompresji({ sprawdz }) {
       kontoJs.status === 200 && Boolean(id) && kontoJs.headers.get('cache-control') === 'private, no-store'
       && /javascript/.test(kontoJs.headers.get('content-type') || ''));
     const c2 = await t.zaloguj('standard');
+    // Aplikacja (D) nie ma juz miejsca na konto w HTML: starsza strona z meta cai-konto podstawiona w tescie.
+    const html = t.srv.wczytajAplikacje();
+    t.srv.ustawHtmlAplikacji(html.includes('WSTAW_TUTAJ_KONTO') ? html : html.replace('<head>', '<head>\n<meta name="cai-konto" content="WSTAW_TUTAJ_KONTO">'));
     const dzis1 = await t.zadanie('/', { headers: { cookie: c } });
     const dzis1T = await dzis1.text();
     const dzis2T = await (await t.zadanie('/', { headers: { cookie: c2 } })).text();
-    sprawdz('strona aplikacji z miejscem na konto (dzisiejsza): identyfikator w HTML per konto, private no-store, bez ETag (jak dzis)',
+    sprawdz('strona aplikacji z miejscem na konto (starsza wersja): identyfikator w HTML per konto, private no-store, bez ETag',
       dzis1T.includes(`content="${id}"`) && !dzis2T.includes(`content="${id}"`)
       && dzis1.headers.get('cache-control') === 'private, no-store' && !dzis1.headers.get('etag'));
-    t.srv.ustawHtmlAplikacji(t.srv.wczytajAplikacje().split('WSTAW_TUTAJ_KONTO').join(''));
+    t.srv.ustawHtmlAplikacji(html.split('WSTAW_TUTAJ_KONTO').join(''));
     const o1 = await t.zadanie('/', { headers: { cookie: c, 'accept-encoding': 'br' } });
     const w1 = await o1.text();
     const o2 = await t.zadanie('/', { headers: { cookie: c2, 'accept-encoding': 'gzip' } });
