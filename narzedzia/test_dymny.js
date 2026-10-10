@@ -1768,6 +1768,11 @@ async function wariantSamoobsluga(b) {
     return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(klucze) });
   });
   await k.route(/\/api\/platnosci\/zakup$/, (r) => {
+    if (st.limitZakupu) {
+      st.limitZakupu = false;
+      return r.fulfill({ status: 429, headers: { 'X-CAI-Kod': 'za-duzo-prob' }, contentType: 'application/json',
+        body: JSON.stringify({ type: 'error', error: { type: 'cai_za_duzo_prob', message: 'Za duzo prob' }, kod: 'za-duzo-prob', ponowZa: 1800 }) });
+    }
     zapytania.zakup.push(JSON.parse(r.request().postData() || '{}'));
     return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ url: 'https://checkout.stripe.test/c/pay/cs_test_r9d' }) });
   });
@@ -1888,6 +1893,12 @@ async function wariantSamoobsluga(b) {
     && /19\s?€/.test(waluty.wymuszona.przycisk) && /chwilowo wstrzymana/.test(waluty.brak), JSON.stringify(waluty));
   await s.check('#zakup-zgoda-regulamin');
   await s.check('#zakup-zgoda-wykonanie');
+  // Limit prob zakupu (429 za-duzo-prob, ponowZa w sekundach): komunikat w minutach, potem druga proba przechodzi.
+  st.limitZakupu = true;
+  await s.click('#zakup-przycisk');
+  await krok('R9-D limit prob zakupu', s.waitForFunction(() => !document.getElementById('zakup-blad').hidden && !document.getElementById('zakup-przycisk').disabled, null, { timeout: 5000 }));
+  const limitZakupu = await s.evaluate(() => document.getElementById('zakup-blad').textContent);
+  wynik('R9-D: 429 za-duzo-prob przy zakupie - komunikat z czasem w minutach (ponowZa w sekundach), przycisk znow aktywny', /Spróbuj ponownie za 30 min\./.test(limitZakupu), limitZakupu);
   await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('#zakup-przycisk')]);
   wynik('R9-D: zakup idzie do POST /api/platnosci/zakup z planem, waluta, zgoda na wykonanie i regulaminem (kontrakt B), potem przekierowanie do Checkout',
     zapytania.zakup.length === 1 && zapytania.zakup[0].plan === 'standard' && zapytania.zakup[0].waluta === 'pln' && zapytania.zakup[0].zgodaNaWykonanie === true

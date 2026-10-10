@@ -1513,6 +1513,8 @@ KONTROLE += [
      "postJson('/api/platnosci/zakup', { plan: wybranyPlan, waluta: wybranaWaluta, zgodaNaWykonanie: !!(z2 && z2.checked), zgodaRegulamin: !!(z1 && z1.checked), jezyk: jezyk(), z: 'app' })", None, ('proxy',)),
     ('R9-D/zakup-waluty', 'kontrakt B: waluta bez ceny ukryta, waluta wymuszona klienta, ktory juz placil',
      "return wym ? w.filter(function(x){ return x === wym; }) : w;", None, ('proxy',)),
+    ('R9-D/zakup-limit-minuty', 'kontrakt B: 429 za-duzo-prob przy zakupie - czas w minutach (ponowZa w sekundach)',
+     "var t = tekst(k, '').replace('{min}', String(Math.max(1, Math.ceil(((d && d.ponowZa) || 60) / 60))));", None, ('proxy',)),
     ('R9-D/panel-stripe', 'UX8-21: panel klienta Stripe (Zarzadzaj subskrypcja)',
      "postJson('/api/platnosci/panel', {})", None, ('proxy',)),
     ('R9-D/powrot-stripe', 'UX8-20: powrot ze Stripe z aktywacja z webhooka i wariantem opoznienia (ok i oczekuje)',
