@@ -1016,6 +1016,8 @@ function daneEkranuKonta(kontekst, o = {}) {
 }
 
 function ekranKonta(res, kontekst, status, o = {}) {
+  // Formularz panelu klienta przekierowuje do hosta dostawcy platnosci: CSP form-action z modulu B.
+  if (kontekst.platnosci && typeof kontekst.platnosci.cspEkranu === 'function') kontekst.platnosci.cspEkranu(res, kontekst);
   return wyslijHtml(res, kontekst, status, ekrany.ekranKonta({ jezyk: kontekst.jezyk, dane: daneEkranuKonta(kontekst, o) }));
 }
 
