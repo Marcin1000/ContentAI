@@ -1207,8 +1207,13 @@ atrapa `narzedzia/atrapa/poczta.js` (API jak Resend).
   `wyslanych`, `bledow`, `ostatniBlad` bez adresów i odnośników).
 - Szablony PL i EN (tekst + prosty HTML, przycisk, bez obrazków i pikseli, stopka z danymi
   usługodawcy): `potwierdzenie`, `reset`, `haslo-zmienione`, `zmiana-email`, `zmiana-email-info`,
-  `konto-usuniete`, `prog-przychodu`, `powitanie`, `konto-istnieje`, `test`. Rozliczenia
+  `konto-usuniete`, `prog-przychodu`, `powitanie`, `konto-istnieje`, `test`, `zakup-potwierdzenie`
+  i `odstapienie-potwierdzenie` (trwały nośnik umowy, PR8-31; pola `dane` jak w sekcji
+  "Płatności"). Pola każdego szablonu: nagłówek `serwer/poczta-szablony.js`. Rozliczenia
   (potwierdzenia płatności) wysyła Stripe.
+- Załączniki: `dane.zalaczniki: [{ nazwa, typ, tresc }]` (np. regulamin i pouczenie w TXT) idą do
+  Resend jako `attachments` (base64), najwyżej 5 po 2 MB; w `CAI_POCZTA_LOG` tylko nazwa, typ
+  i rozmiar.
 
 Konfiguracja Resend (raz, Marcin):
 1. Resend → Domains → dodaj domenę nadawcy (np. `mail.content-ai.net`), wpisz u Cloudflare
