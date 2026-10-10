@@ -136,8 +136,8 @@ async function testyBazy({ sprawdz }) {
       poSzukaniu === 1 && odczytow === 2 && poZmianie[0].nazwa === 'Zmieniony z zewnatrz');
   } finally {
     pliki.czytajJson = czytajPrzed;
-    baza.wyczyscPamiec();
     fs.rmSync(kat, { recursive: true, force: true });
+    if (typeof baza.wyczyscPamiec === 'function') baza.wyczyscPamiec();
   }
 }
 
