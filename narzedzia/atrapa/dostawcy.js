@@ -27,7 +27,8 @@
  *          ATRAPA_BLAD_RODZAJ (lista rodzajow, puste = wszystkie), ATRAPA_BLAD_RAZY (ile razy, potem normalnie),
  *          ATRAPA_BLAD_CO (co ktore pasujace wywolanie), ATRAPA_WYSZUKIWANIE (tak|nie|blad),
  *          ATRAPA_PAUSE_TURN=1, ATRAPA_WSTEP=1 (tekst przed wyszukiwaniem), ATRAPA_MYSLENIE (tak|nie),
- *          ATRAPA_DZIENNIK (plik dziennika wywolan).
+ *          ATRAPA_DZIENNIK (plik dziennika wywolan; uruchom(0) w procesie testow bez tej zmiennej
+ *          trzyma wywolania tylko w pamieci, w tablicy `ostatnie`).
  * Znaczniki w tresci zapytania (dzialaja tylko dla tego wywolania): [atrapa:429] [atrapa:500] [atrapa:529]
  *   [atrapa:c2pa] (grafika: PNG z fragmentem caBX jak manifest C2PA dostawcy)
  *   [atrapa:opoznienie=3000] [atrapa:bez-sieci] [atrapa:siec-blad] [atrapa:pause] [atrapa:max-tokens]
@@ -73,6 +74,7 @@ const KONF = {
 if (!KONF.dziennik) {
   KONF.dziennik = path.join(require('os').tmpdir(), 'atrapa-wywolania-' + KONF.port + '.log');
 }
+const DZIENNIK_DOMYSLNY = KONF.dziennik;
 
 // ─── Narzedzia ogolne ────────────────────────────────────────────────────────
 
@@ -1589,6 +1591,7 @@ const ostatnie = [];
 function zapiszWywolanie(wpis) {
   ostatnie.push(wpis);
   if (ostatnie.length > 200) ostatnie.shift();
+  if (!KONF.dziennik) return;
   try { fs.mkdirSync(path.dirname(KONF.dziennik), { recursive: true }); fs.appendFileSync(KONF.dziennik, JSON.stringify(wpis) + '\n'); } catch { /* dziennik nie moze zatrzymac atrapy */ }
 }
 
@@ -1720,6 +1723,9 @@ function opoznienieDla(tekst, rodzaj) {
 // ─── Serwer ─────────────────────────────────────────────────────────────────
 
 function uruchom(port = KONF.port, host = KONF.host) {
+  // Atrapa w procesie testow serwera (port 0, bez ATRAPA_DZIENNIK) nie dopisuje do dziennika
+  // wspolnej atrapy 9199: wywolania zostaja w pamieci (ostatnie), test moze podac wlasny plik.
+  if (Number(port) === 0 && KONF.dziennik === DZIENNIK_DOMYSLNY && !process.env.ATRAPA_DZIENNIK) KONF.dziennik = '';
   const serwer = http.createServer((req, res) => {
     const kawalki = [];
     req.on('data', (c) => kawalki.push(c));
@@ -1754,7 +1760,7 @@ function uruchom(port = KONF.port, host = KONF.host) {
     });
   });
   serwer.listen(port, host, () => {
-    console.log(`[atrapa] dostawcy AI na http://${host}:${port} (wersja ${WERSJA}), dziennik: ${KONF.dziennik}`);
+    console.log(`[atrapa] dostawcy AI na http://${host}:${serwer.address().port} (wersja ${WERSJA}), dziennik: ${KONF.dziennik || 'tylko w pamieci'}`);
   });
   return serwer;
 }

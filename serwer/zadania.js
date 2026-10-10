@@ -232,6 +232,19 @@ function trwajace() {
   return n;
 }
 
+/**
+ * Ile wynikow jest gotowych, ale nikt ich jeszcze nie odebral (klient zerwal polaczenie,
+ * ponowienie z tym samym X-Zadanie w drodze), zakonczonych najwyzej `oknoMs` temu.
+ * Lagodne zatrzymanie chwile na nie czeka, zeby oplacony wynik nie zginal z procesem.
+ */
+function nieodebrane(oknoMs, teraz = Date.now()) {
+  let n = 0;
+  for (const wpis of zadania.values()) {
+    if (wpis.koniec && !wpis.odebrane && !wpis.anulowane && teraz - wpis.koniec <= oknoMs) n += 1;
+  }
+  return n;
+}
+
 /** Konfiguracja z serwera: budzet wynikow w MB (CAI_ZADANIA_MB). */
 function ustaw({ budzetMb } = {}) {
   if (Number(budzetMb) > 0) BUDZET.bajty = Math.round(Number(budzetMb) * 1024 * 1024);
@@ -248,6 +261,6 @@ function stan() {
 setInterval(() => sprzataj(), 60_000).unref();
 
 module.exports = {
-  idZNaglowka, znajdz, uruchom, odbierz, anuluj, stanZadania, trwajace, ustaw, stan, sprzataj, wyczyscKopie,
+  idZNaglowka, znajdz, uruchom, odbierz, anuluj, stanZadania, trwajace, nieodebrane, ustaw, stan, sprzataj, wyczyscKopie,
   OdpowiedzZadania, NAGLOWKI_TAJNE, _zadania: zadania,
 };

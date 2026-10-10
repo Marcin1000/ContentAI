@@ -845,6 +845,12 @@ function wczytajAplikacje() {
   return htmlAplikacji;
 }
 
+/** Do testow: podstawia gotowy HTML aplikacji (np. bez miejsca na konto) i czysci pamiec stron. */
+function ustawHtmlAplikacji(html) {
+  htmlAplikacji = html;
+  PAMIEC_STRONY.clear();
+}
+
 // ─── Koszt: dozwolone modele, sufit tokenow, rozmiary grafik ─────────────────
 // /api przepuszczal dowolny model i max_tokens 128000 nawet z konta
 // darmowego, a /api/images dowolne n i size. Na koncie serwera to my placimy,
@@ -958,8 +964,8 @@ function odpowiedzJson(res, status, dane) {
 }
 
 function odpowiedzTekst(res, status, tekst, typ = 'text/plain; charset=utf-8') {
-  if (res.headersSent || res.destroyed) return;
-  wyslij(res, status, { 'Content-Type': typ }, Buffer.from(tekst, 'utf8'));
+  if (res.headersSent || res.destroyed) return undefined;
+  return wyslij(res, status, { 'Content-Type': typ }, Buffer.from(tekst, 'utf8'));
 }
 
 // ─── Naglowki bezpieczenstwa ─────────────────────────────────────────────────
@@ -1042,26 +1048,83 @@ function spakuj(bufor, kodowanie, jakosc) {
   return zlib.gzipSync(bufor, { level: 6 });
 }
 
+// Pakowanie w puli watkow libuv (F, KOD8-32): brotli 11 dla pwa/lib/pdfmake.min.js to 2-4 s,
+// a liczone synchronicznie po kazdym restarcie zatrzymywalo serwer dla wszystkich. Male
+// odpowiedzi (do 256 kB, ulamki milisekundy) dalej pakujemy od razu.
+const PROG_PAKOWANIA_W_TLE = 256 * 1024;
+
+function spakujAsync(bufor, kodowanie, jakosc) {
+  return new Promise((ok, zle) => {
+    const gotowe = (e, wynik) => (e ? zle(e) : ok(wynik));
+    if (kodowanie === 'br') {
+      zlib.brotliCompress(bufor, {
+        params: {
+          [zlib.constants.BROTLI_PARAM_QUALITY]: jakosc || 5,
+          [zlib.constants.BROTLI_PARAM_SIZE_HINT]: bufor.length,
+        },
+      }, gotowe);
+    } else {
+      zlib.gzip(bufor, { level: 6 }, gotowe);
+    }
+  });
+}
+
+/**
+ * Wersja spakowana wpisu pamieci (plik statyczny, strona aplikacji) -> obietnica bufora.
+ * Gotowa: od razu. Liczona: ta sama obietnica dla wszystkich czekajacych (jedno pakowanie
+ * na plik i kodowanie). Brotli powyzej 9 (sekundy na duzy plik) liczy sie w tle, a do tego
+ * czasu klienci dostaja szybka wersje (brotli 5, dziesiatki milisekund w puli watkow).
+ */
+function spakowanaWersja(wpis, kod, jakosc = 5) {
+  if (wpis.spakowane[kod]) return Promise.resolve(wpis.spakowane[kod]);
+  if (!wpis.liczone) wpis.liczone = {};
+  const licz = (klucz, q, poPakowaniu) => {
+    if (!wpis.liczone[klucz]) {
+      wpis.liczone[klucz] = spakujAsync(wpis.dane, kod, q).then(poPakowaniu)
+        .finally(() => { delete wpis.liczone[klucz]; });
+    }
+    return wpis.liczone[klucz];
+  };
+  const docelowa = () => licz(kod, jakosc, (b) => {
+    wpis.spakowane[kod] = b;
+    if (wpis.szybkie) delete wpis.szybkie[kod];
+    return b;
+  });
+  if (kod !== 'br' || jakosc <= 9) return docelowa();
+  docelowa().catch((e) => console.error('[kompresja]', e.message));
+  if (wpis.szybkie && wpis.szybkie[kod]) return Promise.resolve(wpis.szybkie[kod]);
+  return licz(`${kod}:szybka`, 5, (b) => {
+    if (!wpis.spakowane[kod]) wpis.szybkie = { ...(wpis.szybkie || {}), [kod]: b };
+    return b;
+  });
+}
+
+/** Wysyla gotowe cialo (spakowane albo nie), o ile klient jeszcze czeka. */
+function wyslijCialo(res, status, naglowki, cialo, bezCiala) {
+  if (res.headersSent || res.destroyed) return;
+  res.writeHead(status, { ...naglowki, 'Content-Length': cialo.length });
+  res.end(bezCiala ? undefined : cialo);
+}
+
 /**
  * Wysyla bufor, w razie potrzeby spakowany. `gotowe` pozwala podac wersje
  * spakowane wczesniej (pliki statyczne liczymy raz, nie przy kazdym zadaniu).
+ * Duze cialo bez gotowej wersji pakuje w puli watkow i zwraca obietnice.
  */
 function wyslij(res, status, naglowki, bufor, gotowe) {
   const typ = String(naglowki['Content-Type'] || '');
   const doKompresji = TYPY_DO_KOMPRESJI.test(typ) && bufor.length > 1024;
-  let cialo = bufor;
   const out = { ...naglowki };
-  if (doKompresji) {
-    out.Vary = 'Accept-Encoding';
-    const kod = wybierzKodowanie(res.req);
-    if (kod) {
-      cialo = (gotowe && gotowe[kod]) || spakuj(bufor, kod);
-      out['Content-Encoding'] = kod;
-    }
-  }
-  out['Content-Length'] = cialo.length;
-  res.writeHead(status, out);
-  res.end(res.req && res.req.method === 'HEAD' ? undefined : cialo);
+  const bezCiala = Boolean(res.req && res.req.method === 'HEAD');
+  const kod = doKompresji ? wybierzKodowanie(res.req) : null;
+  if (doKompresji) out.Vary = 'Accept-Encoding';
+  if (!kod) return wyslijCialo(res, status, out, bufor, bezCiala);
+  const spakowane = { ...out, 'Content-Encoding': kod };
+  if (gotowe && gotowe[kod]) return wyslijCialo(res, status, spakowane, gotowe[kod], bezCiala);
+  if (bufor.length <= PROG_PAKOWANIA_W_TLE) return wyslijCialo(res, status, spakowane, spakuj(bufor, kod), bezCiala);
+  return spakujAsync(bufor, kod).then(
+    (cialo) => wyslijCialo(res, status, spakowane, cialo, bezCiala),
+    () => wyslijCialo(res, status, out, bufor, bezCiala));
 }
 
 /**
@@ -1619,6 +1682,8 @@ async function proxyEleven(req, res, sesja) {
 //     jak odpowiedz bramy w oknie restartu), a reszta zapytan (strona, pakiet, baza) dziala,
 //   - trwajace wywolania i zadania w tle koncza sie normalnie; wynik zadania w tle mozna
 //     odebrac ponowieniem z tym samym X-Zadanie, dopoki proces zyje,
+//   - wynik zadania gotowy, ale nieodebrany (klient zerwal polaczenie) czeka jeszcze do 15 s
+//     na ponowienie, zeby oplacony artykul nie zginal razem z procesem,
 //   - gdy nic juz nie trwa (najwyzej 120 s; TimeoutStopSec=150 w uslugach), serwer zamyka
 //     port i baze, a proces konczy sie kodem 0. Drugi SIGTERM albo SIGINT konczy od razu.
 // Port jest otwarty az do konca pracy, wiec nowy proces wstaje dopiero po starym: okno
@@ -1626,6 +1691,7 @@ async function proxyEleven(req, res, sesja) {
 
 const ZATRZYMANIE = { trwa: false, aktywne: 0, odMs: 0, obietnica: null };
 const ZATRZYMANIE_MAKS_MS = 120_000;
+const ZATRZYMANIE_NA_ODBIOR_MS = 15_000;
 
 /** 413 z rozmiarem i rada zamiast 502 "blad dostawcy" (KOD8-16): nagranie, plik albo zapytanie za duze. */
 function odpowiedzZaDuze(res, sciezka) {
@@ -1647,9 +1713,11 @@ function odpowiedzRestartu(res) {
 
 /**
  * Konczy prace w toku, potem zamyka serwery i baze. -> obietnica kodu wyjscia (0).
- *   lagodneZatrzymanie([serwerAplikacji, bramaOpenSeo], { maksMs, coIleMs, loguj })
+ *   lagodneZatrzymanie([serwerAplikacji, bramaOpenSeo], { maksMs, naOdbiorMs, coIleMs, loguj })
  */
-function lagodneZatrzymanie(serwery, { maksMs = ZATRZYMANIE_MAKS_MS, coIleMs = 200, loguj = console } = {}) {
+function lagodneZatrzymanie(serwery, {
+  maksMs = ZATRZYMANIE_MAKS_MS, naOdbiorMs = ZATRZYMANIE_NA_ODBIOR_MS, coIleMs = 200, loguj = console,
+} = {}) {
   if (ZATRZYMANIE.obietnica) return ZATRZYMANIE.obietnica;
   ZATRZYMANIE.trwa = true;
   ZATRZYMANIE.odMs = Date.now();
@@ -1674,7 +1742,8 @@ function lagodneZatrzymanie(serwery, { maksMs = ZATRZYMANIE_MAKS_MS, coIleMs = 2
     };
     const zegar = setInterval(() => {
       const zostalo = ZATRZYMANIE.aktywne + zadaniaWTle.trwajace();
-      if (zostalo === 0) zakoncz(`praca w toku skonczona po ${Math.round((Date.now() - ZATRZYMANIE.odMs) / 100) / 10} s`);
+      const doOdbioru = zostalo === 0 ? zadaniaWTle.nieodebrane(naOdbiorMs) : 0;
+      if (zostalo === 0 && doOdbioru === 0) zakoncz(`praca w toku skonczona po ${Math.round((Date.now() - ZATRZYMANIE.odMs) / 100) / 10} s`);
       else if (Date.now() - ZATRZYMANIE.odMs >= maksMs) zakoncz(`limit ${Math.round(maksMs / 1000)} s, przerwane: ${zostalo}`);
     }, coIleMs);
   });
@@ -2492,18 +2561,30 @@ async function obsluz(req, res) {
     // wtedy jedna wersja (i jedna spakowana) dla wszystkich kont zamiast do 200 kopii
     // po ok. 1,9 MB. Starsza aplikacja (z miejscem na konto) dziala jak dotad.
     const id = tresc.includes(PLACEHOLDER_KONTO) ? idKonta(sesja.login) : '';
-    // Strona moze zawierac identyfikator konta - nie moze trafic do wspolnej pamieci podrecznej.
-    res.setHeader('Cache-Control', 'private, no-store');
     // HTML jest staly w obrebie procesu, rozni sie najwyzej identyfikatorem konta,
     // wiec gotowa i spakowana wersje trzymamy raz (albo per konto, pakowanie to ~30 ms).
     let wpis = PAMIEC_STRONY.get(id || '*');
     if (!wpis) {
-      wpis = { dane: Buffer.from(id ? tresc.split(PLACEHOLDER_KONTO).join(id) : tresc, 'utf8'), spakowane: {} };
+      const dane = Buffer.from(id ? tresc.split(PLACEHOLDER_KONTO).join(id) : tresc, 'utf8');
+      wpis = { dane, spakowane: {}, etag: id ? null : '"' + crypto.createHash('sha256').update(dane).digest('base64url').slice(0, 27) + '"' };
       if (PAMIEC_STRONY.size >= 200) PAMIEC_STRONY.delete(PAMIEC_STRONY.keys().next().value);
       PAMIEC_STRONY.set(id || '*', wpis);
     }
+    // Strona z identyfikatorem konta nie moze trafic do zadnej pamieci podrecznej. Wspolna
+    // wersja (KOD8-06) ma ETag: przegladarka pyta przy kazdym wejsciu i dostaje 304.
+    res.setHeader('Cache-Control', wpis.etag ? 'private, no-cache' : 'private, no-store');
+    if (wpis.etag) {
+      res.setHeader('ETag', wpis.etag);
+      const ifNone = String(req.headers['if-none-match'] || '');
+      if (ifNone && ifNone.split(',').map((t) => t.trim().replace(/^W\//, '')).includes(wpis.etag)) {
+        res.writeHead(304, { Vary: 'Accept-Encoding' });
+        return res.end();
+      }
+    }
     const kod = wybierzKodowanie(req);
-    if (kod && !wpis.spakowane[kod]) wpis.spakowane[kod] = spakuj(wpis.dane, kod);
+    if (kod && !wpis.spakowane[kod]) {
+      try { await spakowanaWersja(wpis, kod); } catch (e) { console.error('[aplikacja] pakowanie:', e.message); }
+    }
     return wyslij(res, 200, { 'Content-Type': html }, wpis.dane, wpis.spakowane);
   }
 
@@ -2579,9 +2660,17 @@ function plikStatyczny(req, res, sciezka) {
     res.writeHead(304, { ETag: wpis.etag, 'Cache-Control': naglowki['Cache-Control'], Vary: 'Accept-Encoding' });
     return res.end();
   }
-  // Wersje spakowane liczymy raz, z najwyzsza jakoscia brotli - plik sie nie zmienia.
+  // Wersje spakowane liczymy raz, z najwyzsza jakoscia brotli - plik sie nie zmienia. Liczymy
+  // je w puli watkow, a do czasu najlepszej wersji klient dostaje szybka (spakowanaWersja).
   const kod = TYPY_DO_KOMPRESJI.test(naglowki['Content-Type']) && wpis.dane.length > 1024 ? wybierzKodowanie(req) : null;
-  if (kod && !wpis.spakowane[kod]) wpis.spakowane[kod] = spakuj(wpis.dane, kod, 11);
+  if (kod && !wpis.spakowane[kod]) {
+    return spakowanaWersja(wpis, kod, 11).then(
+      (cialo) => wyslij(res, 200, naglowki, wpis.dane, { [kod]: cialo }),
+      (e) => {
+        console.error('[pliki] pakowanie:', e.message);
+        return wyslijCialo(res, 200, { ...naglowki, Vary: 'Accept-Encoding' }, wpis.dane, req.method === 'HEAD');
+      });
+  }
   return wyslij(res, 200, naglowki, wpis.dane, wpis.spakowane);
 }
 
@@ -2718,7 +2807,8 @@ function start() {
 
   const serwer = utworzSerwer();
   serwer.listen(KONF.port, KONF.host, () => {
-    console.log(`Content AI: http://${KONF.host}:${KONF.port}`);
+    // Port z gniazda (CAI_PORT=0 w testach to port wybrany przez system).
+    console.log(`Content AI: http://${KONF.host}:${serwer.address().port}`);
     console.log(`  dostawca tresci: ${KONF.dostawca}${KONF.dostawca === 'nvidia' ? ' (' + KONF.modelNvidia + ')' : ''}`);
     if (KONF.modelGrafiki) console.log(`  model grafik: ${KONF.modelGrafiki} (CAI_MODEL_GRAFIKI)`);
     console.log(`  kont: ${kont}, baza: ${KONF.sqlite}, cookie Secure: ${KONF.cookieSecure ? 'tak' : 'NIE (tylko do testow lokalnych)'}`);
@@ -2801,5 +2891,5 @@ module.exports = {
   // Baza i konfiguracja (CLI, testy): otwarcie z migracja, kontrola konfiguracji.
   przygotujMagazyn, sprawdzKonfiguracje, funkcjaWlaczona, stanKonfiguracji, kontekstZadania,
   // Serwer do testow integracyjnych (port 0, bez start()).
-  utworzSerwer, utworzBrameOpenSeo, wczytajAplikacje, KONF, DOZWOLONE, CSP,
+  utworzSerwer, utworzBrameOpenSeo, wczytajAplikacje, ustawHtmlAplikacji, KONF, DOZWOLONE, CSP,
 };

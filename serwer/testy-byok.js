@@ -555,6 +555,9 @@ async function uruchom({ sprawdz }) {
   await testyKluczDla({ sprawdz });
   await testyZadan({ sprawdz });
   await testyZasobow({ sprawdz });
+  // Odpornosc serwera (KOD8-02, 07, 11, 15, SEC8-30, kompresja): osobny plik, wolany stad,
+  // zeby lista plikow w serwer/testy.js (etap 0) zostala bez zmian.
+  await require('./testy-odpornosc.js').uruchom({ sprawdz });
 }
 
 module.exports = { uruchom, KLUCZ, SERWER };
