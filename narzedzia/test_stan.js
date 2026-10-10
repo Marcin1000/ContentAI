@@ -835,8 +835,9 @@ async function scenariuszR9FKeys(b) {
 }
 
 // KOD8-14: telefon, Historia -> Pisz. Animacja wejscia pol wymuszala pelny uklad strony osobno dla panelu
-// i kazdego pola (11 przeliczen w jednym zadaniu, ok. 1 s zamrozenia na CPU x4). Liczba przeliczen ukladu
-// (CDP Performance.LayoutCount) przy przejsciu to stala miara, niezalezna od szybkosci maszyny w CI.
+// i kazdego pola (11 przeliczen w jednym zadaniu, ok. 1 s zamrozenia na CPU x4). Miara: przeliczenia ukladu
+// (CDP Performance.LayoutCount) ponad liczbe klatek w oknie pomiaru. Zwykly uklad raz na klatke zalezy od
+// wersji przegladarki (Chromium 141: 2 na 5 klatek, Chrome Headless Shell 153 w CI: 6-7), wymuszone nie.
 async function scenariuszR9FTelefonPisz(b) {
   const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true });
   await k.addInitScript(() => { try { localStorage.setItem('cai_key_anthropic', 'sk-ant-atrapa'); localStorage.setItem('cai_lang', 'pl'); localStorage.setItem('cai_start_v1', '1'); sessionStorage.setItem('cin_splash', '1'); } catch (e) { /* bez magazynu */ } });
@@ -853,9 +854,16 @@ async function scenariuszR9FTelefonPisz(b) {
     await s.evaluate(() => switchMobileTab('history'));
     await s.waitForTimeout(700);
     const przed = await uklady();
-    await s.evaluate(() => new Promise((ok) => { switchMobileTab('generator'); requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(ok, 50))); }));
-    pomiary.push((await uklady()) - przed);
+    const klatki = await s.evaluate(() => new Promise((ok) => {
+      let n = 0, liczy = true;
+      const licz = () => { if (!liczy) return; n++; requestAnimationFrame(licz); };
+      requestAnimationFrame(licz);
+      switchMobileTab('generator');
+      requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => { liczy = false; ok(n); }, 50)));
+    }));
+    pomiary.push({ uklady: (await uklady()) - przed, klatki });
   }
+  console.log('  KOD8-14 pomiar (przeliczenia ukladu i klatki w oknie): ' + JSON.stringify(pomiary));
   const pola = await s.evaluate(() => ({ n: document.querySelectorAll('#tab-generator .field').length,
     animacje: [...document.querySelectorAll('#tab-generator .field')].filter((f) => f.getAnimations().length > 0).length }));
   // Start na telefonie: odswiezInspektor czytal window.innerWidth (wymuszony uklad calej strony), choc na telefonie wynik jest bez znaczenia.
@@ -867,8 +875,8 @@ async function scenariuszR9FTelefonPisz(b) {
     return n;
   });
   wynik('R9-F KOD8-14: telefon - odswiezInspektor bez odczytu innerWidth (bez wymuszonego ukladu przy starcie)', odczyty === 0, 'odczytow: ' + odczyty);
-  wynik('R9-F KOD8-14: telefon Historia -> Pisz bez przeliczania ukladu dla kazdego pola (najwyzej 4 uklady)',
-    pomiary.every((n) => n <= 4), JSON.stringify({ pomiary, pola }));
+  wynik('R9-F KOD8-14: telefon Historia -> Pisz bez przeliczania ukladu dla kazdego pola (najwyzej 4 uklady ponad klatki)',
+    pomiary.every((p) => p.uklady - p.klatki <= 4), JSON.stringify({ pomiary, pola }));
   wynik('R9-F KOD8-14: pola Pisz nadal wjezdzaja animacja', pola.n >= 5 && pola.animacje >= pola.n - 1, JSON.stringify(pola));
   wynik('R9-F KOD8-14: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
   if (bledow) await zrzut(s, 'r9f-telefon-pisz');
