@@ -19,7 +19,7 @@ const TOKEN = 'TOKEN-TAJNY-0123456789abcdef';
 const ODNOSNIK = `https://app.example.com/potwierdz?t=${TOKEN}&lang=pl`;
 const KONF_BAZOWY = {
   adresPubliczny: 'https://app.example.com',
-  uslugodawca: { imieNazwisko: 'Jan Testowy', adres: 'ul. Testowa 1, 00-001 Warszawa', email: 'kontakt@example.com' },
+  uslugodawca: { imieNazwisko: 'Jan Testowy', adres: 'ul. Testowa 1, 00-001 Warszawa', email: 'kontakt@example.com', telefon: '+48 500 000 000' },
 };
 
 /** Przechwytuje console.* na czas wywolania (sprawdzenie, co trafia do dziennika). */
@@ -45,6 +45,21 @@ const DANE = {
   powitanie: { pakiet: 'Darmowy', artykulow: 3, kosztArtykulu: 'ok. 0,40 zł', odnosnikKlucza: 'https://content-ai.net/klucz-api' },
   'konto-istnieje': { email: 'ola@example.com', odnosnik: 'https://app.example.com/haslo/nowe?t=X' },
   test: {},
+  // Pola jak w platnosci.js (B): kwoty i daty juz sformatowane.
+  'zakup-potwierdzenie': {
+    pakiet: 'Standard', kwota: '79,00 zł', waluta: 'pln', dataZawarcia: '10.10.2026, 12:00', nastepnaPlatnosc: '10.11.2026',
+    terminOdstapienia: '24.10.2026', zadanieWykonania: '10.10.2026, 11:58', trybZwrotu: 'proporcjonalny', regulaminWersja: '2026-10-01',
+    adresRegulaminu: 'https://app.example.com/dokumenty/regulamin', adresOdstapienia: 'https://app.example.com/dokumenty/odstapienie',
+    adresKonta: 'https://app.example.com/konto',
+    zalaczniki: [
+      { nazwa: 'content-ai-regulamin-pl.txt', typ: 'text/plain; charset=utf-8', tresc: 'REGULAMIN Content AI\nParagraf 1. Postanowienia ogólne.' },
+      { nazwa: 'content-ai-odstapienie-pl.txt', typ: 'text/plain; charset=utf-8', tresc: 'POUCZENIE O ODSTĄPIENIU\nWzór formularza.' },
+    ],
+  },
+  'odstapienie-potwierdzenie': {
+    pakiet: 'Standard', dataZawarcia: '10.10.2026', zlozone: '12.10.2026, 09:15', kwotaZwrotu: '73,73 zł', waluta: 'pln',
+    terminZwrotu: '26.10.2026', dniUzyte: 2, dniOkresu: 31, potracenie: '2/31', trybZwrotu: 'proporcjonalny', adresKonta: 'https://app.example.com/konto',
+  },
 };
 
 function testySzablonow({ sprawdz }) {
@@ -88,6 +103,36 @@ function testySzablonow({ sprawdz }) {
     && prog.tekst.includes('do usługodawcy'));
 }
 
+function testyUmowy({ sprawdz }) {
+  console.log('\n  poczta: potwierdzenie umowy i odstapienia (PR8-31, pola z platnosci.js B)');
+  const szablony = require('./poczta-szablony.js');
+  const z = szablony.renderuj('zakup-potwierdzenie', 'pl', DANE['zakup-potwierdzenie'], KONF_BAZOWY);
+  sprawdz('zakup-potwierdzenie PL: dane uslugodawcy z konfiguracji, pakiet, cena, data zawarcia i odnowienia, odstapienie do terminu, zalaczniki i adresy dokumentow',
+    z.temat === 'Content AI: potwierdzenie zamówienia pakietu Standard'
+    && z.tekst.includes('Usługodawca: Jan Testowy, ul. Testowa 1, 00-001 Warszawa, e-mail kontakt@example.com, tel. +48 500 000 000.')
+    && z.tekst.includes('Data zawarcia umowy: 10.10.2026, 12:00. Cena: 79,00 zł miesięcznie') && z.tekst.includes('Kolejna płatność: 10.11.2026.')
+    && z.tekst.includes('w ciągu 14 dni (do 24.10.2026)') && z.tekst.includes('Pouczenie i wzór formularza są w załączniku.')
+    && z.tekst.includes('W załącznikach: Regulamin (wersja 2026-10-01)') && z.tekst.includes('https://app.example.com/dokumenty/odstapienie')
+    && z.tekst.includes('złożone 10.10.2026, 11:58. Jeśli odstąpisz od umowy, zapłacisz za okres, w którym pakiet był dostępny.')
+    && z.html.includes('href="https://app.example.com/konto"'));
+  const pelny = szablony.renderuj('zakup-potwierdzenie', 'pl', { ...DANE['zakup-potwierdzenie'], trybZwrotu: 'pelny' }, KONF_BAZOWY);
+  const bezZadania = szablony.renderuj('zakup-potwierdzenie', 'pl', { ...DANE['zakup-potwierdzenie'], zadanieWykonania: '', zalaczniki: [] }, KONF_BAZOWY);
+  const en = szablony.renderuj('zakup-potwierdzenie', 'en', DANE['zakup-potwierdzenie'], KONF_BAZOWY);
+  sprawdz('zakup-potwierdzenie: wariant D-03 (pelny zwrot), bez zadania wykonania bez tego zdania, bez zalacznikow adresy dokumentow; EN',
+    pelny.tekst.includes('otrzymasz zwrot całej kwoty') && !bezZadania.tekst.includes('Potwierdzamy Twoje żądanie')
+    && !bezZadania.tekst.includes('w załączniku') && bezZadania.tekst.includes('są na stronie.')
+    && en.temat === 'Content AI: confirmation of your Standard plan order' && en.tekst.includes('Service provider: Jan Testowy')
+    && en.tekst.includes('phone +48 500 000 000') && en.tekst.includes('Attached: Terms (version 2026-10-01)'));
+  const o = szablony.renderuj('odstapienie-potwierdzenie', 'pl', DANE['odstapienie-potwierdzenie'], KONF_BAZOWY);
+  const oPelny = szablony.renderuj('odstapienie-potwierdzenie', 'pl', { ...DANE['odstapienie-potwierdzenie'], potracenie: null, trybZwrotu: 'pelny' }, KONF_BAZOWY);
+  const oEn = szablony.renderuj('odstapienie-potwierdzenie', 'en', DANE['odstapienie-potwierdzenie'], KONF_BAZOWY);
+  sprawdz('odstapienie-potwierdzenie: przyjecie oswiadczenia, kwota i termin zwrotu, potracenie proporcjonalne tylko przy potraceniu; EN',
+    o.tekst.includes('pakietu Standard z dnia 10.10.2026, złożone 12.10.2026, 09:15. Subskrypcja została zakończona.')
+    && o.tekst.includes('Zwrot: 73,73 zł na kartę użytą do płatności, najpóźniej do 26.10.2026.') && o.tekst.includes('za 2 z 31 dni dostępu')
+    && !oPelny.tekst.includes('pomniejszona') && o.tekst.includes('pakiecie Darmowym')
+    && oEn.tekst.includes('Refund: 73,73 zł to the card used for payment') && oEn.tekst.includes('Free plan'));
+}
+
 async function testyLog({ sprawdz }) {
   console.log('\n  poczta: tryb log (domyslny)');
   const poczta = require('./poczta.js');
@@ -97,6 +142,12 @@ async function testyLog({ sprawdz }) {
     const konf = { ...KONF_BAZOWY, poczta: { tryb: 'log', log: plik } };
     const { wynik, dziennik } = await zDziennikiem(() => poczta.wyslij({ do: 'ola@example.com', szablon: 'potwierdzenie', jezyk: 'pl', dane: DANE.potwierdzenie }, konf));
     const linie = fs.readFileSync(plik, 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+    await poczta.wyslij({ do: 'ola@example.com', szablon: 'zakup-potwierdzenie', dane: DANE['zakup-potwierdzenie'] }, konf);
+    const zZalacznikami = JSON.parse(fs.readFileSync(plik, 'utf8').trim().split('\n').pop());
+    sprawdz('log: zalaczniki w CAI_POCZTA_LOG skrocone do nazwy, typu i rozmiaru (bez tresci regulaminu)',
+      zZalacznikami.szablon === 'zakup-potwierdzenie' && zZalacznikami.dane.zalaczniki.length === 2
+      && zZalacznikami.dane.zalaczniki[0].nazwa === 'content-ai-regulamin-pl.txt' && zZalacznikami.dane.zalaczniki[0].bajtow > 10
+      && !JSON.stringify(zZalacznikami.dane).includes('Paragraf 1'));
     sprawdz('log: { ok, tryb: log }, dziennik z zamaskowanym adresem, bez odnosnika z tokenem i bez pelnego adresu',
       wynik.ok === true && wynik.tryb === 'log' && dziennik.includes('o***@example.com') && dziennik.includes('potwierdzenie')
       && !dziennik.includes(TOKEN) && !dziennik.includes('ola@example.com'));
@@ -161,6 +212,18 @@ async function testyResend({ sprawdz }) {
       zlyKlucz.wynik.ok === false && /401/.test(zlyKlucz.wynik.blad) && atrapa.ostatnie.length === 1
       && bezKlucza.ok === false && /CAI_POCZTA_KLUCZ/.test(bezKlucza.blad) && atrapa.ostatnie.length === 1);
 
+    // Zalaczniki (potwierdzenie umowy, PR8-31): tresc w base64 do Resend, nazwy bezpieczne, zle wpisy pominiete.
+    atrapa.wyczysc();
+    const zalaczniki = [...DANE['zakup-potwierdzenie'].zalaczniki, { nazwa: 'pusty.txt', typ: 'text/plain', tresc: '' }, { nazwa: '../zly nazwa.txt', typ: 'zly typ', tresc: 'x' }];
+    const zZal = await zDziennikiem(() => poczta.wyslij({ do: 'ola@example.com', szablon: 'zakup-potwierdzenie', dane: { ...DANE['zakup-potwierdzenie'], zalaczniki } }, konf));
+    const listZal = atrapa.poczta[0] || { zalaczniki: [] };
+    const nazwyZal = listZal.zalaczniki.map((a) => a.filename);
+    sprawdz(`resend: zalaczniki do Resend (base64, typ, nazwa bez ukosnikow), pusty pominiety (${nazwyZal.join(', ')})`,
+      zZal.wynik.ok === true && nazwyZal.join(',') === 'content-ai-regulamin-pl.txt,content-ai-odstapienie-pl.txt,_zly_nazwa.txt'
+      && listZal.zalaczniki[0].tekst === DANE['zakup-potwierdzenie'].zalaczniki[0].tresc && listZal.zalaczniki[1].tekst.includes('ODSTĄPIENIU')
+      && listZal.zalaczniki[0].content_type === 'text/plain; charset=utf-8' && listZal.zalaczniki[2].content_type === 'application/octet-stream'
+      && !listZal.text.includes('Paragraf 1') && /zalacznikow: 3/.test(zZal.dziennik));
+
     // Polecenie poczta-test: wysylka probna i kontrola sledzenia domen (PR8-27).
     const wyjscie = [];
     const kontekst = { KONF: konf, wypisz: (t) => wyjscie.push(t), blad: (t) => wyjscie.push('BLAD ' + t) };
@@ -219,6 +282,7 @@ async function testySerwera({ sprawdz }) {
 
 async function uruchom({ sprawdz }) {
   testySzablonow({ sprawdz });
+  testyUmowy({ sprawdz });
   await testyLog({ sprawdz });
   await testyResend({ sprawdz });
   await testySerwera({ sprawdz });

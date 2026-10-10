@@ -1238,9 +1238,9 @@ Wykonawca C, testy `serwer/testy-odpornosc.js` (wołane z `testy-byok.js`).
   `{ id, stan: 'trwa'|'gotowe'|'przerwane'|'brak', status? }` (tylko zadania własnego konta).
   `gotowe`: ponowienie `POST` z tym samym `X-Zadanie` odbierze wynik bez nowego wywołania
   i liczenia. Kolejność w proxy bez zmian: zadanie szukane przed limitem i walidacją ciała.
-- **Za duże zapytanie (KOD8-16).** Ponad 25 MB na `/api`, `/api/images`, `/api/tts`,
-  `/api/transcribe`, `/api/eleven-tts`: `413 { type: 'error', error: { type: 'request_too_large',
-  message }, komunikat, limitMB: 25 }` zamiast 502.
+- **Za duże zapytanie (KOD8-16).** Ponad limit trasy (25 MB; `/api/images`: 1 MB) na `/api`,
+  `/api/images`, `/api/tts`, `/api/transcribe`, `/api/eleven-tts`: `413 { type: 'error', error: { type:
+  'request_too_large', message }, komunikat, limitMB }` zamiast 502 (albo 400 przy grafice).
 - **Pamięć zadań (ARCH8-12, KOD8-05).** `CAI_ZADANIA_MB` liczy wyniki i ciała zapytań zadań
   w toku (nagrania do transkrypcji); bez miejsca zapytanie idzie zwykłym wywołaniem. Wynik
   odebrany czeka 2 minuty, nieodebrany 15; sprzątanie co minutę.

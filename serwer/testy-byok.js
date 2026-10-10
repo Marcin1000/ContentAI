@@ -456,6 +456,11 @@ async function testyZadan({ sprawdz }) {
     const duzeZespJson = duzeZesp.status ? await duzeZesp.json().catch(() => ({})) : {};
     sprawdz('za duze nagranie (KOD8-16): 413 z komunikatem o 25 MB zamiast 502; konto wlasne bez klucza: 403 od razu',
       duze.status === 403 && duzeJson.kod === 'brak-klucza' && duzeZesp.status === 413 && /25 MB/.test(duzeZespJson.komunikat || ''));
+    // Grafika ma wlasny limit ciala (1 MB): 413 podaje ten limit, a nie 25 MB.
+    const duzaGrafika = await t2.zadanie('/api/images', t2.json(cZesp, { model: 'gpt-image-1', prompt: 'x'.repeat(1100 * 1024), n: 1, size: '1024x1024' }));
+    const duzaGrafikaJson = await duzaGrafika.json().catch(() => ({}));
+    sprawdz('za duze zapytanie o grafike: 413 z limitem trasy (1 MB) zamiast 400 "Niepoprawny JSON"',
+      duzaGrafika.status === 413 && duzaGrafikaJson.limitMB === 1 && /1 MB/.test(duzaGrafikaJson.komunikat || ''));
   } finally {
     await t2.zamknij();
   }

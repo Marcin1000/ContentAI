@@ -3,7 +3,8 @@
 // ─── Szablony e-maili PL i EN (wykonawca C, ARCH8-21, PR8-27) ────────────────
 //
 // Teksty: AG/runda8/agencja-strona/06-emaile.md (potwierdzenie, reset, powitanie, proba
-// rejestracji na zajety adres); pozostale napisane w tym samym tonie. Kazdy e-mail ma wersje
+// rejestracji na zajety adres), AG/runda8/prawo/zgody-i-komunikaty.md pkt 5 i 6 (potwierdzenie
+// umowy i odstapienia, PR8-31); pozostale napisane w tym samym tonie. Kazdy e-mail ma wersje
 // tekstowa (link pelnym adresem) i prosty HTML: jedna kolumna, przycisk, bez obrazkow i bez
 // pikseli sledzacych, odnosniki prosto do aplikacji (bez przekierowan). Stopka z danymi
 // uslugodawcy, bez linku rezygnacji (wiadomosci transakcyjne); rozliczenia wysyla Stripe.
@@ -22,12 +23,18 @@
 //       powitanie          { pakiet?, artykulow?, kosztArtykulu?, odnosnikKlucza? }
 //       konto-istnieje     { email, odnosnik }                         (proba rejestracji na zajety adres)
 //       test               {}                                          (polecenie poczta-test)
+//       zakup-potwierdzenie { pakiet, kwota, waluta, dataZawarcia, nastepnaPlatnosc, terminOdstapienia,
+//                          zadanieWykonania, trybZwrotu, regulaminWersja, adresRegulaminu, adresOdstapienia,
+//                          adresKonta, zalaczniki: [{ nazwa, typ, tresc }] }   (platnosci.js B, trwaly nosnik)
+//       odstapienie-potwierdzenie { pakiet, dataZawarcia, zlozone, kwotaZwrotu, waluta, terminZwrotu, dniUzyte,
+//                          dniOkresu, potracenie, trybZwrotu, adresKonta }
+//     Kwoty i daty przychodza juz sformatowane (ekrany-platnosci.js). Zalaczniki wysyla poczta.js.
 //     konf: KONF serwera (uslugodawca, adresPubliczny, poczta.odpowiedz)
 // Odnosnik trafia do href tylko jako adres http(s); kazda wartosc w HTML jest zabezpieczona.
 
 const SZABLONY = [
   'potwierdzenie', 'reset', 'haslo-zmienione', 'zmiana-email', 'zmiana-email-info', 'konto-usuniete', 'prog-przychodu',
-  'powitanie', 'konto-istnieje', 'test',
+  'powitanie', 'konto-istnieje', 'test', 'zakup-potwierdzenie', 'odstapienie-potwierdzenie',
 ];
 
 function esc(s) {
@@ -58,6 +65,14 @@ function waznosc(d, j) {
   if (!minut) minut = 60;
   return j === 'en' ? `${minut} ${minut === 1 ? 'minute' : 'minutes'}` : `${minut} ${odmiana(minut, ['minutę', 'minuty', 'minut'])}`;
 }
+
+/** Dane uslugodawcy jednym zdaniem: imie i nazwisko, adres, e-mail, telefon (pola z konfiguracji). */
+function daneUslugodawcy(u, j) {
+  return [u.imieNazwisko, u.adres, u.email ? `e-mail ${u.email}` : '', u.telefon ? `${j === 'en' ? 'phone' : 'tel.'} ${u.telefon}` : '']
+    .filter(Boolean).join(', ');
+}
+
+const maZalaczniki = (d) => Array.isArray(d.zalaczniki) && d.zalaczniki.length > 0;
 
 function hostAplikacji(konf) {
   try { return new URL(String((konf && konf.adresPubliczny) || '')).host; } catch { return ''; }
@@ -171,6 +186,35 @@ const TRESCI = {
           { przycisk: 'Zaloguj się', odnosnik: k.app },
           { przycisk: 'Ustaw nowe hasło', odnosnik: d.odnosnik },
           'Jeśli to nie Ty, zignoruj tę wiadomość. Twoje konto i hasło pozostają bez zmian.',
+        ],
+      },
+      'zakup-potwierdzenie': {
+        temat: (d) => `Content AI: potwierdzenie zamówienia pakietu ${d.pakiet}`,
+        podglad: (d) => `Umowa o subskrypcję pakietu ${d.pakiet} zawarta ${d.dataZawarcia}.`,
+        podpis: 'Content AI',
+        akapity: (d, k) => [
+          `potwierdzamy zawarcie umowy o subskrypcję pakietu ${d.pakiet} w serwisie Content AI.`,
+          daneUslugodawcy(k.uslugodawca, 'pl') ? `Usługodawca: ${daneUslugodawcy(k.uslugodawca, 'pl')}.` : '',
+          `Data zawarcia umowy: ${d.dataZawarcia}. Cena${d.kwota ? `: ${d.kwota} miesięcznie` : ' miesięczna według cennika pakietu'}, płatna z góry; subskrypcja odnawia się automatycznie co miesiąc.${d.nastepnaPlatnosc ? ` Kolejna płatność: ${d.nastepnaPlatnosc}.` : ''}`,
+          'Rezygnacja: w każdej chwili w ustawieniach konta (pakiet działa do końca opłaconego miesiąca).',
+          `Prawo odstąpienia: możesz odstąpić od umowy w ciągu 14 dni${d.terminOdstapienia ? ` (do ${d.terminOdstapienia})` : ''}, bez podania przyczyny, przyciskiem w ustawieniach konta, e-mailem albo listem.${maZalaczniki(d) ? ' Pouczenie i wzór formularza są w załączniku.' : ''}`,
+          d.zadanieWykonania
+            ? `Potwierdzamy Twoje żądanie rozpoczęcia świadczenia przed upływem terminu na odstąpienie, złożone ${d.zadanieWykonania}. ${d.trybZwrotu === 'pelny' ? 'Jeśli odstąpisz od umowy w tym terminie, otrzymasz zwrot całej kwoty.' : 'Jeśli odstąpisz od umowy, zapłacisz za okres, w którym pakiet był dostępny.'}`
+            : '',
+          'Usługodawca jest zwolniony z VAT. Potwierdzenie płatności wysyła Stripe, a rachunek wystawimy na Twoje żądanie zgłoszone w ciągu 3 miesięcy.',
+          `${maZalaczniki(d) ? `W załącznikach: Regulamin${d.regulaminWersja ? ` (wersja ${d.regulaminWersja})` : ''} i pouczenie o odstąpieniu od umowy z formularzem.` : `Regulamin${d.regulaminWersja ? ` (wersja ${d.regulaminWersja})` : ''} i pouczenie o odstąpieniu od umowy z formularzem są na stronie.`}${bezpiecznyOdnosnik(d.adresRegulaminu) ? ` Regulamin: ${d.adresRegulaminu}` : ''}${bezpiecznyOdnosnik(d.adresOdstapienia) ? ` Pouczenie i formularz: ${d.adresOdstapienia}` : ''}`,
+          { przycisk: 'Otwórz ustawienia konta', odnosnik: d.adresKonta || (k.app ? `${k.app}/konto` : '') },
+        ],
+      },
+      'odstapienie-potwierdzenie': {
+        temat: (d) => `Content AI: potwierdzenie odstąpienia od umowy (pakiet ${d.pakiet})`,
+        podglad: (d) => `Zwrot: ${d.kwotaZwrotu}.`,
+        podpis: 'Content AI',
+        akapity: (d, k) => [
+          `otrzymaliśmy Twoje oświadczenie o odstąpieniu od umowy o subskrypcję pakietu ${d.pakiet}${d.dataZawarcia ? ` z dnia ${d.dataZawarcia}` : ''}, złożone ${d.zlozone}. Subskrypcja została zakończona.`,
+          `Zwrot: ${d.kwotaZwrotu} na kartę użytą do płatności${d.terminZwrotu ? `, najpóźniej do ${d.terminZwrotu}` : ''}.${d.potracenie && Number(d.dniUzyte) > 0 ? ` Kwota jest pomniejszona proporcjonalnie za ${d.dniUzyte} z ${d.dniOkresu} dni dostępu do pakietu, zgodnie z Twoim żądaniem rozpoczęcia świadczenia.` : ''}`,
+          'Konto zostaje i działa dalej w pakiecie Darmowym.',
+          { przycisk: 'Otwórz ustawienia konta', odnosnik: d.adresKonta || (k.app ? `${k.app}/konto` : '') },
         ],
       },
       test: {
@@ -291,6 +335,35 @@ const TRESCI = {
           'If it was not you, ignore this message. Your account and password stay unchanged.',
         ],
       },
+      'zakup-potwierdzenie': {
+        temat: (d) => `Content AI: confirmation of your ${d.pakiet} plan order`,
+        podglad: (d) => `Subscription contract for the ${d.pakiet} plan concluded on ${d.dataZawarcia}.`,
+        podpis: 'Content AI',
+        akapity: (d, k) => [
+          `we confirm the conclusion of the subscription contract for the ${d.pakiet} plan in the Content AI service.`,
+          daneUslugodawcy(k.uslugodawca, 'en') ? `Service provider: ${daneUslugodawcy(k.uslugodawca, 'en')}.` : '',
+          `Date of the contract: ${d.dataZawarcia}. Price${d.kwota ? `: ${d.kwota} per month` : ': monthly, as in the plan price list'}, paid in advance; the subscription renews automatically every month.${d.nastepnaPlatnosc ? ` Next payment: ${d.nastepnaPlatnosc}.` : ''}`,
+          'Cancellation: at any time in the account settings (the plan works until the end of the paid month).',
+          `Right of withdrawal: you can withdraw from the contract within 14 days${d.terminOdstapienia ? ` (until ${d.terminOdstapienia})` : ''} without giving a reason, with the button in the account settings, by email or by letter.${maZalaczniki(d) ? ' The information and the model form are attached.' : ''}`,
+          d.zadanieWykonania
+            ? `We confirm your request to start the service before the withdrawal period ends, made on ${d.zadanieWykonania}. ${d.trybZwrotu === 'pelny' ? 'If you withdraw within this period, you will receive a full refund.' : 'If you withdraw, you will pay for the period in which the plan was available.'}`
+            : '',
+          'The service provider is exempt from VAT. Stripe sends the payment confirmation, and we will issue a receipt if you ask for it within 3 months.',
+          `${maZalaczniki(d) ? `Attached: Terms${d.regulaminWersja ? ` (version ${d.regulaminWersja})` : ''} and the information on withdrawal with the model form.` : `The Terms${d.regulaminWersja ? ` (version ${d.regulaminWersja})` : ''} and the information on withdrawal with the model form are on the website.`}${bezpiecznyOdnosnik(d.adresRegulaminu) ? ` Terms: ${d.adresRegulaminu}` : ''}${bezpiecznyOdnosnik(d.adresOdstapienia) ? ` Withdrawal information and form: ${d.adresOdstapienia}` : ''}`,
+          { przycisk: 'Open account settings', odnosnik: d.adresKonta || (k.app ? `${k.app}/konto` : '') },
+        ],
+      },
+      'odstapienie-potwierdzenie': {
+        temat: (d) => `Content AI: confirmation of withdrawal from the contract (${d.pakiet} plan)`,
+        podglad: (d) => `Refund: ${d.kwotaZwrotu}.`,
+        podpis: 'Content AI',
+        akapity: (d, k) => [
+          `we have received your notice of withdrawal from the ${d.pakiet} plan subscription${d.dataZawarcia ? ` concluded on ${d.dataZawarcia}` : ''}, submitted on ${d.zlozone}. Your subscription has ended.`,
+          `Refund: ${d.kwotaZwrotu} to the card used for payment${d.terminZwrotu ? `, no later than ${d.terminZwrotu}` : ''}.${d.potracenie && Number(d.dniUzyte) > 0 ? ` The amount is reduced proportionally for ${d.dniUzyte} of ${d.dniOkresu} days of access to the plan, in line with your request to start the service early.` : ''}`,
+          'Your account stays and works on the Free plan.',
+          { przycisk: 'Open account settings', odnosnik: d.adresKonta || (k.app ? `${k.app}/konto` : '') },
+        ],
+      },
       test: {
         temat: 'Content AI: test message',
         podglad: 'Email sending works.',
@@ -331,7 +404,7 @@ function renderuj(szablon, jezyk, dane = {}, konf = {}) {
   const temat = String(wartosc(s.temat, d)).replace(/[\r\n]+/g, ' ').trim();
   const podglad = String(wartosc(s.podglad, d) || '');
   // Przycisk bez poprawnego adresu znika (np. haslo-zmienione bez wlaczonej poczty kont).
-  const elementy = s.akapity(d, { app, kontakt })
+  const elementy = s.akapity(d, { app, kontakt, uslugodawca: (konf && konf.uslugodawca) || {} })
     .map((e) => (typeof e === 'string' ? e : { ...e, odnosnik: bezpiecznyOdnosnik(e.odnosnik) }))
     .filter((e) => (typeof e === 'string' ? e.trim() : e.odnosnik));
   const przyciski = elementy.filter((e) => typeof e !== 'string');

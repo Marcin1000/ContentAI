@@ -253,7 +253,9 @@ async function testyZatrzymania({ sprawdz }) {
       .then(async (o) => ({ status: o.status, json: await o.json().catch(() => null) }), (e) => ({ blad: e.message }));
     const zrywam = new AbortController();
     fetch(adres + '/api', { ...post(artykul('[atrapa:opoznienie=1200]'), { 'x-zadanie': 'zatrzymanie-0002' }), signal: zrywam.signal }).catch(() => null);
-    await czekaj(400);
+    // Klient zrywa polaczenie dopiero, gdy serwer prowadzi juz oba zadania (wolna maszyna CI).
+    const stanZadania = async (id) => (await (await fetch(`${adres}/api/zadanie?id=${id}`, { headers: { cookie } })).json().catch(() => ({}))).stan;
+    for (let i = 0; i < 60 && !((await stanZadania('zatrzymanie-0001')) === 'trwa' && (await stanZadania('zatrzymanie-0002')) === 'trwa'); i += 1) await czekaj(50);
     zrywam.abort();
     dziecko.kill('SIGTERM');
     await czekaj(300);

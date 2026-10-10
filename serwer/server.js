@@ -1467,11 +1467,16 @@ function cialoZadania(req, limitBajtow = 25 * 1024 * 1024) {
     if (req.cialoGotowe.length > limitBajtow) {
       const e = new Error('cialo zadania za duze');
       e.status = 413;
+      e.limitMB = Math.round(limitBajtow / 1024 / 1024);
       return Promise.reject(e);
     }
     return Promise.resolve(req.cialoGotowe);
   }
-  return czytajCialo(req, limitBajtow);
+  return czytajCialo(req, limitBajtow).catch((e) => {
+    // Limit trasy (grafika 1 MB, reszta 25 MB) do komunikatu 413.
+    if (e && e.status === 413) e.limitMB = Math.round(limitBajtow / 1024 / 1024);
+    throw e;
+  });
 }
 
 async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
@@ -1694,8 +1699,7 @@ const ZATRZYMANIE_MAKS_MS = 120_000;
 const ZATRZYMANIE_NA_ODBIOR_MS = 15_000;
 
 /** 413 z rozmiarem i rada zamiast 502 "blad dostawcy" (KOD8-16): nagranie, plik albo zapytanie za duze. */
-function odpowiedzZaDuze(res, sciezka) {
-  const mb = 25;
+function odpowiedzZaDuze(res, sciezka, mb = 25) {
   const komunikat = sciezka === '/api/transcribe'
     ? `Nagranie jest za duże: serwer przyjmuje najwyżej ${mb} MB. Skróć je albo zapisz w lżejszym formacie (np. MP3) i spróbuj ponownie.`
     : `Zapytanie jest za duże: serwer przyjmuje najwyżej ${mb} MB.`;
@@ -2508,7 +2512,7 @@ async function obsluz(req, res) {
           return odpowiedzCzasu(cel, e);
         }
         // KOD8-16: za duze nagranie albo zapytanie to 413 z rozmiarem, a nie 502 "blad dostawcy".
-        if (e && e.status === 413) return odpowiedzZaDuze(cel, sciezka);
+        if (e && e.status === 413) return odpowiedzZaDuze(cel, sciezka, e.limitMB);
         if (e instanceof pliki.BladDanych) throw e;
         console.error(`[proxy] ${sciezka}:`, e.message);
         return odpowiedzJson(cel, 502, { error: 'Błąd połączenia z dostawcą API' });

@@ -1628,7 +1628,7 @@ function odpSprawdzenieKlucza(sc, naglowki, json) {
     return json(401, { error: { message: 'You have insufficient permissions for this operation. Missing scopes: api.model.read (atrapa)', type: 'invalid_request_error', param: null, code: null } }, rodzaj);
   }
   if (eleven) return json(200, { subscription: { tier: 'free', character_count: 0, character_limit: 10000 }, is_new_user: false, xi_api_key: null }, rodzaj);
-  if (anthropic) return json(200, { data: [{ type: 'model', id: 'claude-sonnet-5', display_name: 'Claude (atrapa)', created_at: '2026-01-01T00:00:00Z' }], has_more: false, first_id: 'claude-sonnet-5', last_id: 'claude-sonnet-5' }, rodzaj);
+  if (anthropic) return json(200, { data: [{ type: 'model', id: 'claude-sonnet-5', display_name: 'Model Anthropic (atrapa)', created_at: '2026-01-01T00:00:00Z' }], has_more: false, first_id: 'claude-sonnet-5', last_id: 'claude-sonnet-5' }, rodzaj);
   return json(200, { object: 'list', data: [{ id: 'gpt-image-2.5-flare', object: 'model', created: 1767225600, owned_by: 'atrapa' }] }, rodzaj);
 }
 

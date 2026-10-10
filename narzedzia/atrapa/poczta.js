@@ -6,7 +6,9 @@
  * -> { status, naglowki, cialo, rodzaj }, uruchom(port, opcje) -> http.Server.
  *
  *   POST /emails                 jak Resend: Authorization: Bearer <klucz> (domyslnie re_atrapa),
- *                                pola from, to, subject i text albo html; zapisuje wiadomosc, odpowiada
+ *                                pola from, to, subject i text albo html, opcjonalnie attachments
+ *                                [{ filename, content (base64), content_type? }]; zapisuje wiadomosc
+ *                                (zalaczniki odkodowane: filename, content_type, bajty, tekst), odpowiada
  *                                { id }. Ten sam Idempotency-Key -> ta sama odpowiedz bez drugiej wiadomosci.
  *   GET  /domains                lista domen z polami open_tracking i click_tracking (jak Resend)
  *   GET  /_atrapa/poczta?do=     zapisane wiadomosci (do 200) z wyciagnietymi odnosnikami (linki: [])
@@ -91,6 +93,10 @@ function obsluz(metoda, sciezkaPelna, naglowki = {}, bufor = Buffer.alloc(0)) {
   if (!cialo.from || !do_.length || !cialo.subject || !(cialo.text || cialo.html)) {
     return bladResend(422, 'validation_error', 'Missing required field: from, to, subject and text or html', 'brak-pola');
   }
+  const zalaczniki = Array.isArray(cialo.attachments) ? cialo.attachments : [];
+  if (zalaczniki.some((a) => !a || !a.filename || typeof a.content !== 'string')) {
+    return bladResend(422, 'validation_error', 'Attachment requires filename and content', 'zly-zalacznik');
+  }
   const znaczniki = `${cialo.subject} ${do_.join(' ')}`;
   const klucz = String(naglowki['idempotency-key'] || '');
   const zapamietany = klucz ? idempotencja.get(klucz) : null;
@@ -105,6 +111,10 @@ function obsluz(metoda, sciezkaPelna, naglowki = {}, bufor = Buffer.alloc(0)) {
   poczta.push({
     id, czas: new Date().toISOString(), from: cialo.from, to: do_, subject: cialo.subject, text: cialo.text || '', html: cialo.html || '',
     reply_to: cialo.reply_to || null, tags: cialo.tags || [], idempotencja: klucz || null, linki: linki(`${cialo.text || ''} ${cialo.html || ''}`),
+    zalaczniki: zalaczniki.map((a) => {
+      const bufor = Buffer.from(a.content, 'base64');
+      return { filename: a.filename, content_type: a.content_type || null, bajty: bufor.length, tekst: bufor.toString('utf8') };
+    }),
   });
   if (poczta.length > 200) poczta.shift();
   return zapamietaj(json(200, { id }, 'wyslana'));

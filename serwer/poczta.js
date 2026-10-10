@@ -23,6 +23,10 @@
 //   stan() -> { tryb, wyslanych, bledow, ostatniBlad, ostatniBladCzas } (sekcja /api/status)
 //   inicjuj(kontekstSerwera); cli('poczta-test', [adres], kontekst) -> kod wyjscia
 //   Linia CAI_POCZTA_LOG: { czas, do, szablon, jezyk, temat, tekst, html, dane, tryb, wynik }
+//   (dane.zalaczniki w linii skrocone do { nazwa, typ, bajtow })
+// Zalaczniki (potwierdzenie umowy na trwalym nosniku, PR8-31, platnosci.js B): dane.zalaczniki
+// [{ nazwa, typ, tresc }] -> attachments Resend [{ filename, content (base64), content_type }];
+// najwyzej 5, kazdy do 2 MB, nazwa pliku tylko z bezpiecznych znakow.
 
 const crypto = require('node:crypto');
 const pliki = require('./pliki.js');
@@ -30,6 +34,8 @@ const szablony = require('./poczta-szablony.js');
 
 const CZAS_MS = 10_000;
 const PONOWIENIE_MS = 1000;
+const ZALACZNIKI_MAKS = 5;
+const ZALACZNIK_MAKS_BAJTOW = 2 * 1024 * 1024;
 const STAN = { tryb: 'log', wyslanych: 0, bledow: 0, ostatniBlad: null, ostatniBladCzas: null };
 const czekaj = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -50,6 +56,32 @@ function bezpiecznyOpis(tekst) {
     .slice(0, 200);
 }
 
+/** dane.zalaczniki -> attachments API Resend; zle wpisy (pusta tresc, za duze) pomijane. */
+function zalacznikiResend(lista) {
+  if (!Array.isArray(lista)) return [];
+  const wynik = [];
+  for (const z of lista.slice(0, ZALACZNIKI_MAKS)) {
+    if (!z || (typeof z.tresc !== 'string' && !Buffer.isBuffer(z.tresc))) continue;
+    const bufor = Buffer.isBuffer(z.tresc) ? z.tresc : Buffer.from(z.tresc, 'utf8');
+    if (!bufor.length || bufor.length > ZALACZNIK_MAKS_BAJTOW) continue;
+    const nazwa = String(z.nazwa || '').replace(/[^A-Za-z0-9._-]/g, '_').replace(/^\.+/, '').slice(0, 100) || 'zalacznik.txt';
+    const typ = /^[\w.+-]+\/[\w.+-]+(;\s*charset=[\w-]+)?$/i.test(String(z.typ || '')) ? String(z.typ) : 'application/octet-stream';
+    wynik.push({ filename: nazwa, content: bufor.toString('base64'), content_type: typ });
+  }
+  return wynik;
+}
+
+/** Kopia dane do pliku CAI_POCZTA_LOG: zalaczniki bez tresci (nazwa, typ, rozmiar). */
+function daneDoPliku(dane) {
+  if (!dane || !Array.isArray(dane.zalaczniki)) return dane;
+  return {
+    ...dane,
+    zalaczniki: dane.zalaczniki.map((z) => ({
+      nazwa: z && z.nazwa, typ: z && z.typ, bajtow: z && z.tresc ? Buffer.byteLength(z.tresc) : 0,
+    })),
+  };
+}
+
 function zanotujBlad(opis) {
   STAN.bledow += 1;
   STAN.ostatniBlad = bezpiecznyOpis(opis);
@@ -60,7 +92,7 @@ function zanotujBlad(opis) {
  * Jedna wiadomosc przez API Resend. -> { ok, id?, blad?, status? }
  * fetchImpl do testow; sieci i API dotyka tylko ta funkcja.
  */
-async function wyslijResend({ adres, szablon, wiadomosc }, konfPoczty, fetchImpl = fetch) {
+async function wyslijResend({ adres, szablon, wiadomosc, zalaczniki = [] }, konfPoczty, fetchImpl = fetch) {
   if (!konfPoczty.klucz) return { ok: false, blad: 'brak CAI_POCZTA_KLUCZ' };
   if (!konfPoczty.od) return { ok: false, blad: 'brak CAI_POCZTA_OD' };
   const cialo = {
@@ -72,6 +104,7 @@ async function wyslijResend({ adres, szablon, wiadomosc }, konfPoczty, fetchImpl
     tags: [{ name: 'rodzaj', value: szablon }],
   };
   if (konfPoczty.odpowiedz) cialo.reply_to = konfPoczty.odpowiedz;
+  if (zalaczniki.length) cialo.attachments = zalaczniki;
   const tresc = JSON.stringify(cialo);
   const idempotencja = `cai-${crypto.randomUUID()}`;
   const url = `${String(konfPoczty.url || 'https://api.resend.com').replace(/\/+$/, '')}/emails`;
@@ -129,18 +162,20 @@ async function wyslij({ do: adres, szablon, jezyk = 'pl', dane = {} } = {}, konf
     return { ok: false, tryb, blad: 'szablon' };
   }
 
+  const zalaczniki = zalacznikiResend(dane && dane.zalaczniki);
   const wynik = tryb === 'resend'
-    ? await wyslijResend({ adres: doKogo, szablon, wiadomosc }, poczta, fetchImpl)
+    ? await wyslijResend({ adres: doKogo, szablon, wiadomosc, zalaczniki }, poczta, fetchImpl)
     : { ok: true };
   if (wynik.ok) STAN.wyslanych += 1;
   else zanotujBlad(wynik.blad);
-  console.log(`[poczta] ${tryb}: ${szablon} -> ${maskujAdres(doKogo)}: ${wynik.ok ? `ok${wynik.id ? ` (${wynik.id})` : ''}` : `BLAD ${bezpiecznyOpis(wynik.blad)}`}`);
+  const opisZal = zalaczniki.length ? `, zalacznikow: ${zalaczniki.length}` : '';
+  console.log(`[poczta] ${tryb}: ${szablon} -> ${maskujAdres(doKogo)}${opisZal}: ${wynik.ok ? `ok${wynik.id ? ` (${wynik.id})` : ''}` : `BLAD ${bezpiecznyOpis(wynik.blad)}`}`);
 
   // Pelna wiadomosc (z odnosnikiem) tylko w pliku CAI_POCZTA_LOG, nigdy w dzienniku systemowym.
   if (poczta.log) {
     try {
       pliki.dopiszLinie(poczta.log, {
-        czas: new Date().toISOString(), do: doKogo, szablon, jezyk: jezyk === 'en' ? 'en' : 'pl', ...wiadomosc, dane,
+        czas: new Date().toISOString(), do: doKogo, szablon, jezyk: jezyk === 'en' ? 'en' : 'pl', ...wiadomosc, dane: daneDoPliku(dane),
         tryb, wynik: wynik.ok ? 'ok' : 'blad',
       });
     } catch (e) {
@@ -222,4 +257,4 @@ async function cli(polecenie, argumenty, kontekst = {}, fetchImpl = fetch) {
   return 0;
 }
 
-module.exports = { wyslij, wyslijResend, maskujAdres, bezpiecznyOpis, stan, inicjuj, POLECENIA, cli };
+module.exports = { wyslij, wyslijResend, zalacznikiResend, maskujAdres, bezpiecznyOpis, stan, inicjuj, POLECENIA, cli };
