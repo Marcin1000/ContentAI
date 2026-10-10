@@ -1212,8 +1212,9 @@ atrapa `narzedzia/atrapa/poczta.js` (API jak Resend).
 
 Konfiguracja Resend (raz, Marcin):
 1. Resend → Domains → dodaj domenę nadawcy (np. `mail.content-ai.net`), wpisz u Cloudflare
-   rekordy SPF i DKIM z panelu oraz DMARC (`_dmarc`, na start `v=DMARC1; p=none; rua=mailto:...`),
-   poczekaj na "Verified".
+   rekordy z panelu (SEC8-27): SPF (gdy domena ma już SPF, dołóż `include`, drugi rekord SPF to
+   błąd), DKIM oraz DMARC (`_dmarc`: `v=DMARC1; p=quarantine; rua=mailto:...; adkim=s; aspf=s`,
+   po obserwacji raportów `p=reject`); poczekaj na "Verified". Nadawca zawsze z własnej domeny.
 2. W ustawieniach domeny **wyłącz śledzenie otwarć i kliknięć** (PR8-27: bez pikseli
    i przekierowań, bez banera zgody).
 3. API Keys → klucz z uprawnieniem "Sending access" tylko dla tej domeny → `CAI_POCZTA_KLUCZ`,

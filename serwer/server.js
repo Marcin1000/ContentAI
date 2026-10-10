@@ -2213,7 +2213,8 @@ async function obsluz(req, res) {
       platnosci: platnosci.stan(),
       poczta: poczta.stan(),
       oznaczenia: KONF.oznaczenia,
-      klucze: klucze.stan(),
+      // C: zapis kluczy uzytkownikow (liczniki, bez wartosci) i pamiec zadan w tle.
+      kluczeUzytkownikow: klucze.stan(KONF),
       zadania: zadaniaWTle.stan(),
     });
   }

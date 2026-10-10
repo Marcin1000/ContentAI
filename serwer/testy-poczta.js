@@ -58,7 +58,7 @@ function testySzablonow({ sprawdz }) {
       const calosc = `${w.temat}\n${w.tekst}\n${w.html}`;
       if (!w.temat || /[\r\n]/.test(w.temat)) bledy.push(`${nazwa}/${j}: temat`);
       if (/faktur|invoice/i.test(calosc)) bledy.push(`${nazwa}/${j}: faktura`);
-      if (/[–—]/.test(calosc)) bledy.push(`${nazwa}/${j}: dlugi myslnik`);
+      if (/[\u2013\u2014]/.test(calosc)) bledy.push(`${nazwa}/${j}: dlugi myslnik`);
       if (/<img|<script|url\(/i.test(w.html)) bledy.push(`${nazwa}/${j}: obrazek albo skrypt`);
       if (!w.tekst.includes('Jan Testowy') || !w.html.includes('kontakt@example.com')) bledy.push(`${nazwa}/${j}: stopka`);
       if (!/^<!doctype html><html lang="(pl|en)">/.test(w.html)) bledy.push(`${nazwa}/${j}: html`);
@@ -206,6 +206,11 @@ async function testySerwera({ sprawdz }) {
       status.poczta && status.poczta.tryb === 'resend' && status.poczta.wyslanych >= 1 && typeof status.poczta.bledow === 'number'
       && !JSON.stringify(status.poczta).includes('re_atrapa') && !JSON.stringify(status.poczta).includes(TOKEN)
       && plik.length === 1 && plik[0].dane.odnosnik === ODNOSNIK && plik[0].tryb === 'resend');
+    // Sekcje C w /api/status obok dzisiejszych: klucze serwera (tak/nie) zostaja pod "klucze".
+    sprawdz('serwer: /api/status ma dzisiejsze "klucze" (klucze serwera tak/nie) oraz kluczeUzytkownikow i zadania (bez wartosci)',
+      status.klucze && status.klucze.anthropic === true && status.klucze.openai === true
+      && status.kluczeUzytkownikow && typeof status.kluczeUzytkownikow.zapis === 'boolean'
+      && status.zadania && status.zadania.budzetBajtow > 0 && !JSON.stringify(status).includes('re_atrapa'));
   } finally {
     await t.zamknij();
     await new Promise((r) => serwerPoczty.close(r));

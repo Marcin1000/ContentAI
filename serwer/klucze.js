@@ -594,10 +594,10 @@ async function obsluz(sciezka, req, res, kontekst) {
 }
 
 /** Sekcja /api/status: bez kluczy i bez danych kont, same liczniki. */
-function stan() {
+function stan(konf = STAN.konf) {
   return {
     wdrozone: true,
-    zapis: STAN.konf ? Boolean(kluczSzyfru(STAN.konf)) : null,
+    zapis: konf ? Boolean(kluczSzyfru(konf)) : null,
     zapisow: STAN.zapisow,
     usuniec: STAN.usuniec,
     sprawdzen: STAN.sprawdzen,

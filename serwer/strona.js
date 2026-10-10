@@ -426,7 +426,7 @@ function naTekst(html) {
 
 // ─── Kodowanie strony (KOD8-15) ──────────────────────────────────────────────
 // Strona w windows-1250 albo ISO-8859-2 (starsze polskie witryny) czytana jako UTF-8
-// dawala w bazie "Pompa ciep�a". Kolejnosc jak w przegladarce: znacznik BOM, charset
+// dawala w bazie "Pompa ciep?a" (znak zastepczy). Kolejnosc jak w przegladarce: znacznik BOM, charset
 // z naglowka Content-Type, <meta charset> albo <meta http-equiv> w pierwszych 4 kB,
 // domyslnie UTF-8. Nieznana nazwa kodowania -> UTF-8 (TextDecoder z pelnym ICU w Node).
 

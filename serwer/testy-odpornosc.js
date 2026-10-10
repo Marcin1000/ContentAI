@@ -69,7 +69,7 @@ async function testyStrony({ sprawdz }) {
     zakoduj(`<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1250"></head><body><p>${tresc}</p></body></html>`, CP1250)));
   sprawdz('KOD8-15: strona w windows-1250 (naglowek), ISO-8859-2 (<meta charset>) i windows-1250 (<meta http-equiv>) bez znakow zastepczych',
     w1.tekst.includes('Pompa ciepła zużywa') && w2.tekst.includes('Pompa ciepła zużywa') && w2.tytul === 'Ciepło'
-    && w3.tekst.includes('kocioł') && !/�/.test(w1.tekst + w2.tekst + w3.tekst));
+    && w3.tekst.includes('kocioł') && !/\uFFFD/.test(w1.tekst + w2.tekst + w3.tekst));
   const w4 = await strona.pobierz('https://example.com/d', odpowiedz({ 'content-type': 'text/html; charset=nieznane-kodowanie' }, Buffer.from(`<p>${tresc}</p>`)));
   const w5 = await strona.pobierz('https://example.com/e', odpowiedz({ 'content-type': 'text/html' }, Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(`<p>${tresc}</p>`)])));
   sprawdz('KOD8-15: nieznana nazwa kodowania i UTF-8 z BOM -> UTF-8 jak dawniej', w4.tekst.includes('Pompa ciepła') && w5.tekst.startsWith('Pompa ciepła'));
@@ -100,7 +100,7 @@ async function testyBazy({ sprawdz }) {
     const doc = await dodaj({ nazwa: 'stary-word.doc', tresc: 'Tekst ze starego pliku Worda. '.repeat(10) });
     const png = await dodaj({ nazwa: 'zdjecie.png', tresc: '\u0089PNG\r\n\u001a\n' + 'IHDR'.repeat(20) });
     const bin = await dodaj({ nazwa: 'plik-bez-rozszerzenia', tresc: 'abc\u0000def\u0001\u0002ghi'.repeat(40) });
-    const csv = await dodaj({ nazwa: 'cennik-excel.csv', tresc: 'Pompa ciep�a;Za��� g�l� ja��;12000\n'.repeat(5) });
+    const csv = await dodaj({ nazwa: 'cennik-excel.csv', tresc: 'Pompa ciep\uFFFDa;Za\uFFFD\uFFFD\uFFFD g\uFFFDl\uFFFD ja\uFFFD\uFFFD;12000\n'.repeat(5) });
     const en = await dodaj({ nazwa: 'stary-word.doc', tresc: 'Text from an old Word file. '.repeat(10) }, 'en');
     const poZlych = await (await t.zadanie('/api/baza', { headers: { cookie: c } })).json();
     const dobry = await dodaj({ nazwa: 'cennik-utf8.csv', tresc: 'Pompa ciepła;Zażółć gęślą jaźń;12000\n'.repeat(5) });
