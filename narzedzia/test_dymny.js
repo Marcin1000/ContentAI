@@ -31,7 +31,7 @@ catch (e) { console.error('Brak pakietu playwright: npm install --no-save playwr
 
 // Porty z ATRAPA_PORT / CAI_TEST_PORT albo wolne, wskazane przez system (rownolegle
 // przebiegi nie koliduja). Atrapa czyta port przy require, wiec ladujemy ja po wyborze.
-let atrapa, PORT_ATRAPY, PORT_SERWERA;
+let atrapa, PORT_ATRAPY, PORT_SERWERA, KAT_DZIENNIKA;
 function wolnyPort() {
   return new Promise((ok, zle) => {
     const srv = require('net').createServer();
@@ -43,6 +43,12 @@ async function przygotujPorty() {
   PORT_ATRAPY = Number(process.env.ATRAPA_PORT) || await wolnyPort();
   PORT_SERWERA = Number(process.env.CAI_TEST_PORT) || await wolnyPort();
   process.env.ATRAPA_PORT = String(PORT_ATRAPY);
+  // R9-F (KOD8-35): dziennik atrapy w katalogu przebiegu, sprzatany po zielonym przebiegu
+  // (wczesniej po kazdym przebiegu zostawal /tmp/atrapa-wywolania-<port>.log).
+  if (!process.env.ATRAPA_DZIENNIK) {
+    KAT_DZIENNIKA = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-test-atrapa-'));
+    process.env.ATRAPA_DZIENNIK = path.join(KAT_DZIENNIKA, 'atrapa-wywolania.log');
+  }
   atrapa = require('./atrapa/dostawcy.js');
 }
 const ZRZUTY = process.env.CAI_TEST_ZRZUTY || path.join(os.tmpdir(), 'cai-test-zrzuty');
@@ -58,7 +64,33 @@ function wynik(nazwa, ok, szczegol) {
 // polkniety limit przenosil czerwien na nastepny scenariusz.
 async function krok(nazwa, obietnica) {
   try { await obietnica; return true; }
-  catch (e) { wynik('krok: ' + nazwa, false, (e && e.message || String(e)).split('\n')[0]); return false; }
+  catch (e) { wynik('krok: ' + nazwa, false, (e && e.message || String(e)).split('\n')[0]); await zamknijOkna(); return false; }
+}
+
+// R9-F (KOD8-03): po czerwonym kroku okno, ktore zostalo otwarte, przechwytywalo kazde nastepne
+// klikniecie (8 kolejnych limitow czasu), a wyjatek konczyl caly przebieg i 7 z 9 scenariuszy sie
+// nie wykonywalo. Teraz: po nieudanym kroku zamykamy otwarte okna, a kazdy scenariusz biegnie
+// osobno - wyjatek konczy sie bledem z nazwa scenariusza i zamknieciem jego kontekstow.
+let PRZEGLADARKA = null;
+async function zamknijOkna() {
+  if (!PRZEGLADARKA) return;
+  for (const k of PRZEGLADARKA.contexts()) {
+    for (const s of k.pages()) {
+      await s.evaluate(() => {
+        for (let i = 0; i < 10 && typeof window.zamknijGorneOkno === 'function' && window.zamknijGorneOkno();) i++;
+        document.querySelectorAll('.overlay.open').forEach((o) => o.classList.remove('open'));
+      }).catch(() => {});
+    }
+  }
+}
+async function osobno(scenariusz, b) {
+  PRZEGLADARKA = b;
+  const przed = new Set(b.contexts());
+  try { await scenariusz(b); }
+  catch (e) {
+    wynik('scenariusz ' + scenariusz.name + ' przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
+    for (const k of b.contexts()) if (!przed.has(k)) await k.close().catch(() => {});
+  }
 }
 
 function czekajNaPort(port, ms) {
@@ -369,7 +401,10 @@ async function zaloguj(k, login) {
     await s.fill('input[type="password"]', HASLO);
     await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"], input[type="submit"]')]);
   }
-  await s.waitForTimeout(800);
+  // R9-F (KOD8-27): kreator pierwszego uruchomienia wyskakuje dopiero po odpowiedzi /api/pakiet. Stale 800 ms
+  // przegrywalo z wolnym serwerem i kreator zaslanial pierwsze klikniecie - czekamy na jego stan.
+  await s.waitForFunction(() => { const m = document.getElementById('start-modal');
+    return !m || getComputedStyle(m).display !== 'none' || (typeof magazyn !== 'undefined' && !!magazyn.getItem('cai_start_ukonczony')); }, null, { timeout: 8000 }).catch(() => {});
   await s.evaluate(() => { if (typeof startPomin === 'function') startPomin(); });
   return s;
 }
@@ -455,8 +490,12 @@ async function wariantProxy(b) {
 
   // Jedna baza wiedzy: tekst z panelu idzie na serwer.
   await s.evaluate(() => openTextModal());
+  // R9-F (KOD8-03): okno gotowe, gdy fokus jest w polu nazwy (ustawia go menedzer okien).
+  await krok('okno tekstu z fokusem na nazwie', s.waitForFunction(() => (document.activeElement || {}).id === 'm-name', null, { timeout: 3000 }));
   await s.fill('#m-name', 'Cennik montazu');
   await s.fill('#m-content', 'Montaz kosztuje od 18 do 35 tys. zl. Gwarancja 7 lat.');
+  const polaTekstu = await s.evaluate(() => ({ nazwa: document.getElementById('m-name').value, tresc: document.getElementById('m-content').value.length }));
+  wynik('proxy: okno tekstu - nazwa i tresc w swoich polach', polaTekstu.nazwa === 'Cennik montazu' && polaTekstu.tresc > 20, JSON.stringify(polaTekstu));
   await s.evaluate(() => saveText());
   await krok('dokument w bazie serwera', s.waitForFunction(() => (window._bazaSerwerLiczba || 0) > 0, null, { timeout: 10000 }));
   wynik('proxy: dokument z panelu trafia do bazy na serwerze', await s.evaluate(() => window._bazaSerwerLiczba === 1 && docs.length === 0));
@@ -1685,15 +1724,15 @@ async function wariantR9Zrozumialosc(b) {
   try {
     await czekajNaPort(PORT_SERWERA, 15000);
     b = await chromium.launch(process.env.CAI_CHROMIUM ? { executablePath: process.env.CAI_CHROMIUM } : {});
-    await wariantKeys(b);
-    await wariantProxy(b);
-    await wariantTelefonR6(b);
-    await wariantTelefonR6Luki(b);
-    await wariantNowyArtykul(b);
-    await wariantR6F(b);
-    await wariantR7Luki(b);
-    await wariantR7I(b);
-    await wariantR7H(b);
+    await osobno(wariantKeys, b);
+    await osobno(wariantProxy, b);
+    await osobno(wariantTelefonR6, b);
+    await osobno(wariantTelefonR6Luki, b);
+    await osobno(wariantNowyArtykul, b);
+    await osobno(wariantR6F, b);
+    await osobno(wariantR7Luki, b);
+    await osobno(wariantR7I, b);
+    await osobno(wariantR7H, b);
     await wariantPilneKreator(b);
     await wariantR9Zrozumialosc(b);
   } catch (e) {
@@ -1705,6 +1744,7 @@ async function wariantR9Zrozumialosc(b) {
     serwerAtrapy.close();
     serwerPlikow.close();
     fs.rmSync(kat, { recursive: true, force: true });
+    if (KAT_DZIENNIKA) { if (bledow) console.log('Dziennik atrapy: ' + process.env.ATRAPA_DZIENNIK); else fs.rmSync(KAT_DZIENNIKA, { recursive: true, force: true }); }
   }
   console.log(bledow ? '\nBLEDOW: ' + bledow : '\nWszystkie scenariusze przeszly.');
   process.exit(bledow ? 1 : 0);
