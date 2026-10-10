@@ -1852,6 +1852,7 @@ async function wariantSamoobsluga(b) {
   await k.route(/\/api\/klucze(\/[a-z]+)?(\?.*)?$/, (r) => {
     const z = r.request();
     zapytania.klucze.push(z.method() + ' ' + z.url().replace(BAZA, '') + ' ' + (z.postData() || ''));
+    if (st.kluczeBlad && z.method() === 'GET') return r.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'blad testowy' }) });
     if (z.method() === 'POST' && /\/api\/klucze$/.test(z.url())) {
       const d = JSON.parse(z.postData() || '{}');
       if (/zly/.test(d.klucz || '')) return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: false, zapisano: false, dostawca: d.dostawca, powod: 'zly-klucz' }) });
@@ -1935,6 +1936,15 @@ async function wariantSamoobsluga(b) {
     gen: getComputedStyle(document.getElementById('gen-btn')).display, odznaka: document.getElementById('pakiet-badge').textContent, info: !document.getElementById('ai-info-artykul').hidden }));
   wynik('R9-D: po zapisie klucza karta znika, pierwszy artykul gotowy, odznaka "Darmowe: 2 z 3", informacja o AI pod tekstem',
     pierwszy.kreator === 'none' && pierwszy.karta && pierwszy.gen !== 'none' && /Darmowe: 2 z 3/.test(pierwszy.odznaka) && pierwszy.info, JSON.stringify(pierwszy));
+  // Konto na wlasnych kluczach nie wysyla klucza naglowkiem (C, SEC8-04), nawet gdy w przegladarce zostal stary klucz.
+  const naglowkiKlucza = [];
+  const sluchajKlucza = (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url())) naglowkiKlucza.push(z.headers()['x-api-key'] || ''); };
+  s.on('request', sluchajKlucza);
+  await s.evaluate(async () => { API_KEY = 'sk-ant-api03-stary-klucz-z-przegladarki-000000';
+    try { await fetch('/api', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY }, body: '{}' }); } catch (e) { /* odpowiedz bez znaczenia */ }
+    API_KEY = ''; });
+  s.off('request', sluchajKlucza);
+  wynik('R9-D: konto na wlasnych kluczach nie wysyla naglowka x-api-key (klucz tylko w ciasteczku HttpOnly, C)', naglowkiKlucza.length === 1 && naglowkiKlucza[0] === '', JSON.stringify(naglowkiKlucza));
   // 2. Artykuly 2 i 3, potem stan "Wybierz pakiet" przed kliknieciem (A4, UX8-06).
   await generuj(s, 'Pompa ciepła czy kocioł gazowy: porównanie kosztów');
   await generuj(s, 'Jak przygotować dom do montażu pompy ciepła');
@@ -2049,6 +2059,20 @@ async function wariantSamoobsluga(b) {
   const sesja = await s.evaluate(() => ({ pasek: document.getElementById('konto-paski').textContent, szkic: JSON.parse(magazyn.getItem('cai_szkic') || '{}').topic }));
   wynik('R9-D: wygasla sesja (401 X-CAI-Kod sesja) w dowolnym wywolaniu - pasek "Sesja wygasla" z logowaniem, szkic zapisany',
     /Sesja wygasła/.test(sesja.pasek) && /Zaloguj się/.test(sesja.pasek) && sesja.szkic === 'Szkic przed wygasnieciem sesji', JSON.stringify(sesja));
+  // 7b. Stan kluczy nieczytelny (GET /api/klucze 500): bez karty i bez odmowy w przegladarce (odpowie serwer),
+  // a zapis klucza idzie do /api/klucze, nie do localStorage.
+  klucze = Object.assign({}, klucze, { anthropic: { ustawiony: false } });
+  st.kluczeBlad = true;
+  await s.reload({ waitUntil: 'load' });
+  await krok('R9-D stan kluczy nieczytelny', s.waitForFunction(() => !!(window.STAN_KLUCZY && window.STAN_KLUCZY._nieznany), null, { timeout: 8000 }));
+  const nieznany = await s.evaluate(async () => {
+    const przed = { karta: document.getElementById('konto-karta').hidden, bez: window.kontoBezKlucza('anthropic') };
+    const w = await window.zapiszKluczKonta('anthropic', 'sk-ant-api03-nowy-klucz-przy-bledzie-stanu-9999');
+    return Object.assign(przed, { zapis: w.ok, magazyn: Object.keys(localStorage).filter((x) => /klucz/.test(x) && localStorage.getItem(x)) });
+  });
+  st.kluczeBlad = false;
+  wynik('R9-D: stan kluczy nieczytelny (GET /api/klucze 500) - bez karty i odmowy w przegladarce, klucz zapisany przez /api/klucze, nic w localStorage',
+    nieznany.karta && !nieznany.bez && nieznany.zapis && !nieznany.magazyn.length, JSON.stringify(nieznany));
   // 7a. Powrot ze Stripe z krajem spoza listy (D-04, kontrakt B): komunikat z krajem z platnosci.odrzucenie, bez czekania na pakiet.
   st.odrzucenie = { powod: 'kraj', kraj: 'US', czas: Date.now() };
   await s.goto(BAZA + '/?platnosc=kraj', { waitUntil: 'load' });

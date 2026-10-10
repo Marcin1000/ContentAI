@@ -7553,10 +7553,15 @@ async function odbierzArtykulWToku() {
   przerwanieGenerowania = new AbortController();
   let blad = null;
   try {
-    const res = await fetchZadania('/api', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Zadanie': rec.id },
-      body: '{}', signal: przerwanieGenerowania.signal }, rec.id, true);
+    // R9-D (KOD8-30, C): stan zadania jawnym odczytem GET /api/zadanie (bez tresci i kosztu) zamiast sondy POST /api
+    // z pustym cialem: sonda zalezala od kolejnosci kontroli w serwerze, a konto na wlasnych kluczach bez klucza
+    // dostawalo na nia 403 brak-klucza. Zadanie w toku albo gotowe odbiera nizej generate() z tym samym X-Zadanie
+    // (serwer czeka na wynik trwajacego zadania i nie liczy go drugi raz).
+    const res = await fetch('/api/zadanie?id=' + encodeURIComponent(rec.id), { cache: 'no-store', signal: przerwanieGenerowania.signal });
     const dane = await res.json().catch(() => null);
-    if (!res.ok || !dane || dane.error || !Array.isArray(dane.content)) blad = bladOdpowiedzi(dane, res.status);
+    if (res.status === 400) { blad = new Error('zadanie: zly identyfikator'); blad.brakZadania = true; }
+    else if (!res.ok || !dane) blad = bladOdpowiedzi(dane, res.status);
+    else if (dane.stan !== 'trwa' && dane.stan !== 'gotowe') { blad = new Error('zadanie: ' + dane.stan); blad.brakZadania = true; }
   } catch (e) { blad = e; }
   przerwanieGenerowania = null;
   sp.style.display = 'none'; btn.disabled = false;
@@ -7565,9 +7570,8 @@ async function odbierzArtykulWToku() {
     art.style.display = bylo.art; ph.style.display = bylo.ph; ob.className = bylo.odz;
     if (bylo.klucz) ustawTekst(ob, bylo.klucz);
     if (blad.name === 'AbortError') return;
-    // 400 z pustym modelem = serwer nie ma juz tego zadania (minelo 15 minut albo restart uslugi)
-    // i odrzucil puste zapytanie; 409 = zadanie przerwane.
-    const brak = blad.status === 409 || (blad.status === 400 && /Model ""/.test(String(blad.szczegol || blad.message || '')));
+    // Stan 'brak' = serwer nie ma juz tego zadania (minelo 15 minut albo restart uslugi), 'przerwane' = Przerwij.
+    const brak = !!blad.brakZadania;
     if (brak) pokazPowiadomienie(_t('odzysk-blad'), 'uwaga', 15000);
     else powiadomBladApi(blad, null, null, _t('odzysk-blad-prefiks') + ' ');
     return;
@@ -21002,8 +21006,21 @@ async function kbAudioTranscribeAndOpen(file) {
     '/api/eleven-tts': ['x-eleven-key', function(){ return ELEVEN_API_KEY; }],
   };
 
+  // R9-D (SEC8-04, C): konto na wlasnych kluczach ma klucz tylko w ciasteczku HttpOnly - zadnych naglowkow z kluczem
+  // (serwer i tak ich nie przyjmuje); stare klucze z tej przegladarki nie wychodza z niej w zapytaniu.
+  var NAGLOWKI_KLUCZY = { 'x-api-key': 1, 'x-openai-key': 1, 'x-eleven-key': 1, 'xi-api-key': 1 };
+  function bezKluczy(opcje){
+    var stare = opcje && opcje.headers;
+    if (!stare || typeof stare !== 'object' || Array.isArray(stare)) return opcje;
+    var naglowki = {}, zmiana = false;
+    var dodaj = function(w, n){ if (NAGLOWKI_KLUCZY[String(n).toLowerCase()]) zmiana = true; else naglowki[n] = w; };
+    if (typeof stare.forEach === 'function') stare.forEach(dodaj);
+    else Object.keys(stare).forEach(function(n){ dodaj(stare[n], n); });
+    return zmiana ? Object.assign({}, opcje, { headers: naglowki }) : opcje;
+  }
   /** Dokleja klucz uzytkownika, nie ruszajac obiektu podanego przez wolajacego. */
   function zKluczem(sciezka, opcje){
+    if (typeof kontoNaWlasnychKluczach === 'function' && kontoNaWlasnychKluczach()) return bezKluczy(opcje);
     var wpis = KLUCZ_NAGLOWKA[sciezka];
     if (!wpis) return opcje;
     var klucz = wpis[1]();
@@ -21516,8 +21533,8 @@ async function kbAudioTranscribeAndOpen(file) {
   window.odswiezStanKonta = odswiezStanKonta;
 
   // ── Klucze ─────────────────────────────────────────────────────────────────
-  // Konto 'wlasne': klucze w zaszyfrowanych ciasteczkach HttpOnly (C, SEC8-04); stan z /api/klucze z koncowka.
-  // Bez tej trasy (serwer przed scaleniem C) i dla kont zespolu: jak dzis, w tej przegladarce (cai_klucz_*).
+  // Konto 'wlasne': klucze tylko w zaszyfrowanych ciasteczkach HttpOnly (C, SEC8-04); stan z /api/klucze z koncowka.
+  // Konta zespolu: jak dzis, w tej przegladarce (cai_klucz_*).
   function stanKluczyLokalny(){
     var w = { zrodloKluczy: (stan() && stan().zrodloKluczy) || 'serwera', _lokalnie: true };
     DOSTAWCY.forEach(function(d){
@@ -21535,12 +21552,18 @@ async function kbAudioTranscribeAndOpen(file) {
       if (!d || typeof d !== 'object' || !d.anthropic) throw new Error('zly stan');
       window.STAN_KLUCZY = d;
       return przeniesKluczeZMagazynu().then(function(){ return window.STAN_KLUCZY; });
-    }).catch(function(){ window.STAN_KLUCZY = stanKluczyLokalny(); return window.STAN_KLUCZY; });
+    }).catch(function(){
+      // Bez odczytu stanu nie zgadujemy: bez karty "Podlacz klucz" i bez odmowy w przegladarce; brak klucza
+      // zglosi serwer (403 brak-klucza otworzy kreator). Klucz nie trafia wtedy do localStorage.
+      window.STAN_KLUCZY = { zrodloKluczy: 'wlasne', _nieznany: true };
+      DOSTAWCY.forEach(function(d){ window.STAN_KLUCZY[d] = { ustawiony: false }; });
+      return window.STAN_KLUCZY;
+    });
   }
-  function kluczeWCiasteczkach(){ return !!(window.STAN_KLUCZY && !window.STAN_KLUCZY._lokalnie); }
+  function kluczeWCiasteczkach(){ return wlasne(); }
   window.maKlucz = function(d){ var k = window.STAN_KLUCZY; return !!(k && k[d] && k[d].ustawiony && !k[d].niewazny); };
   // Brak klucza wiemy na pewno tylko na koncie BYOK z odczytanym stanem kluczy.
-  window.kontoBezKlucza = function(d){ return wlasne() && !!window.STAN_KLUCZY && !window.maKlucz(d || 'anthropic'); };
+  window.kontoBezKlucza = function(d){ return wlasne() && !!window.STAN_KLUCZY && !window.STAN_KLUCZY._nieznany && !window.maKlucz(d || 'anthropic'); };
   function ustawZmienna(d, wartosc){
     try { if (d === 'anthropic') API_KEY = wartosc; else if (d === 'openai') OPENAI_API_KEY = wartosc; else ELEVEN_API_KEY = wartosc; } catch(e){}
   }
