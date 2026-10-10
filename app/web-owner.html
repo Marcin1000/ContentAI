@@ -1531,6 +1531,10 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 @keyframes ramie { 0%, 100% { opacity: .22; } 20%, 45% { opacity: 1; } }
 .spinner-label { font-size: var(--t-lg); font-weight: var(--g-mocny); color: var(--c-tekst); }
 .spinner-sub { font-size: var(--t-sm); color: var(--c-tekst-3); }
+/* R9-F (KOD8-34): czekanie na siec zamiast etapow, ktore licznik dalej przestawial */
+#spinner.czeka-na-siec #spin-label, #spinner.czeka-na-siec #spin-sub { display: none; }
+#spinner:not(.czeka-na-siec) #spin-siec { display: none; }
+.spin-siec { color: var(--c-uwaga); text-align: center; }
 /* R6: dluzszy opis etapu ("szukam zrodel w sieci i sprawdzam...") zawija sie wysrodkowany, jak tytul nad nim */
 .spinner-wrap #spin-label, .spinner-sub { text-align: center; text-wrap: balance; max-width: 36em; }
 .spinner-czas { font-family: var(--f-mono); font-size: var(--t-xs); color: var(--c-tekst-3); margin-top: 0; }
@@ -2716,6 +2720,8 @@ input[type="text"], input[type="url"], input[type="search"], input[type="email"]
 /* wynik grafiki: Pobierz / Ponow zawijaja sie */
 #img-result-wrap > div { flex-wrap: wrap; }
 .h-item-topic { overflow-wrap: anywhere; }
+/* R9-F (KOD8-25): temat wpisu Historii najwyzej w dwoch liniach (wklejony akapit dawal wpis na kilka ekranow telefonu). */
+#h-list-inner .h-item-topic { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
 /* R4 (kod-17): usuwanie wpisu historii - przycisk po prawej, pole dotyku 44 px. */
 #h-list-inner .h-item { position: relative; padding-right: 52px; }
 .h-usun { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); width: var(--h-dotyk, 44px); height: var(--h-dotyk, 44px); display: inline-flex; align-items: center; justify-content: center; padding: 0; background: none; border: 0; border-radius: var(--r-sm); color: var(--c-tekst-3); cursor: pointer; }
@@ -4958,6 +4964,7 @@ var I18N = {
     'voice-save':'Zapisz','voice-dictate-title':'Dyktuj',
     'voice-no-key':'Brak klucza OpenAI - ustaw OPENAI_API_KEY lub przełącz na silnik przeglądarki.','voice-unsupported':'Ta przeglądarka nie wspiera tej funkcji głosowej.','voice-mic-denied':'Brak dostępu do mikrofonu.','voice-listening':'Słucham…','voice-tts-fail':'Nie udało się odtworzyć audio.',
     'label-topic':'Temat artykułu / strony','ph-topic':'np. Jak wybrać system CRM dla małej firmy',
+    'topic-za-dlugi':'Temat może mieć najwyżej 300 znaków. Dłuższe wskazówki wpisz w polu Dodatkowe wytyczne.','topic-pusty':'Wpisz temat artykułu.',
     'btn-templates':'Szablony','label-ctype':'Typ treści','label-length':'Długość',
     'btn-tematy':'Podpowiedz','btn-tematy-title':'Podpowiedz tematy na podstawie zapotrzebowania',
     'btn-templates-title':'Gotowe szablony formularza',
@@ -5013,6 +5020,7 @@ var I18N = {
     'gap-brak-pokrycia':'Brak pokrycia w zaznaczonych źródłach. Dodaj materiał na ten temat albo usuń tę sekcję.',
     'fakty-title':'Kontrola faktów',
     'fakty-etap-linki':'Sprawdzam odnośniki w artykule…',
+    'fakty-etap-baza':'Pobieram fragmenty Bazy wiedzy, z których powstał artykuł…',
     'fakty-brak-tekstu':'Najpierw wygeneruj artykuł: na razie nie ma czego sprawdzać.',
     'fakty-refresh':'Sprawdź ponownie',
     'fakty-loading':'Zestawiam artykuł ze źródłami…',
@@ -5077,6 +5085,7 @@ var I18N = {
     'vis-title':'Obecność marki w AI','vis-desc':'Sprawdza czy marka pojawia się w odpowiedziach AI na zapytania zakupowe. Uruchamia każdy prompt przez Claude z wyszukiwaniem w sieci i raportuje obecność, pozycję, konkurentów i źródła. To migawka na żądanie z jednego modelu (Claude), nie ciągły monitoring wielu modeli. Każdy prompt zużywa zapytanie web search (płatne).',
     'vis-f-brand':'Marka do wykrycia','vis-f-comp':'Konkurenci (po przecinku)','vis-f-prompts':'Zapytania kontrolne (jedno na linię)','vis-run':'Sprawdź widoczność',
     'vis-f-iter':'Iteracje na prompt (stabilność)','vis-narr':'Narracja marki',
+    'vis-czesc-bledow':'Wynik z {n} z {m} zapytań: {k} nie powiodło się ({powod}).','vis-blad-wszystkie':'Żadne zapytanie nie dało czytelnego wyniku. Spróbuj ponownie za chwilę.','vis-zapytanie-blad':'Zapytanie nie powiodło się, więc nie wchodzi do wyniku.','vis-blad-narracji':'Błąd podczas sprawdzania narracji.',
     'settings-rep-title':'Raport widoczności','settings-rep-sub':'porównanie pomiarów i priorytety',
     'settings-trk-title':'Pomiar ruchu z AI','settings-trk-sub':'wejścia z czatów AI: robots.txt, UTM',
     'trk-title':'Pomiar ruchu z AI (przygotowanie)','trk-desc':'To nie jest pomiar ruchu. Generuje warunki wstępne: dyrektywy robots.txt dla botów AI, linki z UTM i wskazówkę konfiguracji GA4. Sam pomiar wymaga GA4 i analizy logów po stronie serwera.',
@@ -5088,6 +5097,7 @@ var I18N = {
     'tab-generator':'Generator treści','tab-history':'Historia','nav-base':'Baza wiedzy','nav-history':'Historia',
     'settings-cms-title':'Integracja CMS','settings-cms-sub':'WordPress / Drupal',
     'settings-bv-title':'Głos marki','settings-bv-inactive':'Nieaktywny',
+    'settings-bv-active':'Aktywny - profil stylu ustawiony',
     'out-placeholder':'Wpisz temat i kliknij „Wygeneruj treść”','out-placeholder-sub':'AI przeanalizuje bazę wiedzy i stworzy treść',
     'fog-title':'Indeks mglistości (wersja dla polszczyzny)','fog-easy':'poniżej 12: tekst przystępny, łatwy w odbiorze',
     'fog-medium':'12-15: tekst złożony, wymaga skupienia','fog-hard':'powyżej 15: tekst specjalistyczny / bardzo trudny',
@@ -5142,6 +5152,7 @@ var I18N = {
     'gap-refresh':'Odśwież','gap-loading':'Porównuję artykuł z danymi SERP…',
     'gap-pts':'/100','gap-select-all':'Zaznacz wszystkie','gap-deselect':'Odznacz',
     'gap-no-serp':'Włącz Analizę SERP przed generowaniem, aby korzystać z analizy luk semantycznych.',
+    'gap-serp-pakiet':'Analiza luk korzysta z danych SERP, dostępnych od pakietu Standard.','gap-serp-pakiet-btn':'Zobacz pakiety',
     'links-title':'Sugestie linków wewnętrznych','links-loading':'Analizuję bazę wiedzy…',
     'versions-label':'Warianty:',
     'seo-panel-title':'Ocena SEO','aio-panel-title':'Ocena AIO',
@@ -5178,6 +5189,7 @@ var I18N = {
     'kd-optymalna':'Optymalna gęstość: 0,5-2,5%',
     // ── Komunikaty dynamiczne ──
     'msg-pdf-load-fail':'Nie udało się załadować biblioteki PDF. Sprawdź połączenie.',
+    'msg-pdf-przygotowuje':'Przygotowuję PDF… Za pierwszym razem trwa to kilka sekund.',
     'msg-docx-error':'Nie udało się przygotować pliku DOCX. Spróbuj ponownie.',
     'msg-no-article':'Najpierw wygeneruj artykuł.',
     'msg-bad-url':'Podaj pełny URL (https://…)',
@@ -5382,6 +5394,7 @@ var I18N = {
     'tpl-save-section':'Lub zapisz obecny formularz jako szablon','tpl-name-ph':'Nazwa szablonu…',
     'text-modal-title':'Dodaj tekst do bazy wiedzy','text-doc-name-label':'Nazwa dokumentu',
     'text-doc-name-ph':'np. Oferta firmy, FAQ zwroty…','text-content-label':'Treść',
+    'text-brak-nazwy':'Wpisz nazwę dokumentu.','text-brak-tresci':'Wklej albo wpisz treść dokumentu.',
     'url-label':'Adres URL',
     'bv-modal-full-title':'Głos marki (brand voice)',
     'bv-modal-desc-full':'Wklej 2-5 istniejących artykułów firmowych (lub innych tekstów). Aplikacja wyekstrahuje profil stylu i zastosuje go do wszystkich przyszłych generowań.',
@@ -5398,7 +5411,7 @@ var I18N = {
     'out-placeholder-sub-full':'AI przeanalizuje bazę wiedzy i stworzy treść',
     'premium-more-time':'2 do 3 razy więcej czasu',
     'nokey-title':'Brak klucza API','nokey-line1':'Otwórz plik w edytorze tekstowym i znajdź linię:','nokey-line2':'Zastąp WSTAW_TUTAJ_NOWY_KLUCZ_API swoim kluczem z console.anthropic.com','badge-nokey':'brak klucza',
-    'hist-docs-base':'Dokumenty w bazie','hist-cost':'Szac. koszt API','hist-cost-wlasne':'Koszt na Twoich kluczach','hist-cost-wczesniej':'wcześniej',
+    'hist-docs-base':'Dokumenty w bazie','hist-cost':'Szac. koszt API','hist-cost-wlasne':'Szacunkowy koszt na Twoich kluczach','hist-cost-wczesniej':'wcześniej',
     'hist-filter-all':'Wszystkie','hist-filter-hybrid':'Hybryda',
     'bulk-gen-all-txt':'Generuj wszystkie','improve-action-txt':'Popraw tekst',
     // ── Spinner generowania ──
@@ -5467,6 +5480,7 @@ var I18N = {
     'err-za-dlugi':'Za dużo tekstu naraz dla modelu AI. Odznacz część źródeł w bazie wiedzy albo skróć tekst i spróbuj jeszcze raz.',
     'err-za-duze':'Zapytanie jest za duże dla dostawcy AI, zwykle przez duże pliki w bazie wiedzy. Odznacz część źródeł albo podziel duże pliki na mniejsze.',
     'err-za-duze-plik':'Plik jest za duży dla dostawcy AI. Skróć nagranie albo zapisz je w mniejszym pliku i spróbuj jeszcze raz.',
+    'err-transkrypcja-za-duzy':'Plik ma {mb} MB, a transkrypcja przyjmuje najwyżej 25 MB. Podziel nagranie na części albo zapisz je w niższej jakości (np. mono, 64 kb/s) i spróbuj ponownie.',
     'err-model':'Dostawca AI nie udostępnia temu kluczowi API modelu, którego używa aplikacja. Sprawdź dostęp do modeli w panelu dostawcy albo zgłoś to administratorowi.',
     'err-moderacja':'Dostawca AI odrzucił zapytanie na podstawie swoich zasad dotyczących treści. Zmień opis albo wytyczne i spróbuj jeszcze raz.',
     'err-przerwano':'Zapytanie zostało przerwane.','err-szczegoly':'Szczegóły techniczne',
@@ -5498,8 +5512,11 @@ var I18N = {
     'img-step1-noref':'Krok 1 z 2: tworzenie promptu graficznego',
     'msg-no-api-resp':'Brak odpowiedzi z API. Sprawdź klucz API i połączenie.',
     'kb-na-serwerze':'Na serwerze','kb-wspolna':'Baza wspólna zespołu','kb-prywatna':'Twoja baza prywatna','kb-fragm':'fragm.','kb-lokalnie':'Tylko w tej przeglądarce','kb-przenies':'Przenieś na serwer','kb-dodano':'Dodano do bazy wiedzy na serwerze','kb-zostaje-lokalnie':'Dokument zapisano tylko w tej przeglądarce.','kb-przeniesiono':'Przeniesiono na serwer',
+    'kb-dlugi-pytanie':'Dokument „{nazwa}” ma {wszystko} znaków, a baza wiedzy zapisze z niego tylko pierwsze {limit} ({procent}%). Dalsza część nie będzie używana przy pisaniu ani w kontroli faktów. Dodać mimo to? Lepiej podzielić plik na części i dodać je osobno.','kb-uciety':'Dokument „{nazwa}” zapisano tylko częściowo: pierwsze {zapisano} z {wszystko} znaków. Reszta nie trafiła do bazy wiedzy: podziel plik na części i dodaj je osobno.',
     'pakiet-zostalo':'Zostało {n} z {m}','pakiet-zostalo-krotko':'zostało {n}','pakiet-od-standard':'Dostępne od pakietu Standard','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f}: poza pakietem {p}','pakiet-niedostepne':'niedostępne',
     'btn-przerwij':'Przerwij','msg-przerwano':'Generowanie przerwane. Formularz jest bez zmian: możesz poprawić brief i spróbować ponownie.','badge-przerwane':'przerwane','spin-ponawiam-za':'Dostawca AI ogranicza zapytania: ponawiam za {s} s','spin-proba':'próba {n} z {m}','spin-ponawiam':'Ponawiam zapytanie…','spin-wznawiam':'Połączenie było przerwane. Odbieram wynik z serwera…',
+    'odzysk-spin':'Kończę artykuł rozpoczęty przed odświeżeniem strony…','odzysk-spin-sub':'Odbieram wynik z serwera','odzysk-gotowe':'Odebrano artykuł rozpoczęty przed odświeżeniem strony. Jest w Historii.','odzysk-blad':'Nie udało się odebrać artykułu rozpoczętego przed odświeżeniem strony: serwer nie ma już tego wyniku. Wygeneruj go ponownie.','odzysk-blad-prefiks':'Artykuł rozpoczęty przed odświeżeniem strony:',
+    'spin-brak-sieci':'Brak internetu. Wynik odbiorę, gdy wróci połączenie.',
     'badge-historia':'z historii','hist-otworz':'Otwórz w generatorze',
     'msg-blad-prefiks':'Błąd:','menu-wyloguj':'Wyloguj się','menu-wyloguj-sub':'zakończ sesję na tym urządzeniu',
     'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Te dokumenty zapisano skrócone i po odświeżeniu będą krótsze: {lista}. Przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
@@ -5608,6 +5625,7 @@ var I18N = {
     'voice-save':'Save','voice-dictate-title':'Dictate',
     'voice-no-key':'Missing OpenAI key - set OPENAI_API_KEY or switch to the browser engine.','voice-unsupported':'This browser does not support this voice feature.','voice-mic-denied':'Microphone access denied.','voice-listening':'Listening…','voice-tts-fail':'Could not play audio.',
     'label-topic':'Article / page topic','ph-topic':'e.g. How to choose a CRM for a small business',
+    'topic-za-dlugi':'The topic can have at most 300 characters. Put longer guidance in Additional guidelines.','topic-pusty':'Enter the article topic.',
     'btn-templates':'Templates','label-ctype':'Content type','label-length':'Length',
     'btn-tematy':'Suggest','btn-tematy-title':'Suggest topics from your business need',
     'btn-templates-title':'Ready-made form templates',
@@ -5663,6 +5681,7 @@ var I18N = {
     'gap-brak-pokrycia':'Not covered by the selected sources. Add material on this topic or remove this section.',
     'fakty-title':'Fact check',
     'fakty-etap-linki':'Checking the links in the article…',
+    'fakty-etap-baza':'Fetching the knowledge base passages the article was written from…',
     'fakty-brak-tekstu':'Generate an article first: there is nothing to check yet.',
     'fakty-refresh':'Check again',
     'fakty-loading':'Comparing the article with the sources…',
@@ -5727,6 +5746,7 @@ var I18N = {
     'vis-title':'Brand presence in AI','vis-desc':'Checks whether the brand appears in AI answers to buyer queries. Runs each prompt through Claude with web search and reports presence, position, competitors and sources. This is an on-demand snapshot from a single model (Claude), not continuous multi-model monitoring. Each prompt consumes a web search request (billed).',
     'vis-f-brand':'Brand to detect','vis-f-comp':'Competitors (comma separated)','vis-f-prompts':'Control queries (one per line)','vis-run':'Check visibility',
     'vis-f-iter':'Iterations per prompt (stability)','vis-narr':'Brand narrative',
+    'vis-czesc-bledow':'Result from {n} of {m} queries: {k} failed ({powod}).','vis-blad-wszystkie':'No query returned a readable result. Try again in a moment.','vis-zapytanie-blad':'This query failed, so it is not counted in the score.','vis-blad-narracji':'Error during narrative check.',
     'settings-rep-title':'Visibility report','settings-rep-sub':'measurement comparison and priorities',
     'settings-trk-title':'AI traffic setup','settings-trk-sub':'visits from AI chats: robots.txt, UTM',
     'trk-title':'AI traffic setup','trk-desc':'This does not measure traffic. It generates preconditions: robots.txt directives for AI bots, UTM links and a GA4 setup hint. Actual measurement requires GA4 and server-side log analysis.',
@@ -5738,6 +5758,7 @@ var I18N = {
     'tab-generator':'Content generator','tab-history':'History','nav-base':'Knowledge','nav-history':'History',
     'settings-cms-title':'CMS integration','settings-cms-sub':'WordPress / Drupal',
     'settings-bv-title':'Brand voice','settings-bv-inactive':'Inactive',
+    'settings-bv-active':'Active - style profile set',
     'out-placeholder':'Enter a topic and click “Generate content”','out-placeholder-sub':'AI will analyze the knowledge base and create content',
     'fog-title':'Fog index (Polish variant)','fog-easy':'below 12: clear text, easy to read',
     'fog-medium':'12-15: complex text, requires focus','fog-hard':'above 15: specialist / very difficult',
@@ -5792,6 +5813,7 @@ var I18N = {
     'gap-refresh':'Refresh','gap-loading':'Comparing article with SERP data…',
     'gap-pts':'/100','gap-select-all':'Select all','gap-deselect':'Deselect',
     'gap-no-serp':'Enable SERP analysis before generating to use semantic gap analysis.',
+    'gap-serp-pakiet':'Gap analysis uses SERP data, available from the Standard plan.','gap-serp-pakiet-btn':'See plans',
     'links-title':'Internal link suggestions','links-loading':'Analyzing knowledge base…',
     'versions-label':'Variants:',
     'seo-panel-title':'SEO Score','aio-panel-title':'AIO Score',
@@ -5828,6 +5850,7 @@ var I18N = {
     'kd-optymalna':'Optimal density: 0.5-2.5%',
     // ── Dynamic messages ──
     'msg-pdf-load-fail':'Failed to load PDF library. Check your connection.',
+    'msg-pdf-przygotowuje':'Preparing the PDF… The first time takes a few seconds.',
     'msg-docx-error':'Could not create the DOCX file. Please try again.',
     'msg-no-article':'Generate an article first.',
     'msg-bad-url':'Provide a full URL (https://…)',
@@ -6005,8 +6028,11 @@ var I18N = {
     'img-spin-sub':'Generation may take 30-60 seconds',
     'msg-no-api-resp':'No response from API. Check your API key and connection.',
     'kb-na-serwerze':'On the server','kb-wspolna':'Shared team base','kb-prywatna':'Your private base','kb-fragm':'passages','kb-lokalnie':'Only in this browser','kb-przenies':'Move to server','kb-dodano':'Added to the server knowledge base','kb-zostaje-lokalnie':'The document was saved only in this browser.','kb-przeniesiono':'Moved to the server',
+    'kb-dlugi-pytanie':'The document "{nazwa}" has {wszystko} characters, but the knowledge base will store only the first {limit} ({procent}%). The rest will not be used for writing or fact checking. Add it anyway? It is better to split the file into parts and add them separately.','kb-uciety':'The document "{nazwa}" was stored only partly: the first {zapisano} of {wszystko} characters. The rest did not reach the knowledge base: split the file into parts and add them separately.',
     'pakiet-zostalo':'{n} of {m} left','pakiet-zostalo-krotko':'{n} left','pakiet-od-standard':'Available from the Standard plan','pakiet-od-standard-krotko':'Standard','pakiet-poza-tytul':'{f}: not included in the {p} plan','pakiet-niedostepne':'not available',
     'btn-przerwij':'Stop','msg-przerwano':'Generation stopped. The form is unchanged, so you can adjust the brief and try again.','badge-przerwane':'stopped','spin-ponawiam-za':'The AI provider is limiting requests: retrying in {s} s','spin-proba':'attempt {n} of {m}','spin-ponawiam':'Retrying the request…','spin-wznawiam':'The connection dropped. Collecting the result from the server…',
+    'odzysk-spin':'Finishing the article started before the page reloaded…','odzysk-spin-sub':'Collecting the result from the server','odzysk-gotowe':'The article started before the page reloaded has been collected. It is in History.','odzysk-blad':'Could not collect the article started before the page reloaded: the server no longer has this result. Generate it again.','odzysk-blad-prefiks':'Article started before the page reloaded:',
+    'spin-brak-sieci':'No internet connection. The result will be collected when the connection is back.',
     'badge-historia':'from history','hist-otworz':'Open in generator',
     'msg-blad-prefiks':'Error:','menu-wyloguj':'Sign out','menu-wyloguj-sub':'end the session on this device',
     'msg-magazyn-pelny':'Browser storage is full. These documents were saved shortened and will be shorter after a refresh: {lista}. Move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
@@ -6045,6 +6071,7 @@ var I18N = {
     'tpl-save-section':'Or save the current form as a template','tpl-name-ph':'Template name…',
     'text-modal-title':'Add text to knowledge base','text-doc-name-label':'Document name',
     'text-doc-name-ph':'e.g. company offer, FAQ returns…','text-content-label':'Content',
+    'text-brak-nazwy':'Enter a document name.','text-brak-tresci':'Paste or type the document content.',
     'url-label':'URL',
     'bv-modal-full-title':'Brand voice',
     'bv-modal-desc-full':'Paste 2-5 existing company articles (or other texts). The app will extract the style profile and apply it to all future generations.',
@@ -6064,7 +6091,7 @@ var I18N = {
     'out-placeholder-sub-full':'AI will analyze the knowledge base and create content',
     'premium-more-time':'2-3 times longer',
     'nokey-title':'Missing API key','nokey-line1':'Open the file in a text editor and find the line:','nokey-line2':'Replace WSTAW_TUTAJ_NOWY_KLUCZ_API with your key from console.anthropic.com','badge-nokey':'no key',
-    'hist-docs-base':'Documents in base','hist-cost':'Est. API cost','hist-cost-wlasne':'Cost on your keys','hist-cost-wczesniej':'earlier',
+    'hist-docs-base':'Documents in base','hist-cost':'Est. API cost','hist-cost-wlasne':'Estimated cost on your keys','hist-cost-wczesniej':'earlier',
     'hist-filter-all':'All','hist-filter-hybrid':'Hybrid',
     'bulk-gen-all-txt':'Generate all','improve-action-txt':'Improve the text',
     // ── Spinner ──
@@ -6136,6 +6163,7 @@ var I18N = {
     'err-za-dlugi':'Too much text at once for the AI model. Deselect some sources in the knowledge base or shorten the text, then try again.',
     'err-za-duze':'The request is too large for the AI provider, usually because of large files in the knowledge base. Deselect some sources or split large files into smaller ones.',
     'err-za-duze-plik':'The file is too large for the AI provider. Shorten the recording or save it as a smaller file, then try again.',
+    'err-transkrypcja-za-duzy':'The file is {mb} MB, but transcription accepts at most 25 MB. Split the recording into parts or save it at a lower quality (e.g. mono, 64 kbps) and try again.',
     'err-model':'The AI provider does not give this API key access to the model the app uses. Check model access in the provider dashboard or tell your administrator.',
     'err-moderacja':'The AI provider rejected the request under its content policy. Change the description or guidelines, then try again.',
     'err-przerwano':'The request was stopped.','err-szczegoly':'Technical details',
@@ -6383,14 +6411,40 @@ const CENY_MODELI = {
   'claude-sonnet-4-6': [3, 15],
   'claude-haiku-4-5':  [1, 5],
 };
+// R9-F (KOD8-31): cena wyszukiwania w sieci u Anthropic (USD za jedno wyszukiwanie, 10 USD za 1000)
+// i transkrypcji OpenAI (USD za minute nagrania). Szacunek: dokladny koszt jest w panelu dostawcy.
+const CENA_WYSZUKIWANIA = 0.01;
+const CENA_TRANSKRYPCJI_MIN = 0.006;
+function cennikModelu(model) {
+  model = String(model || '');
+  if (CENY_MODELI[model]) return CENY_MODELI[model];
+  // API oddaje dla aliasu pelna nazwe wersji z data (np. claude-opus-5-20261001): najdluzszy pasujacy przedrostek.
+  const klucz = Object.keys(CENY_MODELI).filter(k => model.indexOf(k + '-') === 0).sort((a, b) => b.length - a.length)[0];
+  return klucz ? CENY_MODELI[klucz] : CENY_MODELI['claude-sonnet-5'];
+}
 function kosztOdpowiedzi(dane) {
   if (!dane || !dane.usage) return 0;
   // Model bierzemy z odpowiedzi, nie z zapytania: przy przekierowaniu na
   // Foundry albo przy zapasowym modelu liczylibysmy wedlug zlej stawki.
-  const cennik = CENY_MODELI[dane.model] || CENY_MODELI['claude-sonnet-5'];
+  const cennik = cennikModelu(dane.model);
   const we = dane.usage.input_tokens  || 0;
   const wy = dane.usage.output_tokens || 0;
-  return (we * cennik[0] + wy * cennik[1]) / 1e6;
+  const wyszukiwania = (dane.usage.server_tool_use && dane.usage.server_tool_use.web_search_requests) || 0;
+  return (we * cennik[0] + wy * cennik[1]) / 1e6 + wyszukiwania * CENA_WYSZUKIWANIA;
+}
+// Dlugosc nagrania w sekundach (0, gdy przegladarka nie odczyta pliku) - do kosztu transkrypcji.
+function dlugoscNagrania(plik) {
+  return new Promise(function (ok) {
+    let adres = '';
+    try { adres = URL.createObjectURL(plik); } catch (e) { ok(0); return; }
+    const a = document.createElement('audio');
+    const koniec = function (s) { try { URL.revokeObjectURL(adres); } catch (e) { /* adres juz zwolniony */ } ok(isFinite(s) && s > 0 ? s : 0); };
+    a.preload = 'metadata';
+    a.onloadedmetadata = function () { koniec(a.duration); };
+    a.onerror = function () { koniec(0); };
+    setTimeout(function () { koniec(0); }, 5000);
+    a.src = adres;
+  });
 }
 
 // ─── AZURE AI FOUNDRY (opcjonalna integracja firmowa) ────────────────────────
@@ -6669,17 +6723,61 @@ function czekajNaPowrot(sygnal) {
 function anulujZadanieWTle(id) {
   fetch('/api/zadanie/anuluj', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }), keepalive: true }).catch(function () {});
 }
+// R9-F (KOD8-07): brama przed serwerem (Caddy, Cloudflare) w oknie restartu uslugi oddaje 502/503/504
+// (Cloudflare 520-524) bez JSON-a. To nie jest odpowiedz serwera aplikacji, tylko zerwane polaczenie:
+// po 1, 2, 4 i 8 s pytamy o to samo zadanie (do ok. 60 s), zamiast konczyc artykul bledem.
+const STATUSY_BRAMY = [502, 503, 504, 520, 521, 522, 523, 524];
+function odpowiedzBramy(res) {
+  return STATUSY_BRAMY.indexOf(res.status) !== -1 && !/json/i.test(res.headers.get('content-type') || '');
+}
+function poczekaj(ms, sygnal) {
+  return new Promise(function (ok, zle) {
+    if (sygnal && sygnal.aborted) { zle(new DOMException('Przerwano', 'AbortError')); return; }
+    var przerwij = function () { clearTimeout(t); zle(new DOMException('Przerwano', 'AbortError')); };
+    var t = setTimeout(function () { if (sygnal) sygnal.removeEventListener('abort', przerwij); ok(); }, ms);
+    if (sygnal) sygnal.addEventListener('abort', przerwij, { once: true });
+  });
+}
+// R9-F (KOD8-34): czekanie na siec widac w spinnerze. Licznik etapow generowania co sekunde nadpisywal
+// napis ("Generuje tresc... pisze artykul"), wiec bez zasiegu (pociag, winda) nie bylo widac, ze aplikacja
+// tylko czeka. Osobny wiersz zamiast etapow, dopoki trwa czekanie (licznik: kilka wywolan naraz).
+function czekamNaSiec(tak) {
+  czekamNaSiec.n = Math.max(0, (czekamNaSiec.n || 0) + (tak ? 1 : -1));
+  const sp = document.getElementById('spinner');
+  if (!sp) return;
+  let el = document.getElementById('spin-siec');
+  if (czekamNaSiec.n && !el) {
+    el = document.createElement('div'); el.id = 'spin-siec'; el.className = 'spinner-label spin-siec'; el.setAttribute('role', 'status');
+    const sub = document.getElementById('spin-sub'); if (sub) sub.after(el); else sp.appendChild(el);
+  }
+  if (el) el.textContent = _t(navigator.onLine === false ? 'spin-brak-sieci' : 'spin-wznawiam');
+  sp.classList.toggle('czeka-na-siec', czekamNaSiec.n > 0);
+}
+window.addEventListener('offline', function () { const el = document.getElementById('spin-siec'); if (el) el.textContent = _t('spin-brak-sieci'); });
+window.addEventListener('online', function () { const el = document.getElementById('spin-siec'); if (el) el.textContent = _t('spin-wznawiam'); });
 // fetch do serwera aplikacji odporny na zerwane polaczenie. `id` podaje wolajacy,
 // ktory sam ponawia (grafika): kolejna proba dolacza wtedy do tego samego zadania.
 // `anuluj`: przerwanie przez uzytkownika konczy tez zadanie na serwerze.
 async function fetchZadania(url, opcje, id, anuluj) {
   if (!window.API_ENDPOINT_OVERRIDE || !/^\/api(\/|$)/.test(String(url))) return fetch(url, opcje);
-  id = id || noweIdZadania();
+  // R9-F (KOD8-30): identyfikator ustalony przez wolajacego w naglowku (artykul zapamietany w karcie).
+  id = id || (opcje && opcje.headers && opcje.headers['X-Zadanie']) || noweIdZadania();
   const o = Object.assign({}, opcje, { headers: Object.assign({}, opcje && opcje.headers, { 'X-Zadanie': id }) });
   const przerwane = (e) => e && (e.name === 'AbortError' || (o.signal && o.signal.aborted));
+  let bramaMs = 0, bramaProb = 0;
   for (let proba = 0; ; proba++) {
     try {
-      return await fetch(url, o);
+      const res = await fetch(url, o);
+      if (!odpowiedzBramy(res) || bramaMs >= 60000) return res;
+      try { if (res.body) res.body.cancel().catch(function () {}); } catch (e) { /* cialo juz odczytane */ }
+      const przerwa = Math.min(8000, 1000 * Math.pow(2, bramaProb++));
+      bramaMs += przerwa;
+      const sub = document.getElementById('spin-sub');
+      if (sub) sub.textContent = _t('spin-wznawiam');
+      czekamNaSiec(true);
+      try { await poczekaj(przerwa, o.signal); } finally { czekamNaSiec(false); }
+      proba--; // odpowiedz bramy nie liczy sie do limitu zerwanych polaczen
+      continue;
     } catch (e) {
       if (przerwane(e) || proba >= 5) {
         if (przerwane(e) && anuluj) anulujZadanieWTle(id);
@@ -6687,13 +6785,14 @@ async function fetchZadania(url, opcje, id, anuluj) {
       }
       const sub = document.getElementById('spin-sub');
       if (sub) sub.textContent = _t('spin-wznawiam');
+      czekamNaSiec(true);
       try {
         await czekajNaPowrot(o.signal);
         await new Promise(r => setTimeout(r, Math.min(4000, 600 * (proba + 1))));
       } catch (e2) {
         if (anuluj) anulujZadanieWTle(id);
         throw e2;
-      }
+      } finally { czekamNaSiec(false); }
     }
   }
 }
@@ -6741,6 +6840,11 @@ async function apiFetch(options, maxRetries = 3) {
   const sygnal = options.signal || (przerwanieGenerowania && przerwanieGenerowania.signal) || null;
   if (sygnal && !options.signal) options = Object.assign({}, options, { signal: sygnal });
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    // R9-F (KOD8-30): po 429 nowe zadanie - pod identyfikatorem z naglowka serwer oddalby zapamietane 429.
+    if (attempt > 0 && options.headers && options.headers['X-Zadanie']) {
+      options = Object.assign({}, options, { headers: Object.assign({}, options.headers) });
+      delete options.headers['X-Zadanie'];
+    }
     const res = await fetchZadania(endpoint, options, null, true);
     if (res.status !== 429) {
       // Tryb GPT: przekształć odpowiedź OpenAI → format Anthropic, by reszta kodu działała bez zmian
@@ -7646,13 +7750,26 @@ function switchTab(name, el) {
 }
 
 // ─── MODALS ───────────────────────────────────────────────────────────────────
-function openTextModal() { document.getElementById('text-modal').classList.add('open'); setTimeout(()=>document.getElementById('m-name').focus(),80); }
-function closeTextModal() { document.getElementById('text-modal').classList.remove('open'); document.getElementById('m-name').value=''; document.getElementById('m-content').value=''; }
+// R9-F (KOD8-03): fokus ustawia menedzer okien (pierwsze pole, bez kradziezy fokusu z pola, w ktorym juz
+// sie pisze). Drugi, opozniony focus() przenosil tekst wpisywany w Tresc do pola nazwy.
+function openTextModal() { document.getElementById('text-modal').classList.add('open'); bladPolaTekstu(null); }
+function closeTextModal() { document.getElementById('text-modal').classList.remove('open'); document.getElementById('m-name').value=''; document.getElementById('m-content').value=''; bladPolaTekstu(null); }
+// Komunikat przy pustym polu okna tekstu (pole = null czysci). Wczesniej Dodaj bez tresci nic nie robil i okno stalo bez slowa.
+function bladPolaTekstu(pole, klucz) {
+  ['m-name', 'm-content'].forEach(id => { const p = document.getElementById(id); if (p) p.removeAttribute('aria-invalid'); });
+  let el = document.getElementById('m-blad');
+  if (!pole) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement('p'); el.id = 'm-blad'; el.className = 'tekst-pomoc stan-blad'; el.setAttribute('role', 'alert'); }
+  (pole.closest('.field') || pole).after(el);
+  el.textContent = _t(klucz);
+  pole.setAttribute('aria-invalid', 'true');
+  pole.focus();
+}
 
 function saveText() {
   const name = document.getElementById('m-name').value.trim();
   const content = document.getElementById('m-content').value.trim();
-  if (!name || !content) return;
+  if (!name || !content) { bladPolaTekstu(document.getElementById(name ? 'm-content' : 'm-name'), name ? 'text-brak-tresci' : 'text-brak-nazwy'); return; }
   addDoc(name, content, '✏️');
   closeTextModal();
 }
@@ -7678,7 +7795,7 @@ function openUrlModal() {
   document.getElementById('url-info').style.display = 'none';
   document.getElementById('url-save-btn').disabled = false;
   document.getElementById('url-fill').style.width = '0%';
-  setTimeout(() => document.getElementById('u-url').focus(), 80);
+  // R9-F (KOD8-03): fokus na adresie ustawia menedzer okien (bez opoznionego drugiego focus()).
 }
 function closeUrlModal() {
   document.getElementById('url-modal').classList.remove('open');
@@ -8127,6 +8244,26 @@ function generowanieTrwa(zKolejki) {
 function ostrzezGenerowanieTrwa() {
   pokazPowiadomienie(_t('msg-generowanie-trwa'), 'uwaga');
 }
+// R9-F (KOD8-25): temat ma limit dlugosci (wklejony akapit rozsadzal Historie: wpis na kilka ekranow
+// telefonu) z podpowiedzia, gdzie wpisac dluzsze wskazowki, a pusty temat (same spacje) ma komunikat
+// przy polu zamiast samego fokusu.
+const LIMIT_TEMATU = 300;
+function podpowiedzTematu(klucz) {
+  const pole = document.getElementById('topic');
+  if (!pole) return;
+  let el = document.getElementById('topic-podpowiedz');
+  if (!klucz) { if (el) el.remove(); pole.removeAttribute('aria-invalid'); return; }
+  if (!el) { el = document.createElement('p'); el.id = 'topic-podpowiedz'; el.className = 'tekst-pomoc'; el.setAttribute('role', 'status'); (pole.closest('.pole-wiersz') || pole).after(el); }
+  el.textContent = _t(klucz);
+  el.classList.toggle('stan-blad', klucz === 'topic-pusty');
+  if (klucz === 'topic-pusty') pole.setAttribute('aria-invalid', 'true'); else pole.removeAttribute('aria-invalid');
+}
+(function () {
+  const pole = document.getElementById('topic');
+  if (!pole) return;
+  pole.maxLength = LIMIT_TEMATU;
+  pole.addEventListener('input', function () { podpowiedzTematu(pole.value.length >= LIMIT_TEMATU ? 'topic-za-dlugi' : null); });
+})();
 
 async function generate(skipPremiumModal = false, opcje = null) {
   if (generowanieTrwa(opcje && opcje.zKolejki)) { ostrzezGenerowanieTrwa(); return false; }
@@ -8144,6 +8281,7 @@ async function generate(skipPremiumModal = false, opcje = null) {
 
   // ── Blokada: brak tematu
   if (!topic) {
+    podpowiedzTematu('topic-pusty'); // R9-F (KOD8-25)
     document.getElementById('topic').focus();
     return false;
   }
@@ -8375,7 +8513,13 @@ ${(ctype !== 'FAQ page' && !isPress) ? `- MANDATORY: End the article, immediatel
     if (typeof isPodcastType === 'function' && isPodcastType(ctype)) systemPrompt += podcastPromptBlock();
     else if (typeof isNewsletterAudioType === 'function' && isNewsletterAudioType(ctype)) systemPrompt += newsletterPromptBlock();
 
-    const userPrompt = `You have ${docs.length} knowledge source(s): ${files.length} file(s), ${urls.length} URL(s), ${texts.length} manual text(s).
+    // R9-F (KOD8-19): fragmenty z Bazy na serwerze tez sa zrodlami. Wczesniej prompt mowil "You have 0 knowledge
+    // source(s)" i "Knowledge base ONLY", a zaraz potem dawal te fragmenty - model mogl uznac baze za pusta.
+    const fragmentySerwera = (String(ostatniaWiedzaSerwera || '').match(/^### /gm) || []).length;
+    const opisZrodelSerwera = fragmentySerwera ? `, ${fragmentySerwera} passage(s) from the company knowledge base on the server` : '';
+    const bazaBezTrafien = !fragmentySerwera && (window._bazaSerwerLiczba || 0) > 0
+      ? '\nThe company knowledge base on the server has documents, but none of their passages matches this topic.' : '';
+    const userPrompt = `You have ${activeDocs.length + fragmentySerwera} knowledge source(s): ${files.length} file(s), ${urls.length} URL(s), ${texts.length} manual text(s)${opisZrodelSerwera}.${bazaBezTrafien}
 Mode: ${useWeb ? 'Knowledge base FIRST, supplement gaps with general knowledge where needed.' : 'Knowledge base ONLY - do not add anything outside provided sources.'}
 
 KNOWLEDGE BASE - always prioritize this content:
@@ -8755,6 +8899,7 @@ function usunWpisHistorii(id) {
   if (!h) return;
   if (!window.confirm(_t('hist-usun-pytanie').replace('{t}', h.topic || ''))) return;
   history = history.filter(function (x) { return x !== h; });
+  if (h.id) oznaczUsunietyWpis(h.id); // R9-F (KOD8-09): nie wraca z listy innej karty
   if (biezacyHist === h.id) { biezacyHist = null; magazyn.removeItem('cai_biezacy'); }
   if (previewHistory._podglad === h.id) {
     previewHistory._podglad = null;
@@ -8935,8 +9080,16 @@ async function wywolajZWyszukiwaniem(cialo, naglowki, maxRund = 4) {
   const bloki = [];
 
   for (let runda = 0; runda < maxRund; runda++) {
+    // R9-F (KOD8-13): kolejna tura po pause_turn to ten sam artykul. Z deklaracja "artykul" serwer liczyl
+    // ja jako drugi artykul (konto darmowe: 2 z 3 za jeden tekst); "artykul-ciag" idzie tylko na licznik
+    // wywolan. Kazda tura to tez nowe zadanie w tle (identyfikator tury 0 oddalby jej wynik).
+    let h = naglowki;
+    if (runda > 0 && naglowki) {
+      h = Object.assign({}, naglowki);
+      delete h['X-Zadanie'];
+    }
     const res = await apiFetch({
-      method: 'POST', headers: naglowki,
+      method: 'POST', headers: h,
       body: JSON.stringify(Object.assign({}, cialo, { messages: wiadomosci })),
     });
     const dane = await res.json();
@@ -10472,11 +10625,15 @@ function adresDoDokumentu(href) {
   } catch (e) { return ''; }
 }
 
+// R9-F (KOD8-35): kroje PDF (podzbior PL) nie maja emoji, wiec w pliku zostawal pusty znak \x00.
+// Emoji (z laczeniami, odcieniami skory, flagami i klawiszami) wypadaja z tekstu PDF razem ze spacja przed nimi
+// ("48 h <flaga>, serwis" -> "48 h, serwis"); (c), (R) i TM sa w kroju, wiec zostaja.
+const EMOJI_PDF = / ?(?:(?![©®™])\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}\u{1F1E6}-\u{1F1FF}\u{E0020}-\u{E007F}︎️‍⃣])+/gu;
 // Tekst akapitu z formatowaniem: pogrubienie, kursywa, linki (tylko http, https, mailto).
 function inlinePdf(wezly, f, out) {
   wezly.forEach(function (n) {
     if (n.nodeType === 3) {
-      const t = n.nodeValue.replace(/[ \t\n\r\f]+/g, ' ');
+      const t = n.nodeValue.replace(EMOJI_PDF, '').replace(/[ \t\n\r\f]+/g, ' ');
       if (t) out.push(Object.assign({ text: t }, f));
       return;
     }
@@ -10703,14 +10860,27 @@ function trescPdf(korzen) {
 }
 
 function zaladujPdfMake(gotowe) {
+  // R9-F (KOD8-32): pierwszy PDF dociaga 1,7 MB (na telefonie kilka sekund bez znaku zycia), a kolejne
+  // dotkniecie w tym czasie dawalo drugi plik. Teraz komunikat od razu i jedno pobranie: dotkniecia
+  // w trakcie ladowania czekaja na to samo ladowanie.
+  const czekajacy = zaladujPdfMake.czekajacy || (zaladujPdfMake.czekajacy = []);
+  let toast = null;
+  const koniec = function (ok) {
+    if (toast) { toast.classList.add('znika'); setTimeout(function () { toast.remove(); }, 200); }
+    const lista = czekajacy.splice(0);
+    if (ok) lista.forEach(function (f) { try { f(); } catch (e) { console.error('[pdf]', e); } });
+  };
   function wczytaj(src, cb) {
     const s = document.createElement('script');
     s.src = src; s.onload = cb;
-    s.onerror = function () { powiadomBlad(_t('msg-pdf-load-fail')); };
+    s.onerror = function () { koniec(false); powiadomBlad(_t('msg-pdf-load-fail')); };
     document.head.appendChild(s);
   }
   if (window.pdfMake && typeof window.pdfMake.createPdf === 'function') { gotowe(); return; }
-  wczytaj('pwa/lib/pdfmake.min.js', function () { wczytaj('pwa/lib/vfs_fonts.js', gotowe); });
+  if (czekajacy.length) return; // ladowanie trwa: kolejne dotkniecie nie robi drugiego pliku
+  czekajacy.push(gotowe);
+  toast = pokazPowiadomienie(_t('msg-pdf-przygotowuje'), 'info', 30000);
+  wczytaj('pwa/lib/pdfmake.min.js', function () { wczytaj('pwa/lib/vfs_fonts.js', function () { koniec(true); }); });
 }
 
 function dlPdf() {
@@ -11963,6 +12133,7 @@ function zapiszRecznePoprawki() {
   const wpis = wpisHistorii(biezacyHist);
   if (wpis) {
     wpis.html = h;
+    wpis.zm = Date.now(); // R9-F (KOD8-09): nowsza zmiana wpisu wygrywa przy scalaniu kart
     // R6-F (E-14): ta sama liczba slow co w pasku statystyk (wczesniej ze zrodlami i meta).
     wpis.words = liczbaSlowArtykulu(art);
     saveState();
@@ -12427,7 +12598,8 @@ function odswiezInspektor() {
   document.body.classList.toggle('inspektor-otwarty', !!otwarty);
   // 1280-1439 px: brief + panel kontroli zostawialy artykulowi ~40 znakow w linii.
   // Przy otwartym panelu brief zwija sie do szyny (i wraca, gdy panel sie zamknie).
-  var b = document.body, sredni = window.innerWidth >= 1280 && window.innerWidth < 1440 && !b.classList.contains('is-mobile');
+  // R9-F (KOD8-14): klasa telefonu najpierw - odczyt innerWidth wymuszal przy starcie telefonu pelny uklad strony.
+  var b = document.body, sredni = !b.classList.contains('is-mobile') && window.innerWidth >= 1280 && window.innerWidth < 1440;
   if (otwarty && sredni && !b.classList.contains('brief-zwiniety')) { przelaczBrief(true); b.dataset.briefAuto = '1'; }
   else if (!otwarty && b.dataset.briefAuto === '1') { delete b.dataset.briefAuto; przelaczBrief(false); }
   var gr = otwarty ? INSPEKTOR[otwarty].gr : '';
@@ -13054,6 +13226,49 @@ const LS = {
   COST:     'cai_cost_v2',
 };
 
+// R9-F (KOD8-09): Historia jednego konta w kilku kartach. Kazda karta trzyma liste w pamieci, a zapis
+// szedl zawsze cala lista tej karty, wiec artykul z drugiej karty znikal bez sladu. Teraz zapis
+// i zdarzenie 'storage' scalaja listy po id (wygrywa nowsza zmiana wpisu), a id usunietych wpisow
+// pamietamy, zeby nie wracaly z listy innej karty.
+let ostatniZapisHistorii = null;
+const LS_USUNIETE = 'cai_history_usuniete';
+function oznaczUsunietyWpis(id) {
+  const lista = (czytajJson(LS_USUNIETE, []) || []).filter(x => x !== id);
+  lista.push(id);
+  magazyn.setItem(LS_USUNIETE, JSON.stringify(lista.slice(-300)));
+}
+function scalHistorieZMagazynem() {
+  const surowe = magazyn.getItem(LS.HISTORY);
+  if (!surowe || surowe === ostatniZapisHistorii) return false;
+  let zapisana;
+  try { zapisana = JSON.parse(surowe); } catch (e) { return false; }
+  if (!Array.isArray(zapisana)) return false;
+  ostatniZapisHistorii = surowe;
+  const usuniete = new Set(czytajJson(LS_USUNIETE, []) || []);
+  const mapa = new Map();
+  let zmiana = false;
+  history.forEach(h => {
+    if (!h) return;
+    if (h.id && usuniete.has(h.id)) { zmiana = true; return; }
+    mapa.set(h.id || ('bez-id-' + mapa.size), h);
+  });
+  zapisana.forEach(z => {
+    if (!z || !z.id || usuniete.has(z.id)) return;
+    const moj = mapa.get(z.id);
+    if (!moj) { mapa.set(z.id, z); zmiana = true; }
+    else if ((z.zm || z.ts || 0) > (moj.zm || moj.ts || 0)) { Object.assign(moj, z); zmiana = true; }
+  });
+  if (!zmiana) return false;
+  history = Array.from(mapa.values()).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  if (biezacyHist != null && !wpisHistorii(biezacyHist)) { biezacyHist = null; magazyn.removeItem('cai_biezacy'); }
+  return true;
+}
+window.addEventListener('storage', function (e) {
+  const k = String((e && e.key) || '');
+  if (k.slice(-LS.HISTORY.length) !== LS.HISTORY && k.slice(-LS_USUNIETE.length) !== LS_USUNIETE) return;
+  if (scalHistorieZMagazynem()) { try { renderHistory(); } catch (er) {} }
+});
+
 function saveState() {
   // Historia najpierw i osobno: pelny magazyn (zwykle przez duze dokumenty
   // bazy) nie moze po cichu zablokowac zapisu artykulow. Wczesniej jeden
@@ -13064,13 +13279,19 @@ function saveState() {
   // wypadaja najstarsze wpisy historii - z komunikatem, ile ich bylo.
   const wpisDoZapisu = h => ({
     id: h.id, ts: h.ts, topic: h.topic, type: h.type, words: h.words, time: h.time,
-    html: h.html || '', jezyk: h.jezyk || '', kontekst: h.kontekst || null
+    html: h.html || '', jezyk: h.jezyk || '', kontekst: h.kontekst || null, zm: h.zm || h.ts || 0
   });
-  const zapiszHistorie = (n) => magazyn.setItem(LS.HISTORY, JSON.stringify(history.slice(0, n).map(wpisDoZapisu)));
+  // R9-F (KOD8-09): najpierw wpisy zapisane przez inne karty tego konta - zapis calej listy z pamieci
+  // tej karty kasowal artykuly z drugiej karty.
+  if (scalHistorieZMagazynem()) { try { renderHistory(); } catch (e) {} }
+  const zapiszHistorie = (n) => { const json = JSON.stringify(history.slice(0, n).map(wpisDoZapisu)); const ok = magazyn.setItem(LS.HISTORY, json); if (ok) ostatniZapisHistorii = json; return ok; };
   const mniej = (n, min) => Math.max(min, n - Math.max(1, Math.ceil(n / 10)));
   let n = history.length;
   let ok = zapiszHistorie(n);
   while (!ok && n > 1) { n = mniej(n, 1); ok = zapiszHistorie(n); }
+  // Licznik i koszt z drugiej karty nie cofaja sie przy zapisie tej karty (R9-F, KOD8-09).
+  genCount = Math.max(genCount, parseInt(magazyn.getItem(LS.GENCOUNT) || '0', 10) || 0);
+  sessionCost = Math.max(sessionCost, parseFloat(magazyn.getItem(LS.COST) || '0') || 0);
   magazyn.setItem(LS.GENCOUNT, String(genCount));
   magazyn.setItem(LS.COST, String(sessionCost));
   const docsToSave = docs.map(d => ({
@@ -13401,12 +13622,29 @@ function openWpModal() {
 }
 function closeWpModal() { document.getElementById('wp-modal').classList.remove('open'); }
 
+// R9-F (KOD8-29): naglowek Basic w UTF-8 (RFC 7617). btoa przyjmuje tylko Latin-1, wiec login albo haslo
+// z polska litera (Drupal dopuszcza loginy Unicode, np. "Łukasz") konczylo sie surowym wyjatkiem przegladarki.
+function base64Utf8(s) {
+  const bajty = new TextEncoder().encode(String(s));
+  let bin = '';
+  for (let i = 0; i < bajty.length; i++) bin += String.fromCharCode(bajty[i]);
+  return btoa(bin);
+}
+// Adres CMS bez schematu dostaje https:// (wczesniej zapytanie szlo pod adres wzgledny, na serwer aplikacji),
+// bez koncowego /wp-admin i ukosnikow.
+function normalizujAdresCms(u) {
+  u = String(u || '').trim();
+  if (!u) return '';
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(u)) u = 'https://' + u.replace(/^\/+/, '');
+  return u.replace(/\/wp-admin(\/.*)?$/i, '').replace(/\/+$/, '');
+}
+
 function saveCmsSettings() {
   if (activeCms === 'wp') {
-    wpSettings = { url: document.getElementById('wp-url').value.trim().replace(/\/$/, ''), user: document.getElementById('wp-user').value.trim(), pass: document.getElementById('wp-pass').value.trim() };
+    wpSettings = { url: normalizujAdresCms(document.getElementById('wp-url').value), user: document.getElementById('wp-user').value.trim(), pass: document.getElementById('wp-pass').value.trim() };
     try { magazyn.setItem('cai-wp', JSON.stringify(wpSettings)); } catch(e) {}
   } else {
-    drupalSettings = { url: document.getElementById('drupal-url').value.trim().replace(/\/$/, ''), user: document.getElementById('drupal-user').value.trim(), pass: document.getElementById('drupal-pass').value.trim(), ctype: document.getElementById('drupal-ctype').value.trim() || 'article', format: document.getElementById('drupal-format').value };
+    drupalSettings = { url: normalizujAdresCms(document.getElementById('drupal-url').value), user: document.getElementById('drupal-user').value.trim(), pass: document.getElementById('drupal-pass').value.trim(), ctype: document.getElementById('drupal-ctype').value.trim() || 'article', format: document.getElementById('drupal-format').value };
     try { magazyn.setItem('cai-drupal', JSON.stringify(drupalSettings)); } catch(e) {}
   }
   try { magazyn.setItem('cai-active-cms', activeCms); } catch(e) {}
@@ -13484,18 +13722,18 @@ function cmsBezHttps(url) {
 async function testCmsConnection() {
   const res = document.getElementById('wp-test-result');
   res.innerHTML = _t('msg-loading-test');
-  const adresCms = document.getElementById(activeCms === 'wp' ? 'wp-url' : 'drupal-url').value.trim();
+  const adresCms = normalizujAdresCms(document.getElementById(activeCms === 'wp' ? 'wp-url' : 'drupal-url').value);
   if (cmsBezHttps(adresCms)) { res.innerHTML = `<span class="stan-blad">${escapeHtml(_t('msg-cms-https'))}</span>`; return; }
   try {
     if (activeCms === 'wp') {
-      const url = document.getElementById('wp-url').value.trim().replace(/\/$/, '');
-      const creds = btoa(`${document.getElementById('wp-user').value.trim()}:${document.getElementById('wp-pass').value.trim()}`);
+      const url = normalizujAdresCms(document.getElementById('wp-url').value);
+      const creds = base64Utf8(`${document.getElementById('wp-user').value.trim()}:${document.getElementById('wp-pass').value.trim()}`);
       const r = await fetch(`${url}/wp-json/wp/v2/users/me`, { headers: { 'Authorization': `Basic ${creds}` } });
       if (r.ok) { const d = await r.json(); res.innerHTML = `<span class="stan-ok">${escapeHtml(_t('wp-zalogowano').replace('{name}', String(d.name || '')))}</span>`; }
       else res.innerHTML = htmlBleduCms(r.status, await szczegolOdpowiedziCms(r), 'wp');
     } else {
-      const url = document.getElementById('drupal-url').value.trim().replace(/\/$/, '');
-      const creds = btoa(`${document.getElementById('drupal-user').value.trim()}:${document.getElementById('drupal-pass').value.trim()}`);
+      const url = normalizujAdresCms(document.getElementById('drupal-url').value);
+      const creds = base64Utf8(`${document.getElementById('drupal-user').value.trim()}:${document.getElementById('drupal-pass').value.trim()}`);
       const r = await fetch(`${url}/jsonapi`, { headers: { 'Authorization': `Basic ${creds}`, 'Accept': 'application/vnd.api+json' } });
       if (r.ok) res.innerHTML = `<span style="color:var(--c-sukces)">${_t('drupal-ok')}</span>`;
       else res.innerHTML = htmlBleduCms(r.status, await szczegolOdpowiedziCms(r), 'drupal');
@@ -13615,8 +13853,8 @@ async function publishToCms(status) {
 }
 
 async function publishToWordPress(title, content, excerpt, status, resEl) {
-  const creds = btoa(`${wpSettings.user}:${wpSettings.pass}`);
-  const r = await fetch(`${wpSettings.url}/wp-json/wp/v2/posts`, {
+  const creds = base64Utf8(`${wpSettings.user}:${wpSettings.pass}`);
+  const r = await fetch(`${normalizujAdresCms(wpSettings.url)}/wp-json/wp/v2/posts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${creds}` },
     body: JSON.stringify({ title, content, excerpt, status })
@@ -13632,7 +13870,7 @@ async function publishToWordPress(title, content, excerpt, status, resEl) {
 }
 
 async function publishToDrupal(title, content, excerpt, status, resEl) {
-  const creds = btoa(`${drupalSettings.user}:${drupalSettings.pass}`);
+  const creds = base64Utf8(`${drupalSettings.user}:${drupalSettings.pass}`);
   const ctype = drupalSettings.ctype || 'article';
   const fmt = drupalSettings.format || 'full_html';
   const drupalStatus = status === 'publish' ? 1 : 0;
@@ -13648,7 +13886,7 @@ async function publishToDrupal(title, content, excerpt, status, resEl) {
     }
   };
 
-  const r = await fetch(`${drupalSettings.url}/jsonapi/node/${ctype}`, {
+  const r = await fetch(`${normalizujAdresCms(drupalSettings.url)}/jsonapi/node/${ctype}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/vnd.api+json',
@@ -13709,7 +13947,8 @@ function otworzTematy() {
   if (propozycjeTematow.length) rysujPropozycje();
   // Checkbox bazy wiedzy pokazujemy tylko, gdy jest co brac - inaczej
   // proponowalibysmy opcje, ktora niczego nie zmienia.
-  var zaznaczone = docs.filter(function(d){ return d.selected; }).length;
+  // R9-F (KOD8-18): takze dokumenty w Bazie na serwerze (w wariancie z serwerem wszystkie sa tam).
+  var zaznaczone = docs.filter(function(d){ return d.selected; }).length + (window._bazaSerwerLiczba || 0);
   var wrap = document.getElementById('tematy-baza-wrap');
   wrap.style.display = zaznaczone ? 'flex' : 'none';
   if (zaznaczone) document.getElementById('tematy-baza').checked = true;
@@ -13798,8 +14037,7 @@ async function generujTematy() {
 
   var wiedza = '';
   if (document.getElementById('tematy-baza').checked) {
-    wiedza = docs.filter(function(d){ return d.selected; })
-      .map(function(d){ return d.content; }).join('\n').substring(0, 3000);
+    wiedza = await wiedzaDoPomocnika(opis, 3000); // R9-F (KOD8-18): takze Baza na serwerze
   }
 
   var isDemo = API_KEY === 'WSTAW_TUTAJ_KLUCZ_API' || API_KEY === 'WSTAW_TUTAJ_NOWY_KLUCZ_API';
@@ -13870,6 +14108,18 @@ function zapamietajBrief(temat, b) {
   magazyn.setItem('cai_briefy', JSON.stringify(wszystkie));
 }
 
+// R9-F (KOD8-18): wiedza dla pomocnikow (brief, Podpowiedz tematy): zaznaczone dokumenty z tej przegladarki
+// i fragmenty z Bazy na serwerze pasujace do zapytania. W wariancie z serwerem wszystkie dokumenty z panelu
+// sa na serwerze, wiec pomocnicy dostawali "Knowledge base:" z pusta trescia.
+async function wiedzaDoPomocnika(zapytanie, limit) {
+  let tekst = docs.filter(d => d.selected).map(d => d.content).join('\n');
+  if (typeof wiedzaZSerwera === 'function' && (window._bazaSerwerLiczba || 0) > 0) {
+    const zSerwera = await wiedzaZSerwera(zapytanie);
+    if (zSerwera) tekst = zSerwera + (tekst ? '\n' + tekst : '');
+  }
+  return tekst.substring(0, limit || 3000);
+}
+
 async function openBriefPanel(odswiez) {
   const topic = document.getElementById('topic').value.trim();
   if (!topic) { document.getElementById('topic').focus(); return; }
@@ -13881,7 +14131,7 @@ async function openBriefPanel(odswiez) {
   document.getElementById('brief-content').innerHTML = '<div class="seo-loading">' + _t('msg-loading-brief') + '</div>';
   briefKeywords = [];
 
-  const kbText = docs.filter(d=>d.selected).map(d=>d.content).join('\n').substring(0, 3000);
+  const kbText = await wiedzaDoPomocnika(topic, 3000); // R9-F (KOD8-18): takze Baza na serwerze
   const isDemo = API_KEY === 'WSTAW_TUTAJ_KLUCZ_API' || API_KEY === 'WSTAW_TUTAJ_NOWY_KLUCZ_API';
 
   if (isDemo) {
@@ -13899,7 +14149,9 @@ async function openBriefPanel(odswiez) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(600),
-        system: 'You are a content strategist. Analyze the topic and knowledge base and respond ONLY with valid JSON no markdown: {"keywords":["4-6 phrases"],"h2":["5-7 headings"],"gap":"one sentence about content gap","words":"recommended word count range"}. All text MUST be in ' + (currentLang === 'en' ? 'English' : 'Polish') + '.' + blokDaty(),
+        // R9-F (KOD8-18): frazy i naglowki w jezyku artykulu (pole Jezyk tekstu), nie interfejsu - "Uzyj slow
+        // kluczowych" wstawial polskie frazy do angielskiego tekstu.
+        system: 'You are a content strategist. Analyze the topic and knowledge base and respond ONLY with valid JSON no markdown: {"keywords":["4-6 phrases"],"h2":["5-7 headings"],"gap":"one sentence about content gap","words":"recommended word count range"}. All text MUST be in ' + jezykDlaModelu(document.getElementById('lang').value) + '.' + blokDaty(),
         messages: [{ role: 'user', content: `Topic: ${topic}\n\nKnowledge base:\n${kbText}` }]
       })
     });
@@ -14000,12 +14252,14 @@ function updateBvBadge() {
   const sub = document.getElementById('bv-menu-sub');
   const icon = document.getElementById('bv-menu-icon');
   if (!sub) return;
+  // R9-F (KOD8-28): napis ze slownika razem z data-i18n - wczesniej polski na sztywno w interfejsie EN,
+  // a po zmianie jezyka albo odswiezeniu "Nieaktywny" mimo ustawionego profilu.
   if (brandVoiceProfile) {
-    sub.textContent = 'Aktywny - profil stylu ustawiony';
+    ustawTekst(sub, 'settings-bv-active');
     sub.style.color = 'var(--c-sukces)';
     if (icon) icon.innerHTML = ikona('circle-dot', 'ok');
   } else {
-    sub.textContent = 'Nieaktywny';
+    ustawTekst(sub, 'settings-bv-inactive');
     sub.style.color = '';
     if (icon) icon.innerHTML = ikona('mic');
   }
@@ -14768,48 +15022,67 @@ function odswiezLicznikDomen() {
 }
 
 function harvestKbUrls() {
-  return docs.map(d => {
+  const lista = docs.map(d => {
     if (d.url) return { name: (d.name || '').replace(/^🔗\s*/, '') || d.url, url: d.url };
     const m = (d.content || '').match(/\[Źródło:\s*(https?:\/\/[^\]\n]+)/);
     if (m) return { name: (d.name || '').replace(/^🔗\s*/, '') || m[1].trim(), url: m[1].trim() };
     return null;
   }).filter(Boolean);
+  // R9-F (KOD8-18): strony firmy z Bazy na serwerze (w wariancie z serwerem tam sa wszystkie dokumenty).
+  (window._bazaSerwer || []).forEach(d => {
+    if (d && d.url && !lista.some(u => u.url === d.url)) lista.push({ name: d.nazwa || d.url, url: d.url });
+  });
+  return lista;
+}
+
+// R9-F (KOD8-18): naglowki pliku w jezyku tekstu (strona anglojezyczna dostawala "## O firmie").
+function naglowkiLlms() {
+  return ((document.getElementById('lang') || {}).value || 'Polski') === 'Polski'
+    ? { firma: 'O firmie', nazwa: 'Pełna nazwa', strona: 'Strona', linie: 'Linie biznesowe (rozróżnienie dla modeli AI)', uslugi: 'Kluczowe usługi',
+      strony: 'Ważne strony', kontekst: 'Kontekst marki (pełne źródła)', brak: 'Brak dokumentów w bazie wiedzy.' }
+    : { firma: 'About the company', nazwa: 'Legal name', strona: 'Website', linie: 'Business lines (disambiguation for AI models)', uslugi: 'Key services',
+      strony: 'Important pages', kontekst: 'Brand context (full sources)', brak: 'No documents in the knowledge base.' };
 }
 
 function buildLlmsTxt(cfg, urls) {
+  const N = naglowkiLlms();
   const out = [];
   out.push('# ' + (cfg.name || ''));
   out.push('');
   if (cfg.description) { out.push('> ' + cfg.description); out.push(''); }
-  out.push('## O firmie');
-  if (cfg.legalName) out.push('- Pełna nazwa: ' + cfg.legalName);
-  if (cfg.siteUrl)   out.push('- Strona: ' + cfg.siteUrl);
+  out.push('## ' + N.firma);
+  if (cfg.legalName) out.push('- ' + N.nazwa + ': ' + cfg.legalName);
+  if (cfg.siteUrl)   out.push('- ' + N.strona + ': ' + cfg.siteUrl);
   out.push('');
   const lineRules = (cfg.lines || '').split('\n').map(s => s.trim()).filter(Boolean);
   if (lineRules.length) {
-    out.push('## Linie biznesowe (rozróżnienie dla modeli AI)');
+    out.push('## ' + N.linie);
     lineRules.forEach(l => out.push('- ' + l));
     out.push('');
   }
   const services = (cfg.services || '').split('\n').map(s => s.trim()).filter(Boolean);
   if (services.length) {
-    out.push('## Kluczowe usługi');
+    out.push('## ' + N.uslugi);
     services.forEach(s => out.push('- ' + s));
     out.push('');
   }
   if (urls.length) {
-    out.push('## Ważne strony');
+    out.push('## ' + N.strony);
     urls.forEach(u => out.push('- [' + u.name + '](' + u.url + ')'));
     out.push('');
   }
   return out.join('\n').trim() + '\n';
 }
 
-function buildLlmsFullTxt(cfg, urls) {
+// zSerwera: fragmenty z Bazy na serwerze (blok "## WIEDZA FIRMOWA" z /api/baza/szukaj) albo ''.
+function buildLlmsFullTxt(cfg, urls, zSerwera) {
+  const N = naglowkiLlms();
   let out = buildLlmsTxt(cfg, urls).trim() + '\n\n';
-  out += '## Kontekst marki (pełne źródła)\n\n';
+  out += '## ' + N.kontekst + '\n\n';
   const ctxDocs = docs.filter(d => (d.content || '').trim().length > 0);
-  if (!ctxDocs.length) { out += 'Brak dokumentów w bazie wiedzy.\n'; return out.trim() + '\n'; }
+  const serwer = String(zSerwera || '').replace(/^\s*## WIEDZA FIRMOWA\s*/, '').split(/\n\n---\n\n/).map(s => s.trim()).filter(Boolean);
+  if (!ctxDocs.length && !serwer.length) { out += N.brak + '\n'; return out.trim() + '\n'; }
+  serwer.forEach(f => { out += f.replace(/\s*\n(?!### )/g, ' ').slice(0, 1300) + '\n\n'; });
   ctxDocs.forEach(d => {
     out += '### ' + (d.name || '').replace(/^🔗\s*/, '') + '\n';
     const full = (d.content || '').replace(/\s+/g, ' ').trim();
@@ -14818,11 +15091,16 @@ function buildLlmsFullTxt(cfg, urls) {
   return out.trim() + '\n';
 }
 
-function generateLlms() {
+async function generateLlms() {
   const cfg = saveLlmsConfig();
   const urls = harvestKbUrls();
   document.getElementById('llms-out-basic-ta').value = buildLlmsTxt(cfg, urls);
-  document.getElementById('llms-out-full-ta').value = buildLlmsFullTxt(cfg, urls);
+  // R9-F (KOD8-18): kontekst marki takze z Bazy na serwerze (fragmenty pasujace do nazwy, opisu i uslug).
+  let zSerwera = '';
+  if (typeof wiedzaZSerwera === 'function' && (window._bazaSerwerLiczba || 0) > 0) {
+    zSerwera = await wiedzaZSerwera([cfg.name, cfg.description, cfg.services].filter(Boolean).join(' ').slice(0, 400));
+  }
+  document.getElementById('llms-out-full-ta').value = buildLlmsFullTxt(cfg, urls, zSerwera);
   document.getElementById('llms-urls-hint').textContent = _t('llms-hint-urls').replace('{n}', urls.length);
 }
 
@@ -15075,8 +15353,15 @@ function _visExtractJson(text) {
   try { return parsujJsonModelu(text); } catch (e) { return null; }
 }
 
+// R9-F (KOD8-23): rynek i jezyk pomiaru z pola Jezyk tekstu. Wczesniej "Polish market" na sztywno: klient
+// anglojezyczny dostawal pomiar polskiego rynku.
+function rynekWidocznosci() {
+  const jezyk = jezykDlaModelu((document.getElementById('lang') || {}).value);
+  const rynek = ({ Polish: 'the Polish market', German: 'the German-speaking market', Czech: 'the Czech market' })[jezyk] || 'an English-speaking market';
+  return rynek + ' (the user writes and expects the answer in ' + jezyk + ')';
+}
 async function visQuery(query, brand, competitors) {
-  const sys = 'You simulate an AI assistant answering a user shopping or recommendation query for the Polish market. Use web search to ground the answer in current sources. The user is choosing a company or service. After researching, respond ONLY with a single JSON object, no prose and no markdown fences, with keys: '
+  const sys = 'You simulate an AI assistant answering a user shopping or recommendation query for ' + rynekWidocznosci() + '. Use web search to ground the answer in current sources. The user is choosing a company or service. After researching, respond ONLY with a single JSON object, no prose and no markdown fences, with keys: '
     + '"present" (true or false: does the brand "' + brand + '" appear among your recommended options), '
     + '"position" (integer rank of "' + brand + '" among recommended options, or null if absent), '
     + '"competitors" (array of competing brand names you would recommend, in order), '
@@ -15095,6 +15380,8 @@ async function visQuery(query, brand, competitors) {
     })
   });
   const data = await res.json().catch(() => null);
+  // R9-F (KOD8-22): blad API (zly klucz, przeciazenie, limit) to nie odpowiedz "marki nie ma" - idzie z powodem.
+  if (!res.ok || (data && data.error)) throw bladOdpowiedzi(data, res.status);
   if (!data || !data.content) return { present: false, position: null, competitors: [], sources: [], note: 'no response', error: true };
   // Bez separatora: przypis potrafi podzielic jeden JSON na kilka blokow
   // tekstu, a znak nowej linii w srodku napisu psul parsowanie.
@@ -15141,6 +15428,7 @@ async function runVisibility() {
 
   const iters = Math.max(1, Math.min(5, c.iterations || 1));
   const results = [];
+  let ostatniBlad = null; // R9-F (KOD8-22): powod nieudanych zapytan
   for (let i = 0; i < prompts.length; i++) {
     let presentCount = 0, errCount = 0;
     const positions = [], compFreq = {}, srcSet = {};
@@ -15148,7 +15436,7 @@ async function runVisibility() {
       prog.textContent = (en ? 'Checking ' : 'Sprawdzam ') + (i + 1) + '/' + prompts.length + (iters > 1 ? ' (' + (k + 1) + '/' + iters + ')' : '') + ': ' + prompts[i];
       let r;
       try { r = await visQuery(prompts[i], brand, c.competitors); }
-      catch (e) { r = { present: false, position: null, competitors: [], sources: [], error: true }; }
+      catch (e) { ostatniBlad = e; r = { present: false, position: null, competitors: [], sources: [], error: true }; }
       if (r.error) errCount++;
       if (r.present) presentCount++;
       if (r.present && r.position) positions.push(r.position);
@@ -15156,7 +15444,8 @@ async function runVisibility() {
       (r.sources || []).forEach(s => { const key = String(s).trim(); if (key) srcSet[key] = 1; });
     }
     results.push({
-      prompt: prompts[i], iterations: iters, presentCount,
+      // R9-F (KOD8-22): stabilnosc liczona z udanych iteracji (nieudana to nie "marki nie ma").
+      prompt: prompts[i], iterations: Math.max(1, iters - errCount), presentCount,
       present: presentCount > 0,
       avgPosition: positions.length ? Math.round(positions.reduce((a, b) => a + b, 0) / positions.length * 10) / 10 : null,
       competitors: Object.entries(compFreq).sort((a, b) => b[1] - a[1]).map(e => e[0]),
@@ -15167,7 +15456,14 @@ async function runVisibility() {
   prog.textContent = '';
   btn.disabled = false; btn.style.opacity = '1';
 
+  // R9-F (KOD8-22): zadne zapytanie sie nie udalo (zly klucz, przeciazenie) - komunikat z powodem, bez wyniku
+  // "0, obecnosc w 0/N" i bez zapisu do historii pomiarow (raporty i trend pokazywalyby falszywe zero).
+  if (!results.some(r => !r.error)) {
+    document.getElementById('vis-results').innerHTML = blokBledu(ostatniBlad || new Error(_t('vis-blad-wszystkie')), 'runVisibility()');
+    return;
+  }
   const run = { ts: Date.now(), brand, iterations: iters, results };
+  if (results.some(r => r.error)) run.bladOpis = ostatniBlad ? komunikatBleduApi(ostatniBlad) : _t('vis-blad-wszystkie');
   persistVisRun(run);
   renderVisResults(run);
 }
@@ -15209,14 +15505,16 @@ function _visWeight(r) {
   return w;
 }
 function visibilityScore(results) {
-  if (!results || !results.length) return 0;
+  // R9-F (KOD8-22): zapytanie, ktore sie nie udalo, nie wchodzi do mianownika (zanizalo wynik).
+  results = (results || []).filter(r => r && !r.error);
+  if (!results.length) return 0;
   return Math.round(results.reduce((a, r) => a + _visWeight(r), 0) / results.length * 100);
 }
 
 function renderVisResults(run) {
   const en = currentLang === 'en';
   const results = run.results;
-  const n = results.length;
+  const n = results.filter(r => !r.error).length; // R9-F (KOD8-22): tylko udane zapytania
   const present = results.filter(r => r.present).length;
   const pct = n ? Math.round(present / n * 100) : 0;
   const score = visibilityScore(results);
@@ -15233,6 +15531,12 @@ function renderVisResults(run) {
   html += '<div style="font-size:30px;font-weight:700;color:' + color + '">' + score + '</div>';
   html += '<div style="font-size:12px;color:var(--text2)">' + (en ? 'Visibility score (position-weighted)' : 'Wskaźnik widoczności (ważony pozycją)') + '<br>' + (en ? 'present in' : 'obecność w') + ' <strong>' + present + '/' + n + '</strong> ' + (en ? 'queries, avg position' : 'zapytań, śr. pozycja') + ' <strong>' + (avgPos == null ? (en ? 'n/a' : 'b.d.') : '#' + formatujLiczbe(avgPos)) + '</strong><br>' + _visEsc(run.brand) + '</div></div>';
   html += '<div style="font-size:11px;color:var(--text3);margin:0 0 12px">' + (en ? 'Presence alone is ' + pct + '%; the score lowers it for weak positions and instability.' : 'Sama obecność to ' + pct + '%; wskaźnik obniża ją za dalsze pozycje i niestabilność.') + '</div>';
+  // R9-F (KOD8-22): czesc zapytan sie nie udala - ile i dlaczego (wynik liczony z udanych).
+  const nieudane = results.length - n;
+  if (nieudane > 0) {
+    html += '<div class="vis-czesc-bledow" role="status" style="font-size:12px;color:var(--c-uwaga);margin:0 0 12px">' + ikona('triangle-alert', 'uwaga') + ' '
+      + escapeHtml(_t('vis-czesc-bledow').replace('{n}', n).replace('{m}', results.length).replace('{k}', nieudane).replace('{powod}', run.bladOpis || _t('vis-blad-wszystkie'))) + '</div>';
+  }
 
   if (topComp.length) {
     html += '<div style="font-size:12px;color:var(--text2);margin-bottom:6px"><strong>' + (en ? 'Competitors most cited' : 'Najczęściej cytowani konkurenci') + ':</strong> ';
@@ -15252,6 +15556,7 @@ function renderVisResults(run) {
     const srcs = (r.sources || []).slice(0, 4).map(_visEsc).join(', ');
     html += '<div style="border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px">';
     html += '<div style="font-size:13px;font-weight:600">' + icon + ' ' + _visEsc(r.prompt) + pos + stab + '</div>';
+    if (r.error) html += '<div style="font-size:11px;color:var(--c-uwaga);margin-top:3px">' + escapeHtml(_t('vis-zapytanie-blad')) + '</div>'; // R9-F (KOD8-22)
     if (comps) html += '<div style="font-size:11px;color:var(--text3);margin-top:3px">' + (en ? 'Recommended' : 'Polecani') + ': ' + comps + '</div>';
     if (srcs) html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + (en ? 'Sources' : 'Źródła') + ': ' + srcs + '</div>';
     html += '</div>';
@@ -15274,17 +15579,26 @@ async function runNarrative() {
   out.innerHTML = '';
   try {
     prog.textContent = en ? 'Step 1/2: how AI describes the brand...' : 'Krok 1/2: jak AI opisuje markę...';
-    const sys1 = 'You are an AI assistant. A user asks about the brand "' + brand + '". Using web search, write how you would describe ' + brand + ' to that user: what it does, main strengths, who it is for, and pricing positioning. 120 to 180 words, in Polish, plain text only, no markdown.';
+    // R9-F (KOD8-23): narracja w jezyku tekstu (wczesniej "in Polish" i "Opowiedz o marce" takze dla klienta EN).
+    const jezykNarracji = jezykDlaModelu((document.getElementById('lang') || {}).value);
+    const sys1 = 'You are an AI assistant. A user asks about the brand "' + brand + '". Using web search, write how you would describe ' + brand + ' to that user: what it does, main strengths, who it is for, and pricing positioning. 120 to 180 words, in ' + jezykNarracji + ', plain text only, no markdown.';
     const r1 = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 700, system: sys1, messages: [{ role: 'user', content: 'Opowiedz o marce: ' + brand }], tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] })
+      body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 700, system: sys1, messages: [{ role: 'user', content: (jezykNarracji === 'Polish' ? 'Opowiedz o marce: ' : 'Tell me about the brand: ') + brand }], tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] })
     });
     const d1 = await r1.json().catch(() => null);
+    // R9-F (KOD8-23): blad API (zly klucz, 529) z powodem, nie "Brak odpowiedzi z narracja".
+    if (!r1.ok || (d1 && d1.error)) throw bladOdpowiedzi(d1, r1.status);
     const narrative = (d1 && d1.content ? d1.content.filter(b => b.type === 'text').map(b => b.text).join('') : '').trim();
     if (!narrative) { out.innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'No narrative returned.' : 'Brak odpowiedzi z narracją.') + '</div>'; prog.textContent = ''; btn.disabled = false; btn.style.opacity = '1'; return; }
     prog.textContent = en ? 'Step 2/2: comparing with knowledge base...' : 'Krok 2/2: porównanie z bazą wiedzy...';
-    const kb = _visKb();
+    // R9-F (KOD8-23): prawda o firmie takze z Bazy na serwerze (w wariancie z serwerem tam sa dokumenty).
+    let kb = _visKb();
+    if (typeof wiedzaZSerwera === 'function' && (window._bazaSerwerLiczba || 0) > 0) {
+      const zSerwera = (await wiedzaZSerwera(brand)).replace(/^\s*## WIEDZA FIRMOWA\s*/, '').slice(0, 6000);
+      if (zSerwera) kb = zSerwera + (kb ? '\n\n' + kb : '');
+    }
     const sys2 = 'You evaluate how an AI assistant described a brand against the company ground truth documents. Respond ONLY with a JSON object, no prose and no fences, keys: "alignment" (integer 0-100: how well the description matches the company real offer and positioning), "factual_issues" (array of strings: claims in the description that are wrong or unsupported by the ground truth), "missing_strengths" (array of strings: key strengths from the ground truth that the description omitted), "note" (short string).';
     const user2 = 'GROUND TRUTH (company documents):\n' + (kb || '(no documents)') + '\n\nAI DESCRIPTION:\n' + narrative + '\n\nBrand: ' + brand;
     const r2 = await apiFetch({
@@ -15301,7 +15615,8 @@ async function runNarrative() {
   } catch (e) {
     prog.textContent = '';
     btn.disabled = false; btn.style.opacity = '1';
-    out.innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'Error during narrative check.' : 'Błąd podczas sprawdzania narracji.') + '</div>';
+    // R9-F (KOD8-23): komunikat z powodem (zly klucz: przejscie do kluczy, 529: Sprobuj ponownie).
+    out.innerHTML = blokBledu(e, 'runNarrative()', 'vis-blad-narracji');
   }
 }
 
@@ -17915,16 +18230,24 @@ function newsletterPromptBlock() {
 }
 
 /* ── Transkrypcja pliku audio (Whisper) ── */
+// R9-F (KOD8-16): limit dostawcy na plik (25 MB) z zapasem na reszte zapytania. Wiekszy plik konczyl sie
+// komunikatem "blad serwera (500) ... bez analizy SERP", a ponowienie niczego nie zmienia.
+const LIMIT_PLIKU_TRANSKRYPCJI = 25 * 1024 * 1024 - 16 * 1024;
 async function transcribeMedia(file) {
   var key = voiceOAKey();
   if (!voiceIsProxy() && !key) { powiadomBlad(_t('voice-no-key')); throw new Error('no key'); }
+  if (file && file.size > LIMIT_PLIKU_TRANSKRYPCJI) throw new Error(_t('err-transkrypcja-za-duzy').replace('{mb}', formatujLiczbe(file.size / 1048576, 1)));
   var fd = new FormData();
   fd.append('file', file, file.name || 'audio.webm');
   fd.append('model', 'gpt-4o-transcribe');
   var headers = {};
   if (!voiceIsProxy()) headers['Authorization'] = 'Bearer ' + key;
-  var res = await fetch(OPENAI_STT_ENDPOINT, { method: 'POST', headers, body: fd });
+  // R9-F (KOD8-16): przez zadanie w tle (jak artykul i grafika) - zerwane polaczenie (telefon w tle przy
+  // dlugim nagraniu) nie gubi oplaconej transkrypcji, tylko odbiera ja z serwera.
+  var res = await fetchZadania(OPENAI_STT_ENDPOINT, { method: 'POST', headers, body: fd });
   if (!res.ok) { var e = await res.json().catch(function(){ return {}; }); throw bladOdpowiedzi(e, res.status, 'OpenAI'); }
+  // R9-F (KOD8-31): koszt transkrypcji z dlugosci nagrania (wczesniej nie wchodzil do kosztu na kluczach).
+  dlugoscNagrania(file).then(function (s) { if (s) dodajKoszt('openai', s / 60 * CENA_TRANSKRYPCJI_MIN); });
   var d = await res.json(); return d.text || '';
 }
 
@@ -18183,16 +18506,28 @@ async function kbAudioTranscribeAndOpen(file) {
   if(reduce) return;
   var MODULE={image:1,audio:1};
   var last='generator';
-  function anim(el,css){ if(el){ el.style.animation='none'; void el.offsetWidth; el.style.animation=css; } }
+  /* R9-F (KOD8-14): animacje wejscia przez Web Animations API, bez wymuszania ukladu. Wczesniej
+     animation='none' + odczyt offsetWidth przeliczal uklad calej strony (ok. 2200 elementow) dla panelu
+     i kazdego pola osobno: na telefonie ok. 1 s zamrozenia przy przejsciu na Pisz i przy starcie. */
+  var KLATKI={cinRise:[{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'none'}],
+    cinField:[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],
+    cinPop:[{opacity:0,transform:'scale(.82)'},{opacity:1,transform:'none'}]};
+  function anim(el,css,opoznienie){
+    if(!el) return;
+    var m=/^(\w+) ([\d.]+)s (cubic-bezier\([^)]*\))( both)?$/.exec(css);
+    if(!m||!KLATKI[m[1]]||typeof el.animate!=='function'){ el.style.animation=css; if(opoznienie) el.style.animationDelay=opoznienie+'s'; return; }
+    if(el._cinAnim) el._cinAnim.cancel();
+    el._cinAnim=el.animate(KLATKI[m[1]],{duration:parseFloat(m[2])*1000,delay:(opoznienie||0)*1000,easing:m[3],fill:m[4]?'backwards':'none'});
+  }
   function animateGen(){
     var p=document.getElementById('tab-generator'); anim(p,'cinRise .42s cubic-bezier(.2,.7,.2,1)');
     var fs=(p||document).querySelectorAll('.field');
-    for(var i=0;i<fs.length;i++){ anim(fs[i],'cinField .4s cubic-bezier(.2,.7,.2,1) both'); fs[i].style.animationDelay=(0.02+i*0.04)+'s'; }
+    for(var i=0;i<fs.length;i++){ anim(fs[i],'cinField .4s cubic-bezier(.2,.7,.2,1) both',0.02+i*0.04); }
   }
   function animateHistory(){
     anim(document.getElementById('tab-history'),'cinRise .42s cubic-bezier(.2,.7,.2,1)');
     var items=document.querySelectorAll('#h-list-inner .h-item');
-    for(var i=0;i<items.length && i<16;i++){ anim(items[i],'cinField .38s cubic-bezier(.2,.7,.2,1) both'); items[i].style.animationDelay=(0.02+i*0.03)+'s'; }
+    for(var i=0;i<items.length && i<16;i++){ anim(items[i],'cinField .38s cubic-bezier(.2,.7,.2,1) both',0.02+i*0.03); }
   }
   function onView(name){
     if(!MODULE[last]){ if(name==='generator') animateGen(); else if(name==='history') animateHistory(); }
@@ -18264,7 +18599,7 @@ async function kbAudioTranscribeAndOpen(file) {
   if(msb){ var wasOpen=msb.classList.contains('open');
     new MutationObserver(function(){ var open=msb.classList.contains('open');
       if(open&&!wasOpen){ var items=msb.querySelectorAll('.kb-item');
-        for(var i=0;i<items.length&&i<16;i++){ anim(items[i],'cinField .38s cubic-bezier(.2,.7,.2,1) both'); items[i].style.animationDelay=(0.02+i*0.03)+'s'; } }
+        for(var i=0;i<items.length&&i<16;i++){ anim(items[i],'cinField .38s cubic-bezier(.2,.7,.2,1) both',0.02+i*0.03); } }
       wasOpen=open;
     }).observe(msb,{attributes:true,attributeFilter:['class']}); }
 })();

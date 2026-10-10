@@ -30,6 +30,13 @@ const REPO = path.resolve(__dirname, '..');
 let chromium;
 try { ({ chromium } = require('playwright')); }
 catch (e) { console.error('Brak pakietu playwright: npm install --no-save playwright && npx playwright install chromium'); process.exit(1); }
+// R9-F (KOD8-35): dziennik atrapy w katalogu przebiegu, sprzatany po zielonym przebiegu. Wczesniej
+// /tmp/atrapa-wywolania-9199.log, czyli ten sam plik co wspolnej atrapy na porcie 9199.
+let KAT_DZIENNIKA = null;
+if (!process.env.ATRAPA_DZIENNIK) {
+  KAT_DZIENNIKA = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-test-atrapa-'));
+  process.env.ATRAPA_DZIENNIK = path.join(KAT_DZIENNIKA, 'atrapa-wywolania.log');
+}
 const atrapa = require('./atrapa/dostawcy.js');
 
 const ZRZUTY = process.env.CAI_TEST_ZRZUTY || path.join(os.tmpdir(), 'cai-test-stan');
@@ -46,6 +53,70 @@ async function krok(nazwa, obietnica) {
 }
 async function zrzut(s, nazwa) {
   try { fs.mkdirSync(ZRZUTY, { recursive: true }); await s.screenshot({ path: path.join(ZRZUTY, nazwa + '.png') }); } catch (e) { /* bez zrzutu */ }
+}
+
+// ── R9-F: serwer aplikacji z kontami i atrapa dostawcow (wariant proxy, jak test_dymny) ──
+const http = require('http');
+const { spawn } = require('child_process');
+const HASLO = 'test-haslo-123';
+function wolnyPort() {
+  return new Promise((ok, zle) => {
+    const srv = require('net').createServer();
+    srv.once('error', zle);
+    srv.listen(0, '127.0.0.1', () => { const p = srv.address().port; srv.close(() => ok(p)); });
+  });
+}
+function czekajNaPort(port, ms) {
+  const koniec = Date.now() + ms;
+  return new Promise((resolve, reject) => {
+    (function proba() {
+      const r = http.get({ host: '127.0.0.1', port, path: '/' }, (o) => { o.resume(); resolve(); });
+      r.on('error', () => { if (Date.now() > koniec) reject(new Error('port ' + port + ' nie odpowiada')); else setTimeout(proba, 150); });
+    })();
+  });
+}
+// Serwer w katalogu tymczasowym: { port, kat, proces, zatrzymaj() }. Atrapa dostawcow na wlasnym porcie.
+async function serwerProxy() {
+  const portAtrapy = await wolnyPort();
+  const port = await wolnyPort();
+  const srvAtrapy = atrapa.uruchom(portAtrapy);
+  const kat = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-test-stan-'));
+  const { zahaszuj } = require(path.join(REPO, 'serwer', 'server.js'));
+  const konta = [['admin', 'admin', 'premium'], ['premium', 'uzytkownik', 'premium'], ['standard', 'uzytkownik', 'standard'], ['darmowy', 'uzytkownik', 'darmowy']]
+    .map(([login, rola, plan]) => Object.assign({ login, rola, plan, utworzony: '2026-01-01' }, zahaszuj(HASLO)));
+  fs.writeFileSync(path.join(kat, 'uzytkownicy.json'), JSON.stringify(konta, null, 2));
+  const env = Object.assign({}, process.env, {
+    CAI_UZYTKOWNICY: path.join(kat, 'uzytkownicy.json'), CAI_BAZA: path.join(kat, 'baza'), CAI_UZYCIE: path.join(kat, 'uzycie'),
+    CAI_MARKA: kat, CAI_SEKRET_PLIK: path.join(kat, 'sekret'), PORT: String(port), CAI_HOST: '127.0.0.1',
+    ANTHROPIC_KEY: 'test-anthropic', OPENAI_KEY: 'test-openai', ELEVEN_KEY: 'test-eleven',
+    CAI_URL_ANTHROPIC: 'http://127.0.0.1:' + portAtrapy + '/v1/messages', CAI_URL_OPENAI: 'http://127.0.0.1:' + portAtrapy + '/v1',
+    CAI_URL_ELEVEN: 'http://127.0.0.1:' + portAtrapy + '/eleven/v1', CAI_ZAUFANE_ADRESY: '127.0.0.1',
+  });
+  const proces = spawn(process.execPath, [path.join(REPO, 'serwer', 'server.js')], { cwd: REPO, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  let log = '';
+  proces.stdout.on('data', (d) => { log += d; });
+  proces.stderr.on('data', (d) => { log += d; });
+  await czekajNaPort(port, 15000);
+  return { port, kat, proces, log: () => log, zatrzymaj: () => { proces.kill(); srvAtrapy.close(); fs.rmSync(kat, { recursive: true, force: true }); } };
+}
+async function zalogujProxy(k, port, login) {
+  const s = await k.newPage();
+  await s.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'load' });
+  if (await s.$('input[name="login"]')) {
+    await s.fill('input[name="login"]', login);
+    await s.fill('input[type="password"]', HASLO);
+    await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"], input[type="submit"]')]);
+  }
+  await s.waitForFunction(() => typeof generate === 'function' && document.readyState === 'complete', null, { timeout: 15000 });
+  await s.evaluate(() => { if (typeof startPomin === 'function') startPomin(); });
+  return s;
+}
+async function kontekstProxy(b, opcje) {
+  const k = await b.newContext(Object.assign({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 } }, opcje || {}));
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); localStorage.setItem('cai_lang', 'pl'); localStorage.setItem('cai_start_v1', '1'); } catch (e) { /* bez magazynu */ } });
+  const bledyJs = [];
+  k.on('page', (p) => { p.on('pageerror', (e) => bledyJs.push(e.message.slice(0, 160))); p.on('dialog', (d) => d.accept().catch(() => {})); });
+  return { k, bledyJs };
 }
 
 // Bledy dostawcy w ksztalcie odpowiedzi API (tresc jak u Anthropic i OpenAI).
@@ -735,18 +806,921 @@ async function scenariuszHistoriiR4(b) {
   await e.k.close();
 }
 
+// ── R9-F (runda 9, wykonawca F): poprawki z audytu kodu KOD8 ──────────────────────────────
+// Wariant keys z pliku: okno tekstu (KOD8-03).
+async function scenariuszR9FKeys(b) {
+  const { k, s, bledyJs } = await nowaStrona(b, 'pl', {});
+  // KOD8-03: fokus po otwarciu okna tekstu nie przeskakuje do nazwy, gdy autor pisze juz tresc
+  // (drugi, opozniony o 80 ms focus() przenosil reszte tekstu do pola nazwy).
+  // Autor przechodzi do Tresci 30 ms po otwarciu okna i pisze (20 ms na znak, przez znacznik 80 ms).
+  await s.evaluate(() => new Promise((ok) => { openTextModal(); setTimeout(() => { document.getElementById('m-content').focus(); ok(); }, 30); }));
+  await s.keyboard.type('Tresc wpisana od razu', { delay: 20 });
+  await s.waitForTimeout(200);
+  const fokus = await s.evaluate(() => ({ akt: (document.activeElement || {}).id || '', nazwa: document.getElementById('m-name').value, tresc: document.getElementById('m-content').value }));
+  wynik('R9-F KOD8-03: okno tekstu - wpisywana tresc zostaje w polu Tresc (fokus nie przeskakuje)',
+    fokus.akt === 'm-content' && fokus.nazwa === '' && fokus.tresc === 'Tresc wpisana od razu', JSON.stringify(fokus));
+  // Dodaj z pusta trescia: komunikat przy polu i fokus na nim (wczesniej okno stalo bez slowa).
+  await s.evaluate(() => { document.getElementById('m-name').value = 'Tylko nazwa'; document.getElementById('m-content').value = ''; saveText(); });
+  const pusta = await s.evaluate(() => { const m = document.getElementById('m-blad'); return { otwarte: document.getElementById('text-modal').classList.contains('open'),
+    komunikat: m ? m.textContent : '', wzor: typeof _t === 'function' ? _t('text-brak-tresci') : '', rola: m ? m.getAttribute('role') : '', akt: (document.activeElement || {}).id || '',
+    niepoprawne: document.getElementById('m-content').getAttribute('aria-invalid') }; });
+  wynik('R9-F KOD8-03: Dodaj bez tresci - komunikat przy polu Tresc i fokus na nim',
+    pusta.otwarte && !!pusta.komunikat && pusta.komunikat === pusta.wzor && pusta.rola === 'alert' && pusta.akt === 'm-content' && pusta.niepoprawne === 'true', JSON.stringify(pusta));
+  await s.evaluate(() => { document.getElementById('m-content').value = 'Montaz kosztuje od 18 do 35 tys. zl.'; saveText(); });
+  const zapis = await s.evaluate(() => ({ otwarte: document.getElementById('text-modal').classList.contains('open'), komunikat: !!document.getElementById('m-blad'), doc: docs.some((d) => d.name === 'Tylko nazwa') }));
+  wynik('R9-F KOD8-03: po uzupelnieniu tresci dokument zapisany, okno zamkniete, komunikat znika', !zapis.otwarte && !zapis.komunikat && zapis.doc, JSON.stringify(zapis));
+  wynik('R9-F keys: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-keys');
+  await k.close();
+}
+
+// KOD8-14: telefon, Historia -> Pisz. Animacja wejscia pol wymuszala pelny uklad strony osobno dla panelu
+// i kazdego pola (11 przeliczen w jednym zadaniu, ok. 1 s zamrozenia na CPU x4). Liczba przeliczen ukladu
+// (CDP Performance.LayoutCount) przy przejsciu to stala miara, niezalezna od szybkosci maszyny w CI.
+async function scenariuszR9FTelefonPisz(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true });
+  await k.addInitScript(() => { try { localStorage.setItem('cai_key_anthropic', 'sk-ant-atrapa'); localStorage.setItem('cai_lang', 'pl'); localStorage.setItem('cai_start_v1', '1'); sessionStorage.setItem('cin_splash', '1'); } catch (e) { /* bez magazynu */ } });
+  const s = await k.newPage();
+  const bledyJs = [];
+  s.on('pageerror', (e) => bledyJs.push(e.message.slice(0, 160)));
+  await s.goto(PLIK, { waitUntil: 'load' });
+  await s.waitForTimeout(1200);
+  const cdp = await k.newCDPSession(s);
+  await cdp.send('Performance.enable');
+  const uklady = async () => ((await cdp.send('Performance.getMetrics')).metrics.find((m) => m.name === 'LayoutCount') || {}).value || 0;
+  const pomiary = [];
+  for (let i = 0; i < 2; i++) {
+    await s.evaluate(() => switchMobileTab('history'));
+    await s.waitForTimeout(700);
+    const przed = await uklady();
+    await s.evaluate(() => new Promise((ok) => { switchMobileTab('generator'); requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(ok, 50))); }));
+    pomiary.push((await uklady()) - przed);
+  }
+  const pola = await s.evaluate(() => ({ n: document.querySelectorAll('#tab-generator .field').length,
+    animacje: [...document.querySelectorAll('#tab-generator .field')].filter((f) => f.getAnimations().length > 0).length }));
+  // Start na telefonie: odswiezInspektor czytal window.innerWidth (wymuszony uklad calej strony), choc na telefonie wynik jest bez znaczenia.
+  const odczyty = await s.evaluate(() => {
+    let n = 0;
+    const d = Object.getOwnPropertyDescriptor(window, 'innerWidth');
+    Object.defineProperty(window, 'innerWidth', { configurable: true, get() { n++; return d.get.call(window); } });
+    try { odswiezInspektor(); } finally { Object.defineProperty(window, 'innerWidth', d); }
+    return n;
+  });
+  wynik('R9-F KOD8-14: telefon - odswiezInspektor bez odczytu innerWidth (bez wymuszonego ukladu przy starcie)', odczyty === 0, 'odczytow: ' + odczyty);
+  wynik('R9-F KOD8-14: telefon Historia -> Pisz bez przeliczania ukladu dla kazdego pola (najwyzej 4 uklady)',
+    pomiary.every((n) => n <= 4), JSON.stringify({ pomiary, pola }));
+  wynik('R9-F KOD8-14: pola Pisz nadal wjezdzaja animacja', pola.n >= 5 && pola.animacje >= pola.n - 1, JSON.stringify(pola));
+  wynik('R9-F KOD8-14: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-telefon-pisz');
+  await k.close();
+}
+
+// KOD8-25: temat bez limitu dlugosci (wklejony akapit) rozsadzal wpis Historii na telefonie; temat z samych
+// spacji: "Wygeneruj" nic nie mowil.
+async function scenariuszR9FTemat(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true });
+  await k.addInitScript(() => { try { localStorage.setItem('cai_key_anthropic', 'sk-ant-atrapa'); localStorage.setItem('cai_lang', 'pl'); localStorage.setItem('cai_start_v1', '1'); sessionStorage.setItem('cin_splash', '1'); } catch (e) { /* bez magazynu */ } });
+  await k.route(/api\.anthropic\.com|api\.openai\.com|api\.elevenlabs\.io/, atrapa.obsluzRoute);
+  const s = await k.newPage();
+  const bledyJs = [];
+  s.on('pageerror', (e) => bledyJs.push(e.message.slice(0, 160)));
+  await s.goto(PLIK, { waitUntil: 'load' });
+  await s.waitForTimeout(700);
+  await s.focus('#topic');
+  await s.keyboard.insertText('Pompy ciepla w domu jednorodzinnym, '.repeat(12));
+  const dlugi = await s.evaluate(() => ({ dl: document.getElementById('topic').value.length, podp: ((document.getElementById('topic-podpowiedz') || {}).textContent || '') }));
+  wynik('R9-F KOD8-25: temat najwyzej 300 znakow, z podpowiedzia o Dodatkowych wytycznych', dlugi.dl === 300 && /Dodatkowe wytyczne/.test(dlugi.podp), JSON.stringify(dlugi));
+  await s.evaluate(() => { document.getElementById('topic').value = '    '; generate(true); });
+  await s.waitForTimeout(300);
+  const pusty = await s.evaluate(() => ({ podp: ((document.getElementById('topic-podpowiedz') || {}).textContent || ''), spinner: getComputedStyle(document.getElementById('spinner')).display,
+    niepoprawne: document.getElementById('topic').getAttribute('aria-invalid') }));
+  wynik('R9-F KOD8-25: pusty temat - komunikat przy polu, bez generowania', pusty.podp === 'Wpisz temat artykułu.' && pusty.spinner === 'none' && pusty.niepoprawne === 'true', JSON.stringify(pusty));
+  // Wpis Historii z tematem-akapitem (np. sprzed limitu albo z kolejki): najwyzej dwie linie na liscie.
+  await s.evaluate(() => {
+    history.unshift({ id: 'hdlugi', ts: Date.now(), topic: 'Bardzo dlugi temat wklejony jako akapit. '.repeat(70), type: 'Artykuł blogowy', words: 800, time: '10:00', html: '<h1>T</h1><p>x</p>' });
+    renderHistory(); switchMobileTab('history');
+  });
+  await s.waitForTimeout(400);
+  const wpis = await s.evaluate(() => { const e = document.querySelector('#h-list-inner .h-item[data-id="hdlugi"] .h-item-topic'); return e ? Math.round(e.getBoundingClientRect().height) : -1; });
+  wynik('R9-F KOD8-25: wpis Historii z bardzo dlugim tematem ma najwyzej dwie linie tematu', wpis > 0 && wpis <= 48, 'wysokosc tematu: ' + wpis);
+  wynik('R9-F KOD8-25: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-temat');
+  await k.close();
+}
+
+// KOD8-31: szacowany koszt na wlasnych kluczach. Nazwa modelu z data wersji (API zwraca ja dla aliasow) spadala
+// na stawke modelu pomocniczego, nie liczyly sie wyszukiwania w sieci ani transkrypcja, a etykieta nie mowila,
+// ze to szacunek.
+async function scenariuszR9FKoszt(b) {
+  const { k, s, bledyJs } = await nowaStrona(b, 'pl', {});
+  const ceny = await s.evaluate(() => ({
+    wersja: kosztOdpowiedzi({ model: 'claude-opus-5-20261001', usage: { input_tokens: 1000000, output_tokens: 0 } }),
+    alias: kosztOdpowiedzi({ model: 'claude-opus-5', usage: { input_tokens: 1000000, output_tokens: 0 } }),
+    siec: kosztOdpowiedzi({ model: 'claude-sonnet-5', usage: { input_tokens: 0, output_tokens: 0, server_tool_use: { web_search_requests: 5 } } }),
+    etykieta: _t('hist-cost-wlasne'),
+  }));
+  wynik('R9-F KOD8-31: cennik po nazwie modelu z data wersji (jak alias), nie stawka modelu pomocniczego', ceny.wersja === ceny.alias && ceny.alias > 0, JSON.stringify(ceny));
+  wynik('R9-F KOD8-31: wyszukiwania w sieci wliczone do kosztu (5 wyszukan = 0,05 USD)', Math.abs(ceny.siec - 0.05) < 1e-9, JSON.stringify(ceny));
+  wynik('R9-F KOD8-31: etykieta mowi, ze koszt na wlasnych kluczach to szacunek', /Szacunkowy/.test(ceny.etykieta), ceny.etykieta);
+  // Transkrypcja nagrania (2 s WAV) dolicza koszt OpenAI.
+  const transkrypcja = await s.evaluate(async () => {
+    const przed = (kosztyApi.wszystkie || {}).openai || 0;
+    const hz = 8000, n = hz * 2, b = new ArrayBuffer(44 + n * 2), v = new DataView(b);
+    const zapisz = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+    zapisz(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); zapisz(8, 'WAVE'); zapisz(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, hz, true); v.setUint32(28, hz * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); zapisz(36, 'data'); v.setUint32(40, n * 2, true);
+    const tekst = await transcribeMedia(new File([b], 'nagranie.wav', { type: 'audio/wav' }));
+    await new Promise((r) => setTimeout(r, 800));
+    return { tekst: String(tekst).slice(0, 30), koszt: ((kosztyApi.wszystkie || {}).openai || 0) - przed };
+  });
+  wynik('R9-F KOD8-31: transkrypcja dolicza koszt (z dlugosci nagrania)', transkrypcja.tekst.length > 0 && transkrypcja.koszt > 0, JSON.stringify(transkrypcja));
+  wynik('R9-F KOD8-31: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-koszt');
+  await k.close();
+}
+
+// KOD8-22: Widocznosc marki w AI. Zly klucz albo przeciazenie przy wszystkich zapytaniach to blad z powodem
+// (bez "0, obecnosc w 0/2" i bez zapisu do historii pomiarow); czesc nieudanych nie zaniza wyniku.
+async function scenariuszR9FWidocznosc(b) {
+  const st = {};
+  const { k, s, bledyJs } = await nowaStrona(b, 'pl', st);
+  // Czesciowy blad: zapytanie z "awaria" dostaje 529, pozostale ida do atrapy.
+  await k.route(/api\.anthropic\.com/, (route) => {
+    const z = route.request();
+    if (z.method() === 'POST' && /awaria/.test(z.postData() || '') && /simulate an AI assistant/.test(z.postData() || '')) {
+      return route.fulfill({ status: 529, contentType: 'application/json', headers: atrapa.CORS, body: JSON.stringify(BLEDY[529][1]) });
+    }
+    return route.fallback();
+  });
+  const pomiar = async (zapytania) => {
+    await s.evaluate((z) => { openVisModal(); document.getElementById('vis-brand').value = 'Termoplus'; document.getElementById('vis-comp').value = 'Viessmann, Daikin';
+      document.getElementById('vis-prompts').value = z; document.getElementById('vis-iter').value = '1'; window.__w = runVisibility(); }, zapytania);
+    await s.waitForFunction(() => !document.getElementById('vis-run-btn').disabled, null, { timeout: 60000 }).catch(() => {});
+    return s.evaluate(() => {
+      const w = document.getElementById('vis-results');
+      const kb = w.querySelector('.komunikat-bledu');
+      return { tekst: (w.innerText || '').replace(/\s+/g, ' ').slice(0, 260), blad: kb ? kb.innerText.replace(/\s+/g, ' ').slice(0, 200) : '',
+        ponow: !!(kb && kb.querySelector('.ponow-generowanie')), klucze: !!(kb && kb.querySelector('[onclick="otworzUstawieniaKlucza()"]')),
+        pomiarow: JSON.parse(magazyn.getItem('cai-vis-runs') || '[]').length };
+    });
+  };
+  for (const [blad, klucz, ponow, klucze] of [['401', 'err-klucz', false, true], ['529', 'err-overloaded', true, false]]) {
+    st.blad = blad; st.gdzie = 'anthropic';
+    const w = await pomiar('najlepsza pompa ciepla krakow\nmontaz pompy ciepla opinie');
+    const wzor = await s.evaluate((kl) => _t(kl), klucz);
+    wynik('R9-F KOD8-22: Widocznosc - wszystkie zapytania z bledem ' + blad + ': komunikat z powodem zamiast wyniku 0',
+      w.blad.indexOf(wzor) !== -1 && !/obecność w 0\/2/.test(w.tekst) && w.ponow === ponow && w.klucze === klucze, JSON.stringify(w));
+    wynik('R9-F KOD8-22: Widocznosc - pomiar z samych bledow (' + blad + ') nie trafia do historii pomiarow', w.pomiarow === 0, JSON.stringify(w));
+    await s.evaluate(() => closeVisModal());
+  }
+  st.blad = null;
+  const czesc = await pomiar('najlepsza pompa ciepla krakow\nawaria zapytania o montaz');
+  const notka = await s.evaluate(() => _t('vis-czesc-bledow').split('{')[0]);
+  wynik('R9-F KOD8-22: Widocznosc - czesc zapytan z bledem: wynik z udanych (obecnosc w N/1) i informacja, ile sie nie udalo',
+    /obecność w [01]\/1 /.test(czesc.tekst) && !!notka && czesc.tekst.indexOf(notka) !== -1 && czesc.pomiarow === 1, JSON.stringify(czesc));
+  wynik('R9-F KOD8-22: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-widocznosc');
+  await k.close();
+}
+
+// Wariant proxy: jeden serwer z atrapa na wszystkie scenariusze R9-F (uruchamiany przy pierwszym uzyciu).
+let SERWER = null;
+async function serwer() { if (!SERWER) SERWER = await serwerProxy(); return SERWER; }
+const pakietUzycie = (s) => s.evaluate(async () => (await (await fetch('/api/pakiet')).json()).uzycie || {});
+
+// KOD8-07: wdrozenie (restart uslugi) w trakcie generowania - brama oddaje 502 bez tresci, a serwer po
+// chwili dziala. Aplikacja traktuje to jak zerwane polaczenie i odbiera wynik tego samego zadania.
+async function scenariuszR9FBrama(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  // Konto standard: licznik artykulow pokazuje, czy artykul policzono raz (premium nie ma licznikow).
+  const s = await zalogujProxy(k, srv.port, 'standard');
+  const przed = { hist: await s.evaluate(() => history.length), art: ((await pakietUzycie(s)).artykul || {}).zuzyte };
+  const zadania = [];
+  let bramaRaz = true;
+  await s.route(/\/api$/, async (route) => {
+    const z = route.request();
+    const artykul = z.method() === 'POST' && z.headers()['x-cai-czynnosc'] === 'artykul';
+    if (artykul) zadania.push(z.headers()['x-zadanie'] || '');
+    if (artykul && bramaRaz) {
+      bramaRaz = false;
+      // Zapytanie dochodzi do serwera (zadanie biegnie dalej), a przegladarka dostaje 502 bramy bez tresci.
+      route.fetch().catch(() => {});
+      await new Promise((r) => setTimeout(r, 400));
+      return route.fulfill({ status: 502, body: '' });
+    }
+    return route.continue();
+  });
+  await generuj(s, 'Artykul w oknie restartu [atrapa:opoznienie=2500@artykul]', false);
+  await krok('R9-F KOD8-07 generowanie po 502 bramy', czekajNaKoniec(s, 60000));
+  await s.unroute(/\/api$/);
+  const po = await s.evaluate(() => ({ hist: history.length, odz: document.getElementById('out-badge').className,
+    blad: ((document.querySelector('#article .komunikat-bledu') || {}).innerText || '').replace(/\s+/g, ' ').slice(0, 140) }));
+  po.art = ((await pakietUzycie(s)).artykul || {}).zuzyte;
+  wynik('R9-F KOD8-07: 502 bramy w trakcie generowania - artykul odebrany z zadania na serwerze (Historia +1)',
+    po.hist === przed.hist + 1 && /ready/.test(po.odz) && !po.blad, JSON.stringify({ przed, po }));
+  wynik('R9-F KOD8-07: ponowienie z tym samym X-Zadanie, artykul policzony raz',
+    zadania.length >= 2 && !!zadania[0] && zadania.every((x) => x === zadania[0]) && po.art === przed.art + 1, JSON.stringify({ zadania, przed: przed.art, po: po.art }));
+  wynik('R9-F KOD8-07: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-brama');
+  await k.close();
+}
+
+// KOD8-09: dwie karty tego samego konta (wspolny localStorage). Artykul z jednej karty nie moze zniknac
+// z Historii, gdy druga zapisze swoja liste; usuniety wpis nie wraca.
+async function scenariuszR9FDwieKarty(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const a = await zalogujProxy(k, srv.port, 'standard');
+  const bKarta = await k.newPage();
+  await bKarta.goto('http://127.0.0.1:' + srv.port + '/', { waitUntil: 'load' });
+  await bKarta.waitForFunction(() => typeof generate === 'function' && document.readyState === 'complete', null, { timeout: 15000 });
+  await bKarta.evaluate(() => { if (typeof startPomin === 'function') startPomin(); });
+  await generuj(a, 'Artykul z karty A', false);
+  await krok('R9-F KOD8-09 artykul w karcie A', czekajNaKoniec(a));
+  await generuj(bKarta, 'Artykul z karty B', false);
+  await krok('R9-F KOD8-09 artykul w karcie B', czekajNaKoniec(bKarta));
+  await a.waitForTimeout(500);
+  const tematy = (s) => s.evaluate(() => history.map((h) => h.topic).sort().join(' | '));
+  const zapisane = (s) => s.evaluate(() => JSON.parse(magazyn.getItem('cai_history_v2') || '[]').map((h) => h.topic).sort().join(' | '));
+  const oba = 'Artykul z karty A | Artykul z karty B';
+  const st1 = { a: await tematy(a), b: await tematy(bKarta), magazyn: await zapisane(a) };
+  wynik('R9-F KOD8-09: dwie karty - oba artykuly w Historii obu kart i w magazynie', st1.a === oba && st1.b === oba && st1.magazyn === oba, JSON.stringify(st1));
+  await a.reload({ waitUntil: 'load' });
+  await a.waitForFunction(() => typeof generate === 'function' && document.readyState === 'complete', null, { timeout: 15000 });
+  const poOdswiezeniu = await tematy(a);
+  wynik('R9-F KOD8-09: po odswiezeniu karty A oba artykuly zostaja', poOdswiezeniu === oba, poOdswiezeniu);
+  // Usuniecie w karcie B: wpis znika tez w A i nie wraca, gdy A zapisze swoja (starsza) liste.
+  await bKarta.evaluate(() => { const h = history.find((x) => x.topic === 'Artykul z karty A'); if (h) usunWpisHistorii(h.id); });
+  await a.waitForTimeout(400);
+  const poUsunieciuA = await tematy(a);
+  await a.evaluate(() => saveState());
+  const poZapisieA = { a: await tematy(a), b: await tematy(bKarta), magazyn: await zapisane(a) };
+  wynik('R9-F KOD8-09: wpis usuniety w jednej karcie znika w drugiej i nie wraca po jej zapisie',
+    poUsunieciuA === 'Artykul z karty B' && poZapisieA.a === 'Artykul z karty B' && poZapisieA.magazyn === 'Artykul z karty B', JSON.stringify({ poUsunieciuA, poZapisieA }));
+  wynik('R9-F KOD8-09: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(a, 'r9f-dwie-karty');
+  await k.close();
+}
+
+// KOD8-13: artykul z wyszukiwaniem, ktory API konczy pierwsza ture "pause_turn". Druga tura to ten sam
+// artykul: konto darmowe (3 artykuly) ma po nim zuzyte 1, nie 2.
+async function scenariuszR9FPauseTurn(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'darmowy');
+  const przed = ((await pakietUzycie(s)).artykul || {}).zuzyte || 0;
+  const deklaracje = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url())) deklaracje.push(z.headers()['x-cai-czynnosc'] || '-'); });
+  await generuj(s, 'Rowery elektryczne do miasta [atrapa:pause@artykul]', false);
+  await krok('R9-F KOD8-13 artykul z pause_turn', czekajNaKoniec(s));
+  const st = await s.evaluate(() => ({ odz: document.getElementById('out-badge').className, h2: document.querySelectorAll('#article h2').length }));
+  const po = ((await pakietUzycie(s)).artykul || {}).zuzyte || 0;
+  const artykul = deklaracje.filter((x) => x === 'artykul').length;
+  wynik('R9-F KOD8-13: artykul z tura pause_turn gotowy', /ready/.test(st.odz) && st.h2 >= 2, JSON.stringify(st));
+  wynik('R9-F KOD8-13: kontynuacja pause_turn nie deklaruje drugiego artykulu, pakiet -1 (nie -2)',
+    artykul === 1 && deklaracje.indexOf('artykul-ciag') !== -1 && po - przed === 1, JSON.stringify({ deklaracje, przed, po }));
+  wynik('R9-F KOD8-13: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-pause-turn');
+  await k.close();
+}
+
+// KOD8-30: telefon ubija karte (albo strona sie przeladowuje) w trakcie generowania. Serwer konczy
+// zadanie i liczy artykul; po powrocie aplikacja odbiera ten sam artykul (Historia +1, licznik +1, nie +2).
+// Zapis sprzed 15 minut albo zadanie, ktorego serwer juz nie ma: komunikat, bez nowego platnego artykulu.
+async function scenariuszR9FPrzeladowanie(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b, { viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true });
+  const s = await zalogujProxy(k, srv.port, 'standard');
+  const przed = { hist: await s.evaluate(() => history.length), art: ((await pakietUzycie(s)).artykul || {}).zuzyte || 0 };
+  await s.evaluate(() => { document.getElementById('topic').value = 'Artykul ubity w tle [atrapa:opoznienie=4000@artykul]'; document.getElementById('use-web').checked = true; generate(true); });
+  await s.waitForTimeout(1500);
+  await s.reload({ waitUntil: 'load' });
+  await krok('R9-F KOD8-30 artykul odebrany po przeladowaniu', s.waitForFunction(() => history.some((h) => /Artykul ubity w tle/.test(h.topic)) && /ready/.test(document.getElementById('out-badge').className), null, { timeout: 40000 }));
+  const po = await s.evaluate(() => ({ hist: history.length, temat: (history[0] || {}).topic || '', odz: document.getElementById('out-badge').className,
+    h2: document.querySelectorAll('#article h2').length, zapis: (() => { try { return sessionStorage.getItem('cai_artykul_w_toku'); } catch (e) { return 'blad'; } })(),
+    pow: [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent.slice(0, 120)) }));
+  po.art = ((await pakietUzycie(s)).artykul || {}).zuzyte || 0;
+  wynik('R9-F KOD8-30: przeladowanie w trakcie generowania - artykul odebrany z zadania (Historia +1, na ekranie)',
+    po.hist === przed.hist + 1 && /Artykul ubity w tle/.test(po.temat) && /ready/.test(po.odz) && po.h2 >= 2, JSON.stringify({ przed, po }));
+  wynik('R9-F KOD8-30: artykul policzony raz (bez drugiego generowania), zapis w karcie usuniety', po.art === przed.art + 1 && po.zapis === null, JSON.stringify({ przed: przed.art, po: po.art, zapis: po.zapis }));
+  // Zadanie, ktorego serwer nie ma (np. restart uslugi): komunikat i bez nowego artykulu.
+  await s.evaluate(() => { try { sessionStorage.setItem('cai_artykul_w_toku', JSON.stringify({ id: 'brakzadania' + Date.now(), konto: magazyn.konto, start: Date.now(), temat: 'Zgubione zadanie', frazy: [], formularz: {} })); } catch (e) { /* bez magazynu */ } });
+  await s.reload({ waitUntil: 'load' });
+  await krok('R9-F KOD8-30 komunikat o zgubionym zadaniu', s.waitForFunction(() => [...document.querySelectorAll('.powiadomienie')].some((p) => p.textContent.indexOf(_t('odzysk-blad')) !== -1), null, { timeout: 20000 }));
+  const zgubione = await s.evaluate(() => ({ hist: history.length, temat: (history[0] || {}).topic || '', spinner: getComputedStyle(document.getElementById('spinner')).display,
+    przycisk: document.getElementById('gen-btn').disabled, zapis: (() => { try { return sessionStorage.getItem('cai_artykul_w_toku'); } catch (e) { return 'blad'; } })() }));
+  zgubione.art = ((await pakietUzycie(s)).artykul || {}).zuzyte || 0;
+  wynik('R9-F KOD8-30: zadania nie ma na serwerze - komunikat, bez nowego artykulu i bez wpisu',
+    zgubione.hist === po.hist && !/Zgubione/.test(zgubione.temat) && zgubione.spinner === 'none' && !zgubione.przycisk && zgubione.zapis === null && zgubione.art === po.art, JSON.stringify(zgubione));
+  wynik('R9-F KOD8-30: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-przeladowanie');
+  await k.close();
+}
+
+// KOD8-17: Fakty dla artykulu napisanego z Bazy na serwerze, zaraz po generowaniu i po odswiezeniu strony
+// (artykul wraca z Historii): kontrola zestawia tekst z fragmentami Bazy, nie "Brak zrodel do porownania".
+async function scenariuszR9FFakty(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  await s.evaluate(async () => {
+    await fetch('/api/baza', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zakres: 'prywatna', nazwa: 'Oferta Termoplus',
+      tresc: 'Termoplus montuje pompy ciepla Vitocal w 48 godzin. Gwarancja 7 lat. Pompy ciepla w Krakowie od 28 000 zl.' }) });
+    await odswiezListeBazy();
+  });
+  const zrodlaFaktow = [];
+  s.on('request', (z) => { const d = z.postData() || ''; if (z.method() === 'POST' && /\/api$/.test(z.url()) && /fact checker/.test(d)) zrodlaFaktow.push(/Vitocal/.test(d)); });
+  await s.evaluate(() => { document.getElementById('topic').value = 'Pompy ciepla w Krakowie'; document.getElementById('use-web').checked = false; generate(true); });
+  await krok('R9-F KOD8-17 artykul z Bazy', czekajNaKoniec(s));
+  const fakty = async () => {
+    await s.evaluate(() => { const p = document.getElementById('fakty-panel'); if (p.style.display === 'block') p.style.display = 'none'; przelaczPanelFaktow(); });
+    await s.waitForFunction(() => getComputedStyle(document.getElementById('fakty-loading')).display === 'none', null, { timeout: 30000 }).catch(() => {});
+    return s.evaluate(() => ({ stan: faktyStan, tekst: (document.getElementById('fakty-wynik').innerText || '').replace(/\s+/g, ' ').slice(0, 120) }));
+  };
+  const przed = await fakty();
+  await s.reload({ waitUntil: 'load' });
+  await s.waitForFunction(() => typeof generate === 'function' && document.readyState === 'complete' && document.getElementById('article').style.display === 'block', null, { timeout: 15000 });
+  await s.waitForTimeout(500);
+  const po = await fakty();
+  wynik('R9-F KOD8-17: Fakty zaraz po generowaniu zestawiaja tekst z Baza na serwerze', przed.stan === 'gotowe' && zrodlaFaktow[0] === true, JSON.stringify({ przed, zrodlaFaktow }));
+  wynik('R9-F KOD8-17: po odswiezeniu (artykul z Historii) Fakty dalej widza Baze na serwerze, bez "Brak zrodel"',
+    po.stan === 'gotowe' && zrodlaFaktow.length === 2 && zrodlaFaktow[1] === true, JSON.stringify({ po, zrodlaFaktow }));
+  await s.evaluate(async () => { const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); });
+  wynik('R9-F KOD8-17: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-fakty');
+  await k.close();
+}
+
+// KOD8-16: transkrypcja. Plik ponad limit dostawcy (25 MB) - jasny komunikat przed wyslaniem (bez wysylania
+// 26 MB i bez "bledu serwera 500 ... bez analizy SERP"); zerwane polaczenie w trakcie - wynik odebrany
+// z zadania na serwerze (transkrypcja policzona raz), a nie blad przy oplaconej pracy.
+async function scenariuszR9FTranskrypcja(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'standard');
+  const wyslane = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api\/transcribe$/.test(z.url())) wyslane.push(z.headers()['x-zadanie'] || '-'); });
+  const ustawPlik = (mb, nazwa) => s.evaluate(({ mb, nazwa }) => {
+    const bajty = new Uint8Array(Math.round(mb * 1024 * 1024)); bajty[0] = 0x49; bajty[1] = 0x44; bajty[2] = 0x33;
+    const dt = new DataTransfer(); dt.items.add(new File([bajty], nazwa, { type: 'audio/mpeg' }));
+    const fi = document.getElementById('au-file'); fi.files = dt.files; if (typeof audioFileLabel === 'function') audioFileLabel();
+  }, { mb, nazwa });
+  const uruchom = async () => {
+    await s.evaluate(() => { document.querySelectorAll('.powiadomienie').forEach((x) => x.remove()); document.getElementById('au-script').innerText = '';
+      document.getElementById('au-result-wrap').style.display = 'none'; document.getElementById('au-gen-btn').click(); });
+    await s.waitForTimeout(300);
+    await s.waitForFunction(() => !document.getElementById('au-gen-btn').disabled, null, { timeout: 60000 }).catch(() => {});
+    await s.waitForTimeout(300);
+    return s.evaluate(() => ({ wynik: (document.getElementById('au-script').innerText || '').slice(0, 60), widoczny: document.getElementById('au-result-wrap').style.display,
+      powiadomienia: [...document.querySelectorAll('.powiadomienie')].map((x) => x.textContent.replace(/\s+/g, ' ').slice(0, 200)) }));
+  };
+  await s.evaluate(() => { openAudioPanel(); document.getElementById('au-type').value = 'transcription'; audioSetType(); });
+  await s.waitForTimeout(300);
+  // Plik 26 MB: komunikat o limicie, nic nie idzie do serwera.
+  await ustawPlik(26, 'dlugie-nagranie.m4a');
+  const duzy = await uruchom();
+  const wzorLimitu = await s.evaluate(() => _t('err-transkrypcja-za-duzy').split('{')[0]);
+  wynik('R9-F KOD8-16: plik ponad 25 MB - komunikat o limicie przed wyslaniem, bez wysylania pliku',
+    wyslane.length === 0 && !!wzorLimitu && duzy.powiadomienia.some((p) => p.indexOf(wzorLimitu) !== -1) && !duzy.powiadomienia.some((p) => /SERP|500/.test(p)), JSON.stringify({ duzy, wyslane }));
+  // Zerwane polaczenie: zapytanie dochodzi do serwera, odpowiedz nie wraca; aplikacja odbiera wynik tego samego zadania.
+  const przed = ((await pakietUzycie(s)).transkrypcja || {}).zuzyte || 0;
+  let zerwij = true;
+  await s.route(/\/api\/transcribe$/, async (route) => {
+    if (zerwij) { zerwij = false; route.fetch().catch(() => {}); await new Promise((r) => setTimeout(r, 400)); return route.abort('connectionreset'); }
+    return route.continue();
+  });
+  await ustawPlik(0.2, 'nagranie.mp3');
+  const zerwane = await uruchom();
+  await s.unroute(/\/api\/transcribe$/);
+  const po = ((await pakietUzycie(s)).transkrypcja || {}).zuzyte || 0;
+  wynik('R9-F KOD8-16: zerwane polaczenie w trakcie transkrypcji - wynik odebrany z serwera, policzony raz',
+    zerwane.widoczny === 'block' && zerwane.wynik.length > 5 && !zerwane.powiadomienia.length && wyslane.length >= 2 && wyslane.every((x) => x === wyslane[0] && x !== '-') && po === przed + 1,
+    JSON.stringify({ zerwane, wyslane, przed, po }));
+  wynik('R9-F KOD8-16: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-transkrypcja');
+  await k.close();
+}
+
+// KOD8-11: dokument dluzszy niz miesci Baza na serwerze (60 fragmentow po 1500 znakow) - pytanie przed
+// dodaniem (z liczbami), a po zapisie informacja, ile zapisano; wczesniej "Dodano do bazy" i cisza.
+async function scenariuszR9FDuzyDokument(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  const wyslane = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api\/baza$/.test(z.url())) wyslane.push(JSON.parse(z.postData() || '{}').nazwa || ''); });
+  const dodaj = (odpowiedz) => s.evaluate(async (odp) => {
+    document.querySelectorAll('.powiadomienie').forEach((p) => p.remove());
+    window.__pytania = []; window.confirm = (m) => { window.__pytania.push(m); return odp; };
+    let tresc = '';
+    for (let i = 1; tresc.length < 335000; i++) tresc += 'Rozdzial ' + i + '. Pompa ciepla model XYZ' + i + ' ma gwarancje producenta i serwis w calej Polsce. ';
+    tresc += 'Gwarancja producenta XYZ123 wynosi 10 lat.';
+    const przed = window._bazaSerwerLiczba || 0;
+    addDoc('Katalog produktow', tresc, '📄');
+    for (let i = 0; i < 40 && (window._bazaSerwerLiczba || 0) === przed && !document.querySelector('.powiadomienie'); i++) await new Promise((r) => setTimeout(r, 250));
+    await new Promise((r) => setTimeout(r, 500));
+    return { pytania: window.__pytania, liczba: window._bazaSerwerLiczba || 0, lokalne: docs.length, dlugosc: tresc.length,
+      pow: [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent.replace(/\s+/g, ' ').slice(0, 260)) };
+  }, odpowiedz);
+  const nie = await dodaj(false);
+  wynik('R9-F KOD8-11: dokument ponad limit Bazy - pytanie przed dodaniem z liczbami; "Anuluj" nic nie dodaje',
+    nie.pytania.length === 1 && /90[\s .,]?000/.test(nie.pytania[0]) && nie.liczba === 0 && nie.lokalne === 0 && !wyslane.length, JSON.stringify(nie).slice(0, 400));
+  const tak = await dodaj(true);
+  const wzor = await s.evaluate(() => _t('kb-uciety').split('{')[0]);
+  wynik('R9-F KOD8-11: po zgodzie dokument w Bazie i informacja, ile znakow zapisano (zamiast samego "Dodano")',
+    tak.pytania.length === 1 && tak.liczba === 1 && wyslane.length === 1 && !!wzor && tak.pow.some((p) => p.indexOf(wzor) !== -1 && /90[\s .,]?000/.test(p)), JSON.stringify(tak).slice(0, 500));
+  await s.evaluate(async () => { const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); });
+  wynik('R9-F KOD8-11: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-duzy-dokument');
+  await k.close();
+}
+
+// KOD8-29: integracja CMS. Login Drupala z polska litera (btoa przyjmuje tylko Latin-1) i adres bez https://
+// (zapytanie szlo pod adres wzgledny, na serwer aplikacji). CMS udawany trasa.
+async function scenariuszR9FCms(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  const zapytania = [];
+  const naglowek = { 'access-control-allow-origin': '*' };
+  await k.route(/cms\.przyklad\.pl/, (route) => {
+    const z = route.request();
+    zapytania.push({ url: z.url(), auth: z.headers().authorization || '' });
+    if (/users\/me/.test(z.url())) return route.fulfill({ status: 200, contentType: 'application/json', headers: naglowek, body: JSON.stringify({ id: 1, name: 'Redakcja' }) });
+    if (/jsonapi/.test(z.url())) return route.fulfill({ status: 200, contentType: 'application/vnd.api+json', headers: naglowek, body: JSON.stringify({ data: [] }) });
+    return route.fulfill({ status: 404, headers: naglowek, body: '' });
+  });
+  const testuj = async (cms, url, user, pass) => {
+    await s.evaluate(({ cms, url, user, pass }) => {
+      openWpModal(); switchCmsTab(cms);
+      document.getElementById(cms + '-url').value = url; document.getElementById(cms + '-user').value = user; document.getElementById(cms + '-pass').value = pass;
+      document.getElementById('wp-test-result').innerHTML = '';
+      testCmsConnection();
+    }, { cms, url, user, pass });
+    await s.waitForFunction(() => { const r = document.getElementById('wp-test-result'); return r.textContent && r.textContent !== _t('msg-loading-test'); }, null, { timeout: 10000 }).catch(() => {});
+    return s.evaluate(() => (document.getElementById('wp-test-result').innerText || '').replace(/\s+/g, ' ').slice(0, 200));
+  };
+  const drupal = await testuj('drupal', 'https://cms.przyklad.pl', 'Łukasz', 'hasło');
+  const authDrupal = (zapytania.find((z) => /jsonapi/.test(z.url)) || {}).auth || '';
+  const oczekiwany = 'Basic ' + Buffer.from('Łukasz:hasło', 'utf8').toString('base64');
+  const drupalOk = await s.evaluate(() => _t('drupal-ok'));
+  wynik('R9-F KOD8-29: Drupal - login i haslo z polskimi literami w naglowku Basic (UTF-8), test polaczenia OK',
+    authDrupal === oczekiwany && drupal.indexOf(drupalOk.replace(/<[^>]+>/g, '').slice(0, 12)) !== -1 && !/btoa|Latin1/.test(drupal), JSON.stringify({ drupal, authDrupal }));
+  const wp = await testuj('wp', 'cms.przyklad.pl/wp-admin/', 'redakcja', 'abcd efgh');
+  const zapWp = zapytania.find((z) => /users\/me/.test(z.url)) || {};
+  wynik('R9-F KOD8-29: WordPress - adres bez https:// i z /wp-admin trafia do https://adres/wp-json',
+    zapWp.url === 'https://cms.przyklad.pl/wp-json/wp/v2/users/me' && /Redakcja/.test(wp), JSON.stringify({ wp, url: zapWp.url }));
+  const zapis = await s.evaluate(() => { switchCmsTab('wp'); document.getElementById('wp-url').value = ' cms.przyklad.pl//'; saveCmsSettings(); const u = wpSettings.url; magazyn.removeItem('cai-wp'); return u; });
+  wynik('R9-F KOD8-29: zapis ustawien dopisuje https:// i obcina ukosniki', zapis === 'https://cms.przyklad.pl', zapis);
+  wynik('R9-F KOD8-29: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-cms');
+  await k.close();
+}
+
+// KOD8-32: pierwszy PDF na telefonie - biblioteka (1,7 MB) laduje sie kilka sekund bez znaku zycia, a drugie
+// dotkniecie w tym czasie dawalo dwa pliki. Wolne ladowanie udaje trasa z opoznieniem.
+async function scenariuszR9FPdf(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b, { viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true, acceptDownloads: true });
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  await s.route(/\/pwa\/lib\/pdfmake\.min\.js$/, async (route) => { await new Promise((r) => setTimeout(r, 1500)); return route.continue(); });
+  let pobran = 0;
+  s.on('download', () => { pobran++; });
+  await s.evaluate(() => {
+    const art = document.getElementById('article');
+    art.innerHTML = '<h1>Pompy ciepla w domu</h1><p>Pompa ciepla obniza koszty ogrzewania.</p><h2>Jak dziala</h2><p>Pobiera cieplo z powietrza.</p>';
+    art.style.display = 'block';
+    document.querySelectorAll('.powiadomienie').forEach((p) => p.remove());
+    dlPdf();
+  });
+  await s.waitForTimeout(300);
+  const wTrakcie = await s.evaluate(() => [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent.slice(0, 80)));
+  await s.evaluate(() => dlPdf());
+  // Pierwsze pobranie biblioteki ze swiezego serwera trwa kilka sekund (kompresja przy pierwszym zapytaniu).
+  await s.waitForEvent('download', { timeout: 30000 }).catch(() => {});
+  await s.waitForTimeout(2000);
+  const wzor = await s.evaluate(() => _t('msg-pdf-przygotowuje').slice(0, 15));
+  wynik('R9-F KOD8-32: pierwszy PDF - komunikat od razu, w trakcie ladowania biblioteki', wTrakcie.some((p) => p.indexOf(wzor) === 0), JSON.stringify(wTrakcie));
+  wynik('R9-F KOD8-32: drugie dotkniecie w trakcie ladowania nie daje drugiego pliku', pobran === 1, 'pobran: ' + pobran);
+  // KOD8-35: emoji dopisane w Edytuj daly w PDF pusty znak \x00 (kroje PDF maja tylko lacinke PL/DE/CZ i typografie).
+  const emoji = await s.evaluate(() => {
+    const el = document.createElement('div');
+    el.innerHTML = '<h2>Oferta 🔥 na zimę</h2><p>👍🏽 Montaż w 48 h 🇵🇱, serwis 1️⃣ dzień. Marka Termoplus® i Vitocal™ © 2026.</p><ul><li>Gwarancja 👨‍👩‍👧 7 lat ✅</li></ul>';
+    const teksty = [];
+    (function zbierz(w) { if (Array.isArray(w)) { w.forEach(zbierz); return; } if (!w || typeof w !== 'object') { if (typeof w === 'string') teksty.push(w); return; }
+      ['text', 'stack', 'ul', 'ol', 'columns'].forEach((p) => { if (w[p] !== undefined) zbierz(w[p]); }); })(trescPdf(el));
+    const wszystko = teksty.join('|');
+    // Znaki w krojach PDF (cmap z pwa/lib/vfs_fonts.js): ASCII, U+00A0-017E i kilkanascie znakow typografii.
+    const TYPOGRAFIA = [0x2013, 0x2014, 0x2018, 0x2019, 0x201A, 0x201C, 0x201D, 0x201E, 0x2022, 0x2026, 0x20AC, 0x2122, 0x2212];
+    const wKroju = (c) => { const k = c.codePointAt(0); return k === 10 || (k >= 0x20 && k <= 0x7E) || (k >= 0xA0 && k <= 0x17E) || TYPOGRAFIA.includes(k); };
+    return { wszystko, poza: [...wszystko].filter((c) => !wKroju(c)).map((c) => c.codePointAt(0).toString(16)) };
+  });
+  wynik('R9-F KOD8-35: PDF - emoji wypadaja z tekstu (bez pustych znakow), litery, (R), TM i (c) zostaja',
+    !emoji.poza.length && /Oferta na zimę/.test(emoji.wszystko) && /Montaż w 48 h, serwis 1 dzień\. Marka Termoplus® i Vitocal™ © 2026\./.test(emoji.wszystko) && /Gwarancja 7 lat(\||$)/.test(emoji.wszystko),
+    JSON.stringify(emoji));
+  wynik('R9-F KOD8-32: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-pdf');
+  await k.close();
+}
+
+// KOD8-33: konto darmowe (SERP poza pakietem) - zakladka Luki mowila tylko "Wlacz Analize SERP", czego nie da
+// sie zrobic. Ma mowic, od ktorego pakietu sa Luki, z przejsciem do pakietow.
+async function scenariuszR9FLukiDarmowy(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'darmowy');
+  await s.waitForFunction(() => { const p = document.getElementById('use-serp'); return p && p.disabled; }, null, { timeout: 10000 }).catch(() => {});
+  await generuj(s, 'Pompy ciepla w domu', false);
+  await krok('R9-F KOD8-33 artykul na koncie darmowym', czekajNaKoniec(s));
+  await s.evaluate(() => inspektorPokaz('luki'));
+  await s.waitForFunction(() => getComputedStyle(document.getElementById('gap-no-serp')).display === 'block', null, { timeout: 10000 }).catch(() => {});
+  const luki = await s.evaluate(() => { const e = document.getElementById('gap-no-serp'); return { tekst: (e.innerText || '').replace(/\s+/g, ' '), pakiety: !!e.querySelector('[onclick="otworzPakiet()"]'),
+    wzor: _t('gap-serp-pakiet'), stary: _t('gap-no-serp') }; });
+  wynik('R9-F KOD8-33: konto bez SERP - Luki mowia, od ktorego pakietu sa dostepne, z przejsciem do pakietow',
+    luki.tekst.indexOf(luki.wzor) !== -1 && luki.tekst.indexOf(luki.stary) === -1 && luki.pakiety, JSON.stringify(luki));
+  wynik('R9-F KOD8-33: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-luki-darmowy');
+  await k.close();
+}
+
+// KOD8-34: generowanie bez internetu (pociag, winda). Spinner mowi, ze aplikacja czeka na siec (zamiast
+// "Generuje tresc... pisze artykul"), a artykul po powrocie sieci powstaje Z wiedza z Bazy na serwerze.
+async function scenariuszR9FBezSieci(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b, { viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true });
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  await s.evaluate(async () => {
+    await fetch('/api/baza', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zakres: 'prywatna', nazwa: 'Oferta Termoplus',
+      tresc: 'Termoplus montuje pompy ciepla Vitocal w 48 godzin. Gwarancja 7 lat.' }) });
+    await odswiezListeBazy();
+  });
+  let zWiedza = null;
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url()) && z.headers()['x-cai-czynnosc'] === 'artykul') zWiedza = /Vitocal/.test(z.postData() || ''); });
+  await k.setOffline(true);
+  await s.evaluate(() => { document.getElementById('topic').value = 'Pompy ciepla Termoplus'; document.getElementById('use-web').checked = false; window.__g = generate(true); });
+  await s.waitForTimeout(2500);
+  const offline = await s.evaluate(() => {
+    const widac = (id) => { const e = document.getElementById(id); return !!e && getComputedStyle(e).display !== 'none' && e.getClientRects().length > 0; };
+    return { siec: widac('spin-siec') ? document.getElementById('spin-siec').textContent : '', etap: widac('spin-label'), wzor: _t('spin-brak-sieci') };
+  });
+  await k.setOffline(false);
+  await krok('R9-F KOD8-34 artykul po powrocie sieci', czekajNaKoniec(s, 40000));
+  const po = await s.evaluate(() => ({ odz: document.getElementById('out-badge').className, siec: !!document.querySelector('#spinner.czeka-na-siec') }));
+  wynik('R9-F KOD8-34: bez internetu spinner mowi, ze czeka na siec (etapy pisania schowane)', offline.siec === offline.wzor && !offline.etap, JSON.stringify(offline));
+  wynik('R9-F KOD8-34: po powrocie sieci artykul gotowy i napisany z wiedza z Bazy na serwerze', /ready/.test(po.odz) && !po.siec && zWiedza === true, JSON.stringify({ po, zWiedza }));
+  await s.evaluate(async () => { const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); });
+  wynik('R9-F KOD8-34: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-bez-sieci');
+  await k.close();
+}
+
+// KOD8-19: prompt artykulu w wariancie z serwerem mowil modelowi "You have 0 knowledge source(s)" i "Knowledge base
+// ONLY", a zaraz potem dawal fragmenty z Bazy na serwerze. Licznik zrodel ma liczyc te fragmenty.
+async function scenariuszR9FPromptBazy(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  await s.evaluate(async () => {
+    await fetch('/api/baza', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zakres: 'prywatna', nazwa: 'Oferta Termoplus',
+      tresc: 'Termoplus montuje pompy ciepla Vitocal w 48 godzin. Gwarancja 7 lat. Pompy ciepla w Krakowie od 28 000 zl.' }) });
+    await odswiezListeBazy();
+  });
+  const prompty = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url()) && z.headers()['x-cai-czynnosc'] === 'artykul') { try { prompty.push(JSON.parse(z.postData()).messages[0].content); } catch (e) { /* inne cialo */ } } });
+  await s.evaluate(() => { document.getElementById('topic').value = 'Pompy ciepla w Krakowie'; document.getElementById('use-web').checked = false; generate(true); });
+  await krok('R9-F KOD8-19 artykul z Bazy na serwerze', czekajNaKoniec(s));
+  const poczatek = (prompty[0] || '').split('\n')[0];
+  wynik('R9-F KOD8-19: prompt liczy fragmenty z Bazy na serwerze jako zrodla (nie "You have 0 knowledge source(s)")',
+    /WIEDZA FIRMOWA/.test(prompty[0] || '') && !/You have 0 knowledge source/.test(poczatek) && /passage\(s\) from the company knowledge base on the server/.test(poczatek), poczatek);
+  await s.evaluate(async () => { const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); });
+  wynik('R9-F KOD8-19: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-prompt-bazy');
+  await k.close();
+}
+
+// KOD8-18: w wariancie z serwerem wszystkie dokumenty sa w Bazie na serwerze, a brief, Podpowiedz tematy i llms.txt
+// czytaly tylko dokumenty z przegladarki. Brief prosil o tekst w jezyku interfejsu, nie artykulu.
+async function scenariuszR9FPomocnicy(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  await s.evaluate(async () => {
+    await fetch('/api/baza', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zakres: 'prywatna', nazwa: 'Oferta Termoplus',
+      url: 'https://termoplus.example.com/oferta', tresc: 'Termoplus montuje pompy ciepla Vitocal w Krakowie w 48 godzin. Gwarancja 7 lat.' }) });
+    await odswiezListeBazy();
+    const l = document.getElementById('lang'); l.value = 'English'; l.dispatchEvent(new Event('change'));
+  });
+  const zap = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url())) { try { const d = JSON.parse(z.postData()); zap.push({ sys: String(d.system || ''), tresc: JSON.stringify(d.messages || []) }); } catch (e) { /* inne */ } } });
+  // Brief
+  await s.evaluate(() => { document.getElementById('topic').value = 'Pompy ciepla w Krakowie'; openBriefPanel(true); });
+  await s.waitForFunction(() => !document.querySelector('#brief-content .seo-loading'), null, { timeout: 30000 }).catch(() => {});
+  const brief = zap.find((z) => /content strategist/.test(z.sys) && !/EXACTLY 10 article topics/.test(z.sys)) || { sys: '', tresc: '' };
+  wynik('R9-F KOD8-18: brief dostaje wiedze z Bazy na serwerze i pisze w jezyku artykulu (English przy interfejsie PL)',
+    /Vitocal/.test(brief.tresc) && /MUST be in English/.test(brief.sys), JSON.stringify({ sys: brief.sys.slice(-60), tresc: brief.tresc.slice(0, 160) }));
+  await s.evaluate(() => { try { closeBriefPanel(); } catch (e) { /* zamkniety */ } });
+  // Podpowiedz tematy
+  await s.evaluate(() => otworzTematy());
+  const pole = await s.evaluate(() => getComputedStyle(document.getElementById('tematy-baza-wrap')).display !== 'none' && document.getElementById('tematy-baza').checked);
+  await s.evaluate(() => { document.getElementById('tematy-zapotrzebowanie').value = 'Klienci pytaja o pompy ciepla'; generujTematy(); });
+  await s.waitForFunction(() => !document.querySelector('#tematy-wynik .seo-loading'), null, { timeout: 30000 }).catch(() => {});
+  const tematy = zap.filter((z) => /EXACTLY 10 article topics/.test(z.sys)).pop() || { tresc: '' };
+  wynik('R9-F KOD8-18: Podpowiedz tematy - pole Bazy widoczne przy dokumentach na serwerze i wiedza w zapytaniu', pole && /Vitocal/.test(tematy.tresc), JSON.stringify({ pole, tresc: tematy.tresc.slice(0, 200) }));
+  await s.evaluate(() => zamknijTematy());
+  // llms.txt: adres strony z Bazy na serwerze, kontekst z serwera, naglowki w jezyku tekstu
+  const llms = await s.evaluate(async () => {
+    openLlmsModal(); document.getElementById('llms-name').value = 'Termoplus';
+    await generateLlms();
+    return { pelny: document.getElementById('llms-out-full-ta').value, podstawowy: document.getElementById('llms-out-basic-ta').value };
+  });
+  wynik('R9-F KOD8-18: llms.txt - strona z Bazy na serwerze w "Important pages", kontekst z serwera, naglowki po angielsku',
+    /termoplus\.example\.com\/oferta/.test(llms.podstawowy) && /Vitocal/.test(llms.pelny) && /## About the company/.test(llms.podstawowy) && !/O firmie|Brak dokumentów/.test(llms.pelny), JSON.stringify(llms).slice(0, 400));
+  await s.evaluate(async () => { try { closeLlmsModal(); } catch (e) { /* */ } const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); });
+  wynik('R9-F KOD8-18: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-pomocnicy');
+  await k.close();
+}
+
+// KOD8-23: Widocznosc AI i Narracja marki. Rynek i jezyk "Polish" na sztywno (anglojezyczny klient dostawal pomiar
+// polskiego rynku i polska narracje), Narracja porownywala z "(no documents)" przy Bazie na serwerze, a blad API
+// w kroku 1 dawal "Brak odpowiedzi z narracja" bez powodu.
+async function scenariuszR9FNarracja(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  await s.evaluate(async () => {
+    await fetch('/api/baza', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zakres: 'prywatna', nazwa: 'Oferta Termoplus',
+      tresc: 'Termoplus montuje pompy ciepla Vitocal w Krakowie w 48 godzin. Gwarancja 7 lat.' }) });
+    await odswiezListeBazy();
+    const l = document.getElementById('lang'); l.value = 'English'; l.dispatchEvent(new Event('change'));
+  });
+  const zap = [];
+  let blad401 = false;
+  await s.route(/\/api$/, (route) => {
+    const z = route.request();
+    let d = {}; try { d = JSON.parse(z.postData() || '{}'); } catch (e) { /* inne cialo */ }
+    zap.push({ sys: String(d.system || ''), tresc: JSON.stringify(d.messages || []) });
+    if (blad401 && /A user asks about the brand/.test(String(d.system || ''))) {
+      return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key' } }) });
+    }
+    return route.continue();
+  });
+  await s.evaluate(() => { openVisModal(); document.getElementById('vis-brand').value = 'Termoplus'; document.getElementById('vis-comp').value = 'Viessmann';
+    document.getElementById('vis-prompts').value = 'best heat pump installer'; document.getElementById('vis-iter').value = '1'; window.__w = runVisibility(); });
+  await s.waitForFunction(() => !document.getElementById('vis-run-btn').disabled, null, { timeout: 60000 }).catch(() => {});
+  const pomiar = zap.find((z) => /simulate an AI assistant/.test(z.sys)) || { sys: '' };
+  wynik('R9-F KOD8-23: Widocznosc - rynek z jezyka tekstu (English), nie "Polish market" na sztywno', !!pomiar.sys && !/Polish market/.test(pomiar.sys) && /English/.test(pomiar.sys), pomiar.sys.slice(0, 160));
+  await s.evaluate(() => { window.__n = runNarrative(); });
+  await s.waitForFunction(() => !document.getElementById('vis-narr-btn').disabled, null, { timeout: 60000 }).catch(() => {});
+  const krok1 = zap.find((z) => /A user asks about the brand/.test(z.sys)) || { sys: '', tresc: '' };
+  const krok2 = zap.find((z) => /GROUND TRUTH/.test(z.tresc)) || { tresc: '' };
+  wynik('R9-F KOD8-23: Narracja w jezyku tekstu (English), bez "in Polish" i "Opowiedz o marce"', /in English/.test(krok1.sys) && !/in Polish/.test(krok1.sys) && !/Opowiedz o marce/.test(krok1.tresc), krok1.sys.slice(-120) + ' | ' + krok1.tresc.slice(0, 80));
+  wynik('R9-F KOD8-23: Narracja porownuje z Baza na serwerze (nie "(no documents)")', /Vitocal/.test(krok2.tresc) && !/\(no documents\)/.test(krok2.tresc), krok2.tresc.slice(0, 200));
+  blad401 = true;
+  await s.evaluate(() => { window.__n = runNarrative(); });
+  await s.waitForFunction(() => !document.getElementById('vis-narr-btn').disabled, null, { timeout: 60000 }).catch(() => {});
+  const blad = await s.evaluate(() => { const kb = document.querySelector('#vis-results .komunikat-bledu'); return { tekst: kb ? kb.innerText.replace(/\s+/g, ' ') : (document.getElementById('vis-results').innerText || ''), wzor: _t('err-klucz') }; });
+  wynik('R9-F KOD8-23: Narracja - blad API (zly klucz) z powodem zamiast "Brak odpowiedzi z narracja"', blad.tekst.indexOf(blad.wzor) !== -1, blad.tekst.slice(0, 200));
+  await s.unroute(/\/api$/);
+  await s.evaluate(async () => { closeVisModal(); const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); });
+  wynik('R9-F KOD8-23: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-narracja');
+  await k.close();
+}
+
+// KOD8-10: sesja wygasla w trakcie pracy. Lista Bazy czytala {"error":"Niezalogowany"} jak pusta liste
+// ("Brak dokumentow", licznik 0), a nowy dokument po cichu zostawal tylko w przegladarce.
+async function scenariuszR9FSesja(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  await s.evaluate(async () => {
+    await fetch('/api/baza', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zakres: 'prywatna', nazwa: 'Cennik', tresc: 'Montaz kosztuje od 18 do 35 tys. zl.' }) });
+    await odswiezListeBazy();
+  });
+  const przed = await s.evaluate(() => window._bazaSerwerLiczba);
+  // Wygasniecie sesji: przegladarka nie ma juz ciasteczka sesji, serwer odpowiada 401.
+  const ciastka = await k.cookies();
+  await k.clearCookies();
+  const lista = await s.evaluate(async () => {
+    await otworzBazeSerwera();
+    return { liczba: window._bazaSerwerLiczba, tekst: (document.getElementById('bazas-lista').innerText || '').replace(/\s+/g, ' ').slice(0, 160),
+      pusto: _t('bazas-pusto'), sesja: _t('bazas-sesja') };
+  });
+  wynik('R9-F KOD8-10: po wygasnieciu sesji lista Bazy mowi o sesji, a nie "Brak dokumentow"; licznik zostaje',
+    przed === 1 && lista.liczba === 1 && lista.tekst.indexOf(lista.sesja) !== -1 && lista.tekst.indexOf(lista.pusto) === -1, JSON.stringify(lista));
+  const dodanie = await s.evaluate(async () => {
+    zamknijBazeSerwera();
+    document.querySelectorAll('.powiadomienie').forEach((p) => p.remove());
+    addDoc('Nowy dokument', 'Tresc nowego dokumentu po wygasnieciu sesji.', '✏️');
+    await new Promise((r) => setTimeout(r, 1200));
+    return { lokalne: docs.length, pow: [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent.replace(/\s+/g, ' ').slice(0, 200)), wzor: _t('kb-sesja-wygasla') };
+  });
+  wynik('R9-F KOD8-10: dodanie dokumentu przy wygaslej sesji - komunikat o sesji, bez cichego zapisu tylko w przegladarce',
+    dodanie.lokalne === 0 && dodanie.pow.some((p) => p.indexOf(dodanie.wzor) !== -1), JSON.stringify(dodanie));
+  await k.addCookies(ciastka);
+  await s.evaluate(async () => { const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); });
+  wynik('R9-F KOD8-10: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-sesja');
+  await k.close();
+}
+
+// KOD8-28: sciezki, ktorych nie sprawdzal zaden test (raport it-kod, "0 testow"): pliki do Bazy przez pole pliku
+// (handleFiles/processFile), strona do Bazy (saveUrl + /api/strona), przeniesienie dokumentow z przegladarki na
+// serwer (przeniesNaSerwer), Glos marki (analyzeBrandVoice) uzyty w prompcie artykulu, panel KD (toggleKdPanel),
+// lektor artykulu (speakArticle) i monitor widocznosci AI (aivCheckOne/aivCheckAll).
+async function scenariuszR9FPokrycie(b) {
+  const srv = await serwer();
+  const { k, bledyJs } = await kontekstProxy(b);
+  const s = await zalogujProxy(k, srv.port, 'premium');
+  const wyczyscBaze = () => s.evaluate(async () => { const d = await (await fetch('/api/baza')).json(); for (const x of d.dokumenty || []) await fetch('/api/baza/usun', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: x.id, zakres: x.zakres }) }); await odswiezListeBazy(); });
+  // Kazde powiadomienie od chwili pokazania (znikaja po 6 s, a na ekranie mieszcza sie 4).
+  const powiadomienia = () => s.evaluate(() => window.__powiadomienia.slice());
+  await s.evaluate(() => {
+    window.__powiadomienia = [];
+    new MutationObserver((zmiany) => zmiany.forEach((z) => z.addedNodes.forEach((n) => {
+      if (n.classList && n.classList.contains('powiadomienie')) window.__powiadomienia.push(n.textContent.replace(/\s+/g, ' '));
+    }))).observe(document.body, { childList: true, subtree: true });
+  });
+  const czekajNaBaze = (n) => s.waitForFunction((n) => (window._bazaSerwerLiczba || 0) >= n, n, { timeout: 15000 }).catch(() => {});
+  await wyczyscBaze();
+  const doBazy = [];
+  const zap = [];
+  s.on('request', (z) => {
+    if (z.method() !== 'POST') return;
+    if (/\/api\/baza$/.test(z.url())) { try { doBazy.push(JSON.parse(z.postData() || '{}')); } catch (e) { /* inne cialo */ } }
+    if (/\/api$/.test(z.url())) zap.push({ czynnosc: z.headers()['x-cai-czynnosc'] || '', cialo: z.postData() || '' });
+  });
+
+  // Pliki przez pole pliku: TXT z polskimi literami, DOCX (z generatora eksportu aplikacji), prezentacja i pusty plik.
+  const docx = await s.evaluate(async () => {
+    await wczytajSkrypt('pwa/lib/docx-natywny.js');
+    const el = document.createElement('div');
+    el.innerHTML = '<h1>Oferta serwisowa</h1><p>Przegląd pompy ciepła raz w roku. Gwarancja 7 lat, dojazd w 48 godzin.</p>';
+    const bajty = new Uint8Array(await (await window.DocxNatywny.zbuduj(el, { tytul: 'Oferta serwisowa', jezyk: 'pl-PL' })).arrayBuffer());
+    let bin = ''; for (const x of bajty) bin += String.fromCharCode(x);
+    return btoa(bin);
+  });
+  await s.evaluate(() => document.querySelectorAll('.powiadomienie').forEach((p) => p.remove()));
+  await s.setInputFiles('#file-input', [
+    { name: 'cennik.txt', mimeType: 'text/plain', buffer: Buffer.from('Pompa ciepła Vitocal 250-A: montaż w 48 godzin, cena od 38 000 zł. Żółta karta gwarancyjna na 7 lat.', 'utf8') },
+    { name: 'oferta-serwisowa.docx', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', buffer: Buffer.from(docx, 'base64') },
+    { name: 'prezentacja.pptx', mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', buffer: Buffer.from('PK') },
+    { name: 'pusty.txt', mimeType: 'text/plain', buffer: Buffer.alloc(0) },
+  ]);
+  await czekajNaBaze(2);
+  await s.waitForTimeout(500);
+  const pliki = await s.evaluate(() => ({ liczba: window._bazaSerwerLiczba || 0, lokalne: docs.length,
+    pptx: _t('msg-plik-pptx').replace('{name}', 'prezentacja.pptx'), pusty: _t('msg-plik-pusty').replace('{name}', 'pusty.txt') }));
+  const powPliki = await powiadomienia();
+  const txt = doBazy.find((d) => d.nazwa === 'cennik.txt') || {};
+  const dok = doBazy.find((d) => d.nazwa === 'oferta-serwisowa.docx') || {};
+  wynik('R9-F KOD8-28: pliki do Bazy przez pole pliku - TXT i DOCX z polskimi literami na serwerze, bez kopii w przegladarce',
+    /Pompa ciepła Vitocal/.test(txt.tresc || '') && /Żółta karta/.test(txt.tresc || '') && /Przegląd pompy ciepła/.test(dok.tresc || '') && /Gwarancja 7 lat/.test(dok.tresc || '')
+      && pliki.liczba === 2 && pliki.lokalne === 0, JSON.stringify({ pliki, txt: (txt.tresc || '').slice(0, 80), dok: (dok.tresc || '').slice(0, 80) }));
+  wynik('R9-F KOD8-28: prezentacja i pusty plik - komunikat zamiast dokumentu w Bazie',
+    doBazy.length === 2 && powPliki.some((p) => p.indexOf(pliki.pptx) !== -1) && powPliki.some((p) => p.indexOf(pliki.pusty) !== -1), JSON.stringify({ wyslane: doBazy.map((d) => d.nazwa), powPliki }).slice(0, 400));
+
+  // Strona do Bazy: adres bez https://, serwer pobiera strone (/api/strona udawane trasa - kontener nie ma sieci).
+  let adresStrony = '';
+  await s.route(/\/api\/strona$/, (route) => {
+    try { adresStrony = JSON.parse(route.request().postData() || '{}').adres || ''; } catch (e) { /* inne cialo */ }
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ tytul: 'Termoplus - pompy ciepła w Krakowie',
+      tekst: 'Termoplus montuje pompy ciepła w Krakowie i okolicach, z przeglądem po pierwszym sezonie grzewczym. '.repeat(6) + 'Serwis odpowiada w 24 godziny.' }) });
+  });
+  await s.evaluate(async () => { openUrlModal(); document.getElementById('u-url').value = 'termoplus.example.com/oferta'; await saveUrl(); });
+  await czekajNaBaze(3);
+  await s.unroute(/\/api\/strona$/);
+  const strona = doBazy.find((d) => d.nazwa === 'Termoplus - pompy ciepła w Krakowie') || {};
+  const oknoAdresu = await s.evaluate(() => document.getElementById('url-modal').classList.contains('open'));
+  wynik('R9-F KOD8-28: strona do Bazy (saveUrl + /api/strona) - https:// dopisane, tytul strony jako nazwa, tresc i adres na serwerze',
+    adresStrony === 'https://termoplus.example.com/oferta' && strona.url === 'https://termoplus.example.com/oferta' && /montuje pompy ciepła/.test(strona.tresc || '') && !oknoAdresu,
+    JSON.stringify({ adresStrony, url: strona.url, tresc: (strona.tresc || '').slice(0, 80), oknoAdresu }));
+
+  // Dokument sprzed Bazy na serwerze (tylko w przegladarce): "Przenies na serwer" w panelu Bazy.
+  const przen = await s.evaluate(async () => {
+    document.querySelectorAll('.powiadomienie').forEach((p) => p.remove());
+    docs.push({ name: 'Notatka z przegladarki', content: 'Klienci pytaja o dotacje Czyste Powietrze i montaz zima.', icon: '✏️', words: 9, added: new Date(), selected: true, url: null });
+    rysujBazeWPanelu();
+    const przycisk = document.querySelector('#kb-serwer .kb-przenies');
+    const przed = window._bazaSerwerLiczba || 0;
+    if (przycisk) przycisk.click();
+    for (let i = 0; i < 60 && ((window._bazaSerwerLiczba || 0) === przed || docs.length); i++) await new Promise((r) => setTimeout(r, 250));
+    await new Promise((r) => setTimeout(r, 300));
+    return { przycisk: !!przycisk, przed, po: window._bazaSerwerLiczba || 0, lokalne: docs.length, wzor: _t('kb-przeniesiono') + ': 1', pow: window.__powiadomienia.slice(-3) };
+  });
+  wynik('R9-F KOD8-28: przeniesienie dokumentu z przegladarki na serwer - w Bazie na serwerze, nie w przegladarce, z komunikatem',
+    przen.przycisk && przen.po === przen.przed + 1 && przen.lokalne === 0 && doBazy.some((d) => d.nazwa === 'Notatka z przegladarki') && przen.pow.some((p) => p.indexOf(przen.wzor) !== -1), JSON.stringify(przen).slice(0, 400));
+
+  // Glos marki: profil z probek tekstu, zapisany i uzyty w prompcie nastepnego artykulu.
+  const bv = await s.evaluate(async () => {
+    openBvModal();
+    document.getElementById('bv-articles').value = 'Pompa ciepla to inwestycja na lata. Liczymy koszty uczciwie i mowimy wprost, ile zaoszczedzisz. '
+      + 'Montaz trwa dwa dni, a serwis odpowiada w 24 godziny. Bez zargonu, za to z liczbami.';
+    document.querySelector('#bv-input-area button[onclick="analyzeBrandVoice()"]').click();
+    for (let i = 0; i < 80 && !brandVoiceProfile; i++) await new Promise((r) => setTimeout(r, 250));
+    return { styl: (brandVoiceProfile && brandVoiceProfile.style) || '', zapisany: !!magazyn.getItem('cai-bv'), otwarte: document.getElementById('bv-modal').classList.contains('open') };
+  });
+  wynik('R9-F KOD8-28: Glos marki - profil stylu z probek zapisany, okno zamkniete', !!bv.styl && bv.zapisany && !bv.otwarte, JSON.stringify(bv));
+  // Podpis w menu ustawien: byl polski na sztywno (takze w interfejsie EN), a po zmianie jezyka "Nieaktywny".
+  const plakietka = await s.evaluate(() => {
+    const sub = () => document.getElementById('bv-menu-sub').textContent;
+    const w = { pl: sub(), wzorPl: _t('settings-bv-active') };
+    ustawJezyk('en'); w.en = sub(); w.wzorEn = _t('settings-bv-active');
+    ustawJezyk('pl'); w.znowuPl = sub();
+    return w;
+  });
+  wynik('R9-F KOD8-28: Glos marki - podpis "aktywny" w menu ze slownika, takze po zmianie jezyka',
+    plakietka.pl === plakietka.wzorPl && plakietka.en === plakietka.wzorEn && plakietka.en !== plakietka.pl && plakietka.znowuPl === plakietka.wzorPl, JSON.stringify(plakietka));
+  await s.fill('#kw-input', 'pompy ciepla');
+  await s.press('#kw-input', 'Enter');
+  await s.evaluate(() => { document.getElementById('topic').value = 'Pompy ciepla w Krakowie'; document.getElementById('use-web').checked = false; generate(true); });
+  await krok('R9-F KOD8-28 artykul z Glosem marki', czekajNaKoniec(s));
+  const artykul = zap.filter((z) => z.czynnosc === 'artykul').map((z) => z.cialo);
+  wynik('R9-F KOD8-28: Glos marki trafia do promptu artykulu', !!bv.styl && artykul.some((c) => c.indexOf('BRAND VOICE - apply this style: ' + JSON.stringify(bv.styl).slice(1, -1)) !== -1),
+    'zapytan artykulu: ' + artykul.length);
+
+  // Panel KD: klik w gestosc slow kluczowych otwiera tabele, drugi klik zamyka.
+  const kd = await s.evaluate(() => {
+    const w = document.getElementById('stat-kd-wrap'), p = document.getElementById('kd-panel');
+    w.click(); const otwarty = p.style.display === 'block', wiersze = p.querySelectorAll('.kd-row').length;
+    w.click(); return { otwarty, wiersze, zamkniety: p.style.display === 'none' };
+  });
+  wynik('R9-F KOD8-28: panel KD - tabela gestosci slow kluczowych otwiera sie i zamyka', kd.otwarty && kd.wiersze > 0 && kd.zamkniety, JSON.stringify(kd));
+
+  // Lektor: "Posluchaj" czyta artykul glosem z serwera (TTS przez /api/tts, atrapa MP3).
+  const tts = [];
+  s.on('request', (z) => { if (z.method() === 'POST' && /\/api\/tts/.test(z.url())) tts.push(z.url()); });
+  const przedLektorem = (await powiadomienia()).length;
+  await krok('R9-F KOD8-28 lektor: menu Wiecej', s.click('#grupa-wiecej-wrap > button', { timeout: 5000 }));
+  await krok('R9-F KOD8-28 lektor: Posluchaj', s.click('#tts-btn', { timeout: 5000 }));
+  await s.waitForFunction(() => window.AUDIO && AUDIO.buffer && AUDIO.playing, null, { timeout: 30000 }).catch(() => {});
+  const lektor = await s.evaluate(() => ({ gra: !!(AUDIO.buffer && AUDIO.playing), czas: Math.round(AUDIO.dur || 0), przycisk: document.getElementById('tts-btn').textContent.trim(), wzor: _t('audio-pause') }));
+  lektor.pow = (await powiadomienia()).slice(przedLektorem).map((p) => p.slice(0, 160));
+  await s.evaluate(() => { try { audioBarClose(); } catch (e) { /* bez paska */ } });
+  wynik('R9-F KOD8-28: lektor artykulu - glos z serwera gra, przycisk "Pauza", bez bledu', lektor.gra && lektor.przycisk === lektor.wzor && tts.length > 0 && !lektor.pow.length,
+    JSON.stringify({ lektor, tts: tts.length }));
+
+  // Monitor widocznosci AI: zapytania dodane w oknie, "Sprawdz" przy jednym i "Sprawdz wszystkie" zapisuja pomiar.
+  // Domeny google.com i gov.pl sa zawsze w wynikach wyszukiwania atrapy, wiec status to "cytowane".
+  const aiv = await s.evaluate(async () => {
+    aivOpen();
+    const c = aivCfg(); c.domains = ['google.com', 'gov.pl']; c.brands = ['Termoplus']; c.queries = []; aivSave(c);
+    for (const q of ['czy Termoplus to dobry instalator pomp ciepla', 'najlepszy instalator pomp ciepla w Krakowie']) { document.getElementById('aiv-add-input').value = q; aivAdd(); }
+    await aivCheckOne(0, document.querySelector('#aiv-list button[onclick^="aivCheckOne(0"]'));
+    const poJednym = aivCfg().queries.map((q) => (q.hist || []).length);
+    await aivCheckAll(null);
+    const po = aivCfg().queries;
+    const wynik = { poJednym, poWszystkich: po.map((q) => (q.hist || []).length), status: po.map((q) => (q.hist && q.hist.length ? q.hist[q.hist.length - 1].status : '')),
+      ocena: document.getElementById('aiv-score').textContent, lista: (document.getElementById('aiv-list').innerText || '').replace(/\s+/g, ' ').slice(0, 240), etykieta: _t('aiv-status-cited') };
+    aivClose();
+    return wynik;
+  });
+  const pytaniaAiv = zap.filter((z) => /helpful AI assistant answering a user question using web search/.test(z.cialo));
+  wynik('R9-F KOD8-28: monitor widocznosci AI - "Sprawdz" i "Sprawdz wszystkie" zapisuja pomiar z wyszukiwaniem, wynik i status w oknie',
+    aiv.poJednym.join() === '1,0' && aiv.poWszystkich.join() === '2,1' && aiv.status.every((x) => x === 'cited') && aiv.ocena === '100/100' && aiv.lista.indexOf(aiv.etykieta) !== -1
+      && pytaniaAiv.length === 3 && pytaniaAiv.every((z) => /web_search/.test(z.cialo) && /in Polish/.test(z.cialo)), JSON.stringify({ aiv, pytan: pytaniaAiv.length }).slice(0, 500));
+
+  await wyczyscBaze();
+  wynik('R9-F KOD8-28: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'r9f-pokrycie');
+  await k.close();
+}
+
+// Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
+// CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
+const SCENARIUSZE = [
+  ['stan', scenariuszStanu], ['r4-logika', scenariuszR4Logiki], ['bledy', scenariuszBledow], ['historia-r4', scenariuszHistoriiR4],
+  ['r9f-keys', scenariuszR9FKeys], ['r9f-telefon-pisz', scenariuszR9FTelefonPisz], ['r9f-temat', scenariuszR9FTemat], ['r9f-koszt', scenariuszR9FKoszt], ['r9f-widocznosc', scenariuszR9FWidocznosc], ['r9f-brama', scenariuszR9FBrama], ['r9f-dwie-karty', scenariuszR9FDwieKarty],
+  ['r9f-pause-turn', scenariuszR9FPauseTurn], ['r9f-przeladowanie', scenariuszR9FPrzeladowanie], ['r9f-fakty', scenariuszR9FFakty],
+  ['r9f-transkrypcja', scenariuszR9FTranskrypcja], ['r9f-duzy-dokument', scenariuszR9FDuzyDokument],
+  ['r9f-cms', scenariuszR9FCms], ['r9f-pdf', scenariuszR9FPdf],
+  ['r9f-luki-darmowy', scenariuszR9FLukiDarmowy], ['r9f-bez-sieci', scenariuszR9FBezSieci],
+  ['r9f-prompt-bazy', scenariuszR9FPromptBazy], ['r9f-pomocnicy', scenariuszR9FPomocnicy],
+  ['r9f-narracja', scenariuszR9FNarracja], ['r9f-sesja', scenariuszR9FSesja],
+  ['r9f-pokrycie', scenariuszR9FPokrycie],
+];
 (async () => {
   let b;
+  const tylko = String(process.env.CAI_TEST_TYLKO || '').split(',').map((x) => x.trim()).filter(Boolean);
   try {
     b = await chromium.launch(process.env.CAI_CHROMIUM ? { executablePath: process.env.CAI_CHROMIUM } : {});
-    await scenariuszStanu(b);
-    await scenariuszR4Logiki(b);
-    await scenariuszBledow(b);
-    await scenariuszHistoriiR4(b);
+    for (const [nazwa, scenariusz] of SCENARIUSZE) {
+      if (tylko.length && tylko.indexOf(nazwa) < 0) continue;
+      const przed = new Set(b.contexts());
+      try { await scenariusz(b); }
+      catch (e) {
+        wynik('scenariusz ' + nazwa + ' przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
+        for (const k of b.contexts()) if (!przed.has(k)) await k.close().catch(() => {});
+      }
+    }
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
   } finally {
     if (b) await b.close();
+    if (SERWER) { if (bledow) console.log(SERWER.log().split('\n').slice(-15).join('\n')); SERWER.zatrzymaj(); }
+    if (KAT_DZIENNIKA) { if (bledow) console.log('Dziennik atrapy: ' + process.env.ATRAPA_DZIENNIK); else fs.rmSync(KAT_DZIENNIKA, { recursive: true, force: true }); }
   }
   console.log(bledow ? '\nBLEDOW: ' + bledow : '\nWszystkie scenariusze przeszly.');
   process.exit(bledow ? 1 : 0);
