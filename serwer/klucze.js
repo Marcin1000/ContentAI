@@ -247,6 +247,9 @@ function zlyFormat(dostawca, dane) {
   return null;
 }
 
+// Przedimek angielski przed nazwa dostawcy (an Anthropic, an OpenAI, a DataForSEO).
+const przedimek = (nazwa) => (/^[aeiou]/i.test(nazwa) ? 'an' : 'a');
+
 const KOMUNIKATY_FORMATU = {
   pl: {
     format: (o) => `To nie jest klucz ${o.nazwa}. Sprawdź, czy skopiowano cały klucz (zaczyna się od ${o.wskazowka}).`,
@@ -254,8 +257,8 @@ const KOMUNIKATY_FORMATU = {
     'inny-dostawca': (o) => `To wygląda na klucz innego dostawcy. W tym polu wklej klucz ${o.nazwa} (zaczyna się od ${o.wskazowka}).`,
   },
   en: {
-    format: (o) => `This is not a ${o.nazwa} API key. Check that the whole key was copied (it starts with ${o.wskazowka}).`,
-    administracyjny: (o) => `This is a ${o.nazwa} admin key. Paste a regular API key without account management permissions.`,
+    format: (o) => `This is not ${przedimek(o.nazwa)} ${o.nazwa} API key. Check that the whole key was copied (it starts with ${o.wskazowka}).`,
+    administracyjny: (o) => `This is ${przedimek(o.nazwa)} ${o.nazwa} admin key. Paste a regular API key without account management permissions.`,
     'inny-dostawca': (o) => `This looks like another provider's key. Paste your ${o.nazwa} key here (it starts with ${o.wskazowka}).`,
   },
 };

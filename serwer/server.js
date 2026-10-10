@@ -1385,6 +1385,17 @@ function wektoryDla(konto) {
 }
 
 /**
+ * 403 dla zmiany ustawien organizacji (marka, baza wspolna) przez kogos, kto nia nie
+ * zarzadza (ARCH8-09). W glownej jak dzis ({ error } z napisem), w samoobslugowej kod
+ * uprawnienia-organizacji.
+ */
+function odmowaOrganizacji(req, res, konto, napisGlownej) {
+  if (req && req.readable) req.resume();
+  if (dzierzawy.idOrganizacji(konto) === dzierzawy.GLOWNA) return odpowiedzJson(res, 403, { error: napisGlownej });
+  return bledy.bladCai(res, 'uprawnienia-organizacji', 403);
+}
+
+/**
  * Cialo zapytania proxy. Kopia zadania w tle niesie juz przeczytane cialo (cialoGotowe):
  * bez drugiego czytania i drugiej kopii w pamieci (do 25 MB nagrania, KOD8-05).
  */
@@ -2144,17 +2155,21 @@ async function obsluz(req, res) {
   }
 
   // ─── Konfiguracja marki ────────────────────────────────────────────────────
-  // Jedna dla calego wdrozenia: czytaja wszyscy, pisze administrator.
-  // Wczesniej siedziala w localStorage przegladarki, wiec kazdy uzytkownik
-  // mial wlasna kopie, a nowa osoba w zespole zaczynala od pustej.
+  // Jedna na organizacje (dzierzawy, ARCH8-09, SEC8-51): zespol glowny ma dzisiejszy plik
+  // (czytaja wszyscy w zespole, pisze administrator), konto samoobslugowe wlasna marke,
+  // ktora edytuje jej wlasciciel. Wczesniej siedziala w localStorage przegladarki, wiec
+  // kazdy uzytkownik mial wlasna kopie, a nowa osoba w zespole zaczynala od pustej.
   if (sciezka === '/api/marka' && req.method === 'GET') {
-    return odpowiedzJson(res, 200, { marka: marka.wczytaj(KONF.katalogMarki) });
+    return odpowiedzJson(res, 200, {
+      marka: marka.wczytaj(KONF.katalogMarki, dzierzawy.idOrganizacji(konto)),
+      zakres: dzierzawy.opisDlaAplikacji(konto).rodzaj,
+      mozeEdytowac: dzierzawy.mozeZarzadzac(konto, konto.org),
+    });
   }
 
   if (sciezka === '/api/marka' && req.method === 'POST') {
-    if (sesja.rola !== 'admin') {
-      return odpowiedzJson(res, 403, { error: 'Konfiguracje marki zmienia administrator' });
-    }
+    // Zapis: w glownej administrator jak dzis, w samoobslugowej jej wlasciciel.
+    if (!dzierzawy.mozeZarzadzac(konto, konto.org)) return odmowaOrganizacji(req, res, konto, 'Konfiguracje marki zmienia administrator');
     let dane;
     try {
       // Po oczyszczeniu konfiguracja ma najwyzej okolo 18 kB - 64 kB to zapas
@@ -2163,12 +2178,13 @@ async function obsluz(req, res) {
     } catch (e) {
       return odpowiedzJson(res, e.status || 400, { error: e.message });
     }
-    return odpowiedzJson(res, 200, { marka: marka.zapisz(KONF.katalogMarki, dane) });
+    return odpowiedzJson(res, 200, { marka: marka.zapisz(KONF.katalogMarki, dane, dzierzawy.idOrganizacji(konto)) });
   }
 
   // ─── Pobranie strony WWW do bazy wiedzy ────────────────────────────────────
-  // Zwyklym zadaniem HTTP, bez modelu. Nie liczy sie do pakietu, bo nie
-  // kosztuje ani jednego tokenu.
+  // Zwyklym zadaniem HTTP, bez modelu. Nie liczy sie do pakietu artykulow, bo nie
+  // kosztuje ani jednego tokenu; konto na wlasnym kluczu ma na to pule serwera
+  // (pasmo i adres IP serwera, ARCH8-11) i potrzebuje potwierdzonego e-maila.
   if (sciezka === '/api/strona' && req.method === 'POST') {
     let dane;
     try {
@@ -2179,8 +2195,12 @@ async function obsluz(req, res) {
     if (!wolnoWyjsc(sesja.login)) {
       return odpowiedzJson(res, 429, { error: 'Za duzo pobran w krotkim czasie. Sprobuj za chwile.' });
     }
+    const odmowaStron = odmowaZasobu(konto, 'strony', 'strona');
+    if (odmowaStron) return bledy.bladCai(res, odmowaStron.kod, odmowaStron.status, odmowaStron.pola);
     try {
-      return odpowiedzJson(res, 200, await strona.pobierz(String(dane.adres || '')));
+      const pobrana = await strona.pobierz(String(dane.adres || ''));
+      policzZasob(konto, 'strony', 1);
+      return odpowiedzJson(res, 200, pobrana);
     } catch (e) {
       // 502, bo blad jest po stronie pobieranej witryny, nie zadania. Do
       // przegladarki idzie tylko nasz wlasny komunikat - komunikat bledu sieci
@@ -2192,7 +2212,8 @@ async function obsluz(req, res) {
 
   // ─── Sprawdzenie odnosnikow z gotowego artykulu ────────────────────────────
   // Przegladarka nie sprawdzi obcego adresu, bo nie wolno jej czytac
-  // odpowiedzi. Serwer moze. Nie liczy sie do pakietu - to samo HTTP.
+  // odpowiedzi. Serwer moze. Nie liczy sie do pakietu - to samo HTTP; dla konta
+  // na wlasnym kluczu kazdy adres to jedna sztuka z puli stron serwera.
   if (sciezka === '/api/odnosniki' && req.method === 'POST') {
     let dane;
     try {
@@ -2205,21 +2226,40 @@ async function obsluz(req, res) {
     if (!wolnoWyjsc(sesja.login, adresy.length || 1)) {
       return odpowiedzJson(res, 429, { error: 'Za duzo sprawdzen w krotkim czasie. Sprobuj za chwile.' });
     }
-    return odpowiedzJson(res, 200, { odnosniki: await strona.sprawdzOdnosniki(adresy) });
+    const odmowaStron = odmowaZasobu(konto, 'strony', 'odnosniki');
+    if (odmowaStron) return bledy.bladCai(res, odmowaStron.kod, odmowaStron.status, odmowaStron.pola);
+    // Pula prawie pusta: sprawdzamy tyle adresow, ile zostalo, reszta "nieznany" z powodem
+    // (ta sama dlugosc i kolejnosc, ktorej oczekuje aplikacja).
+    const pula = plany.sprawdzLimitSerwera(konto, 'strony');
+    const doSprawdzenia = pula.zostalo === null ? adresy : adresy.slice(0, pula.zostalo);
+    const odnosniki = await strona.sprawdzOdnosniki(doSprawdzenia);
+    policzZasob(konto, 'strony', doSprawdzenia.length);
+    const pominiete = adresy.slice(doSprawdzenia.length).map((adres) => ({
+      adres, status: 0, stan: 'nieznany', dziala: false, powod: 'limit-pakietu', blad: 'Wyczerpano pulę sprawdzeń w pakiecie',
+    }));
+    return odpowiedzJson(res, 200, pominiete.length ? { odnosniki: [...odnosniki, ...pominiete], pominiete: pominiete.length } : { odnosniki });
   }
 
   // ─── Baza wiedzy ───────────────────────────────────────────────────────────
+  // Baza wspolna jest per organizacja (ARCH8-09, SEC8-50): konto widzi wspolna swojej
+  // organizacji i swoja prywatna; do wspolnej pisze ten, kto organizacja zarzadza.
+  const orgBazy = dzierzawy.idOrganizacji(konto);
   if (sciezka === '/api/baza' && req.method === 'GET') {
-    return odpowiedzJson(res, 200, { dokumenty: baza.lista({ katalog: KONF.katalogBazy, login: sesja.login }) });
+    return odpowiedzJson(res, 200, {
+      dokumenty: baza.lista({ katalog: KONF.katalogBazy, login: sesja.login, organizacja: orgBazy }),
+      // KOD8-11: ile znakow dokumentu trafia do bazy (aplikacja pyta przed dodaniem dluzszego).
+      limitZnakow: baza.LIMIT_ZNAKOW,
+    });
   }
 
   if (sciezka === '/api/baza' && req.method === 'POST') {
     // Limit dokumentow jest pakietowy: darmowy ma trzy, premium bez ograniczenia.
-    const konto = kontoSesji(sesja);
+    // W organizacji samoobslugowej liczy dokumenty prywatne i wspolne: wlasciciel pisze
+    // do obu, wiec "wspolna" nie moze omijac limitu pakietu.
     const limitDok = plany.planKonta(konto).limitDokumentow;
     if (limitDok !== null) {
-      const wlasne = baza.lista({ katalog: KONF.katalogBazy, login: sesja.login })
-        .filter((d) => d.zakres !== baza.WSPOLNA).length;
+      const wlasne = baza.lista({ katalog: KONF.katalogBazy, login: sesja.login, organizacja: orgBazy })
+        .filter((d) => orgBazy !== dzierzawy.GLOWNA || d.zakres !== baza.WSPOLNA).length;
       if (wlasne >= limitDok) {
         return bledy.bladCai(res, 'limit-pakietu', 402, {
           error: `Limit dokumentów w tym pakiecie: ${limitDok}.`,
@@ -2233,18 +2273,28 @@ async function obsluz(req, res) {
     catch { return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' }); }
 
     const zakres = dane.zakres === baza.WSPOLNA ? baza.WSPOLNA : 'prywatna';
-    // Do bazy wspolnej pisze wylacznie admin - inaczej kazdy zmienialby wiedze zespolu.
-    if (zakres === baza.WSPOLNA && sesja.rola !== 'admin') {
-      return odpowiedzJson(res, 403, { error: 'Do bazy wspólnej dodaje wyłącznie admin' });
+    // Do bazy wspolnej pisze tylko zarzadzajacy organizacja (glowna: admin) - inaczej
+    // kazdy zmienialby wiedze zespolu.
+    if (zakres === baza.WSPOLNA && !dzierzawy.mozeZarzadzac(konto, konto.org)) {
+      return odmowaOrganizacji(req, res, konto, 'Do bazy wspólnej dodaje wyłącznie admin');
     }
+    // KOD8-15: stary .doc, obraz albo zle odczytane kodowanie - jasny komunikat zamiast smieci w bazie.
+    const zlaTresc = baza.sprawdzTresc(dane.nazwa, dane.tresc);
+    if (zlaTresc) {
+      const komunikat = jezykZadania(req) === 'en' ? zlaTresc.komunikatEn : zlaTresc.komunikat;
+      return odpowiedzJson(res, 422, { error: komunikat, komunikat, powod: zlaTresc.powod });
+    }
+    const wektory = wektoryDla(konto);
     try {
       // R6-F (E-13): adres strony (pole url albo "Zrodlo: URL" w tresci) wraca w liscie /api/baza.
       const opis = await baza.dodaj({
-        katalog: KONF.katalogBazy, zakres, login: sesja.login,
-        nazwa: dane.nazwa, tresc: dane.tresc, url: dane.url, konfWektorow: KONF.wektory,
+        katalog: KONF.katalogBazy, zakres, login: sesja.login, organizacja: orgBazy,
+        nazwa: dane.nazwa, tresc: dane.tresc, url: dane.url, konfWektorow: wektory.konf,
       });
-      console.log(`[baza] +${zakres} "${opis.nazwa}" (${opis.fragmentow} fragm., wektory: ${opis.zWektorami})`);
-      return odpowiedzJson(res, 200, opis);
+      if (wektory.liczyc && opis.zWektorami) policzZasob(konto, 'wektory', 1);
+      // Dziennik bez nazwy dokumentu (dane klienta, SEC8-54): zakres i liczby wystarcza.
+      console.log(`[baza] +${zakres} (${opis.fragmentow} fragm., wektory: ${opis.zWektorami}${opis.uciety ? `, uciety do ${opis.zapisanoZnakow} z ${opis.znakow} znakow` : ''})`);
+      return odpowiedzJson(res, 200, wektory.powod ? { ...opis, powodWektorow: wektory.powod } : opis);
     } catch (e) {
       if (e instanceof pliki.BladDanych) throw e;
       return odpowiedzJson(res, 400, { error: e.message });
@@ -2256,10 +2306,10 @@ async function obsluz(req, res) {
     try { dane = JSON.parse((await czytajCialo(req)).toString('utf8')); }
     catch { return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' }); }
     const zakres = dane.zakres === baza.WSPOLNA ? baza.WSPOLNA : 'prywatna';
-    if (zakres === baza.WSPOLNA && sesja.rola !== 'admin') {
-      return odpowiedzJson(res, 403, { error: 'Z bazy wspólnej usuwa wyłącznie admin' });
+    if (zakres === baza.WSPOLNA && !dzierzawy.mozeZarzadzac(konto, konto.org)) {
+      return odmowaOrganizacji(req, res, konto, 'Z bazy wspólnej usuwa wyłącznie admin');
     }
-    const usuniety = baza.usun({ katalog: KONF.katalogBazy, zakres, login: sesja.login, id: dane.id });
+    const usuniety = baza.usun({ katalog: KONF.katalogBazy, zakres, login: sesja.login, id: dane.id, organizacja: orgBazy });
     return odpowiedzJson(res, usuniety ? 200 : 404, usuniety ? { ok: true } : { error: 'Nie znaleziono dokumentu' });
   }
 
@@ -2267,13 +2317,17 @@ async function obsluz(req, res) {
     let dane;
     try { dane = JSON.parse((await czytajCialo(req)).toString('utf8')); }
     catch { return odpowiedzJson(res, 400, { error: 'Niepoprawny JSON' }); }
+    const wektory = wektoryDla(konto);
     const wynik = await baza.szukaj({
-      katalog: KONF.katalogBazy, login: sesja.login,
+      katalog: KONF.katalogBazy, login: sesja.login, organizacja: orgBazy,
       zapytanie: String(dane.zapytanie || ''),
       ile: Math.min(Number(dane.ile) || baza.DOMYSLNIE_FRAGMENTOW, 30),
-      konfWektorow: KONF.wektory,
+      konfWektorow: wektory.konf,
     });
-    return odpowiedzJson(res, 200, { ...wynik, prompt: baza.doPromptu(wynik) });
+    if (wektory.liczyc && wynik.metoda === 'wektory') policzZasob(konto, 'wektory', 1);
+    // Konto na wlasnym kluczu bez puli wektorow (D-09) szuka po slowach kluczowych: powod jawnie.
+    const powod = wektory.powod && wynik.metoda === 'slowa-kluczowe' ? { powod: wektory.powod } : {};
+    return odpowiedzJson(res, 200, { ...wynik, ...powod, prompt: baza.doPromptu(wynik) });
   }
 
   // ─── Dane z OpenSEO ────────────────────────────────────────────────────────
@@ -2290,7 +2344,9 @@ async function obsluz(req, res) {
       }
       return odpowiedzJson(res, 501, { error: 'OpenSEO nie jest wdrozone na tym serwerze.' });
     }
-    if (!plany.maFunkcje(kontoSesji(sesja), 'openseo')) {
+    // Jeden kontener i jeden projekt zespolu (SEC8-52): maFunkcje daje 'openseo' tylko
+    // organizacji glownej, wiec konto samoobslugowe dostaje odmowe takze w Premium.
+    if (!plany.maFunkcje(konto, 'openseo')) {
       return bledy.bladCai(res, 'funkcja-poza-pakietem', 402, { error: 'Dane z OpenSEO są dostępne w pakiecie Premium.', funkcja: 'openseo' });
     }
     try {
