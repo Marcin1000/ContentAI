@@ -1657,7 +1657,8 @@ async function testyPoprawek() {
       const logowanie = await zadanie('/');
       sprawdz('ekran logowania ma CSP i no-store', Boolean(logowanie.headers.get('content-security-policy')) && logowanie.headers.get('cache-control') === 'no-store');
       const app = await zadanie('/', { headers: { cookie: cStd } });
-      sprawdz('strona aplikacji zostaje private, no-store', app.headers.get('cache-control') === 'private, no-store');
+      // R9-D (KOD8-06): aplikacja bierze konto z /konto.js, wiec strona jest jedna dla kont: prywatna, z ETag i rewalidacja.
+      sprawdz('strona aplikacji zostaje prywatna: private, no-cache z ETag (jedna dla wszystkich kont)', app.headers.get('cache-control') === 'private, no-cache' && Boolean(app.headers.get('etag')));
     }
 
     console.log('\n  ekran logowania');

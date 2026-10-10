@@ -1095,6 +1095,9 @@ async function scenariuszR9FPrzeladowanie(b) {
   const przed = { hist: await s.evaluate(() => history.length), art: ((await pakietUzycie(s)).artykul || {}).zuzyte || 0 };
   await s.evaluate(() => { document.getElementById('topic').value = 'Artykul ubity w tle [atrapa:opoznienie=4000@artykul]'; document.getElementById('use-web').checked = true; generate(true); });
   await s.waitForTimeout(1500);
+  // R9-D (KOD8-30, trasa C): po przeladowaniu stan zadania z GET /api/zadanie, bez sondy POST /api z pustym cialem.
+  const odbior = { stan: 0, sonda: 0 };
+  s.on('request', (z) => { if (z.method() === 'GET' && /\/api\/zadanie\?id=/.test(z.url())) odbior.stan++; if (z.method() === 'POST' && /\/api$/.test(z.url()) && z.postData() === '{}') odbior.sonda++; });
   await s.reload({ waitUntil: 'load' });
   await krok('R9-F KOD8-30 artykul odebrany po przeladowaniu', s.waitForFunction(() => history.some((h) => /Artykul ubity w tle/.test(h.topic)) && /ready/.test(document.getElementById('out-badge').className), null, { timeout: 40000 }));
   const po = await s.evaluate(() => ({ hist: history.length, temat: (history[0] || {}).topic || '', odz: document.getElementById('out-badge').className,
@@ -1104,6 +1107,7 @@ async function scenariuszR9FPrzeladowanie(b) {
   wynik('R9-F KOD8-30: przeladowanie w trakcie generowania - artykul odebrany z zadania (Historia +1, na ekranie)',
     po.hist === przed.hist + 1 && /Artykul ubity w tle/.test(po.temat) && /ready/.test(po.odz) && po.h2 >= 2, JSON.stringify({ przed, po }));
   wynik('R9-F KOD8-30: artykul policzony raz (bez drugiego generowania), zapis w karcie usuniety', po.art === przed.art + 1 && po.zapis === null, JSON.stringify({ przed: przed.art, po: po.art, zapis: po.zapis }));
+  wynik('R9-D KOD8-30: odbior pyta o stan zadania GET /api/zadanie (trasa C), bez sondy POST /api z pustym cialem', odbior.stan >= 1 && odbior.sonda === 0, JSON.stringify(odbior));
   // Zadanie, ktorego serwer nie ma (np. restart uslugi): komunikat i bez nowego artykulu.
   await s.evaluate(() => { try { sessionStorage.setItem('cai_artykul_w_toku', JSON.stringify({ id: 'brakzadania' + Date.now(), konto: magazyn.konto, start: Date.now(), temat: 'Zgubione zadanie', frazy: [], formularz: {} })); } catch (e) { /* bez magazynu */ } });
   await s.reload({ waitUntil: 'load' });

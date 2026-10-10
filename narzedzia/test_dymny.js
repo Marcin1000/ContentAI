@@ -1177,7 +1177,7 @@ async function wariantR6F(b) {
     /powiadomienie-uwaga\|[^|]*pominięte w eksporcie: 1[^|]*Usuń notatkę albo wpisz w jej miejsce treść/.test(toast), toast);
   const JEDNA = /(^|[\s(„"])[aiouwzAIOUWZ] /m, TWARDA = /(^|[\s(„" ])[aiouwzAIOUWZ] /;
   await s.evaluate(async () => {
-    await wczytajSkrypt('pwa/lib/docx-natywny.js');
+    await wczytajSkrypt('pwa/lib/docx-natywny-2.js');
     const org = window.DocxNatywny.zbuduj;
     window.DocxNatywny.zbuduj = function (el) { window.__docxTekst = el.textContent; return org.apply(this, arguments); };
     await new Promise((ok) => zaladujPdfMake(ok));
@@ -1811,6 +1811,516 @@ async function wariantR9Zrozumialosc(b) {
   await k2.close();
 }
 
+// ── R9-D: konto samoobslugowe od rejestracji do platnego pakietu ───────────────
+// Konto 'darmowy' z serwera testowego (prawdziwy licznik 3 darmowych artykulow i proxy do atrapy)
+// gra konto zalozone przez rejestracje: stan konta, klucze i platnosci przychodza z odpowiedzi
+// w ksztalcie kontraktow A1 (/api/konto), C (/api/klucze*) i B (/api/platnosci/*) przez page.route,
+// niezaleznie od tego, ktore moduly sa juz scalone (prawdziwe przeplywy A1 i B maja wariantR9Rejestracja
+// i wariantR9Zakup). Checkout Stripe i powrot (/konto/platnosc -> /?platnosc=oczekuje) to atrapa.
+function stanKontaSamoobslugi(st) {
+  return {
+    login: 'k-samoobsluga1', email: 'anna@example.com', emailPotwierdzony: st.emailPotwierdzony, rola: 'uzytkownik', pochodzenie: 'samoobsluga', zrodloKluczy: 'wlasne',
+    organizacja: { id: 'o-samoobsluga1', nazwa: null, rodzaj: 'samoobsluga', mozeZarzadzac: true },
+    subskrypcja: st.aktywna ? { stan: st.anulowana ? 'anulowana' : 'aktywna', plan: 'standard', okresDo: Date.now() + 30 * 864e5, waluta: 'pln', dostepDo: null } : { stan: 'brak', plan: null, okresDo: null, waluta: null, dostepDo: null },
+    platnosci: { wlaczone: true, sprzedaz: true, tryb: 'test', dostawca: 'stripe', waluty: ['eur', 'pln'], walutaDomyslna: 'pln', wymagaZgodyNaWykonanie: true,
+      mozeKupic: !st.aktywna, maPanel: !!st.aktywna, plany: [{ plan: 'standard', nazwa: 'Standard', nazwaEn: 'Standard', ceny: { eur: 1900, pln: 7900 } },
+        { plan: 'premium', nazwa: 'Premium', nazwaEn: 'Premium', ceny: { eur: 4900, pln: 19900 } }],
+      walutaWymuszona: st.aktywna ? 'pln' : null, zakupNiedozwolony: false, kraje: ['PL', 'DE', 'CZ'], zwrot: 'proporcjonalny',
+      odstapienie: st.aktywna ? { mozliwe: true, zawarcie: Date.now(), do: Date.now() + 14 * 864e5, szacunek: null, adres: '/konto/odstapienie', ponowienie: false }
+        : { mozliwe: false, powod: 'brak-umowy', do: null, zlozone: null },
+      odrzucenie: st.odrzucenie || null, adresy: { zakup: '/konto/zakup', panel: '/konto/panel', odstapienie: '/konto/odstapienie' }, rachunek: { email: 'kontakt@example.com' } },
+    zgody: { regulamin: { wersja: '2026-10-15', aktualna: '2026-10-15', wymagaAkceptacji: false }, marketing: false },
+    oznaczenia: null, uslugodawca: { nazwa: null, adres: null, email: 'kontakt@example.com' },
+    mozliwosci: { eksport: true, usuniecie: true, zmianaHasla: true }, adresy: { konto: '/konto', eksport: '/konto/eksport', usun: '/konto/usun' },
+  };
+}
+async function wariantSamoobsluga(b) {
+  const bledy = [];
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  const BAZA = 'http://127.0.0.1:' + PORT_SERWERA;
+  const st = { emailPotwierdzony: false, aktywna: false, odpytan: 0, kupiono: false };
+  let klucze = { zrodloKluczy: 'wlasne', zapis: true, dostawcy: ['anthropic', 'openai', 'eleven'], anthropic: { ustawiony: false }, openai: { ustawiony: false }, eleven: { ustawiony: false } };
+  const zapytania = { klucze: [], zakup: [], api: 0, potwierdzenie: 0 };
+  await k.route(/\/api\/konto$/, (r) => {
+    // Webhook Stripe dochodzi z opoznieniem: pierwsze odpytanie po powrocie widzi jeszcze stan sprzed platnosci.
+    if (st.kupiono && !st.aktywna && ++st.odpytan > 2) st.aktywna = true;
+    return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(stanKontaSamoobslugi(st)) });
+  });
+  await k.route(/\/api\/konto\/potwierdzenie$/, (r) => { zapytania.potwierdzenie++; return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, stan: 'wyslano' }) }); });
+  // Marka organizacji konta jednoosobowego (C): GET /api/marka mowi, ze to konto ja zmienia (mozeEdytowac).
+  await k.route(/\/api\/marka$/, (r) => (r.request().method() === 'GET'
+    ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ marka: null, zakres: 'organizacja', mozeEdytowac: true }) }) : r.continue()));
+  await k.route(/\/api\/klucze(\/[a-z]+)?(\?.*)?$/, (r) => {
+    const z = r.request();
+    zapytania.klucze.push(z.method() + ' ' + z.url().replace(BAZA, '') + ' ' + (z.postData() || ''));
+    if (st.kluczeBlad && z.method() === 'GET') return r.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'blad testowy' }) });
+    if (z.method() === 'POST' && /\/api\/klucze\/sprawdz$/.test(z.url())) {
+      return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, dostawca: JSON.parse(z.postData() || '{}').dostawca }) });
+    }
+    if (z.method() === 'POST' && /\/api\/klucze$/.test(z.url())) {
+      const d = JSON.parse(z.postData() || '{}');
+      if (/zly/.test(d.klucz || '')) return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: false, zapisano: false, dostawca: d.dostawca, powod: 'zly-klucz' }) });
+      klucze = Object.assign({}, klucze, { [d.dostawca]: { ustawiony: true, koncowka: String(d.klucz).slice(-4), zapamietany: d.zapamietaj !== false, wygasa: Date.now() + 30 * 864e5 } });
+      return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(Object.assign({ ok: true, zapisano: true }, klucze)) });
+    }
+    if (z.method() === 'DELETE') {
+      const d = new URL(z.url()).searchParams.get('dostawca');
+      (d === 'wszystkie' ? ['anthropic', 'openai', 'eleven'] : [d]).forEach((x) => { klucze[x] = { ustawiony: false }; });
+    }
+    return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(klucze) });
+  });
+  await k.route(/\/api\/platnosci\/zakup$/, (r) => {
+    if (st.nowyRegulamin) {
+      st.nowyRegulamin = false;
+      return r.fulfill({ status: 403, headers: { 'X-CAI-Kod': 'zgoda-wymagana' }, contentType: 'application/json',
+        body: JSON.stringify({ type: 'error', error: { type: 'cai_zgoda_wymagana', message: 'Zgoda wymagana' }, kod: 'zgoda-wymagana', wersja: '2026-11-01' }) });
+    }
+    if (st.limitZakupu) {
+      st.limitZakupu = false;
+      return r.fulfill({ status: 429, headers: { 'X-CAI-Kod': 'za-duzo-prob' }, contentType: 'application/json',
+        body: JSON.stringify({ type: 'error', error: { type: 'cai_za_duzo_prob', message: 'Za duzo prob' }, kod: 'za-duzo-prob', ponowZa: 1800 }) });
+    }
+    zapytania.zakup.push(JSON.parse(r.request().postData() || '{}'));
+    return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ url: 'https://checkout.stripe.test/c/pay/cs_test_r9d' }) });
+  });
+  await k.route(/checkout\.stripe\.test/, (r) => r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8',
+    body: '<!doctype html><title>Stripe (atrapa)</title><a id="zaplac" href="' + BAZA + '/konto/platnosc?wynik=ok&sesja=cs_test_r9d">Zapłać</a>' }));
+  await k.route(/\/konto\/platnosc\?/, (r) => { st.kupiono = true; return r.fulfill({ status: 303, headers: { Location: '/?platnosc=oczekuje' }, body: '' }); });
+  // Po zakupie pakiet Standard (licznik 50 w okresie rozliczeniowym); wczesniej prawdziwy /api/pakiet konta darmowy.
+  await k.route(/\/api\/pakiet$/, (r) => (st.aktywna
+    ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ plan: 'standard', nazwa: 'Standard', nazwaEn: 'Standard', okres: 'miesiac',
+      uzycie: { artykul: { limit: 50, zuzyte: 0, zostalo: 50 }, wywolanie: { limit: null, zuzyte: 0 } }, funkcje: { bazaWiedzy: true, serp: true, wlasnyKlucz: true }, limitDokumentow: 50, zrodloKluczy: 'wlasne' }) })
+    : r.continue()));
+  k.on('request', (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url())) zapytania.api++; });
+
+  // 1. Pierwsze wejscie po rejestracji: kreator BYOK w trzech krokach i karta "Podlacz klucz" zamiast Wygeneruj.
+  const s = await k.newPage();
+  await s.goto(BAZA + '/', { waitUntil: 'load' });
+  if (await s.$('input[name="login"]')) {
+    await s.fill('input[name="login"]', 'darmowy');
+    await s.fill('input[type="password"]', HASLO);
+    await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"], input[type="submit"]')]);
+  }
+  await krok('R9-D kreator klucza po pierwszym wejsciu', s.waitForFunction(() => getComputedStyle(document.getElementById('start-modal')).display === 'flex' && /z 3/.test(document.getElementById('start-postep').textContent), null, { timeout: 10000 }));
+  const start = await s.evaluate(() => ({ postep: document.getElementById('start-postep').textContent, tytul: (document.getElementById('start-tytul') || {}).textContent || '',
+    dalej: document.getElementById('start-dalej').disabled, koszt: (document.querySelector('#start-tresc .byok-koszt') || {}).textContent || '',
+    przewodnik: document.querySelectorAll('#start-tresc .byok-kroki li').length, zapamietaj: !!(document.getElementById('start-zapamietaj') || {}).checked,
+    warunki: (document.querySelector('#start-tresc .byok-gdzie') || {}).textContent || '',
+    karta: !document.getElementById('konto-karta').hidden, gen: getComputedStyle(document.getElementById('gen-btn')).display,
+    pasek: document.getElementById('konto-paski').textContent }));
+  wynik('R9-D: kreator BYOK "Krok 1 z 3" z kosztem artykulu, przewodnikiem po kluczu, warunkami dostawcy (D-01) i "Zapamietaj" zaznaczonym',
+    start.postep === 'Krok 1 z 3' && /klucz Anthropic/.test(start.tytul) && start.dalej && /0,25-0,50 USD/.test(start.koszt) && start.przewodnik === 5 && start.zapamietaj
+    && /na jego warunkach/.test(start.warunki), JSON.stringify(start));
+  wynik('R9-D: bez klucza karta "Podlacz klucz" w miejscu Wygeneruj (E1), pasek trybu testowego platnosci i potwierdzenia e-maila',
+    start.karta && start.gen === 'none' && /Tryb testowy płatności/.test(start.pasek) && /Potwierdź adres anna@example\.com/.test(start.pasek), JSON.stringify(start));
+  // Brak klucza: wywolanie modelu nie wychodzi do serwera (po swiezym odczycie stanu kluczy), odpowiedz 403 brak-klucza.
+  const bez = await s.evaluate(async () => { const o = await fetch('/api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); return { status: o.status, kod: o.headers.get('X-CAI-Kod'), d: await o.json() }; });
+  wynik('R9-D: wywolanie modelu bez klucza = 403 brak-klucza bez zapytania do modelu', bez.status === 403 && bez.kod === 'brak-klucza' && bez.d.dostawca === 'anthropic' && zapytania.api === 0, JSON.stringify(bez));
+  // Zly klucz, potem dobry ("Sprawdz i zapisz" = POST /api/klucze z testem u dostawcy).
+  await s.fill('#start-pole-anthropic', 'sk-ant-api03-zly-klucz-0000000000000000000');
+  await s.click('#start-tresc .byok-pole[data-dostawca="anthropic"] .byok-zapisz');
+  await krok('R9-D zly klucz odrzucony', s.waitForFunction(() => /nie przyjął/.test(document.getElementById('start-wynik-anthropic').textContent), null, { timeout: 5000 }));
+  await s.fill('#start-pole-anthropic', 'sk-ant-api03-dobry-klucz-1111111111111111wxyz');
+  await s.click('#start-tresc .byok-pole[data-dostawca="anthropic"] .byok-zapisz');
+  await krok('R9-D dobry klucz zapisany', s.waitForFunction(() => /działa i jest zapisany/.test(document.getElementById('start-wynik-anthropic').textContent) && !document.getElementById('start-dalej').disabled, null, { timeout: 5000 }));
+  const zapis = zapytania.klucze.filter((z) => /^POST \/api\/klucze /.test(z)).pop() || '';
+  const poZapisie = await s.evaluate(() => ({ pole: document.getElementById('start-pole-anthropic').value, magazyn: Object.keys(localStorage).filter((x) => /klucz/.test(x) && localStorage.getItem(x)), ciastko: document.cookie }));
+  wynik('R9-D: klucz idzie do /api/klucze z testem i "zapamietaj", pole czyszczone, nic w localStorage ani w document.cookie (SEC8-04)',
+    /"dostawca":"anthropic"/.test(zapis) && /"sprawdz":true/.test(zapis) && /"zapamietaj":true/.test(zapis) && poZapisie.pole === '' && !poZapisie.magazyn.length && !/sk-ant/.test(poZapisie.ciastko), JSON.stringify({ zapis, poZapisie }));
+  // Krok 2: firma (marka konta), krok 3: pierwszy artykul z tematem z kreatora.
+  await s.click('#start-dalej');
+  await s.fill('#byok-firma-nazwa', 'Pompy Ciepła Testowe');
+  await s.fill('#byok-firma-opis', 'Montaż i serwis pomp ciepła w domach jednorodzinnych.');
+  await s.click('#start-dalej');
+  const krok3 = await s.evaluate(() => ({ postep: document.getElementById('start-postep').textContent, siec: document.getElementById('byok-siec').checked,
+    marka: JSON.parse(magazyn.getItem('cai-llms') || '{}').name }));
+  wynik('R9-D: kreator krok 2 zapisuje firme, krok 3 "Pierwszy artykul" z wlaczonym szukaniem w sieci przy pustej bazie',
+    krok3.postep === 'Krok 3 z 3' && krok3.siec && krok3.marka === 'Pompy Ciepła Testowe', JSON.stringify(krok3));
+  await s.fill('#byok-temat', 'Jak wybrać pompę ciepła do domu jednorodzinnego');
+  await s.click('#start-dalej');
+  await krok('R9-D pierwszy artykul z kreatora', s.waitForFunction(() => { const b = document.getElementById('gen-btn'); const sp = document.getElementById('spinner');
+    return b && !b.disabled && sp && getComputedStyle(sp).display === 'none' && document.getElementById('article').innerHTML.trim().length > 200; }, null, { timeout: 60000 }));
+  await krok('R9-D licznik po pierwszym artykule', s.waitForFunction(() => /Darmowe: 2 z 3/.test(document.getElementById('pakiet-badge').textContent), null, { timeout: 8000 }));
+  const pierwszy = await s.evaluate(() => ({ kreator: getComputedStyle(document.getElementById('start-modal')).display, karta: document.getElementById('konto-karta').hidden,
+    gen: getComputedStyle(document.getElementById('gen-btn')).display, odznaka: document.getElementById('pakiet-badge').textContent, info: !document.getElementById('ai-info-artykul').hidden }));
+  wynik('R9-D: po zapisie klucza karta znika, pierwszy artykul gotowy, odznaka "Darmowe: 2 z 3", informacja o AI pod tekstem',
+    pierwszy.kreator === 'none' && pierwszy.karta && pierwszy.gen !== 'none' && /Darmowe: 2 z 3/.test(pierwszy.odznaka) && pierwszy.info, JSON.stringify(pierwszy));
+  wynik('R9-D: marke organizacji edytuje konto, ktoremu serwer na to pozwala (GET /api/marka mozeEdytowac, C)', await s.evaluate(() => markaAdmin === true));
+  // Konto na wlasnych kluczach nie wysyla klucza naglowkiem (C, SEC8-04), nawet gdy w przegladarce zostal stary klucz.
+  const naglowkiKlucza = [];
+  const sluchajKlucza = (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url())) naglowkiKlucza.push(z.headers()['x-api-key'] || ''); };
+  s.on('request', sluchajKlucza);
+  await s.evaluate(async () => { API_KEY = 'sk-ant-api03-stary-klucz-z-przegladarki-000000';
+    try { await fetch('/api', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY }, body: '{}' }); } catch (e) { /* odpowiedz bez znaczenia */ }
+    API_KEY = ''; });
+  s.off('request', sluchajKlucza);
+  wynik('R9-D: konto na wlasnych kluczach nie wysyla naglowka x-api-key (klucz tylko w ciasteczku HttpOnly, C)', naglowkiKlucza.length === 1 && naglowkiKlucza[0] === '', JSON.stringify(naglowkiKlucza));
+  // 2. Artykuly 2 i 3, potem stan "Wybierz pakiet" przed kliknieciem (A4, UX8-06).
+  await generuj(s, 'Pompa ciepła czy kocioł gazowy: porównanie kosztów');
+  await generuj(s, 'Jak przygotować dom do montażu pompy ciepła');
+  await krok('R9-D licznik po trzech artykulach', s.waitForFunction(() => /Darmowe wykorzystane/.test(document.getElementById('pakiet-badge').textContent), null, { timeout: 8000 }));
+  const a4 = await s.evaluate(() => ({ karta: !document.getElementById('konto-karta').hidden, tekst: document.getElementById('konto-karta').textContent,
+    gen: getComputedStyle(document.getElementById('gen-btn')).display, odznaka: document.getElementById('pakiet-badge').textContent, historia: history.length }));
+  wynik('R9-D: po 3 darmowych artykulach karta "Wybierz pakiet, zeby pisac dalej" przed kliknieciem i odznaka "Darmowe wykorzystane"',
+    a4.karta && /Wykorzystano 3 z 3 darmowych artykułów/.test(a4.tekst) && /Wybierz pakiet, żeby pisać dalej/.test(a4.tekst) && a4.gen === 'none' && a4.historia >= 3, JSON.stringify(a4));
+  // 402 od dostawcy (brak srodkow na koncie Anthropic) nie otwiera okna pakietu (UX8-03).
+  await s.route(/\/api$/, (r) => r.fulfill({ status: 402, contentType: 'application/json', body: JSON.stringify({ type: 'error', error: { type: 'billing_error', message: 'Your credit balance is too low to access the Anthropic API.' } }) }));
+  const e402 = await s.evaluate(async () => { const o = await fetch('/api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); const d = await o.json();
+    await new Promise((ok) => setTimeout(ok, 300)); return { okno: document.getElementById('pakiet-modal').style.display, tekst: komunikatBleduApi(bladOdpowiedzi(d, o.status)),
+      blok: blokBledu(bladOdpowiedzi(d, o.status), 'generate()') }; });
+  await s.unroute(/\/api$/);
+  wynik('R9-D: 402 billing_error dostawcy bez okna pakietu, komunikat o srodkach u Anthropic (nie limit pakietu)',
+    e402.okno !== 'flex' && /Na Twoim koncie Anthropic zabrakło środków/.test(e402.tekst) && /To nie jest limit pakietu/.test(e402.tekst), JSON.stringify(e402));
+  wynik('R9-D: E3 - przy braku srodkow przycisk "Rozliczenia Anthropic" i "Sprobuj ponownie" (po doladowaniu)',
+    /href="https:\/\/platform\.claude\.com\/settings\/billing"/.test(e402.blok) && /Rozliczenia Anthropic/.test(e402.blok) && /ponow-generowanie/.test(e402.blok), e402.blok);
+  const e4 = await s.evaluate(() => [
+    blokBledu(bladOdpowiedzi({ type: 'error', error: { type: 'rate_limit_error', message: 'enforced_spend_limit_reached' } }, 429, 'Anthropic'), 'generate()'),
+    blokBledu(bladOdpowiedzi({ type: 'error', error: { type: 'invalid_request_error', message: 'You have reached your specified API usage limits. You will regain access on 2026-11-01 at 00:00 UTC.' } }, 400, 'Anthropic'), 'generate()')]);
+  wynik('R9-D: E4 - limit wydatkow u dostawcy: przycisk "Limity Anthropic" (strona limitow w konsoli), bez "Sprobuj ponownie"',
+    e4.every((h) => /href="https:\/\/platform\.claude\.com\/settings\/limits"/.test(h) && /Limity Anthropic/.test(h) && !/ponow-generowanie/.test(h)), e4.join(' || '));
+  // 3. Zakup w dwoch kliknieciach: "Wybierz pakiet" -> karty z waluta i zgodami -> "Przejdz do platnosci".
+  await s.click('#a4-wybierz');
+  await krok('R9-D okno pakietow', s.waitForSelector('#zakup .zakup-karta', { timeout: 5000 }));
+  const okno = await s.evaluate(() => ({ karty: [...document.querySelectorAll('.zakup-karta')].map((x) => x.textContent), waluta: (document.querySelector('#zakup .segmenty [aria-pressed="true"]') || {}).textContent,
+    przycisk: document.getElementById('zakup-przycisk').textContent, zablokowany: document.getElementById('zakup-przycisk').disabled,
+    podsumowanie: document.getElementById('zakup-podsumowanie').textContent, zgody: document.querySelectorAll('#zakup input[type=checkbox]').length }));
+  wynik('R9-D: okno pakietow - Standard i Premium w PLN (interfejs PL), podsumowanie prawne, dwie zgody, przycisk zablokowany do zaznaczenia',
+    okno.karty.length === 2 && /79\s?zł/.test(okno.karty[0]) && okno.waluta === 'PLN' && /Przejdź do płatności · 79\s?zł/.test(okno.przycisk) && okno.zablokowany
+    && /odnawia się automatycznie/.test(okno.podsumowanie) && okno.zgody === 2, JSON.stringify(okno));
+  const waluty = await s.evaluate(() => {
+    const pl = window.STAN_KONTA.platnosci, zapas = JSON.stringify(pl), w = {};
+    const karty = () => [...document.querySelectorAll('#pakiet-zakup .zakup-karta')].map((x) => x.textContent);
+    try {
+      pl.plany[1].ceny = { eur: 4900 };
+      wybierzWaluteZakupu('pln'); w.pln = karty();
+      wybierzWaluteZakupu('eur'); w.eur = karty();
+      pl.walutaWymuszona = 'eur';
+      wybierzWaluteZakupu('pln');
+      w.wymuszona = { przelacznik: !!document.querySelector('#zakup .segmenty'), opis: (document.getElementById('zakup-waluta-wymuszona') || {}).textContent || '', przycisk: document.getElementById('zakup-przycisk').textContent };
+      pl.plany.forEach((p) => { p.ceny = {}; });
+      wybierzWaluteZakupu('eur'); w.brak = document.getElementById('pakiet-zakup').textContent;
+    } finally {
+      window.STAN_KONTA.platnosci = JSON.parse(zapas);
+      wybierzWaluteZakupu('pln');
+    }
+    return w;
+  });
+  wynik('R9-D: okno pakietow wedlug kontraktu B - pakiet bez ceny w walucie ukryty, waluta wymuszona bez przelacznika, bez cen "wstrzymana"',
+    waluty.pln.length === 1 && /Standard/.test(waluty.pln[0]) && waluty.eur.length === 2 && !waluty.wymuszona.przelacznik && /Płacisz w EUR/.test(waluty.wymuszona.opis)
+    && /19\s?€/.test(waluty.wymuszona.przycisk) && /chwilowo wstrzymana/.test(waluty.brak), JSON.stringify(waluty));
+  await s.check('#zakup-zgoda-regulamin');
+  await s.check('#zakup-zgoda-wykonanie');
+  // Nowy regulamin do akceptacji (A1, 403 zgoda-wymagana z wersja): komunikat o regulaminie i pasek z akceptacja,
+  // nie "zaznacz oba pola" (to zgoda zakupu B, bez wersji).
+  st.nowyRegulamin = true;
+  await s.click('#zakup-przycisk');
+  await krok('R9-D nowy regulamin przy zakupie', s.waitForFunction(() => !document.getElementById('zakup-blad').hidden && !!document.querySelector('#konto-paski [data-pasek="zgoda"]'), null, { timeout: 5000 }));
+  const regulamin = await s.evaluate(() => ({ blad: document.getElementById('zakup-blad').textContent, pasek: (document.querySelector('#konto-paski [data-pasek="zgoda"]') || {}).textContent || '' }));
+  wynik('R9-D: 403 zgoda-wymagana z wersja (A1) przy zakupie - komunikat o nowym regulaminie i pasek z akceptacja, nie pola zgody zakupu',
+    /Zmieniliśmy regulamin/.test(regulamin.blad) && !/Zaznacz oba pola/.test(regulamin.blad) && /regulamin/i.test(regulamin.pasek), JSON.stringify(regulamin));
+  // Limit prob zakupu (429 za-duzo-prob, ponowZa w sekundach): komunikat w minutach, potem druga proba przechodzi.
+  st.limitZakupu = true;
+  await s.click('#zakup-przycisk');
+  await krok('R9-D limit prob zakupu', s.waitForFunction(() => /Spróbuj ponownie za/.test(document.getElementById('zakup-blad').textContent) && !document.getElementById('zakup-przycisk').disabled, null, { timeout: 5000 }));
+  const limitZakupu = await s.evaluate(() => document.getElementById('zakup-blad').textContent);
+  wynik('R9-D: 429 za-duzo-prob przy zakupie - komunikat z czasem w minutach (ponowZa w sekundach), przycisk znow aktywny', /Spróbuj ponownie za 30 min\./.test(limitZakupu), limitZakupu);
+  await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('#zakup-przycisk')]);
+  wynik('R9-D: zakup idzie do POST /api/platnosci/zakup z planem, waluta, zgoda na wykonanie i regulaminem (kontrakt B), potem przekierowanie do Checkout',
+    zapytania.zakup.length === 1 && zapytania.zakup[0].plan === 'standard' && zapytania.zakup[0].waluta === 'pln' && zapytania.zakup[0].zgodaNaWykonanie === true
+    && zapytania.zakup[0].zgodaRegulamin === true && zapytania.zakup[0].jezyk === 'pl' && zapytania.zakup[0].z === 'app' && /checkout\.stripe\.test/.test(s.url()),
+    JSON.stringify({ zakup: zapytania.zakup, url: s.url() }));
+  // 4. Platnosc w Checkout (atrapa) i powrot: aktywacja z webhooka z opoznieniem, pakiet aktywny.
+  await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('#zaplac')]);
+  await krok('R9-D okno "Platnosc przyjeta"', s.waitForSelector('#platnosc-modal.open', { timeout: 10000 }));
+  const czeka = await s.evaluate(() => document.getElementById('platnosc-tresc').textContent);
+  await krok('R9-D pakiet aktywny po powrocie', s.waitForFunction(() => /jest aktywny do/.test(document.getElementById('platnosc-tresc').textContent), null, { timeout: 15000 }));
+  const po = await s.evaluate(() => ({ tresc: document.getElementById('platnosc-tresc').textContent, adres: location.search, odznaka: document.getElementById('pakiet-badge').textContent,
+    karta: document.getElementById('konto-karta').hidden, gen: getComputedStyle(document.getElementById('gen-btn')).display }));
+  wynik('R9-D: powrot ze Stripe - najpierw "Czekamy na potwierdzenie", potem "Pakiet Standard jest aktywny", adres bez ?platnosc',
+    /Czekamy na potwierdzenie płatności/.test(czeka) && /Pakiet Standard jest aktywny do/.test(po.tresc) && /anna@example\.com/.test(po.tresc) && !/platnosc/.test(po.adres), JSON.stringify({ czeka, po }));
+  await s.evaluate(() => zamknijPlatnosc());
+  await krok('R9-D odznaka pakietu Standard', s.waitForFunction(() => /Standard/.test(document.getElementById('pakiet-badge').textContent), null, { timeout: 8000 }));
+  const aktywny = await s.evaluate(() => ({ odznaka: document.getElementById('pakiet-badge').textContent, karta: document.getElementById('konto-karta').hidden, gen: getComputedStyle(document.getElementById('gen-btn')).display }));
+  wynik('R9-D: pakiet Standard aktywny - odznaka "Standard · Zostalo 50 z 50", Wygeneruj wraca', /Standard · Zostało 50 z 50/.test(aktywny.odznaka) && aktywny.karta && aktywny.gen !== 'none', JSON.stringify(aktywny));
+  // 5. Konto: pakiet z panelem Stripe, klucze z koncowka, dane; potwierdzenie e-maila z paska.
+  await s.evaluate(() => otworzKonto());
+  await krok('R9-D ekran Konto', s.waitForFunction(() => document.querySelectorAll('#konto-tresc .konto-sekcja').length >= 5, null, { timeout: 5000 }));
+  const konto = await s.evaluate(() => ({ sekcje: [...document.querySelectorAll('#konto-tresc .konto-sekcja h4')].map((h) => h.textContent), tresc: document.getElementById('konto-tresc').textContent,
+    odstapienie: !!document.querySelector('#konto-tresc a[href="/konto/odstapienie?z=app&lang=pl"]') }));
+  wynik('R9-D: Konto - Pakiet i platnosci (Zarzadzaj subskrypcja, rachunek na prosbe), Klucze API z koncowka, Oznaczenia AI, Twoje dane (eksport Historii)',
+    konto.sekcje.indexOf('Pakiet i płatności') >= 0 && konto.sekcje.indexOf('Klucze API') >= 0 && konto.sekcje.indexOf('Oznaczenia AI') >= 0 && konto.sekcje.indexOf('Twoje dane') >= 0
+    && /Zarządzaj subskrypcją/.test(konto.tresc) && /Rachunek wystawiamy na prośbę/.test(konto.tresc) && /kończy się na wxyz/.test(konto.tresc) && /Eksportuj historię/.test(konto.tresc), JSON.stringify(konto.sekcje));
+  wynik('R9-D: Konto - odstapienie w 14 dni z adresem z kontraktu B i powrotem do aplikacji (z=app)', konto.odstapienie && /Możesz odstąpić od umowy do/.test(konto.tresc), konto.tresc.slice(0, 400));
+  await s.evaluate(() => zamknijKonto());
+  st.anulowana = true;
+  await s.evaluate(() => otworzKonto());
+  await krok('R9-D Konto z anulowana subskrypcja', s.waitForFunction(() => /Subskrypcja anulowana/.test(document.getElementById('konto-tresc').textContent), null, { timeout: 5000 }));
+  const e8 = await s.evaluate(() => [...document.querySelectorAll('#konto-tresc button')].map((b) => b.textContent).filter((t) => /Wznów|Zarządzaj/.test(t)));
+  wynik('R9-D: E8 - anulowana subskrypcja: opis "dziala do" i przycisk "Wznow subskrypcje" (panel Stripe)', e8.length === 1 && /Wznów subskrypcję/.test(e8[0]), JSON.stringify(e8));
+  st.anulowana = false;
+  await s.evaluate(() => zamknijKonto());
+  await s.evaluate(() => { const b = [...document.querySelectorAll('#konto-paski button')].filter((x) => /Wyślij link/.test(x.textContent))[0]; if (b) b.click(); });
+  await s.waitForTimeout(300);
+  wynik('R9-D: pasek "Potwierdz adres" wysyla link ponownie (POST /api/konto/potwierdzenie)', zapytania.potwierdzenie === 1, String(zapytania.potwierdzenie));
+  // 6. Grafika bez klucza OpenAI: karta podlaczenia zamiast formularza (A8).
+  await s.evaluate(() => openImgPanelSmart());
+  await s.waitForTimeout(300);
+  const a8 = await s.evaluate(() => ({ karta: !!document.getElementById('img-klucz'), tekst: (document.getElementById('img-klucz') || {}).textContent || '',
+    formularz: document.getElementById('img-gen-btn').getClientRects().length }));
+  wynik('R9-D: Grafika bez klucza OpenAI - karta "Grafiki tworzy OpenAI" z polem klucza, formularz schowany (A8, UX8-25)',
+    a8.karta && /Grafiki tworzy OpenAI/.test(a8.tekst) && /weryfikację organizacji/.test(a8.tekst) && a8.formularz === 0, JSON.stringify(a8));
+  await s.evaluate(() => closeImgPanelSmart());
+  // 7. Wygasla sesja w dowolnym wywolaniu API: pasek z logowaniem i zapisanym szkicem.
+  await s.route(/\/api\/baza$/, (r) => r.fulfill({ status: 401, headers: { 'X-CAI-Kod': 'sesja' }, contentType: 'application/json', body: JSON.stringify({ error: 'Niezalogowany' }) }));
+  await s.evaluate(async () => { document.getElementById('topic').value = 'Szkic przed wygasnieciem sesji'; await fetch('/api/baza'); });
+  await s.unroute(/\/api\/baza$/);
+  const sesja = await s.evaluate(() => ({ pasek: document.getElementById('konto-paski').textContent, szkic: JSON.parse(magazyn.getItem('cai_szkic') || '{}').topic }));
+  wynik('R9-D: wygasla sesja (401 X-CAI-Kod sesja) w dowolnym wywolaniu - pasek "Sesja wygasla" z logowaniem, szkic zapisany',
+    /Sesja wygasła/.test(sesja.pasek) && /Zaloguj się/.test(sesja.pasek) && sesja.szkic === 'Szkic przed wygasnieciem sesji', JSON.stringify(sesja));
+  // 7b. Stan kluczy nieczytelny (GET /api/klucze 500): bez karty i bez odmowy w przegladarce (odpowie serwer),
+  // a zapis klucza idzie do /api/klucze, nie do localStorage.
+  klucze = Object.assign({}, klucze, { anthropic: { ustawiony: false } });
+  st.kluczeBlad = true;
+  await s.reload({ waitUntil: 'load' });
+  await krok('R9-D stan kluczy nieczytelny', s.waitForFunction(() => !!(window.STAN_KLUCZY && window.STAN_KLUCZY._nieznany), null, { timeout: 8000 }));
+  const nieznany = await s.evaluate(async () => {
+    const przed = { karta: document.getElementById('konto-karta').hidden, bez: window.kontoBezKlucza('anthropic') };
+    const w = await window.zapiszKluczKonta('anthropic', 'sk-ant-api03-nowy-klucz-przy-bledzie-stanu-9999');
+    return Object.assign(przed, { zapis: w.ok, magazyn: Object.keys(localStorage).filter((x) => /klucz/.test(x) && localStorage.getItem(x)) });
+  });
+  st.kluczeBlad = false;
+  wynik('R9-D: stan kluczy nieczytelny (GET /api/klucze 500) - bez karty i odmowy w przegladarce, klucz zapisany przez /api/klucze, nic w localStorage',
+    nieznany.karta && !nieznany.bez && nieznany.zapis && !nieznany.magazyn.length, JSON.stringify(nieznany));
+  // Klucz usuniety albo zapisany poza kreatorem i Kontem (np. w innej karcie): odpowiedzi /api/klucze odswiezaja karte,
+  // a nieaktualny stan w tej karcie nie blokuje wywolania modelu (najpierw swiezy odczyt).
+  const pozaKreatorem = await s.evaluate(async () => {
+    const karta = () => !document.getElementById('konto-karta').hidden;
+    const chwila = () => new Promise((ok) => setTimeout(ok, 300));
+    await fetch('/api/klucze?dostawca=anthropic', { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+    await chwila();
+    const poUsunieciu = karta();
+    await fetch('/api/klucze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dostawca: 'anthropic', klucz: 'sk-ant-api03-z-innej-karty-0000000000000000wxyz' }) });
+    await chwila();
+    const poZapisie = karta();
+    window.STAN_KLUCZY = Object.assign({}, window.STAN_KLUCZY, { anthropic: { ustawiony: false } });
+    const o = await fetch('/api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    return { poUsunieciu, poZapisie, kod: o.headers.get('X-CAI-Kod') || '', status: o.status, stan: !!(window.STAN_KLUCZY.anthropic && window.STAN_KLUCZY.anthropic.ustawiony) };
+  });
+  wynik('R9-D: klucz zapisany albo usuniety poza kreatorem (C, inna karta) - karta nadaza, nieaktualny stan nie blokuje wywolania (swiezy odczyt)',
+    pozaKreatorem.poUsunieciu && !pozaKreatorem.poZapisie && pozaKreatorem.kod !== 'brak-klucza' && pozaKreatorem.stan, JSON.stringify(pozaKreatorem));
+  // Ciasteczko klucza, ktorego serwer nie odszyfruje (C: inne konto, zmiana hasla, "wyloguj wszedzie"): inny tekst niz odrzucenie u dostawcy.
+  const niewazny = await s.evaluate(() => {
+    const zapas = window.STAN_KLUCZY;
+    window.STAN_KLUCZY = { zrodloKluczy: 'wlasne', anthropic: { ustawiony: false, niewazny: true }, openai: { ustawiony: false }, eleven: { ustawiony: false } };
+    window.rysujStanKonta();
+    const t = document.getElementById('konto-karta').textContent;
+    window.STAN_KLUCZY = zapas;
+    window.rysujStanKonta();
+    return t;
+  });
+  wynik('R9-D: nieczytelne ciasteczko klucza (C: niewazny bez klucza) - karta "nie dziala juz na tym urzadzeniu", nie "odrzucil"',
+    /nie działa już na tym urządzeniu/.test(niewazny) && !/odrzucił/.test(niewazny), niewazny);
+  // Odrzucenie klucza u dostawcy (zly-klucz) zna tylko ta karta: zostaje po odswiezeniu stanu z serwera (ta sama
+  // koncowka klucza), a znika po udanym "Sprawdz" (klucz znow dziala u dostawcy).
+  const odrzucenie = await s.evaluate(async () => {
+    window.STAN_KLUCZY.anthropic.niewazny = true;
+    await window.odswiezKluczeKonta();
+    const poOdczycie = { bez: window.kontoBezKlucza('anthropic'), karta: document.getElementById('konto-karta').textContent };
+    window.sprawdzKluczKonta('anthropic');
+    await new Promise((ok) => setTimeout(ok, 600));
+    return Object.assign(poOdczycie, { poSprawdzeniu: window.kontoBezKlucza('anthropic'), kartaUkryta: document.getElementById('konto-karta').hidden });
+  });
+  wynik('R9-D: klucz odrzucony u dostawcy zostaje odrzucony po odswiezeniu stanu (ta sama koncowka), udane "Sprawdz" zdejmuje znacznik',
+    odrzucenie.bez && /odrzucił/.test(odrzucenie.karta) && !odrzucenie.poSprawdzeniu && odrzucenie.kartaUkryta, JSON.stringify(odrzucenie));
+  // 7a. Powrot ze Stripe z krajem spoza listy (D-04, kontrakt B): komunikat z krajem z platnosci.odrzucenie, bez czekania na pakiet.
+  st.odrzucenie = { powod: 'kraj', kraj: 'US', czas: Date.now() };
+  await s.goto(BAZA + '/?platnosc=kraj', { waitUntil: 'load' });
+  await krok('R9-D okno odrzuconego kraju', s.waitForFunction(() => /spoza Unii Europejskiej \(US\)/.test((document.getElementById('platnosc-tresc') || {}).textContent || ''), null, { timeout: 10000 }));
+  const kraj = await s.evaluate(() => ({ tytul: document.getElementById('platnosc-tytul').textContent, tresc: document.getElementById('platnosc-tresc').textContent,
+    przycisk: document.getElementById('platnosc-dalej').textContent, adres: location.search }));
+  wynik('R9-D: powrot ze Stripe z krajem spoza UE (?platnosc=kraj) - "Platnosc anulowana" z krajem i zwrotem, adres bez ?platnosc',
+    /Płatność anulowana/.test(kraj.tytul) && /zwrócimy na kartę/.test(kraj.tresc) && !/Czekamy/.test(kraj.tresc) && /Zamknij/.test(kraj.przycisk) && !/platnosc/.test(kraj.adres), JSON.stringify(kraj));
+  await s.evaluate(() => zamknijPlatnosc());
+  st.odrzucenie = null;
+  await krok('R9-D klucze po odswiezeniu', s.waitForFunction(() => !!(window.STAN_KLUCZY && window.STAN_KLUCZY.anthropic && window.STAN_KLUCZY.anthropic.ustawiony), null, { timeout: 8000 }));
+  // 8. Wylogowanie konta z kluczem: wybor, czy klucze zostaja na urzadzeniu (UX8-09, M-10).
+  await s.evaluate(() => wyloguj());
+  const wyl = await s.evaluate(() => ({ okno: document.getElementById('wyloguj-modal').classList.contains('open'), opis: document.querySelector('#wyloguj-modal p').textContent }));
+  wynik('R9-D: wylogowanie konta z kluczem pyta, czy zostawic klucze (domyslnie zostaja, M-10)', wyl.okno && /zostają na tym urządzeniu/.test(wyl.opis), JSON.stringify(wyl));
+  await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('#wyloguj-usun')]);
+  wynik('R9-D: "Wyloguj i usun klucze" usuwa klucze (DELETE /api/klucze?dostawca=wszystkie) i wylogowuje',
+    zapytania.klucze.some((z) => /^DELETE \/api\/klucze\?dostawca=wszystkie/.test(z)) && !!(await s.$('input[name="login"]')), JSON.stringify(zapytania.klucze.slice(-2)));
+  wynik('R9-D: bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+  if (bledow) await zrzut(s, 'r9d-samoobsluga');
+  await k.close();
+}
+
+// KOD8-24: kreator pierwszego uruchomienia nie wyskakuje nad tematem zaczetym, zanim serwer odpowiedzial o pakiecie
+// (wolna odpowiedz udaje trasa z opoznieniem). Kontrola: bez tematu kreator sie pokazuje.
+async function wariantKreatorTematR9D(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); } catch (e) { /* bez magazynu */ } });
+  await k.route(/\/api\/pakiet$/, async (r) => { await new Promise((ok) => setTimeout(ok, 2500)); return r.continue().catch(() => {}); });
+  const s = await k.newPage();
+  await s.goto('http://127.0.0.1:' + PORT_SERWERA + '/', { waitUntil: 'load' });
+  if (await s.$('input[name="login"]')) {
+    await s.fill('input[name="login"]', 'standard');
+    await s.fill('input[type="password"]', HASLO);
+    await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"], input[type="submit"]')]);
+  }
+  await s.fill('#topic', 'Temat zaczety przed kreatorem');
+  await s.waitForTimeout(4000);
+  const zTematem = await s.evaluate(() => ({ kreator: getComputedStyle(document.getElementById('start-modal')).display, temat: document.getElementById('topic').value }));
+  await s.fill('#topic', '');
+  await s.waitForTimeout(300);
+  const s2 = await k.newPage();
+  await s2.goto('http://127.0.0.1:' + PORT_SERWERA + '/', { waitUntil: 'load' });
+  await s2.waitForFunction(() => getComputedStyle(document.getElementById('start-modal')).display === 'flex', null, { timeout: 10000 }).catch(() => {});
+  const bezTematu = await s2.evaluate(() => getComputedStyle(document.getElementById('start-modal')).display);
+  wynik('R9-D: KOD8-24 kreator pierwszego uruchomienia nie wyskakuje nad zaczetym tematem (bez tematu sie pokazuje)',
+    zTematem.kreator === 'none' && /Temat zaczety/.test(zTematem.temat) && bezTematu === 'flex', JSON.stringify({ zTematem, bezTematu }));
+  await k.close();
+}
+
+// PR8-26: ciasteczko motywu dopiero po wyborze motywu (bez wyboru brak ciasteczka).
+async function wariantMotywR9D(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); } catch (e) { /* bez magazynu */ } });
+  const s = await zaloguj(k, 'premium');
+  await s.waitForTimeout(500);
+  const przed = await s.evaluate(() => /(?:^|; )cai_motyw=/.test(document.cookie));
+  await s.evaluate(() => toggleDarkMode());
+  const po = await s.evaluate(() => (document.cookie.match(/(?:^|; )cai_motyw=([^;]*)/) || [])[1] || '');
+  wynik('R9-D: PR8-26 ciasteczko cai_motyw tylko po wyborze motywu (przed wyborem brak)', !przed && /^(jasny|ciemny)$/.test(po), JSON.stringify({ przed, po }));
+  await k.close();
+}
+
+// R9-D: konto samoobslugowe od rejestracji do platnego pakietu na prawdziwych modulach A1 (rejestracja, /api/konto),
+// C (kreator klucza, ciasteczko HttpOnly, sprawdzenie u dostawcy) i B (/api/platnosci/*, atrapa Stripe): 3 artykuly na
+// wlasnym kluczu, karta "Wybierz pakiet", ceny z /api/konto.platnosci, obie zgody w POST /api/platnosci/zakup (zapisane
+// w zgodach konta), Checkout, powrot z aktywnym pakietem, Konto: panel Stripe z powrotem (?konto=1) i odstapienie na
+// ekranie serwera z powrotem do aplikacji. Osobny serwer z CAI_REJESTRACJA=1, CAI_KLUCZ_CIASTEK i PLATNOSCI=stripe.
+async function wariantR9DZakupWAplikacji(b) {
+  const atrapaStripe = require('./atrapa/stripe.js');
+  const portStripe = await wolnyPort();
+  const portSerwera = await wolnyPort();
+  const sekret = 'whsec_dymny_r9d_123456';
+  const adres = 'http://127.0.0.1:' + portSerwera;
+  const urlStripe = 'http://127.0.0.1:' + portStripe;
+  const srvStripe = atrapaStripe.uruchom(portStripe, { sekret, webhook: adres + '/platnosci/webhook/stripe' });
+  const kat = przygotujDane();
+  const env = Object.assign({}, process.env, {
+    CAI_UZYTKOWNICY: path.join(kat, 'uzytkownicy.json'), CAI_BAZA: path.join(kat, 'baza'), CAI_UZYCIE: path.join(kat, 'uzycie'),
+    CAI_MARKA: kat, CAI_SEKRET_PLIK: path.join(kat, 'sekret'), PORT: String(portSerwera), CAI_HOST: '127.0.0.1', CAI_ZAUFANE_ADRESY: '127.0.0.1',
+    ANTHROPIC_KEY: 'test-anthropic', CAI_URL_ANTHROPIC: 'http://127.0.0.1:' + PORT_ATRAPY + '/v1/messages',
+    CAI_REJESTRACJA: '1', CAI_ADRES_PUBLICZNY: adres, CAI_POCZTA_LOG: path.join(kat, 'poczta.jsonl'),
+    CAI_REGULAMIN_WERSJA: '2026-10-v1', CAI_POLITYKA_WERSJA: '2026-10-v1', CAI_KLUCZ_CIASTEK: require('crypto').randomBytes(32).toString('base64'),
+    PLATNOSCI: 'stripe', PLATNOSCI_TRYB: 'test', STRIPE_KLUCZ: 'rk_test_atrapa', STRIPE_SEKRET_WEBHOOKA: sekret,
+    STRIPE_CENA_STANDARD: 'price_atrapa_standard', STRIPE_CENA_PREMIUM: 'price_atrapa_premium', STRIPE_URL_API: urlStripe,
+    STRIPE_HOSTY_PRZEKIEROWAN: urlStripe, PLATNOSCI_CENY_WYSWIETLANE: 'standard:eur=19,pln=79;premium:eur=49,pln=199',
+    CAI_USLUGODAWCA_IMIE_NAZWISKO: 'Jan Testowy', CAI_USLUGODAWCA_ADRES: 'ul. Testowa 1, 00-001 Warszawa', CAI_USLUGODAWCA_EMAIL: 'kontakt@example.com',
+  });
+  const serwer = spawn(process.execPath, [path.join(REPO, 'serwer', 'server.js')], { cwd: REPO, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  let log = '';
+  serwer.stdout.on('data', (d) => { log += d; });
+  serwer.stderr.on('data', (d) => { log += d; });
+  const bledy = [];
+  const zakupy = [];
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  k.on('request', (z) => { if (z.method() === 'POST' && /\/api\/platnosci\/zakup$/.test(z.url())) zakupy.push(z.postData() || ''); });
+  let s;
+  try {
+    await czekajNaPort(portSerwera, 15000);
+    s = await k.newPage();
+    await s.goto(adres + '/rejestracja', { waitUntil: 'load' });
+    await krok('R9-D formularz rejestracji (A1)', s.waitForSelector('#email', { timeout: 5000 }));
+    await s.fill('#email', 'zakup.w.aplikacji@firma-przyklad.pl');
+    await s.fill('#haslo', 'mocne-haslo-do-testu-42');
+    await s.check('#zgoda_regulamin');
+    await s.check('#zgoda_wiek');
+    await s.waitForTimeout(3200);                       // podpisany znacznik: formularz szybszy niz 3 s to automat
+    await krok('R9-D rejestracja (A1)', Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"]')]));
+    await krok('R9-D stan konta z prawdziwego /api/konto', s.waitForFunction(() => !!(window.STAN_KONTA && window.STAN_KONTA.pochodzenie === 'samoobsluga' && !window.STAN_KONTA._zapas), null, { timeout: 10000 }));
+    // Kreator klucza na prawdziwym C (ciasteczko HttpOnly, sprawdzenie u dostawcy na atrapie): zly klucz, potem dobry.
+    await krok('R9-D kreator klucza (C)', s.waitForFunction(() => getComputedStyle(document.getElementById('start-modal')).display === 'flex'
+      && /z 3/.test(document.getElementById('start-postep').textContent), null, { timeout: 10000 }));
+    await s.fill('#start-pole-anthropic', 'sk-ant-api03-zly-klucz-0000000000000000000000');
+    await s.click('#start-tresc .byok-pole[data-dostawca="anthropic"] .byok-zapisz');
+    await krok('R9-D zly klucz odrzucony u dostawcy (C)', s.waitForFunction(() => /nie przyjął/.test(document.getElementById('start-wynik-anthropic').textContent), null, { timeout: 10000 }));
+    await s.fill('#start-pole-anthropic', 'sk-ant-api03-dobry-klucz-z-e2e-1111111111111111abcd');
+    await s.click('#start-tresc .byok-pole[data-dostawca="anthropic"] .byok-zapisz');
+    await krok('R9-D dobry klucz zapisany (C)', s.waitForFunction(() => /działa i jest zapisany/.test(document.getElementById('start-wynik-anthropic').textContent), null, { timeout: 10000 }));
+    const kluczC = await s.evaluate(async () => ({ stan: (await (await fetch('/api/klucze')).json()).anthropic, ciastko: /cai_k_/.test(document.cookie),
+      magazyn: Object.keys(localStorage).filter((x) => /klucz/.test(x) && localStorage.getItem(x)) }));
+    wynik('R9-D na serwerze A1+B+C: kreator klucza - zly klucz odrzucony u dostawcy, dobry w ciasteczku HttpOnly (koncowka), nic w localStorage',
+      !!kluczC.stan && kluczC.stan.ustawiony && kluczC.stan.koncowka === 'abcd' && !kluczC.ciastko && !kluczC.magazyn.length, JSON.stringify(kluczC));
+    // Kreator: firma i pierwszy artykul na kluczu uzytkownika, potem dwa kolejne: pula 3 darmowych artykulow z serwera.
+    await s.click('#start-dalej');
+    await s.fill('#byok-firma-nazwa', 'Firma z rejestracji');
+    await s.click('#start-dalej');
+    await s.fill('#byok-temat', 'Pierwszy artykul na wlasnym kluczu');
+    await s.click('#start-dalej');
+    await krok('R9-D pierwszy artykul z kreatora (A1+C)', s.waitForFunction(() => { const g = document.getElementById('gen-btn'); const sp = document.getElementById('spinner');
+      return g && !g.disabled && sp && getComputedStyle(sp).display === 'none' && document.getElementById('article').innerHTML.trim().length > 200; }, null, { timeout: 60000 }));
+    await generuj(s, 'Drugi artykul na wlasnym kluczu');
+    await generuj(s, 'Trzeci artykul na wlasnym kluczu');
+    await krok('R9-D karta Wybierz pakiet po 3 artykulach', s.waitForFunction(() => !document.getElementById('konto-karta').hidden
+      && /Wybierz pakiet/.test(document.getElementById('konto-karta').textContent), null, { timeout: 10000 }));
+    const pula = await s.evaluate(async () => ({ karta: document.getElementById('konto-karta').textContent, odznaka: document.getElementById('pakiet-badge').textContent,
+      artykul: ((await (await fetch('/api/pakiet')).json()).uzycie || {}).artykul, historia: history.length }));
+    wynik('R9-D na serwerze A1+B+C: 3 artykuly na wlasnym kluczu z kreatora i Wygeneruj, potem karta "Wybierz pakiet" i odznaka (licznik serwera)',
+      /Wykorzystano 3 z 3/.test(pula.karta) && /Darmowe wykorzystane/.test(pula.odznaka) && !!pula.artykul && pula.artykul.zuzyte === 3 && pula.historia >= 3, JSON.stringify(pula));
+    await s.click('#a4-wybierz');
+    await krok('R9-D okno pakietow z cenami z serwera', s.waitForSelector('#zakup .zakup-karta', { timeout: 8000 }));
+    const okno = await s.evaluate(() => ({ karty: [...document.querySelectorAll('#zakup .zakup-karta')].map((x) => x.textContent), test: !!document.querySelector('#pakiet-zakup .zakup-test'),
+      waluta: (document.querySelector('#zakup .segmenty [aria-pressed="true"]') || {}).textContent || '' }));
+    wynik('R9-D na serwerze A1+B+C: okno pakietow z cenami z /api/konto.platnosci (79 zl, 199 zl), PLN dla interfejsu PL, pasek trybu testowego',
+      okno.karty.length === 2 && /79\s?zł/.test(okno.karty[0]) && /199\s?zł/.test(okno.karty[1]) && okno.waluta === 'PLN' && okno.test, JSON.stringify(okno));
+    await s.check('#zakup-zgoda-regulamin');
+    await s.check('#zakup-zgoda-wykonanie');
+    await krok('R9-D przejscie do Checkout', Promise.all([s.waitForURL((u) => String(u).startsWith(urlStripe), { timeout: 15000 }), s.click('#zakup-przycisk')]));
+    await krok('R9-D zaplata w Checkout i powrot do aplikacji', Promise.all([
+      s.waitForNavigation({ url: (u) => String(u).startsWith(adres + '/?platnosc='), waitUntil: 'load', timeout: 15000 }), s.click('#zaplac')]));
+    await krok('R9-D pakiet aktywny po powrocie', s.waitForFunction(() => /Pakiet Standard jest aktywny do/.test((document.getElementById('platnosc-tresc') || {}).textContent || ''), null, { timeout: 20000 }));
+    const po = await s.evaluate(async () => {
+      const stan = await (await fetch('/api/platnosci/stan')).json();
+      const eksport = await (await fetch('/konto/eksport')).json();
+      return { adres: location.search, sub: stan.subskrypcja, zgody: (eksport.zgody || []).filter((z) => z.zrodlo === 'zakup').map((z) => z.rodzaj) };
+    });
+    wynik('R9-D na serwerze A1+B+C: zakup z aplikacji - obie zgody zapisane w koncie (regulamin i natychmiastowe wykonanie), subskrypcja aktywna, adres bez ?platnosc',
+      zakupy.length === 1 && /"zgodaRegulamin":true/.test(zakupy[0]) && po.sub.stan === 'aktywna' && po.sub.plan === 'standard'
+      && po.zgody.indexOf('regulamin') >= 0 && po.zgody.indexOf('natychmiastowe-wykonanie') >= 0 && !/platnosc/.test(po.adres), JSON.stringify({ zakupy, po }));
+    await s.evaluate(() => zamknijPlatnosc());
+    // Konto: panel klienta Stripe i powrot z niego na ekran Konto (?konto=1).
+    await s.evaluate(() => otworzKonto());
+    await krok('R9-D Konto z panelem Stripe', s.waitForFunction(() => /Zarządzaj subskrypcją/.test(document.getElementById('konto-tresc').textContent)
+      && !!document.querySelector('#konto-tresc a[href="/konto/odstapienie?z=app&lang=pl"]'), null, { timeout: 8000 }));
+    await krok('R9-D panel klienta Stripe', Promise.all([s.waitForURL((u) => String(u).startsWith(urlStripe + '/p/session/'), { timeout: 15000 }),
+      s.evaluate(() => { [...document.querySelectorAll('#konto-tresc button')].filter((x) => /Zarządzaj subskrypcją/.test(x.textContent))[0].click(); })]));
+    await krok('R9-D powrot z panelu', Promise.all([s.waitForNavigation({ url: (u) => String(u).startsWith(adres + '/?konto=1'), waitUntil: 'load', timeout: 15000 }), s.click('#wroc')]));
+    await krok('R9-D ekran Konto po powrocie z panelu', s.waitForSelector('#konto-modal.open', { timeout: 10000 }));
+    // Odstapienie: ekran serwera B w dwoch krokach, powrot do aplikacji (z=app).
+    await krok('R9-D ekran odstapienia', Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('#konto-tresc a[href="/konto/odstapienie?z=app&lang=pl"]')]));
+    const odst = await s.evaluate(() => ({ przycisk: !!document.getElementById('potwierdz-odstapienie'), tekst: document.body.textContent, adres: location.pathname + location.search }));
+    wynik('R9-D na serwerze A1+B+C: z Konta panel Stripe z powrotem na ekran Konto, odstapienie na ekranie serwera z drugim krokiem i powrotem do aplikacji',
+      odst.przycisk && /Wróć do aplikacji/.test(odst.tekst) && /^\/konto\/odstapienie\?z=app/.test(odst.adres), JSON.stringify({ przycisk: odst.przycisk, adres: odst.adres }));
+    wynik('R9-D na serwerze A1+B+C: bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+    if (bledow) await zrzut(s, 'r9d-zakup-aplikacja');
+  } catch (e) {
+    wynik('R9-D zakup w aplikacji na serwerze A1+B przerwany', false, (e && e.message || String(e)).split('\n')[0] + ' | ' + log.split('\n').slice(-5).join(' '));
+    if (s) await zrzut(s, 'r9d-zakup-aplikacja').catch(() => {});
+  } finally {
+    await k.close();
+    serwer.kill();
+    await new Promise((r) => srvStripe.close(r));
+    fs.rmSync(kat, { recursive: true, force: true });
+  }
+}
+
 // R9-A1: rejestracja w przegladarce na osobnym serwerze (CAI_REJESTRACJA=1, poczta w dzienniku CAI_POCZTA_LOG):
 // "Zaloz konto" z ekranu logowania, formularz, aplikacja od razu po rejestracji, link z e-maila i przycisk
 // potwierdzenia (GET niczego nie zmienia), logowanie e-mailem. Ekrany kont bez naruszen CSP. Pada przed A1.
@@ -2017,6 +2527,10 @@ async function wariantR9Zakup(b) {
     await wariantR9Rejestracja(b);
     await wariantR9Zakup(b);
     await wariantR9Klucze(b);
+    await osobno(wariantMotywR9D, b);
+    await osobno(wariantKreatorTematR9D, b);
+    await osobno(wariantSamoobsluga, b);
+    await osobno(wariantR9DZakupWAplikacji, b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));

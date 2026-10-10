@@ -25,6 +25,7 @@
     var m = document.querySelector('meta[name="cai-konto"]');
     if (m && m.content && !/^WSTAW/.test(m.content)) konto = m.content;
   } catch (e) {}
+  if (typeof window.CAI_KONTO === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(window.CAI_KONTO)) konto = window.CAI_KONTO; // R9-D (ARCH8-24)
   var pref = czytaj('cai-dark');
   var jasnySystem = false;
   try { jasnySystem = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches); } catch (e) {}
@@ -3138,6 +3139,130 @@ body.is-mobile .ins-tresc #gap-missing-wrap { padding-bottom: var(--s-12); }
 body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: absolute; left: calc(var(--s-12) * -1); right: calc(var(--s-12) * -1); bottom: 100%;
   height: var(--s-16); pointer-events: none; background: linear-gradient(to bottom, transparent, var(--c-panel)); }
 }
+@layer widoki {
+/* ══ RUNDA 9, wykonawca D: oznaczenia AI ══ */
+/* przelaczniki etykiet AI i informacje "powstalo z pomoca AI"; display z .grupa-menu .btn-secondary wygrywal z hidden */
+.ozn-wiersz[hidden], .ai-info[hidden] { display: none; }
+label.ozn-wiersz { display: flex; align-items: flex-start; gap: var(--s-8); margin-top: var(--s-8); font-size: var(--t-sm); line-height: 1.45; color: var(--c-tekst-2); cursor: pointer; }
+label.ozn-wiersz > input[type=checkbox] { flex: none; margin: 2px 0 0; }
+label.ozn-wiersz > span { display: flex; flex-direction: column; gap: var(--s-4); min-width: 0; }
+label.ozn-wiersz b { font-weight: var(--g-sredni); color: var(--c-tekst); }
+label.ozn-wiersz small { font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
+.ozn-wiersz-ramka { margin: 0 0 var(--s-12); padding: var(--s-8) var(--s-12); border: 1px solid var(--c-linia); border-radius: var(--r-md); background: var(--c-panel); }
+.ai-info { display: flex; align-items: flex-start; gap: var(--s-6); margin: var(--s-8) 0 0; }
+.ai-info > .ikona { flex: none; margin-top: 2px; color: var(--c-tekst-3); }
+#ai-info-artykul { max-width: calc(var(--tresc-max) + 2 * var(--s-56, 56px) + 2px); margin: var(--s-12) auto 0; padding: 0 var(--s-4); box-sizing: border-box; }
+/* telefon i tablet: informacja o AI jest ostatnim wierszem tresci, wiec to ona (nie artykul) ma odstep od paskow na dole */
+body.is-mobile:has(#ai-info-artykul:not([hidden])) .article { padding-bottom: var(--s-16); }
+body.is-mobile #ai-info-artykul { max-width: none; margin: 0; padding: 0 var(--s-16) calc(112px + env(safe-area-inset-bottom, 0px) + var(--s-24)); }
+/* pole dotyku przelacznikow etykiet na telefonie (44 px) */
+body.is-mobile label.ozn-wiersz { min-height: var(--h-dotyk); }
+.au-ozn { margin-top: var(--s-12); }
+.au-ozn .ai-info { margin-top: 0; }
+#audio-bar-ai { flex: 1; min-width: 0; padding: 0 var(--s-8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+}
+@layer widoki {
+/* ══ RUNDA 9, wykonawca D: konto, klucze BYOK, pakiet i zakup ══ */
+.settings-item[hidden], .konto-karta[hidden], .konto-paski[hidden], .pakiet-zakup[hidden] { display: none; }
+/* karta w miejscu "Wygeneruj": bez klucza (E1) albo po wyczerpaniu puli (A4) */
+body.karta-konta #gen-btn { display: none; }
+.konto-karta { display: flex; flex-direction: column; gap: var(--s-4); padding: var(--s-12); border: 1px solid var(--c-akcent-ramka); border-radius: var(--r-md); background: var(--c-akcent-tlo); }
+.konto-karta-tytul { margin: 0; font-size: var(--t-sm); font-weight: var(--g-mocny); line-height: 1.4; color: var(--c-tekst); }
+.konto-karta-opis { margin: 0; font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-2); }
+.konto-karta-akcje { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-8) var(--s-12); margin-top: var(--s-6); }
+.konto-karta-akcje .btn-generate { width: auto; flex: 1 1 auto; }
+/* paski stanu konta nad aplikacja */
+.konto-paski { flex: none; display: flex; flex-direction: column; }
+.konto-pasek { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-4) var(--s-12); margin: 0; padding: var(--s-6) var(--s-16); border-bottom: 1px solid var(--c-linia);
+  font-size: var(--t-sm); line-height: 1.45; color: var(--c-tekst); background: var(--c-panel); }
+.konto-pasek > .ikona { flex: none; }
+.konto-pasek-tekst { flex: 1 1 240px; min-width: 0; }
+.konto-pasek .btn-link { font-weight: var(--g-mocny); }
+.konto-pasek-info { background: var(--c-akcent-tlo); }
+.konto-pasek-info > .ikona { color: var(--c-akcent-mocny); }
+.konto-pasek-uwaga { background: var(--c-uwaga-tlo); border-color: var(--c-uwaga-ramka); }
+.konto-pasek-uwaga > .ikona { color: var(--c-uwaga); }
+.konto-pasek-blad { background: var(--c-blad-tlo); border-color: var(--c-blad-ramka); }
+.konto-pasek-blad > .ikona { color: var(--c-blad); }
+#pakiet-badge.pakiet-alarm { border-color: var(--c-blad-ramka); color: var(--c-blad); }
+/* okno pakietu: pula spoza pakietu (KOD8-04) i zakup (UX8-20) */
+.pakiet-niedostepna { display: flex; justify-content: space-between; align-items: center; gap: var(--s-8); margin-bottom: 10px; font-size: var(--t-xs); color: var(--c-tekst-3); }
+.pakiet-zakup { margin-top: var(--s-16); padding-top: var(--s-16); border-top: 1px solid var(--c-linia); }
+.zakup { display: flex; flex-direction: column; gap: var(--s-8); }
+.zakup-naglowek { display: flex; align-items: center; justify-content: space-between; gap: var(--s-8); flex-wrap: wrap; }
+.zakup-naglowek b { font-size: var(--t-md); color: var(--c-tekst); }
+.zakup-karty { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--s-8); }
+.zakup-karta { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-4); padding: var(--s-12); border: 1px solid var(--c-ramka); border-radius: var(--r-md);
+  background: var(--c-pole); color: var(--c-tekst); text-align: left; cursor: pointer; font: inherit; }
+.zakup-karta:hover { border-color: var(--c-ramka-najazd); }
+.zakup-karta[aria-checked="true"] { border-color: var(--c-akcent); box-shadow: 0 0 0 1px var(--c-akcent); }
+.zakup-karta-nazwa { font-weight: var(--g-mocny); font-size: var(--t-md); }
+.zakup-karta-cena { font-size: var(--t-sm); color: var(--c-tekst-2); }
+.zakup p { margin: 0; }
+.zakup .ozn-wiersz { margin-top: 0; }
+.zakup .btn-generate.zakup-przycisk { width: 100%; flex: 1 1 100%; justify-content: center; }
+.zakup-przycisk:disabled { opacity: .55; cursor: not-allowed; }
+.zakup-przycisk.btn-working { cursor: progress; }
+.zakup-test { margin: 0 0 var(--s-12); border: 1px solid var(--c-linia); border-radius: var(--r-md); }
+.zakup-stan { display: flex; flex-direction: column; gap: var(--s-8); align-items: flex-start; }
+.zakup-stan p { margin: 0; }
+/* ekran Konto (A7) */
+.modal.konto-okno { width: 640px; }
+.konto-tresc { display: flex; flex-direction: column; gap: var(--s-16); }
+.konto-kto { display: flex; align-items: center; gap: var(--s-8); }
+.konto-kto b { display: block; overflow-wrap: anywhere; }
+.konto-kto small { display: block; font-size: var(--t-xs); }
+.konto-sekcja { padding-top: var(--s-12); border-top: 1px solid var(--c-linia); }
+.konto-sekcja h4 { margin: 0 0 var(--s-8); font-size: var(--t-md); font-weight: var(--g-mocny); color: var(--c-tekst); }
+.konto-sekcja > p { margin: 0 0 var(--s-8); }
+.konto-akcje { display: flex; flex-wrap: wrap; gap: var(--s-8); margin: var(--s-8) 0; }
+.konto-akcje .btn-generate { width: auto; }
+.konto-akcje a.btn-secondary { text-decoration: none; }
+.btn-secondary.niszcz { color: var(--c-blad); }
+.konto-klucz { padding: var(--s-8) 0; border-bottom: 1px solid var(--c-linia); }
+.konto-klucz-glowa { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-8); flex-wrap: wrap; }
+.konto-klucz-glowa small { display: block; font-size: var(--t-xs); color: var(--c-tekst-3); }
+.konto-klucz-stan { font-size: var(--t-xs); color: var(--c-tekst-2); }
+.konto-klucz-akcje { display: flex; flex-wrap: wrap; gap: var(--s-6); margin-top: var(--s-6); }
+.konto-klucz-zmiana[hidden] { display: none; }
+/* pole klucza: kreator, Konto, Grafika i Audio */
+.byok-pole { margin: var(--s-12) 0 var(--s-4); }
+.byok-etykieta { display: block; margin: var(--s-8) 0 var(--s-4); font-size: var(--t-sm); font-weight: var(--g-mocny); color: var(--c-tekst); }
+.byok-pole-opis { margin: 0 0 var(--s-6); }
+.byok-wiersz { display: flex; flex-wrap: wrap; gap: var(--s-6); }
+.byok-wiersz input { flex: 1 1 220px; min-width: 0; font-family: var(--f-mono); font-size: var(--t-sm); }
+.byok-wiersz .btn-generate { width: auto; }
+.byok-wynik { display: flex; align-items: flex-start; gap: var(--s-6); margin: var(--s-6) 0 0; }
+.byok-wynik:empty { margin: 0; }
+.byok-wynik .ikona { flex: none; margin-top: 2px; }
+.byok-wynik-ok { color: var(--c-sukces); }
+.byok-wynik-blad { color: var(--c-blad); }
+.byok-koszt, .byok-alarm { display: flex; gap: var(--s-8); align-items: flex-start; margin: 0 0 var(--s-8); padding: var(--s-8) var(--s-12); border-radius: var(--r-md); font-size: var(--t-sm); line-height: 1.5; }
+.byok-koszt { background: var(--c-panel); border: 1px solid var(--c-linia); color: var(--c-tekst-2); }
+.byok-alarm { background: var(--c-blad-tlo); border: 1px solid var(--c-blad-ramka); color: var(--c-tekst); }
+.byok-koszt > .ikona, .byok-alarm > .ikona { flex: none; margin-top: 2px; }
+.byok-alarm > .ikona { color: var(--c-blad); }
+.byok-gdzie { margin: var(--s-8) 0; }
+.byok-kroki { margin: var(--s-8) 0; padding-left: var(--s-20); font-size: var(--t-sm); line-height: 1.55; color: var(--c-tekst-2); }
+.byok-kroki li + li { margin-top: var(--s-4); }
+.byok-jest { display: flex; gap: var(--s-6); align-items: center; margin: 0 0 var(--s-8); }
+.byok-podpowiedzi { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-6); margin: var(--s-8) 0; }
+#start-tresc input[type=text], #start-tresc textarea { width: 100%; box-sizing: border-box; }
+.platnosc-tresc { display: flex; gap: var(--s-8); align-items: flex-start; }
+/* .modal p (komponenty) wygrywal z .tekst-pomoc: drobny druk w kreatorze, Koncie i zakupie zostaje drobny */
+#start-tresc p.tekst-pomoc, .konto-tresc p.tekst-pomoc, .zakup p.tekst-pomoc, .zakup-stan p.tekst-pomoc { font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
+#start-tresc p.byok-wynik-ok, .konto-tresc p.byok-wynik-ok { color: var(--c-sukces); }
+#start-tresc p.byok-wynik-blad, .konto-tresc p.byok-wynik-blad, .zakup p.stan-blad { color: var(--c-blad); }
+/* Grafika i Audio bez klucza: karta podlaczenia (A8); w Grafice zamiast formularza */
+.modul-klucz { display: flex; flex-direction: column; gap: var(--s-4); margin: 0 0 var(--s-16); padding: var(--s-12); border: 1px solid var(--c-akcent-ramka); border-radius: var(--r-md); background: var(--c-akcent-tlo); }
+.modul-klucz .konto-karta-tytul { display: flex; gap: var(--s-6); align-items: flex-start; }
+.modul-klucz .konto-karta-tytul > .ikona { flex: none; margin-top: 2px; color: var(--c-akcent-mocny); }
+.modul-klucz p { margin: 0; }
+.modul-klucz p.tekst-pomoc { font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-2); }
+#img-panel.bez-klucza .modul-ustawienia > :not(.modul-klucz) { display: none; }
+/* konto jednoosobowe: jedna lista "Twoja baza wiedzy", bez wyboru prywatna/wspolna (UX8-23, A10) */
+body.konto-samoobslugowe #bazas-zakres { display: none; }
+}
 </style>
 </head>
 <body>
@@ -3623,6 +3748,9 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
               <div class="grupa-backdrop" onclick="przelaczGrupe('pobierz')"></div>
               <div class="grupa-menu" id="grupa-pobierz-menu">
                 <div class="arkusz-tytul"><span data-i18n="grupa-pobierz">Eksport</span><button type="button" class="przycisk-ikona arkusz-zamknij" onclick="zamknijGrupyPaska()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+                <!-- R9-D (PR8-19): widoczna informacja o AI w plikach i przy kopiowaniu (domyslnie wylaczona, M-5) -->
+                <button type="button" class="btn-secondary menu-przelacznik ozn-wiersz grupa-opcja" id="ozn-tekst-btn" data-oznaczenie="tekst" role="switch" aria-checked="false" aria-describedby="ozn-tekst-opis" onclick="ustawWyborOznaczenia('tekst', this.getAttribute('aria-checked') !== 'true')"><svg class="ikona" aria-hidden="true"><use href="#i-info"/></svg><span class="menu-przelacznik-tekst"><span data-i18n="ozn-tekst-przelacznik">Dodaj informację o AI</span><small id="ozn-tekst-opis" data-i18n="ozn-tekst-opis">Zdanie na końcu tekstu w TXT, DOCX, PDF i przy kopiowaniu</small></span><span class="menu-przelacznik-tor" aria-hidden="true"></span></button>
+                <div class="grupa-sep grupa-opcja"></div>
                 <button class="btn-secondary" id="dl-btn" style="display:none" onclick="dlTxt()"><svg class="ikona" aria-hidden="true"><use href="#i-file-down"/></svg>TXT</button>
                 <button class="btn-secondary" id="dl-docx-btn" style="display:none" onclick="dlDocx()"><svg class="ikona" aria-hidden="true"><use href="#i-file-down"/></svg>DOCX</button>
                                 <button class="btn-secondary" id="dl-pdf-btn" style="display:none" onclick="dlPdf()"><svg class="ikona" aria-hidden="true"><use href="#i-file-down"/></svg>PDF</button>
@@ -3644,6 +3772,8 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
             <div class="repurpose-body">
               <div id="repurpose-loading" class="seo-loading" data-i18n="rp-loading">Tworzę przeróbkę…</div>
               <textarea class="repurpose-out" id="repurpose-out" aria-label="Gotowa przeróbka" data-i18n-label="lbl-repurpose-out" style="display:none"></textarea>
+              <!-- R9-D (PR8-19): krotka etykieta "Przygotowano z pomoca AI." przy kopiowaniu przerobki -->
+              <label class="ozn-wiersz" for="ozn-tekst-rp"><input type="checkbox" id="ozn-tekst-rp" data-oznaczenie="tekst" onchange="ustawWyborOznaczenia('tekst', this.checked)"><span data-i18n="ozn-rp-przelacznik">Dopisz przy kopiowaniu krótką informację o AI</span></label>
             </div>
           </div>
 
@@ -3665,7 +3795,7 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
                 <option value="organization">Organization</option>
                 <option value="service">Service</option>
                 <option value="localbusiness">LocalBusiness</option>
-                <option value="article">Article + Person</option>
+                <option value="article">Article</option>
                 <option value="breadcrumb">BreadcrumbList</option>
               </select>
             </div>
@@ -3737,6 +3867,8 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
               <div class="szkielet-kartka" aria-hidden="true"><span class="sz sz-h1"></span><span class="sz sz-h1 sz-krotki"></span><span class="sz sz-odstep"></span><span class="sz"></span><span class="sz"></span><span class="sz sz-krotki"></span><span class="sz sz-h2"></span><span class="sz"></span><span class="sz"></span><span class="sz"></span><span class="sz sz-krotki"></span></div>
             </div>
             <div class="article" id="article"></div>
+            <!-- R9-D (art. 50 ust. 1 AI Act, prawo pkt 1): przy kazdym tekscie widac, ze powstal z pomoca AI -->
+            <p class="tekst-pomoc ai-info" id="ai-info-artykul" hidden><svg class="ikona" aria-hidden="true"><use href="#i-info"/></svg><span><span data-i18n="ozn-artykul-info">Ten tekst powstał z pomocą AI. Sprawdź fakty przed publikacją.</span> <span data-ozn-meta="tekst" data-i18n="ozn-artykul-info-meta">Pobrane pliki mają oznaczenie AI w metadanych.</span></span></p>
           </div>
           </div>
           <aside class="inspektor" id="inspektor" hidden aria-label="Kontrola tekstu" data-i18n-label="ins-etykieta">
@@ -4424,11 +4556,27 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
   <div class="modal" style="width:420px">
     <div class="modal-head"><h3 id="pub-modal-title">Publikuj w CMS</h3><button class="modal-close" onclick="closeWpPublishModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
     <div class="field" style="margin-bottom:14px"><label for="wp-category" class="field-label">Tagi / kategoria (opcjonalnie)</label><input type="text" id="wp-category" placeholder="e-commerce, logistyka..." /></div>
+    <!-- R9-D (PR8-19, art. 50 ust. 4 AI Act): widoczna informacja o AI pod wpisem i przypomnienie o obowiazku publikujacego -->
+    <label class="ozn-wiersz ozn-wiersz-ramka" for="ozn-tekst-cms"><input type="checkbox" id="ozn-tekst-cms" data-oznaczenie="tekst" onchange="ustawWyborOznaczenia('tekst', this.checked)"><span><b data-i18n="ozn-cms-przelacznik">Dodaj informację o AI na końcu wpisu</b><small id="ozn-cms-przypomnienie"><span data-i18n="ozn-cms-przypomnienie">Jeśli publikujesz tekst, który informuje o sprawach publicznych (np. zdrowie, finanse, polityka), a nikt w Twojej redakcji go nie sprawdził merytorycznie, musisz zaznaczyć, że powstał z pomocą AI.</span> <a class="link-akcent" id="ozn-cms-wiecej" href="https://content-ai.net/ai-act/" target="_blank" rel="noopener" data-i18n="ozn-wiecej">Więcej</a></small></span></label>
+    <p class="tekst-pomoc" id="ozn-cms-drupal" hidden data-i18n="ozn-cms-drupal">Drupal zachowa oznaczenie AI w kodzie wpisu przy formacie full_html. Format basic_html je usuwa.</p>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn-secondary" onclick="publishToCms('draft')" data-i18n="btn-save-draft" data-ikona="save"><svg class="ikona" aria-hidden="true"><use href="#i-save"/></svg>Zapisz jako szkic</button>
       <button class="btn-generate" style="width:auto" onclick="publishToCms('publish')"><svg class="ikona" aria-hidden="true"><use href="#i-rocket"/></svg>Opublikuj</button>
     </div>
     <div class="tekst-pomoc" id="wp-pub-result" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- R9-D (D-08, prawo 3.5): pytanie przed pobraniem grafiki bez napisu AI -->
+<div class="overlay" id="ozn-grafika-modal" onclick="if(event.target===this)odpowiedzOGrafice(null)">
+  <div class="modal" style="width:460px">
+    <div class="modal-head"><h3 id="ozn-grafika-tytul" data-i18n="ozn-grafika-pytanie">Czy grafika przedstawia prawdziwe osoby, miejsca albo zdarzenia?</h3><button class="modal-close" onclick="odpowiedzOGrafice(null)"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+    <p class="tekst-zwykly" style="margin:0 0 10px" data-i18n="ozn-grafika-pytanie-opis">Jeśli tak i ktoś mógłby uznać ją za prawdziwą, przed publikacją trzeba zaznaczyć, że powstała z pomocą AI (AI Act, art. 50 ust. 4). Możemy dodać w rogu napis „Grafika wygenerowana przez AI”. Informacja o AI w metadanych pliku jest zawsze.</p>
+    <p class="tekst-pomoc" style="margin:0 0 16px"><a class="link-akcent" id="ozn-grafika-wiecej" href="https://content-ai.net/ai-act/" target="_blank" rel="noopener" data-i18n="ozn-wiecej-ai-act">Więcej o oznaczaniu treści AI</a></p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+      <button type="button" class="btn-secondary" onclick="odpowiedzOGrafice(false)" data-i18n="ozn-grafika-bez">Nie, pobierz bez napisu</button>
+      <button type="button" class="btn-generate" style="width:auto" onclick="odpowiedzOGrafice(true)" data-i18n="ozn-grafika-z">Tak, pobierz z napisem</button>
+    </div>
   </div>
 </div>
 
@@ -4679,9 +4827,12 @@ body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: abso
                   <div class="tekst-zwykly" id="img-result-label"></div>
                   <div class="tekst-pomoc" id="img-result-size"></div>
                   <div class="tekst-pomoc" id="img-result-hint"></div>
+                  <!-- R9-D (art. 50 AI Act): informacja przy wyniku i przelacznik napisu na pobranym pliku -->
+                  <div class="tekst-pomoc ai-info" id="img-ai-info"><svg class="ikona" aria-hidden="true"><use href="#i-info"/></svg><span><span data-i18n="ozn-grafika-info">Grafikę wygenerowała AI (OpenAI).</span> <span data-ozn-meta="grafika" data-i18n="ozn-grafika-info-meta">Pobrany plik ma oznaczenie AI w metadanych.</span></span></div>
+                  <label class="ozn-wiersz" for="ozn-grafika"><input type="checkbox" id="ozn-grafika" data-oznaczenie="grafika" onchange="ustawWyborOznaczenia('grafika', this.checked)"><span data-i18n="ozn-grafika-przelacznik">Napis „Grafika wygenerowana przez AI” na pobranym pliku</span></label>
                 </div>
                 <div class="img-wynik-akcje">
-                  <a class="btn-generate" id="img-download-link" href="#" download><span data-i18n="img-download-btn" data-ikona="download"><svg class="ikona" aria-hidden="true"><use href="#i-download"/></svg>Pobierz PNG</span></a>
+                  <a class="btn-generate" id="img-download-link" href="#" download onclick="return pobierzGrafikeAI(event, this)"><span data-i18n="img-download-btn" data-ikona="download"><svg class="ikona" aria-hidden="true"><use href="#i-download"/></svg>Pobierz PNG</span></a>
                   <button type="button" class="btn-secondary" id="img-copy-btn" onclick="imgCopyResult()"><span data-i18n="img-copy-btn-lbl" data-ikona="clipboard-list"><svg class="ikona" aria-hidden="true"><use href="#i-clipboard-list"/></svg>Kopiuj</span></button>
                   <button type="button" class="btn-secondary" onclick="generateImage()"><span data-i18n="img-retry" data-ikona="refresh-cw"><svg class="ikona" aria-hidden="true"><use href="#i-refresh-cw"/></svg>Ponów</span></button>
                 </div>
@@ -4760,6 +4911,8 @@ var magazyn = (function () {
     var m = document.querySelector('meta[name="cai-konto"]');
     if (m && m.content && !/^WSTAW/.test(m.content)) konto = m.content;
   } catch (e) {}
+  // R9-D (ARCH8-24): identyfikator z /konto.js wygrywa; meta cai-konto (starsza strona z miejscem na konto) to zapas.
+  if (typeof window.CAI_KONTO === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(window.CAI_KONTO)) konto = window.CAI_KONTO;
   var prefiks = konto ? 'u:' + konto + ':' : '';
   var WSPOLNE = { 'cai_lang': 1, 'cai-dark': 1 };
   var klucz = function (n) { return WSPOLNE[n] ? n : prefiks + n; };
@@ -4844,20 +4997,24 @@ function pokazPowiadomienie(tekst, rodzaj, czas) {
 // Sekrety konta (klucze API, hasla CMS) znikaja z przegladarki przy wylogowaniu -
 // historia, szkic i ustawienia zostaja na swoim miejscu.
 var SEKRETY_KONTA = /^(cai_key_|cai_klucz_)|^(cai-wp|cai-drupal)$/;
-function usunSekretyKonta() {
+function usunSekretyKonta(zostawKlucze) {
   try {
     var pref = magazyn.konto ? 'u:' + magazyn.konto + ':' : '';
     for (var i = localStorage.length - 1; i >= 0; i--) {
       var k = localStorage.key(i);
       if (!k || (pref && k.indexOf(pref) !== 0)) continue;
+      // R9-D (M-10): "Wyloguj sie" na koncie z wlasnymi kluczami zostawia klucze na tym urzadzeniu.
+      if (zostawKlucze && /^cai_klucz_/.test(pref ? k.slice(pref.length) : k)) continue;
       if (SEKRETY_KONTA.test(pref ? k.slice(pref.length) : k)) localStorage.removeItem(k);
     }
   } catch (e) { console.warn('[wyloguj] nie usunieto sekretow:', e && e.name); }
 }
-function wyloguj() {
+function wyloguj(opcje) {
+  // R9-D (UX8-09, M-10): konto z wlasnymi kluczami najpierw wybiera, co z kluczami na tym urzadzeniu.
+  if (!opcje && typeof window.zapytajPrzyWylogowaniu === 'function' && window.zapytajPrzyWylogowaniu()) return;
   // Poprawki z trybu Edytuj do historii, zanim strona zniknie (kod-04).
   if (editMode) toggleEdit();
-  usunSekretyKonta();
+  usunSekretyKonta(!!(opcje && opcje.zostawKlucze));
   // POST, nie przejscie pod adres: wylogowania nie da sie wywolac obrazkiem
   // ani linkiem z obcej strony.
   const f = document.createElement('form');
@@ -4946,6 +5103,8 @@ var I18N = {
     'audio-voices':'Liczba głosów','audio-engine':'Silnik głosu','au-eng-openai':'OpenAI','au-eng-eleven':'ElevenLabs','au-eng-web':'Przeglądarka',
     'audio-source':'Temat lub treść','audio-source-ph':'Wpisz temat albo wklej gotową treść…','audio-from-article':'Wczytaj artykuł','audio-file':'Plik audio do transkrypcji',
     'audio-gen-script':'Wygeneruj skrypt','audio-transcribe':'Transkrybuj','audio-script':'Skrypt (edytowalny)','audio-play':'Odtwórz','audio-dl':'Pobierz MP3','audio-hist':'Historia audio','audio-dl-docx':'Pobierz .docx',
+    'ozn-audio-info':'Nagranie czyta syntetyczny głos wygenerowany przez AI.','ozn-audio-info-meta':'Pobrany plik MP3 ma oznaczenie AI w metadanych.',
+    'ozn-audio-przelacznik':'Zacznij nagranie zapowiedzią, że czyta je syntetyczny głos','ozn-audio-glos':'Syntetyczny głos AI',
     // R5: zwijka, stopka, pusty stan i rodzaje w historii modulu audio
     'au-glosy-tytul':'Model i głosy','au-stopka-info':'Najpierw powstaje skrypt do poprawienia, potem audio.',
     'au-pusty-tytul':'Tu pojawi się skrypt','au-pusty-opis':'Skrypt możesz poprawić, zanim go odsłuchasz albo pobierzesz jako MP3.',
@@ -5195,6 +5354,10 @@ var I18N = {
     'msg-pdf-load-fail':'Nie udało się załadować biblioteki PDF. Sprawdź połączenie.',
     'msg-pdf-przygotowuje':'Przygotowuję PDF… Za pierwszym razem trwa to kilka sekund.',
     'msg-docx-error':'Nie udało się przygotować pliku DOCX. Spróbuj ponownie.',
+    'ozn-tekst-przelacznik':'Dodaj informację o AI','ozn-tekst-opis':'Zdanie na końcu tekstu w TXT, DOCX, PDF i przy kopiowaniu',
+    'ozn-wiecej':'Więcej','ozn-wiecej-ai-act':'Więcej o oznaczaniu treści AI',
+    'ozn-artykul-info':'Ten tekst powstał z pomocą AI. Sprawdź fakty przed publikacją.','ozn-artykul-info-meta':'Pobrane pliki mają oznaczenie AI w metadanych.',
+    'ozn-rp-przelacznik':'Dopisz przy kopiowaniu krótką informację o AI',
     'msg-no-article':'Najpierw wygeneruj artykuł.',
     'msg-bad-url':'Podaj pełny URL (https://…)',
     'msg-no-openai-key':'Brak klucza OpenAI. Wpisz go w menu ustawień → Klucze API.',
@@ -5510,6 +5673,18 @@ var I18N = {
     'err-uprawnienia':'Klucz API nie ma uprawnień do tej funkcji albo modelu. Sprawdź ustawienia klucza w panelu dostawcy AI.','btn-otworz-klucze':'Otwórz Klucze API',
     'err-klucz':'Dostawca AI odrzucił klucz API: jest nieprawidłowy, wyłączony albo wygasł. Sprawdź go w menu ustawień → Klucze API.',
     'btn-sprobuj-ponownie':'Spróbuj ponownie',
+    'err-brak-klucza':'Ta funkcja potrzebuje klucza {DOSTAWCA}. Dodaj go w Kluczach API, a potem spróbuj ponownie.','err-email-niepotwierdzony':'Najpierw potwierdź adres e-mail: link jest w wiadomości od Content AI.',
+    'err-zgoda-wymagana':'Zmieniliśmy regulamin. Przeczytaj i zaakceptuj nową wersję, żeby dalej korzystać z aplikacji.','err-limit-wydatkow-wlasny':'Zapytanie zatrzymał limit wydatków, który ustawiłeś w konsoli {DOSTAWCA}. Podnieś go albo poczekaj do nowego miesiąca.',
+    'err-limit-wydatkow-konta':'Twoje konto {DOSTAWCA} doszło do miesięcznego limitu wydatków dla swojego poziomu. Ponawianie nic nie da do początku miesiąca. Wyższy poziom zamówisz w konsoli dostawcy, w części Limits.',
+    'err-weryfikacja-openai':'OpenAI wymaga weryfikacji Twojej organizacji, zanim udostępni generowanie grafik. Zrób to w ustawieniach organizacji na platform.openai.com i spróbuj ponownie.',
+    'err-klucz-wlasny':'{DOSTAWCA} odrzucił Twój klucz API: jest błędny, usunięty albo wygasł. Utwórz nowy klucz w konsoli dostawcy i wklej go w Kluczach API.',
+    'err-srodki-wlasny':'Na Twoim koncie {DOSTAWCA} zabrakło środków albo płatność nie przeszła. Doładuj konto w części Billing konsoli dostawcy i spróbuj ponownie. To nie jest limit pakietu Content AI.',
+    'err-uprawnienia-wlasny':'Twój klucz {DOSTAWCA} nie ma dostępu do tej funkcji albo modelu. Sprawdź ustawienia klucza i obszaru roboczego w konsoli dostawcy.',
+    'err-rate-limit-wlasny':'{DOSTAWCA} chwilowo ogranicza liczbę zapytań z Twojego konta. Spróbuj ponownie za minutę. Nowe konta u dostawcy mają niższe limity, które rosną z czasem.',
+    'err-model-wlasny':'{DOSTAWCA} nie udostępnia Twojemu kluczowi modelu, którego używa aplikacja. Sprawdź dostęp do modeli w konsoli dostawcy.','err-limit-pakietu-zawsze':'Pula pakietu jest wykorzystana i się nie odnawia. Szczegóły są w oknie pakietu.',
+    'err-funkcja-poza-pakietem':'Ta funkcja nie wchodzi w Twój pakiet. Szczegóły są w oknie pakietu.','btn-podlacz-klucz':'Podłącz klucz {DOSTAWCA}','btn-wybierz-pakiet':'Wybierz pakiet',
+    'btn-wyslij-link':'Wyślij link ponownie','btn-rozliczenia':'Rozliczenia {DOSTAWCA}',
+    'btn-limity':'Limity {DOSTAWCA}',
     'err-json-modelu':'Model zwrócił odpowiedź w uszkodzonym formacie. Spróbuj jeszcze raz.',
     'wp-published':'opublikowano',
     'wp-draft':'zapisano jako szkic',
@@ -5522,6 +5697,13 @@ var I18N = {
     'page-title':'Content AI - Generator treści, grafik i audio',
     'img-copy-btn-lbl':'Kopiuj',
     'img-download-btn':'Pobierz PNG',
+    'ozn-grafika-info':'Grafikę wygenerowała AI (OpenAI).','ozn-grafika-info-meta':'Pobrany plik ma oznaczenie AI w metadanych.',
+    'ozn-grafika-przelacznik':'Napis „Grafika wygenerowana przez AI” na pobranym pliku',
+    'ozn-grafika-pytanie':'Czy grafika przedstawia prawdziwe osoby, miejsca albo zdarzenia?',
+    'ozn-grafika-pytanie-opis':'Jeśli tak i ktoś mógłby uznać ją za prawdziwą, przed publikacją trzeba zaznaczyć, że powstała z pomocą AI (AI Act, art. 50 ust. 4). Możemy dodać w rogu napis „Grafika wygenerowana przez AI”. Informacja o AI w metadanych pliku jest zawsze.',
+    'ozn-grafika-bez':'Nie, pobierz bez napisu','ozn-grafika-z':'Tak, pobierz z napisem',
+    'ozn-grafika-schowek':'Kopia w schowku nie zawiera oznaczenia AI. Aby je zachować, pobierz plik.',
+    'ozn-grafika-blad':'Nie udało się dodać napisu do grafiki. Spróbuj ponownie.',
     'img-step1-noref':'Krok 1 z 2: tworzenie promptu graficznego',
     'msg-no-api-resp':'Brak odpowiedzi z API. Sprawdź klucz API i połączenie.',
     'kb-na-serwerze':'Na serwerze','kb-wspolna':'Baza wspólna zespołu','kb-prywatna':'Twoja baza prywatna','kb-fragm':'fragm.','kb-lokalnie':'Tylko w tej przeglądarce','kb-przenies':'Przenieś na serwer','kb-dodano':'Dodano do bazy wiedzy na serwerze','kb-zostaje-lokalnie':'Dokument zapisano tylko w tej przeglądarce.','kb-przeniesiono':'Przeniesiono na serwer',
@@ -5532,10 +5714,42 @@ var I18N = {
     'spin-brak-sieci':'Brak internetu. Wynik odbiorę, gdy wróci połączenie.',
     'badge-historia':'z historii','hist-otworz':'Otwórz w generatorze',
     'msg-blad-prefiks':'Błąd:','menu-wyloguj':'Wyloguj się','menu-wyloguj-sub':'zakończ sesję na tym urządzeniu',
+    'konto-tytul':'Konto','konto-menu-title':'Konto i płatności','konto-menu-sub':'pakiet, klucze API, Twoje dane','wyl-tytul':'Wylogować się?','wyl-opis':'Zapamiętane klucze API zostają na tym urządzeniu także po wylogowaniu (najwyżej 30 dni) i inne konto ich nie odczyta. Jeśli to wspólny komputer, usuń je przy wylogowaniu.',
+    'wyl-usun':'Wyloguj i usuń klucze','wyl-zostaw':'Wyloguj się','plat-ok-tytul':'Płatność przyjęta','plat-zacznij':'Zacznij pisać','plat-oczekuje':'Czekamy na potwierdzenie płatności od Stripe. To zwykle kilka sekund; okno odświeży się samo.',
+    'plat-ok-tekst':'Pakiet {PAKIET} jest aktywny do {DATA}, potem odnowi się automatycznie. Potwierdzenie płatności Stripe wysłał na {EMAIL}.','plat-opoznienie-tytul':'Pakiet włącza się z opóźnieniem',
+    'plat-opoznienie':'Płatność dotarła, ale Stripe jeszcze nie potwierdził jej naszemu serwerowi. Zwykle trwa to kilka minut. Nie płać drugi raz: odśwież stronę za chwilę, a jeśli pakiet nadal nie działa, napisz na {EMAIL}.',
+    'plat-przerwana':'Płatność nie została dokończona i nic nie pobraliśmy. Pakiet możesz wybrać w każdej chwili.','plat-odnowienie-nieudane':'Nie udało się pobrać opłaty za pakiet {PAKIET}. Zaktualizuj kartę do {DATA}, żeby pakiet działał bez przerwy.',
+    'plat-kraj-tytul':'Płatność anulowana','plat-kraj':'Adres rozliczeniowy tej płatności jest spoza Unii Europejskiej ({KRAJ}), a pakiety sprzedajemy tylko klientom z Unii. Subskrypcję anulowaliśmy, a całą kwotę zwrócimy na kartę. Konto działa dalej w dotychczasowym pakiecie.',
+    'plat-odnowienie-przycisk':'Zaktualizuj kartę','plat-ustawienia-tytul':'Pakiet i płatności','plat-ustawienia-portal':'Zarządzaj subskrypcją','plat-ustawienia-portal-opis':'Otworzy się panel Stripe. Zmienisz w nim pakiet albo kartę, pobierzesz potwierdzenia płatności i anulujesz subskrypcję.',
+    'plat-ustawienia-rachunek':'Rachunek wystawiamy na prośbę: napisz na {EMAIL_KONTAKT} w ciągu 3 miesięcy od końca miesiąca płatności i podaj jej datę.','sub-aktywna':'Pakiet {PAKIET} jest aktywny. Następne odnowienie: {DATA}.',
+    'sub-anulowana':'Subskrypcja anulowana. Pakiet {PAKIET} działa do {DATA}, potem konto przejdzie na pakiet Darmowy.','sub-wygasla':'Pakiet {PAKIET} wygasł {DATA}. Konto działa w pakiecie Darmowym: historia tekstów i dokumenty zostają, a limity są takie jak w tym pakiecie.',
+    'sub-wznow':'Wznów subskrypcję',
+    'sub-wybierz':'Wybierz pakiet','pasek-test':'Tryb testowy płatności: karta testowa Stripe, bez prawdziwych pieniędzy.','pasek-sesja':'Sesja wygasła. Zaloguj się ponownie: temat i ustawienia briefu zostaną na miejscu.',
+    'pasek-zgoda':'Zmieniliśmy regulamin. Przeczytaj i zaakceptuj nową wersję, żeby dalej korzystać z aplikacji.','pasek-zgoda-akcja':'Przeczytaj i zaakceptuj',
+    'pasek-email':'Potwierdź adres {EMAIL}: link jest w wiadomości od Content AI.','pasek-zmien-adres':'Zmień adres','potw-ponow-ok':'Wysłaliśmy nowy link. Sprawdź skrzynkę, także folder ze spamem.',
+    'potw-ponow-czekaj':'Link można wysłać ponownie za {s} s.','potw-ponow-blad':'Nie udało się wysłać linku. Spróbuj ponownie za chwilę.','konto-klucze':'Klucze API',
+    'konto-klucze-opis':'Klucze trzyma tylko ta przeglądarka, w zaszyfrowanym ciasteczku przypisanym do Twojego konta. Serwer przekazuje je dostawcy przy każdym zapytaniu i nie zapisuje ich.',
+    'konto-klucze-opis-lokalnie':'Klucze zapisują się tylko w tej przeglądarce. Serwer przekazuje je dostawcy przy każdym zapytaniu i niczego nie zapisuje.',
+    'konto-klucz-ustawiony':'Ustawiony, kończy się na {KONCOWKA}','konto-klucz-do':'zapamiętany do {DATA}','konto-klucz-sesja':'do zamknięcia przeglądarki','konto-klucz-brak':'Nie ustawiony',
+    'konto-klucz-odrzucony':'Odrzucony przez dostawcę: wklej nowy','konto-klucz-dziala':'Klucz działa.','konto-sprawdz':'Sprawdź','konto-zmien':'Zmień','konto-dodaj':'Dodaj klucz',
+    'konto-klucz-niewazny':'Nieważny na tym urządzeniu: wklej go ponownie',
+    'konto-usun-klucz':'Usuń klucz','konto-usun-blad':'Nie udało się usunąć klucza. Spróbuj ponownie.','konto-klucz-usuniety':'Klucz {DOSTAWCA} usunięty z tego urządzenia.',
+    'konto-email-niepotwierdzony':'adres e-mail niepotwierdzony','konto-pula-jednorazowa':'pula jednorazowa','konto-licznik-wraca':'licznik wraca {DATA}','konto-szczegoly-pakietu':'Szczegóły pakietu',
+    'konto-odstapienie':'Możesz odstąpić od umowy do {DATA}.','konto-odstap':'Odstąp od umowy','konto-odstapienie-14':'Od umowy możesz odstąpić w ciągu 14 dni od zakupu.',
+    'konto-odstapienie-zlozone':'Oświadczenie o odstąpieniu od umowy dotarło do nas {DATA}.','konto-odstapienie-zwrot':'Zwrot: {KWOTA} na kartę użytą do płatności.',
+    'konto-ustawienia-serwera':'Ustawienia konta','konto-firma':'Firma i marka','konto-firma-opis':'Nazwa, strona i opis oferty trafiają do każdego artykułu. Styl pisania ustawisz w Głosie marki.',
+    'konto-oznaczenia':'Oznaczenia AI','konto-oznaczenia-opis':'Pliki zawsze niosą informację o AI w metadanych. Tu włączasz widoczne etykiety dla czytelników; to samo zmienisz przy eksporcie i publikacji.',
+    'konto-ozn-tekst':'Zdanie o AI na końcu tekstu (pliki, schowek, publikacja w CMS)','konto-ozn-grafika':'Napis „Grafika wygenerowana przez AI” na pobranych grafikach',
+    'konto-ozn-audio':'Zapowiedź na początku nagrania, że czyta je syntetyczny głos','konto-dane':'Twoje dane','konto-dane-opis':'Dane konta i bazy wiedzy pobierzesz z serwera. Historia artykułów jest tylko w tej przeglądarce: wyeksportuj ją, zanim zmienisz urządzenie.',
+    'konto-pobierz-dane':'Pobierz moje dane','konto-eksport-historii':'Eksportuj historię','konto-sekcja-konto':'Konto','konto-email-haslo':'E-mail, hasło i wylogowanie wszędzie',
+    'konto-usun':'Usuń konto',
     'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Te dokumenty zapisano skrócone i po odświeżeniu będą krótsze: {lista}. Przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
     'ver-poprawiony-hybryda':'Poprawiony SEO+AIO','ver-poprawiony-aio':'Poprawiony AIO','ver-poprawiony-seo':'Poprawiony SEO','ver-wariant':'Wariant',
     'msg-artykul-uciety':'Tekst został ucięty na limicie długości. Zmniejsz długość albo wygeneruj ponownie.',
     'msg-cms-https':'Adres CMS musi zaczynać się od https://. Przeglądarka nie wysyła danych z tej aplikacji na adres http://.',
+    'ozn-cms-przelacznik':'Dodaj informację o AI na końcu wpisu',
+    'ozn-cms-przypomnienie':'Jeśli publikujesz tekst, który informuje o sprawach publicznych (np. zdrowie, finanse, polityka), a nikt w Twojej redakcji go nie sprawdził merytorycznie, musisz zaznaczyć, że powstał z pomocą AI.',
+    'ozn-cms-drupal':'Drupal zachowa oznaczenie AI w kodzie wpisu przy formacie full_html. Format basic_html je usuwa.',
     'msg-wp-cors':'sprawdź adres i czy WordPress przyjmuje zapytania z tej domeny (CORS).',
     'msg-drupal-cors':'może brakować nagłówka CORS. Dodaj w Drupalu Response Headers albo użyj modułu CORS.',
     'msg-premium-uciety':'Samokorekta nie zmieściła się w limicie długości, więc zostaje tekst przed korektą. Spróbuj krótszej długości.',
@@ -5616,6 +5830,8 @@ var I18N = {
     'audio-voices':'Number of voices','audio-engine':'Voice engine','au-eng-openai':'OpenAI','au-eng-eleven':'ElevenLabs','au-eng-web':'Browser',
     'audio-source':'Topic or content','audio-source-ph':'Type a topic or paste ready content…','audio-from-article':'Load article','audio-file':'Audio file to transcribe',
     'audio-gen-script':'Generate script','audio-transcribe':'Transcribe','audio-script':'Script (editable)','audio-play':'Play','audio-dl':'Download MP3','audio-hist':'Audio history','audio-dl-docx':'Download .docx',
+    'ozn-audio-info':'This recording is read by an AI-generated synthetic voice.','ozn-audio-info-meta':'The downloaded MP3 carries an AI label in its metadata.',
+    'ozn-audio-przelacznik':'Start the recording with a note that a synthetic voice is reading it','ozn-audio-glos':'AI synthetic voice',
     // R5: collapsible section, footer, empty state and history types of the audio module
     'au-glosy-tytul':'Model and voices','au-stopka-info':'You get an editable script first, then the audio.',
     'au-pusty-tytul':'Your script will appear here','au-pusty-opis':'You can edit the script before you listen to it or download it as MP3.',
@@ -5865,6 +6081,10 @@ var I18N = {
     'msg-pdf-load-fail':'Failed to load PDF library. Check your connection.',
     'msg-pdf-przygotowuje':'Preparing the PDF… The first time takes a few seconds.',
     'msg-docx-error':'Could not create the DOCX file. Please try again.',
+    'ozn-tekst-przelacznik':'Add AI disclosure','ozn-tekst-opis':'A sentence at the end of the text in TXT, DOCX, PDF and when copying',
+    'ozn-wiecej':'Learn more','ozn-wiecej-ai-act':'More about labelling AI content',
+    'ozn-artykul-info':'This text was created with AI. Check the facts before publishing.','ozn-artykul-info-meta':'Downloaded files carry an AI label in their metadata.',
+    'ozn-rp-przelacznik':'Add a short AI note when copying',
     'msg-no-article':'Generate an article first.',
     'msg-bad-url':'Provide a full URL (https://…)',
     'msg-no-openai-key':'Missing OpenAI key. Enter it in the settings menu → API keys.',
@@ -6057,10 +6277,42 @@ var I18N = {
     'spin-brak-sieci':'No internet connection. The result will be collected when the connection is back.',
     'badge-historia':'from history','hist-otworz':'Open in generator',
     'msg-blad-prefiks':'Error:','menu-wyloguj':'Sign out','menu-wyloguj-sub':'end the session on this device',
+    'konto-tytul':'Account','konto-menu-title':'Account and billing','konto-menu-sub':'plan, API keys, your data','wyl-tytul':'Sign out?','wyl-opis':'Remembered API keys stay on this device after you sign out (for up to 30 days), and no other account can read them. If this is a shared computer, remove them when you sign out.',
+    'wyl-usun':'Sign out and remove keys','wyl-zostaw':'Sign out','plat-ok-tytul':'Payment received','plat-zacznij':'Start writing','plat-oczekuje':'We are waiting for Stripe to confirm the payment. This usually takes a few seconds; this window will refresh on its own.',
+    'plat-ok-tekst':'Your {PAKIET} plan is active until {DATA} and then renews automatically. Stripe has sent a payment confirmation to {EMAIL}.','plat-opoznienie-tytul':'Your plan is taking longer to activate',
+    'plat-opoznienie':'The payment went through, but Stripe has not confirmed it to our server yet. This usually takes a few minutes. Do not pay again: reload the page in a moment, and if the plan still does not work, write to {EMAIL}.',
+    'plat-przerwana':'The payment was not completed and nothing was charged. You can choose a plan at any time.','plat-odnowienie-nieudane':'We could not collect the payment for your {PAKIET} plan. Update your card by {DATA} to keep the plan running without a break.',
+    'plat-kraj-tytul':'Payment cancelled','plat-kraj':'The billing address of this payment is outside the European Union ({KRAJ}), and we sell plans only to customers in the EU. We have cancelled the subscription and will refund the full amount to your card. Your account stays on its current plan.',
+    'plat-odnowienie-przycisk':'Update card','plat-ustawienia-tytul':'Plan and billing','plat-ustawienia-portal':'Manage subscription','plat-ustawienia-portal-opis':'This opens the Stripe portal, where you can change your plan or card, download payment confirmations and cancel your subscription.',
+    'plat-ustawienia-rachunek':'We issue a receipt on request: write to {EMAIL_KONTAKT} within 3 months of the end of the month of payment, giving its date.',
+    'sub-aktywna':'Your {PAKIET} plan is active. Next renewal: {DATA}.','sub-anulowana':'Subscription cancelled. Your {PAKIET} plan stays active until {DATA}, then your account moves to the Free plan.',
+    'sub-wznow':'Resume subscription',
+    'sub-wygasla':'Your {PAKIET} plan ended on {DATA}. Your account is now on the Free plan: your text history and documents stay, and that plan\'s limits apply.',
+    'sub-wybierz':'Choose a plan','pasek-test':'Payment test mode: Stripe test card, no real money.','pasek-sesja':'Your session has expired. Sign in again: the topic and brief settings will stay in place.',
+    'pasek-zgoda':'We have changed the Terms of Service. Read and accept the new version to keep using the app.','pasek-zgoda-akcja':'Read and accept','pasek-email':'Confirm the address {EMAIL}: the link is in the message from Content AI.',
+    'pasek-zmien-adres':'Change address','potw-ponow-ok':'We have sent a new link. Check your inbox, including the spam folder.','potw-ponow-czekaj':'You can send the link again in {s} s.',
+    'potw-ponow-blad':'Could not send the link. Try again in a moment.','konto-klucze':'API keys','konto-klucze-opis':'Only this browser keeps the keys, in an encrypted cookie tied to your account. The server passes them to the provider with each request and does not store them.',
+    'konto-klucze-opis-lokalnie':'The keys are stored only in this browser. The server passes them to the provider with each request and stores nothing.','konto-klucz-ustawiony':'Set, ends in {KONCOWKA}',
+    'konto-klucz-do':'remembered until {DATA}','konto-klucz-sesja':'until you close the browser','konto-klucz-brak':'Not set','konto-klucz-odrzucony':'Rejected by the provider: paste a new one',
+    'konto-klucz-niewazny':'No longer valid on this device: paste it again',
+    'konto-klucz-dziala':'The key works.','konto-sprawdz':'Check','konto-zmien':'Change','konto-dodaj':'Add key','konto-usun-klucz':'Remove key','konto-usun-blad':'Could not remove the key. Try again.',
+    'konto-klucz-usuniety':'{DOSTAWCA} key removed from this device.','konto-email-niepotwierdzony':'e-mail address not confirmed','konto-pula-jednorazowa':'one-off allowance',
+    'konto-licznik-wraca':'counter resets on {DATA}','konto-szczegoly-pakietu':'Plan details','konto-odstapienie':'You can withdraw from the contract until {DATA}.',
+    'konto-odstap':'Withdraw from the contract','konto-odstapienie-14':'You can withdraw from the contract within 14 days of purchase.','konto-ustawienia-serwera':'Account settings',
+    'konto-odstapienie-zlozone':'We received your notice of withdrawal from the contract on {DATA}.','konto-odstapienie-zwrot':'Refund: {KWOTA} to the card used for the payment.',
+    'konto-firma':'Company and brand','konto-firma-opis':'The name, website and description of your offer go into every article. Set your writing style in Brand voice.',
+    'konto-oznaczenia':'AI labels','konto-oznaczenia-opis':'Files always carry an AI note in their metadata. Here you turn on visible labels for readers; you can change the same when exporting and publishing.',
+    'konto-ozn-tekst':'A sentence about AI at the end of the text (files, clipboard, CMS publishing)','konto-ozn-grafika':'“AI-generated image” caption on downloaded images',
+    'konto-ozn-audio':'A note at the start of a recording that a synthetic voice is reading it','konto-dane':'Your data','konto-dane-opis':'Download your account and knowledge base data from the server. Article history is only in this browser: export it before you change devices.',
+    'konto-pobierz-dane':'Download my data','konto-eksport-historii':'Export history','konto-sekcja-konto':'Account','konto-email-haslo':'E-mail, password and signing out everywhere',
+    'konto-usun':'Delete account',
     'msg-magazyn-pelny':'Browser storage is full. These documents were saved shortened and will be shorter after a refresh: {lista}. Move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
     'ver-poprawiony-hybryda':'Improved SEO+AIO','ver-poprawiony-aio':'Improved AIO','ver-poprawiony-seo':'Improved SEO','ver-wariant':'Variant',
     'msg-artykul-uciety':'The text was cut off at the length limit. Reduce the length or generate again.',
     'msg-cms-https':'The CMS address must start with https://. The browser does not send data from this app to an http:// address.',
+    'ozn-cms-przelacznik':'Add an AI disclosure at the end of the post',
+    'ozn-cms-przypomnienie':'If you publish a text that informs the public on matters of public interest (e.g. health, finance, politics) and no one in your editorial team has reviewed its substance, you must disclose that it was created with AI.',
+    'ozn-cms-drupal':'Drupal keeps the AI label in the post code with the full_html format. The basic_html format removes it.',
     'msg-wp-cors':'check the address and whether WordPress accepts requests from this domain (CORS).',
     'msg-drupal-cors':'the CORS header may be missing. Add Response Headers in Drupal or use the CORS module.',
     'msg-premium-uciety':'The self-review did not fit within the length limit, so the text before the review stays. Try a shorter length.',
@@ -6102,6 +6354,13 @@ var I18N = {
     'link-suggest-prefix':'Consider linking','link-suggest-at':'at words:',
     'gap-still-missing':'Still missing topics','gap-szukam':'Finding sources and writing sections…','gap-bez-zrodel':'New sections need sources. The knowledge base is empty and web search is off, so these topics cannot be covered without inventing facts.','gap-wlacz-siec':'Turn on web search and add','gap-konkurencja':'competitor','gap-konkurencja-title':'A topic about a competing brand or product. Unchecked by default: in brand content this is your call.','gap-po-poprawie':'Score from the added sections. Refresh if the model should rate the whole text again.','gap-inny-artykul':'The added sections were for the previous article, so they were not inserted.','gap-pusto':'The model returned no new sections. Please try again.','gap-dopisane':'Sections added: {n}. See the Gaps tab for the result.','gap-serp-blad':'The SERP analysis failed during generation, so there is nothing to compare the text with. Generate the article again with SERP analysis on.','serp-blad-toast':'The SERP analysis failed. The article is being written without it.','gap-pkt':'pts','gap-bez-zrodel-baza':'Topics not covered by the selected documents: {n}. No empty sections were added. Turn on web search or add material to the knowledge base.','gap-bez-zrodel-siec':'Topics without a source: {n}. No empty sections were added; they stay on the missing list. Add material to the knowledge base and try again.',
     'img-download-btn':'Download PNG','img-copy-btn-lbl':'Copy',
+    'ozn-grafika-info':'This image was generated by AI (OpenAI).','ozn-grafika-info-meta':'The downloaded file carries an AI label in its metadata.',
+    'ozn-grafika-przelacznik':'“AI-generated image” caption on the downloaded file',
+    'ozn-grafika-pytanie':'Does the image show real people, places or events?',
+    'ozn-grafika-pytanie-opis':'If it does and someone could take it for real, you must disclose before publishing that it was created with AI (AI Act, Article 50(4)). We can add an “AI-generated image” caption in the corner. The AI label in the file metadata is always there.',
+    'ozn-grafika-bez':'No, download without caption','ozn-grafika-z':'Yes, download with caption',
+    'ozn-grafika-schowek':'The clipboard copy does not keep the AI label. Download the file to keep it.',
+    'ozn-grafika-blad':'Could not add the caption to the image. Please try again.',
     'img-step1-noref':'Step 1 of 2: creating image prompt',
     'img-prompt-used':'Used prompt',
     'editor-done':'Done','edit-etykieta':'Editing','edit-cofnij':'Undo','edit-pasek':'Text editing','edit-podpowiedz':'Editing mode: tap the text to change it. Done saves your changes.','kb-words-suffix':'words','kb-tag-text':'Text','kb-tag-file':'File','hist-words-suffix':'words',
@@ -6202,6 +6461,17 @@ var I18N = {
     'err-uprawnienia':'The API key has no permission for this feature or model. Check the key settings in the AI provider dashboard.','btn-otworz-klucze':'Open API keys',
     'err-klucz':'The AI provider rejected the API key: it is invalid, disabled or expired. Check it in the settings menu → API keys.',
     'btn-sprobuj-ponownie':'Try again',
+    'err-brak-klucza':'This feature needs a {DOSTAWCA} key. Add it under API keys, then try again.','err-email-niepotwierdzony':'Confirm your e-mail address first: the link is in the message from Content AI.',
+    'err-zgoda-wymagana':'We have changed the Terms of Service. Read and accept the new version to keep using the app.','err-limit-wydatkow-wlasny':'The request was stopped by the spend limit you set in the {DOSTAWCA} console. Raise it or wait for the new month.',
+    'err-limit-wydatkow-konta':'Your {DOSTAWCA} account has reached the monthly spending cap for its tier. Retrying will not help until the new month. You can request a higher tier in the provider console, under Limits.',
+    'err-weryfikacja-openai':'OpenAI requires your organization to be verified before it allows image generation. Do this in your organization settings at platform.openai.com and try again.',
+    'err-klucz-wlasny':'{DOSTAWCA} rejected your API key: it is wrong, deleted or expired. Create a new key in the provider console and paste it into API keys.',
+    'err-srodki-wlasny':'Your {DOSTAWCA} account has run out of credit or a payment failed. Add credit under Billing in the provider console and try again. This is not a Content AI plan limit.',
+    'err-uprawnienia-wlasny':'Your {DOSTAWCA} key has no access to this feature or model. Check the key and workspace settings in the provider console.','err-rate-limit-wlasny':'{DOSTAWCA} is temporarily limiting requests from your account. Try again in a minute. New provider accounts have lower limits that grow over time.',
+    'err-model-wlasny':'{DOSTAWCA} does not give your key access to the model the app uses. Check model access in the provider console.','err-limit-pakietu-zawsze':'Your plan allowance is used up and does not reset. Details are in the plan window.',
+    'err-funkcja-poza-pakietem':'This feature is not part of your plan. Details are in the plan window.','btn-podlacz-klucz':'Connect your {DOSTAWCA} key','btn-wybierz-pakiet':'Choose a plan',
+    'btn-wyslij-link':'Send the link again','btn-rozliczenia':'{DOSTAWCA} billing',
+    'btn-limity':'{DOSTAWCA} limits',
     'err-json-modelu':'The model returned a malformed response. Please try again.',
     'gap-btn-select':'Select topics to add',
     'hist-default-name':'Article',
@@ -6512,7 +6782,7 @@ const BRAND = {
   services:    'Pierwsza usluga\nDruga usluga\nTrzecia usluga', // jedna na linie
   lines:       '',                                  // rozroznienie linii produktowych (puste = brak guardraila)
   parentOrganization: '',                           // grupa kapitalowa (opcjonalnie)
-  defaultAuthor: 'Redakcja',                        // autor domyslny w schema Article
+  defaultAuthor: '',                                // autor w schema Article (R9-D, PR8-20: pusty = wydawca, nie zmyslona "Redakcja")
   // ── Dane do schema.org (opcjonalne, zostaw puste jesli brak) ──
   taxID: '', vatID: '', foundingDate: '', numberOfEmployees: '',
   streetAddress: '', postalCode: '', addressLocality: '', addressCountry: 'PL',
@@ -6597,8 +6867,11 @@ function kontekstZWpisu(h) {
     temat: k.temat || (h && h.topic) || '', frazy: Array.isArray(k.frazy) ? k.frazy.slice() : [],
     typ: k.typ || (h && h.type) || '', jezyk: k.jezyk || nazwaJezykaZKodu(h && h.jezyk),
     ton: k.ton || '', dlugosc: k.dlugosc || '', extra: typeof k.extra === 'string' ? k.extra : null,
+    ai: k.ai && typeof k.ai === 'object' ? Object.assign({}, k.ai) : null, // R9-D: wpisy sprzed oznaczen = tresc z AI
   };
 }
+// R9-D (PR8-18): "Popraw wklejony tekst" przerabia tekst uzytkownika (compositeWithTrainedAlgorithmicMedia).
+let poprawaWklejonego = false;
 function kontekstArtykulu() {
   const art = document.getElementById('article');
   const h1El = art && art.querySelector('h1');
@@ -6671,6 +6944,7 @@ let kosztyApi = czytajJson('cai_koszty_v1', null) || { wszystkie: {}, wlasne: {}
 let kontoAdmin = false;
 function naWlasnymKluczu(dostawca) {
   if (!window.API_ENDPOINT_OVERRIDE) return true;
+  if (kontoNaWlasnychKluczach()) return true; // R9-D: klucz w ciasteczku HttpOnly, nie w magazynie
   return !!(magazyn.getItem('cai_klucz_' + dostawca) || '').trim();
 }
 function dodajKoszt(dostawca, kwota) {
@@ -6948,8 +7222,25 @@ function bladOdpowiedzi(dane, status, dostawca) {
   bl.dostawca = dostawca || '';
   // Odpowiedz pakietowa serwera: okno pakietu juz mowi, co sie stalo.
   if (dane && (dane.czynnosc || dane.funkcja)) bl.pakiet = true;
+  // R9-D: kod wlasnej odmowy serwera (X-CAI-Kod, rozdz. 5 projektu), dostawca i rodzaj puli (KOD8-04).
+  bl.kodCai = dane && typeof dane.kod === 'string' ? dane.kod : '';
+  bl.dostawcaKod = kodDostawcyBledu((dane && dane.dostawca) || dostawca);
+  if (!bl.dostawca && dane && typeof dane.dostawca === 'string') bl.dostawca = NAZWY_DOSTAWCOW[bl.dostawcaKod] || '';
+  if (dane && typeof dane.odnawialny === 'boolean') bl.odnawialny = dane.odnawialny;
+  if (KODY_PAKIETU.indexOf(bl.kodCai) >= 0) bl.pakiet = true;
   return bl;
 }
+// R9-D: dostawcy kluczy i kody odmow pakietowych serwera (okno pakietu otwiera tylko one, UX8-03).
+const NAZWY_DOSTAWCOW = { anthropic: 'Anthropic', openai: 'OpenAI', eleven: 'ElevenLabs' };
+const KODY_PAKIETU = ['limit-pakietu', 'funkcja-poza-pakietem', 'zasob-serwera-wyczerpany'];
+function kodDostawcyBledu(d) {
+  const t = String(d || '').toLowerCase();
+  if (/openai/.test(t)) return 'openai';
+  if (/eleven/.test(t)) return 'eleven';
+  return 'anthropic';
+}
+// Konto na wlasnych kluczach (samoobsluga, BYOK). Konta sa tylko w wariancie proxy (STAN_KONTA z /api/konto).
+function kontoNaWlasnychKluczach() { return !!(window.STAN_KONTA && window.STAN_KONTA.zrodloKluczy === 'wlasne'); }
 
 // Rodzaj bledu decyduje o komunikacie i o tym, czy ponowienie ma sens.
 function rodzajBledu(e) {
@@ -6963,17 +7254,30 @@ function rodzajBledu(e) {
   if (e.name === 'AbortError') return 'przerwano';
   if (e.name === 'TypeError' && /fetch|network|load failed/i.test(m)) return 'siec';
   if (e.name === 'SyntaxError' || /Unexpected token|is not valid JSON|JSON\.parse/i.test(m)) return 'odpowiedz';
+  // R9-D: wlasne odmowy serwera rozpoznajemy po kodzie, nie po tresci (UX8-22).
+  const kc = String(e.kodCai || '');
+  if (kc === 'brak-klucza') return 'brak-klucza';
+  if (kc === 'zly-klucz') return 'klucz';
+  if (kc === 'sesja') return 'sesja';
+  if (kc === 'email-niepotwierdzony') return 'email';
+  if (kc === 'zgoda-wymagana') return 'zgoda';
+  if (kc === 'za-duzo-prob') return 'limit-zapytan';
+  if (kc === 'uprawnienia-organizacji') return 'odmowa-serwera';
   if (e.pakiet || (st === 402 && (e.zSerwera || !typ.trim())) || /limit pakietu/i.test(m)) return 'pakiet';
   if (e.zSerwera) {
     if (st === 401 || /niezalogowan/i.test(m)) return 'sesja';
     if (/brak [a-z_]*key/i.test(m)) return 'klucz-serwera';
     if (st === 403) return 'odmowa-serwera';
   }
+  // R9-D (STR8-10): limit wydatkow ustawiony przez uzytkownika i miesieczny limit poziomu konta u dostawcy.
+  if (/specified api usage limits/i.test(m)) return 'limit-wydatkow-wlasny';
+  if (/enforced_spend_limit|spend limit/i.test(typ + ' ' + m)) return 'limit-wydatkow-konta';
   if (/credit balance|billing|insufficient_quota|exceeded your current quota|quota_exceeded/i.test(typ + ' ' + m)) return 'srodki';
   if (/moderation|content_policy|safety system/i.test(typ + ' ' + m)) return 'moderacja';
   if (/prompt is too long|too many (input )?tokens|context length|maximum context/i.test(m)) return 'za-dlugi';
   if (/request_too_large/i.test(typ) || st === 413 || /exceeds the maximum allowed number of bytes/i.test(m)) return 'za-duze';
   if (/authentication|invalid_api_key/i.test(typ) || /invalid x-api-key|incorrect api key|invalid api key/i.test(m) || st === 401) return 'klucz';
+  if (/organization (must be|is not) verified|verify (your|the) organization|organization verification/i.test(m)) return 'weryfikacja-openai';
   if (/permission/i.test(typ) || st === 403) return 'uprawnienia';
   if (/not_found/i.test(typ) || st === 404) return 'model';
   if (/timeout/i.test(typ) || st === 504 || st === 408 || /timeout|timed out|\b504\b/i.test(m)) return 'czas';
@@ -6990,6 +7294,25 @@ const BLEDY_KLUCZE = {
   'za-dlugi': 'err-za-dlugi', 'za-duze': 'err-za-duze', klucz: 'err-klucz', uprawnienia: 'err-uprawnienia',
   model: 'err-model', 'limit-zapytan': 'err-rate-limit', przeciazenie: 'err-overloaded', serwer: 'err-server-500',
 };
+// R9-D (UX8-22, KOD8-04): rodzaje z kodow serwera i nowe sygnaly dostawcow; konto na wlasnych kluczach
+// dostaje tekst z nazwa dostawcy, bez "zglos to administratorowi".
+Object.assign(BLEDY_KLUCZE, {
+  'brak-klucza': 'err-brak-klucza', email: 'err-email-niepotwierdzony', zgoda: 'err-zgoda-wymagana',
+  'limit-wydatkow-wlasny': 'err-limit-wydatkow-wlasny', 'limit-wydatkow-konta': 'err-limit-wydatkow-konta',
+  'weryfikacja-openai': 'err-weryfikacja-openai',
+});
+const BLEDY_WLASNE = {
+  klucz: 'err-klucz-wlasny', srodki: 'err-srodki-wlasny', uprawnienia: 'err-uprawnienia-wlasny',
+  'limit-zapytan': 'err-rate-limit-wlasny', model: 'err-model-wlasny', 'klucz-serwera': 'err-brak-klucza',
+};
+function kluczBleduKonta(r, klucz, e) {
+  if (r === 'pakiet' && e && e.odnawialny === false) return 'err-limit-pakietu-zawsze';
+  if (r === 'pakiet' && e && e.kodCai === 'funkcja-poza-pakietem') return 'err-funkcja-poza-pakietem';
+  return kontoNaWlasnychKluczach() && BLEDY_WLASNE[r] ? BLEDY_WLASNE[r] : klucz;
+}
+function tekstBleduKonta(r, klucz, e) {
+  return _t(kluczBleduKonta(r, klucz, e)).replace(/\{DOSTAWCA\}/g, (e && e.dostawca) || NAZWY_DOSTAWCOW[(e && e.dostawcaKod) || 'anthropic']);
+}
 // Ten sam rodzaj bledu w innej czesci aplikacji brzmi inaczej (plik audio, grafika).
 const BLEDY_KONTEKSTU = {
   audio: { siec: 'err-audio-siec', 'za-duze': 'err-za-duze-plik' },
@@ -7007,12 +7330,12 @@ function komunikatBleduApi(e, zapas, kontekst) {
   if (r === 'wlasny') return String(e.message);
   if (r === 'inny') return _t(zapas || 'err-api-generic');
   const nad = (BLEDY_KONTEKSTU[kontekst] || {})[r];
-  return _t(nad || BLEDY_KLUCZE[r]);
+  return tekstBleduKonta(r, nad || BLEDY_KLUCZE[r], e);
 }
 // Techniczny szczegol (dostawca, status, typ, tresc odpowiedzi) do zwinietej
 // sekcji - przydaje sie przy zgloszeniu. Nie dla komunikatow, ktore sami opisalismy.
 function szczegolBledu(e) {
-  if (!e || ['wlasny', 'cichy', 'przerwano', 'siec', 'odpowiedz'].indexOf(rodzajBledu(e)) !== -1) return '';
+  if (!e || ['wlasny', 'cichy', 'przerwano', 'siec', 'odpowiedz', 'pakiet', 'brak-klucza', 'email', 'zgoda'].indexOf(rodzajBledu(e)) !== -1) return '';
   const czesci = [];
   if (e.dostawca) czesci.push(e.dostawca);
   if (e.status) czesci.push('HTTP ' + e.status);
@@ -7024,7 +7347,7 @@ function szczegolBledu(e) {
 // Klucz poprawia sie w oknie Klucze API (keys) albo w kreatorze konta (proxy).
 // W wariancie owner klucz siedzi w pliku, wiec przycisku nie pokazujemy.
 const KLUCZ_W_PLIKU = false;
-function otworzUstawieniaKlucza() {
+function otworzUstawieniaKlucza(dostawca) {
   if (typeof window.openKeysModal === 'function') window.openKeysModal();
 }
 // Blok bledu w artykule i panelach: zdanie ze slownika, szczegoly zwiniete,
@@ -7040,12 +7363,43 @@ function blokBledu(e, ponow, zapas, kontekst) {
       + '<div class="tekst-pomoc" style="overflow-wrap:anywhere">' + escapeHtml(szczegol) + '</div></details>';
   }
   if (r === 'klucz' && !KLUCZ_W_PLIKU) {
-    h += '<button type="button" class="btn-secondary" onclick="otworzUstawieniaKlucza()">' + ikona('key-round') + escapeHtml(_t('btn-otworz-klucze')) + '</button>';
+    // R9-D: dostawca w przycisku tylko dla konta na wlasnych kluczach (kreator na polu tego dostawcy); reszta jak dzis.
+    const dk = kontoNaWlasnychKluczach() && e && e.dostawcaKod ? '\'' + escapeHtml(e.dostawcaKod) + '\'' : '';
+    h += '<button type="button" class="btn-secondary" onclick="otworzUstawieniaKlucza(' + dk + ')">' + ikona('key-round') + escapeHtml(_t('btn-otworz-klucze')) + '</button>';
   }
+  h += akcjeBleduKonta(r, e, ponow);
   if (ponow && czyPonowic(e)) {
     h += '<button type="button" class="btn-secondary ponow-generowanie" onclick="' + escapeHtml(ponow) + '">' + ikona('refresh-cw') + escapeHtml(_t('btn-sprobuj-ponownie')) + '</button>';
   }
   return h + '</div>';
+}
+// R9-D (UX8-22): przyciski naprawy dla konta na wlasnych kluczach; w pozostalych wariantach nic.
+const ROZLICZENIA_DOSTAWCOW = {
+  anthropic: 'https://platform.claude.com/settings/billing', openai: 'https://platform.openai.com/settings/organization/billing/overview',
+  eleven: 'https://elevenlabs.io/app/subscription',
+};
+// E4: limit wydatkow zmienia sie na stronie limitow w konsoli dostawcy (ElevenLabs nie ma limitu wydatkow).
+const LIMITY_DOSTAWCOW = { anthropic: 'https://platform.claude.com/settings/limits', openai: 'https://platform.openai.com/settings/organization/limits' };
+function akcjeBleduKonta(r, e, ponow) {
+  const d = (e && e.dostawcaKod) || 'anthropic', nazwa = (e && e.dostawca) || NAZWY_DOSTAWCOW[d];
+  if (r === 'brak-klucza' && typeof window.otworzKreatorKlucza === 'function') {
+    return '<button type="button" class="btn-secondary" onclick="otworzKreatorKlucza(\'' + d + '\')">' + ikona('key-round') + escapeHtml(_t('btn-podlacz-klucz').replace('{DOSTAWCA}', nazwa)) + '</button>';
+  }
+  if (r === 'pakiet' && kontoNaWlasnychKluczach() && typeof window.otworzPakiet === 'function') {
+    return '<button type="button" class="btn-secondary" onclick="otworzPakiet(\'zakup\')">' + ikona('package') + escapeHtml(_t('btn-wybierz-pakiet')) + '</button>';
+  }
+  if (r === 'email' && typeof window.wyslijPotwierdzenieEmail === 'function') {
+    return '<button type="button" class="btn-secondary" onclick="wyslijPotwierdzenieEmail()">' + ikona('mail') + escapeHtml(_t('btn-wyslij-link')) + '</button>';
+  }
+  if ((r === 'srodki' || r === 'limit-wydatkow-wlasny' || r === 'limit-wydatkow-konta') && kontoNaWlasnychKluczach()) {
+    // E3: po doladowaniu srodkow ponowienie ma sens; limit wydatkow trzeba najpierw zmienic w konsoli.
+    const znowu = r === 'srodki' && ponow ? '<button type="button" class="btn-secondary ponow-generowanie" onclick="' + escapeHtml(ponow) + '">' + ikona('refresh-cw') + escapeHtml(_t('btn-sprobuj-ponownie')) + '</button>' : '';
+    if (r !== 'srodki' && LIMITY_DOSTAWCOW[d]) {
+      return '<a class="btn-secondary" href="' + LIMITY_DOSTAWCOW[d] + '" target="_blank" rel="noopener">' + ikona('arrow-right') + escapeHtml(_t('btn-limity').replace('{DOSTAWCA}', nazwa)) + '</a>';
+    }
+    return '<a class="btn-secondary" href="' + ROZLICZENIA_DOSTAWCOW[d] + '" target="_blank" rel="noopener">' + ikona('arrow-right') + escapeHtml(_t('btn-rozliczenia').replace('{DOSTAWCA}', nazwa)) + '</a>' + znowu;
+  }
+  return '';
 }
 // To samo dla bledow pokazywanych jako powiadomienie (grafika, audio, dyktowanie).
 function powiadomBladApi(e, zapas, kontekst, przedrostek) {
@@ -7055,7 +7409,16 @@ function powiadomBladApi(e, zapas, kontekst, przedrostek) {
   let tekst = komunikatBleduApi(e, zapas, kontekst);
   const szczegol = r === 'inny' ? szczegolBledu(e) : '';
   if (szczegol) tekst += ' (' + szczegol.slice(0, 200) + ')';
-  powiadomBlad((przedrostek || '') + tekst);
+  // R9-D (UX8-05): brak albo zly klucz w grafice i audio - powiadomienie z przyciskiem naprawy, dluzej na ekranie.
+  const naprawa = (r === 'klucz' || r === 'brak-klucza') && typeof window.otworzKreatorKlucza === 'function';
+  const el = naprawa ? pokazPowiadomienie((przedrostek || '') + tekst, 'blad', 60000) : powiadomBlad((przedrostek || '') + tekst);
+  if (naprawa && el) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'powiadomienie-akcja';
+    b.textContent = _t('btn-podlacz-klucz').replace('{DOSTAWCA}', (e && e.dostawca) || NAZWY_DOSTAWCOW[(e && e.dostawcaKod) || 'anthropic']);
+    b.onclick = function () { el.remove(); window.otworzKreatorKlucza((e && e.dostawcaKod) || 'anthropic'); };
+    el.insertBefore(b, el.querySelector('.powiadomienie-zamknij'));
+  }
 }
 // Bledy WordPressa i Drupala: status HTTP na zdanie ze slownika, odpowiedz CMS
 // (zwykle po angielsku) tylko w zwinietych szczegolach. Status 0 = brak polaczenia.
@@ -8898,7 +9261,8 @@ ${html}`;
   // Do historii idzie artykul tak, jak go widac (ze zrodlami), bez elementow tylko ekranowych.
   history.unshift({ topic: topic || _t('hist-default-name'), type: ctype, words: wordCount, time: new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}), html: htmlDoZapisu(art), jezyk: KODY_JEZYKOW[lang] || '' });
   // R4 (kod-08, kod-09, kod-17): trwale id, czas z data i kontekst artykulu we wpisie.
-  kontekstArt = { temat: topic, frazy: frazy.slice(0, 50), typ: ctype, jezyk: lang, ton: tone, dlugosc: length, extra: extra };
+  kontekstArt = { temat: topic, frazy: frazy.slice(0, 50), typ: ctype, jezyk: lang, ton: tone, dlugosc: length, extra: extra,
+    ai: nowePochodzenieAI(poprawaWklejonego ? 'zlozone' : 'ai') }; // R9-D (PR8-18): pochodzenie tekstu do oznaczen
   Object.assign(history[0], { id: noweIdWpisu(), ts: Date.now(), kontekst: kontekstArt });
   biezacyHist = history[0].id;
   magazyn.setItem('cai_biezacy', biezacyHist);
@@ -10219,6 +10583,459 @@ function jezykDokumentu() {
   return ({ pl: 'pl-PL', en: 'en-US', de: 'de-DE', cs: 'cs-CZ' })[kodJezykaArtykulu()] || 'pl-PL';
 }
 
+// ─── OZNACZENIA AI (R9-D: art. 50 AI Act, PROJEKT-TECHNICZNY rozdz. 9) ──────────
+// Dwie warstwy. Maszynowa (zawsze, gdy `metadane: true`): IPTC Digital Source Type
+// w XMP grafiki, ID3 w MP3, wlasciwosciach DOCX i PDF, atrybutach data-ai-* w HTML do
+// CMS i schema.org digitalSourceType w JSON-LD. Widoczna (art. 50 ust. 4 to obowiazek
+// uzytkownika): przelaczniki etykiet tekstu, grafiki i zapowiedzi audio, z wartosciami
+// domyslnymi z konfiguracji (M-5 / D-08). Stala jest ta sama co serwer/oznaczenia.js
+// (testy-oznaczenia.js porownuje obie); za serwerem przychodzi w /api/konto.oznaczenia
+// razem z wyborem uzytkownika, w wariantach keys i owner wybor zostaje w tej przegladarce.
+const OZNACZENIA_DOMYSLNE = {
+  wersja: 1,
+  system: 'Content AI',
+  adresInformacji: 'https://content-ai.net/ai-act/',
+  adresInformacjiEn: 'https://content-ai.net/en/ai-act/',
+  zrodloIptc: 'http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia',
+  zrodloSchema: 'https://schema.org/TrainedAlgorithmicMediaDigitalSource',
+  zrodloIptcZlozone: 'http://cv.iptc.org/newscodes/digitalsourcetype/compositeWithTrainedAlgorithmicMedia',
+  zrodloSchemaZlozone: 'https://schema.org/CompositeWithTrainedAlgorithmicMediaDigitalSource',
+  slowaKluczowe: 'AI-generated; trainedAlgorithmicMedia; Content AI',
+  tekst: {
+    metadane: true,
+    etykieta: 'domyslnie-wylaczona',
+    miejsce: 'koniec',
+    tresc: {
+      pl: 'Ten tekst powstał z pomocą sztucznej inteligencji (Content AI).',
+      en: 'This text was created with the help of artificial intelligence (Content AI).',
+      de: 'Dieser Text wurde mit Hilfe künstlicher Intelligenz erstellt (Content AI).',
+      cs: 'Tento text vznikl s pomocí umělé inteligence (Content AI).',
+    },
+    krotka: {
+      pl: 'Przygotowano z pomocą AI.',
+      en: 'Prepared with the help of AI.',
+      de: 'Mit Hilfe von KI erstellt.',
+      cs: 'Připraveno s pomocí AI.',
+    },
+  },
+  grafika: {
+    metadane: true,
+    etykieta: 'domyslnie-wylaczona',
+    miejsce: 'prawy-dol',
+    tresc: {
+      pl: 'Grafika wygenerowana przez AI',
+      en: 'AI-generated image',
+      de: 'KI-generiertes Bild',
+      cs: 'Obrázek vytvořený umělou inteligencí',
+    },
+  },
+  audio: {
+    metadane: true,
+    etykieta: 'domyslnie-wlaczona',
+    tresc: {
+      pl: 'Ten materiał odczytuje syntetyczny głos wygenerowany przez sztuczną inteligencję.',
+      en: 'This audio is read by an AI-generated synthetic voice.',
+      de: 'Dieses Audio wird von einer KI-generierten synthetischen Stimme gelesen.',
+      cs: 'Tento záznam čte syntetický hlas vytvořený umělou inteligencí.',
+    },
+  },
+  publikacja: { atrybuty: true },
+};
+const PAMIEC_OZNACZEN = 'cai_oznaczenia';
+const RODZAJE_OZNACZEN = ['tekst', 'grafika', 'audio'];
+// Konfiguracja z serwera (nowsza wersja stalej wygrywa), brakujace pola z wartosci domyslnych.
+function konfigOznaczen() {
+  const zKonta = (window.STAN_KONTA && window.STAN_KONTA.oznaczenia && typeof window.STAN_KONTA.oznaczenia === 'object') ? window.STAN_KONTA.oznaczenia : null;
+  if (!zKonta) return OZNACZENIA_DOMYSLNE;
+  const k = Object.assign({}, OZNACZENIA_DOMYSLNE, zKonta);
+  RODZAJE_OZNACZEN.forEach(function (r) { k[r] = Object.assign({}, OZNACZENIA_DOMYSLNE[r], zKonta[r] || {}); });
+  return k;
+}
+// CAI_OZNACZENIA=0 na serwerze wylacza calosc awaryjnie (pliki bez znacznikow i bez etykiet).
+function oznaczeniaWlaczone() { return konfigOznaczen().wlaczone !== false; }
+function metadaneAI(rodzaj) { const k = konfigOznaczen(); return oznaczeniaWlaczone() && !!(k[rodzaj] && k[rodzaj].metadane); }
+function trybEtykiety(rodzaj) { const k = konfigOznaczen(); return (k[rodzaj] && k[rodzaj].etykieta) || 'domyslnie-wylaczona'; }
+// Przelacznik widac tylko dla wartosci, ktore uzytkownik moze zmienic.
+function etykietaDoWyboru(rodzaj) { const t = trybEtykiety(rodzaj); return oznaczeniaWlaczone() && (t === 'domyslnie-wlaczona' || t === 'domyslnie-wylaczona'); }
+function wyborOznaczenia(rodzaj) {
+  if (!oznaczeniaWlaczone()) return false;
+  const t = trybEtykiety(rodzaj);
+  if (t === 'zawsze') return true;
+  if (t === 'nigdy') return false;
+  // Za serwerem wybor zyje w koncie (kazde urzadzenie); bez serwera albo przed scaleniem kont - w tej przegladarce.
+  const k = konfigOznaczen();
+  if (k.uzytkownik && typeof k.uzytkownik[rodzaj] === 'boolean' && !(window.STAN_KONTA && window.STAN_KONTA._zapas)) return k.uzytkownik[rodzaj];
+  const lokalne = czytajJson(PAMIEC_OZNACZEN, null);
+  if (lokalne && typeof lokalne[rodzaj] === 'boolean') return lokalne[rodzaj];
+  return t === 'domyslnie-wlaczona';
+}
+function ustawWyborOznaczenia(rodzaj, wartosc) {
+  if (RODZAJE_OZNACZEN.indexOf(rodzaj) < 0) return;
+  const v = !!wartosc;
+  const lokalne = czytajJson(PAMIEC_OZNACZEN, null) || {};
+  lokalne[rodzaj] = v;
+  magazyn.setItem(PAMIEC_OZNACZEN, JSON.stringify(lokalne));
+  const k = window.STAN_KONTA && window.STAN_KONTA.oznaczenia;
+  if (k && typeof k === 'object') { k.uzytkownik = Object.assign({}, k.uzytkownik || {}); k.uzytkownik[rodzaj] = v; }
+  rysujPrzelacznikiOznaczen();
+  if (typeof window.zapiszUstawieniaKonta === 'function') window.zapiszUstawieniaKonta({ oznaczenia: { [rodzaj]: v } });
+}
+// Przelaczniki w eksporcie, publikacji, grafice i audio maja jeden stan: wybor uzytkownika.
+function rysujPrzelacznikiOznaczen() {
+  document.querySelectorAll('[data-oznaczenie]').forEach(function (pole) {
+    const r = pole.getAttribute('data-oznaczenie');
+    const wiersz = pole.closest('.ozn-wiersz') || pole;
+    const wybor = wyborOznaczenia(r);
+    wiersz.hidden = !etykietaDoWyboru(r);
+    if (pole.type === 'checkbox') pole.checked = wybor;
+    else if (pole.getAttribute('role') === 'switch') { pole.setAttribute('aria-checked', String(wybor)); pole.classList.toggle('active', wybor); }
+  });
+  // Zdanie "plik ma oznaczenie AI w metadanych" tylko wtedy, gdy to prawda.
+  document.querySelectorAll('[data-ozn-meta]').forEach(function (el) { el.hidden = !metadaneAI(el.getAttribute('data-ozn-meta')); });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', rysujPrzelacznikiOznaczen); else setTimeout(rysujPrzelacznikiOznaczen, 0);
+// Informacja pod artykulem (art. 50 ust. 1): widac ja przy kazdym tekscie, nowym i z Historii.
+(function () {
+  const art = document.getElementById('article');
+  const info = document.getElementById('ai-info-artykul');
+  if (!art || !info || typeof MutationObserver !== 'function') return;
+  // Artykul pokazuje sie przez style.display = 'block' (w trakcie generowania jest ukryty).
+  const rysuj = function () { const jest = art.style.display === 'block' && art.childNodes.length > 0; if (info.hidden === jest) info.hidden = !jest; };
+  new MutationObserver(rysuj).observe(art, { childList: true, attributes: true, attributeFilter: ['style'] });
+  rysuj();
+})();
+// Pochodzenie tekstu (PR8-18, tabela 3.2 prawa): tresc z AI albo tekst uzytkownika przerobiony przez AI.
+function nowePochodzenieAI(rodzaj) {
+  const k = konfigOznaczen();
+  return { pochodzenie: rodzaj === 'zlozone' ? 'zlozone' : 'ai', system: k.system, wersja: k.wersja, czas: new Date().toISOString() };
+}
+function pochodzenieArtykulu() {
+  const ai = typeof kontekstArt !== 'undefined' && kontekstArt && kontekstArt.ai;
+  return ai && ai.pochodzenie === 'zlozone' ? 'zlozone' : 'ai';
+}
+function zrodloAI(pochodzenie) {
+  const k = konfigOznaczen();
+  return pochodzenie === 'zlozone' ? { iptc: k.zrodloIptcZlozone, schema: k.zrodloSchemaZlozone } : { iptc: k.zrodloIptc, schema: k.zrodloSchema };
+}
+// Etykieta w jezyku TRESCI (pl, en, de, cs), nie interfejsu.
+function tekstEtykietyAI(rodzaj, kod, krotka) {
+  const k = konfigOznaczen()[rodzaj] || {};
+  const t = (krotka && k.krotka) || k.tresc || {};
+  return t[kod] || t.en || t.pl || '';
+}
+function adresInformacjiAI() { const k = konfigOznaczen(); return currentLang === 'en' ? (k.adresInformacjiEn || k.adresInformacji) : k.adresInformacji; }
+// Reczna poprawka tekstu w trybie Edytuj: zrodlem jest nadal AI, ale DOCX niesie AIEditedByHuman.
+function oznaczEdycjeCzlowieka() {
+  if (typeof kontekstArt === 'undefined' || !kontekstArt) return;
+  kontekstArt.ai = Object.assign({}, kontekstArt.ai || nowePochodzenieAI('ai'), { edytowany: true });
+  const w = typeof wpisHistorii === 'function' ? wpisHistorii(biezacyHist) : null;
+  if (w) { w.kontekst = w.kontekst || {}; w.kontekst.ai = kontekstArt.ai; }
+}
+document.getElementById('article')?.addEventListener('input', function () { if (editMode) oznaczEdycjeCzlowieka(); });
+
+// Kopia dla klienta: atrybuty data-ai-* na korzeniu (CMS bierze je do opakowania wpisu)
+// i widoczna etykieta wedlug przelacznika. Etykieta nie istnieje w zywym artykule ani w Historii.
+function dodajOznaczenieAI(kopia, cel) {
+  if (!kopia || !cel || !oznaczeniaWlaczone()) return kopia;
+  const zr = zrodloAI(pochodzenieArtykulu());
+  if (metadaneAI('tekst')) {
+    kopia.setAttribute('data-ai-generated', 'true');
+    kopia.setAttribute('data-ai-system', konfigOznaczen().system);
+    kopia.setAttribute('data-ai-source-type', zr.iptc);
+  }
+  if (!wyborOznaczenia('tekst')) return kopia;
+  const p = document.createElement('p');
+  p.className = 'oznaczenie-ai';
+  p.setAttribute('data-ai-label', 'true');
+  p.textContent = tekstEtykietyAI('tekst', kodJezykaArtykulu());
+  if (konfigOznaczen().tekst.miejsce === 'poczatek') {
+    const h1 = kopia.querySelector(':scope > h1');
+    if (h1) h1.after(p); else kopia.prepend(p);
+  } else {
+    // Koniec tekstu: przed lista zrodel i ramka meta (to nie sa czesci artykulu).
+    const po = Array.from(kopia.children).find(function (el) { return el.classList.contains('zrodla-box') || el.classList.contains('meta-box'); });
+    if (po) po.before(p); else kopia.appendChild(p);
+  }
+  return kopia;
+}
+// Wlasciwosci dokumentu (DOCX: custom.xml i cp:keywords, PDF: /Keywords i XMP) albo null, gdy wylaczone.
+function wlasciwosciAI(pochodzenie) {
+  if (!metadaneAI('tekst')) return null;
+  const k = konfigOznaczen();
+  const edytowany = !!(typeof kontekstArt !== 'undefined' && kontekstArt && kontekstArt.ai && kontekstArt.ai.edytowany);
+  return { zrodlo: zrodloAI(pochodzenie || pochodzenieArtykulu()).iptc, system: k.system, wersja: String(k.wersja), slowa: k.slowaKluczowe, edytowany: edytowany };
+}
+function xmlAI(s) { return String(s == null ? '' : s).replace(/[<>&"']/g, function (z) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[z]; }); }
+// Pakiet XMP (IPTC Digital Source Type + xmp:CreatorTool): ten sam w PNG i PDF.
+function xmpAI(zrodlo, system) {
+  return '<?xpacket begin="﻿" id="W5M0MpCehiHzreSzNTczkc9d"?>'
+    + '<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+    + '<rdf:Description rdf:about="" xmlns:Iptc4xmpExt="http://iptc.org/std/Iptc4xmpExt/2008-02-29/" xmlns:xmp="http://ns.adobe.com/xap/1.0/"'
+    + ' Iptc4xmpExt:DigitalSourceType="' + xmlAI(zrodlo) + '" xmp:CreatorTool="' + xmlAI(system) + '"/>'
+    + '</rdf:RDF></x:xmpmeta><?xpacket end="r"?>';
+}
+
+// ── PNG: XMP po IHDR; plik z manifestem C2PA dostawcy (fragment caBX) zostaje nietkniety ──
+let TABLICA_CRC_AI = null;
+function crc32AI(bajty, od, ile) {
+  if (!TABLICA_CRC_AI) {
+    TABLICA_CRC_AI = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); TABLICA_CRC_AI[n] = c >>> 0; }
+  }
+  let crc = 0xFFFFFFFF;
+  const koniec = (od || 0) + (ile == null ? bajty.length : ile);
+  for (let i = od || 0; i < koniec; i++) crc = TABLICA_CRC_AI[(crc ^ bajty[i]) & 0xFF] ^ (crc >>> 8);
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+function fragmentyPng(b) {
+  const SYG = [137, 80, 78, 71, 13, 10, 26, 10];
+  if (!b || b.length < 33 || SYG.some(function (x, i) { return b[i] !== x; })) return null;
+  const lista = [];
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  let p = 8;
+  while (p + 12 <= b.length) {
+    const dl = dv.getUint32(p);
+    const typ = String.fromCharCode(b[p + 4], b[p + 5], b[p + 6], b[p + 7]);
+    lista.push({ typ: typ, od: p, dl: dl });
+    p += 12 + dl;
+    if (typ === 'IEND') break;
+  }
+  return lista;
+}
+function oznaczPng(b, zrodlo, system) {
+  const lista = fragmentyPng(b);
+  if (!lista || !lista.length || lista[0].typ !== 'IHDR') return { bajty: b, zmieniony: false, powod: 'nie-png' };
+  if (lista.some(function (f) { return f.typ === 'caBX'; })) return { bajty: b, zmieniony: false, powod: 'c2pa-dostawcy' };
+  const jestXmp = lista.some(function (f) {
+    if (f.typ !== 'iTXt') return false;
+    let s = ''; for (let i = 0; i < 17 && f.od + 8 + i < b.length; i++) s += String.fromCharCode(b[f.od + 8 + i]);
+    return s === 'XML:com.adobe.xmp';
+  });
+  if (jestXmp) return { bajty: b, zmieniony: false, powod: 'xmp-jest' };
+  // iTXt: slowo kluczowe \0, flaga i metoda kompresji (0, 0), jezyk \0, tlumaczenie \0, tekst UTF-8.
+  const slowo = 'XML:com.adobe.xmp';
+  const tekst = new TextEncoder().encode(xmpAI(zrodlo || zrodloAI('ai').iptc, system || konfigOznaczen().system));
+  const dl = slowo.length + 5 + tekst.length;
+  const frag = new Uint8Array(12 + dl);
+  const dv = new DataView(frag.buffer);
+  dv.setUint32(0, dl);
+  for (let i = 0; i < 4; i++) frag[4 + i] = 'iTXt'.charCodeAt(i);
+  for (let i = 0; i < slowo.length; i++) frag[8 + i] = slowo.charCodeAt(i);
+  frag.set(tekst, 8 + slowo.length + 5);
+  dv.setUint32(8 + dl, crc32AI(frag, 4, 4 + dl));
+  const po = lista[0].od + 12 + lista[0].dl;
+  const wynik = new Uint8Array(b.length + frag.length);
+  wynik.set(b.subarray(0, po), 0);
+  wynik.set(frag, po);
+  wynik.set(b.subarray(po), po + frag.length);
+  return { bajty: wynik, zmieniony: true, powod: 'xmp-dodany' };
+}
+async function oznaczBlobPng(blob) {
+  if (!blob || !metadaneAI('grafika') || !/png/.test(blob.type || '')) return blob;
+  const w = oznaczPng(new Uint8Array(await blob.arrayBuffer()));
+  return w.zmieniony ? new Blob([w.bajty], { type: 'image/png' }) : blob;
+}
+// Widoczna etykieta to nowe kodowanie przez canvas: wersja z napisem niesie nasze XMP zamiast C2PA dostawcy.
+// kolory-eksportu:start (napis na grafice ma stale kolory pliku, nie motywu)
+async function grafikaZEtykieta(blob, tekst) {
+  const adres = URL.createObjectURL(blob);
+  try {
+    const obraz = await new Promise(function (ok, zle) { const i = new Image(); i.onload = function () { ok(i); }; i.onerror = zle; i.src = adres; });
+    const c = document.createElement('canvas');
+    c.width = obraz.naturalWidth; c.height = obraz.naturalHeight;
+    const g = c.getContext('2d');
+    g.drawImage(obraz, 0, 0);
+    const pt = Math.max(14, Math.round(Math.min(c.width, c.height) * 0.032));
+    g.font = '600 ' + pt + 'px "Schibsted Grotesk", system-ui, sans-serif';
+    const marg = Math.round(pt * 0.8), wew = Math.round(pt * 0.55);
+    const szer = Math.ceil(g.measureText(tekst).width) + wew * 2, wys = Math.round(pt * 1.7);
+    const x = c.width - szer - marg, y = c.height - wys - marg;
+    g.fillStyle = 'rgba(17, 17, 16, 0.72)';
+    if (typeof g.roundRect === 'function') { g.beginPath(); g.roundRect(x, y, szer, wys, Math.round(pt * 0.35)); g.fill(); }
+    else g.fillRect(x, y, szer, wys);
+    g.fillStyle = 'rgba(255, 255, 255, 0.96)';
+    g.textBaseline = 'middle';
+    g.fillText(tekst, x + wew, y + wys / 2);
+    const png = await new Promise(function (ok) { c.toBlob(ok, 'image/png'); });
+    if (!png) return blob;
+    const w = oznaczPng(new Uint8Array(await png.arrayBuffer()));
+    return new Blob([w.bajty], { type: 'image/png' });
+  } finally { URL.revokeObjectURL(adres); }
+}
+// kolory-eksportu:koniec
+
+// ── MP3: znacznik ID3v2.4 na poczatku sklejonego pliku, bez znacznikow w srodku strumienia ──
+function synchsafeAI(n) { return [(n >>> 21) & 0x7F, (n >>> 14) & 0x7F, (n >>> 7) & 0x7F, n & 0x7F]; }
+function ramkaId3(id, dane) {
+  const r = new Uint8Array(10 + dane.length);
+  for (let i = 0; i < 4; i++) r[i] = id.charCodeAt(i);
+  r.set(synchsafeAI(dane.length), 4);
+  r.set(dane, 10);
+  return r;
+}
+function polaczBajty(czesci) {
+  const razem = new Uint8Array(czesci.reduce(function (s, c) { return s + c.length; }, 0));
+  let p = 0;
+  czesci.forEach(function (c) { razem.set(c, p); p += c.length; });
+  return razem;
+}
+function znacznikId3AI(opcje) {
+  const o = opcje || {};
+  const k = konfigOznaczen();
+  const utf8 = function (s) { return new TextEncoder().encode(String(s || '')); };
+  const txxx = function (opis, wartosc) { return ramkaId3('TXXX', polaczBajty([new Uint8Array([3]), utf8(opis), new Uint8Array([0]), utf8(wartosc)])); };
+  const ramkaTekstu = function (id, wartosc) { return ramkaId3(id, polaczBajty([new Uint8Array([3]), utf8(wartosc)])); };
+  const jezyk = ({ pl: 'pol', en: 'eng', de: 'deu', cs: 'ces' })[o.jezyk] || 'eng';
+  const ramki = [txxx('AI_GENERATED', 'true'), txxx('DIGITAL_SOURCE_TYPE', o.zrodlo || zrodloAI('ai').iptc), ramkaTekstu('TSSE', k.system)];
+  if (o.tytul) ramki.push(ramkaTekstu('TIT2', o.tytul));
+  // COMM: informacja dla odtwarzaczy, ze glos jest syntetyczny (kodowanie UTF-8, jezyk, pusty opis).
+  const uwaga = tekstEtykietyAI('audio', o.jezyk || 'en');
+  if (uwaga) ramki.push(ramkaId3('COMM', polaczBajty([new Uint8Array([3]), utf8(jezyk), new Uint8Array([0]), utf8(uwaga)])));
+  const cialo = polaczBajty(ramki);
+  return polaczBajty([new Uint8Array([0x49, 0x44, 0x33, 4, 0, 0].concat(synchsafeAI(cialo.length))), cialo]);
+}
+// Fragment od dostawcy bez wlasnych znacznikow (ID3v2 na poczatku, ID3v1 na koncu): w srodku pliku myla odtwarzacze.
+function bezId3(b) {
+  let od = 0, doK = b.length;
+  if (b.length > 10 && b[0] === 0x49 && b[1] === 0x44 && b[2] === 0x33) {
+    od = 10 + ((b[6] & 0x7F) << 21 | (b[7] & 0x7F) << 14 | (b[8] & 0x7F) << 7 | (b[9] & 0x7F)) + ((b[5] & 0x10) ? 10 : 0);
+  }
+  if (doK - od > 128 && b[doK - 128] === 0x54 && b[doK - 127] === 0x41 && b[doK - 126] === 0x47) doK -= 128;
+  return od > 0 || doK < b.length ? b.subarray(Math.min(od, doK), doK) : b;
+}
+async function zbudujMp3(czesci, opcje) {
+  const bajty = [];
+  for (const c of czesci) { if (c) bajty.push(bezId3(new Uint8Array(await c.arrayBuffer()))); }
+  if (metadaneAI('audio')) bajty.unshift(znacznikId3AI(opcje));
+  return new Blob(bajty, { type: 'audio/mpeg' });
+}
+// Zapowiedz glosowa (PR8-17) w jezyku nagrania, doklejona do pierwszego fragmentu: bez osobnego
+// wywolania dostawcy i bez dodatkowej pozycji w pakiecie. Odsluch w module = to samo co w pliku.
+function zapowiedzAudioAI(kod) { return wyborOznaczenia('audio') ? tekstEtykietyAI('audio', kod) : ''; }
+function jezykModuluAudio() { return KODY_JEZYKOW[(document.getElementById('au-lang') || {}).value] || kodJezykaArtykulu(); }
+function zZapowiedziaAI(units, kod) {
+  const z = zapowiedzAudioAI(kod);
+  if (!z || !units || !units.length) return units;
+  const kopia = units.slice();
+  kopia[0] = Object.assign({}, kopia[0], { text: z + ' ' + (kopia[0].text || '') });
+  return kopia;
+}
+function opcjeMp3Modulu() {
+  const sc = document.getElementById('au-script');
+  const h = sc && sc.querySelector('h1');
+  return { jezyk: jezykModuluAudio(), tytul: h ? h.textContent.trim() : '' };
+}
+function opcjeMp3Artykulu() { return { jezyk: kodJezykaArtykulu(), tytul: tytulEksportu(document.getElementById('article')) }; }
+// Przerobki (posty, newsletter, FAQ): krotka etykieta na koncu kopii, wedlug przelacznika tekstu.
+function przerobkaZOznaczeniemAI(tekst) {
+  const t = String(tekst || '');
+  if (!t.trim() || !wyborOznaczenia('tekst')) return t;
+  const etykieta = tekstEtykietyAI('tekst', kodJezykaArtykulu(), true);
+  return !etykieta || t.indexOf(etykieta) >= 0 ? t : t.replace(/\s+$/, '') + '\n\n' + etykieta;
+}
+
+// ── PDF: pakiet XMP dopisany aktualizacja przyrostowa (pdfmake nie zapisuje XMP) ──
+// Nowy obiekt strumienia /Metadata i nowa wersja katalogu z odnosnikiem do niego, nowa tablica xref
+// z /Prev. Tresc pliku przed dopisanym fragmentem zostaje bajt w bajt (czytniki skladaja wersje).
+function pdfZXmp(bajty, xmp) {
+  const latin = function (od, doK) { let s = ''; for (let i = od; i < doK; i++) s += String.fromCharCode(bajty[i]); return s; };
+  const ogon = latin(Math.max(0, bajty.length - 2048), bajty.length);
+  const sx = /startxref\s+(\d+)\s+%%EOF\s*$/.exec(ogon);
+  const tr = /trailer\s*<<([\s\S]*?)>>\s*startxref/.exec(ogon);
+  if (!sx || !tr) return bajty;
+  const rozmiar = /\/Size\s+(\d+)/.exec(tr[1]), root = /\/Root\s+(\d+)\s+(\d+)\s+R/.exec(tr[1]);
+  if (!rozmiar || !root) return bajty;
+  const calosc = latin(0, bajty.length);
+  const wzor = new RegExp('(^|[\\r\\n])' + root[1] + '\\s+' + root[2] + '\\s+obj\\s*([\\s\\S]*?)\\s*endobj', 'g');
+  let m, katalog = null;
+  while ((m = wzor.exec(calosc))) katalog = m[2];
+  if (!katalog || !/^<</.test(katalog) || /\/Metadata\s/.test(katalog)) return bajty;
+  const nr = Number(rozmiar[1]);
+  const kod = new TextEncoder();
+  const xmpB = kod.encode(xmp);
+  const czesci = [];
+  let pozycja = bajty.length;
+  const dopisz = function (s) { const b = typeof s === 'string' ? kod.encode(s) : s; czesci.push(b); pozycja += b.length; };
+  dopisz('\n');
+  const offMeta = pozycja;
+  dopisz(nr + ' 0 obj\n<< /Type /Metadata /Subtype /XML /Length ' + xmpB.length + ' >>\nstream\n');
+  dopisz(xmpB);
+  dopisz('\nendstream\nendobj\n');
+  const offKat = pozycja;
+  dopisz(root[1] + ' ' + root[2] + ' obj\n<< /Metadata ' + nr + ' 0 R' + katalog.slice(2) + '\nendobj\n');
+  const offXref = pozycja;
+  const wpis = function (o) { return String(o).padStart(10, '0') + ' 00000 n \n'; };
+  const trailer = tr[1].replace(/\/Size\s+\d+/, '/Size ' + (nr + 1)).replace(/\/Prev\s+\d+/, '');
+  dopisz('xref\n' + root[1] + ' 1\n' + wpis(offKat) + nr + ' 1\n' + wpis(offMeta)
+    + 'trailer\n<<' + trailer + ' /Prev ' + sx[1] + ' >>\nstartxref\n' + offXref + '\n%%EOF\n');
+  return polaczBajty([bajty].concat(czesci));
+}
+
+// HTML do WordPressa i Drupala: tresc w <div data-ai-*> (publikacja.atrybuty). WordPress zachowuje atrybuty
+// data-* w tresci wpisu, Drupal w formacie full_html (basic_html je usuwa: informacja w oknie publikacji).
+function opakowanieCmsAI(kopia, html) {
+  const k = konfigOznaczen();
+  if (!kopia || !kopia.hasAttribute('data-ai-generated') || !k.publikacja || !k.publikacja.atrybuty) return html;
+  return '<div data-ai-generated="true" data-ai-system="' + xmlAI(k.system) + '" data-ai-source-type="'
+    + xmlAI(kopia.getAttribute('data-ai-source-type') || zrodloAI(pochodzenieArtykulu()).iptc) + '">' + html + '</div>';
+}
+
+// Pobranie grafiki: wersja wedlug przelacznika, a gdy napis jest wylaczony - pytanie, czy grafika
+// przedstawia prawdziwe osoby, miejsca albo zdarzenia (prawo 1.4 i 3.5: wtedy publikujacy musi ja oznaczyc).
+// Odpowiedz pamietamy dla tej grafiki, zeby kolejne pobranie nie pytalo drugi raz.
+const odpowiedziOGrafice = new WeakMap();
+function pobierzGrafikeAI(e, link) {
+  const blob = (link && link.blobGrafiki) || imgCurrentBlob;
+  if (!blob) return true;
+  if (e) e.preventDefault();
+  pobierzGrafikeZOznaczeniem(blob, (link && link.getAttribute('download')) || nazwaPlikuEksportu('', 'png'));
+  return false;
+}
+async function pobierzGrafikeZOznaczeniem(blob, nazwa) {
+  let napis = wyborOznaczenia('grafika');
+  if (!napis && etykietaDoWyboru('grafika')) {
+    const odp = odpowiedziOGrafice.has(blob) ? odpowiedziOGrafice.get(blob) : await zapytajOGrafike();
+    if (odp === null) return;
+    odpowiedziOGrafice.set(blob, odp);
+    napis = odp;
+  }
+  let plik = blob;
+  if (napis) {
+    try { plik = await grafikaZEtykieta(blob, tekstEtykietyAI('grafika', kodJezykaArtykulu())); }
+    catch (er) { console.warn('[grafika] bez napisu AI:', er && er.message); powiadomBlad(_t('ozn-grafika-blad')); return; }
+  } else {
+    // Grafiki z modulu maja juz XMP (imgResizeB64); inne PNG dostaja je tutaj, plik z C2PA dostawcy zostaje.
+    try { plik = await oznaczBlobPng(blob); } catch (er) { plik = blob; }
+  }
+  pobierzPlik(plik, nazwa);
+}
+let zapytanieOGrafike = null;
+function zapytajOGrafike() {
+  const okno = document.getElementById('ozn-grafika-modal');
+  if (!okno) return Promise.resolve(false);
+  const link = document.getElementById('ozn-grafika-wiecej');
+  if (link) link.href = adresInformacjiAI();
+  okno.classList.add('open');
+  return new Promise(function (ok) { zapytanieOGrafike = ok; });
+}
+function odpowiedzOGrafice(wartosc) {
+  const okno = document.getElementById('ozn-grafika-modal');
+  if (okno) okno.classList.remove('open');
+  const ok = zapytanieOGrafike;
+  zapytanieOGrafike = null;
+  if (ok) ok(wartosc);
+}
+// Miniatury z historii grafik sesji: pobranie ta sama droga (kafel wie, ktora to grafika).
+document.addEventListener('click', function (e) {
+  const a = e.target && e.target.closest && e.target.closest('#img-history-grid .img-hist-pobierz');
+  if (!a) return;
+  const kafle = Array.from(document.querySelectorAll('#img-history-grid .img-hist-kafel'));
+  const poz = typeof imgHistory !== 'undefined' ? imgHistory[kafle.indexOf(a.closest('.img-hist-kafel'))] : null;
+  if (!poz || !poz.blob) return;
+  e.preventDefault();
+  pobierzGrafikeZOznaczeniem(poz.blob, a.getAttribute('download') || nazwaPlikuEksportu('', 'png'));
+});
+
 // ─── EKSPORT: wspolny potok (PDF, DOCX, TXT, schowek, WordPress, historia) ───
 // Kazdy eksport bierze KOPIE artykulu przygotowana tutaj, wiec PDF, DOCX, TXT,
 // schowek, WordPress i zapis do historii widza ten sam tekst: bez elementow tylko
@@ -10364,7 +11181,8 @@ function twardeSpacjePl(korzen) {
 // a do tego bez tresci niewidocznej na ekranie, bez notatek o lukach, z naglowkiem
 // zrodel, etykieta ramki meta i datami w jezyku ARTYKULU. Pominiete notatki
 // sygnalizujemy raz, krotkim komunikatem - plik rozni sie wtedy od ekranu.
-function kopiaDoEksportu(zrodlo) {
+// R9-D: cel ('pdf', 'docx', 'txt', 'schowek', 'cms') dokleja oznaczenie AI (dodajOznaczenieAI).
+function kopiaDoEksportu(zrodlo, cel) {
   const kopia = zrodlo.cloneNode(true);
   const ukryte = niewidoczneWArtykule(zrodlo);
   if (ukryte.length) {
@@ -10387,7 +11205,7 @@ function kopiaDoEksportu(zrodlo) {
   const j = jezykEtykiet();
   uporzadkujArtykul(kopia, j);
   kopia.querySelectorAll('.zrodla-box > .zrodla-label').forEach(function (l) { l.textContent = tekstWJezyku('eksport-zrodla', j); });
-  return kopia;
+  return dodajOznaczenieAI(kopia, cel);
 }
 
 function tytulEksportu(kopia) {
@@ -10544,8 +11362,10 @@ function tekstEksportu(korzen) {
 }
 
 // DOCX z biblioteki docx-natywny.js (prawdziwy WordprocessingML; wczytywana przy pierwszym uzyciu).
+// R9-D: wersja 2 pliku (pliki pwa/lib ida z immutable na rok, wiec nowa tresc = nowa nazwa) zapisuje
+// oznaczenie AI we wlasciwosciach dokumentu (docProps/custom.xml, cp:keywords) z opcje.wlasciwosciAI.
 async function pobierzDocx(element, opcje, nazwa) {
-  await wczytajSkrypt('pwa/lib/docx-natywny.js');
+  await wczytajSkrypt('pwa/lib/docx-natywny-2.js');
   if (!window.DocxNatywny || typeof window.DocxNatywny.zbuduj !== 'function') throw new Error('docx-natywny.js');
   const blob = await window.DocxNatywny.zbuduj(element, opcje);
   pobierzPlik(blob, nazwa);
@@ -10561,6 +11381,7 @@ function opcjeDocxArtykulu(kopia) {
     naglowek: nazwaMarki() || '', stopka: skrotTekstu(tytul, 70),
     etykietaMeta: tekstWJezyku('meta-etykieta', j), etykietaZrodel: tekstWJezyku('eksport-zrodla', j),
     znaki: function (n) { return formaZnakow(n, j); },
+    wlasciwosciAI: wlasciwosciAI(),
   };
 }
 
@@ -10611,25 +11432,30 @@ function stylePdf() {
 }
 
 // Wspolna rama dokumentu PDF (artykul i raport widocznosci).
-function dokumentPdf(tresc, tytul, opis, jezyk) {
+// R9-D: `ai` (wlasciwosciAI) dokleja /Keywords i wlasny klucz /DigitalSourceType (pdfmake przepuszcza
+// klucze Info bez spacji); pakiet XMP dopisuje pdfZXmp po zbudowaniu pliku.
+// Tytul w stopce i marka w naglowku bez emoji (EMOJI_PDF, R9-F): kroje PDF ich nie maja, w pliku byl pusty znak.
+function dokumentPdf(tresc, tytul, opis, jezyk, ai) {
   const marka = nazwaMarki();
+  const info = { title: tytul, author: marka || '', subject: opis || '', creator: 'Content AI', producer: 'Content AI' };
+  if (ai) { info.keywords = ai.slowa; info.DigitalSourceType = ai.zrodlo; }
   return {
     pageSize: 'A4',
     pageMargins: [71, 72, 71, 64],
     language: jezyk,
-    info: { title: tytul, author: marka || '', subject: opis || '', creator: 'Content AI', producer: 'Content AI' },
+    info: info,
     defaultStyle: { font: 'Literata', fontSize: 11, lineHeight: 0.96, color: DRUK.tekst },
     styles: stylePdf(),
     // Naglowek H2/H3 nie zostaje sam na dole strony.
     pageBreakBefore: function (wezel, dalejNaStronie) { return wezel.headlineLevel === 1 && dalejNaStronie.length === 0; },
     header: function () {
       return marka ? { margin: [71, 34, 71, 0], stack: [
-        { text: marka, font: 'Schibsted', fontSize: 8.5, color: DRUK.tekst2, characterSpacing: 0.3 },
+        { text: String(marka).replace(EMOJI_PDF, '').trim(), font: 'Schibsted', fontSize: 8.5, color: DRUK.tekst2, characterSpacing: 0.3 },
         { canvas: [{ type: 'line', x1: 0, y1: 6, x2: PDF_SZER, y2: 6, lineWidth: 0.5, lineColor: DRUK.liniaStrony }] }] } : null;
     },
     footer: function (strona, stron) {
       return { margin: [71, 24, 71, 0], columns: [
-        { text: skrotTekstu(tytul, 70), style: 'meta2' },
+        { text: skrotTekstu(String(tytul || '').replace(EMOJI_PDF, '').trim(), 70), style: 'meta2' },
         { text: strona + ' / ' + stron, style: 'meta2', alignment: 'right', width: 'auto' }] };
     },
     content: tresc,
@@ -10833,6 +11659,8 @@ function trescPdf(korzen) {
     if (tag === 'H1') { const t = tekstPdf(el); if (t.length) { out.push({ text: t, style: 'h1' }); poTytule = true; } return; }
     if (tag === 'H2') { out.push({ text: tekstPdf(el), style: 'h2', headlineLevel: 1 }); return; }
     if (/^H[3-6]$/.test(tag)) { out.push({ text: tekstPdf(el), style: 'h3', headlineLevel: 1 }); return; }
+    // R9-D: widoczna etykieta AI drobnym pismem (jak stopka), nie jako akapit tresci.
+    if (tag === 'P' && el.classList.contains('oznaczenie-ai')) { const t = tekstPdf(el); if (t.length) out.push({ text: t, style: 'meta2', margin: [0, 10, 0, 6] }); return; }
     if (tag === 'P') {
       const t = tekstPdf(el);
       if (!t.length) return;
@@ -10912,15 +11740,26 @@ function dlPdf() {
   zaladujPdfMake(function () {
     // Model mogl nadac elementowi id="pdfMake" - wtedy window.pdfMake to element, nie biblioteka.
     if (!window.pdfMake || typeof window.pdfMake.createPdf !== 'function') { powiadomBlad(_t('msg-pdf-load-fail')); return; }
-    const kopia = kopiaDoEksportu(art);
+    const kopia = kopiaDoEksportu(art, 'pdf');
     const czysta = document.createElement('div');
     czysta.innerHTML = oczyscHtmlModelu(kopia.innerHTML);
     const tytul = tytulEksportu(kopia);
     // R6-F (E-18): twarde spacje w tresci strony, metadane (tytul, opis) bez zmian.
     twardeSpacjePl(czysta);
-    const dd = dokumentPdf(trescPdf(czysta), tytul, metaEksportu(kopia), jezykDokumentu());
+    const ai = wlasciwosciAI();
+    const dd = dokumentPdf(trescPdf(czysta), tytul, metaEksportu(kopia), jezykDokumentu(), ai);
     ustawKrojePdf();
-    pdfMake.createPdf(dd).download(nazwaPlikuEksportu(tytul, 'pdf'));
+    pobierzPdf(dd, nazwaPlikuEksportu(tytul, 'pdf'), ai);
+  });
+}
+// R9-D: plik PDF przez bufor - z oznaczeniem AI dopisujemy do niego pakiet XMP (pdfZXmp), potem pobranie.
+function pobierzPdf(dd, nazwa, ai) {
+  const doc = pdfMake.createPdf(dd);
+  if (!ai || typeof doc.getBuffer !== 'function') { doc.download(nazwa); return; }
+  doc.getBuffer(function (bufor) {
+    let bajty = new Uint8Array(bufor.buffer || bufor, bufor.byteOffset || 0, bufor.byteLength || bufor.length);
+    try { bajty = pdfZXmp(bajty, xmpAI(ai.zrodlo, ai.system)); } catch (e) { console.warn('[pdf] bez XMP:', e && e.message); }
+    pobierzPlik(new Blob([bajty], { type: 'application/pdf' }), nazwa);
   });
 }
 // kolory-eksportu:koniec
@@ -12536,7 +13375,7 @@ function saveTemplate() {
 // pochodzil z konca generowania - w trakcie edycji kopiowal tekst sprzed zmian.
 function copyOut() {
   const art = document.getElementById('article');
-  const tekst = art && art.innerHTML.trim() ? tekstEksportu(kopiaDoEksportu(art)) : currentText;
+  const tekst = art && art.innerHTML.trim() ? tekstEksportu(kopiaDoEksportu(art, 'schowek')) : currentText;
   navigator.clipboard.writeText(tekst).then(() => {
     const btn = document.getElementById('copy-btn');
     btn.innerHTML = ikona('check', 'ok') + '<span>' + _t('btn-copied') + '</span>';
@@ -12548,7 +13387,7 @@ function copyOut() {
 function dlTxt() {
   const art = document.getElementById('article');
   if (!art || !art.innerHTML.trim()) return;
-  const kopia = kopiaDoEksportu(art);
+  const kopia = kopiaDoEksportu(art, 'txt');
   const nazwa = nazwaPlikuEksportu(tytulEksportu(kopia), 'txt');
   // R6-F (E-18): polski sklad w pliku (twarde spacje po wyrazach jednoliterowych).
   const blob = new Blob([tekstEksportu(twardeSpacjePl(kopia))], { type: 'text/plain;charset=utf-8' });
@@ -12564,7 +13403,7 @@ async function dlDocx() {
   const przycisk = btn ? btn.innerHTML : '';
   if (btn) { btn.innerHTML = _t('msg-loading-docx'); btn.disabled = true; }
   try {
-    const kopia = kopiaDoEksportu(art);
+    const kopia = kopiaDoEksportu(art, 'docx');
     // R6-F (E-18): metadane (tytul, opis) przed twardymi spacjami, tresc dokumentu po nich.
     const opcje = opcjeDocxArtykulu(kopia), nazwa = nazwaPlikuEksportu(tytulEksportu(kopia), 'docx');
     await pobierzDocx(twardeSpacjePl(kopia), opcje, nazwa);
@@ -13773,6 +14612,11 @@ function openWpPublish() {
   if (!hasActive) { openWpModal(); return; }
   const cms = activeCms === 'drupal' ? 'Drupal' : 'WordPress';
   document.getElementById('pub-modal-title').textContent = (currentLang === 'en' ? 'Publish to ' : 'Publikuj w ') + cms;
+  // R9-D (PR8-19): przelacznik etykiety AI, przypomnienie o art. 50 ust. 4 i uwaga o formacie Drupala.
+  rysujPrzelacznikiOznaczen();
+  const wiecej = document.getElementById('ozn-cms-wiecej'); if (wiecej) wiecej.href = adresInformacjiAI();
+  const drupal = document.getElementById('ozn-cms-drupal');
+  if (drupal) drupal.hidden = !(activeCms === 'drupal' && metadaneAI('tekst') && (drupalSettings.format || 'full_html') !== 'full_html');
   document.getElementById('wp-publish-modal').classList.add('open');
 }
 function closeWpPublishModal() { document.getElementById('wp-publish-modal').classList.remove('open'); }
@@ -13857,18 +14701,20 @@ async function publishToCms(status) {
     const metaEl = art.querySelector('.meta-box p');
     const excerpt = metaEl ? metaEl.textContent.replace(/\s+/g, ' ').trim() : '';
     // Ta sama kopia co do plikow: bez data-tylko-ekran, notatek o lukach i tresci niewidocznej.
-    const artClone = kopiaDoEksportu(art);
+    const artClone = kopiaDoEksportu(art, 'cms');
     artClone.querySelector('.meta-box')?.remove();
     // Tytul idzie osobnym polem; H1 w tresci dalby wpis z dwoma H1.
     const h1 = artClone.querySelector('h1');
     const title = (h1 && h1.textContent.trim()) || document.getElementById('topic').value.trim() || _t('wp-default-title');
     if (h1) h1.remove();
     const content = oczyscHtmlModelu(artClone.innerHTML);
+    // R9-D: tresc wpisu w <div data-ai-*> (filtr czysci atrybuty, wiec opakowanie po nim).
+    const wpis = opakowanieCmsAI(artClone, content);
 
     if (activeCms === 'wp') {
-      await publishToWordPress(title, content, excerpt, status, res);
+      await publishToWordPress(title, wpis, excerpt, status, res);
     } else {
-      await publishToDrupal(title, content, excerpt, status, res);
+      await publishToDrupal(title, wpis, excerpt, status, res);
     }
   } catch(e) {
     res.innerHTML = (e && e.name === 'TypeError') ? htmlBleduCms(0, '', activeCms) : '<span class="stan-blad">' + escapeHtml(komunikatBleduApi(e)) + '</span>';
@@ -14400,8 +15246,9 @@ function odswiezGrupyPaska() {
     const menu = document.getElementById('grupa-' + n + '-menu');
     const wrap = document.getElementById('grupa-' + n + '-wrap');
     if (!menu || !wrap) return;
+    // R9-D: opcja eksportu (przelacznik etykiety AI) sama nie pokazuje grupy - tylko przyciski formatow.
     const cos = [...menu.children].some(function(e) {
-      return e.style.display !== 'none' && !e.classList.contains('grupa-sep') && !e.classList.contains('arkusz-tytul');
+      return e.style.display !== 'none' && !e.classList.contains('grupa-sep') && !e.classList.contains('arkusz-tytul') && !e.classList.contains('grupa-opcja');
     });
     wrap.style.display = cos ? 'inline-flex' : 'none';
   });
@@ -14578,7 +15425,7 @@ function showRepurpose(text) {
 }
 
 function copyRepurpose() {
-  const text = document.getElementById('repurpose-out').value;
+  const text = przerobkaZOznaczeniemAI(document.getElementById('repurpose-out').value);
   navigator.clipboard.writeText(text).catch(()=>{});
 }
 
@@ -14726,8 +15573,10 @@ async function runImprove() {
   try {
     // true: okno samokorekty konczylo generate() od razu, a wklejony tekst znikal
     // z bazy, zanim ktokolwiek go uzyl (kod-07). Popraw to swiadomy wybor.
+    poprawaWklejonego = true;
     await generate(true);
   } finally {
+    poprawaWklejonego = false;
     document.getElementById('topic').value = tematBriefu;
     // Przywróć bazę bez temp doca (po tozsamosci: lista mogla sie zmienic w trakcie)
     const k = docs.indexOf(tempDoc);
@@ -14764,7 +15613,8 @@ const SCHEMA_ENTITY = {
   postalCode: BRAND.postalCode || '',
   addressLocality: BRAND.addressLocality || '',
   addressCountry: BRAND.addressCountry || 'PL',
-  defaultAuthor: BRAND.defaultAuthor || 'Redakcja',
+  // R9-D (PR8-20): bez domyslnego autora "Redakcja" (to nie osoba); autor tylko z konfiguracji marki.
+  defaultAuthor: BRAND.defaultAuthor || '',
   sameAs: (BRAND.sameAs && BRAND.sameAs.length) ? BRAND.sameAs.slice() : []
 };
 
@@ -14794,7 +15644,7 @@ function buildFaqSchema() {
     if (answer.trim()) pairs.push({ q, a: answer.trim().substring(0, 300) });
   });
   if (!pairs.length) return null;
-  return {
+  return schemaZOznaczeniemAI({
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": pairs.map(p => ({
@@ -14802,7 +15652,13 @@ function buildFaqSchema() {
       "name": p.q,
       "acceptedAnswer": { "@type": "Answer", "text": p.a }
     }))
-  };
+  });
+}
+// R9-D (PR8-17, PR8-20): tresc z AI w danych strukturalnych - schema.org digitalSourceType (Article, FAQPage).
+// Organization, Service, LocalBusiness i BreadcrumbList to szablony z danych marki: bez oznaczenia.
+function schemaZOznaczeniemAI(schema) {
+  if (schema && metadaneAI('tekst')) schema.digitalSourceType = zrodloAI(pochodzenieArtykulu()).schema;
+  return schema;
 }
 
 function buildOrganizationSchema(cfg) {
@@ -14871,15 +15727,18 @@ function buildArticleSchema(cfg) {
   const e = SCHEMA_ENTITY;
   const headline = _articleHeadline() || (nazwaMarki() + " - artykuł");
   const today = new Date().toISOString().slice(0, 10);
-  return {
+  const schema = {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": headline,
     "datePublished": today,
     "dateModified": today,
-    "author": { "@type": "Person", "name": e.defaultAuthor },
     "publisher": { "@type": "Organization", "@id": _orgId(cfg), "name": cfg.name || "" }
   };
+  // Autor: osoba z konfiguracji marki albo wydawca (organizacja), nigdy zmyslona "Redakcja".
+  if (e.defaultAuthor) schema.author = { "@type": "Person", "name": e.defaultAuthor };
+  else if (cfg.name) schema.author = { "@type": "Organization", "@id": _orgId(cfg), "name": cfg.name };
+  return schemaZOznaczeniemAI(schema);
 }
 
 function buildBreadcrumbSchema(cfg) {
@@ -15233,8 +16092,8 @@ const HTML_ATRYBUTY = new Set(['class','id','title','colspan','rowspan','scope',
 // mogla trafic na jedna z kilkudziesieciu regul CSS, ktore chowaja tekst (.sr-only,
 // .tab-panel...): na ekranie nic nie widac, a eksport i WordPress wynosza tresc
 // (it-bezpieczenstwo, R3). data-tylko-ekran z modelu kasowalby z kolei tresc z eksportu.
-const HTML_KLASY = new Set(['meta-box', 'meta-label', 'zrodla-box', 'zrodla-label', 'zrodlo-data']);
-const HTML_DATA = new Set(['data-brak']);
+const HTML_KLASY = new Set(['meta-box', 'meta-label', 'zrodla-box', 'zrodla-label', 'zrodlo-data', 'oznaczenie-ai']);
+const HTML_DATA = new Set(['data-brak', 'data-ai-label']);
 function oczyscHtmlModelu(html) {
   if (!html) return '';
   let dok;
@@ -17220,6 +18079,9 @@ async function imgResizeB64(b64, targetW, targetH) {
     // dostana prawdziwy typ zamiast falszywego image/png.
     const typ = (ia[0] === 0xFF && ia[1] === 0xD8) ? 'image/jpeg'
       : (ia[0] === 0x52 && ia[1] === 0x49 && ia[8] === 0x57 && ia[9] === 0x45) ? 'image/webp' : 'image/png';
+    // R9-D (PR8-17): jedyne miejsce, gdzie bajty dostawcy staja sie plikiem - tu XMP z IPTC Digital Source Type.
+    // PNG z manifestem C2PA dostawcy (caBX) zostaje bajt w bajt (kazda zmiana uniewaznia podpis).
+    if (typ === 'image/png' && metadaneAI('grafika')) { resolve(new Blob([oznaczPng(ia).bajty], { type: typ })); return; }
     resolve(new Blob([ab], { type: typ }));
   });
 }
@@ -17267,6 +18129,8 @@ async function imgCopyResult() {
   if (!imgCurrentBlob) return;
   try {
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': imgCurrentBlob })]);
+    // R9-D (D-07, PR8-21): przegladarka zapisuje do schowka same piksele - bez XMP i bez C2PA.
+    if (oznaczeniaWlaczone()) pokazPowiadomienie(_t('ozn-grafika-schowek'), 'info', 9000);
     const btn = document.getElementById('img-copy-btn');
     btn.textContent = _t('msg-copied-2');
     setTimeout(() => { btn.innerHTML = ikona('copy') + _t('btn-copy'); }, 2000);
@@ -17835,7 +18699,7 @@ async function podcastDownload(btn) {
   var old = btn.innerHTML; btn.disabled = true; btn.innerHTML = ikona('loader', 'kreci');
   try {
     var blobs = []; for (var i = 0; i < units.length; i++) blobs.push(await podGen(units[i]));
-    var full = new Blob(blobs, { type: 'audio/mpeg' });
+    var full = await zbudujMp3(blobs, opcjeMp3Artykulu()); // R9-D: ID3 z oznaczeniem AI
     var url = URL.createObjectURL(full);
     var a = document.createElement('a'); a.href = url; a.download = nazwaPlikuEksportu(tytulEksportu(document.getElementById('article')), 'mp3', '-podcast'); a.click();
     setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
@@ -17984,9 +18848,9 @@ function audioHistAttach(buffer, blob, dur, sig, ttsCost){ var e=audioCurEntry; 
 function audioRenderHistory(){ var w=document.getElementById('au-history-wrap'); if(!w) return; if(!audioHistory.length){ w.style.display='none'; w.innerHTML=''; return; } w.style.display='block'; var rows=audioHistory.map(function(e,i){ var ico=ikona(e.buffer?'volume-2':'notebook-pen'); var c=e.cost?(' \u00B7 $'+e.cost.toFixed(3)):''; return '<button type="button" class="au-hist-item" onclick="audioHistLoad('+i+')"><span class="au-hist-ikona">'+ico+'</span><span class="au-hist-tekst"><span class="au-hist-topic">'+escapeHtml(e.topic||'-')+'</span><span class="au-hist-meta">'+escapeHtml(_t('au-typ-'+e.type))+' \u00B7 '+e.ts+c+'</span></span></button>'; }).join(''); w.innerHTML='<div class="field-label">'+_t('audio-hist')+'</div><div class="au-hist-lista">'+rows+'</div>'; }
 function audioHistLoad(i){ var e=audioHistory[i]; if(!e) return; audioBarClose(); var ty=document.getElementById('au-type'); if(ty) ty.value=e.type; audioSetType(); var sc=document.getElementById('au-script'); if(sc) sc.innerHTML=e.html; audioResultType=e.type; var rw=document.getElementById('au-result-wrap'); if(rw) rw.style.display='block'; var sa=document.getElementById('au-script-actions'), ta=document.getElementById('au-trans-actions'); if(e.type==='transcription'){ if(sa)sa.style.display='none'; if(ta)ta.style.display='flex'; } else { if(sa)sa.style.display='flex'; if(ta)ta.style.display='none'; } audioInvalidate(); if(e.buffer){ AUDIO.buffer=e.buffer; AUDIO.blob=e.blob; AUDIO.dur=e.dur; AUDIO.sig=e.sig; AUDIO.offset=0; AUDIO.playing=false; } audioCurEntry=e; if(rw&&rw.scrollIntoView){ try{ rw.scrollIntoView({block:'start'}); }catch(_e){} } }
 function fmtTime(s){ s=Math.max(0,s|0); var m=(s/60)|0, ss=s%60; return m+':'+(ss<10?'0':'')+ss; }
-function audioSig(){ var sc=document.getElementById('au-script'); return [audioType(), audioEng(), (document.getElementById('au-voices')||{}).value, [audioVoiceFor(0),audioVoiceFor(1),audioVoiceFor(2),audioVoiceFor(3)].join(','), voiceCfg.elevenModel, (sc?sc.innerText:'')].join('|'); }
+function audioSig(){ var sc=document.getElementById('au-script'); return [audioType(), audioEng(), (document.getElementById('au-voices')||{}).value, [audioVoiceFor(0),audioVoiceFor(1),audioVoiceFor(2),audioVoiceFor(3)].join(','), voiceCfg.elevenModel, zapowiedzAudioAI(jezykModuluAudio()), (sc?sc.innerText:'')].join('|'); }
 function audioInvalidate(){ try{ if(AUDIO.src){ AUDIO.src._stopped=true; AUDIO.src.onended=null; AUDIO.src.stop(); } }catch(e){} if(AUDIO.raf){ cancelAnimationFrame(AUDIO.raf); AUDIO.raf=0; } if(AUDIO.url){ try{ URL.revokeObjectURL(AUDIO.url); }catch(e){} } AUDIO.src=null; AUDIO.buffer=null; AUDIO.blob=null; AUDIO.url=null; AUDIO.sig=null; AUDIO.dur=0; AUDIO.offset=0; AUDIO.playing=false; }
-async function audioBuildCore(units, sig, attach, eng){
+async function audioBuildCore(units, sig, attach, eng, mp3){
   if(AUDIO.buffer && AUDIO.sig===sig){ if(!AUDIO.url && AUDIO.blob){ try{ AUDIO.url=URL.createObjectURL(AUDIO.blob); }catch(e){} } return AUDIO.buffer; }
   audioInvalidate();
   if(!units || !units.length) throw new Error('empty');
@@ -17999,7 +18863,7 @@ async function audioBuildCore(units, sig, attach, eng){
   await Promise.all(ws);
   var blobs=[], bufs=[];
   for(var i=0;i<n;i++){ if(ttsState.cancel){ audioBarHide(); throw new Error('cancel'); } blobs.push(blobsArr[i]); var ab=await blobsArr[i].arrayBuffer(); var dec=await ctx.decodeAudioData(ab.slice(0)); bufs.push(dec); }
-  AUDIO.blob=new Blob(blobs,{type:'audio/mpeg'}); AUDIO.url=URL.createObjectURL(AUDIO.blob);
+  AUDIO.blob=await zbudujMp3(blobs, mp3||opcjeMp3Artykulu()); AUDIO.url=URL.createObjectURL(AUDIO.blob); // R9-D: ID3 z oznaczeniem AI
   var sr=ctx.sampleRate, ch=1, total=0;
   bufs.forEach(function(bf){ if(bf.numberOfChannels>ch) ch=bf.numberOfChannels; total+=bf.length; });
   var out=ctx.createBuffer(ch, total, sr);
@@ -18008,7 +18872,7 @@ async function audioBuildCore(units, sig, attach, eng){
   try{ var _ch=0; units.forEach(function(u){ _ch+=((typeof u==='string')?u:(u.text||'')).length; }); var ttsCost=_ch/1000*(eng==='eleven'?0.30:0.05); dodajKoszt(eng==='eleven'?'eleven':'openai', ttsCost); if(attach) audioHistAttach(out, AUDIO.blob, AUDIO.dur, sig, ttsCost); }catch(e){}
   return out;
 }
-async function audioBuild(){ return audioBuildCore(audioUnits(), audioSig(), true, audioEng()); }
+async function audioBuild(){ return audioBuildCore(zZapowiedziaAI(audioUnits(), jezykModuluAudio()), audioSig(), true, audioEng(), opcjeMp3Modulu()); }
 function audioBarSetIcon(s){ var b=document.getElementById('audio-bar-play'); if(b) b.innerHTML=(s==='pause')?'&#10073;&#10073;':'&#9654;'; }
 function audioBarShowBuild(i,n){ var b=document.getElementById('audio-bar'); if(!b)return; if(audioInline){ audioBarPlaceInline(); } else { audioBarPlaceFixed(); document.body.classList.add('audio-bar-open'); } b.classList.add('show'); var pc=n?Math.round(i/n*100):0;
   var f=document.getElementById('audio-bar-fill'); if(f) f.style.width=pc+'%';
@@ -18207,8 +19071,10 @@ async function audioDownloadDocx(btn){
   var old=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="au-spin"></span>';
   try{
     var kopia=czyscKopie(sc.cloneNode(true));
+    // R9-D: skrypt napisal model - oznaczenie AI we wlasciwosciach (bez AIEditedByHuman: edycji skryptu nie sledzimy).
+    var aiSkryptu=wlasciwosciAI('ai'); if(aiSkryptu) delete aiSkryptu.edytowany;
     await pobierzDocx(kopia, { tytul: skrotTekstu(tytul, 200), autor: nazwaMarki()||'', jezyk: ({ pl:'pl-PL', en:'en-US', de:'de-DE', cs:'cs-CZ' })[kod]||'pl-PL',
-      naglowek: nazwaMarki()||'', stopka: skrotTekstu(tytul, 70) }, nazwaPlikuEksportu(tytul, 'docx', currentLang==='en' ? '-script' : '-skrypt'));
+      naglowek: nazwaMarki()||'', stopka: skrotTekstu(tytul, 70), wlasciwosciAI: aiSkryptu }, nazwaPlikuEksportu(tytul, 'docx', currentLang==='en' ? '-script' : '-skrypt'));
   }catch(e){ console.error('[docx]', e); powiadomBlad(_t('msg-docx-error')); }
   btn.innerHTML=old; btn.disabled=false;
 }
@@ -18453,6 +19319,11 @@ async function kbAudioTranscribeAndOpen(file) {
         <div id="au-result-wrap" style="display:none">
           <div class="field-label" id="au-script-etykieta" data-i18n="audio-script">Skrypt (edytowalny)</div>
           <div id="au-script" class="article" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="au-script-etykieta"></div>
+          <!-- R9-D (PR8-17, art. 50 ust. 1 i 2 AI Act): syntetyczny glos i zapowiedz na poczatku nagrania -->
+          <div class="au-ozn au-tylko-skrypt">
+            <p class="tekst-pomoc ai-info"><svg class="ikona" aria-hidden="true"><use href="#i-info"/></svg><span><span data-i18n="ozn-audio-info">Nagranie czyta syntetyczny głos wygenerowany przez AI.</span> <span data-ozn-meta="audio" data-i18n="ozn-audio-info-meta">Pobrany plik MP3 ma oznaczenie AI w metadanych.</span></span></p>
+            <label class="ozn-wiersz" for="ozn-audio"><input type="checkbox" id="ozn-audio" data-oznaczenie="audio" onchange="ustawWyborOznaczenia('audio', this.checked)"><span data-i18n="ozn-audio-przelacznik">Zacznij nagranie zapowiedzią, że czyta je syntetyczny głos</span></label>
+          </div>
           <div id="au-odtwarzacz">
             <div id="au-script-actions">
               <button type="button" class="btn-generate" id="au-play-btn" onclick="audioPlay(this)"><svg class="ikona" aria-hidden="true"><use href="#i-play"/></svg><span data-i18n="audio-play">Odtwórz</span></button>
@@ -18484,7 +19355,7 @@ async function kbAudioTranscribeAndOpen(file) {
   <button id="audio-bar-play" type="button" title="Pauza/Wznów" aria-label="Pauza/Wznów" onclick="audioBarPlayPause()">&#10073;&#10073;</button>
   <div id="audio-bar-main">
     <div id="audio-bar-track" onpointerdown="audioBarScrubStart(event)"><div id="audio-bar-fill"></div></div>
-    <div id="audio-bar-meta"><span id="audio-bar-left">0:00 / 0:00</span><span id="audio-bar-pct">0%</span></div>
+    <div id="audio-bar-meta"><span id="audio-bar-left">0:00 / 0:00</span><span id="audio-bar-ai" data-i18n="ozn-audio-glos">Syntetyczny głos AI</span><span id="audio-bar-pct">0%</span></div>
   </div>
   <button id="audio-bar-close" type="button" title="Zamknij" aria-label="Zamknij" onclick="audioBarClose()">&#10005;</button>
 </div>
