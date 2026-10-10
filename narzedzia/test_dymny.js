@@ -1723,10 +1723,14 @@ function stanKontaSamoobslugi(st) {
   return {
     login: 'k-samoobsluga1', email: 'anna@example.com', emailPotwierdzony: st.emailPotwierdzony, rola: 'uzytkownik', pochodzenie: 'samoobsluga', zrodloKluczy: 'wlasne',
     organizacja: { id: 'o-samoobsluga1', nazwa: null, rodzaj: 'samoobsluga', mozeZarzadzac: true },
-    subskrypcja: st.aktywna ? { stan: 'aktywna', plan: 'standard', okresDo: Date.now() + 30 * 864e5, waluta: 'pln', dostepDo: null } : { stan: 'brak', plan: null, okresDo: null, waluta: null, dostepDo: null },
+    subskrypcja: st.aktywna ? { stan: st.anulowana ? 'anulowana' : 'aktywna', plan: 'standard', okresDo: Date.now() + 30 * 864e5, waluta: 'pln', dostepDo: null } : { stan: 'brak', plan: null, okresDo: null, waluta: null, dostepDo: null },
     platnosci: { wlaczone: true, sprzedaz: true, tryb: 'test', dostawca: 'stripe', waluty: ['eur', 'pln'], walutaDomyslna: 'pln', wymagaZgodyNaWykonanie: true,
       mozeKupic: !st.aktywna, maPanel: !!st.aktywna, plany: [{ plan: 'standard', nazwa: 'Standard', nazwaEn: 'Standard', ceny: { eur: 1900, pln: 7900 } },
-        { plan: 'premium', nazwa: 'Premium', nazwaEn: 'Premium', ceny: { eur: 4900, pln: 19900 } }] },
+        { plan: 'premium', nazwa: 'Premium', nazwaEn: 'Premium', ceny: { eur: 4900, pln: 19900 } }],
+      walutaWymuszona: st.aktywna ? 'pln' : null, zakupNiedozwolony: false, kraje: ['PL', 'DE', 'CZ'], zwrot: 'proporcjonalny',
+      odstapienie: st.aktywna ? { mozliwe: true, zawarcie: Date.now(), do: Date.now() + 14 * 864e5, szacunek: null, adres: '/konto/odstapienie', ponowienie: false }
+        : { mozliwe: false, powod: 'brak-umowy', do: null, zlozone: null },
+      odrzucenie: st.odrzucenie || null, adresy: { zakup: '/konto/zakup', panel: '/konto/panel', odstapienie: '/konto/odstapienie' }, rachunek: { email: 'kontakt@example.com' } },
     zgody: { regulamin: { wersja: '2026-10-15', aktualna: '2026-10-15', wymagaAkceptacji: false }, marketing: false },
     oznaczenia: null, uslugodawca: { nazwa: null, adres: null, email: 'kontakt@example.com' },
     mozliwosci: { eksport: true, usuniecie: true, zmianaHasla: true }, adresy: { konto: '/konto', eksport: '/konto/eksport', usun: '/konto/usun' },
@@ -1768,7 +1772,7 @@ async function wariantSamoobsluga(b) {
   });
   await k.route(/checkout\.stripe\.test/, (r) => r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8',
     body: '<!doctype html><title>Stripe (atrapa)</title><a id="zaplac" href="' + BAZA + '/konto/platnosc?wynik=ok&sesja=cs_test_r9d">Zapłać</a>' }));
-  await k.route(/\/konto\/platnosc\?/, (r) => { st.kupiono = true; return r.fulfill({ status: 303, headers: { Location: '/?platnosc=ok' }, body: '' }); });
+  await k.route(/\/konto\/platnosc\?/, (r) => { st.kupiono = true; return r.fulfill({ status: 303, headers: { Location: '/?platnosc=oczekuje' }, body: '' }); });
   // Po zakupie pakiet Standard (licznik 50 w okresie rozliczeniowym); wczesniej prawdziwy /api/pakiet konta darmowy.
   await k.route(/\/api\/pakiet$/, (r) => (st.aktywna
     ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ plan: 'standard', nazwa: 'Standard', nazwaEn: 'Standard', okres: 'miesiac',
@@ -1860,11 +1864,33 @@ async function wariantSamoobsluga(b) {
   wynik('R9-D: okno pakietow - Standard i Premium w PLN (interfejs PL), podsumowanie prawne, dwie zgody, przycisk zablokowany do zaznaczenia',
     okno.karty.length === 2 && /79\s?zł/.test(okno.karty[0]) && okno.waluta === 'PLN' && /Przejdź do płatności · 79\s?zł/.test(okno.przycisk) && okno.zablokowany
     && /odnawia się automatycznie/.test(okno.podsumowanie) && okno.zgody === 2, JSON.stringify(okno));
+  const waluty = await s.evaluate(() => {
+    const pl = window.STAN_KONTA.platnosci, zapas = JSON.stringify(pl), w = {};
+    const karty = () => [...document.querySelectorAll('#pakiet-zakup .zakup-karta')].map((x) => x.textContent);
+    try {
+      pl.plany[1].ceny = { eur: 4900 };
+      wybierzWaluteZakupu('pln'); w.pln = karty();
+      wybierzWaluteZakupu('eur'); w.eur = karty();
+      pl.walutaWymuszona = 'eur';
+      wybierzWaluteZakupu('pln');
+      w.wymuszona = { przelacznik: !!document.querySelector('#zakup .segmenty'), opis: (document.getElementById('zakup-waluta-wymuszona') || {}).textContent || '', przycisk: document.getElementById('zakup-przycisk').textContent };
+      pl.plany.forEach((p) => { p.ceny = {}; });
+      wybierzWaluteZakupu('eur'); w.brak = document.getElementById('pakiet-zakup').textContent;
+    } finally {
+      window.STAN_KONTA.platnosci = JSON.parse(zapas);
+      wybierzWaluteZakupu('pln');
+    }
+    return w;
+  });
+  wynik('R9-D: okno pakietow wedlug kontraktu B - pakiet bez ceny w walucie ukryty, waluta wymuszona bez przelacznika, bez cen "wstrzymana"',
+    waluty.pln.length === 1 && /Standard/.test(waluty.pln[0]) && waluty.eur.length === 2 && !waluty.wymuszona.przelacznik && /Płacisz w EUR/.test(waluty.wymuszona.opis)
+    && /19\s?€/.test(waluty.wymuszona.przycisk) && /chwilowo wstrzymana/.test(waluty.brak), JSON.stringify(waluty));
   await s.check('#zakup-zgoda-regulamin');
   await s.check('#zakup-zgoda-wykonanie');
   await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('#zakup-przycisk')]);
-  wynik('R9-D: zakup idzie do POST /api/platnosci/zakup z planem, waluta i zgoda na wykonanie, potem przekierowanie do Checkout',
-    zapytania.zakup.length === 1 && zapytania.zakup[0].plan === 'standard' && zapytania.zakup[0].waluta === 'pln' && zapytania.zakup[0].zgodaNaWykonanie === true && /checkout\.stripe\.test/.test(s.url()),
+  wynik('R9-D: zakup idzie do POST /api/platnosci/zakup z planem, waluta, zgoda na wykonanie i regulaminem (kontrakt B), potem przekierowanie do Checkout',
+    zapytania.zakup.length === 1 && zapytania.zakup[0].plan === 'standard' && zapytania.zakup[0].waluta === 'pln' && zapytania.zakup[0].zgodaNaWykonanie === true
+    && zapytania.zakup[0].zgodaRegulamin === true && zapytania.zakup[0].jezyk === 'pl' && zapytania.zakup[0].z === 'app' && /checkout\.stripe\.test/.test(s.url()),
     JSON.stringify({ zakup: zapytania.zakup, url: s.url() }));
   // 4. Platnosc w Checkout (atrapa) i powrot: aktywacja z webhooka z opoznieniem, pakiet aktywny.
   await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('#zaplac')]);
@@ -1882,10 +1908,19 @@ async function wariantSamoobsluga(b) {
   // 5. Konto: pakiet z panelem Stripe, klucze z koncowka, dane; potwierdzenie e-maila z paska.
   await s.evaluate(() => otworzKonto());
   await krok('R9-D ekran Konto', s.waitForFunction(() => document.querySelectorAll('#konto-tresc .konto-sekcja').length >= 5, null, { timeout: 5000 }));
-  const konto = await s.evaluate(() => ({ sekcje: [...document.querySelectorAll('#konto-tresc .konto-sekcja h4')].map((h) => h.textContent), tresc: document.getElementById('konto-tresc').textContent }));
+  const konto = await s.evaluate(() => ({ sekcje: [...document.querySelectorAll('#konto-tresc .konto-sekcja h4')].map((h) => h.textContent), tresc: document.getElementById('konto-tresc').textContent,
+    odstapienie: !!document.querySelector('#konto-tresc a[href="/konto/odstapienie?z=app&lang=pl"]') }));
   wynik('R9-D: Konto - Pakiet i platnosci (Zarzadzaj subskrypcja, rachunek na prosbe), Klucze API z koncowka, Oznaczenia AI, Twoje dane (eksport Historii)',
     konto.sekcje.indexOf('Pakiet i płatności') >= 0 && konto.sekcje.indexOf('Klucze API') >= 0 && konto.sekcje.indexOf('Oznaczenia AI') >= 0 && konto.sekcje.indexOf('Twoje dane') >= 0
     && /Zarządzaj subskrypcją/.test(konto.tresc) && /Rachunek wystawiamy na prośbę/.test(konto.tresc) && /kończy się na wxyz/.test(konto.tresc) && /Eksportuj historię/.test(konto.tresc), JSON.stringify(konto.sekcje));
+  wynik('R9-D: Konto - odstapienie w 14 dni z adresem z kontraktu B i powrotem do aplikacji (z=app)', konto.odstapienie && /Możesz odstąpić od umowy do/.test(konto.tresc), konto.tresc.slice(0, 400));
+  await s.evaluate(() => zamknijKonto());
+  st.anulowana = true;
+  await s.evaluate(() => otworzKonto());
+  await krok('R9-D Konto z anulowana subskrypcja', s.waitForFunction(() => /Subskrypcja anulowana/.test(document.getElementById('konto-tresc').textContent), null, { timeout: 5000 }));
+  const e8 = await s.evaluate(() => [...document.querySelectorAll('#konto-tresc button')].map((b) => b.textContent).filter((t) => /Wznów|Zarządzaj/.test(t)));
+  wynik('R9-D: E8 - anulowana subskrypcja: opis "dziala do" i przycisk "Wznow subskrypcje" (panel Stripe)', e8.length === 1 && /Wznów subskrypcję/.test(e8[0]), JSON.stringify(e8));
+  st.anulowana = false;
   await s.evaluate(() => zamknijKonto());
   await s.evaluate(() => { const b = [...document.querySelectorAll('#konto-paski button')].filter((x) => /Wyślij link/.test(x.textContent))[0]; if (b) b.click(); });
   await s.waitForTimeout(300);
@@ -1905,6 +1940,17 @@ async function wariantSamoobsluga(b) {
   const sesja = await s.evaluate(() => ({ pasek: document.getElementById('konto-paski').textContent, szkic: JSON.parse(magazyn.getItem('cai_szkic') || '{}').topic }));
   wynik('R9-D: wygasla sesja (401 X-CAI-Kod sesja) w dowolnym wywolaniu - pasek "Sesja wygasla" z logowaniem, szkic zapisany',
     /Sesja wygasła/.test(sesja.pasek) && /Zaloguj się/.test(sesja.pasek) && sesja.szkic === 'Szkic przed wygasnieciem sesji', JSON.stringify(sesja));
+  // 7a. Powrot ze Stripe z krajem spoza listy (D-04, kontrakt B): komunikat z krajem z platnosci.odrzucenie, bez czekania na pakiet.
+  st.odrzucenie = { powod: 'kraj', kraj: 'US', czas: Date.now() };
+  await s.goto(BAZA + '/?platnosc=kraj', { waitUntil: 'load' });
+  await krok('R9-D okno odrzuconego kraju', s.waitForFunction(() => /spoza Unii Europejskiej \(US\)/.test((document.getElementById('platnosc-tresc') || {}).textContent || ''), null, { timeout: 10000 }));
+  const kraj = await s.evaluate(() => ({ tytul: document.getElementById('platnosc-tytul').textContent, tresc: document.getElementById('platnosc-tresc').textContent,
+    przycisk: document.getElementById('platnosc-dalej').textContent, adres: location.search }));
+  wynik('R9-D: powrot ze Stripe z krajem spoza UE (?platnosc=kraj) - "Platnosc anulowana" z krajem i zwrotem, adres bez ?platnosc',
+    /Płatność anulowana/.test(kraj.tytul) && /zwrócimy na kartę/.test(kraj.tresc) && !/Czekamy/.test(kraj.tresc) && /Zamknij/.test(kraj.przycisk) && !/platnosc/.test(kraj.adres), JSON.stringify(kraj));
+  await s.evaluate(() => zamknijPlatnosc());
+  st.odrzucenie = null;
+  await krok('R9-D klucze po odswiezeniu', s.waitForFunction(() => !!(window.STAN_KLUCZY && window.STAN_KLUCZY.anthropic && window.STAN_KLUCZY.anthropic.ustawiony), null, { timeout: 8000 }));
   // 8. Wylogowanie konta z kluczem: wybor, czy klucze zostaja na urzadzeniu (UX8-09, M-10).
   await s.evaluate(() => wyloguj());
   const wyl = await s.evaluate(() => ({ okno: document.getElementById('wyloguj-modal').classList.contains('open'), opis: document.querySelector('#wyloguj-modal p').textContent }));

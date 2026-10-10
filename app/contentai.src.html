@@ -5699,6 +5699,7 @@ var I18N = {
     'zakup-bl-niedozwolony':'Pakiet tego konta zmienia administrator zespołu.','zakup-bl-plan':'Ten pakiet nie jest dostępny w wybranej walucie. Wybierz inną walutę.',
     'zakup-bl-stripe':'Stripe chwilowo nie odpowiada. Spróbuj ponownie za chwilę.','zakup-bl-za-duzo':'Za dużo prób w krótkim czasie. Spróbuj ponownie za {s} s.',
     'zakup-bl-wylaczone':'Płatności są wyłączone na tym serwerze.','zakup-bl-inny':'Nie udało się przejść do płatności. Spróbuj ponownie za chwilę.','zakup-bl-brak-subskrypcji':'To konto nie ma jeszcze subskrypcji. Wybierz pakiet w oknie pakietu.',
+    'zakup-bl-zgoda':'Zaznacz oba pola zgody, żeby przejść do płatności.','zakup-waluta-wymuszona':'Płacisz w {WALUTA}, tak jak przy poprzedniej subskrypcji tego konta.',
     'start-menu-title':'Konfiguracja konta','start-menu-sub':'klucze API i pierwsze kroki',
     'start-dalej':'Dalej','start-wstecz':'Wstecz','start-pomin':'Pomiń kreator',
     'start-krok-z':'Krok {n} z {m}',
@@ -5969,9 +5970,11 @@ var I18N = {
     'plat-ok-tekst':'Pakiet {PAKIET} jest aktywny do {DATA}, potem odnowi się automatycznie. Potwierdzenie płatności Stripe wysłał na {EMAIL}.','plat-opoznienie-tytul':'Pakiet włącza się z opóźnieniem',
     'plat-opoznienie':'Płatność dotarła, ale Stripe jeszcze nie potwierdził jej naszemu serwerowi. Zwykle trwa to kilka minut. Nie płać drugi raz: odśwież stronę za chwilę, a jeśli pakiet nadal nie działa, napisz na {EMAIL}.',
     'plat-przerwana':'Płatność nie została dokończona i nic nie pobraliśmy. Pakiet możesz wybrać w każdej chwili.','plat-odnowienie-nieudane':'Nie udało się pobrać opłaty za pakiet {PAKIET}. Zaktualizuj kartę do {DATA}, żeby pakiet działał bez przerwy.',
+    'plat-kraj-tytul':'Płatność anulowana','plat-kraj':'Adres rozliczeniowy tej płatności jest spoza Unii Europejskiej ({KRAJ}), a pakiety sprzedajemy tylko klientom z Unii. Subskrypcję anulowaliśmy, a całą kwotę zwrócimy na kartę. Konto działa dalej w dotychczasowym pakiecie.',
     'plat-odnowienie-przycisk':'Zaktualizuj kartę','plat-ustawienia-tytul':'Pakiet i płatności','plat-ustawienia-portal':'Zarządzaj subskrypcją','plat-ustawienia-portal-opis':'Otworzy się panel Stripe. Zmienisz w nim pakiet albo kartę, pobierzesz potwierdzenia płatności i anulujesz subskrypcję.',
     'plat-ustawienia-rachunek':'Rachunek wystawiamy na prośbę: napisz na {EMAIL_KONTAKT} w ciągu 3 miesięcy od końca miesiąca płatności i podaj jej datę.','sub-aktywna':'Pakiet {PAKIET} jest aktywny. Następne odnowienie: {DATA}.',
     'sub-anulowana':'Subskrypcja anulowana. Pakiet {PAKIET} działa do {DATA}, potem konto przejdzie na pakiet Darmowy.','sub-wygasla':'Pakiet {PAKIET} wygasł {DATA}. Konto działa w pakiecie Darmowym: historia tekstów i dokumenty zostają, a limity są takie jak w tym pakiecie.',
+    'sub-wznow':'Wznów subskrypcję',
     'sub-wybierz':'Wybierz pakiet','pasek-test':'Tryb testowy płatności: karta testowa Stripe, bez prawdziwych pieniędzy.','pasek-sesja':'Sesja wygasła. Zaloguj się ponownie: temat i ustawienia briefu zostaną na miejscu.',
     'pasek-zgoda':'Zmieniliśmy regulamin. Przeczytaj i zaakceptuj nową wersję, żeby dalej korzystać z aplikacji.','pasek-zgoda-akcja':'Przeczytaj i zaakceptuj',
     'pasek-email':'Potwierdź adres {EMAIL}: link jest w wiadomości od Content AI.','pasek-zmien-adres':'Zmień adres','potw-ponow-ok':'Wysłaliśmy nowy link. Sprawdź skrzynkę, także folder ze spamem.',
@@ -5983,6 +5986,7 @@ var I18N = {
     'konto-usun-klucz':'Usuń klucz','konto-usun-blad':'Nie udało się usunąć klucza. Spróbuj ponownie.','konto-klucz-usuniety':'Klucz {DOSTAWCA} usunięty z tego urządzenia.',
     'konto-email-niepotwierdzony':'adres e-mail niepotwierdzony','konto-pula-jednorazowa':'pula jednorazowa','konto-licznik-wraca':'licznik wraca {DATA}','konto-szczegoly-pakietu':'Szczegóły pakietu',
     'konto-odstapienie':'Możesz odstąpić od umowy do {DATA}.','konto-odstap':'Odstąp od umowy','konto-odstapienie-14':'Od umowy możesz odstąpić w ciągu 14 dni od zakupu.',
+    'konto-odstapienie-zlozone':'Oświadczenie o odstąpieniu od umowy dotarło do nas {DATA}.','konto-odstapienie-zwrot':'Zwrot: {KWOTA} na kartę użytą do płatności.',
     'konto-ustawienia-serwera':'Ustawienia konta','konto-firma':'Firma i marka','konto-firma-opis':'Nazwa, strona i opis oferty trafiają do każdego artykułu. Styl pisania ustawisz w Głosie marki.',
     'konto-oznaczenia':'Oznaczenia AI','konto-oznaczenia-opis':'Pliki zawsze niosą informację o AI w metadanych. Tu włączasz widoczne etykiety dla czytelników; to samo zmienisz przy eksporcie i publikacji.',
     'konto-ozn-tekst':'Zdanie o AI na końcu tekstu (pliki, schowek, publikacja w CMS)','konto-ozn-grafika':'Napis „Grafika wygenerowana przez AI” na pobranych grafikach',
@@ -6561,6 +6565,7 @@ var I18N = {
     'zakup-bl-niedozwolony':'The plan of this account is changed by your team administrator.','zakup-bl-plan':'This plan is not available in the selected currency. Choose another currency.',
     'zakup-bl-stripe':'Stripe is not responding right now. Try again in a moment.','zakup-bl-za-duzo':'Too many attempts in a short time. Try again in {s} s.',
     'zakup-bl-wylaczone':'Payments are turned off on this server.','zakup-bl-inny':'Could not continue to payment. Try again in a moment.','zakup-bl-brak-subskrypcji':'This account has no subscription yet. Choose a plan in the plan window.',
+    'zakup-bl-zgoda':'Tick both consent boxes to continue to payment.','zakup-waluta-wymuszona':'You pay in {WALUTA}, as with this account\'s previous subscription.',
     'start-menu-title':'Account setup','start-menu-sub':'API keys and first steps',
     'start-dalej':'Next','start-wstecz':'Back','start-pomin':'Skip setup',
     'start-krok-z':'Step {n} of {m}',
@@ -6647,9 +6652,11 @@ var I18N = {
     'plat-ok-tekst':'Your {PAKIET} plan is active until {DATA} and then renews automatically. Stripe has sent a payment confirmation to {EMAIL}.','plat-opoznienie-tytul':'Your plan is taking longer to activate',
     'plat-opoznienie':'The payment went through, but Stripe has not confirmed it to our server yet. This usually takes a few minutes. Do not pay again: reload the page in a moment, and if the plan still does not work, write to {EMAIL}.',
     'plat-przerwana':'The payment was not completed and nothing was charged. You can choose a plan at any time.','plat-odnowienie-nieudane':'We could not collect the payment for your {PAKIET} plan. Update your card by {DATA} to keep the plan running without a break.',
+    'plat-kraj-tytul':'Payment cancelled','plat-kraj':'The billing address of this payment is outside the European Union ({KRAJ}), and we sell plans only to customers in the EU. We have cancelled the subscription and will refund the full amount to your card. Your account stays on its current plan.',
     'plat-odnowienie-przycisk':'Update card','plat-ustawienia-tytul':'Plan and billing','plat-ustawienia-portal':'Manage subscription','plat-ustawienia-portal-opis':'This opens the Stripe portal, where you can change your plan or card, download payment confirmations and cancel your subscription.',
     'plat-ustawienia-rachunek':'We issue a receipt on request: write to {EMAIL_KONTAKT} within 3 months of the end of the month of payment, giving its date.',
     'sub-aktywna':'Your {PAKIET} plan is active. Next renewal: {DATA}.','sub-anulowana':'Subscription cancelled. Your {PAKIET} plan stays active until {DATA}, then your account moves to the Free plan.',
+    'sub-wznow':'Resume subscription',
     'sub-wygasla':'Your {PAKIET} plan ended on {DATA}. Your account is now on the Free plan: your text history and documents stay, and that plan\'s limits apply.',
     'sub-wybierz':'Choose a plan','pasek-test':'Payment test mode: Stripe test card, no real money.','pasek-sesja':'Your session has expired. Sign in again: the topic and brief settings will stay in place.',
     'pasek-zgoda':'We have changed the Terms of Service. Read and accept the new version to keep using the app.','pasek-zgoda-akcja':'Read and accept','pasek-email':'Confirm the address {EMAIL}: the link is in the message from Content AI.',
@@ -6661,6 +6668,7 @@ var I18N = {
     'konto-klucz-usuniety':'{DOSTAWCA} key removed from this device.','konto-email-niepotwierdzony':'e-mail address not confirmed','konto-pula-jednorazowa':'one-off allowance',
     'konto-licznik-wraca':'counter resets on {DATA}','konto-szczegoly-pakietu':'Plan details','konto-odstapienie':'You can withdraw from the contract until {DATA}.',
     'konto-odstap':'Withdraw from the contract','konto-odstapienie-14':'You can withdraw from the contract within 14 days of purchase.','konto-ustawienia-serwera':'Account settings',
+    'konto-odstapienie-zlozone':'We received your notice of withdrawal from the contract on {DATA}.','konto-odstapienie-zwrot':'Refund: {KWOTA} to the card used for the payment.',
     'konto-firma':'Company and brand','konto-firma-opis':'The name, website and description of your offer go into every article. Set your writing style in Brand voice.',
     'konto-oznaczenia':'AI labels','konto-oznaczenia-opis':'Files always carry an AI note in their metadata. Here you turn on visible labels for readers; you can change the same when exporting and publishing.',
     'konto-ozn-tekst':'A sentence about AI at the end of the text (files, clipboard, CMS publishing)','konto-ozn-grafika':'“AI-generated image” caption on downloaded images',
@@ -21427,7 +21435,7 @@ async function kbAudioTranscribeAndOpen(file) {
   <div class="modal" style="width:480px" aria-labelledby="platnosc-tytul">
     <div class="modal-head"><h3 id="platnosc-tytul" data-i18n="plat-ok-tytul">Płatność przyjęta</h3><button type="button" class="modal-close" onclick="zamknijPlatnosc()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
     <div id="platnosc-tresc" class="tekst-zwykly platnosc-tresc" role="status" aria-live="polite"></div>
-    <div class="modal-footer"><button type="button" class="btn-generate" onclick="zamknijPlatnosc()" data-i18n="plat-zacznij">Zacznij pisać</button></div>
+    <div class="modal-footer"><button type="button" class="btn-generate" id="platnosc-dalej" onclick="zamknijPlatnosc()" data-i18n="plat-zacznij">Zacznij pisać</button></div>
   </div>
 </div>
 <script>
@@ -21807,11 +21815,20 @@ async function kbAudioTranscribeAndOpen(file) {
 
   // ── Zakup w oknie pakietu (UX8-20, prawo pkt 3) ────────────────────────────
   var wybranyPlan = null, wybranaWaluta = null;
+  // Kontrakt B: waluta bez kwoty w plany[].ceny to pozycja wstrzymana (ukryta); klient, ktory juz placil,
+  // placi tylko w swojej walucie (walutaWymuszona, Stripe nie laczy walut u klienta).
+  function walutyZakupu(pl){
+    var w = (pl.waluty || []).map(function(x){ return String(x).toLowerCase(); })
+      .filter(function(x){ return (pl.plany || []).some(function(p){ return p.ceny && p.ceny[x] != null; }); });
+    var wym = pl.walutaWymuszona ? String(pl.walutaWymuszona).toLowerCase() : '';
+    return wym ? w.filter(function(x){ return x === wym; }) : w;
+  }
   function walutaStartowa(pl){
-    var w = (pl.waluty || []).map(function(x){ return String(x).toLowerCase(); });
+    var w = walutyZakupu(pl);
     if (jezyk() === 'pl' && w.indexOf('pln') >= 0) return 'pln';
     if (w.indexOf('eur') >= 0) return 'eur';
-    return String(pl.walutaDomyslna || w[0] || 'eur').toLowerCase();
+    var d = String(pl.walutaDomyslna || '').toLowerCase();
+    return w.indexOf(d) >= 0 ? d : (w[0] || 'eur');
   }
   function adresDokumentu(nazwa){
     var s = stan(), a = (s && s.adresy) || {};
@@ -21839,22 +21856,24 @@ async function kbAudioTranscribeAndOpen(file) {
     if (pl.wlaczone && pl.tryb === 'test') h += '<p class="konto-pasek konto-pasek-info zakup-test">' + ikona('info') + '<span>' + esc(tekst('pasek-test', '')) + '</span></p>';
     if (ZYWE.indexOf(sub.stan) >= 0) {
       h += '<div class="zakup-stan"><p class="tekst-zwykly">' + esc(opisSubskrypcji(sub)) + '</p>'
-        + (pl.maPanel ? '<button type="button" class="btn-secondary" id="zakup-panel" onclick="otworzPanelPlatnosci()">' + esc(tekst('plat-ustawienia-portal', '')) + '</button><p class="tekst-pomoc">' + esc(tekst('plat-ustawienia-portal-opis', '')) + '</p>' : '')
+        + (pl.maPanel ? '<button type="button" class="btn-secondary" id="zakup-panel" onclick="otworzPanelPlatnosci()">' + esc(tekst(sub.stan === 'anulowana' ? 'sub-wznow' : 'plat-ustawienia-portal', '')) + '</button><p class="tekst-pomoc">' + esc(tekst('plat-ustawienia-portal-opis', '')) + '</p>' : '')
         + '</div>';
     } else if (pl.wlaczone && pl.sprzedaz === false) {
       h += '<p class="tekst-zwykly">' + esc(tekst('zakup-wstrzymany', '')) + '</p>';
-    } else if (mozeKupic() && pl.plany && pl.plany.length) {
-      var waluty = (pl.waluty || []).map(function(x){ return String(x).toLowerCase(); });
+    } else if (mozeKupic() && pl.plany && pl.plany.length && walutyZakupu(pl).length) {
+      var waluty = walutyZakupu(pl);
       if (!wybranaWaluta || waluty.indexOf(wybranaWaluta) < 0) wybranaWaluta = walutaStartowa(pl);
-      if (!wybranyPlan || !pl.plany.some(function(p){ return p.plan === wybranyPlan; })) wybranyPlan = (pl.plany.filter(function(p){ return p.plan === 'standard'; })[0] || pl.plany[0]).plan;
-      var plan = pl.plany.filter(function(p){ return p.plan === wybranyPlan; })[0];
+      var plany = pl.plany.filter(function(p){ return p.ceny && p.ceny[wybranaWaluta] != null; });
+      if (!wybranyPlan || !plany.some(function(p){ return p.plan === wybranyPlan; })) wybranyPlan = (plany.filter(function(p){ return p.plan === 'standard'; })[0] || plany[0]).plan;
+      var plan = plany.filter(function(p){ return p.plan === wybranyPlan; })[0];
       var cena = cenaPlanu(plan, wybranaWaluta);
       h += '<div class="zakup" id="zakup">'
         + '<div class="zakup-naglowek"><b id="zakup-tytul">' + esc(tekst('zakup-tytul', '')) + '</b>'
         + (waluty.length > 1 ? '<div class="segmenty" role="group" aria-label="' + esc(tekst('zakup-waluta', '')) + '">' + waluty.map(function(w){
             return '<button type="button" aria-pressed="' + (w === wybranaWaluta) + '" onclick="wybierzWaluteZakupu(\'' + w + '\')">' + esc(w.toUpperCase()) + '</button>'; }).join('') + '</div>' : '')
         + '</div>'
-        + '<div class="zakup-karty" role="radiogroup" aria-labelledby="zakup-tytul">' + pl.plany.map(function(p){
+        + (pl.walutaWymuszona ? '<p class="tekst-pomoc" id="zakup-waluta-wymuszona">' + esc(tekst('zakup-waluta-wymuszona', '').replace('{WALUTA}', String(pl.walutaWymuszona).toUpperCase())) + '</p>' : '')
+        + '<div class="zakup-karty" role="radiogroup" aria-labelledby="zakup-tytul">' + plany.map(function(p){
             var nazwa = jezyk() === 'en' && p.nazwaEn ? p.nazwaEn : p.nazwa;
             return '<button type="button" class="zakup-karta" role="radio" aria-checked="' + (p.plan === wybranyPlan) + '" onclick="wybierzPlanZakupu(\'' + esc(p.plan) + '\')">'
               + '<span class="zakup-karta-nazwa">' + esc(nazwa) + (p.plan === 'standard' ? ' <span class="znacznik-pakietu">' + esc(tekst('zakup-polecany', '')) + '</span>' : '') + '</span>'
@@ -21871,6 +21890,9 @@ async function kbAudioTranscribeAndOpen(file) {
         + '<p class="tekst-pomoc stan-blad" id="zakup-blad" role="alert" hidden></p>'
         + '<p class="tekst-pomoc">' + esc(tekst('zakup-stopka', '').replace('{EMAIL}', emailRachunku())) + '</p>'
         + '</div>';
+    } else if (mozeKupic() && pl.plany && pl.plany.length) {
+      // Kazda pozycja wstrzymana (brak ceny w kazdej walucie): jak wstrzymana sprzedaz.
+      h += '<p class="tekst-zwykly">' + esc(tekst('zakup-wstrzymany', '')) + '</p>';
     }
     cel.innerHTML = h;
     cel.hidden = !h;
@@ -21886,16 +21908,16 @@ async function kbAudioTranscribeAndOpen(file) {
     var cel = el('zakup-blad');
     var k = { 'subskrypcja-istnieje': 'zakup-bl-istnieje', 'sprzedaz-wstrzymana': 'zakup-wstrzymany', 'zakup-niedozwolony': 'zakup-bl-niedozwolony',
       'plan-niedostepny': 'zakup-bl-plan', 'dostawca-platnosci-niedostepny': 'zakup-bl-stripe', 'za-duzo-prob': 'zakup-bl-za-duzo',
-      'platnosci-wylaczone': 'zakup-bl-wylaczone', siec: 'err-siec' }[kod] || 'zakup-bl-inny';
+      'platnosci-wylaczone': 'zakup-bl-wylaczone', 'zgoda-wymagana': 'zakup-bl-zgoda', siec: 'err-siec' }[kod] || 'zakup-bl-inny';
     var t = tekst(k, '').replace('{s}', String((d && d.ponowZa) || 60));
     if (cel) { cel.textContent = t; cel.hidden = false; } else powiadomBlad(t);
     if (kod === 'subskrypcja-istnieje') odswiezStanKonta();
   }
   window.przejdzDoPlatnosci = function(){
-    var b = el('zakup-przycisk'), z2 = el('zakup-zgoda-wykonanie');
+    var b = el('zakup-przycisk'), z1 = el('zakup-zgoda-regulamin'), z2 = el('zakup-zgoda-wykonanie');
     if (b) { b.disabled = true; b.classList.add('btn-working'); }
     var koniec = function(){ if (b) { b.classList.remove('btn-working'); window.odswiezPrzyciskZakupu(); } };
-    postJson('/api/platnosci/zakup', { plan: wybranyPlan, waluta: wybranaWaluta, zgodaNaWykonanie: !!(z2 && z2.checked) }).then(function(w){
+    postJson('/api/platnosci/zakup', { plan: wybranyPlan, waluta: wybranaWaluta, zgodaNaWykonanie: !!(z2 && z2.checked), zgodaRegulamin: !!(z1 && z1.checked), jezyk: jezyk(), z: 'app' }).then(function(w){
       if (w.o.ok && w.d.url) { location.assign(w.d.url); return; }
       koniec(); bladZakupu(kodOdpowiedzi(w.o, w.d), w.d);
     }).catch(function(){ koniec(); bladZakupu('siec'); });
@@ -21908,7 +21930,7 @@ async function kbAudioTranscribeAndOpen(file) {
     }).catch(function(){ powiadomBlad(tekst('err-siec', '')); });
   };
 
-  // ── Powrot ze Stripe (?platnosc=ok|anulowana): aktywacja z webhooka i wariant opoznienia (A6, UX8-20) ──
+  // ── Powrot ze Stripe (?platnosc=ok|oczekuje|kraj|anulowana): aktywacja z webhooka i wariant opoznienia (A6, UX8-20) ──
   window.zamknijPlatnosc = function(){ el('platnosc-modal').classList.remove('open'); };
   function trescPlatnosci(klucz, tytul, trwa){
     ustawTekst(el('platnosc-tytul'), tytul);
@@ -21916,6 +21938,7 @@ async function kbAudioTranscribeAndOpen(file) {
   }
   function czekajNaPakiet(){
     el('platnosc-modal').classList.add('open');
+    ustawTekst(el('platnosc-dalej'), 'plat-zacznij');
     trescPlatnosci(tekst('plat-oczekuje', ''), 'plat-ok-tytul', true);
     var start = Date.now();
     (function krok(){
@@ -21937,8 +21960,20 @@ async function kbAudioTranscribeAndOpen(file) {
     q.delete('platnosc');
     // window.history: w aplikacji `history` to lista artykulow (Historia).
     try { window.history.replaceState(window.history.state, '', location.pathname + (q.toString() ? '?' + q.toString() : '') + location.hash); } catch(e){}
-    if (w === 'ok') czekajNaPakiet();
+    if (w === 'ok' || w === 'oczekuje') czekajNaPakiet();
+    else if (w === 'kraj') odrzuconyKraj();
     else pokazPowiadomienie(tekst('plat-przerwana', ''), 'info', 9000);
+  }
+  // Kraj adresu rozliczeniowego spoza listy (D-04): serwer anulowal zakup i zwraca calosc, pakiet bez zmian.
+  function tekstKraju(kraj){ var t = tekst('plat-kraj', ''); return kraj ? t.replace('{KRAJ}', kraj) : t.replace(/\s*\(\{KRAJ\}\)/, ''); }
+  function odrzuconyKraj(){
+    el('platnosc-modal').classList.add('open');
+    ustawTekst(el('platnosc-dalej'), 'okno-zamknij');
+    trescPlatnosci(tekstKraju(''), 'plat-kraj-tytul', false);
+    odswiezStanKonta().then(function(s){
+      var o = s && s.platnosci && s.platnosci.odrzucenie;
+      if (o && o.kraj && /^[A-Za-z]{2}$/.test(String(o.kraj))) trescPlatnosci(tekstKraju(String(o.kraj).toUpperCase()), 'plat-kraj-tytul', false);
+    });
   }
 
   // ── Ekran Konto (UX8-21, makieta A7) ───────────────────────────────────────
@@ -22001,13 +22036,15 @@ async function kbAudioTranscribeAndOpen(file) {
     if (ZYWE.indexOf(sub.stan) >= 0 || sub.stan === 'wygasla') pakietH += '<p class="tekst-zwykly">' + esc(opisSubskrypcji(sub)) + '</p>';
     if (pl.wlaczone && pl.tryb === 'test') pakietH += '<p class="tekst-pomoc">' + esc(tekst('pasek-test', '')) + '</p>';
     var akcje = [];
-    if (pl.maPanel) akcje.push('<button type="button" class="btn-secondary" onclick="otworzPanelPlatnosci()">' + esc(tekst('plat-ustawienia-portal', '')) + '</button>');
+    if (pl.maPanel) akcje.push('<button type="button" class="btn-secondary" onclick="otworzPanelPlatnosci()">' + esc(tekst(sub.stan === 'anulowana' ? 'sub-wznow' : 'plat-ustawienia-portal', '')) + '</button>');
     else if (mozeKupic()) akcje.push('<button type="button" class="btn-generate" onclick="zamknijKonto();otworzPakiet(\'zakup\')">' + esc(tekst('pakiet-zmien', '')) + '</button>');
     akcje.push('<button type="button" class="btn-secondary" onclick="zamknijKonto();otworzPakiet()">' + esc(tekst('konto-szczegoly-pakietu', '')) + '</button>');
     pakietH += '<div class="konto-akcje">' + akcje.join('') + '</div>';
     if (pl.maPanel) pakietH += '<p class="tekst-pomoc">' + esc(tekst('plat-ustawienia-portal-opis', '')) + '</p>';
     if (pl.wlaczone) pakietH += '<p class="tekst-pomoc">' + esc(tekst('plat-ustawienia-rachunek', '').replace('{EMAIL_KONTAKT}', emailRachunku())) + '</p>';
-    if (pl.odstapienie && pl.odstapienie.mozliwe) pakietH += '<p class="tekst-pomoc">' + esc(tekst('konto-odstapienie', '').replace('{DATA}', data(pl.odstapienie.do))) + ' <a class="link-akcent" href="/konto/odstapienie?z=aplikacja&amp;lang=' + jezyk() + '">' + esc(tekst('konto-odstap', '')) + '</a></p>';
+    var zl = pl.odstapienie && !pl.odstapienie.mozliwe && pl.odstapienie.zlozone;
+    if (zl) pakietH += '<p class="tekst-pomoc">' + esc(tekst('konto-odstapienie-zlozone', '').replace('{DATA}', data(zl.czas))) + (zl.kwota > 0 ? ' ' + esc(tekst('konto-odstapienie-zwrot', '').replace('{KWOTA}', kwota(zl.kwota, zl.waluta))) : '') + '</p>';
+    else if (pl.odstapienie && pl.odstapienie.mozliwe) pakietH += '<p class="tekst-pomoc">' + esc(tekst('konto-odstapienie', '').replace('{DATA}', data(pl.odstapienie.do))) + ' <a class="link-akcent" href="' + esc(pl.odstapienie.adres || (pl.adresy && pl.adresy.odstapienie) || '/konto/odstapienie') + '?z=app&amp;lang=' + jezyk() + '">' + esc(tekst('konto-odstap', '')) + '</a></p>';
     else if (pl.wlaczone && ZYWE.indexOf(sub.stan) >= 0) pakietH += '<p class="tekst-pomoc">' + esc(tekst('konto-odstapienie-14', '')) + ' <a class="link-akcent" href="/konto#platnosci">' + esc(tekst('konto-ustawienia-serwera', '')) + '</a></p>';
     h += sekcja('pakiet', tekst('plat-ustawienia-tytul', ''), pakietH);
     // Klucze API (konto na wlasnych kluczach).
