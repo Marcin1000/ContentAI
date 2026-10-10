@@ -7680,9 +7680,8 @@ function blokBledu(e, ponow, zapas, kontekst) {
     const dk = kontoNaWlasnychKluczach() && e && e.dostawcaKod ? '\'' + escapeHtml(e.dostawcaKod) + '\'' : '';
     h += '<button type="button" class="btn-secondary" onclick="otworzUstawieniaKlucza(' + dk + ')">' + ikona('key-round') + escapeHtml(_t('btn-otworz-klucze')) + '</button>';
   }
-  h += akcjeBleduKonta(r, e);
-  // R9-D (UX8-22, E3): konto na wlasnych kluczach po doladowaniu srodkow u dostawcy ponawia przyciskiem.
-  if (ponow && (czyPonowic(e) || (r === 'srodki' && kontoNaWlasnychKluczach()))) {
+  h += akcjeBleduKonta(r, e, ponow);
+  if (ponow && czyPonowic(e)) {
     h += '<button type="button" class="btn-secondary ponow-generowanie" onclick="' + escapeHtml(ponow) + '">' + ikona('refresh-cw') + escapeHtml(_t('btn-sprobuj-ponownie')) + '</button>';
   }
   return h + '</div>';
@@ -7692,7 +7691,7 @@ const ROZLICZENIA_DOSTAWCOW = {
   anthropic: 'https://platform.claude.com/settings/billing', openai: 'https://platform.openai.com/settings/organization/billing/overview',
   eleven: 'https://elevenlabs.io/app/subscription',
 };
-function akcjeBleduKonta(r, e) {
+function akcjeBleduKonta(r, e, ponow) {
   const d = (e && e.dostawcaKod) || 'anthropic', nazwa = (e && e.dostawca) || NAZWY_DOSTAWCOW[d];
   if (r === 'brak-klucza' && typeof window.otworzKreatorKlucza === 'function') {
     return '<button type="button" class="btn-secondary" onclick="otworzKreatorKlucza(\'' + d + '\')">' + ikona('key-round') + escapeHtml(_t('btn-podlacz-klucz').replace('{DOSTAWCA}', nazwa)) + '</button>';
@@ -7704,7 +7703,9 @@ function akcjeBleduKonta(r, e) {
     return '<button type="button" class="btn-secondary" onclick="wyslijPotwierdzenieEmail()">' + ikona('mail') + escapeHtml(_t('btn-wyslij-link')) + '</button>';
   }
   if ((r === 'srodki' || r === 'limit-wydatkow-wlasny' || r === 'limit-wydatkow-konta') && kontoNaWlasnychKluczach()) {
-    return '<a class="btn-secondary" href="' + ROZLICZENIA_DOSTAWCOW[d] + '" target="_blank" rel="noopener">' + ikona('arrow-right') + escapeHtml(_t('btn-rozliczenia').replace('{DOSTAWCA}', nazwa)) + '</a>';
+    // E3: po doladowaniu srodkow ponowienie ma sens; limit wydatkow trzeba najpierw zmienic w konsoli.
+    const znowu = r === 'srodki' && ponow ? '<button type="button" class="btn-secondary ponow-generowanie" onclick="' + escapeHtml(ponow) + '">' + ikona('refresh-cw') + escapeHtml(_t('btn-sprobuj-ponownie')) + '</button>' : '';
+    return '<a class="btn-secondary" href="' + ROZLICZENIA_DOSTAWCOW[d] + '" target="_blank" rel="noopener">' + ikona('arrow-right') + escapeHtml(_t('btn-rozliczenia').replace('{DOSTAWCA}', nazwa)) + '</a>' + znowu;
   }
   return '';
 }
