@@ -692,7 +692,9 @@ async function testySerwera(sprawdz) {
     sprawdz('platnosci wylaczone: trasy zakupu i panelu -> 404 platnosci-wylaczone (aplikacja chowa przyciski)',
       zakup.status === 404 && zakup.headers.get('x-cai-kod') === 'platnosci-wylaczone' && panel.status === 404);
     const kluczSprawdz = await t.zadanie('/api/klucze/sprawdz', t.json(cKlient, { dostawca: 'anthropic' }));
-    sprawdz('trasy kluczy (C) maja kontrakt: 501 niezaimplementowane', kluczSprawdz.status === 501 && kluczSprawdz.headers.get('x-cai-kod') === 'niezaimplementowane');
+    // C wdrozyl /api/klucze (testy-byok.js): bez klucza sprawdzenie mowi to wprost, bez wywolania dostawcy.
+    sprawdz('trasy kluczy (C): /api/klucze/sprawdz bez klucza -> 200 { ok: false, powod: brak-klucza }',
+      kluczSprawdz.status === 200 && (await kluczSprawdz.json()).powod === 'brak-klucza');
     const rejestracja = await t.zadanie('/rejestracja');
     const webhook = await t.zadanie('/platnosci/webhook/stripe', { method: 'POST', headers: { 'Content-Type': 'application/json', 'stripe-signature': 't=1,v1=x' }, body: '{}' });
     sprawdz('bez CAI_REJESTRACJA i PLATNOSCI publiczne trasy dzialaja jak dzis (ekran logowania)',

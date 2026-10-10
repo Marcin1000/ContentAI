@@ -11,12 +11,25 @@
  * kilkanascie minut; aplikacja po powrocie ponawia to samo zadanie i dostaje
  * gotowa odpowiedz - bez drugiego wywolania dostawcy i bez drugiego liczenia
  * do pakietu. Przycisk Przerwij konczy zadanie jawnie (/api/zadanie/anuluj).
+ *
+ * Pamiec (ARCH8-12, KOD8-05, SEC8-02): kopia zapytania zadania niesie naglowki
+ * z kluczami uzytkownika i ciasteczka (sesja, zaszyfrowane klucze). Po zakonczeniu
+ * wywolania dostawcy usuwamy je z kopii, a sama kopia znika z wpisu (odp.req = null):
+ * klucz nie zyje w pamieci dluzej niz wywolanie. Wyniki maja budzet w bajtach
+ * (CAI_ZADANIA_MB, domyslnie 200): przy przekroczeniu najstarsze zakonczone wyniki
+ * wypadaja, a gdy wszystkie jeszcze trwaja, nowe zapytanie idzie bez trybu w tle
+ * (zwykle wywolanie). Wynik odebrany przez klienta czeka juz tylko 2 minuty (na
+ * wypadek zerwania tuz po wyslaniu), nieodebrany 15 minut. Sprzatanie co minute.
  */
 const { EventEmitter } = require('node:events');
 
 const CZAS_PRZECHOWANIA_MS = 15 * 60 * 1000;
+const PO_ODEBRANIU_MS = 2 * 60 * 1000;
 const NA_KONTO = 8;
 const RAZEM = 400;
+// Naglowki kopii zapytania, ktore nie moga przezyc wywolania dostawcy.
+const NAGLOWKI_TAJNE = ['x-api-key', 'x-openai-key', 'x-eleven-key', 'xi-api-key', 'authorization', 'cookie'];
+const BUDZET = { bajty: 200 * 1024 * 1024 };
 
 /** klucz "login:id" -> { login, odp, obietnica, koniec, anulowane } */
 const zadania = new Map();
@@ -43,6 +56,9 @@ class OdpowiedzZadania extends EventEmitter {
     this.destroyed = false;
     this._naglowki = {};
     this._kawalki = [];
+    this.bajty = 0;
+    // Cialo zapytania w pamieci, dopoki zadanie trwa (nagranie do 25 MB) - liczy sie do budzetu.
+    this.bajtyZapytania = 0;
   }
 
   setHeader(nazwa, wartosc) { this._naglowki[String(nazwa).toLowerCase()] = wartosc; }
@@ -57,7 +73,11 @@ class OdpowiedzZadania extends EventEmitter {
   }
 
   write(kawalek) {
-    if (kawalek != null) this._kawalki.push(Buffer.isBuffer(kawalek) ? kawalek : Buffer.from(String(kawalek)));
+    if (kawalek != null) {
+      const b = Buffer.isBuffer(kawalek) ? kawalek : Buffer.from(String(kawalek));
+      this._kawalki.push(b);
+      this.bajty += b.length;
+    }
     this.headersSent = true;
     return true;
   }
@@ -84,18 +104,45 @@ class OdpowiedzZadania extends EventEmitter {
 
 function sprzataj(teraz = Date.now()) {
   for (const [klucz, wpis] of zadania) {
-    if (wpis.koniec && teraz - wpis.koniec > CZAS_PRZECHOWANIA_MS) zadania.delete(klucz);
+    if (!wpis.koniec) continue;
+    if (teraz - wpis.koniec > CZAS_PRZECHOWANIA_MS || (wpis.odebrane && teraz - wpis.odebrane > PO_ODEBRANIU_MS)) zadania.delete(klucz);
   }
 }
 
-/** Najstarsze zakonczone zadania znikaja pierwsze, gdy konto albo serwer ma ich za duzo. */
-function zrobMiejsce(login) {
+/** Bajty w pamieci: wyniki (trwajace i zakonczone) i ciala zapytan zadan w toku. */
+function bajtyRazem() {
+  let suma = 0;
+  for (const wpis of zadania.values()) suma += wpis.odp.bajty + wpis.odp.bajtyZapytania;
+  return suma;
+}
+
+/**
+ * Najstarsze zakonczone zadania znikaja pierwsze, gdy konto albo serwer ma ich za duzo
+ * albo wyniki przekraczaja budzet bajtow. -> false, gdy budzetu nie da sie zwolnic
+ * (wszystko jeszcze trwa): wolajacy robi wtedy zwykle wywolanie bez trybu w tle.
+ */
+function zrobMiejsce(login, nowe = 0) {
   const konta = [...zadania.entries()].filter(([, w]) => w.login === login);
   const zakonczone = (lista) => lista.filter(([, w]) => w.koniec).sort((a, b) => a[1].koniec - b[1].koniec);
   for (const [klucz] of zakonczone(konta).slice(0, Math.max(0, konta.length - NA_KONTO + 1))) zadania.delete(klucz);
   if (zadania.size >= RAZEM) {
     for (const [klucz] of zakonczone([...zadania.entries()]).slice(0, zadania.size - RAZEM + 1)) zadania.delete(klucz);
   }
+  let bajty = bajtyRazem() + nowe;
+  if (bajty < BUDZET.bajty) return true;
+  for (const [klucz, wpis] of zakonczone([...zadania.entries()])) {
+    zadania.delete(klucz);
+    bajty -= wpis.odp.bajty;
+    if (bajty < BUDZET.bajty) return true;
+  }
+  return bajty < BUDZET.bajty;
+}
+
+/** Usuwa z kopii zapytania naglowki z kluczami i ciasteczka (po wywolaniu dostawcy). */
+function wyczyscKopie(req) {
+  if (!req) return;
+  if (req.headers) for (const n of NAGLOWKI_TAJNE) delete req.headers[n];
+  if (req.cialoGotowe) req.cialoGotowe = null;
 }
 
 function znajdz(login, id) {
@@ -106,12 +153,17 @@ function znajdz(login, id) {
 
 /**
  * Startuje zadanie. `wykonaj(odp)` to zwykla obsluga proxy, ktora pisze
- * do podanej odpowiedzi; tutaj pisze do OdpowiedzZadania.
+ * do podanej odpowiedzi; tutaj pisze do OdpowiedzZadania. `req` to kopia
+ * zapytania (wlasny obiekt naglowkow): po wywolaniu traci naglowki z kluczami.
+ * -> wpis albo null, gdy budzet pamieci wynikow jest wyczerpany przez zadania
+ *    w toku (wolajacy wykonuje wtedy zapytanie zwyczajnie, bez trybu w tle).
  */
 function uruchom(login, id, req, wykonaj) {
   sprzataj();
-  zrobMiejsce(login);
+  const bajtyZapytania = req && Buffer.isBuffer(req.cialoGotowe) ? req.cialoGotowe.length : 0;
+  if (!zrobMiejsce(login, bajtyZapytania)) return null;
   const odp = new OdpowiedzZadania(req);
+  odp.bajtyZapytania = bajtyZapytania;
   const wpis = { login, odp, koniec: 0, anulowane: false };
   wpis.obietnica = (async () => {
     try {
@@ -126,6 +178,11 @@ function uruchom(login, id, req, wykonaj) {
     } finally {
       if (!odp.writableEnded) wpis.anulowane = true;
       wpis.koniec = Date.now();
+      // Klucz uzytkownika nie zyje dluzej niz wywolanie (ARCH8-12): ani w kopii zapytania,
+      // ani we wpisie (wynik do odebrania zostaje, zapytanie nie).
+      wyczyscKopie(req);
+      odp.req = null;
+      odp.bajtyZapytania = 0;
     }
   })();
   zadania.set(login + ':' + id, wpis);
@@ -145,6 +202,7 @@ async function odbierz(wpis, res) {
   const w = wpis.odp.wynik();
   res.writeHead(w.status, w.naglowki);
   res.end(res.req && res.req.method === 'HEAD' ? undefined : w.cialo);
+  wpis.odebrane = Date.now();
 }
 
 /** Przerwij z aplikacji. Zwraca true, gdy bylo co przerwac. */
@@ -155,4 +213,41 @@ function anuluj(login, id) {
   return true;
 }
 
-module.exports = { idZNaglowka, znajdz, uruchom, odbierz, anuluj, OdpowiedzZadania, _zadania: zadania };
+/**
+ * Stan zadania dla aplikacji (KOD8-30), bez tresci: { stan: 'trwa'|'gotowe'|'przerwane'|'brak', status? }.
+ * 'gotowe' -> ponowienie z tym samym X-Zadanie odbierze wynik bez nowego wywolania i liczenia.
+ */
+function stanZadania(login, id) {
+  const wpis = znajdz(login, id);
+  if (!wpis) return { stan: 'brak' };
+  if (!wpis.koniec) return { stan: 'trwa' };
+  if (wpis.anulowane) return { stan: 'przerwane' };
+  return { stan: 'gotowe', status: wpis.odp.statusCode };
+}
+
+/** Ile zadan jeszcze trwa (lagodne zatrzymanie serwera czeka, az bedzie 0). */
+function trwajace() {
+  let n = 0;
+  for (const wpis of zadania.values()) if (!wpis.koniec) n += 1;
+  return n;
+}
+
+/** Konfiguracja z serwera: budzet wynikow w MB (CAI_ZADANIA_MB). */
+function ustaw({ budzetMb } = {}) {
+  if (Number(budzetMb) > 0) BUDZET.bajty = Math.round(Number(budzetMb) * 1024 * 1024);
+  return { budzetBajtow: BUDZET.bajty };
+}
+
+/** Stan do testow i /api/status: liczba wpisow, trwajacych i bajtow wynikow. */
+function stan() {
+  return { wpisow: zadania.size, trwajacych: trwajace(), bajty: bajtyRazem(), budzetBajtow: BUDZET.bajty };
+}
+
+// Sprzatanie co minute niezaleznie od ruchu (wczesniej tylko przy nastepnym zapytaniu
+// z X-Zadanie); zegar nie trzyma procesu przy zyciu.
+setInterval(() => sprzataj(), 60_000).unref();
+
+module.exports = {
+  idZNaglowka, znajdz, uruchom, odbierz, anuluj, stanZadania, trwajace, ustaw, stan, sprzataj, wyczyscKopie,
+  OdpowiedzZadania, NAGLOWKI_TAJNE, _zadania: zadania,
+};
