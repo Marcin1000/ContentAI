@@ -983,6 +983,103 @@ async function wariantPilneKreator(b) {
   await k.close();
 }
 
+// Uwagi Marcina z telefonu (runda 9): X w prawym gornym rogu arkusza Konto (zostaje u gory przy przewijaniu),
+// okna Bazy i Tematy bez klawiatury ekranowej przy otwarciu (fokus na oknie, pole dopiero po dotknieciu;
+// komputer jak dotad: fokus w pierwszym polu), Audio w menu Tworz przy gotowym tekscie (zrodlo = ten artykul).
+// Pada na r9-integracja 9f45b4d: brak X w arkuszu Konto, fokus w polu adresu, brak Audio w Tworz.
+async function wariantUwagiTelefonu(b) {
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); if (!localStorage.getItem('cai_lang')) localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  const bledy = [];
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  const s = await zaloguj(k, 'premium');
+
+  // 1. Arkusz Konto: X w prawym gornym rogu, po przewinieciu listy dalej u gory i klikalny, zamyka arkusz.
+  await krok('UT Konto', s.tap('#mnav-konto', { timeout: 3000 }));
+  await s.waitForTimeout(400);
+  const konto = await s.evaluate(() => {
+    const m = document.getElementById('settings-menu'), x = m.querySelector('.menu-konto-zamknij');
+    if (!x) return { brak: true, otwarte: m.classList.contains('open') };
+    const rm = m.getBoundingClientRect(), rx0 = x.getBoundingClientRect();
+    m.scrollTop = m.scrollHeight;
+    const rx = x.getBoundingClientRect();
+    const naWierzchu = document.elementFromPoint(rx.left + rx.width / 2, rx.top + rx.height / 2);
+    return { otwarte: m.classList.contains('open'), przewiniete: m.scrollTop > 0, w: Math.round(rx0.width), h: Math.round(rx0.height),
+      odPrawej: Math.round(rm.right - rx0.right), odGory: Math.round(rx0.top - rm.top), poPrzewinieciu: Math.round(rx.top - rm.top),
+      trafia: !!naWierzchu && x.contains(naWierzchu), etykieta: x.getAttribute('aria-label') };
+  });
+  wynik('telefon: UT arkusz Konto ma X 44 px w prawym gornym rogu (Zamknij)',
+    konto.otwarte && !konto.brak && konto.w >= 44 && konto.h >= 44 && konto.odPrawej <= 16 && konto.odGory <= 16 && konto.etykieta === 'Zamknij', JSON.stringify(konto));
+  wynik('telefon: UT X arkusza Konto zostaje u gory po przewinieciu listy', !konto.brak && konto.przewiniete && konto.poPrzewinieciu <= 16 && konto.trafia, JSON.stringify(konto));
+  if (!konto.brak) await krok('UT X Konto', s.tap('#settings-menu .menu-konto-zamknij', { timeout: 3000 }));
+  await s.waitForTimeout(400);
+  const poX = await s.evaluate(() => ({ otwarte: document.getElementById('settings-menu').classList.contains('open'), rozwiniete: document.getElementById('mnav-konto').getAttribute('aria-expanded') }));
+  wynik('telefon: UT X zamyka arkusz Konto', !konto.brak && !poX.otwarte && poX.rozwiniete === 'false', JSON.stringify(poX));
+
+  // 2. Okna Bazy (adres, tekst) i Tematy: przy otwarciu fokus na oknie, nie w polu tekstowym (bez klawiatury).
+  const fokus = async (strona, otworz) => {
+    await strona.evaluate(otworz);
+    await strona.waitForTimeout(300);
+    return strona.evaluate(() => { const a = document.activeElement;
+      return { tag: a ? a.tagName : '', id: a ? a.id : '', okno: !!a && !!a.closest('.overlay, .okno-tlo, [role="dialog"]'),
+        tekstowe: !!a && (a.tagName === 'TEXTAREA' || a.isContentEditable || (a.tagName === 'INPUT' && !/^(checkbox|radio|button|submit|file|range)$/.test(a.type))) }; });
+  };
+  const url = await fokus(s, () => openUrlModal());
+  await krok('UT pole adresu', s.tap('#u-url', { timeout: 3000 }));
+  const poDotyku = await s.evaluate(() => document.activeElement && document.activeElement.id);
+  await s.evaluate(() => closeUrlModal());
+  await s.waitForTimeout(200);
+  const tekst = await fokus(s, () => openTextModal());
+  await s.evaluate(() => closeTextModal());
+  await s.waitForTimeout(200);
+  const tematy = await fokus(s, () => otworzTematy());
+  await s.evaluate(() => zamknijTematy());
+  await s.waitForTimeout(200);
+  wynik('telefon: UT okna Bazy (adres, tekst) i Tematy bez klawiatury przy otwarciu: fokus na oknie, nie w polu',
+    !url.tekstowe && url.okno && !tekst.tekstowe && tekst.okno && !tematy.tekstowe && tematy.okno, JSON.stringify({ url, tekst, tematy }));
+  wynik('telefon: UT dotkniecie pola adresu daje fokus (i klawiature) dopiero wtedy', poDotyku === 'u-url', String(poDotyku));
+
+  // 3. Menu Tworz przy gotowym tekscie: Audio obok Grafiki, otwiera modul audio z tym artykulem jako zrodlem.
+  await s.evaluate(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); });
+  await s.fill('#topic', 'Jak przygotować sklep na sezon świąteczny');
+  await s.evaluate(() => { document.getElementById('use-web').checked = true; premiumMode = false; generate(true); });
+  await krok('UT artykul', czekajNaKoniec(s));
+  await s.evaluate(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('wynik'); });
+  await s.waitForTimeout(300);
+  await krok('UT Tworz', s.tap('#grupa-tworz-wrap > .btn-secondary', { timeout: 3000 }));
+  await s.waitForTimeout(400);
+  const tworz = await s.evaluate(() => { const m = document.getElementById('grupa-tworz-menu'), a = document.getElementById('audio-wynik-btn');
+    return { otwarte: m.classList.contains('open'), audio: !!a && m.contains(a) && a.offsetParent !== null,
+      pozycje: [...m.querySelectorAll('.btn-secondary, .repurpose-item')].filter((e) => e.offsetParent !== null).map((e) => e.textContent.trim()) }; });
+  wynik('telefon: UT menu Tworz przy gotowym tekscie ma Audio (zaraz po Grafice)', tworz.otwarte && tworz.audio && tworz.pozycje[0] === 'Grafika' && tworz.pozycje[1] === 'Audio', JSON.stringify(tworz));
+  if (tworz.audio) await krok('UT Audio z Tworz', s.tap('#audio-wynik-btn', { timeout: 3000 }));
+  await s.waitForTimeout(500);
+  const audio = await s.evaluate(() => { const p = document.getElementById('audio-panel'), z = document.getElementById('au-source'), a = document.getElementById('article');
+    return { panel: getComputedStyle(p).display, zrodlo: z.value.slice(0, 60), zgodne: !!z.value && z.value === (a.innerText || '').trim(),
+      menu: document.getElementById('grupa-tworz-menu').classList.contains('open') }; });
+  wynik('telefon: UT Audio z Tworz otwiera modul audio z tym artykulem jako zrodlem, menu sie zamyka', audio.panel === 'block' && audio.zgodne && !audio.menu, JSON.stringify(audio));
+  // Wczytany automatycznie artykul znika z nowym artykulem, tekst wpisany przez autora zostaje.
+  const zrodla = await s.evaluate(() => { const z = document.getElementById('au-source'); wyczyscStanArtykulu(); const poNowym = z.value;
+    z.value = 'Mój własny scenariusz'; closeAudioPanel(); openAudioPanel(); const wlasny = z.value; closeAudioPanel(); return { poNowym, wlasny }; });
+  wynik('telefon: UT zrodlo audio: wczytany artykul znika z nowym artykulem, wlasny tekst zostaje', zrodla.poNowym === '' && zrodla.wlasny === 'Mój własny scenariusz', JSON.stringify(zrodla));
+  wynik('telefon: UT bez bledow strony', !bledy.length, bledy.join(' | '));
+  if (bledow) await zrzut(s, 'telefon-uwagi');
+  await k.close();
+
+  // Komputer bez zmian: okno adresu stawia fokus w polu (klawiatura fizyczna), X Konta niewidoczny.
+  const kd = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, locale: 'pl-PL' });
+  await kd.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); if (!localStorage.getItem('cai_lang')) localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  const d = await zaloguj(kd, 'premium');
+  const dUrl = await fokus(d, () => openUrlModal());
+  await d.evaluate(() => closeUrlModal());
+  await d.evaluate(() => toggleSettingsMenu());
+  await d.waitForTimeout(300);
+  const dX = await d.evaluate(() => { const x = document.querySelector('#settings-menu .menu-konto-zamknij'); return !!x && getComputedStyle(x).display !== 'none'; });
+  await d.evaluate(() => closeSettingsMenu());
+  wynik('komputer: UT okno adresu jak dotad z fokusem w polu adresu, X Konta tylko na telefonie', dUrl.id === 'u-url' && !dX, JSON.stringify({ dUrl, dX }));
+  await kd.close();
+}
+
 // R9-C: wlasne klucze w zaszyfrowanym ciasteczku (BYOK, SEC8-04, M-10). Osobny serwer
 // z CAI_KLUCZ_CIASTEK i kontem samoobslugowym na wlasnym kluczu: zapis klucza z aplikacji
 // (/api/klucze, ciasteczko HttpOnly niewidoczne dla skryptu strony), artykul z interfejsu
@@ -2522,6 +2619,7 @@ async function wariantR9Zakup(b) {
     await osobno(wariantR7Luki, b);
     await osobno(wariantR7I, b);
     await osobno(wariantR7H, b);
+    await osobno(wariantUwagiTelefonu, b);
     await wariantPilneKreator(b);
     await wariantR9Zrozumialosc(b);
     await wariantR9Rejestracja(b);

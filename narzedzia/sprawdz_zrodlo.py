@@ -1579,6 +1579,24 @@ KONTROLE += [
      "const LIMITY_DOSTAWCOW = { anthropic: 'https://platform.claude.com/settings/limits'", None, None),
 ]
 
+# Uwagi Marcina z telefonu (runda 9, koordynator). Scenariusz wariantUwagiTelefonu w test_dymny.js.
+KONTROLE += [
+    ("R9-UT/konto-x", "telefon: arkusz Konto ma X w prawym gornym rogu, naglowek zostaje u gory przy przewijaniu",
+     '<button type="button" class="przycisk-ikona arkusz-zamknij menu-konto-zamknij" onclick="closeSettingsMenu()"', None, None),
+    ("R9-UT/konto-x-styl", "X arkusza Konto tylko na telefonie",
+     "body.is-mobile .settings-menu.open .menu-konto-zamknij { display: inline-flex;", None, None),
+    ("R9-UT/bez-klawiatury", "ekran dotykowy: okno przy otwarciu nie stawia fokusu w polu tekstowym (klawiatura po dotknieciu pola)",
+     "if (ekranDotykowy() && otwieraKlawiature(pierwsze)) pierwsze = dialogW(okno);", None, None),
+    ("R9-UT/tematy-bez-klawiatury", "Tematy i szablony: fokus w polu tematu bez klawiatury na ekranie dotykowym",
+     "fokusBezKlawiatury(document.getElementById('tematy-zapotrzebowanie'));", "  document.getElementById('tematy-zapotrzebowanie').focus();\n}", None),
+    ("R9-UT/audio-tworz", "menu Tworz przy gotowym tekscie ma Audio (blokada pakietu jak w menu briefu)",
+     '<button type="button" class="btn-secondary" id="audio-wynik-btn" style="display:none" onclick="openAudioPanel()"', None, None),
+    ("R9-UT/audio-tworz-wynik", "Audio na liscie przyciskow gotowego wyniku",
+     "'img-btn', 'audio-wynik-btn', 'titles-btn',", None, None),
+    ("R9-UT/audio-zrodlo", "Audio przy gotowym artykule: puste zrodlo dostaje ten artykul, wczytany znika z nowym artykulem",
+     "if (as && as.value && typeof audioZArtykulu === 'function' && as.value === audioZArtykulu.auto) as.value = '';", None, None),
+]
+
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi
 # do przegladarki bez przetworzenia, kazda z nich jest potrojona -> SyntaxError
 # "Identifier ... has already been declared" wywala caly blok <script> i zabija UI.

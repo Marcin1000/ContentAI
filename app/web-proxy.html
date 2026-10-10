@@ -2655,6 +2655,16 @@ body.is-mobile .grupa-menu::before, body.is-mobile .settings-menu.open::before, 
 body.is-mobile .overlay .modal::before, body.is-mobile .okno-tlo > .modal::before { display: none; }
 /* menu konta nad dolna nawigacja: "Konto" zostaje widoczne i przelacza menu */
 body.is-mobile .settings-menu.open { bottom: var(--dol); padding-bottom: var(--s-12); overscroll-behavior: contain; touch-action: pan-y; }
+/* uwaga Marcina z telefonu: arkusz Konto ma X w prawym gornym rogu jak pozostale arkusze (UX4-05: X 44 px z wcieciem
+   8 px, kreska pod naglowkiem); naglowek zostaje u gory przy przewijaniu, wiec X jest zawsze pod reka */
+.menu-konto-zamknij { display: none; }
+body.is-mobile .settings-menu.open .menu-konto { position: sticky; top: calc(var(--s-16) * -1); z-index: 2; min-height: 56px;
+  margin: calc(var(--s-16) * -1) calc(var(--s-8) * -1) var(--s-4); padding: var(--s-6) var(--s-8) var(--s-6) var(--s-16);
+  border-bottom: 1px solid var(--c-linia); background: var(--c-nad); }
+body.is-mobile .settings-menu.open .menu-konto > div { min-width: 0; overflow-wrap: anywhere; }
+body.is-mobile .settings-menu.open .menu-konto-zamknij { display: inline-flex; flex: none; margin-left: auto; }
+body.is-mobile .settings-menu.open .menu-konto + hr { display: none; }
+body.is-mobile .settings-menu.open .menu-konto + hr + .menu-tel-widocznosc > .menu-naglowek:first-child { margin-top: var(--s-4); padding-top: var(--s-8); border-top: 0; }
 /* wjazd 260 ms, zjazd 200 ms, tylko transform */
 @keyframes arkusz-wjazd { from { transform: translateY(100%); } }
 @keyframes arkusz-zjazd { to { transform: translateY(110%); } }
@@ -3318,7 +3328,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
     <div class="settings-wrap" id="settings-wrap">
       <button type="button" class="settings-btn konto-btn" id="settings-btn" onclick="toggleSettingsMenu()" title="Konto i ustawienia" aria-label="Konto i ustawienia" data-i18n-title="title-settings" data-i18n-label="title-settings" aria-haspopup="true" aria-expanded="false" aria-controls="settings-menu"><span class="konto-awatar" id="konto-awatar"><svg class="ikona" aria-hidden="true"><use href="#i-user"/></svg></span></button>
       <div class="settings-menu" id="settings-menu" role="menu" aria-label="Konto" data-i18n-label="konto-menu">
-        <div class="menu-konto"><span class="konto-awatar" id="konto-awatar-menu"><svg class="ikona" aria-hidden="true"><use href="#i-user"/></svg></span><div><b id="konto-nazwa" data-i18n="konto-gosc">To urządzenie</b><span id="konto-opis" data-i18n="konto-opis">Ustawienia aplikacji</span></div></div>
+        <div class="menu-konto"><span class="konto-awatar" id="konto-awatar-menu"><svg class="ikona" aria-hidden="true"><use href="#i-user"/></svg></span><div><b id="konto-nazwa" data-i18n="konto-gosc">To urządzenie</b><span id="konto-opis" data-i18n="konto-opis">Ustawienia aplikacji</span></div><button type="button" class="przycisk-ikona arkusz-zamknij menu-konto-zamknij" onclick="closeSettingsMenu()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
         <hr>
         <!-- R9-G (UX8-13): telefon nie ma paska obszarow, wiec Widocznosc AI stoi w arkuszu Konto (na komputerze w gornym pasku) -->
         <div class="menu-tel-widocznosc">
@@ -3750,6 +3760,9 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
               <div class="grupa-menu" id="grupa-tworz-menu">
                 <div class="arkusz-tytul"><span data-i18n="grupa-tworz">Twórz</span><button type="button" class="przycisk-ikona arkusz-zamknij" onclick="zamknijGrupyPaska()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
                 <button class="btn-secondary" id="img-btn" style="display:none" onclick="openImgPanelSmart()" title="Generuj grafikę dopasowaną do artykułu" data-i18n-title="title-img-generate" data-i18n="btn-img-out" data-ikona="image"><svg class="ikona" aria-hidden="true"><use href="#i-image"/></svg>Grafika</button>
+                <!-- Uwaga Marcina z telefonu: Audio z gotowego tekstu (podcast, newsletter, audiobook) obok Grafiki;
+                     onclick jak w menu briefu, wiec blokada pakietu (oznaczBlokade) obejmuje oba przyciski. -->
+                <button type="button" class="btn-secondary" id="audio-wynik-btn" style="display:none" onclick="openAudioPanel()" title="Audio: podcast, newsletter, audiobook i transkrypcja" data-i18n-title="title-audio" data-i18n="audio-btn" data-ikona="headphones"><svg class="ikona" aria-hidden="true"><use href="#i-headphones"/></svg>Audio</button>
                 <button class="btn-secondary" id="titles-btn" style="display:none" onclick="openTitlesPanel()" data-i18n="btn-titles" data-ikona="lightbulb"><svg class="ikona" aria-hidden="true"><use href="#i-lightbulb"/></svg>Tytuły</button>
                 <!-- Przerobki byly osobnym menu. Menu w menu to o jedno klikniecie
                      za duzo, wiec ich pozycje stoja tu wprost, za kreska.
@@ -8953,7 +8966,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
 // znikaly Fakty, AEO, GEO, Posluchaj, Dopracuj, przerobki i JSON-LD (kod-01).
 const PRZYCISKI_WYNIKU = ['edit-btn', 'copy-btn', 'dl-btn', 'dl-docx-btn', 'dl-pdf-btn', 'jsonld-btn',
   'fakty-btn', 'seo-btn', 'aio-btn', 'aeo-btn', 'geo-btn', 'links-btn', 'gap-btn',
-  'img-btn', 'titles-btn', 'repurpose-wrap', 'premium-fix-btn', 'tts-btn', 'nowy-art-btn'];
+  'img-btn', 'audio-wynik-btn', 'titles-btn', 'repurpose-wrap', 'premium-fix-btn', 'tts-btn', 'nowy-art-btn'];
 function pokazPrzyciskiWyniku(widoczne, typ) {
   PRZYCISKI_WYNIKU.forEach(function (id) {
     const el = document.getElementById(id);
@@ -10815,6 +10828,7 @@ function wyczyscStanArtykulu() {
   numerArtykulu++;
   if (typeof runRepurpose === 'function') runRepurpose.nr = (runRepurpose.nr || 0) + 1;
   { const ic = document.getElementById('img-context'); if (ic && ic.value && ic.value === kontekstGrafiki.auto) ic.value = ''; kontekstGrafiki.auto = ''; }
+  { const as = document.getElementById('au-source'); if (as && as.value && typeof audioZArtykulu === 'function' && as.value === audioZArtykulu.auto) as.value = ''; if (typeof audioZArtykulu === 'function') audioZArtykulu.auto = ''; }
   try { inspektorZamknij(); } catch (e) {}
   try { closeRepurposePanel(); } catch (e) {}
   const przerobka = document.getElementById('repurpose-out');
@@ -13742,8 +13756,8 @@ function applyTemplate(i) {
   // Szkic briefu: zmiany z szablonu nie wywoluja zdarzen pol.
   if (typeof zapiszSzkic === 'function') zapiszSzkic();
   closeTplModal();
-  document.getElementById('topic').focus();
-  document.getElementById('topic').select();
+  const poleTematu = document.getElementById('topic');
+  if (fokusBezKlawiatury(poleTematu)) poleTematu.select();
 }
 
 function saveTemplate() {
@@ -15209,7 +15223,7 @@ function otworzTematy() {
   var wrap = document.getElementById('tematy-baza-wrap');
   wrap.style.display = zaznaczone ? 'flex' : 'none';
   if (zaznaczone) document.getElementById('tematy-baza').checked = true;
-  document.getElementById('tematy-zapotrzebowanie').focus();
+  fokusBezKlawiatury(document.getElementById('tematy-zapotrzebowanie'));
 }
 
 function zamknijTematy() {
@@ -15223,7 +15237,7 @@ function uzyjTematu(i) {
   var pole = document.getElementById('topic');
   pole.value = t.temat || '';
   zamknijTematy();
-  pole.focus();
+  fokusBezKlawiatury(pole);
   // Krotki blysk, zeby bylo widac, ze cos sie stalo w polu poza ekranem uwagi.
   pole.style.transition = 'box-shadow .2s';
   pole.style.boxShadow = '0 0 0 3px rgba(217,119,6,.35)';
@@ -17836,6 +17850,23 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && typeof zamknijGorneOkno === 'function' && zamknijGorneOkno()) return;
   if (e.key === 'Escape') { if (typeof zamknijPanelFaktow === 'function') zamknijPanelFaktow(); closeContextMenu(); closeLinkDialog(); closeNoSourceModal(); closePremiumModal(); closeTitlesModal(); closeGapPanel(); closeSerpPanel(); if(seoOpen){seoOpen=false;document.getElementById('seo-panel')?.classList.remove('show');} if(aioOpen){aioOpen=false;document.getElementById('aio-panel')?.classList.remove('show');} if(aeoOpen){aeoOpen=false;document.getElementById('aeo-panel')?.classList.remove('show');} if(geoOpen){geoOpen=false;document.getElementById('geo-panel')?.classList.remove('show');} closeBriefPanel(); if(linksOpen) toggleLinksPanel(); closeImgPanelSmart(); closeBvModal(); closeLlmsModal(); closeVisModal(); closeRepModal(); closeTrkModal(); closeTextModal(); closeUrlModal(); if(!bulkRunning) closeBulkModal(); closeImproveModal(); closeWpModal(); closeTplModal(); closeWpPublishModal(); closeSettingsMenu(); zamknijTematy(); zamknijGrupyPaska(); if(typeof zamknijPakiet==='function') zamknijPakiet(); if(typeof startPomin==='function' && document.getElementById('start-modal')?.style.display==='flex') startPomin(); const fi=document.getElementById('fog-panel'); if(fi) fi.style.display='none'; }
 });
+// Uwaga Marcina z telefonu: klawiatura ekranowa otwiera sie dopiero po dotknieciu pola tekstowego.
+// Programowy fokus w polu tekstowym na ekranie dotykowym otwiera ja od razu i zaslania arkusz od dolu.
+// Dotykowy = glowny wskaznik gruby i zaden precyzyjny (tablet z gladzikiem i laptop z dotykiem bez zmian).
+function ekranDotykowy() {
+  return !!(window.matchMedia && matchMedia('(pointer: coarse)').matches && !matchMedia('(any-pointer: fine)').matches);
+}
+function otwieraKlawiature(p) {
+  if (!p || !p.tagName) return false;
+  if (p.isContentEditable || p.tagName === 'TEXTAREA') return !p.readOnly;
+  return p.tagName === 'INPUT' && !p.readOnly && !/^(checkbox|radio|button|submit|reset|file|range|color|image|hidden)$/i.test(p.type || '');
+}
+// Fokus po akcji uzytkownika (wybor szablonu, tematu): na ekranie dotykowym pole tekstowe go nie dostaje.
+function fokusBezKlawiatury(p, opcje) {
+  if (!p || (ekranDotykowy() && otwieraKlawiature(p))) return false;
+  try { p.focus(opcje); } catch (e) {}
+  return true;
+}
 // ── OKNA: dostepnosc, fokus, kolejnosc i Escape w jednym miejscu ─────────
 // Okna sa otwierane przez kilkadziesiat roznych funkcji (klasa .open albo
 // style.display). Zamiast poprawiac kazda z nich, obserwujemy same okna:
@@ -17884,7 +17915,10 @@ document.addEventListener('keydown', e => {
     requestAnimationFrame(() => {
       if (!widoczny(okno) || okno.contains(document.activeElement)) return;
       const pola = polaW(okno);
-      const pierwsze = pola.find(p => !p.classList.contains('modal-close')) || pola[0] || dialogW(okno);
+      let pierwsze = pola.find(p => !p.classList.contains('modal-close')) || pola[0] || dialogW(okno);
+      // Ekran dotykowy: zamiast pola tekstowego fokus dostaje samo okno (czytnik ekranu czyta jego tytul),
+      // a klawiatura pojawia sie dopiero po dotknieciu pola.
+      if (ekranDotykowy() && otwieraKlawiature(pierwsze)) pierwsze = dialogW(okno);
       try { pierwsze.focus({ preventScroll: true }); } catch (e) {}
     });
   }
@@ -19391,8 +19425,8 @@ function audioBarClose(){ audioPauseSrc(); try{ if(window.speechSynthesis) speec
 
 function audioSyncGenBtn(){ var b=document.getElementById('au-gen-btn'); if(!b) return; var ic=document.getElementById('au-gen-icon'); var lb=document.getElementById('au-gen-label'); if(window._audioBusy){ b.disabled=true; b.classList.add('btn-working'); if(ic) ic.innerHTML='<span class="au-spin"></span>'; if(lb) lb.textContent=_t('audio-gen-loading'); } }
 function openAudioPanel(){
-  if (document.body.classList.contains('is-mobile')) { switchMobileTab('audio'); }
-  else { var pl=document.getElementById('audio-panel'); pl.style.display=(pl.style.display==='none'||!pl.style.display)?'block':'none'; }
+  if (document.body.classList.contains('is-mobile')) { switchMobileTab('audio'); audioZArtykulu(); }
+  else { var pl=document.getElementById('audio-panel'); pl.style.display=(pl.style.display==='none'||!pl.style.display)?'block':'none'; if(pl.style.display==='block') audioZArtykulu(); }
   audioSyncEngine(); audioSetType(); audioSyncGenBtn();
   if(!window._auLangInit){ var gl=document.getElementById('lang'), al=document.getElementById('au-lang'); if(gl&&al) al.value=gl.value; window._auLangInit=true; }
 }
@@ -19416,6 +19450,10 @@ function audioSetType(){
 // R5: na telefonie wynik lezy pod formularzem - po wygenerowaniu przewijamy do niego (jak w grafice)
 function audioPokazWynik(){ if(!document.body.classList.contains('is-mobile')) return; var rw=document.getElementById('au-result-wrap'); if(rw&&rw.scrollIntoView) setTimeout(function(){ try{ rw.scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){} }, 100); }
 function audioLoadArticle(){ var a=document.getElementById('article'), s=document.getElementById('au-source'); if(a&&s){ s.value=(a.innerText||'').trim(); } }
+// Audio z menu Tworz (i z briefu) przy gotowym artykule: puste pole zrodla dostaje ten artykul, jak kontekst Grafiki.
+// Tekst wpisany przez autora zostaje; wczytany automatycznie znika z nowym artykulem (wyczyscStanArtykulu).
+function audioZArtykulu(){ var a=document.getElementById('article'), s=document.getElementById('au-source'); if(!a||!s||s.value.trim()) return; var t=(a.innerText||'').trim(); if(t) s.value=audioZArtykulu.auto=t; }
+audioZArtykulu.auto='';
 // R5: pole pliku do transkrypcji przyjmuje tez upuszczony plik
 function audioPlikUpusc(ev){ ev.preventDefault(); var i=document.getElementById('au-file'), dt=ev.dataTransfer; if(i && dt && dt.files && dt.files.length){ try{ i.files=dt.files; }catch(e){ return; } audioFileLabel(); } }
 function audioFileLabel(){ var i=document.getElementById('au-file'), s=document.getElementById('au-fname'); if(i&&s) s.textContent=(i.files&&i.files[0])?i.files[0].name:_t('audio-no-file'); }
