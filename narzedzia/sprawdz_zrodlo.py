@@ -1534,6 +1534,8 @@ KONTROLE += [
     ('R9-D/pdf-stopka-emoji', 'KOD8-35 (prosba F): tytul w stopce i marka w naglowku PDF bez emoji (EMOJI_PDF)',
      "{ text: skrotTekstu(String(tytul || '').replace(EMOJI_PDF, '').trim(), 70), style: 'meta2' },",
      "{ text: skrotTekstu(tytul, 70), style: 'meta2' },", None),
+    ('R9-D/klucz-przycisk', 'przycisk kluczy przy bledzie: dostawca tylko dla konta na wlasnych kluczach, reszta jak dzis (test_stan)',
+     "const dk = kontoNaWlasnychKluczach() && e && e.dostawcaKod ? '\\'' + escapeHtml(e.dostawcaKod) + '\\'' : '';", None, None),
 ]
 
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi

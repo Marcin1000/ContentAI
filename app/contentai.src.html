@@ -7861,7 +7861,9 @@ function blokBledu(e, ponow, zapas, kontekst) {
       + '<div class="tekst-pomoc" style="overflow-wrap:anywhere">' + escapeHtml(szczegol) + '</div></details>';
   }
   if (r === 'klucz' && !KLUCZ_W_PLIKU) {
-    h += '<button type="button" class="btn-secondary" onclick="otworzUstawieniaKlucza(\'' + escapeHtml((e && e.dostawcaKod) || '') + '\')">' + ikona('key-round') + escapeHtml(_t('btn-otworz-klucze')) + '</button>';
+    // R9-D: dostawca w przycisku tylko dla konta na wlasnych kluczach (kreator na polu tego dostawcy); reszta jak dzis.
+    const dk = kontoNaWlasnychKluczach() && e && e.dostawcaKod ? '\'' + escapeHtml(e.dostawcaKod) + '\'' : '';
+    h += '<button type="button" class="btn-secondary" onclick="otworzUstawieniaKlucza(' + dk + ')">' + ikona('key-round') + escapeHtml(_t('btn-otworz-klucze')) + '</button>';
   }
   h += akcjeBleduKonta(r, e);
   if (ponow && czyPonowic(e)) {
