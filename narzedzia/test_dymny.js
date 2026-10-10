@@ -1849,6 +1849,9 @@ async function wariantSamoobsluga(b) {
     return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(stanKontaSamoobslugi(st)) });
   });
   await k.route(/\/api\/konto\/potwierdzenie$/, (r) => { zapytania.potwierdzenie++; return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, stan: 'wyslano' }) }); });
+  // Marka organizacji konta jednoosobowego (C): GET /api/marka mowi, ze to konto ja zmienia (mozeEdytowac).
+  await k.route(/\/api\/marka$/, (r) => (r.request().method() === 'GET'
+    ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ marka: null, zakres: 'organizacja', mozeEdytowac: true }) }) : r.continue()));
   await k.route(/\/api\/klucze(\/[a-z]+)?(\?.*)?$/, (r) => {
     const z = r.request();
     zapytania.klucze.push(z.method() + ' ' + z.url().replace(BAZA, '') + ' ' + (z.postData() || ''));
@@ -1866,6 +1869,11 @@ async function wariantSamoobsluga(b) {
     return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(klucze) });
   });
   await k.route(/\/api\/platnosci\/zakup$/, (r) => {
+    if (st.nowyRegulamin) {
+      st.nowyRegulamin = false;
+      return r.fulfill({ status: 403, headers: { 'X-CAI-Kod': 'zgoda-wymagana' }, contentType: 'application/json',
+        body: JSON.stringify({ type: 'error', error: { type: 'cai_zgoda_wymagana', message: 'Zgoda wymagana' }, kod: 'zgoda-wymagana', wersja: '2026-11-01' }) });
+    }
     if (st.limitZakupu) {
       st.limitZakupu = false;
       return r.fulfill({ status: 429, headers: { 'X-CAI-Kod': 'za-duzo-prob' }, contentType: 'application/json',
@@ -1936,6 +1944,7 @@ async function wariantSamoobsluga(b) {
     gen: getComputedStyle(document.getElementById('gen-btn')).display, odznaka: document.getElementById('pakiet-badge').textContent, info: !document.getElementById('ai-info-artykul').hidden }));
   wynik('R9-D: po zapisie klucza karta znika, pierwszy artykul gotowy, odznaka "Darmowe: 2 z 3", informacja o AI pod tekstem',
     pierwszy.kreator === 'none' && pierwszy.karta && pierwszy.gen !== 'none' && /Darmowe: 2 z 3/.test(pierwszy.odznaka) && pierwszy.info, JSON.stringify(pierwszy));
+  wynik('R9-D: marke organizacji edytuje konto, ktoremu serwer na to pozwala (GET /api/marka mozeEdytowac, C)', await s.evaluate(() => markaAdmin === true));
   // Konto na wlasnych kluczach nie wysyla klucza naglowkiem (C, SEC8-04), nawet gdy w przegladarce zostal stary klucz.
   const naglowkiKlucza = [];
   const sluchajKlucza = (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url())) naglowkiKlucza.push(z.headers()['x-api-key'] || ''); };
@@ -2000,10 +2009,18 @@ async function wariantSamoobsluga(b) {
     && /19\s?€/.test(waluty.wymuszona.przycisk) && /chwilowo wstrzymana/.test(waluty.brak), JSON.stringify(waluty));
   await s.check('#zakup-zgoda-regulamin');
   await s.check('#zakup-zgoda-wykonanie');
+  // Nowy regulamin do akceptacji (A1, 403 zgoda-wymagana z wersja): komunikat o regulaminie i pasek z akceptacja,
+  // nie "zaznacz oba pola" (to zgoda zakupu B, bez wersji).
+  st.nowyRegulamin = true;
+  await s.click('#zakup-przycisk');
+  await krok('R9-D nowy regulamin przy zakupie', s.waitForFunction(() => !document.getElementById('zakup-blad').hidden && !!document.querySelector('#konto-paski [data-pasek="zgoda"]'), null, { timeout: 5000 }));
+  const regulamin = await s.evaluate(() => ({ blad: document.getElementById('zakup-blad').textContent, pasek: (document.querySelector('#konto-paski [data-pasek="zgoda"]') || {}).textContent || '' }));
+  wynik('R9-D: 403 zgoda-wymagana z wersja (A1) przy zakupie - komunikat o nowym regulaminie i pasek z akceptacja, nie pola zgody zakupu',
+    /Zmieniliśmy regulamin/.test(regulamin.blad) && !/Zaznacz oba pola/.test(regulamin.blad) && /regulamin/i.test(regulamin.pasek), JSON.stringify(regulamin));
   // Limit prob zakupu (429 za-duzo-prob, ponowZa w sekundach): komunikat w minutach, potem druga proba przechodzi.
   st.limitZakupu = true;
   await s.click('#zakup-przycisk');
-  await krok('R9-D limit prob zakupu', s.waitForFunction(() => !document.getElementById('zakup-blad').hidden && !document.getElementById('zakup-przycisk').disabled, null, { timeout: 5000 }));
+  await krok('R9-D limit prob zakupu', s.waitForFunction(() => /Spróbuj ponownie za/.test(document.getElementById('zakup-blad').textContent) && !document.getElementById('zakup-przycisk').disabled, null, { timeout: 5000 }));
   const limitZakupu = await s.evaluate(() => document.getElementById('zakup-blad').textContent);
   wynik('R9-D: 429 za-duzo-prob przy zakupie - komunikat z czasem w minutach (ponowZa w sekundach), przycisk znow aktywny', /Spróbuj ponownie za 30 min\./.test(limitZakupu), limitZakupu);
   await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('#zakup-przycisk')]);

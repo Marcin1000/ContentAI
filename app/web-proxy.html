@@ -16250,10 +16250,13 @@ function markaUstawiona(m) {
 }
 
 async function wczytajMarkeZSerwera() {
+  let mozeEdytowac = null;
   try {
     const odp = await fetch('/api/marka');
     if (!odp.ok) return;
     const dane = await odp.json();
+    // R9-D (C, ARCH8-09): serwer mowi wprost, czy to konto zmienia marke organizacji.
+    if (dane && typeof dane.mozeEdytowac === 'boolean') mozeEdytowac = dane.mozeEdytowac;
     const m = dane && dane.marka;
     if (markaUstawiona(m)) {
       markaZSerwera = m;
@@ -16268,6 +16271,7 @@ async function wczytajMarkeZSerwera() {
     // R9-D (UX8-23): marke organizacji edytuje ten, kto nia zarzadza (konto jednoosobowe: wlasciciel).
     if (ja && ja.organizacja && typeof ja.organizacja.mozeZarzadzac === 'boolean') markaAdmin = ja.organizacja.mozeZarzadzac;
   } catch (e) { markaAdmin = false; }
+  if (mozeEdytowac !== null) markaAdmin = mozeEdytowac;
   kontoAdmin = markaAdmin;
   updateCostDisplay();
 }
@@ -20774,6 +20778,11 @@ async function kbAudioTranscribeAndOpen(file) {
   // Wygasla sesja w kazdym wywolaniu API aplikacji (nie tylko w platnych): jeden komunikat z logowaniem.
   function poOdpowiedzi(zasob, odp){
     if (odp && odp.status === 401 && wlasnyAdres(zasob) && odp.headers.get('X-CAI-Kod') === 'sesja' && typeof window.sesjaWygasla === 'function') window.sesjaWygasla();
+    // A1 (CAI_WYMUS_AKCEPTACJE=1): nowy regulamin do akceptacji przy dowolnym zapisie - pasek z akceptacja. Odmowa
+    // z wersja to regulamin; bez wersji (zakup, B: zgoda na natychmiastowe wykonanie) to blad formularza zakupu.
+    if (odp && odp.status === 403 && wlasnyAdres(zasob) && odp.headers.get('X-CAI-Kod') === 'zgoda-wymagana' && typeof window.poOdmowieSerwera === 'function') {
+      odp.clone().json().then(function(d){ if (d && d.wersja) window.poOdmowieSerwera('zgoda-wymagana'); }).catch(function(){});
+    }
     return odp;
   }
 
@@ -21645,6 +21654,8 @@ async function kbAudioTranscribeAndOpen(file) {
     var k = { 'subskrypcja-istnieje': 'zakup-bl-istnieje', 'sprzedaz-wstrzymana': 'zakup-wstrzymany', 'zakup-niedozwolony': 'zakup-bl-niedozwolony',
       'plan-niedostepny': 'zakup-bl-plan', 'dostawca-platnosci-niedostepny': 'zakup-bl-stripe', 'za-duzo-prob': 'zakup-bl-za-duzo',
       'platnosci-wylaczone': 'zakup-bl-wylaczone', 'zgoda-wymagana': 'zakup-bl-zgoda', siec: 'err-siec' }[kod] || 'zakup-bl-inny';
+    // A1: 'zgoda-wymagana' z wersja to nowy regulamin do akceptacji (pasek nad aplikacja), nie pola zgody w oknie.
+    if (kod === 'zgoda-wymagana' && d && d.wersja) k = 'err-zgoda-wymagana';
     // ponowZa w sekundach (limit sesji zakupu liczony w godzinie): w komunikacie minuty, jak na ekranie B.
     var t = tekst(k, '').replace('{min}', String(Math.max(1, Math.ceil(((d && d.ponowZa) || 60) / 60))));
     if (cel) { cel.textContent = t; cel.hidden = false; } else powiadomBlad(t);
