@@ -738,6 +738,86 @@ async function testyUsuniecia(sprawdz) {
   }
 }
 
+// ─── CLI: pokaz, email, klucze, organizacja ──────────────────────────────────
+
+async function testyCli(sprawdz) {
+  console.log('\n  konta (A1) - CLI uzytkownicy.js: pokaz, email, klucze, organizacja');
+  const { spawnSync } = require('node:child_process');
+  const t = await uruchomSerwer({ srodowisko: srodowiskoRejestracji(), atrapaDostawcow: true });
+  try {
+    // CLI to osobny proces na tej samej bazie (WAL), ze srodowiskiem serwera testowego.
+    const cli = (...a) => spawnSync(process.execPath, [path.join(__dirname, 'uzytkownicy.js'), ...a], { env: { ...process.env }, encoding: 'utf8' });
+    const rej = await zarejestruj(t, { email: 'Ewa.Klient@Firma.pl' });
+    const cookie = ciasteczkoSesji(rej);
+    const klient = t.magazyn.kontoPoEmailu('ewa.klient@firma.pl');
+
+    const pokaz = cli('pokaz', 'EWA.klient@firma.pl');
+    const pokazZespolu = cli('pokaz', 'standard');
+    sprawdz('CLI pokaz <e-mail|login>: konto, organizacja, klucze, pakiet, zgody z wersja; bez hasha i soli',
+      pokaz.status === 0 && pokaz.stdout.includes(`Konto ${klient.login} (samoobsługowe`) && /e-mail:\s+ewa\.klient@firma\.pl \(niepotwierdzony\)/.test(pokaz.stdout)
+      && pokaz.stdout.includes(klient.organizacja) && /klucze API:\s+własne/.test(pokaz.stdout) && /pakiet:\s+darmowy/.test(pokaz.stdout)
+      && /artykul 0 z 3/.test(pokaz.stdout) && /regulamin\s+2026-10-v1\s+tak\s+rejestracja/.test(pokaz.stdout) && /polityka/.test(pokaz.stdout)
+      && !pokaz.stdout.includes(klient.hash) && !pokaz.stdout.includes(klient.sol)
+      && pokazZespolu.status === 0 && /e-mail:\s+brak \(loguje się loginem\)/.test(pokazZespolu.stdout) && /organizacja:\s+glowna/.test(pokazZespolu.stdout)
+      && /klucze API:\s+serwera/.test(pokazZespolu.stdout));
+
+    // email: adres od administratora jest potwierdzony; stare linki z e-maili przestaja dzialac.
+    const staryReset = t.magazyn.zapiszToken({ login: 'standard', rodzaj: 'reset', email: 'stary@firma.pl', wazneMs: 3600_000 });
+    const tokenPrzed = t.magazyn.sprawdzToken(staryReset, 'reset') !== null;
+    const ustaw = cli('email', 'standard', 'Ola.Zespol@Firma.pl');
+    const poUstawieniu = t.magazyn.konto('standard');
+    const logowanie = await t.zadanie('/auth/login', t.formularz(null, { login: 'ola.zespol@firma.pl', haslo: HASLO }, { 'x-real-ip': nowyIp() }));
+    sprawdz('CLI email <login> <adres>: zapis znormalizowany i potwierdzony, logowanie e-mailem, wczesniejsze tokeny niewazne',
+      ustaw.status === 0 && poUstawieniu.email === 'ola.zespol@firma.pl' && Boolean(poUstawieniu.emailPotwierdzony)
+      && logowanie.status === 302 && Boolean(ciasteczkoSesji(logowanie)) && tokenPrzed && t.magazyn.sprawdzToken(staryReset, 'reset') === null);
+    const zajety = cli('email', 'premium', 'ewa.klient@firma.pl');
+    const zly = cli('email', 'premium', 'ewa@firma');
+    const usunSamoobslugowy = cli('email', klient.login, '-');
+    sprawdz('CLI email: adres innego konta, zly format i usuniecie adresu konta samoobslugowego odrzucone (kod 1, bez zmian)',
+      zajety.status === 1 && /ma już konto/.test(zajety.stderr) && zly.status === 1 && /nie wygląda na adres/.test(zly.stderr)
+      && usunSamoobslugowy.status === 1 && t.magazyn.konto('premium').email === null
+      && t.magazyn.konto(klient.login).email === 'ewa.klient@firma.pl');
+    const usunZespolu = cli('email', 'ola.zespol@firma.pl', '-');
+    sprawdz('CLI email <login> -: konto zespolu bez adresu loguje sie dalej loginem',
+      usunZespolu.status === 0 && t.magazyn.konto('standard').email === null && t.magazyn.konto('standard').emailPotwierdzony === null
+      && (await t.zadanie('/auth/login', t.formularz(null, { login: 'standard', haslo: HASLO }, { 'x-real-ip': nowyIp() }))).status === 302);
+
+    // klucze: zmiana dziala od nastepnego zapytania (konto czytane z bazy przy kazdym zadaniu).
+    const kluczeSerwera = cli('klucze', klient.login, 'serwera');
+    const poZmianie = await (await t.zadanie('/api/konto', { headers: { cookie } })).json();
+    const zleZrodlo = cli('klucze', klient.login, 'cudze');
+    const bezZmian = cli('klucze', klient.login, 'serwera');
+    sprawdz('CLI klucze <login> serwera|wlasne: zmiana bez restartu (/api/konto), zla wartosc odrzucona, powtorka bez zmian',
+      kluczeSerwera.status === 0 && poZmianie.zrodloKluczy === 'serwera' && t.magazyn.konto(klient.login).zrodloKluczy === 'serwera'
+      && zleZrodlo.status === 1 && bezZmian.status === 0 && /Bez zmian/.test(bezZmian.stdout)
+      && cli('klucze', klient.login, 'wlasne').status === 0 && t.magazyn.konto(klient.login).zrodloKluczy === 'wlasne');
+
+    // organizacja: opis (konta, pliki) i nazwa widoczna w /api/konto.
+    const opis = cli('organizacja', klient.login);
+    const nazwa = cli('organizacja', klient.login, 'nazwa', 'Biuro', 'Ewy');
+    const poNazwie = await (await t.zadanie('/api/konto', { headers: { cookie } })).json();
+    const zaDluga = cli('organizacja', klient.organizacja, 'nazwa', 'x'.repeat(101));
+    const nieznana = cli('organizacja', 'o-nieistnieje');
+    const glowna = cli('organizacja', 'glowna');
+    sprawdz('CLI organizacja <login|id> [nazwa <tekst>]: opis z kontami i plikami, nazwa w /api/konto, zla nazwa i nieznana organizacja odrzucone',
+      opis.status === 0 && opis.stdout.includes(`Organizacja ${klient.organizacja} (samoobsługowa)`) && opis.stdout.includes(klient.login)
+      && opis.stdout.includes(path.join('marki', `${klient.organizacja}.json`)) && nazwa.status === 0
+      && t.magazyn.organizacja(klient.organizacja).nazwa === 'Biuro Ewy' && poNazwie.organizacja.nazwa === 'Biuro Ewy'
+      && zaDluga.status === 1 && t.magazyn.organizacja(klient.organizacja).nazwa === 'Biuro Ewy' && nieznana.status === 1
+      && glowna.status === 0 && /Konta \(4\)/.test(glowna.stdout)
+      && cli('organizacja', klient.organizacja, 'nazwa', '-').status === 0 && t.magazyn.organizacja(klient.organizacja).nazwa === null);
+
+    t.magazyn.usunKonto(klient.login, { powod: 'uzytkownik' });
+    const poUsunieciu = cli('pokaz', klient.login);
+    const pomoc = cli('pomoc');
+    sprawdz('CLI pokaz usunietego konta: kod 1 z data i powodem; pomoc wymienia nowe polecenia',
+      poUsunieciu.status === 1 && /usunięto .* \(powód: uzytkownik\)/.test(poUsunieciu.stderr)
+      && ['pokaz <login|e-mail>', 'email <login|e-mail>', 'klucze <login|e-mail>', 'organizacja <login|e-mail|id>'].every((p) => pomoc.stdout.includes(p)));
+  } finally {
+    await t.zamknij();
+  }
+}
+
 // ─── Funkcje modulu bez serwera ──────────────────────────────────────────────
 
 function testyFunkcji(sprawdz) {
@@ -771,6 +851,7 @@ async function uruchom({ sprawdz }) {
   await testyResetu(sprawdz);
   await testyKonta(sprawdz);
   await testyUsuniecia(sprawdz);
+  await testyCli(sprawdz);
 }
 
 module.exports = { uruchom };
