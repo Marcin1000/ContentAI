@@ -1221,7 +1221,8 @@ async function zgodyEkran(req, res, kontekst) {
     jezyk, wersja: KONF.regulaminWersja, adres, csrf: tokenCsrf(kontekst), stopka: stopkaKonta(konto, jezyk), ...o,
   }));
   if (req.method === 'GET' || req.method === 'HEAD') {
-    return ekran(200, { aktualne: !wymagaAkceptacji(konto, KONF), wersja: konto.regulaminWersja || KONF.regulaminWersja || '' });
+    const wymaga = wymagaAkceptacji(konto, KONF);
+    return ekran(200, { aktualne: !wymaga, wersja: wymaga ? KONF.regulaminWersja : (konto.regulaminWersja || KONF.regulaminWersja || '') });
   }
   if (req.method !== 'POST') return metodaNiedozwolona(res, kontekst, 'GET, HEAD, POST');
   const dane = await formularz(req, kontekst);
