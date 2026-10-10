@@ -143,19 +143,29 @@ async function testyBazy({ sprawdz }) {
 
 async function testyKompresji({ sprawdz }) {
   console.log('\n  odpornosc: kompresja w puli watkow, jedna strona aplikacji (KOD8-06, KOD8-32, ARCH8-24)');
-  const { monitorEventLoopDelay } = require('node:perf_hooks');
   const t = await uruchomSerwer({});
   try {
     const c = await t.zaloguj('premium');
     const oryginal = fs.readFileSync(path.join(__dirname, '..', 'app', 'pwa', 'lib', 'pdfmake.min.js'));
     const pobierz = () => t.zadanie('/pwa/lib/pdfmake.min.js', { headers: { cookie: c, 'accept-encoding': 'br' } });
-    const opoznienie = monitorEventLoopDelay({ resolution: 10 });
-    opoznienie.enable();
-    const [p1, p2] = await Promise.all([pobierz(), pobierz()]);
-    const b1 = Buffer.from(await p1.arrayBuffer());
-    const b2 = Buffer.from(await p2.arrayBuffer());
-    opoznienie.disable();
-    const maksMs = Math.round(opoznienie.max / 1e6);
+    // Zegar co 10 ms w tym samym procesie co serwer: najdluzsza przerwa miedzy tikami to
+    // najdluzsze zatrzymanie petli zdarzen w czasie pierwszych pobran.
+    let ostatniTik = Date.now();
+    let maksMs = 0;
+    const zegar = setInterval(() => { const teraz = Date.now(); maksMs = Math.max(maksMs, teraz - ostatniTik); ostatniTik = teraz; }, 10);
+    await czekaj(50);
+    let p1;
+    let p2;
+    let b1 = Buffer.alloc(0);
+    let b2 = Buffer.alloc(0);
+    try {
+      [p1, p2] = await Promise.all([pobierz(), pobierz()]);
+      b1 = Buffer.from(await p1.arrayBuffer());
+      b2 = Buffer.from(await p2.arrayBuffer());
+      await czekaj(30);
+    } finally {
+      clearInterval(zegar);
+    }
     sprawdz(`kompresja: pierwsze pobrania pdfmake.min.js (brotli) nie zatrzymuja petli zdarzen (najdluzej ${maksMs} ms, dawniej 2-4 s), tresc zgodna`,
       p1.status === 200 && p1.headers.get('content-encoding') === 'br' && b1.equals(oryginal) && b2.equals(oryginal) && maksMs < 500);
     const szybka = Number(p1.headers.get('content-length'));
