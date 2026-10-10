@@ -804,7 +804,8 @@ function testyPlikowWdrozenia(sprawdz) {
 async function testyAtrap(sprawdz) {
   console.log('\n  atrapy stripe.js i poczta.js (ksztalt modulu, zaslepki)');
   const nasluch = (s) => new Promise((ok) => { if (s.listening) ok(); else s.once('listening', ok); });
-  for (const [nazwa, plik, sciezka] of [['stripe', 'stripe.js', '/v1/customers'], ['poczta', 'poczta.js', '/emails']]) {
+  // stripe.js: pelna atrapa wykonawcy B, testy ksztaltu i API w testy-platnosci.js
+  for (const [nazwa, plik, sciezka] of [['poczta', 'poczta.js', '/emails']]) {
     const atrapa = require(path.join(__dirname, '..', 'narzedzia', 'atrapa', plik));
     const serwer = atrapa.uruchom(0, { sekret: 'whsec_test', webhook: 'http://127.0.0.1:9/platnosci/webhook/stripe' });
     try {

@@ -968,6 +968,11 @@ function odstapieniaKonta(login) {
   return zap('SELECT * FROM odstapienia WHERE login = ? ORDER BY zlozone DESC, id DESC').all(login).map(zWierszaOdstapienia);
 }
 
+/** Oswiadczenia w stanie (np. 'blad': zwrot do ponowienia, /api/status i CLI), od najstarszego. */
+function odstapieniaWStanie(stan, limit = 100) {
+  return zap('SELECT * FROM odstapienia WHERE stan = ? ORDER BY zlozone, id LIMIT ?').all(String(stan), Math.max(1, Number(limit) || 100)).map(zWierszaOdstapienia);
+}
+
 /** Kwota zwrocona dla wplaty (w jednostkach najmniejszych; laczna, nie przyrost). */
 function ustawZwrot(dostawca, id, kwotaZwrotu) {
   return zap('UPDATE platnosci SET zwrot = ? WHERE dostawca = ? AND id = ?').run(Math.max(0, Number(kwotaZwrotu) || 0), dostawca, id).changes > 0;
@@ -1159,7 +1164,7 @@ const API = {
   zapiszZdarzenie, oznaczZdarzenie, zdarzeniaNieprzetworzone, powiazKlienta, zastosujStanSubskrypcji,
   dopiszPlatnosc, ustawZwrot, sumyPlatnosci, platnosciWOkresie, platnosciKonta, kontaDoUzgodnienia,
   uzupelnijPlatnosc, wplata, wplataPoPlatnosci, wplatySubskrypcji, dopiszZwrot, zwrotyWplaty, zwrotyWOkresie,
-  zapiszOdstapienie, zmienOdstapienie, odstapienie, odstapieniaKonta,
+  zapiszOdstapienie, zmienOdstapienie, odstapienie, odstapieniaKonta, odstapieniaWStanie,
   meta, ustawMeta,
   migracjaZapiszKonto, migracjaUsunKonto,
   kopia, kopiaOkresowa, sprzataj, kontaNiepotwierdzone,
