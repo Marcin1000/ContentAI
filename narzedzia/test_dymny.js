@@ -1912,9 +1912,9 @@ async function wariantSamoobsluga(b) {
     && /na jego warunkach/.test(start.warunki), JSON.stringify(start));
   wynik('R9-D: bez klucza karta "Podlacz klucz" w miejscu Wygeneruj (E1), pasek trybu testowego platnosci i potwierdzenia e-maila',
     start.karta && start.gen === 'none' && /Tryb testowy płatności/.test(start.pasek) && /Potwierdź adres anna@example\.com/.test(start.pasek), JSON.stringify(start));
-  // Brak klucza: wywolanie modelu nie wychodzi do sieci, odpowiedz 403 brak-klucza od razu.
+  // Brak klucza: wywolanie modelu nie wychodzi do serwera (po swiezym odczycie stanu kluczy), odpowiedz 403 brak-klucza.
   const bez = await s.evaluate(async () => { const o = await fetch('/api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); return { status: o.status, kod: o.headers.get('X-CAI-Kod'), d: await o.json() }; });
-  wynik('R9-D: wywolanie modelu bez klucza = 403 brak-klucza bez ruchu sieciowego', bez.status === 403 && bez.kod === 'brak-klucza' && bez.d.dostawca === 'anthropic' && zapytania.api === 0, JSON.stringify(bez));
+  wynik('R9-D: wywolanie modelu bez klucza = 403 brak-klucza bez zapytania do modelu', bez.status === 403 && bez.kod === 'brak-klucza' && bez.d.dostawca === 'anthropic' && zapytania.api === 0, JSON.stringify(bez));
   // Zly klucz, potem dobry ("Sprawdz i zapisz" = POST /api/klucze z testem u dostawcy).
   await s.fill('#start-pole-anthropic', 'sk-ant-api03-zly-klucz-0000000000000000000');
   await s.click('#start-tresc .byok-pole[data-dostawca="anthropic"] .byok-zapisz');
@@ -2090,6 +2090,23 @@ async function wariantSamoobsluga(b) {
   st.kluczeBlad = false;
   wynik('R9-D: stan kluczy nieczytelny (GET /api/klucze 500) - bez karty i odmowy w przegladarce, klucz zapisany przez /api/klucze, nic w localStorage',
     nieznany.karta && !nieznany.bez && nieznany.zapis && !nieznany.magazyn.length, JSON.stringify(nieznany));
+  // Klucz usuniety albo zapisany poza kreatorem i Kontem (np. w innej karcie): odpowiedzi /api/klucze odswiezaja karte,
+  // a nieaktualny stan w tej karcie nie blokuje wywolania modelu (najpierw swiezy odczyt).
+  const pozaKreatorem = await s.evaluate(async () => {
+    const karta = () => !document.getElementById('konto-karta').hidden;
+    const chwila = () => new Promise((ok) => setTimeout(ok, 300));
+    await fetch('/api/klucze?dostawca=anthropic', { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+    await chwila();
+    const poUsunieciu = karta();
+    await fetch('/api/klucze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dostawca: 'anthropic', klucz: 'sk-ant-api03-z-innej-karty-0000000000000000wxyz' }) });
+    await chwila();
+    const poZapisie = karta();
+    window.STAN_KLUCZY = Object.assign({}, window.STAN_KLUCZY, { anthropic: { ustawiony: false } });
+    const o = await fetch('/api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    return { poUsunieciu, poZapisie, kod: o.headers.get('X-CAI-Kod') || '', status: o.status, stan: !!(window.STAN_KLUCZY.anthropic && window.STAN_KLUCZY.anthropic.ustawiony) };
+  });
+  wynik('R9-D: klucz zapisany albo usuniety poza kreatorem (C, inna karta) - karta nadaza, nieaktualny stan nie blokuje wywolania (swiezy odczyt)',
+    pozaKreatorem.poUsunieciu && !pozaKreatorem.poZapisie && pozaKreatorem.kod !== 'brak-klucza' && pozaKreatorem.stan, JSON.stringify(pozaKreatorem));
   // Ciasteczko klucza, ktorego serwer nie odszyfruje (C: inne konto, zmiana hasla, "wyloguj wszedzie"): inny tekst niz odrzucenie u dostawcy.
   const niewazny = await s.evaluate(() => {
     const zapas = window.STAN_KLUCZY;

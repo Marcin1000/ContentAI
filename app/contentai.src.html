@@ -21074,6 +21074,10 @@ async function kbAudioTranscribeAndOpen(file) {
     if (odp && odp.status === 403 && wlasnyAdres(zasob) && odp.headers.get('X-CAI-Kod') === 'zgoda-wymagana' && typeof window.poOdmowieSerwera === 'function') {
       odp.clone().json().then(function(d){ if (d && d.wersja) window.poOdmowieSerwera('zgoda-wymagana'); }).catch(function(){});
     }
+    // C: kazda odpowiedz ze stanem kluczy (odczyt, zapis, usuniecie, takze spoza kreatora i Konta) odswieza karte i Konto.
+    if (odp && odp.ok && wlasnyAdres(zasob) && /^\/api\/klucze(\/usun)?$/.test(sciezkaZadania(zasob)) && typeof window.ustawStanKluczy === 'function') {
+      odp.clone().json().then(window.ustawStanKluczy).catch(function(){});
+    }
     return odp;
   }
 
@@ -21082,8 +21086,14 @@ async function kbAudioTranscribeAndOpen(file) {
     if (!PLATNE[sciezka] || !wlasnyAdres(zasob)) return oryginalnyFetch.apply(null, arguments).then(function(odp){ return poOdpowiedzi(zasob, odp); });
     var dostawca = DOSTAWCA_SCIEZKI[sciezka];
     if (typeof window.kontoBezKlucza === 'function' && window.kontoBezKlucza(dostawca)) {
-      if (typeof window.otworzKreatorKluczaRaz === 'function') window.otworzKreatorKluczaRaz(dostawca);
-      return Promise.resolve(odpowiedzBrakKlucza(dostawca));
+      // Stan kluczy w tej karcie moze byc nieaktualny (klucz zapisany w innej karcie albo poza kreatorem):
+      // najpierw swiezy odczyt /api/klucze, odmowa w przegladarce dopiero, gdy klucza dalej nie ma.
+      var odczyt = typeof window.odswiezKluczeKonta === 'function' ? window.odswiezKluczeKonta() : Promise.resolve();
+      return odczyt.then(function(){
+        if (!window.kontoBezKlucza(dostawca)) return window.fetch(zasob, opcje);
+        if (typeof window.otworzKreatorKluczaRaz === 'function') window.otworzKreatorKluczaRaz(dostawca);
+        return odpowiedzBrakKlucza(dostawca);
+      });
     }
     // Klucz doklejamy tylko do wywolan z adresem tekstowym. Przy obiekcie
     // Request drugi argument zastapilby JEGO naglowki, gubiac Content-Type -
@@ -21574,6 +21584,19 @@ async function kbAudioTranscribeAndOpen(file) {
     });
   }
   function kluczeWCiasteczkach(){ return wlasne(); }
+  // Jeden odczyt naraz (rownolegle wywolania modelu bez klucza czekaja na ten sam).
+  var odczytKluczy = null;
+  window.odswiezKluczeKonta = function(){
+    if (!odczytKluczy) odczytKluczy = odswiezKlucze().then(function(w){ odczytKluczy = null; rysujWszystko(); return w; }, function(){ odczytKluczy = null; });
+    return odczytKluczy;
+  };
+  window.ustawStanKluczy = function(d){
+    if (!wlasne() || !d || typeof d !== 'object' || !d.anthropic) return;
+    // Ten sam stan (zapis z kreatora juz go ustawil): bez przerysowania, zeby nie zgubic komunikatu przy polu.
+    try { if (JSON.stringify(d) === JSON.stringify(window.STAN_KLUCZY)) return; } catch(e){}
+    window.STAN_KLUCZY = d;
+    poZmianieKluczy();
+  };
   window.maKlucz = function(d){ var k = window.STAN_KLUCZY; return !!(k && k[d] && k[d].ustawiony && !k[d].niewazny); };
   // Brak klucza wiemy na pewno tylko na koncie BYOK z odczytanym stanem kluczy.
   window.kontoBezKlucza = function(d){ return wlasne() && !!window.STAN_KLUCZY && !window.STAN_KLUCZY._nieznany && !window.maKlucz(d || 'anthropic'); };
