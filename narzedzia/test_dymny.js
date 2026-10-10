@@ -1038,6 +1038,12 @@ async function wariantUwagiTelefonu(b) {
   wynik('telefon: UT okna Bazy (adres, tekst) i Tematy bez klawiatury przy otwarciu: fokus na oknie, nie w polu',
     !url.tekstowe && url.okno && !tekst.tekstowe && tekst.okno && !tematy.tekstowe && tematy.okno, JSON.stringify({ url, tekst, tematy }));
   wynik('telefon: UT dotkniecie pola adresu daje fokus (i klawiature) dopiero wtedy', poDotyku === 'u-url', String(poDotyku));
+  // Kreator otwarty dla dostawcy (Grafika albo Audio bez klucza) na koncie z wlasnymi kluczami: fokus na tytule kroku.
+  const kreator = await fokus(s, () => { window.__stanKonta = window.STAN_KONTA;
+    window.STAN_KONTA = Object.assign({}, window.STAN_KONTA || {}, { zrodloKluczy: 'wlasne' }); otworzKreatorKlucza('openai'); });
+  await s.evaluate(() => { startPomin(); window.STAN_KONTA = window.__stanKonta; });
+  await s.waitForTimeout(200);
+  wynik('telefon: UT kreator klucza dla dostawcy bez klawiatury przy otwarciu (fokus na tytule kroku)', !kreator.tekstowe && kreator.okno, JSON.stringify(kreator));
 
   // 3. Menu Tworz przy gotowym tekscie: Audio obok Grafiki, otwiera modul audio z tym artykulem jako zrodlem.
   await s.evaluate(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); });
@@ -1077,6 +1083,8 @@ async function wariantUwagiTelefonu(b) {
   const dX = await d.evaluate(() => { const x = document.querySelector('#settings-menu .menu-konto-zamknij'); return !!x && getComputedStyle(x).display !== 'none'; });
   await d.evaluate(() => closeSettingsMenu());
   wynik('komputer: UT okno adresu jak dotad z fokusem w polu adresu, X Konta tylko na telefonie', dUrl.id === 'u-url' && !dX, JSON.stringify({ dUrl, dX }));
+  const dKoszt = await d.evaluate(() => { const e = document.querySelector('label[for="use-web"] .koszt-wlasny'); return { jest: !!e, widoczny: !!e && e.offsetParent !== null }; });
+  wynik('komputer: UT konto zespolu (klucze serwera) bez zdania o koszcie wyszukiwania na wlasnym kluczu', dKoszt.jest && !dKoszt.widoczny, JSON.stringify(dKoszt));
   await kd.close();
 }
 
@@ -1141,6 +1149,9 @@ async function wariantR9Klucze(b) {
     wynik('R9-C klucze: zapis z aplikacji - ciasteczko HttpOnly (niewidoczne dla skryptu), stan z koncowka, konto wlasne',
       zapis.status === 200 && !zapis.widocznyDlaSkryptu && zapis.stan && zapis.stan.ustawiony && zapis.stan.koncowka === KLUCZ.slice(-4) && zapis.zrodlo === 'wlasne',
       JSON.stringify(zapis));
+    // UX8-14 (G) przy wlasnym kluczu: "Szukaj w sieci" wlacza sie samo przy pustej bazie, a wyszukiwanie placi uzytkownik.
+    const kosztSieci = await s.evaluate(() => { const e = document.querySelector('label[for="use-web"] .koszt-wlasny'); return { widoczny: !!e && e.offsetParent !== null, tekst: e ? e.textContent : '' }; });
+    wynik('R9-C klucze: pod "Szukaj w sieci" zdanie, ze wyszukiwanie zwieksza koszt na kluczu uzytkownika', kosztSieci.widoczny && /Twoim kluczu API/.test(kosztSieci.tekst), JSON.stringify(kosztSieci));
     const odWywolania = atrapa.ostatnie.length;
     const r = await generuj(s, 'Artykul na wlasnym kluczu z ciasteczka');
     const wywolania = atrapa.ostatnie.slice(odWywolania).filter((w) => /\/v1\/messages/.test(w.sciezka || ''));

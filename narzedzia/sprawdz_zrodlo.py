@@ -1587,6 +1587,8 @@ KONTROLE += [
      "body.is-mobile .settings-menu.open .menu-konto-zamknij { display: inline-flex;", None, None),
     ("R9-UT/bez-klawiatury", "ekran dotykowy: okno przy otwarciu nie stawia fokusu w polu tekstowym (klawiatura po dotknieciu pola)",
      "if (ekranDotykowy() && otwieraKlawiature(pierwsze)) pierwsze = dialogW(okno);", None, None),
+    ("R9-UT/kreator-bez-klawiatury", "kreator otwarty dla dostawcy: na ekranie dotykowym pole klucza bez fokusu (fokus na tytule kroku)",
+     "if (fokus && typeof ekranDotykowy === 'function' && ekranDotykowy() && otwieraKlawiature(fokus)) fokus = null;", None, ("proxy",)),
     ("R9-UT/tematy-bez-klawiatury", "Tematy i szablony: fokus w polu tematu bez klawiatury na ekranie dotykowym",
      "fokusBezKlawiatury(document.getElementById('tematy-zapotrzebowanie'));", "  document.getElementById('tematy-zapotrzebowanie').focus();\n}", None),
     ("R9-UT/audio-tworz", "menu Tworz przy gotowym tekscie ma Audio (blokada pakietu jak w menu briefu)",
@@ -1595,6 +1597,8 @@ KONTROLE += [
      "'img-btn', 'audio-wynik-btn', 'titles-btn',", None, None),
     ("R9-UT/audio-zrodlo", "Audio przy gotowym artykule: puste zrodlo dostaje ten artykul, wczytany znika z nowym artykulem",
      "if (as && as.value && typeof audioZArtykulu === 'function' && as.value === audioZArtykulu.auto) as.value = '';", None, None),
+    ("R9-UT/siec-koszt-wlasny", "UX8-14 przy wlasnym kluczu: pod Szukaj w sieci zdanie o koszcie wyszukiwania na kluczu uzytkownika",
+     "body.konto-wlasne .toggle-row .koszt-wlasny { display: block; }", None, None),
 ]
 
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi

@@ -369,7 +369,15 @@ function audytStrony(o) {
       let K = null;
       for (let p = e.parentElement; p; p = p.parentElement) { if (p === document.body) { K = document.scrollingElement; break; } const c = cs(p); if ((c.overflowY === 'auto' || c.overflowY === 'scroll') && p.scrollHeight > p.clientHeight + 2) { K = p; break; } if (c.position === 'fixed') break; }
       let daSie = false;
-      if (K) {
+      if (K && K !== document.scrollingElement) {
+        // element przewijanego arkusza ponizej albo powyzej jego widocznej czesci: przykrywa go tlo menu
+        // na calym ekranie, wiec kierunek przewijania wynika z polozenia elementu w pojemniku, nie z paska
+        // (menu Tworz z Audio na 320x568; dojscie do konca listy sprawdza osobno "ostatni-zasloniety")
+        const kr = K.getBoundingClientRect(), kGora = kr.top + K.clientTop, kDol = kGora + K.clientHeight;
+        if (cy > kDol) daSie = (K.scrollHeight - K.clientHeight - K.scrollTop) >= (r.bottom - kDol) + 2;
+        else if (cy < kGora) daSie = K.scrollTop >= (kGora - r.top) + 2;
+      }
+      if (K && !daSie) {
         // pasek dolny (srodek w dolnej polowie ekranu) odslania element przewijaniem w dol, gorny - w gore;
         // element moze zaczynac sie ponizej gornej krawedzi wysokiego dolnego paska (stopka briefu)
         const pasekNizej = (fr.top + fr.bottom) / 2 > H / 2;

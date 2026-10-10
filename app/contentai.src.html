@@ -2687,6 +2687,9 @@ body.is-mobile .settings-menu.open .menu-konto > div { min-width: 0; overflow-wr
 body.is-mobile .settings-menu.open .menu-konto-zamknij { display: inline-flex; flex: none; margin-left: auto; }
 body.is-mobile .settings-menu.open .menu-konto + hr { display: none; }
 body.is-mobile .settings-menu.open .menu-konto + hr + .menu-tel-widocznosc > .menu-naglowek:first-child { margin-top: var(--s-4); padding-top: var(--s-8); border-top: 0; }
+/* UX8-14 przy wlasnym kluczu: "Szukaj w sieci" wlacza sie samo przy pustej bazie, a wyszukiwanie placi uzytkownik */
+.toggle-row .koszt-wlasny { display: none; }
+body.konto-wlasne .toggle-row .koszt-wlasny { display: block; }
 /* wjazd 260 ms, zjazd 200 ms, tylko transform */
 @keyframes arkusz-wjazd { from { transform: translateY(100%); } }
 @keyframes arkusz-zjazd { to { transform: translateY(110%); } }
@@ -3706,6 +3709,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="toggle-info">
               <span class="toggle-label" data-i18n="toggle-web">Szukaj w sieci i podaj źródła</span>
               <span class="toggle-hint" data-i18n="toggle-web-hint">Czego brakuje w bazie, AI poszuka w sieci i wymieni źródła pod artykułem. Dane o Twojej firmie zawsze tylko z bazy. Wydłuża generowanie o ok. 30 s.</span>
+              <span class="toggle-hint koszt-wlasny" data-i18n="toggle-web-koszt-wlasne">Wyszukiwanie w sieci jest płatne u dostawcy AI i zwiększa koszt tekstu na Twoim kluczu API.</span>
             </div>
             <div class="toggle-wrap">
               <input type="checkbox" id="use-web" />
@@ -5285,6 +5289,7 @@ var I18N = {
     'toggle-web':'Szukaj w sieci i podaj źródła',
     'toggle-web-hint':'Czego brakuje w bazie, AI poszuka w sieci i wymieni źródła pod artykułem. Dane o Twojej firmie zawsze tylko z bazy. Wydłuża generowanie o ok. 30 s.',
     'toggle-web-hint-pusta':'Twoja baza wiedzy jest pusta, więc AI oprze tekst na stronach z sieci i wymieni je pod artykułem. Dodaj materiały o firmie, żeby kolejne teksty mówiły o Twojej ofercie.',
+    'toggle-web-koszt-wlasne':'Wyszukiwanie w sieci jest płatne u dostawcy AI i zwiększa koszt tekstu na Twoim kluczu API.',
     'toggle-serp':'Analiza SERP przed generowaniem',
     'toggle-serp-hint':'Przed pisaniem AI sprawdza, co rankuje w Google na Twoje słowo kluczowe, i bierze to pod uwagę. Wydłuża generowanie o ok. 15 s.',
     'toggle-aeo':'Tryb AEO (treść pod cytowania AI)','toggle-aeo-hint':'Wymusza format pod silniki odpowiedzi: definicja 25-50 słów na start, liczby w intro, 5-7 pytań FAQ, krótkie listy, nagłówki jako pytania.',
@@ -6152,6 +6157,7 @@ var I18N = {
     'toggle-web':'Search the web and cite sources',
     'toggle-web-hint':'What the knowledge base lacks, the AI looks up online and lists the sources under the article. Anything about your company still comes from the knowledge base only. Adds about 30 s.',
     'toggle-web-hint-pusta':'Your knowledge base is empty, so the AI bases the text on web pages and lists them under the article. Add materials about your company so the next texts talk about your offer.',
+    'toggle-web-koszt-wlasne':'Web search is billed by the AI provider and adds to the cost of the text on your API key.',
     'toggle-serp':'SERP analysis before generating',
     'toggle-serp-hint':'Before writing, the AI checks what ranks in Google for your keyword and takes it into account. Adds about 15 s.',
     'toggle-aeo':'AEO mode (content for AI citations)','toggle-aeo-hint':'Forces answer-engine format: 25-50 word definition up front, numbers in intro, 5-7 FAQ questions, short lists, headings as questions.',
@@ -15295,7 +15301,7 @@ function siecDomyslnaDlaBazy() {
   }
   // Po ustawieniu stanu (inaczej sama zmiana defaultChecked przestawia jeszcze nieruszony przelacznik).
   w.defaultChecked = pusta;
-  const opis = document.querySelector('label[for="use-web"] .toggle-hint');
+  const opis = document.querySelector('label[for="use-web"] .toggle-hint:not(.koszt-wlasny)');
   const klucz = pusta && w.checked ? 'toggle-web-hint-pusta' : 'toggle-web-hint';
   if (opis && opis.getAttribute('data-i18n') !== klucz) { opis.setAttribute('data-i18n', klucz); opis.textContent = _t(klucz); }
 }
@@ -21366,6 +21372,8 @@ async function kbAudioTranscribeAndOpen(file) {
       dalej.textContent = tekst('byok-napisz', '');
     }
     var tytul = el('start-tytul');
+    // Ekran dotykowy: pole klucza bez fokusu (klawiatura dopiero po dotknieciu pola), fokus na tytule kroku.
+    if (fokus && typeof ekranDotykowy === 'function' && ekranDotykowy() && otwieraKlawiature(fokus)) fokus = null;
     if (el('start-modal').style.display === 'flex') { try { (fokus || tytul).focus({ preventScroll: true }); } catch(e){} }
   }
   function zapiszFirme(){

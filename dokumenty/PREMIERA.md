@@ -33,6 +33,29 @@ ssh root@100.107.236.125
 
 ## Etap 1. Serwer: przygotowanie (raz, nie zmienia aplikacji)
 
+### 1.0 Node.js 22.13 albo nowszy (OBOWIĄZKOWO przed etapem 3)
+
+Nowa wersja trzyma konta we wbudowanej bazie Node (`node:sqlite`), która jest dopiero od Node 22.13.
+Na starszym Node nowa wersja **nie wystartuje** (w dzienniku: `modul node:sqlite jest niedostepny`).
+
+```bash
+node -v
+```
+
+- `v22.13` albo więcej (np. `v22.20.0`, `v24.x`): w porządku, przejdź do 1.1.
+- mniej (np. `v18.19.1`, `v20.x`): zainstaluj Node 22 (ta sama wersja co w testach na GitHubie).
+  Obecna wersja aplikacji działa na Node 22 bez zmian, więc robisz to osobno, przed nowym kodem:
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+node -v
+sudo systemctl restart contentai
+sudo systemctl status contentai --no-pager | head -5
+```
+
+Oczekiwane: `node -v` pokazuje `v22.x`, usługa `active (running)`, aplikacja działa jak wcześniej.
+
 ### 1.1 Swap 3 GB (dziś brak; skok pamięci ubijał proces)
 
 ```bash
@@ -144,6 +167,12 @@ i napisz do mnie.
 
 Wieczorem albo rano, poza godzinami pracy klientów (restart trwa kilka sekund).
 Szczegóły: `serwer/README.md`, sekcja "Aktualizacja".
+
+Najpierw kontrola Node (krok 1.0). Polecenie kończy się błędem, gdy Node jest za stary; wtedy nie idź dalej:
+
+```bash
+node -e 'const [a,b]=process.versions.node.split(".").map(Number); if (a<22||(a===22&&b<13)) { console.error("Node "+process.version+" jest za stary, zrob krok 1.0"); process.exit(1); } console.log("Node "+process.version+": OK")'
+```
 
 ```bash
 sudo tar czf /root/contentai-dane-$(date +%F-%H%M).tgz -C /srv/contentai/serwer dane
