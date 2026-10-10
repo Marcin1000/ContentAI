@@ -1846,6 +1846,11 @@ async function wariantSamoobsluga(b) {
     e402.okno !== 'flex' && /Na Twoim koncie Anthropic zabrakło środków/.test(e402.tekst) && /To nie jest limit pakietu/.test(e402.tekst), JSON.stringify(e402));
   wynik('R9-D: E3 - przy braku srodkow przycisk "Rozliczenia Anthropic" i "Sprobuj ponownie" (po doladowaniu)',
     /href="https:\/\/platform\.claude\.com\/settings\/billing"/.test(e402.blok) && /Rozliczenia Anthropic/.test(e402.blok) && /ponow-generowanie/.test(e402.blok), e402.blok);
+  const e4 = await s.evaluate(() => [
+    blokBledu(bladOdpowiedzi({ type: 'error', error: { type: 'rate_limit_error', message: 'enforced_spend_limit_reached' } }, 429, 'Anthropic'), 'generate()'),
+    blokBledu(bladOdpowiedzi({ type: 'error', error: { type: 'invalid_request_error', message: 'You have reached your specified API usage limits. You will regain access on 2026-11-01 at 00:00 UTC.' } }, 400, 'Anthropic'), 'generate()')]);
+  wynik('R9-D: E4 - limit wydatkow u dostawcy: przycisk "Limity Anthropic" (strona limitow w konsoli), bez "Sprobuj ponownie"',
+    e4.every((h) => /href="https:\/\/platform\.claude\.com\/settings\/limits"/.test(h) && /Limity Anthropic/.test(h) && !/ponow-generowanie/.test(h)), e4.join(' || '));
   // 3. Zakup w dwoch kliknieciach: "Wybierz pakiet" -> karty z waluta i zgodami -> "Przejdz do platnosci".
   await s.click('#a4-wybierz');
   await krok('R9-D okno pakietow', s.waitForSelector('#zakup .zakup-karta', { timeout: 5000 }));

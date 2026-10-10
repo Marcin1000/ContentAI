@@ -5934,6 +5934,7 @@ var I18N = {
     'err-model-wlasny':'{DOSTAWCA} nie udostępnia Twojemu kluczowi modelu, którego używa aplikacja. Sprawdź dostęp do modeli w konsoli dostawcy.','err-limit-pakietu-zawsze':'Pula pakietu jest wykorzystana i się nie odnawia. Szczegóły są w oknie pakietu.',
     'err-funkcja-poza-pakietem':'Ta funkcja nie wchodzi w Twój pakiet. Szczegóły są w oknie pakietu.','btn-podlacz-klucz':'Podłącz klucz {DOSTAWCA}','btn-wybierz-pakiet':'Wybierz pakiet',
     'btn-wyslij-link':'Wyślij link ponownie','btn-rozliczenia':'Rozliczenia {DOSTAWCA}',
+    'btn-limity':'Limity {DOSTAWCA}',
     'err-json-modelu':'Model zwrócił odpowiedź w uszkodzonym formacie. Spróbuj jeszcze raz.',
     'wp-published':'opublikowano',
     'wp-draft':'zapisano jako szkic',
@@ -6850,6 +6851,7 @@ var I18N = {
     'err-model-wlasny':'{DOSTAWCA} does not give your key access to the model the app uses. Check model access in the provider console.','err-limit-pakietu-zawsze':'Your plan allowance is used up and does not reset. Details are in the plan window.',
     'err-funkcja-poza-pakietem':'This feature is not part of your plan. Details are in the plan window.','btn-podlacz-klucz':'Connect your {DOSTAWCA} key','btn-wybierz-pakiet':'Choose a plan',
     'btn-wyslij-link':'Send the link again','btn-rozliczenia':'{DOSTAWCA} billing',
+    'btn-limity':'{DOSTAWCA} limits',
     'err-json-modelu':'The model returned a malformed response. Please try again.',
     'gap-btn-select':'Select topics to add',
     'hist-default-name':'Article',
@@ -7876,6 +7878,8 @@ const ROZLICZENIA_DOSTAWCOW = {
   anthropic: 'https://platform.claude.com/settings/billing', openai: 'https://platform.openai.com/settings/organization/billing/overview',
   eleven: 'https://elevenlabs.io/app/subscription',
 };
+// E4: limit wydatkow zmienia sie na stronie limitow w konsoli dostawcy (ElevenLabs nie ma limitu wydatkow).
+const LIMITY_DOSTAWCOW = { anthropic: 'https://platform.claude.com/settings/limits', openai: 'https://platform.openai.com/settings/organization/limits' };
 function akcjeBleduKonta(r, e, ponow) {
   const d = (e && e.dostawcaKod) || 'anthropic', nazwa = (e && e.dostawca) || NAZWY_DOSTAWCOW[d];
   if (r === 'brak-klucza' && typeof window.otworzKreatorKlucza === 'function') {
@@ -7890,6 +7894,9 @@ function akcjeBleduKonta(r, e, ponow) {
   if ((r === 'srodki' || r === 'limit-wydatkow-wlasny' || r === 'limit-wydatkow-konta') && kontoNaWlasnychKluczach()) {
     // E3: po doladowaniu srodkow ponowienie ma sens; limit wydatkow trzeba najpierw zmienic w konsoli.
     const znowu = r === 'srodki' && ponow ? '<button type="button" class="btn-secondary ponow-generowanie" onclick="' + escapeHtml(ponow) + '">' + ikona('refresh-cw') + escapeHtml(_t('btn-sprobuj-ponownie')) + '</button>' : '';
+    if (r !== 'srodki' && LIMITY_DOSTAWCOW[d]) {
+      return '<a class="btn-secondary" href="' + LIMITY_DOSTAWCOW[d] + '" target="_blank" rel="noopener">' + ikona('arrow-right') + escapeHtml(_t('btn-limity').replace('{DOSTAWCA}', nazwa)) + '</a>';
+    }
     return '<a class="btn-secondary" href="' + ROZLICZENIA_DOSTAWCOW[d] + '" target="_blank" rel="noopener">' + ikona('arrow-right') + escapeHtml(_t('btn-rozliczenia').replace('{DOSTAWCA}', nazwa)) + '</a>' + znowu;
   }
   return '';

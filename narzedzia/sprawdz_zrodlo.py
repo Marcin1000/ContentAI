@@ -1538,6 +1538,8 @@ KONTROLE += [
      "const dk = kontoNaWlasnychKluczach() && e && e.dostawcaKod ? '\\'' + escapeHtml(e.dostawcaKod) + '\\'' : '';", None, None),
     ('R9-D/e3-ponow', 'UX8-22, E3: brak srodkow u dostawcy na wlasnym kluczu - "Sprobuj ponownie" po doladowaniu',
      "const znowu = r === 'srodki' && ponow ? '<button type=\"button\" class=\"btn-secondary ponow-generowanie\"", None, None),
+    ('R9-D/e4-limity', 'UX8-22, E4: limit wydatkow u dostawcy - przycisk do strony limitow w konsoli',
+     "const LIMITY_DOSTAWCOW = { anthropic: 'https://platform.claude.com/settings/limits'", None, None),
 ]
 
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi
