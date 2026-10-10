@@ -1384,10 +1384,21 @@ function czynnosciTresci(req) {
   return deklaracja === 'artykul' ? ['wywolanie', 'artykul'] : ['wywolanie'];
 }
 
-/** Dopisuje uzycie po udanej odpowiedzi dostawcy. */
+/**
+ * KOD8-20: limit rezerwowany przed wywolaniem dostawcy (atomowo w bazie), wiec zapytania wyslane
+ * naraz nie omijaja limitu. -> { rezerwacja } albo { odmowa } w dzisiejszym ksztalcie 402.
+ * Potwierdzenie: policzUzycie po sukcesie; zwolnienie: finally w wykonaj (blad, przerwanie, czas).
+ */
+function zarezerwujLimit(sesja, czynnosci) {
+  const r = plany.zarezerwuj({ konto: kontoSesji(sesja), czynnosci: czynnosci.filter(Boolean) });
+  if (r.wolno) return { rezerwacja: r.rezerwacja };
+  return { odmowa: odmowaLimitu(sesja, r.czynnosc) || { error: 'Limit pakietu wyczerpany', czynnosc: r.czynnosc } };
+}
+
+/** Dopisuje uzycie po udanej odpowiedzi dostawcy (z rezerwacja: potwierdza zarezerwowana sztuke). */
 function policzUzycie(sesja, czynnosc) {
   try {
-    plany.policz({ konto: kontoSesji(sesja), czynnosc });
+    plany.policz({ konto: kontoSesji(sesja), czynnosc, rezerwacja: sesja && sesja.rezerwacja });
   } catch (e) {
     // Blad licznika nie moze zabrac uzytkownikowi gotowego wyniku - lepiej
     // policzyc o jedno mniej niz oddac blad na juz wykonana prace.
@@ -2516,11 +2527,9 @@ async function obsluz(req, res) {
     };
     // /api obsluguje zarowno artykul, jak i wywolania pomocnicze - patrz czynnosciTresci()
     const czynnosci = sciezka === '/api' ? czynnosciTresci(req) : [CZYNNOSCI[sciezka]];
-    for (const czynnosc of czynnosci) {
-      if (!czynnosc) continue;
-      const odmowa = odmowaLimitu(sesja, czynnosc);
-      if (odmowa) return bledy.bladCai(res, 'limit-pakietu', 402, odmowa);
-    }
+    const { rezerwacja, odmowa } = zarezerwujLimit(sesja, czynnosci);
+    if (odmowa) return bledy.bladCai(res, 'limit-pakietu', 402, odmowa);
+    sesja.rezerwacja = rezerwacja;
 
     const wykonaj = async (cel, zad = req) => {
       try {
@@ -2545,6 +2554,8 @@ async function obsluz(req, res) {
         if (e instanceof pliki.BladDanych) throw e;
         console.error(`[proxy] ${sciezka}:`, e.message);
         return odpowiedzJson(cel, 502, { error: 'Błąd połączenia z dostawcą API' });
+      } finally {
+        rezerwacja.zwolnij();
       }
       return undefined;
     };
@@ -2564,6 +2575,7 @@ async function obsluz(req, res) {
       try {
         cialo = await czytajCialo(req);
       } catch (e) {
+        rezerwacja.zwolnij();
         if (e.status === 413) return odpowiedzZaDuze(res, sciezka);
         return undefined;
       }
