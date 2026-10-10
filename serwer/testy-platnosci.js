@@ -793,6 +793,28 @@ async function testyZakupu(sprawdz) {
       powiaz.status === 0 && /Powiązano/.test(powiaz.stdout) && konflikt.status === 1 && zamien.status === 0 && konto(t, y.login).platnikKlient === klientY2.json.id);
     const sync = await cli('platnosci-synchronizuj', a.login);
     sprawdz('CLI platnosci-synchronizuj <login>: kod 0, stan konta z dostawcy', sync.status === 0 && /Uzgodniono kont: 1/.test(sync.stdout));
+    const skryptStripe = (...dodatkowe) => new Promise((ok) => {
+      const proc = spawn(process.execPath, [path.join(__dirname, '..', 'narzedzia', 'test_platnosci_stripe.js'), '--waluta', 'pln',
+        '--cli', `${process.execPath} ${path.join(__dirname, 'uzytkownicy.js')}`, ...dodatkowe],
+      { env: { ...process.env, STRIPE_KLUCZ_ZEGARY: 'sk_test_atrapa_zegary', TEST_PLATNOSCI_CZEKAJ_S: '0.2' } });
+      let wyjscie = '';
+      proc.stdout.on('data', (dd) => { wyjscie += dd; });
+      proc.stderr.on('data', (dd) => { wyjscie += dd; });
+      proc.on('close', (status) => ok({ status, wyjscie }));
+    });
+    const zz = await nowyKlient(t);
+    const skrypt = await skryptStripe('--login', zz.login);
+    const zz2 = await nowyKlient(t);
+    const skrypt0341 = await skryptStripe('--login', zz2.login, '--karta', '0341', '--sprzataj');
+    const bezKlucza = await new Promise((ok) => {
+      const proc = spawn(process.execPath, [path.join(__dirname, '..', 'narzedzia', 'test_platnosci_stripe.js'), '--login', zz.login], { env: { ...process.env, STRIPE_KLUCZ_ZEGARY: KLUCZ } });
+      proc.on('close', (status) => ok(status));
+    });
+    sprawdz('narzedzia/test_platnosci_stripe.js (11.4) na atrapie: zegar testowy, subskrypcja, powiazanie, miesiac pozniej aktywna z 2 wplatami; klucz rk_ -> kod 2',
+      skrypt.status === 0 && /Gotowe: stan konta zgodny/.test(skrypt.wyjscie) && konto(t, zz.login).subskrypcjaStan === 'aktywna'
+      && t.magazyn.platnosciKonta(zz.login).length === 2 && bezKlucza === 2);
+    sprawdz('narzedzia/test_platnosci_stripe.js --karta 0341 --sprzataj: odnowienie odrzucone -> zalegla (T9), zegar usuniety',
+      skrypt0341.status === 0 && /miesiac 1: stan zalegla/.test(skrypt0341.wyjscie) && /Usunięto zegar/.test(skrypt0341.wyjscie) && konto(t, zz2.login).subskrypcjaStan === 'zalegla');
 
     console.log('\n  platnosci (B) - stany ARCH8-16 z przesuwanym czasem atrapy');
     const e = await nowyKlient(t);
