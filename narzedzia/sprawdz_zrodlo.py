@@ -1536,6 +1536,8 @@ KONTROLE += [
      "{ text: skrotTekstu(tytul, 70), style: 'meta2' },", None),
     ('R9-D/klucz-przycisk', 'przycisk kluczy przy bledzie: dostawca tylko dla konta na wlasnych kluczach, reszta jak dzis (test_stan)',
      "const dk = kontoNaWlasnychKluczach() && e && e.dostawcaKod ? '\\'' + escapeHtml(e.dostawcaKod) + '\\'' : '';", None, None),
+    ('R9-D/e3-ponow', 'UX8-22, E3: brak srodkow u dostawcy na wlasnym kluczu - "Sprobuj ponownie" po doladowaniu',
+     "if (ponow && (czyPonowic(e) || (r === 'srodki' && kontoNaWlasnychKluczach()))) {", None, None),
 ]
 
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi

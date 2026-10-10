@@ -1839,10 +1839,13 @@ async function wariantSamoobsluga(b) {
   // 402 od dostawcy (brak srodkow na koncie Anthropic) nie otwiera okna pakietu (UX8-03).
   await s.route(/\/api$/, (r) => r.fulfill({ status: 402, contentType: 'application/json', body: JSON.stringify({ type: 'error', error: { type: 'billing_error', message: 'Your credit balance is too low to access the Anthropic API.' } }) }));
   const e402 = await s.evaluate(async () => { const o = await fetch('/api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); const d = await o.json();
-    await new Promise((ok) => setTimeout(ok, 300)); return { okno: document.getElementById('pakiet-modal').style.display, tekst: komunikatBleduApi(bladOdpowiedzi(d, o.status)) }; });
+    await new Promise((ok) => setTimeout(ok, 300)); return { okno: document.getElementById('pakiet-modal').style.display, tekst: komunikatBleduApi(bladOdpowiedzi(d, o.status)),
+      blok: blokBledu(bladOdpowiedzi(d, o.status), 'generate()') }; });
   await s.unroute(/\/api$/);
   wynik('R9-D: 402 billing_error dostawcy bez okna pakietu, komunikat o srodkach u Anthropic (nie limit pakietu)',
     e402.okno !== 'flex' && /Na Twoim koncie Anthropic zabrakło środków/.test(e402.tekst) && /To nie jest limit pakietu/.test(e402.tekst), JSON.stringify(e402));
+  wynik('R9-D: E3 - przy braku srodkow przycisk "Rozliczenia Anthropic" i "Sprobuj ponownie" (po doladowaniu)',
+    /href="https:\/\/platform\.claude\.com\/settings\/billing"/.test(e402.blok) && /Rozliczenia Anthropic/.test(e402.blok) && /ponow-generowanie/.test(e402.blok), e402.blok);
   // 3. Zakup w dwoch kliknieciach: "Wybierz pakiet" -> karty z waluta i zgodami -> "Przejdz do platnosci".
   await s.click('#a4-wybierz');
   await krok('R9-D okno pakietow', s.waitForSelector('#zakup .zakup-karta', { timeout: 5000 }));

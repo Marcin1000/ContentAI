@@ -7330,7 +7330,8 @@ function blokBledu(e, ponow, zapas, kontekst) {
     h += '<button type="button" class="btn-secondary" onclick="otworzUstawieniaKlucza(' + dk + ')">' + ikona('key-round') + escapeHtml(_t('btn-otworz-klucze')) + '</button>';
   }
   h += akcjeBleduKonta(r, e);
-  if (ponow && czyPonowic(e)) {
+  // R9-D (UX8-22, E3): konto na wlasnych kluczach po doladowaniu srodkow u dostawcy ponawia przyciskiem.
+  if (ponow && (czyPonowic(e) || (r === 'srodki' && kontoNaWlasnychKluczach()))) {
     h += '<button type="button" class="btn-secondary ponow-generowanie" onclick="' + escapeHtml(ponow) + '">' + ikona('refresh-cw') + escapeHtml(_t('btn-sprobuj-ponownie')) + '</button>';
   }
   return h + '</div>';
