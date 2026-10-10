@@ -693,6 +693,27 @@ Content AI zastąp albo dopisz, potem `caddy validate --config /etc/caddy/Caddyf
 
 ```
 {
+    # Dziennik Caddy bez kluczy API uzytkownikow (SEC8-01). Przy bledzie 502 (restart Node)
+    # Caddy zapisuje do journald cale zadanie z naglowkami; sam ukrywa tylko Cookie
+    # i Authorization, a X-Api-Key, X-Openai-Key i X-Eleven-Key szlyby jawnym tekstem.
+    # Filtr usuwa je ze wszystkich wpisow (bledy i dziennik dostepu kazdej domeny); Cookie
+    # (zaszyfrowane klucze BYOK), Authorization i Set-Cookie tez, na wypadek log_credentials.
+    # NIE dodawaj w blokach domen log { output file ... } bez tego samego filtra.
+    log default {
+        output stderr
+        format filter {
+            wrap json
+            fields {
+                request>headers>X-Api-Key delete
+                request>headers>X-Openai-Key delete
+                request>headers>X-Eleven-Key delete
+                request>headers>Xi-Api-Key delete
+                request>headers>Cookie delete
+                request>headers>Authorization delete
+                resp_headers>Set-Cookie delete
+            }
+        }
+    }
     servers {
         # Adresy Cloudflare. Tylko z nich Caddy przyjmie adres klienta z naglowka;
         # od kazdego innego polaczenia {client_ip} to adres samego polaczenia.
@@ -721,7 +742,8 @@ content-ai.net {
 
     # --- Pamiec podreczna ---
     # HTML: przegladarka zawsze pyta (ETag); krawedz Cloudflare trzyma 10 minut.
-    @html path / /en/ /prywatnosc/ /en/privacy/ *.html
+    # Podstrony to katalogi z index.html, wiec kazdy adres zakonczony ukosnikiem.
+    @html path */ *.html
     header @html Cache-Control "public, max-age=0, must-revalidate"
     header @html CDN-Cache-Control "max-age=600"
     # CSS i JS maja w adresie ?v=<skrot tresci> (buduj_strone.py): nowa wersja = nowy adres.
@@ -769,8 +791,35 @@ app.content-ai.net {
         # bez zmian i Node mu ufa (limit prob logowania do ominiecia), a bez naglowka
         # wszyscy uzytkownicy sa dla Node jednym adresem 127.0.0.1.
         header_up X-Real-IP {client_ip}
+        # Restart przy wdrozeniu (ARCH8-25): przez 10 s Caddy ponawia polaczenie co 250 ms
+        # zamiast od razu oddac 502; strony i odczyty przeczekuja start nowego procesu.
+        lb_try_duration 10s
+        lb_try_interval 250ms
     }
 }
+
+# ── Srodowisko testowe (M-9; tylko gdy wdrozone: contentai-test na 127.0.0.1:3101) ──
+# Calosc za haslem Caddy poza webhookiem Stripe (ten podpisuje sie sam, HMAC). Haslo:
+# caddy hash-password, wynik zamiast WSTAW_TUTAJ_HASH_BCRYPT (Caddy 2.7: basicauth).
+# Naglowek Authorization z basic_auth nie idzie dalej do Node. Dziennik: filtr z bloku globalnego.
+#
+# test.content-ai.net {
+#     header {
+#         Strict-Transport-Security "max-age=31536000; includeSubDomains"
+#         X-Robots-Tag "noindex, nofollow"
+#         -Server
+#     }
+#     @chronione not path /platnosci/webhook/*
+#     basic_auth @chronione {
+#         WSTAW_TUTAJ_LOGIN WSTAW_TUTAJ_HASH_BCRYPT
+#     }
+#     reverse_proxy 127.0.0.1:3101 {
+#         header_up X-Real-IP {client_ip}
+#         header_up -Authorization
+#         lb_try_duration 10s
+#         lb_try_interval 250ms
+#     }
+# }
 
 # ── OpenSEO (tylko gdy wdrozone, CAI_OPENSEO_PORT=3110) ──────────────────────
 # Port 3110 (brama Content AI), NIGDY 3001 (goly kontener bez logowania).
@@ -813,6 +862,19 @@ już serwer, a dwa ekrany logowania pod rząd tylko męczą.
 - Brama OpenSEO (`seo.` → port `CAI_OPENSEO_PORT`) potrzebuje tego samego
   `header_up X-Real-IP {client_ip}`; tam `encode` zostaje, bo brama oddaje HTML
   nieskompresowany.
+- **Dziennik bez kluczy (SEC8-01)**: `log default` z `format filter` w bloku globalnym
+  usuwa z każdego wpisu Caddy nagłówki `X-Api-Key`, `X-Openai-Key`, `X-Eleven-Key`,
+  `Xi-Api-Key`, `Cookie` (zaszyfrowane klucze BYOK), `Authorization` i `Set-Cookie`. Bez
+  filtra błąd 502 (restart Node) zapisywał do journald całe żądanie z kluczami jawnym
+  tekstem. Własne `log { output file ... }` w bloku domeny ma osobny format: dopisz do niego
+  ten sam filtr. Sprawdzenie: `journalctl -u caddy --no-pager -o cat | grep -c -E
+  'X-Api-Key|X-Openai-Key|X-Eleven-Key'` daje 0.
+- **`lb_try_duration 10s`** (ARCH8-25): w oknie restartu (nowy proces wstaje 1-2 s) Caddy
+  ponawia połączenie co 250 ms zamiast od razu oddać 502. Strony i odczyty przeczekują
+  restart; wywołania dostawców w trakcie łagodnego zatrzymania dostają 503 z `Retry-After`
+  (aplikacja ponawia je sama, rozdział "Własne klucze").
+- **`test.content-ai.net`** (zakomentowany, M-9): środowisko testowe za `basic_auth` poza
+  `/platnosci/webhook/*`, port 3101 (`serwer/contentai-test.service`).
 
 ### Aktualizacja
 
@@ -1050,20 +1112,156 @@ rejestr wpłat. Etap 0: kontrakt i zaślepki (bez `PLATNOSCI` trasy zakupu odpow
 
 ## Własne klucze
 
-Wykonawca C (`serwer/klucze.js`): klucze użytkowników w zaszyfrowanych ciasteczkach
-(`CAI_KLUCZ_CIASTEK`), `kluczDla()` bez ścieżki do klucza serwera dla kont `wlasne`,
-`/api/klucze`. Etap 0: kontrakt i zaślepki.
+Konta samoobsługowe pracują na własnych kluczach (`zrodlo_kluczy = 'wlasne'`), konta zespołu
+(`'serwera'`) jak dotąd na kluczach serwera. Moduł `serwer/klucze.js` (ARCH8-10..12, SEC8-03,
+SEC8-04, decyzja M-10), testy `serwer/testy-byok.js`.
+
+**Gdzie leży klucz.** W zaszyfrowanym ciasteczku HttpOnly w przeglądarce użytkownika:
+`cai_k_a` (Anthropic), `cai_k_o` (OpenAI), `cai_k_e` (ElevenLabs), przy `CAI_COOKIE_SECURE=1`
+z przedrostkiem `__Secure-`; `Path=/api`, `SameSite=Strict`, bez `Domain` (nie trafia do `seo.`
+ani na stronę produktową). "Zapamiętaj na tym urządzeniu" (domyślnie) = 30 dni, inaczej do
+zamknięcia przeglądarki. Szyfr AES-256-GCM kluczem `CAI_KLUCZ_CIASTEK`, który jest tylko na
+serwerze; dane dodatkowe szyfru wiążą ciasteczko z loginem konta i z `sesje_od`. Skutki:
+- zwykłe wylogowanie nie usuwa zapamiętanych kluczy (M-10),
+- "Wyloguj wszędzie", zmiana i reset hasła unieważniają je na wszystkich urządzeniach naraz,
+- inne konto na tym samym komputerze ich nie odszyfruje, a zmiana `CAI_KLUCZ_CIASTEK`
+  unieważnia wszystkie (awaryjnie),
+- serwer nie zapisuje klucza nigdzie: ani w bazie, ani w dzienniku, ani w pamięci zadania
+  w tle po wywołaniu dostawcy (kopia zapytania traci nagłówki z kluczami i ciasteczka).
+
+Bez `CAI_KLUCZ_CIASTEK` zapis kluczy jest wyłączony (`503 niezaimplementowane`,
+`powod: 'zapis-wylaczony'`), a konta `wlasne` dostają `brak-klucza`.
+
+**Który klucz idzie do dostawcy (`kluczDla`).** Konto `wlasne` (i każde bez jawnego `'serwera'`):
+wyłącznie klucz z ciasteczka; bez niego `403 brak-klucza` (z `dostawca`, przy nieważnym
+ciasteczku `niewazny: true`) przed limitem pakietu i przed zadaniem w tle, bez wywołania
+dostawcy. Konto `serwera`: ciasteczko, potem przejściowo nagłówek `x-api-key` / `x-openai-key` /
+`x-eleven-key` (aplikacja R8), na końcu klucz serwera jak dziś. Klucz użytkownika Anthropic idzie
+zawsze do Anthropic, także przy `CAI_DOSTAWCA=nvidia` (SEC8-03); NVIDIA dostaje tylko klucz
+serwera. Klucz użytkownika odrzucony przez dostawcę (401, 403 z brakiem uprawnień): odpowiedź
+dostawcy bez zmian plus nagłówki `X-CAI-Kod: zly-klucz` i `X-CAI-Dostawca`.
+
+**API dla aplikacji** (za logowaniem; JSON z kontrolą CSRF jak reszta `/api`):
+
+| Trasa | Ciało | Odpowiedź |
+|---|---|---|
+| `GET /api/klucze` | - | `{ zrodloKluczy, zapis, dostawcy, anthropic: { ustawiony, koncowka, zapamietany, wygasa?, niewazny?, kluczSerwera? }, openai, eleven }`; nigdy cały klucz, `koncowka` to 4 ostatnie znaki |
+| `POST /api/klucze` | `{ dostawca, klucz, zapamietaj?, sprawdz? }` albo `{ anthropic?, openai?, eleven?, zapamietaj? }` | `200 { ok: true, zapisano: true, ...stan }` i `Set-Cookie`; zły format: `400 zly-klucz` z `format` (`format`, `administracyjny`, `inny-dostawca`), `komunikat` PL/EN i `X-CAI-Dostawca`; z `sprawdz: true` i kluczem odrzuconym u dostawcy: `200 { ok: false, zapisano: false, powod }` |
+| `DELETE /api/klucze?dostawca=anthropic\|openai\|eleven\|wszystkie` (z `Content-Type: application/json`) albo `POST /api/klucze/usun` `{ dostawca? }` | - | `200 { ok: true, usunieto, ...stan }` i ciasteczka kasujące |
+| `POST /api/klucze/sprawdz` | `{ dostawca, klucz? }` (bez klucza: zapisany) | `200 { ok, dostawca, powod?, status? }`; `powod`: `brak-klucza`, `zly-klucz`, `brak-uprawnien`, `dostawca-niedostepny`; bez kosztu (lista modeli, dane konta), 10 na minutę (`429 za-duzo-prob`) |
+
+Formaty (SEC8-03): Anthropic `sk-ant-api..` (klucz administracyjny `sk-ant-admin..` odrzucany),
+OpenAI `sk-..`, `sk-proj-..`, `sk-svcacct-..` (bez `sk-admin-..` i bez klucza Anthropic w polu
+OpenAI), ElevenLabs `sk_..` albo 32 znaki szesnastkowe. Zapisów 30 na minutę na konto.
+Wylogowanie wszędzie i usunięcie konta (A1) doklejają `klucze.ciasteczkaUsuwajace(KONF)`.
+
+Miejsce na czwartego dostawcę (własne konto DataForSEO klienta, para login + hasło): wpis
+`dataforseo` w `DOSTAWCY_OPIS` i `KLUCZE_SERWERA` (`serwer/klucze.js`, zakomentowany wzór),
+ciasteczko `cai_k_d` z tym samym szyfrem (szyfrogram niesie obiekt pól, nie jeden napis),
+w `obsluzSerp` gałąź `dataforseo` bierze `klucze.kluczDla(req, konto, 'dataforseo', KONF).dane`
+zamiast `KONF.dataForSeo`.
 
 ## Dzierżawy
 
-Wykonawca C: marka i baza wspólna per organizacja (`serwer/dzierzawy.js`, `marka.js`,
-`baza.js`), OpenSEO tylko w organizacji `glowna`, limity zasobów serwera dla kont `wlasne`.
+Organizacja jako dzierżawa (ARCH8-09, KOD8-01, SEC8-50..52), testy `serwer/testy-dzierzawy.js`.
+Dzisiejsze konta należą do organizacji `glowna` i działają jak dotąd: te same pliki, ten sam
+administrator. Każde konto samoobsługowe to własna organizacja `o-...`, której jest właścicielem.
+
+| Zasób | `glowna` | organizacja samoobsługowa |
+|---|---|---|
+| Marka (`GET/POST /api/marka`) | `<CAI_MARKA>/marka.json`, zmienia admin | `<CAI_MARKA>/marki/<id>.json`, zmienia właściciel |
+| Baza wspólna (`/api/baza*`) | `<CAI_BAZA>/wspolna.json`, pisze admin | `<CAI_BAZA>/wspolna-<id>.json`, pisze właściciel |
+| Limit dokumentów pakietu | liczy dokumenty prywatne | liczy prywatne i wspólne |
+| OpenSEO (brama `seo.` i `/api/seo/*`) | jak dziś (pakiet) | brak (`402 funkcja-poza-pakietem`), także przy roli `admin` |
+| Źródło SERP | `CAI_SERP` | `CAI_SERP_SAMOOBSLUGA` (`model` albo `dataforseo`, nigdy projekt OpenSEO) |
+| Panel operatora (`/api/status`, `/api/admin/*`) | admin | brak (`403`) |
+
+`GET /api/marka` zwraca `{ marka, zakres: 'glowna'|'samoobsluga', mozeEdytowac }`; odmowa zapisu
+w `glowna` jak dotąd (`403 { error }`), w organizacji samoobsługowej `403 uprawnienia-organizacji`.
+Wyszukiwanie w bazie i blok "WIEDZA FIRMOWA" biorą wyłącznie bazę wspólną organizacji konta
+i jego prywatną. Przegląd 17 zasobów współdzielonych (historia, widoczność AI, CMS, prośby,
+liczniki, zadania w tle, pliki tymczasowe i inne) z decyzją dla każdego: AG/runda9/WYKONANIE-C.md.
+
+**Zasoby opłacane przez serwer dla kont `wlasne`** (ARCH8-11). Konto na własnym kluczu płaci samo
+za model, ale serwer płaci za dane SERP z DataForSEO, wektory NVIDIA i pobieranie stron (pasmo
+i adres IP serwera). Te zasoby mają pulę z pakietu (`plany.limitySerwera`); po jej wyczerpaniu
+`402 zasob-serwera-wyczerpany` z polami `zasob`, `limit`, `zuzyte`, `odnawialny`. Konto
+samoobsługowe korzysta z nich dopiero po potwierdzeniu e-maila (`403 email-niepotwierdzony`).
+Sprawdzanie odnośników przy kończącej się puli sprawdza tyle, ile zostało, resztę zwraca jako
+`stan: 'nieznany', powod: 'limit-pakietu'` (pole `pominiete`). Wektory (D-09: pula 0 we
+wszystkich pakietach) dla kont `wlasne` są wyłączone: baza szuka po słowach kluczowych,
+odpowiedź ma `powod` / `powodWektorow: 'limit-pakietu'`. Konta zespołu: bez puli, jak dziś.
 
 ## Poczta
 
-Wykonawca C (`serwer/poczta.js`, `serwer/poczta-szablony.js`): Resend albo dziennik.
-Etap 0: tryb `log` działa (zamaskowany adres w dzienniku, pełna wiadomość tylko
-w `CAI_POCZTA_LOG`), adapter Resend to zaślepka.
+`serwer/poczta.js` i `serwer/poczta-szablony.js` (ARCH8-21, PR8-27), testy `serwer/testy-poczta.js`,
+atrapa `narzedzia/atrapa/poczta.js` (API jak Resend).
+
+- `CAI_POCZTA=log` (domyślnie): nic nie wychodzi; w dzienniku tylko szablon, zamaskowany adres
+  (`a***@firma.pl`) i wynik, pełna wiadomość wyłącznie w pliku `CAI_POCZTA_LOG` (testy,
+  środowisko testowe). Z `CAI_REJESTRACJA=1` start ostrzega, że linki nie trafią do skrzynek.
+- `CAI_POCZTA=resend`: `POST <CAI_POCZTA_URL>/emails` przez `fetch` (bez npm), limit czasu 10 s,
+  jedno ponowienie po 1 s przy błędzie sieci, 429 i 5xx z tym samym `Idempotency-Key` (Resend nie
+  wyśle wiadomości drugi raz). Brak klucza albo nadawcy: funkcja wyłączona, poczta schodzi na `log`.
+- Odnośnik z tokenem nigdy nie trafia do dziennika ani do `/api/status` (sekcja `poczta`: `tryb`,
+  `wyslanych`, `bledow`, `ostatniBlad` bez adresów i odnośników).
+- Szablony PL i EN (tekst + prosty HTML, przycisk, bez obrazków i pikseli, stopka z danymi
+  usługodawcy): `potwierdzenie`, `reset`, `haslo-zmienione`, `zmiana-email`, `zmiana-email-info`,
+  `konto-usuniete`, `prog-przychodu`, `powitanie`, `konto-istnieje`, `test`. Rozliczenia
+  (potwierdzenia płatności) wysyła Stripe.
+
+Konfiguracja Resend (raz, Marcin):
+1. Resend → Domains → dodaj domenę nadawcy (np. `mail.content-ai.net`), wpisz u Cloudflare
+   rekordy SPF i DKIM z panelu oraz DMARC (`_dmarc`, na start `v=DMARC1; p=none; rua=mailto:...`),
+   poczekaj na "Verified".
+2. W ustawieniach domeny **wyłącz śledzenie otwarć i kliknięć** (PR8-27: bez pikseli
+   i przekierowań, bez banera zgody).
+3. API Keys → klucz z uprawnieniem "Sending access" tylko dla tej domeny → `CAI_POCZTA_KLUCZ`,
+   `CAI_POCZTA=resend`, `CAI_POCZTA_OD="Content AI <konto@mail.content-ai.net>"`, restart.
+4. `sudo serwer/cli.sh poczta-test twoj@adres.pl`: wiadomość próbna (sprawdź SPF, DKIM i DMARC
+   "pass" w nagłówkach); polecenie ostrzega, gdy domena ma włączone śledzenie (o ile klucz
+   może odczytać domeny; klucz tylko do wysyłki: sprawdź w panelu).
+
+## Odporność serwera
+
+Wykonawca C, testy `serwer/testy-odpornosc.js` (wołane z `testy-byok.js`).
+
+- **Łagodne zatrzymanie (KOD8-07).** `systemctl restart` wysyła SIGTERM: nowe wywołania dostawców
+  dostają `503` tekstem z `Retry-After: 5` (aplikacja ponawia je jak odpowiedź bramy), reszta
+  (strona, pakiet, baza, odbiór wyniku zadania) działa; trwające wywołania i zadania w tle kończą
+  się normalnie, gotowy, ale nieodebrany wynik czeka do 15 s na ponowienie z tym samym
+  `X-Zadanie`. Gdy nic nie trwa (najwyżej 120 s, `TimeoutStopSec=150`), proces zamyka port i bazę.
+  Drugi SIGTERM kończy od razu. Okno bez serwera to sam start nowego procesu (Caddy:
+  `lb_try_duration`).
+- **Stan zadania (KOD8-30).** `GET /api/zadanie?id=<id>` albo `GET /api/zadanie/<id>` →
+  `{ id, stan: 'trwa'|'gotowe'|'przerwane'|'brak', status? }` (tylko zadania własnego konta).
+  `gotowe`: ponowienie `POST` z tym samym `X-Zadanie` odbierze wynik bez nowego wywołania
+  i liczenia. Kolejność w proxy bez zmian: zadanie szukane przed limitem i walidacją ciała.
+- **Za duże zapytanie (KOD8-16).** Ponad 25 MB na `/api`, `/api/images`, `/api/tts`,
+  `/api/transcribe`, `/api/eleven-tts`: `413 { type: 'error', error: { type: 'request_too_large',
+  message }, komunikat, limitMB: 25 }` zamiast 502.
+- **Pamięć zadań (ARCH8-12, KOD8-05).** `CAI_ZADANIA_MB` liczy wyniki i ciała zapytań zadań
+  w toku (nagrania do transkrypcji); bez miejsca zapytanie idzie zwykłym wywołaniem. Wynik
+  odebrany czeka 2 minuty, nieodebrany 15; sprzątanie co minutę.
+- **Kompresja (prośba F, KOD8-32).** Duże odpowiedzi (ponad 256 kB) pakowane w puli wątków.
+  Pliki z `pwa/lib/` dostają od razu wersję brotli 5, a brotli 11 liczy się w tle i ją zastępuje:
+  po restarcie żadne pakowanie nie zatrzymuje serwera (dawniej ok. 4,7 s dla wszystkich).
+- **Jedna strona aplikacji (KOD8-06, ARCH8-24).** `GET /konto.js` →
+  `window.CAI_KONTO="<identyfikator konta>";` (`Cache-Control: private, no-store`). Aplikacja,
+  której HTML nie ma już `WSTAW_TUTAJ_KONTO` (ładuje `<script src="/konto.js">` przed pierwszym
+  skryptem i czyta `window.CAI_KONTO`, z zapasem na `meta[name="cai-konto"]`), dostaje jedną
+  wersję HTML dla wszystkich kont z `ETag`, `304` i `Cache-Control: private, no-cache`.
+  Dzisiejsza aplikacja (z meta) działa jak dotąd, strona per konto.
+- **Baza wiedzy.** Dokument dłuższy niż 90 000 znaków (60 fragmentów) jest ucinany jawnie
+  (KOD8-11): `POST /api/baza` i lista mają `uciety`, `zapisanoZnakow`, `znakow`, a
+  `GET /api/baza` ma `limitZnakow`. Stary `.doc`/`.ppt`/`.xls`, obraz, plik binarny i tekst
+  ze znakami zastępczymi (CSV z polskiego Excela w Windows-1250) dostają `422 { error, komunikat,
+  powod: 'stary-format'|'obraz'|'plik-binarny'|'kodowanie' }` (KOD8-15, PL/EN wg języka).
+  Plik bazy jest parsowany raz na wersję (i-węzeł, rozmiar, czas zmiany), nie przy każdym
+  wyszukiwaniu (SEC8-30, pamięć 64 MB).
+- **Pobieranie stron.** HTML na tekst w czasie liniowym (KOD8-02: 32 000 niedomkniętych
+  `<nav>` w kilkanaście ms zamiast 21 s), kodowanie strony z nagłówka, BOM albo `<meta>`
+  (Windows-1250, ISO-8859-2; KOD8-15).
 
 ## Oznaczanie treści AI
 

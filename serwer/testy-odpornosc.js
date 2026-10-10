@@ -272,7 +272,28 @@ async function testyZatrzymania({ sprawdz }) {
   }
 }
 
+function testyCaddy({ sprawdz }) {
+  console.log('\n  odpornosc: blok Caddy (SEC8-01 dziennik bez kluczy, ARCH8-25 restart, podstrony strony)');
+  const korzen = path.join(__dirname, '..');
+  const linie = fs.readFileSync(path.join(korzen, 'dokumenty', 'Caddyfile.content-ai'), 'utf8').split('\n');
+  const start = linie.indexOf('{');
+  const globalny = linie.slice(start, linie.indexOf('}', start) + 1).join('\n');
+  const blok = linie.slice(start, linie.findIndex((l) => l.startsWith('# Zmienne uslugi'))).join('\n');
+  const usuwane = ['X-Api-Key', 'X-Openai-Key', 'X-Eleven-Key', 'Xi-Api-Key', 'Cookie', 'Authorization']
+    .filter((n) => !globalny.includes(`request>headers>${n} delete`));
+  sprawdz(`Caddy: log default z format filter w bloku globalnym usuwa naglowki z kluczami i ciasteczka (brak: ${usuwane.join(', ') || 'nic'})`,
+    /log default \{[\s\S]*format filter \{/.test(globalny) && usuwane.length === 0);
+  const app = blok.slice(blok.indexOf('app.content-ai.net {'), blok.indexOf('# ── Srodowisko testowe'));
+  sprawdz('Caddy: app. ponawia polaczenie w oknie restartu (lb_try_duration 10s, lb_try_interval 250ms)',
+    /reverse_proxy 127\.0\.0\.1:3100 \{[\s\S]*?lb_try_duration 10s\n\s+lb_try_interval 250ms\n\s+\}/.test(app));
+  sprawdz('Caddy: naglowki HTML strony dla kazdego adresu zakonczonego ukosnikiem (@html path */ *.html)',
+    blok.includes('@html path */ *.html'));
+  sprawdz('Caddy: zakomentowany blok test.content-ai.net (basic_auth poza webhookiem, port 3101, X-Real-IP)',
+    /# test\.content-ai\.net \{[\s\S]*#\s+@chronione not path \/platnosci\/webhook\/\*[\s\S]*#\s+basic_auth @chronione[\s\S]*#\s+reverse_proxy 127\.0\.0\.1:3101 \{\n#\s+header_up X-Real-IP \{client_ip\}/.test(blok));
+}
+
 async function uruchom({ sprawdz }) {
+  testyCaddy({ sprawdz });
   await testyStrony({ sprawdz });
   await testyBazy({ sprawdz });
   await testyKompresji({ sprawdz });
