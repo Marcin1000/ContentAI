@@ -1675,6 +1675,99 @@ async function wariantR9Zrozumialosc(b) {
   await k2.close();
 }
 
+// R9-A1: rejestracja w przegladarce na osobnym serwerze (CAI_REJESTRACJA=1, poczta w dzienniku CAI_POCZTA_LOG):
+// "Zaloz konto" z ekranu logowania, formularz, aplikacja od razu po rejestracji, link z e-maila i przycisk
+// potwierdzenia (GET niczego nie zmienia), logowanie e-mailem. Ekrany kont bez naruszen CSP. Pada przed A1.
+async function wariantR9Rejestracja(b) {
+  const kat = przygotujDane();
+  const port = await wolnyPort();
+  const adres = 'http://127.0.0.1:' + port;
+  const plikPoczty = path.join(kat, 'poczta.jsonl');
+  const env = Object.assign({}, process.env, {
+    CAI_UZYTKOWNICY: path.join(kat, 'uzytkownicy.json'), CAI_BAZA: path.join(kat, 'baza'),
+    CAI_UZYCIE: path.join(kat, 'uzycie'), CAI_MARKA: kat, CAI_SEKRET_PLIK: path.join(kat, 'sekret'),
+    PORT: String(port), CAI_HOST: '127.0.0.1', CAI_ZAUFANE_ADRESY: '127.0.0.1',
+    ANTHROPIC_KEY: 'test-anthropic', CAI_URL_ANTHROPIC: 'http://127.0.0.1:' + PORT_ATRAPY + '/v1/messages',
+    CAI_REJESTRACJA: '1', CAI_ADRES_PUBLICZNY: adres, CAI_POCZTA_LOG: plikPoczty,
+    CAI_USLUGODAWCA_IMIE_NAZWISKO: 'Jan Testowy', CAI_USLUGODAWCA_ADRES: 'ul. Testowa 1, 00-001 Warszawa',
+    CAI_USLUGODAWCA_EMAIL: 'kontakt@example.com', CAI_REGULAMIN_WERSJA: '2026-10-v1', CAI_POLITYKA_WERSJA: '2026-10-v1',
+    CAI_KLUCZ_CIASTEK: require('crypto').randomBytes(32).toString('base64'),
+  });
+  const p = spawn(process.execPath, [path.join(REPO, 'serwer', 'server.js')], { cwd: REPO, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  let log = '';
+  p.stdout.on('data', (d) => { log += d; });
+  p.stderr.on('data', (d) => { log += d; });
+  // Naruszenia CSP liczymy tylko na ekranach serwera (logowanie, rejestracja, potwierdzenie, konto), nie w aplikacji.
+  const csp = [];
+  let ekranKont = true;
+  const sluchajCsp = (strona) => strona.on('console', (m) => { if (ekranKont && /Content Security Policy/i.test(m.text())) csp.push(strona.url() + ': ' + m.text().slice(0, 160)); });
+  let k;
+  try {
+    await czekajNaPort(port, 15000);
+    k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true, locale: 'pl-PL' });
+    await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); } catch (e) { /* bez magazynu */ } });
+    const s = await k.newPage();
+    sluchajCsp(s);
+    await s.goto(adres + '/', { waitUntil: 'load' });
+    const zaloz = await s.$('a[href^="/rejestracja"]');
+    wynik('telefon: R9-A1 ekran logowania przy otwartej rejestracji: "E-mail lub login", "Zaloz konto" zamiast "Popros o dostep"',
+      !!zaloz && /E-mail lub login/.test(await s.textContent('label[for="login"]')) && !/Poproś o dostęp/.test(await s.textContent('body')));
+    if (zaloz) await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), zaloz.click()]);
+    const email = 'nowa.osoba@firma-przyklad.pl';
+    await krok('R9-A1 formularz rejestracji', s.waitForSelector('#email', { timeout: 5000 }));
+    await s.fill('#email', email);
+    await s.fill('#haslo', 'mocne-haslo-do-testu-42');
+    await s.check('#zgoda_regulamin');
+    await s.check('#zgoda_wiek');
+    await s.waitForTimeout(3200);                       // podpisany znacznik: formularz szybszy niz 3 s to automat
+    ekranKont = false;
+    await krok('R9-A1 wyslanie rejestracji', Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"]')]));
+    const poRejestracji = { url: s.url(), aplikacja: !!(await s.$('#gen-btn')) };
+    const konto = await s.evaluate(async () => (await fetch('/api/konto')).json()).catch(() => null);
+    wynik('telefon: R9-A1 po rejestracji od razu aplikacja i sesja: konto samoobslugowe na wlasnych kluczach, adres niepotwierdzony',
+      poRejestracji.url === adres + '/' && poRejestracji.aplikacja && !!konto && konto.email === email && konto.pochodzenie === 'samoobsluga'
+        && konto.zrodloKluczy === 'wlasne' && konto.emailPotwierdzony === false, JSON.stringify({ poRejestracji, konto: konto && { email: konto.email, potw: konto.emailPotwierdzony } }));
+    let list = null;
+    try { list = fs.readFileSync(plikPoczty, 'utf8').trim().split('\n').map((l) => JSON.parse(l)).filter((l) => l.do === email && l.szablon === 'potwierdzenie').pop(); } catch (e) { /* brak listu */ }
+    const odnosnik = list && list.dane && list.dane.odnosnik;
+    wynik('telefon: R9-A1 list z potwierdzeniem w dzienniku poczty, odnosnik z CAI_ADRES_PUBLICZNY', !!odnosnik && odnosnik.indexOf(adres + '/potwierdz?') === 0, String(odnosnik));
+    if (odnosnik) {
+      ekranKont = true;
+      await s.goto(odnosnik, { waitUntil: 'load' });
+      const poGet = await s.evaluate(async () => (await (await fetch('/api/konto')).json()).emailPotwierdzony);
+      await krok('R9-A1 przycisk potwierdzenia', Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"]')]));
+      const ekran = await s.textContent('h1');
+      const poPost = await s.evaluate(async () => (await (await fetch('/api/konto')).json()).emailPotwierdzony);
+      wynik('telefon: R9-A1 odnosnik z e-maila tylko pokazuje przycisk, potwierdza dopiero klikniecie (POST)', poGet === false && poPost === true, JSON.stringify({ poGet, poPost, ekran }));
+    }
+    // Nowa przegladarka: logowanie adresem e-mail zamiast loginu.
+    const k2 = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, locale: 'pl-PL' });
+    const s2 = await k2.newPage();
+    sluchajCsp(s2);
+    ekranKont = true;
+    await s2.goto(adres + '/', { waitUntil: 'load' });
+    await s2.fill('input[name="login"]', email.toUpperCase());
+    await s2.fill('input[type="password"]', 'mocne-haslo-do-testu-42');
+    ekranKont = false;
+    await krok('R9-A1 logowanie e-mailem', Promise.all([s2.waitForNavigation({ waitUntil: 'load' }), s2.click('button[type="submit"]')]));
+    const zalogowany = await s2.evaluate(async () => { const o = await fetch('/api/konto'); return o.ok ? (await o.json()).email : o.status; });
+    ekranKont = true;
+    await s2.goto(adres + '/konto', { waitUntil: 'load' });
+    const ekranKonta = await s2.textContent('body');
+    wynik('komputer: R9-A1 logowanie adresem e-mail (wielkosc liter bez znaczenia), ekran /konto z potwierdzonym adresem',
+      zalogowany === email && /Konto/.test(ekranKonta) && /potwierdzony/.test(ekranKonta) && /Wyloguj na wszystkich urządzeniach/.test(ekranKonta), String(zalogowany));
+    await k2.close();
+    wynik('R9-A1 ekrany kont i logowania bez naruszen CSP', !csp.length, csp.slice(0, 3).join(' | '));
+    if (bledow) await zrzut(s, 'telefon-r9a1');
+  } catch (e) {
+    wynik('R9-A1 scenariusz rejestracji przerwany', false, (e && e.message || String(e)).split('\n')[0] + ' | ' + log.split('\n').slice(-5).join(' '));
+  } finally {
+    if (k) await k.close();
+    p.kill();
+    fs.rmSync(kat, { recursive: true, force: true });
+  }
+}
+
 (async () => {
   await przygotujPorty();
   const serwerPlikow = await uruchomSerwerPlikow();
@@ -1696,6 +1789,7 @@ async function wariantR9Zrozumialosc(b) {
     await wariantR7H(b);
     await wariantPilneKreator(b);
     await wariantR9Zrozumialosc(b);
+    await wariantR9Rejestracja(b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));
