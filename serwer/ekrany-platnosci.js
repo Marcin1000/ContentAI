@@ -404,13 +404,15 @@ ${stopkaUslugodawcy(uslugodawca, jezyk)}`;
 }
 
 /**
- * Sekcja "Pakiet i platnosci" ekranu /konto (A1). stan = platnosci.stanDlaKonta(konto, kontekst).
- * Formularz panelu (POST /konto/panel -> 303 do Stripe) wymaga na tej stronie CSP z hostami
- * dostawcy: konta.js wola platnosci.cspEkranu(res, kontekst) przed wyslaniem ekranu.
+ * Sekcja "Pakiet i platnosci" ekranu /konto (A1). stan = platnosci.stanDlaKonta(konto, kontekst),
+ * pakiety domyslnie z plany.js. Formularz panelu (POST /konto/panel -> 303 do Stripe) wymaga na tej
+ * stronie CSP z hostami dostawcy: konta.js wola platnosci.cspEkranu(res, kontekst) przed wyslaniem
+ * ekranu (przegladarka stosuje form-action strony z formularzem takze do przekierowania).
  */
-function sekcjaKonta({ jezyk = 'pl', stan, pakiety = {} } = {}) {
+function sekcjaKonta({ jezyk = 'pl', stan, pakiety = null } = {}) {
   const t = teksty(jezyk);
   if (!stan || !stan.platnosci || !stan.platnosci.wlaczone) return '';
+  if (!pakiety) pakiety = require('./plany.js').PLANY;
   const s = stan.subskrypcja || {};
   const p = stan.platnosci;
   const nazwa = pakiety[s.plan] ? nazwaPakietu(pakiety[s.plan], jezyk) : (s.plan || '');
