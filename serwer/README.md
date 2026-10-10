@@ -1036,17 +1036,269 @@ organizacji: `serwer/dzierzawy.js` (`operator`, `mozeZarzadzac`, `zrodloSerp`, `
 
 ## Konta samoobsługowe
 
-Wykonawca A1 (`serwer/konta.js`, `serwer/ekrany-kont.js`): rejestracja, potwierdzenie
-e-maila, reset hasła, ekran konta, zgody, eksport danych i usunięcie konta.
-Etap 0: kontrakt tras i zaślepki (trasy z sesją odpowiadają 501, publiczne przy
-`CAI_REJESTRACJA=0` działają jak dziś).
+`serwer/konta.js` (trasy i reguły) i `serwer/ekrany-kont.js` (ekrany): rejestracja,
+potwierdzenie e-maila, logowanie e-mailem, reset hasła, ekran konta, zgody, eksport
+danych i usunięcie konta. SQL tylko w `magazyn.js`, e-maile przez `poczta.wyslij` (C),
+anulowanie subskrypcji przez `platnosci.anulujDlaKonta` (B). Ekrany to czysty HTML bez
+skryptów, pod tą samą CSP co logowanie, z `Cache-Control: no-store`, po polsku i angielsku
+(`?lang=`), w jasnym i ciemnym motywie.
+
+**Bez nowych zmiennych konta zespołu działają jak dziś**: ekran logowania ma "Poproś
+o dostęp" i zdanie o administratorze, `/rejestracja` pokazuje logowanie, a nowe są tylko
+etykieta "E-mail lub login" i odnośnik "Nie pamiętasz hasła?" (bez `CAI_ADRES_PUBLICZNY`
+prowadzi do informacji, że hasło konta zespołu zmienia administrator). Konto zespołu
+(organizacja `glowna`) zachowuje login, klucze serwera i pakiet; z adresem e-mail
+(`uzytkownicy.js email`) loguje się nim albo loginem. Rejestrację otwiera
+`CAI_REJESTRACJA=1` (z pełną konfiguracją, inaczej funkcja zostaje wyłączona z wpisem
+w dzienniku). Reset hasła i odnośniki w e-mailach działają, gdy jest poprawny
+`CAI_ADRES_PUBLICZNY`, także przy zamkniętej rejestracji, więc jej zamknięcie nie odcina
+istniejących klientów.
+
+### Przepływy
+
+| Trasa | Co robi |
+|---|---|
+| `GET/POST /rejestracja` | e-mail, hasło (10-256 znaków, nie z listy najczęstszych, inne niż e-mail), zgody: regulamin i ukończone 18 lat (osobne, niezaznaczone pola) oraz informacja o administratorze danych z odnośnikiem do polityki. Konto `k-...` i organizacja `o-...` w jednej transakcji, zgody z wersją (`CAI_REGULAMIN_WERSJA`, `CAI_POLITYKA_WERSJA`) i czasem, klucze `wlasne`, plan `CAI_PLAN_NOWYCH`. Sesja od razu, `303` do aplikacji albo, przy `?pakiet=` i włączonych płatnościach, do zakupu (`/konto/zakup?plan=...`). Zajęty adres: komunikat przy polu (logowanie od razu po rejestracji i tak zdradza, czy adres był wolny) |
+| `GET /potwierdz?t=`, `POST /potwierdz` | GET tylko pokazuje przycisk (skanery poczty otwierają linki), POST potwierdza. Link 48 h (`CAI_EMAIL_POTWIERDZENIE_GODZIN`), jednorazowy, nowy unieważnia poprzedni. Ten sam ekran potwierdza zmianę adresu (link 24 h na nowy adres) |
+| `/auth/login` | pole "E-mail lub login" (znak `@` = e-mail). Do limitu prób per IP dochodzi limit per konto: 20 nieudanych prób w godzinę blokuje logowanie hasłem na 15 minut; komunikat proponuje reset, a reset działa mimo blokady. Przy otwartej rejestracji "Załóż konto" zamiast "Poproś o dostęp". Język: polski, gdy polski stoi w `Accept-Language` najwyżej, inaczej angielski (jak aplikacja); bez nagłówka polski |
+| `GET/POST /haslo` | ta sama odpowiedź dla istniejącego i nieistniejącego adresu; list idzie po wysłaniu odpowiedzi (stały czas). Operator serwera bez resetu e-mailem (`CAI_RESET_ADMIN=0`), w trybie bramy reset wyłączony |
+| `GET/POST /haslo/nowe?t=` | GET nie zużywa tokenu (60 min, `CAI_RESET_MINUT`); POST ustawia hasło, `sesje_od` (wylogowanie wszędzie), potwierdza e-mail, zdejmuje blokadę prób, kasuje ciasteczka kluczy, loguje i wysyła "hasło zmienione" |
+| `GET /konto` | adres (stan, ponowne wysłanie linku, zmiana po podaniu hasła: link na nowy adres, informacja na stary), hasło (zmiana wylogowuje inne urządzenia i usuwa zapamiętane klucze), pakiet i zużycie (sekcja płatności od B, jeśli jest), "Wyloguj na wszystkich urządzeniach", eksport, regulamin i prywatność, usunięcie |
+| `GET /konto/eksport` | JSON do pobrania: konto (bez `hash` i `sol`), organizacja, zgody, zużycie, płatności, baza wiedzy (tekst bez wektorów), marka organizacji. Historia artykułów jest tylko w przeglądarce (eksport w aplikacji) |
+| `GET/POST /konto/usun` | hasło i "rozumiem". Najpierw anulowanie subskrypcji przez B: błąd = `503`, konto zostaje (klient nie płaci za usunięte konto). Potem konto i organizacja w jednej transakcji, wpis `konta_usuniete` ze skrótem e-maila (bez adresu), pliki konta i organizacji (z kopiami `.uszkodzony-*` i `.tmp-*`); odpowiedź z `Clear-Site-Data: "cache", "cookies", "storage"`, ciasteczkami kasującymi sesję i klucze, list "konto usunięte". Konta zespołu: nie (administrator, `uzytkownicy.js usun`), chyba że `CAI_USUWANIE_STARYCH=1` |
+| `GET/POST /konto/zgody` | akceptacja nowej wersji regulaminu (gdy `CAI_REGULAMIN_WERSJA` różni się od zaakceptowanej) |
+| `/do-widzenia` | publiczny ekran po usunięciu |
+
+Do potwierdzenia adresu konto na własnym kluczu pisze normalnie, ale zasoby opłacane przez
+serwer czekają: `POST /api/strona` i `POST /api/odnosniki` (akcja `strony`) odpowiadają
+`403 email-niepotwierdzony`; SERP i wektory sprawdza C przez `konta.wymagaPotwierdzenia(konto)`.
+Konta niepotwierdzone, bez płatności i bez logowania od `CAI_NIEPOTWIERDZONE_DNI` (30) znikają
+przy sprzątaniu dobowym. Przy `CAI_WYMUS_AKCEPTACJE=1` nowa wersja regulaminu blokuje
+zapisujące trasy `/api/*` kodem `403 zgoda-wymagana` (poza `/api/konto*` i przerwaniem zadania)
+do akceptacji; konta zespołu tylko przy `CAI_ZGODY_DLA_STARYCH=1`.
+
+### Ochrona formularzy
+
+| Mechanizm | Wartość |
+|---|---|
+| pułapka | ukryte pole `strona`: wypełnione = udawany sukces, bez konta |
+| znacznik czasu | podpisany sekretem sesji; formularz szybszy niż 3 s albo starszy niż 2 h jest odrzucany |
+| rejestracja | 5 na godzinę z adresu IP, 20 na dobę z sieci `/24` (IPv6: `/48`), 300 na dobę łącznie (`429` z `Retry-After`) |
+| reset hasła | 5 na godzinę z adresu IP, 3 na godzinę na adres e-mail (bez zdradzania, czy konto istnieje) |
+| tokeny z e-maili | `POST /potwierdz`, `/haslo/nowe`: 30 na godzinę z adresu IP |
+| ponowny link potwierdzający | raz na minutę, 3 na godzinę na konto |
+| hasło na ekranie konta | 10 nieudanych prób na godzinę na konto |
+| Cloudflare Turnstile | opcja: `CAI_TURNSTILE_KLUCZ` i `CAI_TURNSTILE_SEKRET` (oba albo żaden); CSP tych dwóch ekranów dopuszcza wtedy `challenges.cloudflare.com` |
+
+Liczniki leżą w pamięci procesu (`serwer/limity.js`), jak licznik logowania; restart je zeruje.
+Tokeny z e-maili: 32 losowe bajty, w bazie tylko `sha256`, jednorazowe; odnośniki zawsze
+z `CAI_ADRES_PUBLICZNY`, nigdy z nagłówka `Host`. Formularze `/konto/*` niosą token CSRF
+(HMAC sekretem sesji z loginu i identyfikatora sesji) obok kontroli pochodzenia; ciasteczko
+sesji zostaje `SameSite=Lax`, bo powrót ze Stripe i linki z poczty to nawigacje z innej witryny.
+
+### JSON dla aplikacji
+
+- `GET /api/konto`: login, e-mail i jego stan (`potwierdzenie.wyslano`, `ponowZa`),
+  organizacja (`mozeZarzadzac`), pakiet, subskrypcja i płatności (B), zgody
+  (`wymagaAkceptacji`), oznaczenia (D), dane usługodawcy, `mozliwosci`, adresy ekranów
+  i `csrf` do formularzy `/konto/*`.
+- `POST /api/konto/potwierdzenie`: ponowne wysłanie linku (`429 za-duzo-prob` z `ponowZa`).
+- `POST /api/konto/zgody` `{ regulamin?, polityka?, marketing? }`,
+  `POST /api/konto/ustawienia` `{ oznaczenia?, jezyk? }`.
+
+### CLI
+
+```bash
+sudo serwer/cli.sh pokaz anna@firma.pl          # konto, organizacja, klucze, pakiet, zużycie, subskrypcja, zgody (bez hasha)
+sudo serwer/cli.sh email anna anna@firma.pl     # adres logowania od administratora (od razu potwierdzony)
+sudo serwer/cli.sh email anna -                 # konto zespołu bez adresu (loguje się loginem)
+sudo serwer/cli.sh klucze k-abcdefgh2345 serwera  # źródło kluczy: wlasne|serwera (bez argumentu pokazuje)
+sudo serwer/cli.sh organizacja anna@firma.pl    # organizacja: konta, pliki marki i bazy wspólnej
+sudo serwer/cli.sh organizacja o-abcdefgh2345 nazwa Biuro Nowak   # nazwa (`-` usuwa)
+```
+
+Każde polecenie przyjmuje login albo e-mail. `email` sprawdza format i unikalność, a linki
+wysłane wcześniej na stary adres przestają działać; konto samoobsługowe nie może zostać
+bez adresu. Zmiana kluczy działa od następnego zapytania, bez restartu.
+
+### Włączenie
+
+1. Dane usługodawcy (`CAI_USLUGODAWCA_*`), `CAI_ADRES_PUBLICZNY`, wersje dokumentów,
+   `CAI_KLUCZ_CIASTEK` (C) i poczta (`CAI_POCZTA`, C) w `/etc/contentai/srodowisko`.
+2. `CAI_REJESTRACJA=1` i restart; dziennik startu pokazuje `rejestracja: otwarta`.
+3. Opcjonalnie Turnstile (klucz i sekret z panelu Cloudflare).
 
 ## Płatności
 
-Wykonawca B (`serwer/platnosci.js`, `serwer/platnosci-stripe.js`, `serwer/ekrany-platnosci.js`,
-`serwer/platnosci-cli.js`): Stripe Checkout i Customer Portal, webhook, stany subskrypcji,
-rejestr wpłat. Etap 0: kontrakt i zaślepki (bez `PLATNOSCI` trasy zakupu odpowiadają
-`404 platnosci-wylaczone`, a webhook przechodzi dalej jak dziś).
+Wykonawca B. Rdzeń niezależny od dostawcy (`serwer/platnosci.js`), adapter Stripe na `fetch`
+z przypiętą wersją API `2025-03-31.basil` (`serwer/platnosci-stripe.js`, jedyny plik, który zna
+Stripe), ekrany bez JavaScriptu (`serwer/ekrany-platnosci.js`), polecenia CLI (`serwer/platnosci-cli.js`),
+atrapa Stripe (`narzedzia/atrapa/stripe.js`) i testy (`serwer/testy-platnosci.js`).
+Bez `PLATNOSCI` wszystkie trasy płatności odpowiadają `404 platnosci-wylaczone`, webhook przechodzi
+dalej jak dziś, a konta działają w swoich pakietach. Błąd konfiguracji wyłącza tylko płatności
+(wpis `[konfiguracja]` w dzienniku i `/api/status.konfiguracja.platnosci.bledy`, z nazwami zmiennych).
+
+Marcin sprzedaje jako osoba fizyczna bez działalności (decyzja 2): bez Stripe Tax i bez NIP klienta,
+rejestr wpłat i zwrotów, licznik przychodu w kwartale z progami, sprzedaż tylko do krajów
+z `PLATNOSCI_KRAJE` (D-04), odstąpienie w 14 dni ze zwrotem proporcjonalnym (D-03, `PLATNOSCI_ZWROT`).
+
+### Jak to działa
+
+- **Zakup** (ARCH8-19): aplikacja woła `POST /api/platnosci/zakup` i robi `location.assign(url)`, a ekran
+  serwera `GET /konto/zakup?plan=&waluta=&z=app|konto` ma formularz `POST /konto/zakup` (303 do Checkout).
+  Ekran pokazuje podsumowanie (cena końcowa, odnawianie co miesiąc, rezygnacja), dwa osobne pola zgody
+  (regulamin z pouczeniem; żądanie rozpoczęcia świadczenia przed upływem 14 dni, PR8-31), informację
+  o krajach UE i dane usługodawcy. Oba oświadczenia trafiają do `zgody` (wersja regulaminu, źródło
+  `zakup`) przed przekierowaniem; identyfikator zgody i wersja idą w `metadata` sesji. Kolejność kontroli:
+  sprzedaż, prawo zakupu (konta `glowna` i operator tylko przy `PLATNOSCI_DLA_STARYCH=1`), pakiet,
+  waluta, żywa subskrypcja (409), zgoda, limit 10 sesji na godzinę, cena, wyłącznik po progu.
+- **Waluta** (M-1): klient, który już płacił, zawsze w swojej walucie (Stripe nie łączy walut u klienta);
+  potem wybrana; potem z języka (`PLATNOSCI_WALUTA_PL` dla polskiego, `PLATNOSCI_WALUTA_DOMYSLNA` dla innych).
+- **Checkout**: `mode=subscription`, `currency` przy cenie wielowalutowej, `client_reference_id` = login,
+  adres rozliczeniowy wymagany, metody z `PLATNOSCI_METODY` (`auto` = ustawienia panelu Stripe; BLIK tylko
+  dla PLN; Przelewy24 odrzucane, PR8-13), bez `automatic_tax` i `tax_id_collection` (opcje
+  `PLATNOSCI_PODATKI`, `PLATNOSCI_NIP_KLIENTA`), tekst nad przyciskiem "zamawiasz subskrypcję z obowiązkiem
+  zapłaty ... co miesiąc" (`custom_text.submit`). Zgodę na regulamin zbiera nasz ekran, nie Checkout
+  (`consent_collection` wymaga adresu regulaminu w panelu Stripe i dublowałby pole).
+- **Ceny** (ARCH8-17): kwoty na ekranach z `PLATNOSCI_CENY_WYSWIETLANE`, obciążenie zawsze według ceny
+  w Stripe. Ceny u dostawcy są pobierane przy starcie (bez sieci: ostrzeżenie i ponowienie po 5 min),
+  co 6 h i przed pierwszą sprzedażą; pozycja (pakiet i waluta) z ceną nieaktywną, nie miesięczną,
+  z innego trybu albo inną niż na ekranie jest wstrzymana (`400 plan-niedostepny`, `powod: 'cena'`).
+- **Powrót** `GET /konto/platnosc?wynik=ok&sesja={CHECKOUT_SESSION_ID}&z=`: sesja musi należeć do
+  zalogowanego konta (inaczej 403), stan z API bez czekania na webhook, potem 303 na
+  `/?platnosc=ok|oczekuje|kraj|anulowana` (przy `z=konto` na `/konto?platnosc=...`). `oczekuje`: aplikacja
+  odpytuje `GET /api/platnosci/stan`, webhook dokończy.
+- **Panel klienta**: `POST /api/platnosci/panel` albo formularz `POST /konto/panel` (303 do Customer Portal,
+  powrót `/?konto=1` albo `/konto`). Zmiana pakietu, karty i anulowanie na koniec okresu są w Portalu.
+- **Webhook** `POST /platnosci/webhook/stripe` (ARCH8-15): przed sesją i CSRF, podpis HMAC na surowych
+  bajtach (`Stripe-Signature`, kilka `v1`, kilka sekretów w `STRIPE_SEKRET_WEBHOOKA` na czas zmiany,
+  tolerancja 300 s), idempotencja po `event.id` (`platnosci_zdarzenia`), zdarzenie innego trybu
+  (`livemode`) ignorowane, stan zawsze z API (lista subskrypcji klienta, kolejność zdarzeń bez znaczenia),
+  zamek per klient. Błąd API dostawcy: 503, zdarzenie zostaje nieprzetworzone i Stripe je ponowi.
+  Obsługiwane: `checkout.session.completed`, `customer.subscription.created|updated|deleted`,
+  `invoice.paid` (rejestr wpłat), `invoice.payment_failed`, `charge.refunded` (zwroty z panelu Stripe).
+- **Stany** (ARCH8-16): `trialing` -> `probna`, `active` -> `aktywna`, `active` z anulowaniem na koniec
+  okresu -> `anulowana` (pakiet do `okresDo`), `past_due`/`unpaid` -> `zalegla` (pakiet przez
+  `PLATNOSCI_ZALEGLA_DNI`), `canceled`/`incomplete_expired`/`paused` -> `wygasla`, `incomplete` -> `brak`.
+  Powiązanie z innego trybu (`platnik_tryb`) nigdy nie daje dostępu.
+- **Uzgadnianie** co 6 h (i `platnosci-synchronizuj`): konta z żywą subskrypcją albo dawno nieuzgadniane,
+  najwyżej 3 zapytania na sekundę, brakujące wpłaty z API, dokończenie odstąpień przerwanych błędem
+  dostawcy. Konto `aktywna` z `okresDo` starszym niż 2 doby jest synchronizowane w tle przy zapytaniu.
+- **Kraj spoza `PLATNOSCI_KRAJE`**: Checkout nie ogranicza kraju adresu rozliczeniowego, więc zakup
+  z takim adresem jest od razu anulowany i zwracany w całości (`zwrot` z powodem `kraj`), a aplikacja
+  dostaje `platnosci.odrzucenie` i powrót `?platnosc=kraj`.
+- **Odstąpienie w 14 dni** (PR8-31, art. 11a dyrektywy 2011/83/UE): przycisk "Odstąp od umowy tutaj"
+  (sekcja konta, `/konto/odstapienie?z=konto`), drugi krok "Potwierdź odstąpienie od umowy", API dla
+  aplikacji i `zwrot <login>` dla oświadczeń e-mailem albo listem. Termin: koniec 14. dnia po dniu zawarcia
+  (czas polski). Serwer zapisuje oświadczenie (`odstapienia`, z chwilą złożenia), anuluje subskrypcję od razu
+  i zleca zwrot: `proporcjonalny` = wpłata minus rozpoczęte doby dostępu (`kwota * dni / dni okresu`,
+  zaokrąglone), `pelny` = cała wpłata. Awaria dostawcy: oświadczenie zostaje w stanie `blad` (liczy się
+  chwila złożenia), dokończy je uzgadnianie albo `zwrot <login> --wykonaj`, ten sam klucz idempotencji.
+  Usunięcie konta (A1) w terminie odstąpienia = odstąpienie ze zwrotem, po terminie anulowanie bez zwrotu.
+- **Przychód i progi** (PR8-09): wpłaty z kwartału (czas polski) minus zwroty zlecone w kwartale, EUR po
+  `PLATNOSCI_KURS_EUR_PLN` (przybliżenie do ostrzeżeń, nie księgowość). Progi `PLATNOSCI_PROGI_OSTRZEZEN`
+  i 100% limitu `PLATNOSCI_PROG_KWARTAL_PLN`, sprzedaż do konsumentów z innych krajów UE w roku (80% i 100%
+  `PLATNOSCI_PROG_UE_EUR`): wpis w dzienniku, `/api/status.platnosci.progi` i jeden e-mail
+  `prog-przychodu` do usługodawcy na próg i okres. `PLATNOSCI_WSTRZYMAJ_PO_PROGU=1` odmawia zakupu, który
+  przekroczyłby limit kwartalny (`403 sprzedaz-wstrzymana`, `powod: 'prog'`); zarządzanie subskrypcją działa.
+
+### Kontrakt dla aplikacji (D)
+
+| Trasa | Ciało | Odpowiedź | Odmowy (`X-CAI-Kod`) |
+|---|---|---|---|
+| `GET /api/platnosci/stan` | - | `{ subskrypcja, platnosci }` jak w `/api/konto` (niżej) | `404 platnosci-wylaczone` |
+| `POST /api/platnosci/zakup` | `{ plan, waluta?, zgodaNaWykonanie: true, zgodaRegulamin?, jezyk?, z? }` | `{ url, plan, waluta, kwota }` | `403 zgoda-wymagana`, `400 plan-niedostepny` (`powod: 'cena'`), `409 subskrypcja-istnieje`, `403 zakup-niedozwolony`, `403 sprzedaz-wstrzymana` (`powod: 'konfiguracja'\|'prog'`), `429 za-duzo-prob` (`ponowZa`), `503 dostawca-platnosci-niedostepny` |
+| `POST /api/platnosci/panel` | `{ jezyk?, z? }` | `{ url }` | `409 brak-subskrypcji`, `503` |
+| `GET /api/platnosci/odstapienie` | - | `{ mozliwe, powod, zawarcie, termin, szacunek: { kwota, waluta, tryb, dniUzyte, dniOkresu }, plan }` | - |
+| `POST /api/platnosci/odstapienie` | `{ potwierdzam: true }` | `{ ok, odstapienie: { id, zlozone, zwrot: { kwota, waluta, tryb, dniUzyte, dniOkresu, najpozniej } } }` | `403 zgoda-wymagana`, `409 odstapienie-niedostepne` (`powod: 'brak-umowy'\|'zlozone'\|'po-terminie'`), `503` (oświadczenie zapisane) |
+
+`platnosci.stanDlaKonta(konto, kontekst)` (synchronicznie, bez sieci) daje sekcje `/api/konto`:
+`subskrypcja: { stan, plan, okresDo, waluta, dostepDo }` i `platnosci: { wlaczone, sprzedaz, tryb, dostawca,
+waluty, walutaDomyslna, wymagaZgodyNaWykonanie, mozeKupic, maPanel, plany: [{ plan, nazwa, nazwaEn, opis,
+opisEn, limity, funkcje, limitDokumentow, ceny: { eur: 1900, pln: 7900 } }] }` oraz pola B: `walutaWymuszona`
+(waluta klienta, który już płacił), `zakupNiedozwolony`, `kraje`, `zwrot` (tryb), `odstapienie: { mozliwe,
+do, zawarcie, szacunek, adres, ponowienie }` albo `{ mozliwe: false, powod, do, zlozone: { czas, stan, kwota,
+waluta } }`, `odrzucenie: { powod: 'kraj', kraj, czas }`, `adresy: { zakup, panel, odstapienie }`,
+`rachunek: { email }`. Kwoty w jednostkach najmniejszych (grosze, centy), czasy w ms.
+
+### Kontrakt dla kont (A1) i poczty (C)
+
+- `/konto` (A1): `ekrany.sekcjaKonta({ jezyk, stan: platnosci.stanDlaKonta(konto, kontekst), pakiety:
+  plany.PLANY })` zwraca sekcję "Pakiet i płatności" (stan, formularz panelu, "Odstąp od umowy tutaj",
+  rachunek na prośbę), a przed wysłaniem ekranu `platnosci.cspEkranu(res, kontekst)` dopisuje hosty dostawcy
+  do `form-action` (przeglądarka stosuje je do przekierowania 303 po formularzu panelu).
+- Usunięcie konta (A1): `await platnosci.anulujDlaKonta(konto, kontekst)`; wyjątek = konto zostaje
+  (klient płaciłby dalej).
+- E-maile (C, `serwer/poczta-szablony.js`; bez szablonu B zapisuje ostrzeżenie i nie wysyła):
+  `zakup-potwierdzenie` (potwierdzenie umowy na trwałym nośniku, PR8-31; raz na sesję Checkout) z `dane:
+  { pakiet, kwota, waluta, dataZawarcia, nastepnaPlatnosc, terminOdstapienia, zadanieWykonania, trybZwrotu,
+  regulaminWersja, adresRegulaminu, adresOdstapienia, adresKonta, zalaczniki: [{ nazwa, typ, tresc }] }`
+  (regulamin i pouczenie z formularzem jako tekst z `dokumenty-prawne.js`); `odstapienie-potwierdzenie`
+  z `dane: { pakiet, dataZawarcia, zlozone, kwotaZwrotu, waluta, terminZwrotu, dniUzyte, dniOkresu,
+  potracenie, trybZwrotu, adresKonta }`; `prog-przychodu` (do usługodawcy) z `dane: { rodzaj: 'kwartal'|'ue',
+  prog, okres, przychod, limit, procent, opis }`. Teksty: AG/runda8/prawo/zgody-i-komunikaty.md pkt 5 i 6.
+  Potwierdzenia płatności, nieudane płatności i wygasające karty wysyła Stripe (ARCH8-21).
+- Limit pakietu (KOD8-20): `plany.zarezerwuj({ konto, czynnosci })` przed wywołaniem dostawcy,
+  `plany.policz({ ..., rezerwacja })` po sukcesie, `rezerwacja.zwolnij()` w `finally`; wpięcie w proxy
+  `server.js` (sekcja C) jest w łatce AG/runda9/b/kod8-20-server.diff. Kontynuacja po `pause_turn`
+  (`x-cai-czynnosc: artykul-ciag`, KOD8-13) liczy się jak zwykłe wywołanie modelu, nie jak drugi artykuł.
+
+### Polecenia (`sudo serwer/cli.sh <polecenie>`, środowisko testowe: `--srodowisko /etc/contentai/srodowisko-test`)
+
+| Polecenie | Co robi |
+|---|---|
+| `platnosci-sprawdz` | konfiguracja, ceny u dostawcy (z porównaniem z `PLATNOSCI_CENY_WYSWIETLANE`), ostatni webhook, nieprzetworzone zdarzenia, uzgadnianie, odstąpienia z błędem, przychód kwartału; kod 0 = gotowe do sprzedaży |
+| `platnosci-synchronizuj [login]` | uzgodnienie stanu i wpłat z Stripe, dokończenie odstąpień z błędem |
+| `platnosci-powiaz <login> <cus_...> [--zamien]` | powiązanie konta z klientem Stripe, tylko `PLATNOSCI_TRYB=test` (skrypt testu z zegarem) |
+| `przychod [RRRR-Qn\|RRRR]` | wpłaty minus zwroty per waluta i kraj, razem w PLN, procent limitu kwartalnego, sprzedaż do innych krajów UE w roku |
+| `ewidencja <od> <do> [--dziennie]` | CSV (średnik, przecinek dziesiętny) wpłat i zwrotów do ewidencji sprzedaży: data, rodzaj, identyfikator, konto, kraj, kwota, waluta, PLN, narastająco w kwartale, pakiet, okres; `--dziennie`: sumy dzienne. Kolumny potwierdza księgowa (PR8-12) |
+| `zwrot <login> [--zlozone RRRR-MM-DD[THH:MM]] [--pelny] [--wykonaj]` | odstąpienie zgłoszone e-mailem albo listem: bez `--wykonaj` tylko wyliczenie; `--zlozone` = chwila otrzymania oświadczenia (czas polski); `--pelny` = zwrot całości |
+
+### Test w prawdziwym trybie testowym Stripe (T1-T12, PROJEKT-TECHNICZNY 12.4)
+
+Przed testem (raz, w panelu Stripe w trybie testowym, przełącznik "Test mode"):
+1. Product catalog: "Content AI Standard" i "Content AI Premium", każdy z ceną cykliczną miesięczną 19 EUR
+   i 49 EUR z opcją waluty PLN 79 i 199 zł ("Add another currency"). Identyfikatory cen (`price_...`)
+   do `STRIPE_CENA_STANDARD` i `STRIPE_CENA_PREMIUM`.
+2. Settings > Billing > Customer portal: zmiana karty TAK, anulowanie TAK (na koniec okresu), zmiana pakietu
+   TAK (obie ceny), historia faktur NIE, adres powrotu `https://test.content-ai.net/konto`.
+3. Settings > Customer emails: potwierdzenia udanych płatności, zwroty, nieudane płatności i wygasające
+   karty TAK; wysyłka faktur NIE.
+4. Developers > API keys > Create restricted key "content-ai-serwer": zapis Customers, Checkout Sessions,
+   Customer portal, Subscriptions, Refunds; odczyt Prices, Products, Invoices, Invoice Payments, Charges ->
+   `STRIPE_KLUCZ` (`rk_test_...`). Osobny klucz `sk_test_...` tylko do skryptu T8 (nigdy w pliku środowiska).
+5. Developers > Webhooks > Add endpoint `https://test.content-ai.net/platnosci/webhook/stripe`, zdarzenia:
+   `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`,
+   `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`, `charge.refunded`;
+   "Signing secret" (`whsec_...`) -> `STRIPE_SEKRET_WEBHOOKA`.
+6. `/etc/contentai/srodowisko-test`: `PLATNOSCI=stripe`, `PLATNOSCI_TRYB=test`, `STRIPE_KLUCZ`,
+   `STRIPE_SEKRET_WEBHOOKA`, `STRIPE_CENA_STANDARD`, `STRIPE_CENA_PREMIUM`,
+   `PLATNOSCI_CENY_WYSWIETLANE=standard:eur=19,pln=79;premium:eur=49,pln=199`,
+   `CAI_ADRES_PUBLICZNY=https://test.content-ai.net`, `CAI_USLUGODAWCA_IMIE_NAZWISKO`, `CAI_USLUGODAWCA_ADRES`,
+   `CAI_USLUGODAWCA_EMAIL` (wartości tylko w pliku środowiska). Restart usługi testowej, potem
+   `sudo serwer/cli.sh --srodowisko /etc/contentai/srodowisko-test platnosci-sprawdz` -> "Gotowe (kod 0)".
+
+| Krok | Co zrobić | Czego się spodziewać |
+|---|---|---|
+| T1 | Rejestracja nowego konta, e-mail potwierdzający (A1, C) | konto potwierdzone, sesja od razu |
+| T2 | "Generuj" bez klucza; zły klucz; dobry klucz (C, D) | kreator bez zapytania; "odrzucony"; artykuł |
+| T3 | Trzy artykuły, czwarty (D) | okno pakietu: PLN przy polskim interfejsie, EUR przy angielskim |
+| T4 | Zakup Standard w PLN kartą `4242 4242 4242 4242` (dowolna przyszła data, CVC); na ekranie zakupu najpierw "Przejdź do płatności" bez zgód | bez zgód komunikat przy polach; w Checkout tekst o obowiązku zapłaty 79,00 zł co miesiąc i napis przycisku do zapisania dla prawnika (P-05); powrót, "Pakiet aktywny"; `platnosci-synchronizuj <login>` pokazuje `aktywna (standard)`; w panelu Stripe zdarzenia webhooka z odpowiedzią 200; `przychod` pokazuje 79,00 zł; e-mail potwierdzenia umowy (gdy C doda szablon `zakup-potwierdzenie`) |
+| T4a | To samo konto: "Odstąp od umowy tutaj" i "Potwierdź odstąpienie od umowy" | "Odstąpienie przyjęte", w Stripe zwrot (Payments > płatność > Refunds) na kwotę z ekranu (79,00 zł minus rozpoczęte doby), konto w pakiecie Darmowym, `ewidencja` z wierszem zwrotu |
+| T5 | Drugie konto, interfejs angielski, zakup w EUR; w Checkout kraj adresu np. Niemcy | waluta `eur` (parametr `currency` przy cenie wielowalutowej działa); `przychod` liczy sprzedaż do UE (DE) |
+| T5a | Trzecie konto, w Checkout kraj adresu spoza UE (np. United States) | powrót z komunikatem o kraju, subskrypcja anulowana i zwrócona w całości |
+| T6 | Karta 3D Secure `4000 0027 6000 3184`; karta odrzucana `4000 0000 0000 0002`; przy `PLATNOSCI_METODY=card,blik` BLIK w PLN | po uwierzytelnieniu `aktywna`; odrzucenie: błąd w Checkout, stan bez zmian; BLIK: sprawdzić, czy Stripe przyjmuje go w subskrypcji (inaczej zostaje `card`) |
+| T7 | Portal ("Zarządzaj subskrypcją"): Premium, powrót do Standard, anulowanie, wznowienie, zmiana karty | stany `aktywna` -> `anulowana` (do daty) -> `aktywna`; pakiet zgodny z ceną |
+| T8 | `STRIPE_KLUCZ_ZEGARY=sk_test_... STRIPE_CENA_STANDARD=price_... node narzedzia/test_platnosci_stripe.js --login <login> --waluta pln --cli "sudo serwer/cli.sh --srodowisko /etc/contentai/srodowisko-test" --sprzataj` | kod 0: zegar przesunięty o miesiąc, `invoice.paid`, nowy `okres_do`, druga wpłata w rejestrze |
+| T9 | To samo z `--karta 0341 --miesiace 2` | miesiąc 1: `zalegla` (baner, pakiet przez `PLATNOSCI_ZALEGLA_DNI`); po ponowieniach Stripe (ustawienia Smart Retries) `wygasla` i pakiet Darmowy |
+| T10 | Developers > Webhooks: "Resend" kilku zdarzeń; wyłączyć punkt końcowy, anulować w Portalu, włączyć i `platnosci-synchronizuj` | duplikaty bez skutków (200, `powtorzone`); stan dogoniony przez uzgadnianie |
+| T11 | Usunięcie konta z aktywną subskrypcją (A1) | subskrypcja anulowana w Stripe (w 14 dniach od zakupu ze zwrotem), konto i pliki usunięte |
+| T12 | `PLATNOSCI_PROG_KWARTAL_PLN=100`, restart, zakup; potem restart bez `PLATNOSCI` | jeden e-mail `prog-przychodu` na próg (60%, 80%, 100%); bez płatności aplikacja bez przycisków zakupu, konta `glowna` jak dziś |
+
+Przełączenie na live (12.5): produkty, ceny, Portal, klucz i webhook utworzone osobno w trybie live
+(adres `https://app.content-ai.net/platnosci/webhook/stripe`), `PLATNOSCI_TRYB=live` i wszystkie `STRIPE_*`
+z trybu live, `platnosci-sprawdz` kod 0. Serwer odmawia klucza z innego trybu (prefiks `rk_test_`/`rk_live_`).
+Wycofanie: `PLATNOSCI_SPRZEDAZ=0` (nowych zakupów nie ma, webhook, Portal i uzgadnianie działają).
 
 ## Własne klucze
 

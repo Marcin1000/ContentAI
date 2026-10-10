@@ -93,6 +93,12 @@ const KODY = {
     pl: 'To konto nie ma subskrypcji.',
     en: 'This account has no subscription.',
   },
+  // B (PR8-31): pole powod = brak-umowy | po-terminie | zlozone
+  'odstapienie-niedostepne': {
+    status: 409,
+    pl: 'Od tej umowy nie można już odstąpić albo to konto nie ma umowy.',
+    en: 'Withdrawal from this contract is no longer possible, or this account has no contract.',
+  },
   'dostawca-platnosci-niedostepny': {
     status: 503,
     pl: 'Operator płatności nie odpowiada. Spróbuj za chwilę.',

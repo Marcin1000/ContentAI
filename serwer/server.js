@@ -1516,8 +1516,24 @@ function stronaLogowania(kod, req, jezyk, login) {
   return logowanie.stronaLogowania({
     kod, jezyk: jezyk || (req ? jezykZadania(req) : 'pl'), sciezka: '/auth/login',
     // Login wraca do pola tylko w poprawnym formacie - nic obcego nie trafia do HTML.
-    login: poprawnyLogin(login) ? login : '',
+    login: poprawnyLogin(login) || konta.emailDoPola(login) ? login : '',
+    // R9-A1: "Zaloz konto" przy otwartej rejestracji, "Nie pamietasz hasla?" zawsze poza trybem
+    // bramy (bez poczty /haslo mowi, ze haslo konta zespolu zmienia administrator). Port OpenSEO
+    // ma inny host, wiec tam odnosniki prowadza na adres aplikacji (albo ich nie ma).
+    rejestracja: funkcjaWlaczona('rejestracja'),
+    reset: !KONF.zaufanyNaglowek && (kod !== 'openseo' || Boolean(KONF.adresPubliczny)),
+    bazaLinkow: kod === 'openseo' ? KONF.adresPubliczny : '',
   });
+}
+
+/**
+ * Konto z pola `login` formularza (ARCH8-04): ze znakiem @ to e-mail (konto po adresie
+ * znormalizowanym jak przy zapisie), bez niego dzisiejszy login. Nazwa pola zostaje
+ * `login` (kontrakt bramy OpenSEO i testow).
+ */
+function kontoDoLogowania(login) {
+  if (login.includes('@')) return login.length <= 254 ? magazyn.kontoPoEmailu(login) : null;
+  return poprawnyLogin(login) ? magazyn.konto(login) : null;
 }
 
 async function obslugaLogowania(req, res) {
@@ -1535,7 +1551,16 @@ async function obslugaLogowania(req, res) {
   const login = (dane.get('login') || '').trim();
   const haslo = dane.get('haslo') || '';
   const jezyk = jezykZadania(req, dane.get('jezyk'));
-  const uzytkownik = poprawnyLogin(login) ? magazyn.konto(login) : null;
+  const uzytkownik = kontoDoLogowania(login);
+
+  // Licznik nieudanych prob per konto (ARCH8-05, SEC8-24): e-mail jest publiczny, wiec
+  // zgadywanie hasla z wielu adresow IP ograniczamy tez na koncie (20 na godzine ->
+  // 15 minut blokady). Nieistniejacy adres ma licznik po wpisanym tekscie i zachowuje
+  // sie tak samo, wiec blokada nie zdradza, czy konto istnieje. Reset hasla dziala mimo niej.
+  const kluczProb = konta.probyLogowania.klucz(uzytkownik, login);
+  if (konta.probyLogowania.zablokowane(kluczProb)) {
+    return odpowiedzTekst(res, 429, stronaLogowania('za-duzo-prob-konto', req, jezyk, login), html);
+  }
 
   // scrypt liczy sie zawsze, takze dla nieistniejacego loginu - inaczej czas
   // odpowiedzi (1 ms wobec 50 ms) zdradzalby, ktore loginy istnieja. Liczony
@@ -1549,10 +1574,12 @@ async function obslugaLogowania(req, res) {
   }
   if (!uzytkownik || !pasuje) {
     nieudanaProba(ip);
+    konta.probyLogowania.porazka(kluczProb);
     return odpowiedzTekst(res, 401, stronaLogowania('zle-dane', req, jezyk, login), html);
   }
 
   proby.delete(ip);
+  konta.probyLogowania.sukces(kluczProb);
   try {
     magazyn.zmienKonto(uzytkownik.login, { ostatnieLogowanie: Date.now() });
   } catch (e) {
@@ -1749,6 +1776,8 @@ const POMOCNICY = {
   utworzSesje, ciasteczkoSesji, ciasteczkoWylogowania, atrybutyCiasteczka, zapiszWylogowanie,
   zahaszujAsync, hasloPasujeAsync, atrapaKontaAsync, BladZajety, podpisz, skrotEmaila,
   idKonta, poprawnyLogin, stronaLogowania, funkcjaWlaczona,
+  // A1: publiczne ekrany kont rozpoznaja zalogowanego (np. /rejestracja -> aplikacja)
+  sesjaZadania,
 };
 
 /**

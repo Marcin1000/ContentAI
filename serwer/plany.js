@@ -196,19 +196,78 @@ function czasData(teraz) {
   return teraz instanceof Date ? teraz : new Date(czasMs(teraz));
 }
 
+const DOBA_MS = 24 * 3600_000;
+
+/**
+ * Czy subskrypcja daje teraz dostep do pakietu platnego (ARCH8-16, wykonawca B). Stan
+ * subskrypcji jest znormalizowany (platnosci.js), wiec ta funkcja nie zna dostawcy:
+ *   probna, aktywna -> tak; anulowana -> do okresDo; zalegla -> przez PLATNOSCI_ZALEGLA_DNI
+ *   od zalegla_od; wygasla, brak -> nie.
+ * Powiazanie z innego trybu (konto testowe Stripe na serwerze live) nigdy nie daje dostepu.
+ */
+function dostepPlatny(konto, teraz = Date.now(), konf = KONF_PLANOW) {
+  if (!konto || !konto.platnikTryb || konto.platnikTryb !== konf.trybPlatnosci) return false;
+  const t = czasMs(teraz);
+  switch (konto.subskrypcjaStan) {
+    case 'probna': case 'aktywna': return true;
+    case 'anulowana': return Number(konto.okresDo) > t;
+    case 'zalegla': return Boolean(konto.zaleglaOd) && t - Number(konto.zaleglaOd) < Number(konf.zaleglaDni) * DOBA_MS;
+    default: return false;
+  }
+}
+
+/** Do kiedy (ms) dziala pakiet platny albo null: koniec okresu, a przy zaleglej platnosci koniec okresu laski. */
+function dostepDo(konto, teraz = Date.now(), konf = KONF_PLANOW) {
+  if (!dostepPlatny(konto, teraz, konf)) return null;
+  if (konto.subskrypcjaStan === 'zalegla') return Number(konto.zaleglaOd) + Number(konf.zaleglaDni) * DOBA_MS;
+  return Number(konto.okresDo) || null;
+}
+
+/**
+ * Subskrypcja w stanie pakietu (/api/pakiet) albo null dla konta, ktore nigdy nie mialo
+ * platnika ani subskrypcji (konta zespolu: odpowiedz jak przed runda 9).
+ *   -> { stan, plan, okresDo, waluta, dostepDo }
+ */
+function opisSubskrypcji(konto, teraz = Date.now(), konf = KONF_PLANOW) {
+  if (!konto || (!konto.platnik && (!konto.subskrypcjaStan || konto.subskrypcjaStan === 'brak'))) return null;
+  return {
+    stan: konto.subskrypcjaStan || 'brak',
+    plan: konto.subskrypcjaPlan || null,
+    okresDo: Number(konto.okresDo) || null,
+    waluta: konto.subskrypcjaWaluta || null,
+    dostepDo: dostepDo(konto, czasMs(teraz), konf),
+  };
+}
+
 /**
  * Nazwa planu, wedlug ktorego konto dziala teraz (ARCH8-16).
  * Operator (admin organizacji glownej) zawsze premium - wlasciciel systemu nie moze
- * sobie zablokowac narzedzia. Potem plan przypisany przez administratora, a konto
- * samoobslugowe bez planu dostaje CAI_PLAN_NOWYCH.
- * Wykonawca B doklada tu, przed planem przypisanym, dostep z subskrypcji:
- *   if (dostepPlatny(konto, teraz, konf) && PLANY[konto.subskrypcjaPlan]) return konto.subskrypcjaPlan;
+ * sobie zablokowac narzedzia. Potem pakiet z oplaconej subskrypcji (B), potem plan
+ * przypisany przez administratora, a konto samoobslugowe bez planu dostaje CAI_PLAN_NOWYCH.
+ * Po wygasnieciu subskrypcji konto wraca do swojego planu z jego licznikami (darmowy:
+ * okres 'zawsze', wiec zuzyte darmowe artykuly sie nie odnawiaja).
  */
 function planEfektywny(konto, teraz = Date.now(), konf = KONF_PLANOW) {
   if (!konto) return DOMYSLNY;
   if (dzierzawy.operator(konto)) return 'premium';
+  if (dostepPlatny(konto, teraz, konf) && PLANY[konto.subskrypcjaPlan]) return konto.subskrypcjaPlan;
   if (konto.plan && PLANY[konto.plan]) return konto.plan;
   return konto.pochodzenie === 'samoobsluga' ? konf.planNowych : DOMYSLNY;
+}
+
+/**
+ * Pakiety na sprzedaz (sprzedaz: true) w kolejnosci kart, z tym, co pokazuje okno pakietu
+ * i ekran zakupu (/api/konto.platnosci.plany). Kwot tu nie ma: sa w konfiguracji
+ * platnosci (PLATNOSCI_CENY_WYSWIETLANE) i u dostawcy (ARCH8-17).
+ */
+function planyNaSprzedaz() {
+  return Object.entries(PLANY)
+    .filter(([, p]) => p.sprzedaz)
+    .sort((a, b) => (a[1].kolejnosc || 0) - (b[1].kolejnosc || 0))
+    .map(([plan, p]) => ({
+      plan, nazwa: p.nazwa, nazwaEn: p.nazwaEn, opis: p.opis, opisEn: p.opisEn, okres: p.okres, kolejnosc: p.kolejnosc || 0,
+      limity: { ...p.limity }, funkcje: { ...p.funkcje }, limitDokumentow: p.limitDokumentow,
+    }));
 }
 
 /** Plan konta (obiekt z PLANY). */
@@ -292,12 +351,102 @@ function sprawdzLimit({ konto, uzytkownik, czynnosc, teraz }) {
   };
 }
 
-/** Dopisuje jedno uzycie (atomowo w bazie). Wolane PO udanej odpowiedzi dostawcy. */
-function policz({ konto, uzytkownik, czynnosc, teraz }) {
+/**
+ * Dopisuje jedno uzycie (atomowo w bazie). Wolane PO udanej odpowiedzi dostawcy.
+ * Z `rezerwacja` (KOD8-20, zarezerwuj nizej) sztuka zarezerwowana przed wywolaniem jest
+ * tylko potwierdzana: liczy sie raz, przy rezerwacji.
+ */
+function policz({ konto, uzytkownik, czynnosc, teraz, rezerwacja }) {
+  if (rezerwacja && typeof rezerwacja.potwierdz === 'function' && rezerwacja.potwierdz(czynnosc)) return;
   const k = konto || uzytkownik;
   const plan = planKonta(k, teraz);
   if (limitDla(k, plan, czynnosc) === null) return;   // bez limitu nie ma czego liczyc
   magazyn.policz(k.login, okresTeraz(plan, teraz), czynnosc, 1);
+}
+
+// ─── Rezerwacja przed wywolaniem dostawcy (KOD8-20, wykonawca B) ─────────────
+// sprawdzLimit przed wywolaniem i policz po odpowiedzi to dwa kroki: zapytania wyslane
+// naraz (dwie karty, skrypt) widza ten sam licznik i wszystkie przechodza (pomiar it-kod:
+// 10 artykulow przy pozostalym 1). Rezerwacja zajmuje sztuke od razu, atomowo w bazie
+// (magazyn.zarezerwuj: UPDATE ... WHERE ile < limit), a wszystkie czynnosci zapytania
+// razem albo zadna. Po udanej odpowiedzi policz({ ..., rezerwacja }) ja potwierdza, po bledzie
+// dostawcy, przerwaniu albo limicie czasu rezerwacja.zwolnij() oddaje niepotwierdzone sztuki.
+// Licznik w bazie obejmuje tez sztuki w toku, wiec /api/pakiet pokazuje je jako zuzyte.
+//
+//   const r = plany.zarezerwuj({ konto, czynnosci: ['wywolanie', 'artykul'] });
+//   if (!r.wolno) -> 402 limit-pakietu (r.czynnosc, r.odmowa jak wynik sprawdzLimit)
+//   try { ...wywolanie...; po sukcesie plany.policz({ konto, czynnosc, rezerwacja: r.rezerwacja }) }
+//   finally { r.rezerwacja.zwolnij(); }      // zwalnia tylko to, czego nie potwierdzono
+
+function utworzRezerwacje(login, pozycje) {
+  let zamknieta = false;
+  return {
+    login,
+    pozycje,
+    /** Potwierdza jedna niepotwierdzona sztuke czynnosci; false = tej czynnosci nie rezerwowano. */
+    potwierdz(czynnosc) {
+      const p = pozycje.find((x) => x.czynnosc === czynnosc && !x.potwierdzona);
+      if (!p) return false;
+      p.potwierdzona = true;
+      return true;
+    },
+    /** Oddaje niepotwierdzone sztuki (raz; kolejne wywolania nic nie robia). -> ile oddano */
+    zwolnij() {
+      if (zamknieta) return 0;
+      zamknieta = true;
+      let oddane = 0;
+      for (const p of pozycje) {
+        if (p.potwierdzona || p.bezLimitu) continue;
+        try {
+          magazyn.policz(login, p.okres, p.czynnosc, -1);
+          oddane += 1;
+        } catch (e) {
+          // Baza chwilowo niedostepna: sztuka zostaje zuzyta (ostroznie: lepiej o jedna mniej niz ponad limit).
+          console.error(`[plany] zwolnienie rezerwacji ${p.czynnosc}: ${e.message}`);
+        }
+      }
+      return oddane;
+    },
+  };
+}
+
+/**
+ * Rezerwuje po jednej sztuce kazdej czynnosci przed wywolaniem dostawcy.
+ *   zarezerwuj({ konto, czynnosci, teraz }) -> { wolno: true, rezerwacja }
+ *                                           | { wolno: false, czynnosc, odmowa }
+ * odmowa ma pola wyniku sprawdzLimit (powod, limit, zuzyte, zostalo, okres, plan).
+ */
+function zarezerwuj({ konto, uzytkownik, czynnosci, teraz }) {
+  const k = konto || uzytkownik;
+  const plan = planKonta(k, teraz);
+  const okres = okresTeraz(plan, teraz);
+  const pozycje = [];
+  const rezerwacja = utworzRezerwacje(k.login, pozycje);
+  for (const czynnosc of (czynnosci || []).filter(Boolean)) {
+    const limit = limitDla(k, plan, czynnosc);
+    if (limit === undefined) {
+      rezerwacja.zwolnij();
+      return { wolno: false, czynnosc, odmowa: { wolno: false, powod: 'nieznana-czynnosc', czynnosc } };
+    }
+    if (limit === null) {
+      pozycje.push({ czynnosc, okres, bezLimitu: true, potwierdzona: false });
+      continue;
+    }
+    const w = magazyn.zarezerwuj(k.login, okres, czynnosc, limit);
+    if (!w.ok) {
+      rezerwacja.zwolnij();
+      return {
+        wolno: false,
+        czynnosc,
+        odmowa: {
+          wolno: false, powod: 'limit-wyczerpany', limit, zuzyte: w.ile, zostalo: Math.max(0, limit - w.ile),
+          okres: plan.okres, plan: nazwaPlanu(k, teraz),
+        },
+      };
+    }
+    pozycje.push({ czynnosc, okres, bezLimitu: false, potwierdzona: false });
+  }
+  return { wolno: true, rezerwacja };
 }
 
 // ─── Zasoby oplacane przez serwer (ARCH8-11) ──────────────────────────────────
@@ -381,7 +530,8 @@ function stanPakietu({ konto, uzytkownik, teraz }) {
     uzycie: pozycje,
     zrodloKluczy: (k && k.zrodloKluczy) || 'serwera',
     limitySerwera,
-    subskrypcja: null,          // B: { stan, plan, okresDo, dostepDo } (ARCH8-16)
+    // B (ARCH8-16): { stan, plan, okresDo, waluta, dostepDo }; null dla konta bez platnika i subskrypcji.
+    subskrypcja: opisSubskrypcji(k, teraz),
   };
 }
 
@@ -391,6 +541,11 @@ module.exports = {
   KONF_PLANOW,
   ZASOBY_SERWERA,
   ustawKonfiguracje,
+  dostepPlatny,
+  dostepDo,
+  opisSubskrypcji,
+  planyNaSprzedaz,
+  zarezerwuj,
   planEfektywny,
   planKonta,
   nazwaPlanu,

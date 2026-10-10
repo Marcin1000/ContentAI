@@ -16,6 +16,10 @@
  *   node serwer/uzytkownicy.js migruj [--sprawdz]  - konta z plikow JSON (R8) do bazy
  *   node serwer/uzytkownicy.js eksport-json   - wycofanie do R8: pliki JSON z bazy
  *   node serwer/uzytkownicy.js kopia [plik]   - kopia bazy w trakcie pracy uslugi
+ *   node serwer/uzytkownicy.js pokaz <login|e-mail>            - szczegoly konta (bez hasla)
+ *   node serwer/uzytkownicy.js email <login|e-mail> [adres|-]  - adres logowania (potwierdzony) albo jego usuniecie
+ *   node serwer/uzytkownicy.js klucze <login|e-mail> [wlasne|serwera] - zrodlo kluczy API konta
+ *   node serwer/uzytkownicy.js organizacja <login|e-mail|id> [nazwa <tekst|->]
  * oraz polecenia platnosci (platnosci-cli.js) i poczty (poczta.js) - lista w pomocy.
  *
  * Konta leza w bazie SQLite (serwer/magazyn.js). Polecenie zmienia jeden wiersz
@@ -40,6 +44,7 @@ const poczta = require('./poczta.js');
 const {
   zahaszuj, ROLE, PLIK_UZYTKOWNIKOW, PLIK_WYLOGOWANYCH, zrodlaMigracji, poprawnyLogin, skrotEmaila, KONF,
 } = require('./server.js');
+const konta = require('./konta.js');
 
 // Dane konta na dysku: prywatna baza wiedzy (u-<login>.json) razem z kopiami
 // uszkodzonych wersji i plikami tymczasowymi zapisu (oraz plik licznikow z R8,
@@ -173,6 +178,10 @@ Na serwerze: sudo serwer/cli.sh <polecenie> (środowisko i konto usługi).
   node serwer/uzytkownicy.js migruj [--sprawdz]     konta z plików JSON (R8) do bazy
   node serwer/uzytkownicy.js eksport-json           wycofanie do R8: pliki JSON z bazy
   node serwer/uzytkownicy.js kopia [plik]           kopia bazy w trakcie pracy usługi
+  node serwer/uzytkownicy.js pokaz <login|e-mail>   szczegóły konta: organizacja, pakiet, zgody, użycie
+  node serwer/uzytkownicy.js email <login|e-mail> [adres|-]   adres logowania (potwierdzony) albo usunięcie
+  node serwer/uzytkownicy.js klucze <login|e-mail> [wlasne|serwera]   źródło kluczy API konta
+  node serwer/uzytkownicy.js organizacja <login|e-mail|id> [nazwa <tekst|->]   organizacja konta
 ${dodatkowe}
 
 Baza kont: ${KONF.sqlite}
@@ -191,6 +200,216 @@ function brakKonta(login) {
 
 function znacznikPliku() {
   return new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
+}
+
+// ─── Polecenia kont samoobslugowych (A1): pokaz, email, klucze, organizacja ───
+
+// Tokeny z e-maili, ktore traca sens po zmianie adresu przez administratora.
+const TOKENY_ADRESU = ['potwierdzenie', 'reset', 'zmiana-email'];
+
+function czas(ms) {
+  if (ms === null || ms === undefined || ms === '') return '-';
+  return `${new Date(Number(ms)).toISOString().replace('T', ' ').slice(0, 16)} UTC`;
+}
+
+/** Konto po loginie albo po e-mailu (rozpoznanym po znaku @, jak na ekranie logowania). */
+function kontoZArgumentu(arg) {
+  if (!arg) return null;
+  return String(arg).includes('@') ? magazyn.kontoPoEmailu(arg) : magazyn.konto(arg);
+}
+
+function brakKontaLubUsuniete(arg) {
+  const usuniete = !String(arg).includes('@') && magazyn.kontoUsuniete(arg);
+  if (usuniete) {
+    console.error(`BŁĄD: konto "${arg}" usunięto ${czas(usuniete.usunieto)} (powód: ${usuniete.powod}).`);
+    process.exit(1);
+  }
+  return brakKonta(arg);
+}
+
+function opisPliku(plik) {
+  try {
+    return `${plik} (${fs.statSync(plik).size} B)`;
+  } catch (e) {
+    if (e.code === 'ENOENT') return `${plik} (brak)`;
+    throw e;
+  }
+}
+
+/** pokaz <login|e-mail>: wszystko, czego potrzeba przy zgloszeniu klienta. Bez hasha i soli. */
+function pokazKonto(arg) {
+  if (!arg) return uzycie('pokaz <login|e-mail>');
+  const znalezione = kontoZArgumentu(arg);
+  if (!znalezione) return brakKontaLubUsuniete(arg);
+  const u = magazyn.kontoZOrganizacja(znalezione.login);
+  const org = u.org || {};
+  const stan = plany.stanPakietu({ konto: u });
+  const w = (etykieta, wartosc) => console.log(`  ${etykieta.padEnd(20)} ${wartosc}`);
+  console.log(`Konto ${u.login} (${u.pochodzenie === 'samoobsluga' ? 'samoobsługowe' : 'zespołu'}, ${KONF.sqlite})\n`);
+  w('e-mail:', u.email
+    ? `${u.email} (${u.emailPotwierdzony ? `potwierdzony ${czas(u.emailPotwierdzony)}` : 'niepotwierdzony'})`
+    : 'brak (loguje się loginem)');
+  if (u.emailNowy) w('nowy e-mail:', `${u.emailNowy} (czeka na kliknięcie linku)`);
+  if (konta.wymagaPotwierdzenia(u)) w('', 'zasoby opłacane przez serwer czekają na potwierdzenie adresu');
+  w('rola:', `${u.rola}${dzierzawy.operator(u) ? ' (operator serwera)' : ''}`);
+  w('organizacja:', `${org.id || u.organizacja} (${org.rodzaj === 'glowna' ? 'główna zespołu' : 'samoobsługowa'}`
+    + `${org.nazwa ? `, "${org.nazwa}"` : ''}), rola w organizacji: ${u.rolaWOrganizacji}`);
+  w('klucze API:', u.zrodloKluczy === 'wlasne' ? 'własne (klucz z przeglądarki użytkownika)' : 'serwera');
+  w('pakiet:', `${stan.plan} (przypisany: ${u.plan || '-'}${dzierzawy.operator(u) ? ', admin: bez limitów' : ''})`);
+  const okres = stan.okres === 'zawsze' ? 'od założenia' : `w miesiącu ${plany.okresTeraz(plany.PLANY[stan.plan] || plany.PLANY[plany.DOMYSLNY])}`;
+  const pozycje = Object.entries(stan.uzycie || {})
+    .map(([czynnosc, p]) => `${czynnosc} ${p.limit === null ? 'bez limitu' : `${p.zuzyte} z ${p.limit}`}`);
+  if (pozycje.length) w(`użycie (${okres}):`, pozycje.join(', '));
+  if (stan.limitySerwera) {
+    w('zasoby serwera:', Object.entries(stan.limitySerwera)
+      .map(([zasob, p]) => `${zasob} ${p.limit === null ? 'bez limitu' : `${p.zuzyte} z ${p.limit}`}`).join(', '));
+  }
+  const subskrypcja = u.subskrypcjaStan && u.subskrypcjaStan !== 'brak'
+    ? `${u.subskrypcjaStan}${u.subskrypcjaPlan ? ` (${u.subskrypcjaPlan})` : ''}${u.okresDo ? `, okres do ${czas(u.okresDo)}` : ''}`
+      + `${u.zaleglaOd ? `, zaległa od ${czas(u.zaleglaOd)}` : ''}`
+    : 'brak';
+  w('subskrypcja:', subskrypcja);
+  if (u.platnikKlient) {
+    w('klient płatności:', `${u.platnik || '-'} ${u.platnikTryb || '-'} ${u.platnikKlient}${u.platnikSubskrypcja ? `, subskrypcja ${u.platnikSubskrypcja}` : ''}`);
+  }
+  const wplaty = magazyn.platnosciKonta(u.login);
+  if (wplaty.length) {
+    const ostatnia = wplaty[wplaty.length - 1];
+    w('płatności:', `${wplaty.length}, ostatnia ${czas(ostatnia.oplacono)}: ${(Number(ostatnia.kwota) / 100).toFixed(2)} ${String(ostatnia.waluta || '').toUpperCase()}`
+      + `${ostatnia.zwrot ? ' (zwrot)' : ''}`);
+  }
+  // Konta z migracji maja date z pliku R8, a czas w ms z chwili migracji: wtedy sama data.
+  const zalozone = u.utworzonyMs ? czas(u.utworzonyMs) : null;
+  w('utworzone:', zalozone && zalozone.startsWith(u.utworzony || '') ? zalozone : (u.utworzony || '-'));
+  w('ostatnie logowanie:', czas(u.ostatnieLogowanie));
+  w('sesje ważne od:', u.sesjeOd ? czas(u.sesjeOd) : '- (wszystkie wydane)');
+  w('język:', u.jezyk || '-');
+  const wersja = KONF.regulaminWersja;
+  w('regulamin:', u.regulaminWersja
+    ? `${u.regulaminWersja} (${czas(u.regulaminCzas)})${wersja && wersja !== u.regulaminWersja ? `, aktualny: ${wersja}` : ''}`
+    : '-');
+  w('marketing:', u.marketing ? 'tak' : 'nie');
+  if (u.oznaczenia) w('oznaczenia AI:', JSON.stringify(u.oznaczenia));
+  const zgody = magazyn.zgody(u.login);
+  if (zgody.length) {
+    console.log('\n  Dziennik zgód (od najstarszej):');
+    for (const z of zgody) {
+      console.log(`    ${czas(z.czas)}  ${String(z.rodzaj).padEnd(14)} ${String(z.wersja || '-').padEnd(14)} ${z.wartosc ? 'tak' : 'nie'}  ${z.zrodlo}${z.ip ? `  ${z.ip}` : ''}`);
+    }
+  }
+  console.log(`\n  Prywatna baza wiedzy: ${opisPliku(path.join(KONF.katalogBazy, baza.nazwaPliku('prywatna', u.login)))}`);
+}
+
+/** email <login|e-mail> [adres|-]: adres ustawiony przez administratora jest od razu potwierdzony. */
+function ustawEmail(arg, adres) {
+  if (!arg) return uzycie('email <login|e-mail> [adres|-]');
+  const u = kontoZArgumentu(arg);
+  if (!u) return brakKontaLubUsuniete(arg);
+  if (adres === undefined) {
+    console.log(u.email
+      ? `Konto "${u.login}": ${u.email} (${u.emailPotwierdzony ? `potwierdzony ${czas(u.emailPotwierdzony)}` : 'niepotwierdzony'}).`
+      : `Konto "${u.login}" nie ma adresu e-mail (loguje się loginem).`);
+    if (u.emailNowy) console.log(`Czeka zmiana na: ${u.emailNowy}.`);
+    return;
+  }
+  if (adres === '-') {
+    if (u.pochodzenie === 'samoobsluga') {
+      console.error('BŁĄD: konto samoobsługowe loguje się adresem e-mail - ustaw inny adres zamiast go usuwać.');
+      process.exit(1);
+    }
+    magazyn.transakcja(() => {
+      magazyn.zmienKonto(u.login, { email: null, emailPotwierdzony: null, emailNowy: null });
+      magazyn.usunTokeny(u.login, TOKENY_ADRESU);
+    });
+    console.log(`Konto "${u.login}" nie ma już adresu e-mail: loguje się loginem, reset hasła z e-maila nie działa.`);
+    return;
+  }
+  const nowy = magazyn.normalizujEmail(adres);
+  if (!konta.poprawnyEmail(nowy)) {
+    console.error(`BŁĄD: "${adres}" nie wygląda na adres e-mail (nazwa@domena.pl, do ${konta.ZASADY.emailMax} znaków).`);
+    process.exit(1);
+  }
+  let wynik;
+  try {
+    wynik = magazyn.transakcja(() => {
+      const inny = magazyn.kontoPoEmailu(nowy);
+      if (inny && inny.login !== u.login) return { zajety: inny.login };
+      magazyn.zmienKonto(u.login, { email: nowy, emailPotwierdzony: Date.now(), emailNowy: null });
+      magazyn.usunTokeny(u.login, TOKENY_ADRESU);
+      return {};
+    });
+  } catch (e) {
+    // UNIQUE: w tej samej chwili adres zajela rejestracja w dzialajacej usludze.
+    if (/UNIQUE/i.test(String(e.message))) wynik = { zajety: '?' };
+    else throw e;
+  }
+  if (wynik.zajety) {
+    console.error(`BŁĄD: adres ${nowy} ma już konto "${wynik.zajety}".`);
+    process.exit(1);
+  }
+  console.log(`Konto "${u.login}" ma teraz adres ${nowy} (potwierdzony przez administratora). `
+    + 'Loguje się nim albo loginem; linki z e-maili wysłane wcześniej przestały działać.');
+}
+
+/** klucze <login|e-mail> [wlasne|serwera] (ARCH8-10: zmiana tylko tutaj). */
+function ustawKlucze(arg, zrodlo) {
+  if (!arg) return uzycie('klucze <login|e-mail> [wlasne|serwera]');
+  const u = kontoZArgumentu(arg);
+  if (!u) return brakKontaLubUsuniete(arg);
+  if (zrodlo === undefined) {
+    console.log(`Konto "${u.login}" korzysta z kluczy: ${u.zrodloKluczy}.`);
+    return;
+  }
+  if (!['wlasne', 'serwera'].includes(zrodlo)) return uzycie('klucze <login|e-mail> <wlasne|serwera>');
+  if (u.zrodloKluczy === zrodlo) {
+    console.log(`Konto "${u.login}" już korzysta z kluczy: ${zrodlo}. Bez zmian.`);
+    return;
+  }
+  magazyn.zmienKonto(u.login, { zrodloKluczy: zrodlo });
+  console.log(`Konto "${u.login}" korzysta teraz z kluczy: ${zrodlo}. Działa od następnego zapytania, bez restartu.`);
+  console.log(zrodlo === 'serwera'
+    ? 'Uwaga: teksty, grafiki i audio tego konta idą teraz na klucze serwera (koszt po stronie serwera), w limitach pakietu.'
+    : 'Konto potrzebuje teraz własnego klucza Anthropic w przeglądarce; bez niego serwer odpowie kodem brak-klucza.');
+}
+
+/** organizacja <login|e-mail|id> [nazwa <tekst|->]: opis organizacji albo zmiana jej nazwy. */
+function organizacjaKonta(arg, podpolecenie, reszta) {
+  const wzor = 'organizacja <login|e-mail|id> [nazwa <tekst|->]';
+  if (!arg) return uzycie(wzor);
+  let org = magazyn.organizacja(arg);
+  if (!org) {
+    const u = kontoZArgumentu(arg);
+    if (u) org = magazyn.organizacja(u.organizacja);
+  }
+  if (!org) {
+    console.error(`BŁĄD: nie ma konta ani organizacji "${arg}".`);
+    process.exit(1);
+  }
+  if (podpolecenie === 'nazwa') {
+    if (!reszta.length) return uzycie(wzor);
+    const tekst = reszta.join(' ').normalize('NFC').trim();
+    const nazwa = tekst === '-' ? null : tekst;
+    if (nazwa !== null && (!nazwa || nazwa.length > 100 || /[\u0000-\u001f\u007f]/.test(nazwa))) {
+      console.error('BŁĄD: nazwa organizacji może mieć 1-100 znaków, bez znaków sterujących.');
+      process.exit(1);
+    }
+    magazyn.zmienOrganizacje(org.id, { nazwa });
+    console.log(nazwa === null ? `Organizacja ${org.id} nie ma już nazwy.` : `Organizacja ${org.id} nazywa się teraz "${nazwa}".`);
+    return;
+  }
+  if (podpolecenie !== undefined) return uzycie(wzor);
+  const czlonkowie = magazyn.listaKont({ organizacja: org.id, limit: 100000 });
+  const w = (etykieta, wartosc) => console.log(`  ${etykieta.padEnd(14)} ${wartosc}`);
+  console.log(`Organizacja ${org.id} (${org.rodzaj === 'glowna' ? 'główna zespołu' : 'samoobsługowa'})\n`);
+  w('nazwa:', org.nazwa || '-');
+  w('właściciel:', org.wlasciciel || '-');
+  w('utworzona:', czas(org.utworzona));
+  w('marka:', opisPliku(dzierzawy.plikMarki(KONF.katalogMarki, org.id)));
+  w('baza wspólna:', opisPliku(dzierzawy.plikBazyWspolnej(KONF.katalogBazy, org.id)));
+  console.log(`\n  Konta (${czlonkowie.length}):`);
+  for (const k of czlonkowie) {
+    console.log(`    ${k.login.padEnd(20)} ${k.rola.padEnd(12)} ${String(k.rolaWOrganizacji).padEnd(11)} ${k.email || ''}`.trimEnd());
+  }
 }
 
 async function main() {
@@ -407,7 +626,18 @@ async function main() {
       return;
     }
 
-    // A1 dopisuje tu polecenia: pokaz, email, klucze, organizacja (13.3).
+    // A1: polecenia kont samoobslugowych (13.3).
+    case 'pokaz':
+      return pokazKonto(login);
+
+    case 'email':
+      return ustawEmail(login, arg);
+
+    case 'klucze':
+      return ustawKlucze(login, arg);
+
+    case 'organizacja':
+      return organizacjaKonta(login, arg, argumenty.slice(3));
 
     default:
       pomoc();
