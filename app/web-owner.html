@@ -3195,7 +3195,7 @@ body.karta-konta #gen-btn { display: none; }
 .zakup-karta-cena { font-size: var(--t-sm); color: var(--c-tekst-2); }
 .zakup p { margin: 0; }
 .zakup .ozn-wiersz { margin-top: 0; }
-.zakup .btn-generate.zakup-przycisk { width: 100%; justify-content: center; }
+.zakup .btn-generate.zakup-przycisk { width: 100%; flex: 1 1 100%; justify-content: center; }
 .zakup-przycisk:disabled { opacity: .55; cursor: not-allowed; }
 .zakup-przycisk.btn-working { cursor: progress; }
 .zakup-test { margin: 0 0 var(--s-12); border: 1px solid var(--c-linia); border-radius: var(--r-md); }
@@ -3244,6 +3244,17 @@ body.karta-konta #gen-btn { display: none; }
 .byok-podpowiedzi { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-6); margin: var(--s-8) 0; }
 #start-tresc input[type=text], #start-tresc textarea { width: 100%; box-sizing: border-box; }
 .platnosc-tresc { display: flex; gap: var(--s-8); align-items: flex-start; }
+/* .modal p (komponenty) wygrywal z .tekst-pomoc: drobny druk w kreatorze, Koncie i zakupie zostaje drobny */
+#start-tresc p.tekst-pomoc, .konto-tresc p.tekst-pomoc, .zakup p.tekst-pomoc, .zakup-stan p.tekst-pomoc { font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
+#start-tresc p.byok-wynik-ok, .konto-tresc p.byok-wynik-ok { color: var(--c-sukces); }
+#start-tresc p.byok-wynik-blad, .konto-tresc p.byok-wynik-blad, .zakup p.stan-blad { color: var(--c-blad); }
+/* Grafika i Audio bez klucza: karta podlaczenia (A8); w Grafice zamiast formularza */
+.modul-klucz { display: flex; flex-direction: column; gap: var(--s-4); margin: 0 0 var(--s-16); padding: var(--s-12); border: 1px solid var(--c-akcent-ramka); border-radius: var(--r-md); background: var(--c-akcent-tlo); }
+.modul-klucz .konto-karta-tytul { display: flex; gap: var(--s-6); align-items: flex-start; }
+.modul-klucz .konto-karta-tytul > .ikona { flex: none; margin-top: 2px; color: var(--c-akcent-mocny); }
+.modul-klucz p { margin: 0; }
+.modul-klucz p.tekst-pomoc { font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-2); }
+#img-panel.bez-klucza .modul-ustawienia > :not(.modul-klucz) { display: none; }
 /* konto jednoosobowe: jedna lista "Twoja baza wiedzy", bez wyboru prywatna/wspolna (UX8-23, A10) */
 body.konto-samoobslugowe #bazas-zakres { display: none; }
 }

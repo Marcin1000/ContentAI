@@ -3220,7 +3220,7 @@ body.karta-konta #gen-btn { display: none; }
 .zakup-karta-cena { font-size: var(--t-sm); color: var(--c-tekst-2); }
 .zakup p { margin: 0; }
 .zakup .ozn-wiersz { margin-top: 0; }
-.zakup .btn-generate.zakup-przycisk { width: 100%; justify-content: center; }
+.zakup .btn-generate.zakup-przycisk { width: 100%; flex: 1 1 100%; justify-content: center; }
 .zakup-przycisk:disabled { opacity: .55; cursor: not-allowed; }
 .zakup-przycisk.btn-working { cursor: progress; }
 .zakup-test { margin: 0 0 var(--s-12); border: 1px solid var(--c-linia); border-radius: var(--r-md); }
@@ -3269,6 +3269,17 @@ body.karta-konta #gen-btn { display: none; }
 .byok-podpowiedzi { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-6); margin: var(--s-8) 0; }
 #start-tresc input[type=text], #start-tresc textarea { width: 100%; box-sizing: border-box; }
 .platnosc-tresc { display: flex; gap: var(--s-8); align-items: flex-start; }
+/* .modal p (komponenty) wygrywal z .tekst-pomoc: drobny druk w kreatorze, Koncie i zakupie zostaje drobny */
+#start-tresc p.tekst-pomoc, .konto-tresc p.tekst-pomoc, .zakup p.tekst-pomoc, .zakup-stan p.tekst-pomoc { font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
+#start-tresc p.byok-wynik-ok, .konto-tresc p.byok-wynik-ok { color: var(--c-sukces); }
+#start-tresc p.byok-wynik-blad, .konto-tresc p.byok-wynik-blad, .zakup p.stan-blad { color: var(--c-blad); }
+/* Grafika i Audio bez klucza: karta podlaczenia (A8); w Grafice zamiast formularza */
+.modul-klucz { display: flex; flex-direction: column; gap: var(--s-4); margin: 0 0 var(--s-16); padding: var(--s-12); border: 1px solid var(--c-akcent-ramka); border-radius: var(--r-md); background: var(--c-akcent-tlo); }
+.modul-klucz .konto-karta-tytul { display: flex; gap: var(--s-6); align-items: flex-start; }
+.modul-klucz .konto-karta-tytul > .ikona { flex: none; margin-top: 2px; color: var(--c-akcent-mocny); }
+.modul-klucz p { margin: 0; }
+.modul-klucz p.tekst-pomoc { font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-2); }
+#img-panel.bez-klucza .modul-ustawienia > :not(.modul-klucz) { display: none; }
 /* konto jednoosobowe: jedna lista "Twoja baza wiedzy", bez wyboru prywatna/wspolna (UX8-23, A10) */
 body.konto-samoobslugowe #bazas-zakres { display: none; }
 }
@@ -5710,7 +5721,7 @@ var I18N = {
     'start-4-lista':'Gdzie szukać reszty: Baza wiedzy, Historia i Widoczność AI są w pasku na górze (na telefonie w dolnym pasku i w Koncie), a w menu konta ustawisz markę, głos marki i integrację z CMS. Nic z tego nie jest potrzebne do pierwszego artykułu.',
     'byok-1-tytul':'Podłącz swój klucz Anthropic','byok-1-opis':'Content AI pisze teksty modelem firmy Anthropic. Klucz API działa jak hasło do Twojego konta u Anthropic: płacisz dostawcy tylko za to, czego użyjesz, a nam za narzędzie.',
     'byok-koszt':'Ile to kosztuje? Artykuł około 800 słów z ocenami i kontrolą faktów to orientacyjnie 0,25-0,50 USD. Wyszukiwanie w sieci i samokorekta zwiększają koszt. Koszt każdego tekstu zobaczysz w Historii.',
-    'byok-jest':'Klucz Anthropic jest zapisany (kończy się na {KONCOWKA}). Możesz przejść dalej albo wkleić nowy.','byok-gdzie':'Klucz zapisuje się tylko w tej przeglądarce. Przy każdym zapytaniu aplikacja przesyła go do serwera Content AI, który przekazuje go dostawcy i niczego nie zapisuje. Opłaty za korzystanie z modeli ponosisz u dostawcy, na jego warunkach. Konto u dostawcy AI zakładasz na jego warunkach, które akceptujesz sam.',
+    'byok-jest':'Klucz Anthropic jest zapisany (kończy się na {KONCOWKA}). Możesz przejść dalej albo wkleić nowy.','byok-gdzie':'Klucz zapisuje się tylko w tej przeglądarce. Przy każdym zapytaniu aplikacja przesyła go do serwera Content AI, który przekazuje go dostawcy i niczego nie zapisuje. Opłaty za korzystanie z modeli ponosisz u dostawcy, na jego warunkach. Warunki dostawcy akceptujesz sam, zakładając u niego konto.',
     'byok-bezpieczenstwo':'Więcej o bezpieczeństwie','byok-nie-mam':'Nie masz klucza? Około 10 minut','byok-krok-1':'Załóż konto w konsoli Anthropic na platform.claude.com (to osobne konto, niezależne od czatu z Claude).',
     'byok-krok-2':'W Settings, potem Billing, kliknij „Buy credits” i doładuj konto, na przykład 10 USD.','byok-krok-3':'Zalecane: w Billing ustaw „Spend limits”, czyli miesięczny limit wydatków.',
     'byok-krok-4':'W Settings, potem API keys, kliknij „Create key”, nazwij klucz „Content AI” i skopiuj go. Konsola pokaże go tylko raz.','byok-krok-5':'Wróć tutaj, wklej klucz i kliknij „Sprawdź i zapisz”.',
@@ -5734,6 +5745,18 @@ var I18N = {
     'e1-tytul':'Podłącz klucz Anthropic, żeby pisać.','e1-odrzucony':'Anthropic odrzucił zapisany klucz. Podłącz go ponownie, żeby pisać.','e1-opis':'To zajmuje około 5 minut, pokażemy jak. Bez klucza AI nie napisze tekstu.',
     'e1-podlacz':'Podłącz klucz','e1-przyklad':'Zobacz przykład','a4-darmowe':'Wykorzystano {m} z {m} darmowych artykułów.','a4-okres':'Wykorzystano {m} z {m} artykułów w tym okresie. Licznik wraca {DATA}.',
     'a4-wybierz':'Wybierz pakiet, żeby pisać dalej','a4-bez-zakupu':'Zakup pakietu jest chwilowo niedostępny. Napisz do nas, jeśli potrzebujesz więcej artykułów.',
+    'a8-grafika-tytul':'Grafiki tworzy OpenAI. Podłącz klucz API OpenAI.',
+    'a8-grafika-opis':'Koszt każdej grafiki rozlicza Twoje konto OpenAI: od około jednego do kilkudziesięciu centów, zależnie od jakości i formatu. Przed pierwszą grafiką OpenAI może poprosić o weryfikację organizacji.',
+    'a8-jak':'Jak zdobyć klucz {DOSTAWCA}',
+    'a8-krok-1':'Załóż konto na platform.openai.com.',
+    'a8-krok-2':'W części Billing dodaj środki; w Limits ustawisz limit wydatków.',
+    'a8-krok-3':'W API keys kliknij „Create new secret key” i skopiuj klucz (zaczyna się od „sk-”).',
+    'a8-krok-4':'Wklej go tutaj i kliknij „Sprawdź i zapisz”.',
+    'a8-audio-tytul':'Lektor korzysta z {DOSTAWCA}. Podłącz klucz albo wybierz głos przeglądarki.',
+    'a8-audio-opis':'Skrypt napiszesz bez tego klucza. Do nagrania potrzebny jest klucz {DOSTAWCA} (koszt rozlicza Twoje konto u dostawcy) albo darmowy głos przeglądarki.',
+    'a8-transkrypcja-tytul':'Transkrypcję robi OpenAI. Podłącz klucz API OpenAI.',
+    'a8-transkrypcja-opis':'Koszt transkrypcji rozlicza Twoje konto OpenAI, orientacyjnie 0,006 USD za minutę nagrania.',
+    'a8-glos-przegladarki':'Użyj głosu przeglądarki (bez klucza)',
 //@@ENDIF
     'history-select':'Wybierz artykuł z listy',
     // ── Tooltips ──
@@ -6559,7 +6582,7 @@ var I18N = {
     'start-4-lista':'Where to find the rest: the knowledge base, History and AI visibility are in the top bar (on a phone in the bottom bar and under Account), and the account menu holds your brand, brand voice and CMS integration. None of it is needed for a first article.',
     'byok-1-tytul':'Connect your Anthropic key','byok-1-opis':'Content AI writes with Anthropic\'s model. An API key works like a password to your Anthropic account: you pay the provider only for what you use, and us for the tool.',
     'byok-koszt':'What does it cost? An article of about 800 words with scores and a fact check costs roughly $0.25-0.50. Web search and self-review increase the cost. You will see the cost of each text in History.',
-    'byok-jest':'Your Anthropic key is saved (it ends in {KONCOWKA}). You can continue or paste a new one.','byok-gdzie':'Your key is stored only in this browser. With each request the app sends it to the Content AI server, which passes it to the provider and stores nothing. You pay the provider for model usage, under the provider\'s terms. You open your account with the AI provider under its own terms, which you accept yourself.',
+    'byok-jest':'Your Anthropic key is saved (it ends in {KONCOWKA}). You can continue or paste a new one.','byok-gdzie':'Your key is stored only in this browser. With each request the app sends it to the Content AI server, which passes it to the provider and stores nothing. You pay the provider for model usage, under the provider\'s terms. You accept the provider\'s terms yourself when you open an account with them.',
     'byok-bezpieczenstwo':'More about security','byok-nie-mam':'No key yet? About 10 minutes','byok-krok-1':'Create an account in the Anthropic console at platform.claude.com (a separate account, independent of the Claude chat).',
     'byok-krok-2':'In Settings, then Billing, click “Buy credits” and add credit, for example $10.','byok-krok-3':'Recommended: in Billing, set “Spend limits”, a monthly cap on spending.',
     'byok-krok-4':'In Settings, then API keys, click “Create key”, name it “Content AI” and copy it. The console shows it only once.','byok-krok-5':'Come back here, paste the key and click “Check and save”.',
@@ -6583,6 +6606,18 @@ var I18N = {
     'e1-tytul':'Connect your Anthropic key to start writing.','e1-odrzucony':'Anthropic rejected the saved key. Connect it again to keep writing.','e1-opis':'It takes about 5 minutes, we will show you how. Without a key the AI cannot write a text.',
     'e1-podlacz':'Connect key','e1-przyklad':'See a sample','a4-darmowe':'You have used {m} of {m} free articles.','a4-okres':'You have used {m} of {m} articles in this period. The counter resets on {DATA}.',
     'a4-wybierz':'Choose a plan to keep writing','a4-bez-zakupu':'Buying a plan is not available right now. Write to us if you need more articles.',
+    'a8-grafika-tytul':'Images are created by OpenAI. Connect your OpenAI API key.',
+    'a8-grafika-opis':'Each image is billed to your OpenAI account: from about one to several tens of cents, depending on quality and format. Before the first image OpenAI may ask you to verify your organization.',
+    'a8-jak':'How to get a {DOSTAWCA} key',
+    'a8-krok-1':'Create an account at platform.openai.com.',
+    'a8-krok-2':'Add credit under Billing; you can set a spend limit under Limits.',
+    'a8-krok-3':'Under API keys, click “Create new secret key” and copy the key (it starts with “sk-”).',
+    'a8-krok-4':'Paste it here and click “Check and save”.',
+    'a8-audio-tytul':'Voice-over uses {DOSTAWCA}. Connect a key or choose the browser voice.',
+    'a8-audio-opis':'You can write the script without this key. The recording needs a {DOSTAWCA} key (billed to your provider account) or the free browser voice.',
+    'a8-transkrypcja-tytul':'Transcription is done by OpenAI. Connect your OpenAI API key.',
+    'a8-transkrypcja-opis':'Transcription is billed to your OpenAI account, roughly $0.006 per minute of recording.',
+    'a8-glos-przegladarki':'Use the browser voice (no key)',
 //@@ENDIF
     'history-select':'Select an article from the list',
     // ── Tooltips ──
@@ -20878,10 +20913,14 @@ async function kbAudioTranscribeAndOpen(file) {
     el('pakiet-alarm').style.display = 'none';
     el('pakiet-modal').style.display = 'flex';
     rysujTresc();
-    odswiez();
-    // R9-D (UX8-20): "Wybierz pakiet" prowadzi od razu do kart pakietow (klik 1 z 2).
-    var zakup = el('zakup');
-    if (cel === 'zakup' && zakup) setTimeout(function(){ try { zakup.scrollIntoView({ block: 'nearest' }); var k = zakup.querySelector('.zakup-karta[aria-checked="true"]'); if (k) k.focus(); } catch(e){} }, 60);
+    var swiezy = odswiez();
+    // R9-D (UX8-20): "Wybierz pakiet" prowadzi od razu do kart pakietow (klik 1 z 2). Swiezy stan
+    // przerysowuje okno, wiec sekcje szukamy po kazdym rysowaniu.
+    if (cel === 'zakup') {
+      var przewin = function(){ var z = el('zakup'); if (!z) return; try { z.scrollIntoView({ block: 'start' }); var k = z.querySelector('.zakup-karta[aria-checked="true"]'); if (k) k.focus({ preventScroll: true }); } catch(e){} };
+      setTimeout(przewin, 60);
+      if (swiezy && swiezy.then) swiezy.then(function(){ setTimeout(przewin, 0); });
+    }
   };
 
   window.zamknijPakiet = function(){ el('pakiet-modal').style.display = 'none'; };
@@ -21598,8 +21637,10 @@ async function kbAudioTranscribeAndOpen(file) {
       if (w.ok) {
         if (pole) { pole.value = ''; pole.type = 'password'; }
         // Konto przerysowuje sie po zapisie (nowy stan klucza): wynik trafia do wiersza tego dostawcy.
-        var cel2 = (prefiks === 'konto' && el('konto-stan-' + d)) || el(prefiks + '-wynik-' + d) || cel;
-        wynikPola(cel2, 'ok', tekst(w.lokalnie ? 'byok-ok-lokalnie' : (w.zapamietany ? 'byok-ok' : 'byok-ok-sesja'), ''));
+        var cel2 = (prefiks === 'konto' && el('konto-stan-' + d)) || el(prefiks + '-wynik-' + d);
+        var tekstOk = tekst(w.lokalnie ? 'byok-ok-lokalnie' : (w.zapamietany ? 'byok-ok' : 'byok-ok-sesja'), '');
+        // Karta Grafiki i Audio znika po zapisie (formularz wraca): wynik jako powiadomienie.
+        if (cel2) wynikPola(cel2, 'ok', tekstOk); else pokazPowiadomienie(NAZWA[d] + ': ' + tekstOk, 'ok');
         try { document.dispatchEvent(new CustomEvent('cai-klucz-zapisany', { detail: { dostawca: d, prefiks: prefiks } })); } catch(e){}
       } else {
         wynikPola(cel, 'blad', tekstPowodu(d, w));
@@ -21810,7 +21851,8 @@ async function kbAudioTranscribeAndOpen(file) {
         + esc(tekst('zakup-zgoda-1b', '')) + '<a class="link-akcent" href="' + esc(adresDokumentu('odstapienie')) + '" target="_blank" rel="noopener">' + esc(tekst('zakup-pouczenie', '')) + '</a>' + esc(tekst('zakup-zgoda-1c', '')) + '</span></label>'
         + (pl.wymagaZgodyNaWykonanie !== false ? '<label class="ozn-wiersz" for="zakup-zgoda-wykonanie"><input type="checkbox" id="zakup-zgoda-wykonanie" onchange="odswiezPrzyciskZakupu()"><span>'
             + esc(tekst(pl.zwrot === 'pelny' ? 'zakup-zgoda-2-pelny' : 'zakup-zgoda-2', '')) + '</span></label>' : '')
-        + '<button type="button" class="btn-generate zakup-przycisk" id="zakup-przycisk" disabled onclick="przejdzDoPlatnosci()">' + esc(tekst('zakup-przejdz', '').replace('{CENA}', cena)) + '</button>'
+        // Przycisk we wlasnym wierszu: .modal div:has(> .btn-generate) uklada dzieci w rzad (R6, przyciski okien).
+        + '<div class="zakup-akcje"><button type="button" class="btn-generate zakup-przycisk" id="zakup-przycisk" disabled onclick="przejdzDoPlatnosci()">' + esc(tekst('zakup-przejdz', '').replace('{CENA}', cena)) + '</button></div>'
         + '<p class="tekst-pomoc stan-blad" id="zakup-blad" role="alert" hidden></p>'
         + '<p class="tekst-pomoc">' + esc(tekst('zakup-stopka', '').replace('{EMAIL}', emailRachunku())) + '</p>'
         + '</div>';
@@ -22002,6 +22044,57 @@ async function kbAudioTranscribeAndOpen(file) {
       return w.o.ok;
     }).catch(function(){ return false; });
   };
+
+  // ── Grafika i Audio bez klucza OpenAI/ElevenLabs: karta podlaczenia zamiast bledu (UX8-25, makieta A8, E9) ──
+  function kartaKlucza(id, d, tytul, opis, kroki, dodatki){
+    return '<div class="modul-klucz" id="' + id + '" role="region" aria-labelledby="' + id + '-t">'
+      + '<p class="konto-karta-tytul" id="' + id + '-t">' + ikona('key-round') + '<span>' + esc(tytul) + '</span></p>'
+      + '<p class="tekst-pomoc">' + esc(opis) + '</p>'
+      + window.htmlPolaKlucza(id, d) + window.htmlZapamietaj(id)
+      + (kroki ? '<details class="rozwijka"><summary>' + ikona('chevron-down') + esc(tekst('a8-jak', '').replace('{DOSTAWCA}', NAZWA[d])) + '</summary><ol class="byok-kroki">'
+          + kroki.map(function(k){ return '<li>' + esc(tekst(k, '')) + '</li>'; }).join('') + '</ol></details>' : '')
+      + (dodatki || '') + '</div>';
+  }
+  function wstawKarte(panel, id, html){
+    var ust = panel && panel.querySelector('.modul-ustawienia');
+    var stara = el(id);
+    if (!html) { if (stara) stara.remove(); return; }
+    if (stara && stara.getAttribute('data-html') === html) return;
+    var nowa = document.createElement('div');
+    nowa.innerHTML = html;
+    nowa = nowa.firstChild;
+    nowa.setAttribute('data-html', html);
+    if (stara) stara.replaceWith(nowa); else if (ust) ust.insertBefore(nowa, ust.firstChild);
+  }
+  var KROKI_OPENAI = ['a8-krok-1', 'a8-krok-2', 'a8-krok-3', 'a8-krok-4'];
+  window.rysujKartyKluczyModulow = function(){
+    var img = el('img-panel'), au = el('audio-panel');
+    var bezOpenai = window.kontoBezKlucza('openai');
+    if (img) {
+      img.classList.toggle('bez-klucza', bezOpenai);
+      wstawKarte(img, 'img-klucz', bezOpenai ? kartaKlucza('img-klucz', 'openai', tekst('a8-grafika-tytul', ''), tekst('a8-grafika-opis', ''), KROKI_OPENAI) : '');
+    }
+    if (au) {
+      var typ = typeof audioType === 'function' ? audioType() : '', eng = typeof audioEng === 'function' ? audioEng() : 'web';
+      var d = typ === 'transcription' ? 'openai' : (eng === 'openai' ? 'openai' : eng === 'eleven' ? 'eleven' : '');
+      var brak = !!d && window.kontoBezKlucza(d);
+      var dodatki = d && typ !== 'transcription' ? '<div class="konto-akcje"><button type="button" class="btn-secondary" onclick="uzyjGlosuPrzegladarki()">' + esc(tekst('a8-glos-przegladarki', '')) + '</button></div>' : '';
+      wstawKarte(au, 'au-klucz', brak ? kartaKlucza('au-klucz', d, tekst(typ === 'transcription' ? 'a8-transkrypcja-tytul' : 'a8-audio-tytul', '').replace('{DOSTAWCA}', NAZWA[d]),
+        tekst(typ === 'transcription' ? 'a8-transkrypcja-opis' : 'a8-audio-opis', '').replace(/\{DOSTAWCA\}/g, NAZWA[d]), d === 'openai' ? KROKI_OPENAI : null, dodatki) : '');
+    }
+  };
+  window.uzyjGlosuPrzegladarki = function(){
+    var s = el('au-engine'); if (!s) return;
+    s.value = 'web';
+    if (typeof audioEngineChange === 'function') audioEngineChange();
+    window.rysujKartyKluczyModulow();
+  };
+  // Karta zalezy od rodzaju audio i silnika: przerysowanie po kazdej ich zmianie i po otwarciu modulu.
+  ['openImgPanelSmart', 'openAudioPanel', 'audioEngineChange', 'audioSetType'].forEach(function(n){
+    var f = window[n];
+    if (typeof f !== 'function') return;
+    window[n] = function(){ var w = f.apply(this, arguments); try { window.rysujKartyKluczyModulow(); } catch(e){} return w; };
+  });
 
   function rysujWszystko(){
     rysujPaski();
