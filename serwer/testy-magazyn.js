@@ -70,14 +70,14 @@ async function testyMagazynu(sprawdz) {
   try {
     console.log('\n  magazyn - schemat i plik bazy (node:sqlite)');
     const stan = magazyn.otworz({ plik });
-    sprawdz('magazyn: otwarcie zaklada katalog, plik i schemat w wersji 1', stan.otwarty && stan.wersjaSchematu === 1 && fs.existsSync(plik));
+    sprawdz('magazyn: otwarcie zaklada katalog, plik i schemat w najnowszej wersji (1 + migracje)', stan.otwarty && stan.wersjaSchematu === magazyn.WERSJA_NAJNOWSZA && fs.existsSync(plik));
     sprawdz('magazyn: plik bazy tylko dla konta uslugi (0600)', (fs.statSync(plik).mode & 0o777) === 0o600);
     magazyn.utworzKonto({ login: 'zespol', hash: 'aa', sol: 'b', rola: 'admin' });
     sprawdz('magazyn: tryb WAL - plik -wal obok bazy, tez 0600', fs.existsSync(`${plik}-wal`) && (fs.statSync(`${plik}-wal`).mode & 0o777) === 0o600);
     sprawdz('magazyn: organizacja glowna istnieje od poczatku', (magazyn.organizacja('glowna') || {}).rodzaj === 'glowna');
     magazyn.zamknij();
     magazyn.otworz({ plik });
-    sprawdz('magazyn: ponowne otwarcie zachowuje dane i wersje schematu', magazyn.konto('zespol') !== null && magazyn.stan().wersjaSchematu === 1);
+    sprawdz('magazyn: ponowne otwarcie zachowuje dane i wersje schematu', magazyn.konto('zespol') !== null && magazyn.stan().wersjaSchematu === magazyn.WERSJA_NAJNOWSZA);
 
     console.log('\n  magazyn - konta i organizacje');
     const k = magazyn.konto('zespol');
@@ -598,7 +598,7 @@ function testyCli(sprawdz) {
     sprawdz('CLI: eksport-json zapisuje pliki R8, drugi raz odmawia', eksport.status === 0 && fs.existsSync(r8.plikKont) && /Zapisano 3 kont/.test(eksport.stdout)
       && eksport2.status === 1);
     const platnosci = cli('platnosci-sprawdz');
-    sprawdz('CLI: polecenia platnosci przekazane do platnosci-cli.js (zaslepka: kod 1)', platnosci.status === 1 && /zaślepka/.test(platnosci.stderr));
+    sprawdz('CLI: polecenia platnosci przekazane do platnosci-cli.js (bez PLATNOSCI: kod 1 z nazwa zmiennej)', platnosci.status === 1 && /brak PLATNOSCI/.test(platnosci.stderr));
     // Kontrola wlasciciela katalogu danych: root -> katalog innego konta; inne konto -> katalog roota.
     let obcy;
     if (typeof process.geteuid === 'function' && process.geteuid() === 0) {
@@ -805,7 +805,8 @@ function testyPlikowWdrozenia(sprawdz) {
 async function testyAtrap(sprawdz) {
   console.log('\n  atrapy stripe.js i poczta.js (ksztalt modulu, zaslepki)');
   const nasluch = (s) => new Promise((ok) => { if (s.listening) ok(); else s.once('listening', ok); });
-  for (const [nazwa, plik, sciezka] of [['stripe', 'stripe.js', '/v1/customers'], ['poczta', 'poczta.js', '/emails']]) {
+  // stripe.js: pelna atrapa wykonawcy B, testy ksztaltu i API w testy-platnosci.js
+  for (const [nazwa, plik, sciezka] of [['poczta', 'poczta.js', '/emails']]) {
     const atrapa = require(path.join(__dirname, '..', 'narzedzia', 'atrapa', plik));
     const serwer = atrapa.uruchom(0, { sekret: 'whsec_test', webhook: 'http://127.0.0.1:9/platnosci/webhook/stripe' });
     try {
