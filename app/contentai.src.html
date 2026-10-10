@@ -7194,7 +7194,7 @@ const BRAND = {
   services:    'Pierwsza usluga\nDruga usluga\nTrzecia usluga', // jedna na linie
   lines:       '',                                  // rozroznienie linii produktowych (puste = brak guardraila)
   parentOrganization: '',                           // grupa kapitalowa (opcjonalnie)
-  defaultAuthor: 'Redakcja',                        // autor domyslny w schema Article
+  defaultAuthor: '',                                // autor w schema Article (R9-D, PR8-20: pusty = wydawca, nie zmyslona "Redakcja")
   // ── Dane do schema.org (opcjonalne, zostaw puste jesli brak) ──
   taxID: '', vatID: '', foundingDate: '', numberOfEmployees: '',
   streetAddress: '', postalCode: '', addressLocality: '', addressCountry: 'PL',
@@ -11549,6 +11549,9 @@ async function pobierzGrafikeZOznaczeniem(blob, nazwa) {
   if (napis) {
     try { plik = await grafikaZEtykieta(blob, tekstEtykietyAI('grafika', kodJezykaArtykulu())); }
     catch (er) { console.warn('[grafika] bez napisu AI:', er && er.message); powiadomBlad(_t('ozn-grafika-blad')); return; }
+  } else {
+    // Grafiki z modulu maja juz XMP (imgResizeB64); inne PNG dostaja je tutaj, plik z C2PA dostawcy zostaje.
+    try { plik = await oznaczBlobPng(blob); } catch (er) { plik = blob; }
   }
   pobierzPlik(plik, nazwa);
 }
