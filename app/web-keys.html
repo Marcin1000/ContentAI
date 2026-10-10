@@ -3152,6 +3152,11 @@ label.ozn-wiersz small { font-size: var(--t-xs); line-height: 1.45; color: var(-
 .ai-info { display: flex; align-items: flex-start; gap: var(--s-6); margin: var(--s-8) 0 0; }
 .ai-info > .ikona { flex: none; margin-top: 2px; color: var(--c-tekst-3); }
 #ai-info-artykul { max-width: calc(var(--tresc-max) + 2 * var(--s-56, 56px) + 2px); margin: var(--s-12) auto 0; padding: 0 var(--s-4); box-sizing: border-box; }
+/* telefon i tablet: informacja o AI jest ostatnim wierszem tresci, wiec to ona (nie artykul) ma odstep od paskow na dole */
+body.is-mobile:has(#ai-info-artykul:not([hidden])) .article { padding-bottom: var(--s-16); }
+body.is-mobile #ai-info-artykul { max-width: none; margin: 0; padding: 0 var(--s-16) calc(112px + env(safe-area-inset-bottom, 0px) + var(--s-24)); }
+/* pole dotyku przelacznikow etykiet na telefonie (44 px) */
+body.is-mobile label.ozn-wiersz { min-height: var(--h-dotyk); }
 .au-ozn { margin-top: var(--s-12); }
 .au-ozn .ai-info { margin-top: 0; }
 #audio-bar-ai { flex: 1; min-width: 0; padding: 0 var(--s-8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }

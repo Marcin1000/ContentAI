@@ -1856,6 +1856,9 @@ async function wariantSamoobsluga(b) {
     const z = r.request();
     zapytania.klucze.push(z.method() + ' ' + z.url().replace(BAZA, '') + ' ' + (z.postData() || ''));
     if (st.kluczeBlad && z.method() === 'GET') return r.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'blad testowy' }) });
+    if (z.method() === 'POST' && /\/api\/klucze\/sprawdz$/.test(z.url())) {
+      return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, dostawca: JSON.parse(z.postData() || '{}').dostawca }) });
+    }
     if (z.method() === 'POST' && /\/api\/klucze$/.test(z.url())) {
       const d = JSON.parse(z.postData() || '{}');
       if (/zly/.test(d.klucz || '')) return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: false, zapisano: false, dostawca: d.dostawca, powod: 'zly-klucz' }) });
@@ -2119,6 +2122,18 @@ async function wariantSamoobsluga(b) {
   });
   wynik('R9-D: nieczytelne ciasteczko klucza (C: niewazny bez klucza) - karta "nie dziala juz na tym urzadzeniu", nie "odrzucil"',
     /nie działa już na tym urządzeniu/.test(niewazny) && !/odrzucił/.test(niewazny), niewazny);
+  // Odrzucenie klucza u dostawcy (zly-klucz) zna tylko ta karta: zostaje po odswiezeniu stanu z serwera (ta sama
+  // koncowka klucza), a znika po udanym "Sprawdz" (klucz znow dziala u dostawcy).
+  const odrzucenie = await s.evaluate(async () => {
+    window.STAN_KLUCZY.anthropic.niewazny = true;
+    await window.odswiezKluczeKonta();
+    const poOdczycie = { bez: window.kontoBezKlucza('anthropic'), karta: document.getElementById('konto-karta').textContent };
+    window.sprawdzKluczKonta('anthropic');
+    await new Promise((ok) => setTimeout(ok, 600));
+    return Object.assign(poOdczycie, { poSprawdzeniu: window.kontoBezKlucza('anthropic'), kartaUkryta: document.getElementById('konto-karta').hidden });
+  });
+  wynik('R9-D: klucz odrzucony u dostawcy zostaje odrzucony po odswiezeniu stanu (ta sama koncowka), udane "Sprawdz" zdejmuje znacznik',
+    odrzucenie.bez && /odrzucił/.test(odrzucenie.karta) && !odrzucenie.poSprawdzeniu && odrzucenie.kartaUkryta, JSON.stringify(odrzucenie));
   // 7a. Powrot ze Stripe z krajem spoza listy (D-04, kontrakt B): komunikat z krajem z platnosci.odrzucenie, bez czekania na pakiet.
   st.odrzucenie = { powod: 'kraj', kraj: 'US', czas: Date.now() };
   await s.goto(BAZA + '/?platnosc=kraj', { waitUntil: 'load' });

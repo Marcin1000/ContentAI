@@ -3177,6 +3177,11 @@ label.ozn-wiersz small { font-size: var(--t-xs); line-height: 1.45; color: var(-
 .ai-info { display: flex; align-items: flex-start; gap: var(--s-6); margin: var(--s-8) 0 0; }
 .ai-info > .ikona { flex: none; margin-top: 2px; color: var(--c-tekst-3); }
 #ai-info-artykul { max-width: calc(var(--tresc-max) + 2 * var(--s-56, 56px) + 2px); margin: var(--s-12) auto 0; padding: 0 var(--s-4); box-sizing: border-box; }
+/* telefon i tablet: informacja o AI jest ostatnim wierszem tresci, wiec to ona (nie artykul) ma odstep od paskow na dole */
+body.is-mobile:has(#ai-info-artykul:not([hidden])) .article { padding-bottom: var(--s-16); }
+body.is-mobile #ai-info-artykul { max-width: none; margin: 0; padding: 0 var(--s-16) calc(112px + env(safe-area-inset-bottom, 0px) + var(--s-24)); }
+/* pole dotyku przelacznikow etykiet na telefonie (44 px) */
+body.is-mobile label.ozn-wiersz { min-height: var(--h-dotyk); }
 .au-ozn { margin-top: var(--s-12); }
 .au-ozn .ai-info { margin-top: 0; }
 #audio-bar-ai { flex: 1; min-width: 0; padding: 0 var(--s-8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
@@ -21566,6 +21571,16 @@ async function kbAudioTranscribeAndOpen(file) {
     });
     return w;
   }
+  // Odrzucenie klucza u dostawcy (zly-klucz) zna tylko ta karta, serwer go nie zapisuje: znacznik zostaje po odczycie
+  // stanu z serwera, dopoki klucz tego dostawcy (koncowka) sie nie zmieni.
+  function zOdrzuceniami(d){
+    var stary = window.STAN_KLUCZY;
+    DOSTAWCY.forEach(function(x){
+      var a = stary && stary[x], b = d && d[x];
+      if (a && a.niewazny && a.ustawiony && b && b.ustawiony && !b.niewazny && b.koncowka === a.koncowka) b.niewazny = true;
+    });
+    return d;
+  }
   function odswiezKlucze(){
     if (!wlasne()) { window.STAN_KLUCZY = stanKluczyLokalny(); return Promise.resolve(window.STAN_KLUCZY); }
     return fetch('/api/klucze', { cache: 'no-store' }).then(function(o){
@@ -21573,7 +21588,7 @@ async function kbAudioTranscribeAndOpen(file) {
       return o.json();
     }).then(function(d){
       if (!d || typeof d !== 'object' || !d.anthropic) throw new Error('zly stan');
-      window.STAN_KLUCZY = d;
+      window.STAN_KLUCZY = zOdrzuceniami(d);
       return przeniesKluczeZMagazynu().then(function(){ return window.STAN_KLUCZY; });
     }).catch(function(){
       // Bez odczytu stanu nie zgadujemy: bez karty "Podlacz klucz" i bez odmowy w przegladarce; brak klucza
@@ -21592,6 +21607,7 @@ async function kbAudioTranscribeAndOpen(file) {
   };
   window.ustawStanKluczy = function(d){
     if (!wlasne() || !d || typeof d !== 'object' || !d.anthropic) return;
+    d = zOdrzuceniami(d);
     // Ten sam stan (zapis z kreatora juz go ustawil): bez przerysowania, zeby nie zgubic komunikatu przy polu.
     try { if (JSON.stringify(d) === JSON.stringify(window.STAN_KLUCZY)) return; } catch(e){}
     window.STAN_KLUCZY = d;
@@ -21647,6 +21663,8 @@ async function kbAudioTranscribeAndOpen(file) {
   }
   function sprawdzKlucz(d){
     return postJson('/api/klucze/sprawdz', { dostawca: d }).then(function(w){
+      // Klucz dziala u dostawcy: znacznik odrzucenia z tej karty znika (karta "Podlacz klucz" tez).
+      if (w.o.ok && w.d.ok) { var k = window.STAN_KLUCZY && window.STAN_KLUCZY[d]; if (k && k.niewazny && k.ustawiony) { delete k.niewazny; poZmianieKluczy(); } }
       if (w.o.ok) return w.d.ok ? { ok: true } : { ok: false, powod: w.d.powod || 'zly-klucz' };
       if (w.o.status === 429) return { ok: false, powod: 'za-duzo-prob', ponowZa: w.d.ponowZa };
       return { ok: false, powod: 'niedostepne' };
@@ -22076,7 +22094,8 @@ async function kbAudioTranscribeAndOpen(file) {
   window.sprawdzKluczKonta = function(d){
     var cel = el('konto-stan-' + d);
     wynikPola(cel, 'trwa', tekst('byok-sprawdzam', '').replace('{DOSTAWCA}', NAZWA[d]));
-    sprawdzKlucz(d).then(function(w){ wynikPola(cel, w.ok ? 'ok' : 'blad', w.ok ? tekst('konto-klucz-dziala', '') : tekstPowodu(d, w)); });
+    // Konto moglo sie przerysowac w trakcie (nowy stan klucza): wynik do aktualnego wiersza.
+    sprawdzKlucz(d).then(function(w){ wynikPola(el('konto-stan-' + d) || cel, w.ok ? 'ok' : 'blad', w.ok ? tekst('konto-klucz-dziala', '') : tekstPowodu(d, w)); });
   };
   window.pokazZmianeKlucza = function(d, przycisk){
     var z = el('konto-zmiana-' + d); if (!z) return;
