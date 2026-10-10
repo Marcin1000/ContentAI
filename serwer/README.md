@@ -1036,10 +1036,97 @@ organizacji: `serwer/dzierzawy.js` (`operator`, `mozeZarzadzac`, `zrodloSerp`, `
 
 ## Konta samoobsługowe
 
-Wykonawca A1 (`serwer/konta.js`, `serwer/ekrany-kont.js`): rejestracja, potwierdzenie
-e-maila, reset hasła, ekran konta, zgody, eksport danych i usunięcie konta.
-Etap 0: kontrakt tras i zaślepki (trasy z sesją odpowiadają 501, publiczne przy
-`CAI_REJESTRACJA=0` działają jak dziś).
+`serwer/konta.js` (trasy i reguły) i `serwer/ekrany-kont.js` (ekrany): rejestracja,
+potwierdzenie e-maila, logowanie e-mailem, reset hasła, ekran konta, zgody, eksport
+danych i usunięcie konta. SQL tylko w `magazyn.js`, e-maile przez `poczta.wyslij` (C),
+anulowanie subskrypcji przez `platnosci.anulujDlaKonta` (B). Ekrany to czysty HTML bez
+skryptów, pod tą samą CSP co logowanie, z `Cache-Control: no-store`, po polsku i angielsku
+(`?lang=`), w jasnym i ciemnym motywie.
+
+**Bez nowych zmiennych konta zespołu działają jak dziś**: ekran logowania ma "Poproś
+o dostęp" i zdanie o administratorze, `/rejestracja` pokazuje logowanie, a nowe są tylko
+etykieta "E-mail lub login" i odnośnik "Nie pamiętasz hasła?" (bez `CAI_ADRES_PUBLICZNY`
+prowadzi do informacji, że hasło konta zespołu zmienia administrator). Konto zespołu
+(organizacja `glowna`) zachowuje login, klucze serwera i pakiet; z adresem e-mail
+(`uzytkownicy.js email`) loguje się nim albo loginem. Rejestrację otwiera
+`CAI_REJESTRACJA=1` (z pełną konfiguracją, inaczej funkcja zostaje wyłączona z wpisem
+w dzienniku). Reset hasła i odnośniki w e-mailach działają, gdy jest poprawny
+`CAI_ADRES_PUBLICZNY`, także przy zamkniętej rejestracji, więc jej zamknięcie nie odcina
+istniejących klientów.
+
+### Przepływy
+
+| Trasa | Co robi |
+|---|---|
+| `GET/POST /rejestracja` | e-mail, hasło (10-256 znaków, nie z listy najczęstszych, inne niż e-mail), zgody: regulamin i ukończone 18 lat (osobne, niezaznaczone pola) oraz informacja o administratorze danych z odnośnikiem do polityki. Konto `k-...` i organizacja `o-...` w jednej transakcji, zgody z wersją (`CAI_REGULAMIN_WERSJA`, `CAI_POLITYKA_WERSJA`) i czasem, klucze `wlasne`, plan `CAI_PLAN_NOWYCH`. Sesja od razu, `303` do aplikacji albo, przy `?pakiet=` i włączonych płatnościach, do zakupu (`/konto/zakup?plan=...`). Zajęty adres: komunikat przy polu (logowanie od razu po rejestracji i tak zdradza, czy adres był wolny) |
+| `GET /potwierdz?t=`, `POST /potwierdz` | GET tylko pokazuje przycisk (skanery poczty otwierają linki), POST potwierdza. Link 48 h (`CAI_EMAIL_POTWIERDZENIE_GODZIN`), jednorazowy, nowy unieważnia poprzedni. Ten sam ekran potwierdza zmianę adresu (link 24 h na nowy adres) |
+| `/auth/login` | pole "E-mail lub login" (znak `@` = e-mail). Do limitu prób per IP dochodzi limit per konto: 20 nieudanych prób w godzinę blokuje logowanie hasłem na 15 minut; komunikat proponuje reset, a reset działa mimo blokady. Przy otwartej rejestracji "Załóż konto" zamiast "Poproś o dostęp". Język: polski, gdy polski stoi w `Accept-Language` najwyżej, inaczej angielski (jak aplikacja); bez nagłówka polski |
+| `GET/POST /haslo` | ta sama odpowiedź dla istniejącego i nieistniejącego adresu; list idzie po wysłaniu odpowiedzi (stały czas). Operator serwera bez resetu e-mailem (`CAI_RESET_ADMIN=0`), w trybie bramy reset wyłączony |
+| `GET/POST /haslo/nowe?t=` | GET nie zużywa tokenu (60 min, `CAI_RESET_MINUT`); POST ustawia hasło, `sesje_od` (wylogowanie wszędzie), potwierdza e-mail, zdejmuje blokadę prób, kasuje ciasteczka kluczy, loguje i wysyła "hasło zmienione" |
+| `GET /konto` | adres (stan, ponowne wysłanie linku, zmiana po podaniu hasła: link na nowy adres, informacja na stary), hasło (zmiana wylogowuje inne urządzenia i usuwa zapamiętane klucze), pakiet i zużycie (sekcja płatności od B, jeśli jest), "Wyloguj na wszystkich urządzeniach", eksport, regulamin i prywatność, usunięcie |
+| `GET /konto/eksport` | JSON do pobrania: konto (bez `hash` i `sol`), organizacja, zgody, zużycie, płatności, baza wiedzy (tekst bez wektorów), marka organizacji. Historia artykułów jest tylko w przeglądarce (eksport w aplikacji) |
+| `GET/POST /konto/usun` | hasło i "rozumiem". Najpierw anulowanie subskrypcji przez B: błąd = `503`, konto zostaje (klient nie płaci za usunięte konto). Potem konto i organizacja w jednej transakcji, wpis `konta_usuniete` ze skrótem e-maila (bez adresu), pliki konta i organizacji (z kopiami `.uszkodzony-*` i `.tmp-*`); odpowiedź z `Clear-Site-Data: "cache", "cookies", "storage"`, ciasteczkami kasującymi sesję i klucze, list "konto usunięte". Konta zespołu: nie (administrator, `uzytkownicy.js usun`), chyba że `CAI_USUWANIE_STARYCH=1` |
+| `GET/POST /konto/zgody` | akceptacja nowej wersji regulaminu (gdy `CAI_REGULAMIN_WERSJA` różni się od zaakceptowanej) |
+| `/do-widzenia` | publiczny ekran po usunięciu |
+
+Do potwierdzenia adresu konto na własnym kluczu pisze normalnie, ale zasoby opłacane przez
+serwer czekają: `POST /api/strona` i `POST /api/odnosniki` (akcja `strony`) odpowiadają
+`403 email-niepotwierdzony`; SERP i wektory sprawdza C przez `konta.wymagaPotwierdzenia(konto)`.
+Konta niepotwierdzone, bez płatności i bez logowania od `CAI_NIEPOTWIERDZONE_DNI` (30) znikają
+przy sprzątaniu dobowym. Przy `CAI_WYMUS_AKCEPTACJE=1` nowa wersja regulaminu blokuje
+zapisujące trasy `/api/*` kodem `403 zgoda-wymagana` (poza `/api/konto*` i przerwaniem zadania)
+do akceptacji; konta zespołu tylko przy `CAI_ZGODY_DLA_STARYCH=1`.
+
+### Ochrona formularzy
+
+| Mechanizm | Wartość |
+|---|---|
+| pułapka | ukryte pole `strona`: wypełnione = udawany sukces, bez konta |
+| znacznik czasu | podpisany sekretem sesji; formularz szybszy niż 3 s albo starszy niż 2 h jest odrzucany |
+| rejestracja | 5 na godzinę z adresu IP, 20 na dobę z sieci `/24` (IPv6: `/48`), 300 na dobę łącznie (`429` z `Retry-After`) |
+| reset hasła | 5 na godzinę z adresu IP, 3 na godzinę na adres e-mail (bez zdradzania, czy konto istnieje) |
+| tokeny z e-maili | `POST /potwierdz`, `/haslo/nowe`: 30 na godzinę z adresu IP |
+| ponowny link potwierdzający | raz na minutę, 3 na godzinę na konto |
+| hasło na ekranie konta | 10 nieudanych prób na godzinę na konto |
+| Cloudflare Turnstile | opcja: `CAI_TURNSTILE_KLUCZ` i `CAI_TURNSTILE_SEKRET` (oba albo żaden); CSP tych dwóch ekranów dopuszcza wtedy `challenges.cloudflare.com` |
+
+Liczniki leżą w pamięci procesu (`serwer/limity.js`), jak licznik logowania; restart je zeruje.
+Tokeny z e-maili: 32 losowe bajty, w bazie tylko `sha256`, jednorazowe; odnośniki zawsze
+z `CAI_ADRES_PUBLICZNY`, nigdy z nagłówka `Host`. Formularze `/konto/*` niosą token CSRF
+(HMAC sekretem sesji z loginu i identyfikatora sesji) obok kontroli pochodzenia; ciasteczko
+sesji zostaje `SameSite=Lax`, bo powrót ze Stripe i linki z poczty to nawigacje z innej witryny.
+
+### JSON dla aplikacji
+
+- `GET /api/konto`: login, e-mail i jego stan (`potwierdzenie.wyslano`, `ponowZa`),
+  organizacja (`mozeZarzadzac`), pakiet, subskrypcja i płatności (B), zgody
+  (`wymagaAkceptacji`), oznaczenia (D), dane usługodawcy, `mozliwosci`, adresy ekranów
+  i `csrf` do formularzy `/konto/*`.
+- `POST /api/konto/potwierdzenie`: ponowne wysłanie linku (`429 za-duzo-prob` z `ponowZa`).
+- `POST /api/konto/zgody` `{ regulamin?, polityka?, marketing? }`,
+  `POST /api/konto/ustawienia` `{ oznaczenia?, jezyk? }`.
+
+### CLI
+
+```bash
+sudo serwer/cli.sh pokaz anna@firma.pl          # konto, organizacja, klucze, pakiet, zużycie, subskrypcja, zgody (bez hasha)
+sudo serwer/cli.sh email anna anna@firma.pl     # adres logowania od administratora (od razu potwierdzony)
+sudo serwer/cli.sh email anna -                 # konto zespołu bez adresu (loguje się loginem)
+sudo serwer/cli.sh klucze k-abcdefgh2345 serwera  # źródło kluczy: wlasne|serwera (bez argumentu pokazuje)
+sudo serwer/cli.sh organizacja anna@firma.pl    # organizacja: konta, pliki marki i bazy wspólnej
+sudo serwer/cli.sh organizacja o-abcdefgh2345 nazwa Biuro Nowak   # nazwa (`-` usuwa)
+```
+
+Każde polecenie przyjmuje login albo e-mail. `email` sprawdza format i unikalność, a linki
+wysłane wcześniej na stary adres przestają działać; konto samoobsługowe nie może zostać
+bez adresu. Zmiana kluczy działa od następnego zapytania, bez restartu.
+
+### Włączenie
+
+1. Dane usługodawcy (`CAI_USLUGODAWCA_*`), `CAI_ADRES_PUBLICZNY`, wersje dokumentów,
+   `CAI_KLUCZ_CIASTEK` (C) i poczta (`CAI_POCZTA`, C) w `/etc/contentai/srodowisko`.
+2. `CAI_REJESTRACJA=1` i restart; dziennik startu pokazuje `rejestracja: otwarta`.
+3. Opcjonalnie Turnstile (klucz i sekret z panelu Cloudflare).
 
 ## Płatności
 
