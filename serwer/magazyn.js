@@ -241,6 +241,43 @@ CREATE TABLE IF NOT EXISTS konta_usuniete (
 // transakcji co podniesienie wersji_schematu. Numery zarezerwowane w naglowku pliku.
 const MIGRACJE_SCHEMATU = [
   // { wersja: 2, opis: '...', wykonaj: (d) => d.exec('ALTER TABLE konta ADD COLUMN ...') },
+  // 4 = B (platnosci): identyfikator platnosci u dostawcy przy wplacie (zwrot przy odstapieniu
+  // i zwroty z panelu dostawcy), subskrypcja i pakiet wplaty (wplaty jednej umowy, ewidencja),
+  // zwroty z data (ewidencja sprzedazy, PR8-09) i oswiadczenia o odstapieniu (PR8-31).
+  {
+    wersja: 4,
+    opis: 'platnosci: platnosc/subskrypcja/plan wplaty, zwroty, odstapienia',
+    wykonaj: (d) => d.exec(`
+      ALTER TABLE platnosci ADD COLUMN platnosc TEXT;
+      ALTER TABLE platnosci ADD COLUMN subskrypcja TEXT;
+      ALTER TABLE platnosci ADD COLUMN plan TEXT;
+      CREATE INDEX IF NOT EXISTS platnosci_platnosc ON platnosci (dostawca, platnosc);
+      CREATE INDEX IF NOT EXISTS platnosci_subskrypcja ON platnosci (dostawca, subskrypcja);
+      CREATE TABLE IF NOT EXISTS platnosci_zwroty (
+        dostawca TEXT NOT NULL, id TEXT NOT NULL,
+        wplata TEXT NOT NULL,
+        login TEXT,
+        kwota INTEGER NOT NULL, waluta TEXT NOT NULL,
+        czas INTEGER NOT NULL,
+        powod TEXT NOT NULL,
+        PRIMARY KEY (dostawca, id)
+      ) WITHOUT ROWID;
+      CREATE INDEX IF NOT EXISTS platnosci_zwroty_czas ON platnosci_zwroty (czas);
+      CREATE TABLE IF NOT EXISTS odstapienia (
+        id INTEGER PRIMARY KEY,
+        login TEXT NOT NULL,
+        dostawca TEXT, subskrypcja TEXT,
+        zlozone INTEGER NOT NULL,
+        zrodlo TEXT NOT NULL,
+        zawarcie INTEGER, termin INTEGER,
+        tryb_zwrotu TEXT,
+        kwota_zwrotu INTEGER, waluta TEXT, dni_uzyte INTEGER, dni_okresu INTEGER,
+        stan TEXT NOT NULL,
+        blad TEXT, zakonczone INTEGER
+      );
+      CREATE INDEX IF NOT EXISTS odstapienia_konta ON odstapienia (login, zlozone);
+    `),
+  },
 ];
 
 function utworzSchemat(d) {
@@ -809,12 +846,126 @@ function zastosujStanSubskrypcji(login, stanSub, teraz = Date.now()) {
   });
 }
 
-/** Rejestr wplat (invoice.paid). -> true gdy nowa wplata, false gdy juz byla. */
-function dopiszPlatnosc({ dostawca, id, tryb, login = null, kwota, waluta, kraj = null, oplacono, okresOd = null, okresDo = null } = {}) {
-  return zap(`INSERT INTO platnosci (dostawca, id, tryb, login, kwota, waluta, kraj, oplacono, okres_od, okres_do)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(dostawca, id) DO NOTHING`)
+/**
+ * Rejestr wplat (invoice.paid). -> true gdy nowa wplata, false gdy juz byla.
+ * platnosc: identyfikator platnosci u dostawcy (pi_..., ch_...) do zwrotu; subskrypcja i plan:
+ * wplaty jednej umowy (odstapienie) i ewidencja (migracja schematu 4, B).
+ */
+function dopiszPlatnosc({
+  dostawca, id, tryb, login = null, kwota, waluta, kraj = null, oplacono, okresOd = null, okresDo = null,
+  platnosc = null, subskrypcja = null, plan = null,
+} = {}) {
+  return zap(`INSERT INTO platnosci (dostawca, id, tryb, login, kwota, waluta, kraj, oplacono, okres_od, okres_do, platnosc, subskrypcja, plan)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(dostawca, id) DO NOTHING`)
     .run(dostawca, id, tryb, login, Number(kwota) || 0, String(waluta || '').toLowerCase(), kraj ? String(kraj).toUpperCase() : null,
-      Number(oplacono) || Date.now(), okresOd, okresDo).changes > 0;
+      Number(oplacono) || Date.now(), okresOd, okresDo, platnosc || null, subskrypcja || null, plan || null).changes > 0;
+}
+
+const POLA_WPLATY = `dostawca, id, tryb, login, kwota, waluta, kraj, oplacono, okres_od AS okresOd, okres_do AS okresDo, zwrot,
+  platnosc, subskrypcja, plan`;
+
+/** Uzupelnia brakujace pola wplaty zapisanej wczesniej (pola juz zapisane zostaja). -> boolean */
+function uzupelnijPlatnosc(dostawca, id, { login, kraj, platnosc, subskrypcja, plan } = {}) {
+  return zap(`UPDATE platnosci SET login = COALESCE(login, ?), kraj = COALESCE(kraj, ?), platnosc = COALESCE(platnosc, ?),
+      subskrypcja = COALESCE(subskrypcja, ?), plan = COALESCE(plan, ?) WHERE dostawca = ? AND id = ?`)
+    .run(login || null, kraj ? String(kraj).toUpperCase() : null, platnosc || null, subskrypcja || null, plan || null, dostawca, id).changes > 0;
+}
+
+/** Wplata po identyfikatorze albo null. */
+function wplata(dostawca, id) {
+  const w = zap(`SELECT ${POLA_WPLATY} FROM platnosci WHERE dostawca = ? AND id = ?`).get(dostawca, id);
+  return w ? { ...w } : null;
+}
+
+/** Wplata po identyfikatorze platnosci u dostawcy (zwrot z panelu dostawcy: charge.refunded). */
+function wplataPoPlatnosci(dostawca, platnosc) {
+  if (!platnosc) return null;
+  const w = zap(`SELECT ${POLA_WPLATY} FROM platnosci WHERE dostawca = ? AND platnosc = ? ORDER BY oplacono LIMIT 1`).get(dostawca, platnosc);
+  return w ? { ...w } : null;
+}
+
+/** Wplaty jednej subskrypcji (umowy), od najstarszej. */
+function wplatySubskrypcji(dostawca, subskrypcja) {
+  if (!subskrypcja) return [];
+  return zap(`SELECT ${POLA_WPLATY} FROM platnosci WHERE dostawca = ? AND subskrypcja = ? ORDER BY oplacono, id`)
+    .all(dostawca, subskrypcja).map((w) => ({ ...w }));
+}
+
+/**
+ * Zwrot do wplaty (odstapienie, kraj spoza listy, zwrot z panelu dostawcy). Idempotentnie po
+ * identyfikatorze zwrotu; pole platnosci.zwrot = suma zwrotow wplaty (nie mniej niz bylo).
+ *   dopiszZwrot({ dostawca, id, wplata, login, kwota, waluta, czas, powod }) -> true gdy nowy
+ */
+function dopiszZwrot({ dostawca, id, wplata: idWplaty, login = null, kwota, waluta, czas = Date.now(), powod = 'inny' } = {}) {
+  if (!dostawca || !id || !idWplaty) throw new Error('dopiszZwrot: wymagane dostawca, id i wplata');
+  return transakcja(() => {
+    const nowy = zap(`INSERT INTO platnosci_zwroty (dostawca, id, wplata, login, kwota, waluta, czas, powod) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(dostawca, id) DO NOTHING`)
+      .run(dostawca, id, idWplaty, login, Math.max(0, Number(kwota) || 0), String(waluta || '').toLowerCase(), Number(czas) || Date.now(), powod)
+      .changes > 0;
+    zap(`UPDATE platnosci SET zwrot = max(zwrot, (SELECT COALESCE(sum(kwota), 0) FROM platnosci_zwroty z WHERE z.dostawca = ? AND z.wplata = ?))
+      WHERE dostawca = ? AND id = ?`).run(dostawca, idWplaty, dostawca, idWplaty);
+    return nowy;
+  });
+}
+
+/** Zwroty wplaty, od najstarszego. */
+function zwrotyWplaty(dostawca, idWplaty) {
+  return zap('SELECT dostawca, id, wplata, login, kwota, waluta, czas, powod FROM platnosci_zwroty WHERE dostawca = ? AND wplata = ? ORDER BY czas, id')
+    .all(dostawca, idWplaty).map((w) => ({ ...w }));
+}
+
+/** Zwroty w okresie [od, do) dla wplat danego trybu (ewidencja): z krajem i pakietem wplaty. */
+function zwrotyWOkresie({ tryb, od = 0, do: doCzasu = Number.MAX_SAFE_INTEGER } = {}) {
+  return zap(`SELECT z.dostawca, z.id, z.wplata, z.login, z.kwota, z.waluta, z.czas, z.powod, p.kraj, p.plan, p.oplacono
+    FROM platnosci_zwroty z JOIN platnosci p ON p.dostawca = z.dostawca AND p.id = z.wplata
+    WHERE p.tryb = ? AND z.czas >= ? AND z.czas < ? ORDER BY z.czas, z.id`).all(tryb, od, doCzasu).map((w) => ({ ...w }));
+}
+
+// Oswiadczenia o odstapieniu od umowy (PR8-31): wpis zostaje po usunieciu konta (dowod, rozliczenia).
+const POLA_ODSTAPIENIA = {
+  stan: 'stan', kwotaZwrotu: 'kwota_zwrotu', waluta: 'waluta', dniUzyte: 'dni_uzyte', dniOkresu: 'dni_okresu',
+  blad: 'blad', zakonczone: 'zakonczone', trybZwrotu: 'tryb_zwrotu', subskrypcja: 'subskrypcja',
+};
+
+function zWierszaOdstapienia(w) {
+  if (!w) return null;
+  return {
+    id: w.id, login: w.login, dostawca: w.dostawca, subskrypcja: w.subskrypcja, zlozone: w.zlozone, zrodlo: w.zrodlo,
+    zawarcie: w.zawarcie, termin: w.termin, trybZwrotu: w.tryb_zwrotu, kwotaZwrotu: w.kwota_zwrotu, waluta: w.waluta,
+    dniUzyte: w.dni_uzyte, dniOkresu: w.dni_okresu, stan: w.stan, blad: w.blad, zakonczone: w.zakonczone,
+  };
+}
+
+/** zapiszOdstapienie({ login, dostawca, subskrypcja, zlozone, zrodlo, zawarcie, termin, trybZwrotu }) -> id */
+function zapiszOdstapienie({ login, dostawca = null, subskrypcja = null, zlozone = Date.now(), zrodlo, zawarcie = null, termin = null, trybZwrotu = null } = {}) {
+  if (!login || !zrodlo) throw new Error('zapiszOdstapienie: wymagane login i zrodlo');
+  return zap(`INSERT INTO odstapienia (login, dostawca, subskrypcja, zlozone, zrodlo, zawarcie, termin, tryb_zwrotu, stan)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'przyjete') RETURNING id`)
+    .get(login, dostawca, subskrypcja, Number(zlozone) || Date.now(), zrodlo, zawarcie, termin, trybZwrotu).id;
+}
+
+/** Zmiana pol oswiadczenia (stan: przyjete | zwrot-zlecony | bez-zwrotu | blad). Literowka = wyjatek. */
+function zmienOdstapienie(id, pola = {}) {
+  const zestaw = [];
+  const wartosci = [];
+  for (const [pole, wartosc] of Object.entries(pola)) {
+    if (!Object.prototype.hasOwnProperty.call(POLA_ODSTAPIENIA, pole)) throw new Error(`zmienOdstapienie: nieznane pole "${pole}"`);
+    if (wartosc === undefined) continue;
+    zestaw.push(`${POLA_ODSTAPIENIA[pole]} = ?`);
+    wartosci.push(wartosc);
+  }
+  if (!zestaw.length) return false;
+  return zap(`UPDATE odstapienia SET ${zestaw.join(', ')} WHERE id = ?`).run(...wartosci, id).changes > 0;
+}
+
+function odstapienie(id) {
+  return zWierszaOdstapienia(zap('SELECT * FROM odstapienia WHERE id = ?').get(id));
+}
+
+/** Oswiadczenia konta, od najnowszego. */
+function odstapieniaKonta(login) {
+  return zap('SELECT * FROM odstapienia WHERE login = ? ORDER BY zlozone DESC, id DESC').all(login).map(zWierszaOdstapienia);
 }
 
 /** Kwota zwrocona dla wplaty (w jednostkach najmniejszych; laczna, nie przyrost). */
@@ -831,12 +982,12 @@ function sumyPlatnosci({ tryb, od = 0, do: doCzasu = Number.MAX_SAFE_INTEGER } =
 
 /** Wplaty w okresie (ewidencja CSV): pelne wiersze, od najstarszej. */
 function platnosciWOkresie({ tryb, od = 0, do: doCzasu = Number.MAX_SAFE_INTEGER } = {}) {
-  return zap(`SELECT dostawca, id, tryb, login, kwota, waluta, kraj, oplacono, okres_od AS okresOd, okres_do AS okresDo, zwrot
+  return zap(`SELECT ${POLA_WPLATY}
     FROM platnosci WHERE tryb = ? AND oplacono >= ? AND oplacono < ? ORDER BY oplacono, id`).all(tryb, od, doCzasu).map((w) => ({ ...w }));
 }
 
 function platnosciKonta(login) {
-  return zap(`SELECT dostawca, id, tryb, kwota, waluta, kraj, oplacono, okres_od AS okresOd, okres_do AS okresDo, zwrot
+  return zap(`SELECT ${POLA_WPLATY}
     FROM platnosci WHERE login = ? ORDER BY oplacono`).all(login).map((w) => ({ ...w }));
 }
 
@@ -1007,10 +1158,14 @@ const API = {
   dopiszZgode, zgody,
   zapiszZdarzenie, oznaczZdarzenie, zdarzeniaNieprzetworzone, powiazKlienta, zastosujStanSubskrypcji,
   dopiszPlatnosc, ustawZwrot, sumyPlatnosci, platnosciWOkresie, platnosciKonta, kontaDoUzgodnienia,
+  uzupelnijPlatnosc, wplata, wplataPoPlatnosci, wplatySubskrypcji, dopiszZwrot, zwrotyWplaty, zwrotyWOkresie,
+  zapiszOdstapienie, zmienOdstapienie, odstapienie, odstapieniaKonta,
   meta, ustawMeta,
   migracjaZapiszKonto, migracjaUsunKonto,
   kopia, kopiaOkresowa, sprzataj, kontaNiepotwierdzone,
 };
 
 for (const [nazwa, fn] of Object.entries(API)) module.exports[nazwa] = chron(fn);
-Object.assign(module.exports, { BladMagazynu, BladKonfliktu, GLOWNA, WERSJA_SCHEMATU, POLA_KONTA });
+// Najnowsza wersja schematu w tym kodzie (WERSJA_SCHEMATU + migracje): testy i diagnostyka.
+const WERSJA_NAJNOWSZA = Math.max(WERSJA_SCHEMATU, ...MIGRACJE_SCHEMATU.map((m) => m.wersja));
+Object.assign(module.exports, { BladMagazynu, BladKonfliktu, GLOWNA, WERSJA_SCHEMATU, WERSJA_NAJNOWSZA, POLA_KONTA });
