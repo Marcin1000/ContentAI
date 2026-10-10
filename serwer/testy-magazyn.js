@@ -598,7 +598,7 @@ function testyCli(sprawdz) {
     sprawdz('CLI: eksport-json zapisuje pliki R8, drugi raz odmawia', eksport.status === 0 && fs.existsSync(r8.plikKont) && /Zapisano 3 kont/.test(eksport.stdout)
       && eksport2.status === 1);
     const platnosci = cli('platnosci-sprawdz');
-    sprawdz('CLI: polecenia platnosci przekazane do platnosci-cli.js (zaslepka: kod 1)', platnosci.status === 1 && /zaślepka/.test(platnosci.stderr));
+    sprawdz('CLI: polecenia platnosci przekazane do platnosci-cli.js (bez PLATNOSCI: kod 1 z nazwa zmiennej)', platnosci.status === 1 && /brak PLATNOSCI/.test(platnosci.stderr));
     // Kontrola wlasciciela katalogu danych: root -> katalog innego konta; inne konto -> katalog roota.
     let obcy;
     if (typeof process.geteuid === 'function' && process.geteuid() === 0) {

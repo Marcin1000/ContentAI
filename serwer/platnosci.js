@@ -100,7 +100,8 @@ function poczta(kontekst) {
   return (kontekst && kontekst.poczta) || STAN.poczta || require('./poczta.js');
 }
 
-function czekaj(ms) { return new Promise((r) => { const t = setTimeout(r, ms); if (t.unref) t.unref(); }); }
+// Bez unref: CLI (platnosci-synchronizuj) nie moze sie skonczyc w polowie uzgadniania.
+function czekaj(ms) { return new Promise((r) => { setTimeout(r, ms); }); }
 
 function jsonMeta(klucz) {
   try { return JSON.parse(magazyn.meta(klucz) || 'null'); } catch { return null; }
@@ -285,17 +286,22 @@ function kwotyDoWyswietlenia(konf) {
   return c ? c.kwoty : null;
 }
 
-/** Kwota zakupu pakietu w walucie (pobiera ceny, gdy nie ma ich jeszcze w pamieci). */
+/** Pozycja pakiet/waluta wstrzymana: cena u dostawcy niepoprawna albo inna niz na ekranie. */
+function zablokowana(konf, plan, waluta) {
+  const c = cenyZPamieci(konf);
+  return Boolean(c && c.zablokowane.has(`${plan}/${waluta}`));
+}
+
+/**
+ * Kwota zakupu pakietu w walucie. Przed pierwsza sprzedaza (i po 12 h bez kontroli) ceny u dostawcy
+ * sa pobierane i porownane z PLATNOSCI_CENY_WYSWIETLANE: klient nie zaplaci innej kwoty niz na ekranie.
+ */
 async function kwotaDlaZakupu(konf, plan, waluta) {
-  let wysw = kwotyDoWyswietlenia(konf);
-  if (!wysw || !wysw[plan] || wysw[plan][waluta] === undefined) {
-    await odswiezCeny(konf);
-    wysw = kwotyDoWyswietlenia(konf);
-  }
+  if (!cenyZPamieci(konf)) await odswiezCeny(konf);
+  const wysw = kwotyDoWyswietlenia(konf);
   const kwota = wysw && wysw[plan] ? wysw[plan][waluta] : undefined;
   if (kwota === undefined) throw new Odmowa('plan-niedostepny', { plan, waluta });
-  const c = cenyZPamieci(konf);
-  if (c && c.zablokowane.has(`${plan}/${waluta}`)) throw new Odmowa('plan-niedostepny', { plan, waluta, powod: 'cena' });
+  if (zablokowana(konf, plan, waluta)) throw new Odmowa('plan-niedostepny', { plan, waluta, powod: 'cena' });
   return kwota;
 }
 
@@ -357,33 +363,35 @@ function powiazKonto(konto, idKlienta, konf) {
 function zaokraglij(x, miejsc = 2) { const m = 10 ** miejsc; return Math.round(x * m) / m; }
 
 /**
- * Przychod w okresie [od, do): wplaty minus zwroty, per waluta i kraj, razem w PLN (EUR po
- * PLATNOSCI_KURS_EUR_PLN: przyblizenie do ostrzezen, nie ksiegowosc) i sprzedaz do innych
- * krajow UE niz Polska w EUR (prog 10 000 EUR).
+ * Przychod w okresie [od, do): wplaty z okresu minus zwroty zlecone w okresie (zwrot pomniejsza okres,
+ * w ktorym go zlecono, jak korekta; zasade potwierdza ksiegowa, PR8-12), per waluta i kraj, razem w PLN
+ * (EUR po PLATNOSCI_KURS_EUR_PLN: przyblizenie do ostrzezen, nie ksiegowosc) i sprzedaz do innych krajow
+ * UE niz Polska w EUR (prog 10 000 EUR).
  */
 function przychodOkresu(konf, { od, do: doKiedy }) {
   const kurs = Number(konf.platnosci.kursEurPln) || 4.25;
-  const sumy = magazyn.sumyPlatnosci({ tryb: konf.platnosci.tryb, od, do: doKiedy });
+  const wplaty = magazyn.platnosciWOkresie({ tryb: konf.platnosci.tryb, od, do: doKiedy });
+  const zwroty = magazyn.zwrotyWOkresie({ tryb: konf.platnosci.tryb, od, do: doKiedy });
   const wgWalut = {};
   const wgKrajow = {};
+  const inne = new Set();
   let razemPln = 0;
   let ueEur = 0;
-  let wplat = 0;
-  const inne = new Set();
-  for (const w of sumy) {
-    const netto = (Number(w.suma) - Number(w.zwroty)) / 100;
-    wplat += Number(w.wplat) || 0;
-    wgWalut[w.waluta] = zaokraglij((wgWalut[w.waluta] || 0) + netto);
-    const kraj = w.kraj || '?';
-    if (!wgKrajow[kraj]) wgKrajow[kraj] = {};
-    wgKrajow[kraj][w.waluta] = zaokraglij((wgKrajow[kraj][w.waluta] || 0) + netto);
-    let pln;
-    let eur;
-    if (w.waluta === 'pln') { pln = netto; eur = netto / kurs; } else if (w.waluta === 'eur') { pln = netto * kurs; eur = netto; } else { inne.add(w.waluta); continue; }
-    razemPln += pln;
-    if (w.kraj && w.kraj !== 'PL' && KRAJE_UE.has(w.kraj)) ueEur += eur;
-  }
-  return { wplat, wgWalut, wgKrajow, razemPln: zaokraglij(razemPln), ueEur: zaokraglij(ueEur), kurs, inneWaluty: [...inne] };
+  const dodaj = (kwota, waluta, kraj) => {
+    const k = Number(kwota) / 100;
+    wgWalut[waluta] = zaokraglij((wgWalut[waluta] || 0) + k);
+    const kr = kraj || '?';
+    if (!wgKrajow[kr]) wgKrajow[kr] = {};
+    wgKrajow[kr][waluta] = zaokraglij((wgKrajow[kr][waluta] || 0) + k);
+    const ue = Boolean(kraj) && kraj !== 'PL' && KRAJE_UE.has(kraj);
+    if (waluta === 'pln') { razemPln += k; if (ue) ueEur += k / kurs; } else if (waluta === 'eur') { razemPln += k * kurs; if (ue) ueEur += k; } else inne.add(waluta);
+  };
+  for (const w of wplaty) dodaj(w.kwota, w.waluta, w.kraj);
+  for (const z of zwroty) dodaj(-Number(z.kwota), z.waluta, z.kraj);
+  return {
+    wplat: wplaty.length, zwrotow: zwroty.length, wgWalut, wgKrajow, razemPln: zaokraglij(razemPln), ueEur: zaokraglij(ueEur), kurs,
+    inneWaluty: [...inne],
+  };
 }
 
 /** Stan progow teraz: kwartal (limit dzialalnosci nierejestrowanej) i rok (sprzedaz do UE). */
@@ -401,7 +409,7 @@ function stanProgow(konf, teraz = Date.now()) {
   const ueProcent = zaokraglij((roczny.ueEur / progUe) * 100, 1);
   return {
     kwartal: kw.nazwa, od: kw.od, do: kw.do, przychodPln: przychod.razemPln, limitPln: limit, procent, progi, osiagniete,
-    ostrzezenie: osiagniete.length ? osiagniete[osiagniete.length - 1] : null, wplat: przychod.wplat, wgWalut: przychod.wgWalut,
+    ostrzezenie: osiagniete.length ? osiagniete[osiagniete.length - 1] : null, wplat: przychod.wplat, zwrotow: przychod.zwrotow, wgWalut: przychod.wgWalut,
     wgKrajow: przychod.wgKrajow, kursEurPln: przychod.kurs, inneWaluty: przychod.inneWaluty,
     ue: { rok: String(kw.rok), przychodEur: roczny.ueEur, progEur: progUe, procent: ueProcent, osiagniete: [80, 100].filter((x) => ueProcent >= x) },
     wstrzymajPoProgu: Boolean(p.wstrzymajPoProgu),
@@ -438,7 +446,7 @@ async function sprawdzProgi(konf, { teraz = Date.now(), kontekst = null } = {}) 
     STAN.progiWysylane.add(w.klucz);
     try {
       const opis = w.rodzaj === 'kwartal'
-        ? `przychod w kwartale ${w.okres}: ${st.przychodPln.toFixed(2)} zl, ${st.procent}% limitu ${st.limitPln} zl (prog ${w.prog}%)`
+        ? `przychod w kwartale ${w.okres}: ${st.przychodPln.toFixed(2)} zl, ${st.procent}% limitu ${Number(st.limitPln).toFixed(2)} zl (prog ${w.prog}%)`
         : `sprzedaz do innych krajow UE w roku ${w.okres}: ${st.ue.przychodEur.toFixed(2)} EUR, ${st.ue.procent}% progu ${st.ue.progEur} EUR (prog ${w.prog}%)`;
       console.warn(`[platnosci] PROG PRZYCHODU: ${opis}`);
       const adres = konf.uslugodawca && konf.uslugodawca.email;
@@ -1032,6 +1040,7 @@ function ekranZakupuDlaKonta(kontekst, res, { konto, plan, waluta: zadana, z, je
   const kwoty = kwotyDoWyswietlenia(konf) || {};
   const kwota = wybrany && kwoty[wybrany.plan] ? kwoty[wybrany.plan][waluta] : undefined;
   if (!wybrany || kwota === undefined) throw new Odmowa('plan-niedostepny', { plan: plan || null, waluta });
+  if (zablokowana(konf, wybrany.plan, waluta)) throw new Odmowa('plan-niedostepny', { plan: wybrany.plan, waluta, powod: 'cena' });
   const inne = naSprzedaz.filter((x) => x.plan !== wybrany.plan).map((x) => ({ plan: x.plan, nazwa: ekrany.nazwaPakietu(x, jezyk) }));
   ustawCsp(res, konf);
   wyslijHtml(kontekst, res, status, ekrany.ekranZakupu({
@@ -1052,7 +1061,10 @@ async function obsluzZakupEkran(sciezka, req, res, kontekst) {
       const zakaz = zakazZakupu(konto, konf);
       if (zakaz) throw new Odmowa(zakaz);
       if (zywa(konto, konf)) throw new Odmowa('subskrypcja-istnieje', { plan: konto.subskrypcjaPlan });
-      if (!kwotyDoWyswietlenia(konf)) await odswiezCeny(konf);
+      // ceny u dostawcy sprawdzone przed pokazaniem (bez sieci i z cenami z konfiguracji: ekran i tak sie pokaze)
+      if (!cenyZPamieci(konf)) {
+        try { await odswiezCeny(konf); } catch (e) { if (!kwotyDoWyswietlenia(konf)) throw e; }
+      }
       ekranZakupuDlaKonta(kontekst, res, { konto, plan: u.get('plan'), waluta: u.get('waluta'), z, jezyk });
     } catch (e) {
       ekranBledu(kontekst, res, e, jezyk, z);
@@ -1445,7 +1457,8 @@ function stanDlaKonta(konto, kontekst) {
       maPanel: Boolean(klientKonta(k, konf)) && (k.subskrypcjaStan || 'brak') !== 'brak',
       plany: planyNaSprzedaz().map((x) => ({
         plan: x.plan, nazwa: x.nazwa, nazwaEn: x.nazwaEn, opis: x.opis, opisEn: x.opisEn, limity: x.limity, funkcje: x.funkcje,
-        limitDokumentow: x.limitDokumentow, ceny: { ...(kwoty[x.plan] || {}) },
+        limitDokumentow: x.limitDokumentow,
+        ceny: Object.fromEntries(Object.entries(kwoty[x.plan] || {}).filter(([w]) => !zablokowana(konf, x.plan, w))),
       })),
       walutaWymuszona: wymuszona ? waluta : null,
       zakupNiedozwolony: Boolean(zakaz),
