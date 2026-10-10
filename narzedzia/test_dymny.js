@@ -1080,7 +1080,7 @@ async function wariantR6F(b) {
     /powiadomienie-uwaga\|[^|]*pominięte w eksporcie: 1[^|]*Usuń notatkę albo wpisz w jej miejsce treść/.test(toast), toast);
   const JEDNA = /(^|[\s(„"])[aiouwzAIOUWZ] /m, TWARDA = /(^|[\s(„" ])[aiouwzAIOUWZ] /;
   await s.evaluate(async () => {
-    await wczytajSkrypt('pwa/lib/docx-natywny.js');
+    await wczytajSkrypt('pwa/lib/docx-natywny-2.js');
     const org = window.DocxNatywny.zbuduj;
     window.DocxNatywny.zbuduj = function (el) { window.__docxTekst = el.textContent; return org.apply(this, arguments); };
     await new Promise((ok) => zaladujPdfMake(ok));

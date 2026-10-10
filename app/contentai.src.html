@@ -3161,6 +3161,23 @@ body.is-mobile .ins-tresc #gap-missing-wrap { padding-bottom: var(--s-12); }
 body.is-mobile .ins-tresc #gap-improve-btn::before { content: ""; position: absolute; left: calc(var(--s-12) * -1); right: calc(var(--s-12) * -1); bottom: 100%;
   height: var(--s-16); pointer-events: none; background: linear-gradient(to bottom, transparent, var(--c-panel)); }
 }
+@layer widoki {
+/* ══ RUNDA 9, wykonawca D: oznaczenia AI ══ */
+/* przelaczniki etykiet AI i informacje "powstalo z pomoca AI"; display z .grupa-menu .btn-secondary wygrywal z hidden */
+.ozn-wiersz[hidden], .ai-info[hidden] { display: none; }
+label.ozn-wiersz { display: flex; align-items: flex-start; gap: var(--s-8); margin-top: var(--s-8); font-size: var(--t-sm); line-height: 1.45; color: var(--c-tekst-2); cursor: pointer; }
+label.ozn-wiersz > input[type=checkbox] { flex: none; margin: 2px 0 0; }
+label.ozn-wiersz > span { display: flex; flex-direction: column; gap: var(--s-4); min-width: 0; }
+label.ozn-wiersz b { font-weight: var(--g-sredni); color: var(--c-tekst); }
+label.ozn-wiersz small { font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
+.ozn-wiersz-ramka { margin: 0 0 var(--s-12); padding: var(--s-8) var(--s-12); border: 1px solid var(--c-linia); border-radius: var(--r-md); background: var(--c-panel); }
+.ai-info { display: flex; align-items: flex-start; gap: var(--s-6); margin: var(--s-8) 0 0; }
+.ai-info > .ikona { flex: none; margin-top: 2px; color: var(--c-tekst-3); }
+#ai-info-artykul { max-width: calc(var(--tresc-max) + 2 * var(--s-56, 56px) + 2px); margin: var(--s-12) auto 0; padding: 0 var(--s-4); box-sizing: border-box; }
+.au-ozn { margin-top: var(--s-12); }
+.au-ozn .ai-info { margin-top: 0; }
+#audio-bar-ai { flex: 1; min-width: 0; padding: 0 var(--s-8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+}
 </style>
 </head>
 <body>
@@ -3743,6 +3760,8 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="repurpose-body">
               <div id="repurpose-loading" class="seo-loading" data-i18n="rp-loading">Tworzę przeróbkę…</div>
               <textarea class="repurpose-out" id="repurpose-out" aria-label="Gotowa przeróbka" data-i18n-label="lbl-repurpose-out" style="display:none"></textarea>
+              <!-- R9-D (PR8-19): krotka etykieta "Przygotowano z pomoca AI." przy kopiowaniu przerobki -->
+              <label class="ozn-wiersz" for="ozn-tekst-rp"><input type="checkbox" id="ozn-tekst-rp" data-oznaczenie="tekst" onchange="ustawWyborOznaczenia('tekst', this.checked)"><span data-i18n="ozn-rp-przelacznik">Dopisz przy kopiowaniu krótką informację o AI</span></label>
             </div>
           </div>
 
@@ -3836,6 +3855,8 @@ document.addEventListener('DOMContentLoaded', function () {
               <div class="szkielet-kartka" aria-hidden="true"><span class="sz sz-h1"></span><span class="sz sz-h1 sz-krotki"></span><span class="sz sz-odstep"></span><span class="sz"></span><span class="sz"></span><span class="sz sz-krotki"></span><span class="sz sz-h2"></span><span class="sz"></span><span class="sz"></span><span class="sz"></span><span class="sz sz-krotki"></span></div>
             </div>
             <div class="article" id="article"></div>
+            <!-- R9-D (art. 50 ust. 1 AI Act, prawo pkt 1): przy kazdym tekscie widac, ze powstal z pomoca AI -->
+            <p class="tekst-pomoc ai-info" id="ai-info-artykul" hidden><svg class="ikona" aria-hidden="true"><use href="#i-info"/></svg><span><span data-i18n="ozn-artykul-info">Ten tekst powstał z pomocą AI. Sprawdź fakty przed publikacją.</span> <span data-ozn-meta="tekst" data-i18n="ozn-artykul-info-meta">Pobrane pliki mają oznaczenie AI w metadanych.</span></span></p>
           </div>
           </div>
           <aside class="inspektor" id="inspektor" hidden aria-label="Kontrola tekstu" data-i18n-label="ins-etykieta">
@@ -4802,7 +4823,7 @@ document.addEventListener('DOMContentLoaded', function () {
                   <div class="tekst-pomoc" id="img-result-size"></div>
                   <div class="tekst-pomoc" id="img-result-hint"></div>
                   <!-- R9-D (art. 50 AI Act): informacja przy wyniku i przelacznik napisu na pobranym pliku -->
-                  <div class="tekst-pomoc ai-info" id="img-ai-info"><svg class="ikona" aria-hidden="true"><use href="#i-info"/></svg><span data-i18n="ozn-grafika-info">Grafikę wygenerowała AI (OpenAI). Pobrany plik niesie oznaczenie AI w metadanych.</span></div>
+                  <div class="tekst-pomoc ai-info" id="img-ai-info"><svg class="ikona" aria-hidden="true"><use href="#i-info"/></svg><span><span data-i18n="ozn-grafika-info">Grafikę wygenerowała AI (OpenAI).</span> <span data-ozn-meta="grafika" data-i18n="ozn-grafika-info-meta">Pobrany plik ma oznaczenie AI w metadanych.</span></span></div>
                   <label class="ozn-wiersz" for="ozn-grafika"><input type="checkbox" id="ozn-grafika" data-oznaczenie="grafika" onchange="ustawWyborOznaczenia('grafika', this.checked)"><span data-i18n="ozn-grafika-przelacznik">Napis „Grafika wygenerowana przez AI” na pobranym pliku</span></label>
                 </div>
                 <div class="img-wynik-akcje">
@@ -5071,6 +5092,8 @@ var I18N = {
     'audio-voices':'Liczba głosów','audio-engine':'Silnik głosu','au-eng-openai':'OpenAI','au-eng-eleven':'ElevenLabs','au-eng-web':'Przeglądarka',
     'audio-source':'Temat lub treść','audio-source-ph':'Wpisz temat albo wklej gotową treść…','audio-from-article':'Wczytaj artykuł','audio-file':'Plik audio do transkrypcji',
     'audio-gen-script':'Wygeneruj skrypt','audio-transcribe':'Transkrybuj','audio-script':'Skrypt (edytowalny)','audio-play':'Odtwórz','audio-dl':'Pobierz MP3','audio-hist':'Historia audio','audio-dl-docx':'Pobierz .docx',
+    'ozn-audio-info':'Nagranie czyta syntetyczny głos wygenerowany przez AI.','ozn-audio-info-meta':'Pobrany plik MP3 ma oznaczenie AI w metadanych.',
+    'ozn-audio-przelacznik':'Zacznij nagranie zapowiedzią, że czyta je syntetyczny głos','ozn-audio-glos':'Syntetyczny głos AI',
     // R5: zwijka, stopka, pusty stan i rodzaje w historii modulu audio
     'au-glosy-tytul':'Model i głosy','au-stopka-info':'Najpierw powstaje skrypt do poprawienia, potem audio.',
     'au-pusty-tytul':'Tu pojawi się skrypt','au-pusty-opis':'Skrypt możesz poprawić, zanim go odsłuchasz albo pobierzesz jako MP3.',
@@ -5320,6 +5343,10 @@ var I18N = {
     'msg-pdf-load-fail':'Nie udało się załadować biblioteki PDF. Sprawdź połączenie.',
     'msg-pdf-przygotowuje':'Przygotowuję PDF… Za pierwszym razem trwa to kilka sekund.',
     'msg-docx-error':'Nie udało się przygotować pliku DOCX. Spróbuj ponownie.',
+    'ozn-tekst-przelacznik':'Dodaj informację o AI','ozn-tekst-opis':'Zdanie na końcu tekstu w TXT, DOCX, PDF i przy kopiowaniu',
+    'ozn-wiecej':'Więcej','ozn-wiecej-ai-act':'Więcej o oznaczaniu treści AI',
+    'ozn-artykul-info':'Ten tekst powstał z pomocą AI. Sprawdź fakty przed publikacją.','ozn-artykul-info-meta':'Pobrane pliki mają oznaczenie AI w metadanych.',
+    'ozn-rp-przelacznik':'Dopisz przy kopiowaniu krótką informację o AI',
     'msg-no-article':'Najpierw wygeneruj artykuł.',
     'msg-bad-url':'Podaj pełny URL (https://…)',
 //@@IF owner
@@ -5735,6 +5762,13 @@ var I18N = {
     'page-title':'Content AI - Generator treści, grafik i audio',
     'img-copy-btn-lbl':'Kopiuj',
     'img-download-btn':'Pobierz PNG',
+    'ozn-grafika-info':'Grafikę wygenerowała AI (OpenAI).','ozn-grafika-info-meta':'Pobrany plik ma oznaczenie AI w metadanych.',
+    'ozn-grafika-przelacznik':'Napis „Grafika wygenerowana przez AI” na pobranym pliku',
+    'ozn-grafika-pytanie':'Czy grafika przedstawia prawdziwe osoby, miejsca albo zdarzenia?',
+    'ozn-grafika-pytanie-opis':'Jeśli tak i ktoś mógłby uznać ją za prawdziwą, przed publikacją trzeba zaznaczyć, że powstała z pomocą AI (AI Act, art. 50 ust. 4). Możemy dodać w rogu napis „Grafika wygenerowana przez AI”. Informacja o AI w metadanych pliku jest zawsze.',
+    'ozn-grafika-bez':'Nie, pobierz bez napisu','ozn-grafika-z':'Tak, pobierz z napisem',
+    'ozn-grafika-schowek':'Kopia w schowku nie zawiera oznaczenia AI. Aby je zachować, pobierz plik.',
+    'ozn-grafika-blad':'Nie udało się dodać napisu do grafiki. Spróbuj ponownie.',
     'img-step1-noref':'Krok 1 z 2: tworzenie promptu graficznego',
     'msg-no-api-resp':'Brak odpowiedzi z API. Sprawdź klucz API i połączenie.',
     'kb-na-serwerze':'Na serwerze','kb-wspolna':'Baza wspólna zespołu','kb-prywatna':'Twoja baza prywatna','kb-fragm':'fragm.','kb-lokalnie':'Tylko w tej przeglądarce','kb-przenies':'Przenieś na serwer','kb-dodano':'Dodano do bazy wiedzy na serwerze','kb-zostaje-lokalnie':'Dokument zapisano tylko w tej przeglądarce.','kb-przeniesiono':'Przeniesiono na serwer',
@@ -5749,6 +5783,9 @@ var I18N = {
     'ver-poprawiony-hybryda':'Poprawiony SEO+AIO','ver-poprawiony-aio':'Poprawiony AIO','ver-poprawiony-seo':'Poprawiony SEO','ver-wariant':'Wariant',
     'msg-artykul-uciety':'Tekst został ucięty na limicie długości. Zmniejsz długość albo wygeneruj ponownie.',
     'msg-cms-https':'Adres CMS musi zaczynać się od https://. Przeglądarka nie wysyła danych z tej aplikacji na adres http://.',
+    'ozn-cms-przelacznik':'Dodaj informację o AI na końcu wpisu',
+    'ozn-cms-przypomnienie':'Jeśli publikujesz tekst, który informuje o sprawach publicznych (np. zdrowie, finanse, polityka), a nikt w Twojej redakcji go nie sprawdził merytorycznie, musisz zaznaczyć, że powstał z pomocą AI.',
+    'ozn-cms-drupal':'Drupal zachowa oznaczenie AI w kodzie wpisu przy formacie full_html. Format basic_html je usuwa.',
     'msg-wp-cors':'sprawdź adres i czy WordPress przyjmuje zapytania z tej domeny (CORS).',
     'msg-drupal-cors':'może brakować nagłówka CORS. Dodaj w Drupalu Response Headers albo użyj modułu CORS.',
     'msg-premium-uciety':'Samokorekta nie zmieściła się w limicie długości, więc zostaje tekst przed korektą. Spróbuj krótszej długości.',
@@ -5829,6 +5866,8 @@ var I18N = {
     'audio-voices':'Number of voices','audio-engine':'Voice engine','au-eng-openai':'OpenAI','au-eng-eleven':'ElevenLabs','au-eng-web':'Browser',
     'audio-source':'Topic or content','audio-source-ph':'Type a topic or paste ready content…','audio-from-article':'Load article','audio-file':'Audio file to transcribe',
     'audio-gen-script':'Generate script','audio-transcribe':'Transcribe','audio-script':'Script (editable)','audio-play':'Play','audio-dl':'Download MP3','audio-hist':'Audio history','audio-dl-docx':'Download .docx',
+    'ozn-audio-info':'This recording is read by an AI-generated synthetic voice.','ozn-audio-info-meta':'The downloaded MP3 carries an AI label in its metadata.',
+    'ozn-audio-przelacznik':'Start the recording with a note that a synthetic voice is reading it','ozn-audio-glos':'AI synthetic voice',
     // R5: collapsible section, footer, empty state and history types of the audio module
     'au-glosy-tytul':'Model and voices','au-stopka-info':'You get an editable script first, then the audio.',
     'au-pusty-tytul':'Your script will appear here','au-pusty-opis':'You can edit the script before you listen to it or download it as MP3.',
@@ -6078,6 +6117,10 @@ var I18N = {
     'msg-pdf-load-fail':'Failed to load PDF library. Check your connection.',
     'msg-pdf-przygotowuje':'Preparing the PDF… The first time takes a few seconds.',
     'msg-docx-error':'Could not create the DOCX file. Please try again.',
+    'ozn-tekst-przelacznik':'Add AI disclosure','ozn-tekst-opis':'A sentence at the end of the text in TXT, DOCX, PDF and when copying',
+    'ozn-wiecej':'Learn more','ozn-wiecej-ai-act':'More about labelling AI content',
+    'ozn-artykul-info':'This text was created with AI. Check the facts before publishing.','ozn-artykul-info-meta':'Downloaded files carry an AI label in their metadata.',
+    'ozn-rp-przelacznik':'Add a short AI note when copying',
     'msg-no-article':'Generate an article first.',
     'msg-bad-url':'Provide a full URL (https://…)',
 //@@IF owner
@@ -6343,6 +6386,9 @@ var I18N = {
     'ver-poprawiony-hybryda':'Improved SEO+AIO','ver-poprawiony-aio':'Improved AIO','ver-poprawiony-seo':'Improved SEO','ver-wariant':'Variant',
     'msg-artykul-uciety':'The text was cut off at the length limit. Reduce the length or generate again.',
     'msg-cms-https':'The CMS address must start with https://. The browser does not send data from this app to an http:// address.',
+    'ozn-cms-przelacznik':'Add an AI disclosure at the end of the post',
+    'ozn-cms-przypomnienie':'If you publish a text that informs the public on matters of public interest (e.g. health, finance, politics) and no one in your editorial team has reviewed its substance, you must disclose that it was created with AI.',
+    'ozn-cms-drupal':'Drupal keeps the AI label in the post code with the full_html format. The basic_html format removes it.',
     'msg-wp-cors':'check the address and whether WordPress accepts requests from this domain (CORS).',
     'msg-drupal-cors':'the CORS header may be missing. Add Response Headers in Drupal or use the CORS module.',
     'msg-premium-uciety':'The self-review did not fit within the length limit, so the text before the review stays. Try a shorter length.',
@@ -6384,6 +6430,13 @@ var I18N = {
     'link-suggest-prefix':'Consider linking','link-suggest-at':'at words:',
     'gap-still-missing':'Still missing topics','gap-szukam':'Finding sources and writing sections…','gap-bez-zrodel':'New sections need sources. The knowledge base is empty and web search is off, so these topics cannot be covered without inventing facts.','gap-wlacz-siec':'Turn on web search and add','gap-konkurencja':'competitor','gap-konkurencja-title':'A topic about a competing brand or product. Unchecked by default: in brand content this is your call.','gap-po-poprawie':'Score from the added sections. Refresh if the model should rate the whole text again.','gap-inny-artykul':'The added sections were for the previous article, so they were not inserted.','gap-pusto':'The model returned no new sections. Please try again.','gap-dopisane':'Sections added: {n}. See the Gaps tab for the result.','gap-serp-blad':'The SERP analysis failed during generation, so there is nothing to compare the text with. Generate the article again with SERP analysis on.','serp-blad-toast':'The SERP analysis failed. The article is being written without it.','gap-pkt':'pts','gap-bez-zrodel-baza':'Topics not covered by the selected documents: {n}. No empty sections were added. Turn on web search or add material to the knowledge base.','gap-bez-zrodel-siec':'Topics without a source: {n}. No empty sections were added; they stay on the missing list. Add material to the knowledge base and try again.',
     'img-download-btn':'Download PNG','img-copy-btn-lbl':'Copy',
+    'ozn-grafika-info':'This image was generated by AI (OpenAI).','ozn-grafika-info-meta':'The downloaded file carries an AI label in its metadata.',
+    'ozn-grafika-przelacznik':'“AI-generated image” caption on the downloaded file',
+    'ozn-grafika-pytanie':'Does the image show real people, places or events?',
+    'ozn-grafika-pytanie-opis':'If it does and someone could take it for real, you must disclose before publishing that it was created with AI (AI Act, Article 50(4)). We can add an “AI-generated image” caption in the corner. The AI label in the file metadata is always there.',
+    'ozn-grafika-bez':'No, download without caption','ozn-grafika-z':'Yes, download with caption',
+    'ozn-grafika-schowek':'The clipboard copy does not keep the AI label. Download the file to keep it.',
+    'ozn-grafika-blad':'Could not add the caption to the image. Please try again.',
     'img-step1-noref':'Step 1 of 2: creating image prompt',
     'img-prompt-used':'Used prompt',
     'editor-done':'Done','edit-etykieta':'Editing','edit-cofnij':'Undo','edit-pasek':'Text editing','edit-podpowiedz':'Editing mode: tap the text to change it. Done saves your changes.','kb-words-suffix':'words','kb-tag-text':'Text','kb-tag-file':'File','hist-words-suffix':'words',
@@ -10806,8 +10859,20 @@ function rysujPrzelacznikiOznaczen() {
     if (pole.type === 'checkbox') pole.checked = wybor;
     else if (pole.getAttribute('role') === 'switch') { pole.setAttribute('aria-checked', String(wybor)); pole.classList.toggle('active', wybor); }
   });
+  // Zdanie "plik ma oznaczenie AI w metadanych" tylko wtedy, gdy to prawda.
+  document.querySelectorAll('[data-ozn-meta]').forEach(function (el) { el.hidden = !metadaneAI(el.getAttribute('data-ozn-meta')); });
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', rysujPrzelacznikiOznaczen); else setTimeout(rysujPrzelacznikiOznaczen, 0);
+// Informacja pod artykulem (art. 50 ust. 1): widac ja przy kazdym tekscie, nowym i z Historii.
+(function () {
+  const art = document.getElementById('article');
+  const info = document.getElementById('ai-info-artykul');
+  if (!art || !info || typeof MutationObserver !== 'function') return;
+  // Artykul pokazuje sie przez style.display = 'block' (w trakcie generowania jest ukryty).
+  const rysuj = function () { const jest = art.style.display === 'block' && art.childNodes.length > 0; if (info.hidden === jest) info.hidden = !jest; };
+  new MutationObserver(rysuj).observe(art, { childList: true, attributes: true, attributeFilter: ['style'] });
+  rysuj();
+})();
 // Pochodzenie tekstu (PR8-18, tabela 3.2 prawa): tresc z AI albo tekst uzytkownika przerobiony przez AI.
 function nowePochodzenieAI(rodzaj) {
   const k = konfigOznaczen();
@@ -10988,10 +11053,10 @@ function znacznikId3AI(opcje) {
   const k = konfigOznaczen();
   const utf8 = function (s) { return new TextEncoder().encode(String(s || '')); };
   const txxx = function (opis, wartosc) { return ramkaId3('TXXX', polaczBajty([new Uint8Array([3]), utf8(opis), new Uint8Array([0]), utf8(wartosc)])); };
-  const tekst = function (id, wartosc) { return ramkaId3(id, polaczBajty([new Uint8Array([3]), utf8(wartosc)])); };
+  const ramkaTekstu = function (id, wartosc) { return ramkaId3(id, polaczBajty([new Uint8Array([3]), utf8(wartosc)])); };
   const jezyk = ({ pl: 'pol', en: 'eng', de: 'deu', cs: 'ces' })[o.jezyk] || 'eng';
-  const ramki = [txxx('AI_GENERATED', 'true'), txxx('DIGITAL_SOURCE_TYPE', o.zrodlo || zrodloAI('ai').iptc), tekst('TSSE', k.system)];
-  if (o.tytul) ramki.push(tekst('TIT2', o.tytul));
+  const ramki = [txxx('AI_GENERATED', 'true'), txxx('DIGITAL_SOURCE_TYPE', o.zrodlo || zrodloAI('ai').iptc), ramkaTekstu('TSSE', k.system)];
+  if (o.tytul) ramki.push(ramkaTekstu('TIT2', o.tytul));
   // COMM: informacja dla odtwarzaczy, ze glos jest syntetyczny (kodowanie UTF-8, jezyk, pusty opis).
   const uwaga = tekstEtykietyAI('audio', o.jezyk || 'en');
   if (uwaga) ramki.push(ramkaId3('COMM', polaczBajty([new Uint8Array([3]), utf8(jezyk), new Uint8Array([0]), utf8(uwaga)])));
@@ -11012,6 +11077,30 @@ async function zbudujMp3(czesci, opcje) {
   for (const c of czesci) { if (c) bajty.push(bezId3(new Uint8Array(await c.arrayBuffer()))); }
   if (metadaneAI('audio')) bajty.unshift(znacznikId3AI(opcje));
   return new Blob(bajty, { type: 'audio/mpeg' });
+}
+// Zapowiedz glosowa (PR8-17) w jezyku nagrania, doklejona do pierwszego fragmentu: bez osobnego
+// wywolania dostawcy i bez dodatkowej pozycji w pakiecie. Odsluch w module = to samo co w pliku.
+function zapowiedzAudioAI(kod) { return wyborOznaczenia('audio') ? tekstEtykietyAI('audio', kod) : ''; }
+function jezykModuluAudio() { return KODY_JEZYKOW[(document.getElementById('au-lang') || {}).value] || kodJezykaArtykulu(); }
+function zZapowiedziaAI(units, kod) {
+  const z = zapowiedzAudioAI(kod);
+  if (!z || !units || !units.length) return units;
+  const kopia = units.slice();
+  kopia[0] = Object.assign({}, kopia[0], { text: z + ' ' + (kopia[0].text || '') });
+  return kopia;
+}
+function opcjeMp3Modulu() {
+  const sc = document.getElementById('au-script');
+  const h = sc && sc.querySelector('h1');
+  return { jezyk: jezykModuluAudio(), tytul: h ? h.textContent.trim() : '' };
+}
+function opcjeMp3Artykulu() { return { jezyk: kodJezykaArtykulu(), tytul: tytulEksportu(document.getElementById('article')) }; }
+// Przerobki (posty, newsletter, FAQ): krotka etykieta na koncu kopii, wedlug przelacznika tekstu.
+function przerobkaZOznaczeniemAI(tekst) {
+  const t = String(tekst || '');
+  if (!t.trim() || !wyborOznaczenia('tekst')) return t;
+  const etykieta = tekstEtykietyAI('tekst', kodJezykaArtykulu(), true);
+  return !etykieta || t.indexOf(etykieta) >= 0 ? t : t.replace(/\s+$/, '') + '\n\n' + etykieta;
 }
 
 // ── PDF: pakiet XMP dopisany aktualizacja przyrostowa (pdfmake nie zapisuje XMP) ──
@@ -14804,13 +14893,14 @@ async function publishToCms(status) {
     const h1 = artClone.querySelector('h1');
     const title = (h1 && h1.textContent.trim()) || document.getElementById('topic').value.trim() || _t('wp-default-title');
     if (h1) h1.remove();
+    const content = oczyscHtmlModelu(artClone.innerHTML);
     // R9-D: tresc wpisu w <div data-ai-*> (filtr czysci atrybuty, wiec opakowanie po nim).
-    const content = opakowanieCmsAI(artClone, oczyscHtmlModelu(artClone.innerHTML));
+    const wpis = opakowanieCmsAI(artClone, content);
 
     if (activeCms === 'wp') {
-      await publishToWordPress(title, content, excerpt, status, res);
+      await publishToWordPress(title, wpis, excerpt, status, res);
     } else {
-      await publishToDrupal(title, content, excerpt, status, res);
+      await publishToDrupal(title, wpis, excerpt, status, res);
     }
   } catch(e) {
     res.innerHTML = (e && e.name === 'TypeError') ? htmlBleduCms(0, '', activeCms) : '<span class="stan-blad">' + escapeHtml(komunikatBleduApi(e)) + '</span>';
@@ -15526,7 +15616,7 @@ function showRepurpose(text) {
 }
 
 function copyRepurpose() {
-  const text = document.getElementById('repurpose-out').value;
+  const text = przerobkaZOznaczeniemAI(document.getElementById('repurpose-out').value);
   navigator.clipboard.writeText(text).catch(()=>{});
 }
 
@@ -18901,7 +18991,7 @@ async function podcastDownload(btn) {
   var old = btn.innerHTML; btn.disabled = true; btn.innerHTML = ikona('loader', 'kreci');
   try {
     var blobs = []; for (var i = 0; i < units.length; i++) blobs.push(await podGen(units[i]));
-    var full = new Blob(blobs, { type: 'audio/mpeg' });
+    var full = await zbudujMp3(blobs, opcjeMp3Artykulu()); // R9-D: ID3 z oznaczeniem AI
     var url = URL.createObjectURL(full);
     var a = document.createElement('a'); a.href = url; a.download = nazwaPlikuEksportu(tytulEksportu(document.getElementById('article')), 'mp3', '-podcast'); a.click();
     setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
@@ -19050,9 +19140,9 @@ function audioHistAttach(buffer, blob, dur, sig, ttsCost){ var e=audioCurEntry; 
 function audioRenderHistory(){ var w=document.getElementById('au-history-wrap'); if(!w) return; if(!audioHistory.length){ w.style.display='none'; w.innerHTML=''; return; } w.style.display='block'; var rows=audioHistory.map(function(e,i){ var ico=ikona(e.buffer?'volume-2':'notebook-pen'); var c=e.cost?(' \u00B7 $'+e.cost.toFixed(3)):''; return '<button type="button" class="au-hist-item" onclick="audioHistLoad('+i+')"><span class="au-hist-ikona">'+ico+'</span><span class="au-hist-tekst"><span class="au-hist-topic">'+escapeHtml(e.topic||'-')+'</span><span class="au-hist-meta">'+escapeHtml(_t('au-typ-'+e.type))+' \u00B7 '+e.ts+c+'</span></span></button>'; }).join(''); w.innerHTML='<div class="field-label">'+_t('audio-hist')+'</div><div class="au-hist-lista">'+rows+'</div>'; }
 function audioHistLoad(i){ var e=audioHistory[i]; if(!e) return; audioBarClose(); var ty=document.getElementById('au-type'); if(ty) ty.value=e.type; audioSetType(); var sc=document.getElementById('au-script'); if(sc) sc.innerHTML=e.html; audioResultType=e.type; var rw=document.getElementById('au-result-wrap'); if(rw) rw.style.display='block'; var sa=document.getElementById('au-script-actions'), ta=document.getElementById('au-trans-actions'); if(e.type==='transcription'){ if(sa)sa.style.display='none'; if(ta)ta.style.display='flex'; } else { if(sa)sa.style.display='flex'; if(ta)ta.style.display='none'; } audioInvalidate(); if(e.buffer){ AUDIO.buffer=e.buffer; AUDIO.blob=e.blob; AUDIO.dur=e.dur; AUDIO.sig=e.sig; AUDIO.offset=0; AUDIO.playing=false; } audioCurEntry=e; if(rw&&rw.scrollIntoView){ try{ rw.scrollIntoView({block:'start'}); }catch(_e){} } }
 function fmtTime(s){ s=Math.max(0,s|0); var m=(s/60)|0, ss=s%60; return m+':'+(ss<10?'0':'')+ss; }
-function audioSig(){ var sc=document.getElementById('au-script'); return [audioType(), audioEng(), (document.getElementById('au-voices')||{}).value, [audioVoiceFor(0),audioVoiceFor(1),audioVoiceFor(2),audioVoiceFor(3)].join(','), voiceCfg.elevenModel, (sc?sc.innerText:'')].join('|'); }
+function audioSig(){ var sc=document.getElementById('au-script'); return [audioType(), audioEng(), (document.getElementById('au-voices')||{}).value, [audioVoiceFor(0),audioVoiceFor(1),audioVoiceFor(2),audioVoiceFor(3)].join(','), voiceCfg.elevenModel, zapowiedzAudioAI(jezykModuluAudio()), (sc?sc.innerText:'')].join('|'); }
 function audioInvalidate(){ try{ if(AUDIO.src){ AUDIO.src._stopped=true; AUDIO.src.onended=null; AUDIO.src.stop(); } }catch(e){} if(AUDIO.raf){ cancelAnimationFrame(AUDIO.raf); AUDIO.raf=0; } if(AUDIO.url){ try{ URL.revokeObjectURL(AUDIO.url); }catch(e){} } AUDIO.src=null; AUDIO.buffer=null; AUDIO.blob=null; AUDIO.url=null; AUDIO.sig=null; AUDIO.dur=0; AUDIO.offset=0; AUDIO.playing=false; }
-async function audioBuildCore(units, sig, attach, eng){
+async function audioBuildCore(units, sig, attach, eng, mp3){
   if(AUDIO.buffer && AUDIO.sig===sig){ if(!AUDIO.url && AUDIO.blob){ try{ AUDIO.url=URL.createObjectURL(AUDIO.blob); }catch(e){} } return AUDIO.buffer; }
   audioInvalidate();
   if(!units || !units.length) throw new Error('empty');
@@ -19065,7 +19155,7 @@ async function audioBuildCore(units, sig, attach, eng){
   await Promise.all(ws);
   var blobs=[], bufs=[];
   for(var i=0;i<n;i++){ if(ttsState.cancel){ audioBarHide(); throw new Error('cancel'); } blobs.push(blobsArr[i]); var ab=await blobsArr[i].arrayBuffer(); var dec=await ctx.decodeAudioData(ab.slice(0)); bufs.push(dec); }
-  AUDIO.blob=new Blob(blobs,{type:'audio/mpeg'}); AUDIO.url=URL.createObjectURL(AUDIO.blob);
+  AUDIO.blob=await zbudujMp3(blobs, mp3||opcjeMp3Artykulu()); AUDIO.url=URL.createObjectURL(AUDIO.blob); // R9-D: ID3 z oznaczeniem AI
   var sr=ctx.sampleRate, ch=1, total=0;
   bufs.forEach(function(bf){ if(bf.numberOfChannels>ch) ch=bf.numberOfChannels; total+=bf.length; });
   var out=ctx.createBuffer(ch, total, sr);
@@ -19074,7 +19164,7 @@ async function audioBuildCore(units, sig, attach, eng){
   try{ var _ch=0; units.forEach(function(u){ _ch+=((typeof u==='string')?u:(u.text||'')).length; }); var ttsCost=_ch/1000*(eng==='eleven'?0.30:0.05); dodajKoszt(eng==='eleven'?'eleven':'openai', ttsCost); if(attach) audioHistAttach(out, AUDIO.blob, AUDIO.dur, sig, ttsCost); }catch(e){}
   return out;
 }
-async function audioBuild(){ return audioBuildCore(audioUnits(), audioSig(), true, audioEng()); }
+async function audioBuild(){ return audioBuildCore(zZapowiedziaAI(audioUnits(), jezykModuluAudio()), audioSig(), true, audioEng(), opcjeMp3Modulu()); }
 function audioBarSetIcon(s){ var b=document.getElementById('audio-bar-play'); if(b) b.innerHTML=(s==='pause')?'&#10073;&#10073;':'&#9654;'; }
 function audioBarShowBuild(i,n){ var b=document.getElementById('audio-bar'); if(!b)return; if(audioInline){ audioBarPlaceInline(); } else { audioBarPlaceFixed(); document.body.classList.add('audio-bar-open'); } b.classList.add('show'); var pc=n?Math.round(i/n*100):0;
   var f=document.getElementById('audio-bar-fill'); if(f) f.style.width=pc+'%';
@@ -19521,6 +19611,11 @@ async function kbAudioTranscribeAndOpen(file) {
         <div id="au-result-wrap" style="display:none">
           <div class="field-label" id="au-script-etykieta" data-i18n="audio-script">Skrypt (edytowalny)</div>
           <div id="au-script" class="article" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="au-script-etykieta"></div>
+          <!-- R9-D (PR8-17, art. 50 ust. 1 i 2 AI Act): syntetyczny glos i zapowiedz na poczatku nagrania -->
+          <div class="au-ozn au-tylko-skrypt">
+            <p class="tekst-pomoc ai-info"><svg class="ikona" aria-hidden="true"><use href="#i-info"/></svg><span><span data-i18n="ozn-audio-info">Nagranie czyta syntetyczny głos wygenerowany przez AI.</span> <span data-ozn-meta="audio" data-i18n="ozn-audio-info-meta">Pobrany plik MP3 ma oznaczenie AI w metadanych.</span></span></p>
+            <label class="ozn-wiersz" for="ozn-audio"><input type="checkbox" id="ozn-audio" data-oznaczenie="audio" onchange="ustawWyborOznaczenia('audio', this.checked)"><span data-i18n="ozn-audio-przelacznik">Zacznij nagranie zapowiedzią, że czyta je syntetyczny głos</span></label>
+          </div>
           <div id="au-odtwarzacz">
             <div id="au-script-actions">
               <button type="button" class="btn-generate" id="au-play-btn" onclick="audioPlay(this)"><svg class="ikona" aria-hidden="true"><use href="#i-play"/></svg><span data-i18n="audio-play">Odtwórz</span></button>
@@ -19552,7 +19647,7 @@ async function kbAudioTranscribeAndOpen(file) {
   <button id="audio-bar-play" type="button" title="Pauza/Wznów" aria-label="Pauza/Wznów" onclick="audioBarPlayPause()">&#10073;&#10073;</button>
   <div id="audio-bar-main">
     <div id="audio-bar-track" onpointerdown="audioBarScrubStart(event)"><div id="audio-bar-fill"></div></div>
-    <div id="audio-bar-meta"><span id="audio-bar-left">0:00 / 0:00</span><span id="audio-bar-pct">0%</span></div>
+    <div id="audio-bar-meta"><span id="audio-bar-left">0:00 / 0:00</span><span id="audio-bar-ai" data-i18n="ozn-audio-glos">Syntetyczny głos AI</span><span id="audio-bar-pct">0%</span></div>
   </div>
   <button id="audio-bar-close" type="button" title="Zamknij" aria-label="Zamknij" onclick="audioBarClose()">&#10005;</button>
 </div>
