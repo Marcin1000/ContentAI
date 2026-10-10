@@ -434,9 +434,10 @@ function teksty(jezyk) {
 const STYL_KONT = `
 .pole-blad{display:flex;gap:6px;align-items:flex-start;margin:6px 0 0;color:var(--c-blad);font-size:13px;line-height:1.45}
 .podpowiedz{margin:6px 0 0;color:var(--c-tekst-3);font-size:13px;line-height:1.45}
-.pole-wyboru{margin:0 0 14px}
-.zgoda{display:flex;gap:12px;align-items:flex-start;min-height:44px;margin:0;font:400 14px/1.45 var(--f-ui);color:var(--c-tekst-2);cursor:pointer}
-.zgoda input{flex:none;width:22px;height:22px;margin:1px 0 0;padding:0;border-radius:4px;accent-color:var(--c-akcent)}
+.pole-wyboru{margin:0 0 6px}
+.zgoda{display:flex;gap:12px;align-items:flex-start;min-height:44px;margin:0;padding:12px 0;font:400 14px/1.45 var(--f-ui);color:var(--c-tekst-2);cursor:pointer}
+.zgoda input{flex:none;width:22px;height:22px;margin:-1px 0 0;padding:0;border-radius:4px;accent-color:var(--c-akcent)}
+.pole-wyboru .pole-blad{margin:0 0 6px 34px}
 .zgoda input[aria-invalid="true"]{outline:2px solid var(--c-blad);outline-offset:2px}
 .zgoda a{font-weight:600}
 .pulapka{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
@@ -447,6 +448,7 @@ const STYL_KONT = `
 .sekcja h2{margin:0 0 8px;font:600 17px/1.3 var(--f-ui)}
 .sekcja p{margin:0 0 10px;color:var(--c-tekst-2);font-size:14px;line-height:1.5}
 .sekcja form{margin-top:12px}
+.sekcja .maly{margin:12px 0 0}
 .stan{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:var(--r-sm);font:600 12px/1.5 var(--f-ui);vertical-align:1px}
 .stan-ok{background:var(--c-info-tlo);color:var(--c-info)}
 .stan-uwaga{background:var(--c-akcent-tlo);color:var(--c-akcent-mocny)}
@@ -462,6 +464,7 @@ const STYL_KONT = `
 .lista li{margin:0 0 6px}
 .odnosniki{display:flex;flex-wrap:wrap;gap:4px 16px;margin:0 0 10px}
 .odnosniki a{display:inline-flex;align-items:center;min-height:44px;font-size:14px;font-weight:600}
+@media (min-width:960px){.redakcja{position:sticky;top:0;align-self:start;height:100vh;height:100dvh}}
 `;
 
 const IKONA_OK = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>';
