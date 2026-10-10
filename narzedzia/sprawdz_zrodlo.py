@@ -951,7 +951,7 @@ KONTROLE = [
     ("U/odznaka", "odznaka pakietu w pasku gornym",
      'id="pakiet-badge"', None, ("proxy",)),
     ("U/przechwyt", "jeden punkt przechwytu platnych wywolan",
-     "if (!PLATNE[sciezka]) return oryginalnyFetch.apply(null, arguments);", None, ("proxy",)),
+     "if (!PLATNE[sciezka] || !wlasnyAdres(zasob)) return oryginalnyFetch.apply(null, arguments)", None, ("proxy",)),
     ("U/402", "ekran wyczerpanego pakietu po HTTP 402",
      "window.pokazLimitPakietu", None, ("proxy",)),
     ("U/artykul", "tylko generowanie tresci zglasza sie jako artykul",

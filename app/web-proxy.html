@@ -13,6 +13,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="cai-konto" content="WSTAW_TUTAJ_KONTO">
+<!-- R9-D (ARCH8-24): identyfikator konta z /konto.js (window.CAI_KONTO); meta zostaje zapasem dla serwera bez tej trasy -->
+<script src="/konto.js"></script>
 <script id="cai-motyw-start">
 /* Stan widoku ustawiany przed pierwszym malowaniem: motyw, jezyk i klasy ukladu.
    Bez tego aplikacja migala jasnym motywem przy odswiezeniu, pokazywala polskie
@@ -26,6 +28,7 @@
     var m = document.querySelector('meta[name="cai-konto"]');
     if (m && m.content && !/^WSTAW/.test(m.content)) konto = m.content;
   } catch (e) {}
+  if (typeof window.CAI_KONTO === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(window.CAI_KONTO)) konto = window.CAI_KONTO; // R9-D (ARCH8-24)
   var pref = czytaj('cai-dark');
   var jasnySystem = false;
   try { jasnySystem = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches); } catch (e) {}
@@ -3156,6 +3159,97 @@ label.ozn-wiersz small { font-size: var(--t-xs); line-height: 1.45; color: var(-
 .au-ozn .ai-info { margin-top: 0; }
 #audio-bar-ai { flex: 1; min-width: 0; padding: 0 var(--s-8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
 }
+@layer widoki {
+/* ══ RUNDA 9, wykonawca D: konto, klucze BYOK, pakiet i zakup ══ */
+.settings-item[hidden], .konto-karta[hidden], .konto-paski[hidden], .pakiet-zakup[hidden] { display: none; }
+/* karta w miejscu "Wygeneruj": bez klucza (E1) albo po wyczerpaniu puli (A4) */
+body.karta-konta #gen-btn { display: none; }
+.konto-karta { display: flex; flex-direction: column; gap: var(--s-4); padding: var(--s-12); border: 1px solid var(--c-akcent-ramka); border-radius: var(--r-md); background: var(--c-akcent-tlo); }
+.konto-karta-tytul { margin: 0; font-size: var(--t-sm); font-weight: var(--g-mocny); line-height: 1.4; color: var(--c-tekst); }
+.konto-karta-opis { margin: 0; font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-2); }
+.konto-karta-akcje { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-8) var(--s-12); margin-top: var(--s-6); }
+.konto-karta-akcje .btn-generate { width: auto; flex: 1 1 auto; }
+/* paski stanu konta nad aplikacja */
+.konto-paski { flex: none; display: flex; flex-direction: column; }
+.konto-pasek { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-4) var(--s-12); margin: 0; padding: var(--s-6) var(--s-16); border-bottom: 1px solid var(--c-linia);
+  font-size: var(--t-sm); line-height: 1.45; color: var(--c-tekst); background: var(--c-panel); }
+.konto-pasek > .ikona { flex: none; }
+.konto-pasek-tekst { flex: 1 1 240px; min-width: 0; }
+.konto-pasek .btn-link { font-weight: var(--g-mocny); }
+.konto-pasek-info { background: var(--c-akcent-tlo); }
+.konto-pasek-info > .ikona { color: var(--c-akcent-mocny); }
+.konto-pasek-uwaga { background: var(--c-uwaga-tlo); border-color: var(--c-uwaga-ramka); }
+.konto-pasek-uwaga > .ikona { color: var(--c-uwaga); }
+.konto-pasek-blad { background: var(--c-blad-tlo); border-color: var(--c-blad-ramka); }
+.konto-pasek-blad > .ikona { color: var(--c-blad); }
+#pakiet-badge.pakiet-alarm { border-color: var(--c-blad-ramka); color: var(--c-blad); }
+/* okno pakietu: pula spoza pakietu (KOD8-04) i zakup (UX8-20) */
+.pakiet-niedostepna { display: flex; justify-content: space-between; align-items: center; gap: var(--s-8); margin-bottom: 10px; font-size: var(--t-xs); color: var(--c-tekst-3); }
+.pakiet-zakup { margin-top: var(--s-16); padding-top: var(--s-16); border-top: 1px solid var(--c-linia); }
+.zakup { display: flex; flex-direction: column; gap: var(--s-8); }
+.zakup-naglowek { display: flex; align-items: center; justify-content: space-between; gap: var(--s-8); flex-wrap: wrap; }
+.zakup-naglowek b { font-size: var(--t-md); color: var(--c-tekst); }
+.zakup-karty { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--s-8); }
+.zakup-karta { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-4); padding: var(--s-12); border: 1px solid var(--c-ramka); border-radius: var(--r-md);
+  background: var(--c-pole); color: var(--c-tekst); text-align: left; cursor: pointer; font: inherit; }
+.zakup-karta:hover { border-color: var(--c-ramka-najazd); }
+.zakup-karta[aria-checked="true"] { border-color: var(--c-akcent); box-shadow: 0 0 0 1px var(--c-akcent); }
+.zakup-karta-nazwa { font-weight: var(--g-mocny); font-size: var(--t-md); }
+.zakup-karta-cena { font-size: var(--t-sm); color: var(--c-tekst-2); }
+.zakup p { margin: 0; }
+.zakup .ozn-wiersz { margin-top: 0; }
+.zakup .btn-generate.zakup-przycisk { width: 100%; justify-content: center; }
+.zakup-przycisk:disabled { opacity: .55; cursor: not-allowed; }
+.zakup-przycisk.btn-working { cursor: progress; }
+.zakup-test { margin: 0 0 var(--s-12); border: 1px solid var(--c-linia); border-radius: var(--r-md); }
+.zakup-stan { display: flex; flex-direction: column; gap: var(--s-8); align-items: flex-start; }
+.zakup-stan p { margin: 0; }
+/* ekran Konto (A7) */
+.modal.konto-okno { width: 640px; }
+.konto-tresc { display: flex; flex-direction: column; gap: var(--s-16); }
+.konto-kto { display: flex; align-items: center; gap: var(--s-8); }
+.konto-kto b { display: block; overflow-wrap: anywhere; }
+.konto-kto small { display: block; font-size: var(--t-xs); }
+.konto-sekcja { padding-top: var(--s-12); border-top: 1px solid var(--c-linia); }
+.konto-sekcja h4 { margin: 0 0 var(--s-8); font-size: var(--t-md); font-weight: var(--g-mocny); color: var(--c-tekst); }
+.konto-sekcja > p { margin: 0 0 var(--s-8); }
+.konto-akcje { display: flex; flex-wrap: wrap; gap: var(--s-8); margin: var(--s-8) 0; }
+.konto-akcje .btn-generate { width: auto; }
+.konto-akcje a.btn-secondary { text-decoration: none; }
+.btn-secondary.niszcz { color: var(--c-blad); }
+.konto-klucz { padding: var(--s-8) 0; border-bottom: 1px solid var(--c-linia); }
+.konto-klucz-glowa { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-8); flex-wrap: wrap; }
+.konto-klucz-glowa small { display: block; font-size: var(--t-xs); color: var(--c-tekst-3); }
+.konto-klucz-stan { font-size: var(--t-xs); color: var(--c-tekst-2); }
+.konto-klucz-akcje { display: flex; flex-wrap: wrap; gap: var(--s-6); margin-top: var(--s-6); }
+.konto-klucz-zmiana[hidden] { display: none; }
+/* pole klucza: kreator, Konto, Grafika i Audio */
+.byok-pole { margin: var(--s-12) 0 var(--s-4); }
+.byok-etykieta { display: block; margin: var(--s-8) 0 var(--s-4); font-size: var(--t-sm); font-weight: var(--g-mocny); color: var(--c-tekst); }
+.byok-pole-opis { margin: 0 0 var(--s-6); }
+.byok-wiersz { display: flex; flex-wrap: wrap; gap: var(--s-6); }
+.byok-wiersz input { flex: 1 1 220px; min-width: 0; font-family: var(--f-mono); font-size: var(--t-sm); }
+.byok-wiersz .btn-generate { width: auto; }
+.byok-wynik { display: flex; align-items: flex-start; gap: var(--s-6); margin: var(--s-6) 0 0; }
+.byok-wynik:empty { margin: 0; }
+.byok-wynik .ikona { flex: none; margin-top: 2px; }
+.byok-wynik-ok { color: var(--c-sukces); }
+.byok-wynik-blad { color: var(--c-blad); }
+.byok-koszt, .byok-alarm { display: flex; gap: var(--s-8); align-items: flex-start; margin: 0 0 var(--s-8); padding: var(--s-8) var(--s-12); border-radius: var(--r-md); font-size: var(--t-sm); line-height: 1.5; }
+.byok-koszt { background: var(--c-panel); border: 1px solid var(--c-linia); color: var(--c-tekst-2); }
+.byok-alarm { background: var(--c-blad-tlo); border: 1px solid var(--c-blad-ramka); color: var(--c-tekst); }
+.byok-koszt > .ikona, .byok-alarm > .ikona { flex: none; margin-top: 2px; }
+.byok-alarm > .ikona { color: var(--c-blad); }
+.byok-gdzie { margin: var(--s-8) 0; }
+.byok-kroki { margin: var(--s-8) 0; padding-left: var(--s-20); font-size: var(--t-sm); line-height: 1.55; color: var(--c-tekst-2); }
+.byok-kroki li + li { margin-top: var(--s-4); }
+.byok-jest { display: flex; gap: var(--s-6); align-items: center; margin: 0 0 var(--s-8); }
+.byok-podpowiedzi { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-6); margin: var(--s-8) 0; }
+#start-tresc input[type=text], #start-tresc textarea { width: 100%; box-sizing: border-box; }
+.platnosc-tresc { display: flex; gap: var(--s-8); align-items: flex-start; }
+/* konto jednoosobowe: jedna lista "Twoja baza wiedzy", bez wyboru prywatna/wspolna (UX8-23, A10) */
+body.konto-samoobslugowe #bazas-zakres { display: none; }
+}
 </style>
 </head>
 <body>
@@ -3248,6 +3342,10 @@ label.ozn-wiersz small { font-size: var(--t-xs); line-height: 1.45; color: var(-
           <span id="cms-menu-icon"><svg class="ikona" aria-hidden="true"><use href="#i-globe"/></svg></span>
           <div><div class="settings-item-tytul" data-i18n="settings-cms-title">Integracja CMS</div><div class="settings-item-opis" id="cms-menu-sub" data-i18n="settings-cms-sub">WordPress / Drupal</div></div>
         </div>
+        <div class="settings-item" id="konto-item" hidden onclick="otworzKonto()">
+          <span><svg class="ikona" aria-hidden="true"><use href="#i-user"/></svg></span>
+          <div><div class="settings-item-tytul" data-i18n="konto-menu-title">Konto i płatności</div><div class="settings-item-opis" data-i18n="konto-menu-sub">pakiet, klucze API, Twoje dane</div></div>
+        </div>
         <div class="settings-item" onclick="otworzStart();closeSettingsMenu()">
           <span><svg class="ikona" aria-hidden="true"><use href="#i-compass"/></svg></span>
           <div><div class="settings-item-tytul" data-i18n="start-menu-title">Konfiguracja konta</div><div class="settings-item-opis" data-i18n="start-menu-sub">klucze API i pierwsze kroki</div></div>
@@ -3328,6 +3426,8 @@ label.ozn-wiersz small { font-size: var(--t-xs); line-height: 1.45; color: var(-
 
 <!-- MOBILE FAB (generate) - widoczny tylko na zakładce Generator -->
 
+<!-- R9-D: paski stanu konta (tryb testowy platnosci, potwierdzenie e-maila, zalegla platnosc, wygasla sesja) -->
+<div class="konto-paski" id="konto-paski" hidden></div>
 <div class="layout">
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -3563,6 +3663,8 @@ label.ozn-wiersz small { font-size: var(--t-xs); line-height: 1.45; color: var(-
           </details>
 
           <div class="form-actions-sticky">
+            <!-- R9-D (UX8-19, UX8-20): w miejscu "Wygeneruj" karta "Podlacz klucz" (E1) albo "Wybierz pakiet" (A4) -->
+            <div class="konto-karta" id="konto-karta" hidden role="status"></div>
             <div class="generuj-rzad">
             <button class="btn-generate" onclick="generate()" id="gen-btn"><svg class="ikona" aria-hidden="true"><use href="#i-zap"/></svg><span class="gen-etykieta" data-i18n="btn-generate">Wygeneruj treść</span><span class="gen-samokorekta" data-i18n="gen-z-samokorekta">Wygeneruj z samokorektą</span><span class="kbd">Ctrl ↵</span><span class="gen-trwa"><svg class="ikona kreci" aria-hidden="true"><use href="#i-loader"/></svg><span data-i18n="btn-generuje">Generuję…</span></span></button>
             <div class="grupa-wrap" id="grupa-brief-wrap">
@@ -4832,6 +4934,8 @@ var magazyn = (function () {
     var m = document.querySelector('meta[name="cai-konto"]');
     if (m && m.content && !/^WSTAW/.test(m.content)) konto = m.content;
   } catch (e) {}
+  // R9-D (ARCH8-24): identyfikator z /konto.js wygrywa, meta to zapas dla serwera bez tej trasy.
+  if (typeof window.CAI_KONTO === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(window.CAI_KONTO)) konto = window.CAI_KONTO;
   var prefiks = konto ? 'u:' + konto + ':' : '';
   var WSPOLNE = { 'cai_lang': 1, 'cai-dark': 1 };
   var klucz = function (n) { return WSPOLNE[n] ? n : prefiks + n; };
@@ -4916,20 +5020,24 @@ function pokazPowiadomienie(tekst, rodzaj, czas) {
 // Sekrety konta (klucze API, hasla CMS) znikaja z przegladarki przy wylogowaniu -
 // historia, szkic i ustawienia zostaja na swoim miejscu.
 var SEKRETY_KONTA = /^(cai_key_|cai_klucz_)|^(cai-wp|cai-drupal)$/;
-function usunSekretyKonta() {
+function usunSekretyKonta(zostawKlucze) {
   try {
     var pref = magazyn.konto ? 'u:' + magazyn.konto + ':' : '';
     for (var i = localStorage.length - 1; i >= 0; i--) {
       var k = localStorage.key(i);
       if (!k || (pref && k.indexOf(pref) !== 0)) continue;
+      // R9-D (M-10): "Wyloguj sie" na koncie z wlasnymi kluczami zostawia klucze na tym urzadzeniu.
+      if (zostawKlucze && /^cai_klucz_/.test(pref ? k.slice(pref.length) : k)) continue;
       if (SEKRETY_KONTA.test(pref ? k.slice(pref.length) : k)) localStorage.removeItem(k);
     }
   } catch (e) { console.warn('[wyloguj] nie usunieto sekretow:', e && e.name); }
 }
-function wyloguj() {
+function wyloguj(opcje) {
+  // R9-D (UX8-09, M-10): konto z wlasnymi kluczami najpierw wybiera, co z kluczami na tym urzadzeniu.
+  if (!opcje && typeof window.zapytajPrzyWylogowaniu === 'function' && window.zapytajPrzyWylogowaniu()) return;
   // Poprawki z trybu Edytuj do historii, zanim strona zniknie (kod-04).
   if (editMode) toggleEdit();
-  usunSekretyKonta();
+  usunSekretyKonta(!!(opcje && opcje.zostawKlucze));
   // POST, nie przejscie pod adres: wylogowania nie da sie wywolac obrazkiem
   // ani linkiem z obcej strony.
   const f = document.createElement('form');
@@ -5474,6 +5582,18 @@ var I18N = {
     'pakiet-funkcja-title':'Ta funkcja nie wchodzi w Twój pakiet',
     'pakiet-wywolania':'Wywołania modelu','pakiet-wywolanie':'Wywołania modelu',
     'pakiet-wywolania-opis':'Jeden artykuł to kilka wywołań: plan, treść, korekta, przeróbki.',
+    'pakiet-niedostepne-w-pakiecie':'niedostępne w pakiecie','pakiet-limit-zawsze-wlasne':'Darmowe artykuły są wykorzystane. Żeby pisać dalej, wybierz pakiet Standard albo Premium.',
+    'pakiet-limit-odnawialny-wlasne':'Licznik odnowi się {DATA}. Jeśli potrzebujesz więcej teraz, przejdź na wyższy pakiet.','pakiet-zmien':'Zmień pakiet','pakiet-cennik':'Porównaj pakiety',
+    'odznaka-darmowe':'Darmowe: {n} z {m}','odznaka-darmowe-koniec':'Darmowe wykorzystane · Wybierz pakiet','odznaka-wybierz':'Wybierz pakiet','odznaka-zalegla':'płatność zaległa',
+    'odznaka-do':'do {DATA}','zakup-tytul':'Wybierz pakiet','zakup-waluta':'Waluta','zakup-polecany':'polecany','zakup-cena-miesiac':'{CENA} / miesiąc','zakup-podsumowanie':'Pakiet {PAKIET}: {CENA} miesięcznie. Płatność z góry, subskrypcja odnawia się automatycznie co miesiąc, dopóki z niej nie zrezygnujesz. Zrezygnować możesz w każdej chwili w ustawieniach konta; pakiet działa do końca opłaconego miesiąca. Cena jest ceną końcową. Do generowania potrzebny jest Twój klucz API; opłaty u dostawców AI nie są wliczone w cenę.',
+    'zakup-zgoda-1a':'Akceptuję ','zakup-regulamin':'Regulamin','zakup-zgoda-1b':' i zapoznałem się z ','zakup-pouczenie':'pouczeniem o prawie odstąpienia','zakup-zgoda-1c':'.',
+    'zakup-zgoda-2':'Żądam rozpoczęcia świadczenia usługi przed upływem 14 dni na odstąpienie od umowy. Wiem, że jeśli odstąpię od umowy, zapłacę za okres, w którym pakiet był dostępny.',
+    'zakup-zgoda-2-pelny':'Żądam rozpoczęcia świadczenia usługi przed upływem 14 dni na odstąpienie od umowy. Wiem, że mogę odstąpić od umowy w ciągu 14 dni i otrzymać zwrot całej kwoty.',
+    'zakup-przejdz':'Przejdź do płatności · {CENA}','zakup-stopka':'Cena dotyczy narzędzia: za pracę modelu płacisz dostawcy na swoim kluczu. Potwierdzenie płatności wysyła Stripe. Rachunek wystawimy na prośbę: {EMAIL}.',
+    'zakup-wstrzymany':'Sprzedaż pakietów jest chwilowo wstrzymana. Spróbuj później albo napisz do nas.','zakup-bl-istnieje':'To konto ma już aktywną subskrypcję. Pakiet zmienisz w panelu Stripe: Zarządzaj subskrypcją.',
+    'zakup-bl-niedozwolony':'Pakiet tego konta zmienia administrator zespołu.','zakup-bl-plan':'Ten pakiet nie jest dostępny w wybranej walucie. Wybierz inną walutę.',
+    'zakup-bl-stripe':'Stripe chwilowo nie odpowiada. Spróbuj ponownie za chwilę.','zakup-bl-za-duzo':'Za dużo prób w krótkim czasie. Spróbuj ponownie za {s} s.',
+    'zakup-bl-wylaczone':'Płatności są wyłączone na tym serwerze.','zakup-bl-inny':'Nie udało się przejść do płatności. Spróbuj ponownie za chwilę.','zakup-bl-brak-subskrypcji':'To konto nie ma jeszcze subskrypcji. Wybierz pakiet w oknie pakietu.',
     'start-menu-title':'Konfiguracja konta','start-menu-sub':'klucze API i pierwsze kroki',
     'start-dalej':'Dalej','start-wstecz':'Wstecz','start-pomin':'Pomiń kreator',
     'start-krok-z':'Krok {n} z {m}',
@@ -5494,6 +5614,32 @@ var I18N = {
     'start-4-tytul':'Wszystko gotowe',
     'start-4-opis':'Wpisz temat, dodaj słowa kluczowe i kliknij „Wygeneruj treść”. Licznik pakietu jest zawsze w prawym górnym rogu: kliknięcie pokazuje, ile zostało.',
     'start-4-lista':'Gdzie szukać reszty: Baza wiedzy, Historia i Widoczność AI są w pasku na górze (na telefonie w dolnym pasku i w Koncie), a w menu konta ustawisz markę, głos marki i integrację z CMS. Nic z tego nie jest potrzebne do pierwszego artykułu.',
+    'byok-1-tytul':'Podłącz swój klucz Anthropic','byok-1-opis':'Content AI pisze teksty modelem firmy Anthropic. Klucz API działa jak hasło do Twojego konta u Anthropic: płacisz dostawcy tylko za to, czego użyjesz, a nam za narzędzie.',
+    'byok-koszt':'Ile to kosztuje? Artykuł około 800 słów z ocenami i kontrolą faktów to orientacyjnie 0,25-0,50 USD. Wyszukiwanie w sieci i samokorekta zwiększają koszt. Koszt każdego tekstu zobaczysz w Historii.',
+    'byok-jest':'Klucz Anthropic jest zapisany (kończy się na {KONCOWKA}). Możesz przejść dalej albo wkleić nowy.','byok-gdzie':'Klucz zapisuje się tylko w tej przeglądarce. Przy każdym zapytaniu aplikacja przesyła go do serwera Content AI, który przekazuje go dostawcy i niczego nie zapisuje. Opłaty za korzystanie z modeli ponosisz u dostawcy, na jego warunkach. Konto u dostawcy AI zakładasz na jego warunkach, które akceptujesz sam.',
+    'byok-bezpieczenstwo':'Więcej o bezpieczeństwie','byok-nie-mam':'Nie masz klucza? Około 10 minut','byok-krok-1':'Załóż konto w konsoli Anthropic na platform.claude.com (to osobne konto, niezależne od czatu z Claude).',
+    'byok-krok-2':'W Settings, potem Billing, kliknij „Buy credits” i doładuj konto, na przykład 10 USD.','byok-krok-3':'Zalecane: w Billing ustaw „Spend limits”, czyli miesięczny limit wydatków.',
+    'byok-krok-4':'W Settings, potem API keys, kliknij „Create key”, nazwij klucz „Content AI” i skopiuj go. Konsola pokaże go tylko raz.','byok-krok-5':'Wróć tutaj, wklej klucz i kliknij „Sprawdź i zapisz”.',
+    'byok-pelna-instrukcja':'Pełna instrukcja i orientacyjny koszt artykułu','byok-opcjonalne':'Klucze opcjonalne: grafiki, lektor, transkrypcja','byok-przyklad':'Wolisz najpierw zobaczyć wynik?',
+    'byok-pozniej':'Zrobię to później','byok-2-tytul':'Twoja firma (opcjonalnie)','byok-2-opis':'Te dane trafiają do każdego artykułu: AI wie, jak się nazywasz i czym się zajmujesz. Zmienisz je w Koncie.',
+    'byok-firma-nazwa':'Nazwa firmy lub marki','byok-firma-adres':'Adres strony','byok-firma-opis':'Czym się zajmujesz?','byok-2-potem':'Więcej materiałów (oferta, FAQ, cennik) dodasz w Bazie wiedzy, a styl pisania w Głosie marki. Nic z tego nie jest potrzebne do pierwszego artykułu.',
+    'byok-zapisz-dalej':'Zapisz i dalej','byok-pomin':'Pomiń','byok-3-tytul':'Napisz pierwszy artykuł','byok-3-opis':'Każdy artykuł powstaje w około minutę.','byok-3-opis-darmowe':'Darmowe artykuły na start: {n}. Każdy powstaje w około minutę.',
+    'byok-3-opis-pakiet':'Artykuły w pakiecie: zostało {n}. Każdy powstaje w około minutę.','byok-temat':'O czym ma być artykuł?','byok-podpowiedzi':'Podpowiedzi:',
+    'byok-podpowiedz-1':'Jak wybrać pompę ciepła do domu jednorodzinnego','byok-podpowiedz-2':'Jak napisać dobry opis produktu w sklepie internetowym','byok-podpowiedz-3':'Ulga na start w 2026 roku: komu się należy',
+    'byok-siec':'Szukaj w sieci i podaj źródła','byok-siec-pusta':'Twoja baza wiedzy jest pusta, więc fakty przyjdą ze stron w sieci. Źródła zobaczysz pod tekstem.',
+    'byok-siec-opis':'Czego brakuje w bazie wiedzy, AI znajdzie w sieci i wymieni źródła pod tekstem.','byok-napisz':'Napisz artykuł','byok-pole':'Klucz API {DOSTAWCA}',
+    'byok-pokaz':'Pokaż','byok-ukryj':'Ukryj','byok-sprawdz':'Sprawdź i zapisz','byok-zapamietaj':'Zapamiętaj na tym urządzeniu','byok-zapamietaj-opis':'Klucz zostaje przez 30 dni, także po wylogowaniu. Bez tego znika po zamknięciu przeglądarki.',
+    'byok-sprawdzam':'Sprawdzam klucz u {DOSTAWCA}…','byok-ok':'Klucz działa i jest zapisany na tym urządzeniu.','byok-ok-sesja':'Klucz działa. Zostanie w tej przeglądarce do jej zamknięcia.',
+    'byok-ok-lokalnie':'Klucz zapisany w tej przeglądarce.','byok-pusty':'Wklej klucz API w pole powyżej.','byok-zly-format-anthropic':'To nie wygląda na klucz Anthropic. Klucz zaczyna się od „sk-ant-”. Skopiuj go w całości z konsoli Anthropic.',
+    'byok-zly-format-openai':'To nie wygląda na klucz OpenAI. Klucz zaczyna się od „sk-”. Skopiuj go w całości z platform.openai.com.','byok-zly-format':'To nie wygląda na klucz {DOSTAWCA}. Skopiuj go w całości z konsoli dostawcy.',
+    'byok-administracyjny':'To klucz administracyjny. Utwórz w konsoli {DOSTAWCA} zwykły klucz API i wklej go tutaj.','byok-inny-dostawca':'To klucz innego dostawcy. Wklej klucz {DOSTAWCA}.',
+    'byok-odrzucony':'{DOSTAWCA} nie przyjął tego klucza. Skopiuj go jeszcze raz w całości albo utwórz nowy w konsoli dostawcy.','byok-brak-uprawnien':'Klucz działa, ale nie ma dostępu do modeli, których używa aplikacja. Sprawdź ustawienia klucza w konsoli {DOSTAWCA}.',
+    'byok-niedostepny':'{DOSTAWCA} chwilowo nie odpowiada. Spróbuj ponownie za chwilę.','byok-za-duzo':'Za dużo prób w krótkim czasie. Spróbuj ponownie za {s} s.',
+    'byok-sprawdzenie-niedostepne':'Nie udało się teraz sprawdzić klucza. Spróbuj ponownie za chwilę.','byok-brak':'Nie ma zapisanego klucza {DOSTAWCA}.','byok-blad-zapisu':'Nie udało się zapisać klucza. Spróbuj ponownie za chwilę.',
+    'byok-anthropic-opis':'pisanie, oceny, kontrola faktów (wymagany)','byok-openai-opis':'grafiki, lektor, transkrypcja','byok-eleven-opis':'lepszy lektor (opcjonalnie)',
+    'e1-tytul':'Podłącz klucz Anthropic, żeby pisać.','e1-odrzucony':'Anthropic odrzucił zapisany klucz. Podłącz go ponownie, żeby pisać.','e1-opis':'To zajmuje około 5 minut, pokażemy jak. Bez klucza AI nie napisze tekstu.',
+    'e1-podlacz':'Podłącz klucz','e1-przyklad':'Zobacz przykład','a4-darmowe':'Wykorzystano {m} z {m} darmowych artykułów.','a4-okres':'Wykorzystano {m} z {m} artykułów w tym okresie. Licznik wraca {DATA}.',
+    'a4-wybierz':'Wybierz pakiet, żeby pisać dalej','a4-bez-zakupu':'Zakup pakietu jest chwilowo niedostępny. Napisz do nas, jeśli potrzebujesz więcej artykułów.',
     'history-select':'Wybierz artykuł z listy',
     // ── Tooltips ──
     'title-brief-tooltip':'Plan przed pisaniem: frazy, nagłówki H2, luki i zalecana długość',
@@ -5640,6 +5786,17 @@ var I18N = {
     'err-srodki':'Na koncie u dostawcy AI zabrakło środków. Jeśli używasz własnego klucza, doładuj konto u dostawcy. Jeśli nie, zgłoś to administratorowi.',
     'err-uprawnienia':'Klucz API nie ma uprawnień do tej funkcji albo modelu. Zgłoś to administratorowi.','btn-otworz-klucze':'Otwórz konfigurację konta',
     'btn-sprobuj-ponownie':'Spróbuj ponownie',
+    'err-brak-klucza':'Ta funkcja potrzebuje klucza {DOSTAWCA}. Dodaj go w Kluczach API, a potem spróbuj ponownie.','err-email-niepotwierdzony':'Najpierw potwierdź adres e-mail: link jest w wiadomości od Content AI.',
+    'err-zgoda-wymagana':'Zmieniliśmy regulamin. Przeczytaj i zaakceptuj nową wersję, żeby dalej korzystać z aplikacji.','err-limit-wydatkow-wlasny':'Zapytanie zatrzymał limit wydatków, który ustawiłeś w konsoli {DOSTAWCA}. Podnieś go albo poczekaj do nowego miesiąca.',
+    'err-limit-wydatkow-konta':'Twoje konto {DOSTAWCA} doszło do miesięcznego limitu wydatków dla swojego poziomu. Ponawianie nic nie da do początku miesiąca. Wyższy poziom zamówisz w konsoli dostawcy, w części Limits.',
+    'err-weryfikacja-openai':'OpenAI wymaga weryfikacji Twojej organizacji, zanim udostępni generowanie grafik. Zrób to w ustawieniach organizacji na platform.openai.com i spróbuj ponownie.',
+    'err-klucz-wlasny':'{DOSTAWCA} odrzucił Twój klucz API: jest błędny, usunięty albo wygasł. Utwórz nowy klucz w konsoli dostawcy i wklej go w Kluczach API.',
+    'err-srodki-wlasny':'Na Twoim koncie {DOSTAWCA} zabrakło środków albo płatność nie przeszła. Doładuj konto w części Billing konsoli dostawcy i spróbuj ponownie. To nie jest limit pakietu Content AI.',
+    'err-uprawnienia-wlasny':'Twój klucz {DOSTAWCA} nie ma dostępu do tej funkcji albo modelu. Sprawdź ustawienia klucza i obszaru roboczego w konsoli dostawcy.',
+    'err-rate-limit-wlasny':'{DOSTAWCA} chwilowo ogranicza liczbę zapytań z Twojego konta. Spróbuj ponownie za minutę. Nowe konta u dostawcy mają niższe limity, które rosną z czasem.',
+    'err-model-wlasny':'{DOSTAWCA} nie udostępnia Twojemu kluczowi modelu, którego używa aplikacja. Sprawdź dostęp do modeli w konsoli dostawcy.','err-limit-pakietu-zawsze':'Pula pakietu jest wykorzystana i się nie odnawia. Szczegóły są w oknie pakietu.',
+    'err-funkcja-poza-pakietem':'Ta funkcja nie wchodzi w Twój pakiet. Szczegóły są w oknie pakietu.','btn-podlacz-klucz':'Podłącz klucz {DOSTAWCA}','btn-wybierz-pakiet':'Wybierz pakiet',
+    'btn-wyslij-link':'Wyślij link ponownie','btn-rozliczenia':'Rozliczenia {DOSTAWCA}',
     'err-json-modelu':'Model zwrócił odpowiedź w uszkodzonym formacie. Spróbuj jeszcze raz.',
     'wp-published':'opublikowano',
     'wp-draft':'zapisano jako szkic',
@@ -5669,6 +5826,31 @@ var I18N = {
     'spin-brak-sieci':'Brak internetu. Wynik odbiorę, gdy wróci połączenie.',
     'badge-historia':'z historii','hist-otworz':'Otwórz w generatorze',
     'msg-blad-prefiks':'Błąd:','menu-wyloguj':'Wyloguj się','menu-wyloguj-sub':'zakończ sesję na tym urządzeniu',
+    'konto-tytul':'Konto','konto-menu-title':'Konto i płatności','konto-menu-sub':'pakiet, klucze API, Twoje dane','wyl-tytul':'Wylogować się?','wyl-opis':'Zapamiętane klucze API zostają na tym urządzeniu także po wylogowaniu (najwyżej 30 dni) i inne konto ich nie odczyta. Jeśli to wspólny komputer, usuń je przy wylogowaniu.',
+    'wyl-usun':'Wyloguj i usuń klucze','wyl-zostaw':'Wyloguj się','plat-ok-tytul':'Płatność przyjęta','plat-zacznij':'Zacznij pisać','plat-oczekuje':'Czekamy na potwierdzenie płatności od Stripe. To zwykle kilka sekund; okno odświeży się samo.',
+    'plat-ok-tekst':'Pakiet {PAKIET} jest aktywny do {DATA}, potem odnowi się automatycznie. Potwierdzenie płatności Stripe wysłał na {EMAIL}.','plat-opoznienie-tytul':'Pakiet włącza się z opóźnieniem',
+    'plat-opoznienie':'Płatność dotarła, ale Stripe jeszcze nie potwierdził jej naszemu serwerowi. Zwykle trwa to kilka minut. Nie płać drugi raz: odśwież stronę za chwilę, a jeśli pakiet nadal nie działa, napisz na {EMAIL}.',
+    'plat-przerwana':'Płatność nie została dokończona i nic nie pobraliśmy. Pakiet możesz wybrać w każdej chwili.','plat-odnowienie-nieudane':'Nie udało się pobrać opłaty za pakiet {PAKIET}. Zaktualizuj kartę do {DATA}, żeby pakiet działał bez przerwy.',
+    'plat-odnowienie-przycisk':'Zaktualizuj kartę','plat-ustawienia-tytul':'Pakiet i płatności','plat-ustawienia-portal':'Zarządzaj subskrypcją','plat-ustawienia-portal-opis':'Otworzy się panel Stripe. Zmienisz w nim pakiet albo kartę, pobierzesz potwierdzenia płatności i anulujesz subskrypcję.',
+    'plat-ustawienia-rachunek':'Rachunek wystawiamy na prośbę: napisz na {EMAIL_KONTAKT} w ciągu 3 miesięcy od końca miesiąca płatności i podaj jej datę.','sub-aktywna':'Pakiet {PAKIET} jest aktywny. Następne odnowienie: {DATA}.',
+    'sub-anulowana':'Subskrypcja anulowana. Pakiet {PAKIET} działa do {DATA}, potem konto przejdzie na pakiet Darmowy.','sub-wygasla':'Pakiet {PAKIET} wygasł {DATA}. Konto działa w pakiecie Darmowym: historia tekstów i dokumenty zostają, a limity są takie jak w tym pakiecie.',
+    'sub-wybierz':'Wybierz pakiet','pasek-test':'Tryb testowy płatności: karta testowa Stripe, bez prawdziwych pieniędzy.','pasek-sesja':'Sesja wygasła. Zaloguj się ponownie: temat i ustawienia briefu zostaną na miejscu.',
+    'pasek-zgoda':'Zmieniliśmy regulamin. Przeczytaj i zaakceptuj nową wersję, żeby dalej korzystać z aplikacji.','pasek-zgoda-akcja':'Przeczytaj i zaakceptuj',
+    'pasek-email':'Potwierdź adres {EMAIL}: link jest w wiadomości od Content AI.','pasek-zmien-adres':'Zmień adres','potw-ponow-ok':'Wysłaliśmy nowy link. Sprawdź skrzynkę, także folder ze spamem.',
+    'potw-ponow-czekaj':'Link można wysłać ponownie za {s} s.','potw-ponow-blad':'Nie udało się wysłać linku. Spróbuj ponownie za chwilę.','konto-klucze':'Klucze API',
+    'konto-klucze-opis':'Klucze trzyma tylko ta przeglądarka, w zaszyfrowanym ciasteczku przypisanym do Twojego konta. Serwer przekazuje je dostawcy przy każdym zapytaniu i nie zapisuje ich.',
+    'konto-klucze-opis-lokalnie':'Klucze zapisują się tylko w tej przeglądarce. Serwer przekazuje je dostawcy przy każdym zapytaniu i niczego nie zapisuje.',
+    'konto-klucz-ustawiony':'Ustawiony, kończy się na {KONCOWKA}','konto-klucz-do':'zapamiętany do {DATA}','konto-klucz-sesja':'do zamknięcia przeglądarki','konto-klucz-brak':'Nie ustawiony',
+    'konto-klucz-odrzucony':'Odrzucony przez dostawcę: wklej nowy','konto-klucz-dziala':'Klucz działa.','konto-sprawdz':'Sprawdź','konto-zmien':'Zmień','konto-dodaj':'Dodaj klucz',
+    'konto-usun-klucz':'Usuń klucz','konto-usun-blad':'Nie udało się usunąć klucza. Spróbuj ponownie.','konto-klucz-usuniety':'Klucz {DOSTAWCA} usunięty z tego urządzenia.',
+    'konto-email-niepotwierdzony':'adres e-mail niepotwierdzony','konto-pula-jednorazowa':'pula jednorazowa','konto-licznik-wraca':'licznik wraca {DATA}','konto-szczegoly-pakietu':'Szczegóły pakietu',
+    'konto-odstapienie':'Możesz odstąpić od umowy do {DATA}.','konto-odstap':'Odstąp od umowy','konto-odstapienie-14':'Od umowy możesz odstąpić w ciągu 14 dni od zakupu.',
+    'konto-ustawienia-serwera':'Ustawienia konta','konto-firma':'Firma i marka','konto-firma-opis':'Nazwa, strona i opis oferty trafiają do każdego artykułu. Styl pisania ustawisz w Głosie marki.',
+    'konto-oznaczenia':'Oznaczenia AI','konto-oznaczenia-opis':'Pliki zawsze niosą informację o AI w metadanych. Tu włączasz widoczne etykiety dla czytelników; to samo zmienisz przy eksporcie i publikacji.',
+    'konto-ozn-tekst':'Zdanie o AI na końcu tekstu (pliki, schowek, publikacja w CMS)','konto-ozn-grafika':'Napis „Grafika wygenerowana przez AI” na pobranych grafikach',
+    'konto-ozn-audio':'Zapowiedź na początku nagrania, że czyta je syntetyczny głos','konto-dane':'Twoje dane','konto-dane-opis':'Dane konta i bazy wiedzy pobierzesz z serwera. Historia artykułów jest tylko w tej przeglądarce: wyeksportuj ją, zanim zmienisz urządzenie.',
+    'konto-pobierz-dane':'Pobierz moje dane','konto-eksport-historii':'Eksportuj historię','konto-sekcja-konto':'Konto','konto-email-haslo':'E-mail, hasło i wylogowanie wszędzie',
+    'konto-usun':'Usuń konto',
     'msg-magazyn-pelny':'Pamięć przeglądarki jest pełna. Te dokumenty zapisano skrócone i po odświeżeniu będą krótsze: {lista}. Przenieś je do bazy na serwerze albo usuń niepotrzebne.','okno-zamknij':'Zamknij',
     'ver-poprawiony-hybryda':'Poprawiony SEO+AIO','ver-poprawiony-aio':'Poprawiony AIO','ver-poprawiony-seo':'Poprawiony SEO','ver-wariant':'Wariant',
     'msg-artykul-uciety':'Tekst został ucięty na limicie długości. Zmniejsz długość albo wygeneruj ponownie.',
@@ -6213,6 +6395,18 @@ var I18N = {
     'pakiet-funkcja-title':'This feature is not part of your plan',
     'pakiet-wywolania':'Model calls','pakiet-wywolanie':'Model calls',
     'pakiet-wywolania-opis':'One article takes several calls: plan, content, review, rewrites.',
+    'pakiet-niedostepne-w-pakiecie':'not in this plan','pakiet-limit-zawsze-wlasne':'You have used the free articles. To keep writing, choose the Standard or Premium plan.',
+    'pakiet-limit-odnawialny-wlasne':'The counter resets on {DATA}. If you need more now, move to a higher plan.','pakiet-zmien':'Change plan','pakiet-cennik':'Compare plans',
+    'odznaka-darmowe':'Free: {n} of {m}','odznaka-darmowe-koniec':'Free articles used · Choose a plan','odznaka-wybierz':'Choose a plan','odznaka-zalegla':'payment overdue',
+    'odznaka-do':'until {DATA}','zakup-tytul':'Choose a plan','zakup-waluta':'Currency','zakup-polecany':'recommended','zakup-cena-miesiac':'{CENA} / month','zakup-podsumowanie':'{PAKIET} plan: {CENA} per month. Paid in advance; the subscription renews automatically every month until you cancel. You can cancel at any time in account settings; the plan stays active until the end of the paid month. The price is the final price. Generation requires your own API key; AI provider fees are not included.',
+    'zakup-zgoda-1a':'I accept the ','zakup-regulamin':'Terms of Service','zakup-zgoda-1b':' and have read the ','zakup-pouczenie':'information on the right of withdrawal',
+    'zakup-zgoda-1c':'.','zakup-zgoda-2':'I request that the service begins before the 14-day withdrawal period ends. I understand that if I withdraw, I will pay for the period in which the plan was available.',
+    'zakup-zgoda-2-pelny':'I request that the service begins before the 14-day withdrawal period ends. I understand that I can withdraw within 14 days and receive a full refund.',
+    'zakup-przejdz':'Continue to payment · {CENA}','zakup-stopka':'The price covers the tool: you pay the provider for model usage on your own key. Stripe sends the payment confirmation. We issue a receipt on request: {EMAIL}.',
+    'zakup-wstrzymany':'Plan sales are paused for now. Try again later or write to us.','zakup-bl-istnieje':'This account already has an active subscription. You can change the plan in the Stripe portal: Manage subscription.',
+    'zakup-bl-niedozwolony':'The plan of this account is changed by your team administrator.','zakup-bl-plan':'This plan is not available in the selected currency. Choose another currency.',
+    'zakup-bl-stripe':'Stripe is not responding right now. Try again in a moment.','zakup-bl-za-duzo':'Too many attempts in a short time. Try again in {s} s.',
+    'zakup-bl-wylaczone':'Payments are turned off on this server.','zakup-bl-inny':'Could not continue to payment. Try again in a moment.','zakup-bl-brak-subskrypcji':'This account has no subscription yet. Choose a plan in the plan window.',
     'start-menu-title':'Account setup','start-menu-sub':'API keys and first steps',
     'start-dalej':'Next','start-wstecz':'Back','start-pomin':'Skip setup',
     'start-krok-z':'Step {n} of {m}',
@@ -6233,6 +6427,32 @@ var I18N = {
     'start-4-tytul':'All set',
     'start-4-opis':'Enter a topic, add keywords and click “Generate content”. Your plan counter is always in the top right corner: click it to see what is left.',
     'start-4-lista':'Where to find the rest: the knowledge base, History and AI visibility are in the top bar (on a phone in the bottom bar and under Account), and the account menu holds your brand, brand voice and CMS integration. None of it is needed for a first article.',
+    'byok-1-tytul':'Connect your Anthropic key','byok-1-opis':'Content AI writes with Anthropic\'s model. An API key works like a password to your Anthropic account: you pay the provider only for what you use, and us for the tool.',
+    'byok-koszt':'What does it cost? An article of about 800 words with scores and a fact check costs roughly $0.25-0.50. Web search and self-review increase the cost. You will see the cost of each text in History.',
+    'byok-jest':'Your Anthropic key is saved (it ends in {KONCOWKA}). You can continue or paste a new one.','byok-gdzie':'Your key is stored only in this browser. With each request the app sends it to the Content AI server, which passes it to the provider and stores nothing. You pay the provider for model usage, under the provider\'s terms. You open your account with the AI provider under its own terms, which you accept yourself.',
+    'byok-bezpieczenstwo':'More about security','byok-nie-mam':'No key yet? About 10 minutes','byok-krok-1':'Create an account in the Anthropic console at platform.claude.com (a separate account, independent of the Claude chat).',
+    'byok-krok-2':'In Settings, then Billing, click “Buy credits” and add credit, for example $10.','byok-krok-3':'Recommended: in Billing, set “Spend limits”, a monthly cap on spending.',
+    'byok-krok-4':'In Settings, then API keys, click “Create key”, name it “Content AI” and copy it. The console shows it only once.','byok-krok-5':'Come back here, paste the key and click “Check and save”.',
+    'byok-pelna-instrukcja':'Full guide and the estimated cost of an article','byok-opcjonalne':'Optional keys: images, voice-over, transcription','byok-przyklad':'Would you like to see a result first?',
+    'byok-pozniej':'I\'ll do it later','byok-2-tytul':'Your company (optional)','byok-2-opis':'This goes into every article: the AI knows your name and what you do. You can change it under Account.',
+    'byok-firma-nazwa':'Company or brand name','byok-firma-adres':'Website address','byok-firma-opis':'What do you do?','byok-2-potem':'Add more material (offer, FAQ, price list) in the knowledge base, and your writing style in Brand voice. None of it is needed for a first article.',
+    'byok-zapisz-dalej':'Save and continue','byok-pomin':'Skip','byok-3-tytul':'Write your first article','byok-3-opis':'Each article takes about a minute.','byok-3-opis-darmowe':'Free articles to start with: {n}. Each takes about a minute.',
+    'byok-3-opis-pakiet':'Articles left in your plan: {n}. Each takes about a minute.','byok-temat':'What should the article be about?','byok-podpowiedzi':'Ideas:',
+    'byok-podpowiedz-1':'How to choose a heat pump for a family home','byok-podpowiedz-2':'How to write a good product description for an online shop','byok-podpowiedz-3':'What a content brief is and how to use it',
+    'byok-siec':'Search the web and cite sources','byok-siec-pusta':'Your knowledge base is empty, so the facts will come from web pages. You will see the sources under the text.',
+    'byok-siec-opis':'Whatever is missing from the knowledge base, the AI finds on the web and lists the sources under the text.','byok-napisz':'Write the article',
+    'byok-pole':'{DOSTAWCA} API key','byok-pokaz':'Show','byok-ukryj':'Hide','byok-sprawdz':'Check and save','byok-zapamietaj':'Remember on this device','byok-zapamietaj-opis':'The key stays for 30 days, also after you sign out. Without this it disappears when you close the browser.',
+    'byok-sprawdzam':'Checking the key with {DOSTAWCA}…','byok-ok':'The key works and is saved on this device.','byok-ok-sesja':'The key works. It stays in this browser until you close it.',
+    'byok-ok-lokalnie':'Key saved in this browser.','byok-pusty':'Paste your API key into the field above.','byok-zly-format-anthropic':'That does not look like an Anthropic key. It starts with “sk-ant-”. Copy the whole key from the Anthropic console.',
+    'byok-zly-format-openai':'That does not look like an OpenAI key. It starts with “sk-”. Copy the whole key from platform.openai.com.','byok-zly-format':'That does not look like a {DOSTAWCA} key. Copy the whole key from the provider console.',
+    'byok-administracyjny':'That is an admin key. Create a regular API key in the {DOSTAWCA} console and paste it here.','byok-inny-dostawca':'That is another provider\'s key. Paste your {DOSTAWCA} key.',
+    'byok-odrzucony':'{DOSTAWCA} did not accept this key. Copy it again in full or create a new one in the provider console.','byok-brak-uprawnien':'The key works but has no access to the models the app uses. Check the key settings in the {DOSTAWCA} console.',
+    'byok-niedostepny':'{DOSTAWCA} is not responding right now. Try again in a moment.','byok-za-duzo':'Too many attempts in a short time. Try again in {s} s.',
+    'byok-sprawdzenie-niedostepne':'Could not check the key right now. Try again in a moment.','byok-brak':'No {DOSTAWCA} key is saved.','byok-blad-zapisu':'Could not save the key. Try again in a moment.',
+    'byok-anthropic-opis':'writing, scores, fact check (required)','byok-openai-opis':'images, voice-over, transcription','byok-eleven-opis':'better voice-over (optional)',
+    'e1-tytul':'Connect your Anthropic key to start writing.','e1-odrzucony':'Anthropic rejected the saved key. Connect it again to keep writing.','e1-opis':'It takes about 5 minutes, we will show you how. Without a key the AI cannot write a text.',
+    'e1-podlacz':'Connect key','e1-przyklad':'See a sample','a4-darmowe':'You have used {m} of {m} free articles.','a4-okres':'You have used {m} of {m} articles in this period. The counter resets on {DATA}.',
+    'a4-wybierz':'Choose a plan to keep writing','a4-bez-zakupu':'Buying a plan is not available right now. Write to us if you need more articles.',
     'history-select':'Select an article from the list',
     // ── Tooltips ──
     'title-brief-tooltip':'Plan before writing: keywords, H2 headings, gaps and recommended length',
@@ -6255,6 +6475,31 @@ var I18N = {
     'spin-brak-sieci':'No internet connection. The result will be collected when the connection is back.',
     'badge-historia':'from history','hist-otworz':'Open in generator',
     'msg-blad-prefiks':'Error:','menu-wyloguj':'Sign out','menu-wyloguj-sub':'end the session on this device',
+    'konto-tytul':'Account','konto-menu-title':'Account and billing','konto-menu-sub':'plan, API keys, your data','wyl-tytul':'Sign out?','wyl-opis':'Remembered API keys stay on this device after you sign out (for up to 30 days), and no other account can read them. If this is a shared computer, remove them when you sign out.',
+    'wyl-usun':'Sign out and remove keys','wyl-zostaw':'Sign out','plat-ok-tytul':'Payment received','plat-zacznij':'Start writing','plat-oczekuje':'We are waiting for Stripe to confirm the payment. This usually takes a few seconds; this window will refresh on its own.',
+    'plat-ok-tekst':'Your {PAKIET} plan is active until {DATA} and then renews automatically. Stripe has sent a payment confirmation to {EMAIL}.','plat-opoznienie-tytul':'Your plan is taking longer to activate',
+    'plat-opoznienie':'The payment went through, but Stripe has not confirmed it to our server yet. This usually takes a few minutes. Do not pay again: reload the page in a moment, and if the plan still does not work, write to {EMAIL}.',
+    'plat-przerwana':'The payment was not completed and nothing was charged. You can choose a plan at any time.','plat-odnowienie-nieudane':'We could not collect the payment for your {PAKIET} plan. Update your card by {DATA} to keep the plan running without a break.',
+    'plat-odnowienie-przycisk':'Update card','plat-ustawienia-tytul':'Plan and billing','plat-ustawienia-portal':'Manage subscription','plat-ustawienia-portal-opis':'This opens the Stripe portal, where you can change your plan or card, download payment confirmations and cancel your subscription.',
+    'plat-ustawienia-rachunek':'We issue a receipt on request: write to {EMAIL_KONTAKT} within 3 months of the end of the month of payment, giving its date.',
+    'sub-aktywna':'Your {PAKIET} plan is active. Next renewal: {DATA}.','sub-anulowana':'Subscription cancelled. Your {PAKIET} plan stays active until {DATA}, then your account moves to the Free plan.',
+    'sub-wygasla':'Your {PAKIET} plan ended on {DATA}. Your account is now on the Free plan: your text history and documents stay, and that plan\'s limits apply.',
+    'sub-wybierz':'Choose a plan','pasek-test':'Payment test mode: Stripe test card, no real money.','pasek-sesja':'Your session has expired. Sign in again: the topic and brief settings will stay in place.',
+    'pasek-zgoda':'We have changed the Terms of Service. Read and accept the new version to keep using the app.','pasek-zgoda-akcja':'Read and accept','pasek-email':'Confirm the address {EMAIL}: the link is in the message from Content AI.',
+    'pasek-zmien-adres':'Change address','potw-ponow-ok':'We have sent a new link. Check your inbox, including the spam folder.','potw-ponow-czekaj':'You can send the link again in {s} s.',
+    'potw-ponow-blad':'Could not send the link. Try again in a moment.','konto-klucze':'API keys','konto-klucze-opis':'Only this browser keeps the keys, in an encrypted cookie tied to your account. The server passes them to the provider with each request and does not store them.',
+    'konto-klucze-opis-lokalnie':'The keys are stored only in this browser. The server passes them to the provider with each request and stores nothing.','konto-klucz-ustawiony':'Set, ends in {KONCOWKA}',
+    'konto-klucz-do':'remembered until {DATA}','konto-klucz-sesja':'until you close the browser','konto-klucz-brak':'Not set','konto-klucz-odrzucony':'Rejected by the provider: paste a new one',
+    'konto-klucz-dziala':'The key works.','konto-sprawdz':'Check','konto-zmien':'Change','konto-dodaj':'Add key','konto-usun-klucz':'Remove key','konto-usun-blad':'Could not remove the key. Try again.',
+    'konto-klucz-usuniety':'{DOSTAWCA} key removed from this device.','konto-email-niepotwierdzony':'e-mail address not confirmed','konto-pula-jednorazowa':'one-off allowance',
+    'konto-licznik-wraca':'counter resets on {DATA}','konto-szczegoly-pakietu':'Plan details','konto-odstapienie':'You can withdraw from the contract until {DATA}.',
+    'konto-odstap':'Withdraw from the contract','konto-odstapienie-14':'You can withdraw from the contract within 14 days of purchase.','konto-ustawienia-serwera':'Account settings',
+    'konto-firma':'Company and brand','konto-firma-opis':'The name, website and description of your offer go into every article. Set your writing style in Brand voice.',
+    'konto-oznaczenia':'AI labels','konto-oznaczenia-opis':'Files always carry an AI note in their metadata. Here you turn on visible labels for readers; you can change the same when exporting and publishing.',
+    'konto-ozn-tekst':'A sentence about AI at the end of the text (files, clipboard, CMS publishing)','konto-ozn-grafika':'“AI-generated image” caption on downloaded images',
+    'konto-ozn-audio':'A note at the start of a recording that a synthetic voice is reading it','konto-dane':'Your data','konto-dane-opis':'Download your account and knowledge base data from the server. Article history is only in this browser: export it before you change devices.',
+    'konto-pobierz-dane':'Download my data','konto-eksport-historii':'Export history','konto-sekcja-konto':'Account','konto-email-haslo':'E-mail, password and signing out everywhere',
+    'konto-usun':'Delete account',
     'msg-magazyn-pelny':'Browser storage is full. These documents were saved shortened and will be shorter after a refresh: {lista}. Move them to the server knowledge base or remove the ones you do not need.','okno-zamknij':'Close',
     'ver-poprawiony-hybryda':'Improved SEO+AIO','ver-poprawiony-aio':'Improved AIO','ver-poprawiony-seo':'Improved SEO','ver-wariant':'Variant',
     'msg-artykul-uciety':'The text was cut off at the length limit. Reduce the length or generate again.',
@@ -6410,6 +6655,16 @@ var I18N = {
     'err-srodki':'The AI provider account has run out of credit. If you use your own key, top up your provider account. If not, tell your administrator.',
     'err-uprawnienia':'The API key has no permission for this feature or model. Tell your administrator.','btn-otworz-klucze':'Open account setup',
     'btn-sprobuj-ponownie':'Try again',
+    'err-brak-klucza':'This feature needs a {DOSTAWCA} key. Add it under API keys, then try again.','err-email-niepotwierdzony':'Confirm your e-mail address first: the link is in the message from Content AI.',
+    'err-zgoda-wymagana':'We have changed the Terms of Service. Read and accept the new version to keep using the app.','err-limit-wydatkow-wlasny':'The request was stopped by the spend limit you set in the {DOSTAWCA} console. Raise it or wait for the new month.',
+    'err-limit-wydatkow-konta':'Your {DOSTAWCA} account has reached the monthly spending cap for its tier. Retrying will not help until the new month. You can request a higher tier in the provider console, under Limits.',
+    'err-weryfikacja-openai':'OpenAI requires your organization to be verified before it allows image generation. Do this in your organization settings at platform.openai.com and try again.',
+    'err-klucz-wlasny':'{DOSTAWCA} rejected your API key: it is wrong, deleted or expired. Create a new key in the provider console and paste it into API keys.',
+    'err-srodki-wlasny':'Your {DOSTAWCA} account has run out of credit or a payment failed. Add credit under Billing in the provider console and try again. This is not a Content AI plan limit.',
+    'err-uprawnienia-wlasny':'Your {DOSTAWCA} key has no access to this feature or model. Check the key and workspace settings in the provider console.','err-rate-limit-wlasny':'{DOSTAWCA} is temporarily limiting requests from your account. Try again in a minute. New provider accounts have lower limits that grow over time.',
+    'err-model-wlasny':'{DOSTAWCA} does not give your key access to the model the app uses. Check model access in the provider console.','err-limit-pakietu-zawsze':'Your plan allowance is used up and does not reset. Details are in the plan window.',
+    'err-funkcja-poza-pakietem':'This feature is not part of your plan. Details are in the plan window.','btn-podlacz-klucz':'Connect your {DOSTAWCA} key','btn-wybierz-pakiet':'Choose a plan',
+    'btn-wyslij-link':'Send the link again','btn-rozliczenia':'{DOSTAWCA} billing',
     'err-json-modelu':'The model returned a malformed response. Please try again.',
     'gap-btn-select':'Select topics to add',
     'hist-default-name':'Article',
@@ -6896,6 +7151,7 @@ let kosztyApi = czytajJson('cai_koszty_v1', null) || { wszystkie: {}, wlasne: {}
 let kontoAdmin = false;
 function naWlasnymKluczu(dostawca) {
   if (!window.API_ENDPOINT_OVERRIDE) return true;
+  if (kontoNaWlasnychKluczach()) return true; // R9-D: klucz w ciasteczku HttpOnly, nie w magazynie
   return !!(magazyn.getItem('cai_klucz_' + dostawca) || '').trim();
 }
 function dodajKoszt(dostawca, kwota) {
@@ -7238,8 +7494,25 @@ function bladOdpowiedzi(dane, status, dostawca) {
   bl.dostawca = dostawca || '';
   // Odpowiedz pakietowa serwera: okno pakietu juz mowi, co sie stalo.
   if (dane && (dane.czynnosc || dane.funkcja)) bl.pakiet = true;
+  // R9-D: kod wlasnej odmowy serwera (X-CAI-Kod, rozdz. 5 projektu), dostawca i rodzaj puli (KOD8-04).
+  bl.kodCai = dane && typeof dane.kod === 'string' ? dane.kod : '';
+  bl.dostawcaKod = kodDostawcyBledu((dane && dane.dostawca) || dostawca);
+  if (!bl.dostawca && dane && typeof dane.dostawca === 'string') bl.dostawca = NAZWY_DOSTAWCOW[bl.dostawcaKod] || '';
+  if (dane && typeof dane.odnawialny === 'boolean') bl.odnawialny = dane.odnawialny;
+  if (KODY_PAKIETU.indexOf(bl.kodCai) >= 0) bl.pakiet = true;
   return bl;
 }
+// R9-D: dostawcy kluczy i kody odmow pakietowych serwera (okno pakietu otwiera tylko one, UX8-03).
+const NAZWY_DOSTAWCOW = { anthropic: 'Anthropic', openai: 'OpenAI', eleven: 'ElevenLabs' };
+const KODY_PAKIETU = ['limit-pakietu', 'funkcja-poza-pakietem', 'zasob-serwera-wyczerpany'];
+function kodDostawcyBledu(d) {
+  const t = String(d || '').toLowerCase();
+  if (/openai/.test(t)) return 'openai';
+  if (/eleven/.test(t)) return 'eleven';
+  return 'anthropic';
+}
+// Konto na wlasnych kluczach (samoobsluga, BYOK). Konta sa tylko w wariancie proxy (STAN_KONTA z /api/konto).
+function kontoNaWlasnychKluczach() { return !!(window.STAN_KONTA && window.STAN_KONTA.zrodloKluczy === 'wlasne'); }
 
 // Rodzaj bledu decyduje o komunikacie i o tym, czy ponowienie ma sens.
 function rodzajBledu(e) {
@@ -7253,17 +7526,30 @@ function rodzajBledu(e) {
   if (e.name === 'AbortError') return 'przerwano';
   if (e.name === 'TypeError' && /fetch|network|load failed/i.test(m)) return 'siec';
   if (e.name === 'SyntaxError' || /Unexpected token|is not valid JSON|JSON\.parse/i.test(m)) return 'odpowiedz';
+  // R9-D: wlasne odmowy serwera rozpoznajemy po kodzie, nie po tresci (UX8-22).
+  const kc = String(e.kodCai || '');
+  if (kc === 'brak-klucza') return 'brak-klucza';
+  if (kc === 'zly-klucz') return 'klucz';
+  if (kc === 'sesja') return 'sesja';
+  if (kc === 'email-niepotwierdzony') return 'email';
+  if (kc === 'zgoda-wymagana') return 'zgoda';
+  if (kc === 'za-duzo-prob') return 'limit-zapytan';
+  if (kc === 'uprawnienia-organizacji') return 'odmowa-serwera';
   if (e.pakiet || (st === 402 && (e.zSerwera || !typ.trim())) || /limit pakietu/i.test(m)) return 'pakiet';
   if (e.zSerwera) {
     if (st === 401 || /niezalogowan/i.test(m)) return 'sesja';
     if (/brak [a-z_]*key/i.test(m)) return 'klucz-serwera';
     if (st === 403) return 'odmowa-serwera';
   }
+  // R9-D (STR8-10): limit wydatkow ustawiony przez uzytkownika i miesieczny limit poziomu konta u dostawcy.
+  if (/specified api usage limits/i.test(m)) return 'limit-wydatkow-wlasny';
+  if (/enforced_spend_limit|spend limit/i.test(typ + ' ' + m)) return 'limit-wydatkow-konta';
   if (/credit balance|billing|insufficient_quota|exceeded your current quota|quota_exceeded/i.test(typ + ' ' + m)) return 'srodki';
   if (/moderation|content_policy|safety system/i.test(typ + ' ' + m)) return 'moderacja';
   if (/prompt is too long|too many (input )?tokens|context length|maximum context/i.test(m)) return 'za-dlugi';
   if (/request_too_large/i.test(typ) || st === 413 || /exceeds the maximum allowed number of bytes/i.test(m)) return 'za-duze';
   if (/authentication|invalid_api_key/i.test(typ) || /invalid x-api-key|incorrect api key|invalid api key/i.test(m) || st === 401) return 'klucz';
+  if (/organization (must be|is not) verified|verify (your|the) organization|organization verification/i.test(m)) return 'weryfikacja-openai';
   if (/permission/i.test(typ) || st === 403) return 'uprawnienia';
   if (/not_found/i.test(typ) || st === 404) return 'model';
   if (/timeout/i.test(typ) || st === 504 || st === 408 || /timeout|timed out|\b504\b/i.test(m)) return 'czas';
@@ -7280,6 +7566,25 @@ const BLEDY_KLUCZE = {
   'za-dlugi': 'err-za-dlugi', 'za-duze': 'err-za-duze', klucz: 'err-klucz', uprawnienia: 'err-uprawnienia',
   model: 'err-model', 'limit-zapytan': 'err-rate-limit', przeciazenie: 'err-overloaded', serwer: 'err-server-500',
 };
+// R9-D (UX8-22, KOD8-04): rodzaje z kodow serwera i nowe sygnaly dostawcow; konto na wlasnych kluczach
+// dostaje tekst z nazwa dostawcy, bez "zglos to administratorowi".
+Object.assign(BLEDY_KLUCZE, {
+  'brak-klucza': 'err-brak-klucza', email: 'err-email-niepotwierdzony', zgoda: 'err-zgoda-wymagana',
+  'limit-wydatkow-wlasny': 'err-limit-wydatkow-wlasny', 'limit-wydatkow-konta': 'err-limit-wydatkow-konta',
+  'weryfikacja-openai': 'err-weryfikacja-openai',
+});
+const BLEDY_WLASNE = {
+  klucz: 'err-klucz-wlasny', srodki: 'err-srodki-wlasny', uprawnienia: 'err-uprawnienia-wlasny',
+  'limit-zapytan': 'err-rate-limit-wlasny', model: 'err-model-wlasny', 'klucz-serwera': 'err-brak-klucza',
+};
+function kluczBleduKonta(r, klucz, e) {
+  if (r === 'pakiet' && e && e.odnawialny === false) return 'err-limit-pakietu-zawsze';
+  if (r === 'pakiet' && e && e.kodCai === 'funkcja-poza-pakietem') return 'err-funkcja-poza-pakietem';
+  return kontoNaWlasnychKluczach() && BLEDY_WLASNE[r] ? BLEDY_WLASNE[r] : klucz;
+}
+function tekstBleduKonta(r, klucz, e) {
+  return _t(kluczBleduKonta(r, klucz, e)).replace(/\{DOSTAWCA\}/g, (e && e.dostawca) || NAZWY_DOSTAWCOW[(e && e.dostawcaKod) || 'anthropic']);
+}
 // Ten sam rodzaj bledu w innej czesci aplikacji brzmi inaczej (plik audio, grafika).
 const BLEDY_KONTEKSTU = {
   audio: { siec: 'err-audio-siec', 'za-duze': 'err-za-duze-plik' },
@@ -7297,12 +7602,12 @@ function komunikatBleduApi(e, zapas, kontekst) {
   if (r === 'wlasny') return String(e.message);
   if (r === 'inny') return _t(zapas || 'err-api-generic');
   const nad = (BLEDY_KONTEKSTU[kontekst] || {})[r];
-  return _t(nad || BLEDY_KLUCZE[r]);
+  return tekstBleduKonta(r, nad || BLEDY_KLUCZE[r], e);
 }
 // Techniczny szczegol (dostawca, status, typ, tresc odpowiedzi) do zwinietej
 // sekcji - przydaje sie przy zgloszeniu. Nie dla komunikatow, ktore sami opisalismy.
 function szczegolBledu(e) {
-  if (!e || ['wlasny', 'cichy', 'przerwano', 'siec', 'odpowiedz'].indexOf(rodzajBledu(e)) !== -1) return '';
+  if (!e || ['wlasny', 'cichy', 'przerwano', 'siec', 'odpowiedz', 'pakiet', 'brak-klucza', 'email', 'zgoda'].indexOf(rodzajBledu(e)) !== -1) return '';
   const czesci = [];
   if (e.dostawca) czesci.push(e.dostawca);
   if (e.status) czesci.push('HTTP ' + e.status);
@@ -7314,7 +7619,9 @@ function szczegolBledu(e) {
 // Klucz poprawia sie w oknie Klucze API (keys) albo w kreatorze konta (proxy).
 // W wariancie owner klucz siedzi w pliku, wiec przycisku nie pokazujemy.
 const KLUCZ_W_PLIKU = false;
-function otworzUstawieniaKlucza() {
+function otworzUstawieniaKlucza(dostawca) {
+  // R9-D (UX8-04): kreator od razu na kroku klucza, z fokusem na polu tego dostawcy.
+  if (typeof window.otworzKreatorKlucza === 'function') { window.otworzKreatorKlucza(dostawca); return; }
   if (typeof window.otworzStart === 'function') {
     window.otworzStart();
     // Kreator zaczyna od powitania; klucze sa na drugim ekranie.
@@ -7334,12 +7641,34 @@ function blokBledu(e, ponow, zapas, kontekst) {
       + '<div class="tekst-pomoc" style="overflow-wrap:anywhere">' + escapeHtml(szczegol) + '</div></details>';
   }
   if (r === 'klucz' && !KLUCZ_W_PLIKU) {
-    h += '<button type="button" class="btn-secondary" onclick="otworzUstawieniaKlucza()">' + ikona('key-round') + escapeHtml(_t('btn-otworz-klucze')) + '</button>';
+    h += '<button type="button" class="btn-secondary" onclick="otworzUstawieniaKlucza(\'' + escapeHtml((e && e.dostawcaKod) || '') + '\')">' + ikona('key-round') + escapeHtml(_t('btn-otworz-klucze')) + '</button>';
   }
+  h += akcjeBleduKonta(r, e);
   if (ponow && czyPonowic(e)) {
     h += '<button type="button" class="btn-secondary ponow-generowanie" onclick="' + escapeHtml(ponow) + '">' + ikona('refresh-cw') + escapeHtml(_t('btn-sprobuj-ponownie')) + '</button>';
   }
   return h + '</div>';
+}
+// R9-D (UX8-22): przyciski naprawy dla konta na wlasnych kluczach; w pozostalych wariantach nic.
+const ROZLICZENIA_DOSTAWCOW = {
+  anthropic: 'https://platform.claude.com/settings/billing', openai: 'https://platform.openai.com/settings/organization/billing/overview',
+  eleven: 'https://elevenlabs.io/app/subscription',
+};
+function akcjeBleduKonta(r, e) {
+  const d = (e && e.dostawcaKod) || 'anthropic', nazwa = (e && e.dostawca) || NAZWY_DOSTAWCOW[d];
+  if (r === 'brak-klucza' && typeof window.otworzKreatorKlucza === 'function') {
+    return '<button type="button" class="btn-secondary" onclick="otworzKreatorKlucza(\'' + d + '\')">' + ikona('key-round') + escapeHtml(_t('btn-podlacz-klucz').replace('{DOSTAWCA}', nazwa)) + '</button>';
+  }
+  if (r === 'pakiet' && kontoNaWlasnychKluczach() && typeof window.otworzPakiet === 'function') {
+    return '<button type="button" class="btn-secondary" onclick="otworzPakiet(\'zakup\')">' + ikona('package') + escapeHtml(_t('btn-wybierz-pakiet')) + '</button>';
+  }
+  if (r === 'email' && typeof window.wyslijPotwierdzenieEmail === 'function') {
+    return '<button type="button" class="btn-secondary" onclick="wyslijPotwierdzenieEmail()">' + ikona('mail') + escapeHtml(_t('btn-wyslij-link')) + '</button>';
+  }
+  if ((r === 'srodki' || r === 'limit-wydatkow-wlasny' || r === 'limit-wydatkow-konta') && kontoNaWlasnychKluczach()) {
+    return '<a class="btn-secondary" href="' + ROZLICZENIA_DOSTAWCOW[d] + '" target="_blank" rel="noopener">' + ikona('arrow-right') + escapeHtml(_t('btn-rozliczenia').replace('{DOSTAWCA}', nazwa)) + '</a>';
+  }
+  return '';
 }
 // To samo dla bledow pokazywanych jako powiadomienie (grafika, audio, dyktowanie).
 function powiadomBladApi(e, zapas, kontekst, przedrostek) {
@@ -7349,7 +7678,16 @@ function powiadomBladApi(e, zapas, kontekst, przedrostek) {
   let tekst = komunikatBleduApi(e, zapas, kontekst);
   const szczegol = r === 'inny' ? szczegolBledu(e) : '';
   if (szczegol) tekst += ' (' + szczegol.slice(0, 200) + ')';
-  powiadomBlad((przedrostek || '') + tekst);
+  // R9-D (UX8-05): brak albo zly klucz w grafice i audio - powiadomienie z przyciskiem naprawy, dluzej na ekranie.
+  const naprawa = (r === 'klucz' || r === 'brak-klucza') && typeof window.otworzKreatorKlucza === 'function';
+  const el = naprawa ? pokazPowiadomienie((przedrostek || '') + tekst, 'blad', 60000) : powiadomBlad((przedrostek || '') + tekst);
+  if (naprawa && el) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'powiadomienie-akcja';
+    b.textContent = _t('btn-podlacz-klucz').replace('{DOSTAWCA}', (e && e.dostawca) || NAZWY_DOSTAWCOW[(e && e.dostawcaKod) || 'anthropic']);
+    b.onclick = function () { el.remove(); window.otworzKreatorKlucza((e && e.dostawcaKod) || 'anthropic'); };
+    el.insertBefore(b, el.querySelector('.powiadomienie-zamknij'));
+  }
 }
 // Bledy WordPressa i Drupala: status HTTP na zdanie ze slownika, odpowiedz CMS
 // (zwykle po angielsku) tylko w zwinietych szczegolach. Status 0 = brak polaczenia.
@@ -15865,6 +16203,8 @@ async function wczytajMarkeZSerwera() {
   try {
     const ja = await (await fetch('/auth/me')).json();
     markaAdmin = ja && ja.rola === 'admin';
+    // R9-D (UX8-23): marke organizacji edytuje ten, kto nia zarzadza (konto jednoosobowe: wlasciciel).
+    if (ja && ja.organizacja && typeof ja.organizacja.mozeZarzadzac === 'boolean') markaAdmin = ja.organizacja.mozeZarzadzac;
   } catch (e) { markaAdmin = false; }
   kontoAdmin = markaAdmin;
   updateCostDisplay();
@@ -19756,6 +20096,16 @@ async function kbAudioTranscribeAndOpen(file) {
         + (location.protocol === 'https:' ? '; Secure' : '');
     } catch(e){}
   }
+  // R9-D (PR8-26): bez wyboru motywu nie ma ciasteczka; zostawione przez starsza wersje znika (host i domena).
+  function usunMotyw(){
+    try {
+      if (!/(?:^|; )cai_motyw=/.test(document.cookie)) return;
+      var domena = DOMENA.indexOf('WSTAW_TUTAJ') === 0 ? '' : DOMENA;
+      var koniec = '; Path=/; Max-Age=0; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');
+      document.cookie = 'cai_motyw=' + koniec;
+      if (domena) document.cookie = 'cai_motyw=' + koniec + '; Domain=' + domena;
+    } catch(e){}
+  }
 
   // Przelacznik jest zdefiniowany wyzej; owijamy go, zeby nie ruszac oryginalu.
   var pierwotny = window.toggleDarkMode;
@@ -19764,7 +20114,9 @@ async function kbAudioTranscribeAndOpen(file) {
   }
 
   document.addEventListener('DOMContentLoaded', function(){
-    zapiszMotyw();
+    // Ciasteczko tylko po wyraznym wyborze (przelacznik motywu): wtedy to zapamietanie wyboru, nie sledzenie.
+    var wybrany = null; try { wybrany = magazyn.getItem('cai-dark'); } catch(e){}
+    if (wybrany !== null) zapiszMotyw(); else usunMotyw();
     if (!wdrozone) return;
     var poz = document.getElementById('openseo-item');
     if (poz) poz.style.display = '';
@@ -20032,6 +20384,8 @@ async function kbAudioTranscribeAndOpen(file) {
     <div class="tekst-maly" id="pakiet-opis" style="margin-bottom:14px"></div>
     <div id="pakiet-pule"></div>
     <div id="pakiet-funkcje" style="margin-top:16px"></div>
+    <!-- R9-D (UX8-20): wybor pakietu i przejscie do platnosci (konto jednoosobowe) albo stan subskrypcji -->
+    <div id="pakiet-zakup" class="pakiet-zakup" hidden></div>
     <div style="display:flex;justify-content:flex-end;margin-top:18px">
       <button class="btn-secondary" onclick="zamknijPakiet()" data-i18n="pakiet-zamknij">Zamknij</button>
     </div>
@@ -20074,6 +20428,8 @@ async function kbAudioTranscribeAndOpen(file) {
   function wierszPuli(nazwa, poz){
     var etykieta = tekst('pakiet-' + nazwa, nazwa);
     if (poz.limit === null) return pasek(etykieta, tekst('pakiet-bez-limitu','bez limitu'), 0, true);
+    // R9-D (KOD8-04): limit 0 to funkcja spoza pakietu, nie wyczerpana pula (wczesniej pelny czerwony pasek).
+    if (poz.limit === 0) return '<div class="pakiet-niedostepna"><span>' + bezpieczny(etykieta) + '</span><span class="znacznik-pakietu">' + bezpieczny(tekst('pakiet-niedostepne-w-pakiecie','niedostępne w pakiecie')) + '</span></div>';
     // Limit 0 rysujemy jako pasek pelny: funkcji w tym pakiecie po prostu nie ma.
     var procent = poz.limit === 0 ? 100 : Math.min(100, Math.round(poz.zuzyte / poz.limit * 100));
     return pasek(etykieta, poz.zuzyte + ' / ' + poz.limit, procent, false);
@@ -20109,6 +20465,7 @@ async function kbAudioTranscribeAndOpen(file) {
     var malo = a && a.limit !== null && a.zostalo <= 1;
     b.style.borderColor = malo ? 'rgba(226,50,68,.45)' : 'var(--border)';
     b.style.color = malo ? 'var(--c-blad)' : 'var(--text)';
+    if (typeof window.przerysujOdznakeKonta === 'function') window.przerysujOdznakeKonta(b, stan); // R9-D (UX 2.4)
   }
 
   // Funkcje spoza pakietu sa oznaczone, zanim uzytkownik w nie wejdzie:
@@ -20180,7 +20537,7 @@ async function kbAudioTranscribeAndOpen(file) {
     // Dokumenty to limit, ale nie licznik uzycia - pokazujemy sam pulap.
     html += '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--text2);padding-top:8px;border-top:1px solid var(--border)">'
       + '<span>' + bezpieczny(tekst('pakiet-dokumenty','Dokumenty w bazie wiedzy')) + '</span><span style="color:var(--text3)">'
-      + (stan.limitDokumentow === null ? bezpieczny(tekst('pakiet-bez-limitu','bez limitu')) : Number(stan.limitDokumentow))
+      + (stan.limitDokumentow === null ? bezpieczny(tekst('pakiet-bez-limitu','bez limitu')) : (typeof window._bazaSerwerLiczba === 'number' ? window._bazaSerwerLiczba + ' / ' : '') + Number(stan.limitDokumentow))
       + '</span></div>';
 
     var w = stan.uzycie && stan.uzycie.wywolanie;
@@ -20202,6 +20559,7 @@ async function kbAudioTranscribeAndOpen(file) {
             + '<span aria-hidden="true">' + (ma ? ikona('check', 'ok') : ikona('minus')) + '</span><span>' + bezpieczny(tekst('pakiet-fn-' + f, f))
             + (ma ? '' : ' <span class="znacznik-pakietu">' + bezpieczny(tekst('pakiet-niedostepne','niedostępne')) + '</span>') + '</span></div>';
         }).join('');
+    if (typeof window.rysujZakupWPakiecie === 'function') window.rysujZakupWPakiecie(el('pakiet-zakup'));
   }
 
   function odswiez(){
@@ -20210,8 +20568,10 @@ async function kbAudioTranscribeAndOpen(file) {
       return o.json();
     }).then(function(d){
       stan = d;
+      window.STAN_PAKIETU = d; // R9-D: karta "Wybierz pakiet", odznaka i Konto czytaja ten sam stan
       rysujBadge();
       if (el('pakiet-modal').style.display === 'flex') rysujTresc();
+      if (typeof window.rysujStanKonta === 'function') window.rysujStanKonta();
       return d;
     }).catch(function(){
       // Brak odpowiedzi o pakiecie nie moze zablokowac aplikacji - wtedy po
@@ -20227,14 +20587,24 @@ async function kbAudioTranscribeAndOpen(file) {
     if (el('pakiet-modal').style.display === 'flex') rysujTresc();
   };
 
-  window.otworzPakiet = function(){
+  window.otworzPakiet = function(cel){
     el('pakiet-alarm').style.display = 'none';
     el('pakiet-modal').style.display = 'flex';
     rysujTresc();
     odswiez();
+    // R9-D (UX8-20): "Wybierz pakiet" prowadzi od razu do kart pakietow (klik 1 z 2).
+    var zakup = el('zakup');
+    if (cel === 'zakup' && zakup) setTimeout(function(){ try { zakup.scrollIntoView({ block: 'nearest' }); var k = zakup.querySelector('.zakup-karta[aria-checked="true"]'); if (k) k.focus(); } catch(e){} }, 60);
   };
 
   window.zamknijPakiet = function(){ el('pakiet-modal').style.display = 'none'; };
+
+  // R9-D (KOD8-04): pula jednorazowa i odnawialna maja rozne zdania, konto jednoosobowe wybiera pakiet samo.
+  function tekstLimitu(dane){
+    var wlasne = typeof window.kontoSamoobslugowe === 'function' && window.kontoSamoobslugowe();
+    if (dane && dane.odnawialny) return wlasne && typeof window.dataOdnowieniaPakietu === 'function' ? tekst('pakiet-limit-odnawialny-wlasne','').replace('{DATA}', window.dataOdnowieniaPakietu()) : tekst('pakiet-limit-odnawialny', '');
+    return tekst(wlasne ? 'pakiet-limit-zawsze-wlasne' : 'pakiet-limit-zawsze', '');
+  }
 
   /** Ekran po HTTP 402. Dane pochodza z serwera - patrz odmowaLimitu(). */
   window.pokazLimitPakietu = function(dane){
@@ -20258,7 +20628,7 @@ async function kbAudioTranscribeAndOpen(file) {
               + ' ' + Number(dane.zuzyte) + ' / ' + Number(dane.limit) + '</div>'
             : '')
         + '<div style="margin-top:4px;color:var(--text2)">'
-        + bezpieczny(tekst(dane && dane.odnawialny ? 'pakiet-limit-odnawialny' : 'pakiet-limit-zawsze', '')) + '</div>';
+        + bezpieczny(tekstLimitu(dane)) + '</div>';
     }
     alarm.style.display = 'block';
     el('pakiet-modal').style.display = 'flex';
@@ -20307,18 +20677,47 @@ async function kbAudioTranscribeAndOpen(file) {
   // Jeden punkt przechwytu zamiast poprawki w kazdej z ponad dwudziestu funkcji
   // wolajacych model: przez fetch przechodzi kazde platne zapytanie, wiec i
   // odswiezenie licznika, i ekran wyczerpanego pakietu maja tu jedno miejsce.
+  // R9-D (projekt 10.3): dostawca kazdej platnej sciezki; konto na wlasnych kluczach bez klucza tego dostawcy
+  // dostaje od razu odpowiedz 403 brak-klucza (bez ruchu sieciowego) i kreator klucza - ponad dwadziescia
+  // wywolan modelu zachowuje sie tak samo bez zmian w kazdym z nich.
+  var DOSTAWCA_SCIEZKI = { '/api': 'anthropic', '/api/images': 'openai', '/api/tts': 'openai', '/api/transcribe': 'openai', '/api/eleven-tts': 'eleven' };
+  var KODY_OKNA_PAKIETU = ['limit-pakietu', 'funkcja-poza-pakietem', 'zasob-serwera-wyczerpany'];
+  function odpowiedzBrakKlucza(dostawca){
+    var nazwa = { anthropic: 'Anthropic', openai: 'OpenAI', eleven: 'ElevenLabs' }[dostawca] || 'Anthropic';
+    var tresc = tekst('err-brak-klucza', '').replace(/\{DOSTAWCA\}/g, nazwa);
+    var cialo = { type: 'error', error: { type: 'cai_brak_klucza', message: tresc }, kod: 'brak-klucza', komunikat: tresc, dostawca: dostawca };
+    return new Response(JSON.stringify(cialo), { status: 403, headers: { 'Content-Type': 'application/json', 'X-CAI-Kod': 'brak-klucza' } });
+  }
+  function wlasnyAdres(zasob){
+    var url = (typeof zasob === 'string') ? zasob : (zasob && zasob.url) || '';
+    try { return new URL(url, location.href).origin === location.origin; } catch(e){ return false; }
+  }
+  // Wygasla sesja w kazdym wywolaniu API aplikacji (nie tylko w platnych): jeden komunikat z logowaniem.
+  function poOdpowiedzi(zasob, odp){
+    if (odp && odp.status === 401 && wlasnyAdres(zasob) && odp.headers.get('X-CAI-Kod') === 'sesja' && typeof window.sesjaWygasla === 'function') window.sesjaWygasla();
+    return odp;
+  }
+
   window.fetch = function(zasob, opcje){
     var sciezka = sciezkaZadania(zasob);
-    if (!PLATNE[sciezka]) return oryginalnyFetch.apply(null, arguments);
+    if (!PLATNE[sciezka] || !wlasnyAdres(zasob)) return oryginalnyFetch.apply(null, arguments).then(function(odp){ return poOdpowiedzi(zasob, odp); });
+    var dostawca = DOSTAWCA_SCIEZKI[sciezka];
+    if (typeof window.kontoBezKlucza === 'function' && window.kontoBezKlucza(dostawca)) {
+      if (typeof window.otworzKreatorKluczaRaz === 'function') window.otworzKreatorKluczaRaz(dostawca);
+      return Promise.resolve(odpowiedzBrakKlucza(dostawca));
+    }
     // Klucz doklejamy tylko do wywolan z adresem tekstowym. Przy obiekcie
     // Request drugi argument zastapilby JEGO naglowki, gubiac Content-Type -
     // aplikacja tak nie wola, ale lepiej, zeby nie dalo sie tego zepsuc.
     var gotowe = (typeof zasob === 'string') ? zKluczem(sciezka, opcje) : opcje;
     return oryginalnyFetch(zasob, gotowe).then(function(odp){
+      var kod = odp.headers.get('X-CAI-Kod') || '';
+      if (kod && typeof window.poOdmowieSerwera === 'function') window.poOdmowieSerwera(kod, odp, dostawca);
       if (odp.status === 402){
+        // UX8-03: okno pakietu tylko przy odmowie pakietowej serwera; 402 dostawcy (billing_error) to brak srodkow u dostawcy.
         odp.clone().json()
-          .then(function(d){ window.pokazLimitPakietu(d); })
-          .catch(function(){ window.pokazLimitPakietu(null); });
+          .then(function(d){ if (KODY_OKNA_PAKIETU.indexOf(kod) >= 0 || (d && (d.czynnosc || d.funkcja))) window.pokazLimitPakietu(d); })
+          .catch(function(){ if (KODY_OKNA_PAKIETU.indexOf(kod) >= 0) window.pokazLimitPakietu(null); });
       } else if (odp.ok){
         odswiez();
       }
@@ -20355,6 +20754,13 @@ async function kbAudioTranscribeAndOpen(file) {
   var PAMIEC = 'cai_start_ukonczony';
   var krok = 0;
   var kroki = ['powitanie', 'klucze', 'marka', 'koniec'];
+  // R9-D (UX8-19, makieta A1): konto na wlasnych kluczach ma kreator w trzech krokach (klucz, firma,
+  // pierwszy artykul); konta zespolu (klucze serwera) zostaja przy czterech krokach jak dzis.
+  var KROKI_ZESPOL = kroki, KROKI_WLASNE = ['klucz', 'firma', 'artykul'];
+  var dostawcaKreatora = '', powodKreatora = '';
+  var STRONA_KLUCZA = { pl: 'https://content-ai.net/klucz-api/', en: 'https://content-ai.net/en/api-key/' };
+  var STRONA_BEZPIECZENSTWA = { pl: 'https://content-ai.net/#bezpieczenstwo', en: 'https://content-ai.net/en/#bezpieczenstwo' };
+  function ustawKroki(){ kroki = kontoNaWlasnychKluczach() ? KROKI_WLASNE : KROKI_ZESPOL; if (krok >= kroki.length) krok = 0; }
 
   function el(id){ return document.getElementById(id); }
   function tekst(klucz, zapas){ try { return _t(klucz) || zapas; } catch(e){ return zapas; } }
@@ -20395,9 +20801,11 @@ async function kbAudioTranscribeAndOpen(file) {
   }
 
   function rysuj(){
+    ustawKroki();
     rysujKropki();
     var cel = el('start-tresc');
     var s = window.pakietStanStart || null;
+    if (KROKI_WLASNE.indexOf(kroki[krok]) >= 0) { rysujKrokWlasny(cel, s || window.STAN_PAKIETU || null); return; }
 
     if (kroki[krok] === 'powitanie'){
       var nazwaPlanu = s ? (currentLang === 'en' && s.nazwaEn ? s.nazwaEn : s.nazwa) : '';
@@ -20462,6 +20870,117 @@ async function kbAudioTranscribeAndOpen(file) {
     if (tytulKroku && el('start-modal').style.display === 'flex') tytulKroku.focus({ preventScroll: true });
   }
 
+  // ── R9-D: kroki kreatora konta na wlasnych kluczach ──
+  function poleTekstu(id, etykieta, wartosc, podpowiedz, wiele){
+    return '<label class="byok-etykieta" for="' + id + '">' + bezpieczny(etykieta) + '</label>'
+      + (wiele ? '<textarea id="' + id + '" rows="3" placeholder="' + bezpieczny(podpowiedz || '') + '">' + bezpieczny(wartosc || '') + '</textarea>'
+               : '<input id="' + id + '" type="text" placeholder="' + bezpieczny(podpowiedz || '') + '" value="' + bezpieczny(wartosc || '') + '">');
+  }
+  function rysujKrokWlasny(cel, s){
+    var n = kroki[krok], jez = currentLang === 'en' ? 'en' : 'pl';
+    var dalej = el('start-dalej'), pomin = el('start-pomin'), wstecz = el('start-wstecz');
+    var nazwa = { anthropic: 'Anthropic', openai: 'OpenAI', eleven: 'ElevenLabs' };
+    dalej.disabled = false;
+    wstecz.style.visibility = krok === 0 ? 'hidden' : 'visible';
+    pomin.style.display = n === 'artykul' ? 'none' : '';
+    var fokus = null;
+    if (n === 'klucz') {
+      var k = (window.STAN_KLUCZY || {}).anthropic || {};
+      var inny = dostawcaKreatora && dostawcaKreatora !== 'anthropic';
+      var alarm = powodKreatora === 'odrzucony'
+        ? tekst('err-klucz-wlasny', '').replace(/\{DOSTAWCA\}/g, nazwa[dostawcaKreatora || 'anthropic'])
+        : (inny ? tekst('err-brak-klucza', '').replace(/\{DOSTAWCA\}/g, nazwa[dostawcaKreatora]) : '');
+      cel.innerHTML = naglowek(bezpieczny(tekst('byok-1-tytul', '')), bezpieczny(tekst('byok-1-opis', '')))
+        + (alarm ? '<p class="byok-alarm" role="alert">' + ikona('triangle-alert') + '<span>' + bezpieczny(alarm) + '</span></p>' : '')
+        + '<p class="byok-koszt">' + ikona('info') + '<span>' + bezpieczny(tekst('byok-koszt', '')) + '</span></p>'
+        + (k.ustawiony && !k.niewazny ? '<p class="tekst-pomoc stan-ok byok-jest" id="byok-jest">' + ikona('circle-check') + bezpieczny(tekst('byok-jest', '').replace('{KONCOWKA}', k.koncowka || '')) + '</p>' : '')
+        + window.htmlPolaKlucza('start', 'anthropic')
+        + window.htmlZapamietaj('start')
+        + '<p class="tekst-pomoc byok-gdzie">' + bezpieczny(tekst('byok-gdzie', '')) + ' <a class="link-akcent" href="' + STRONA_BEZPIECZENSTWA[jez] + '" target="_blank" rel="noopener">' + bezpieczny(tekst('byok-bezpieczenstwo', '')) + '</a></p>'
+        + '<details class="rozwijka byok-przewodnik"><summary>' + ikona('chevron-down') + bezpieczny(tekst('byok-nie-mam', '')) + '</summary><ol class="byok-kroki">'
+        + [1, 2, 3, 4, 5].map(function(i){ return '<li>' + bezpieczny(tekst('byok-krok-' + i, '')) + '</li>'; }).join('')
+        + '</ol><p class="tekst-pomoc"><a class="link-akcent" href="' + STRONA_KLUCZA[jez] + '" target="_blank" rel="noopener">' + bezpieczny(tekst('byok-pelna-instrukcja', '')) + '</a></p></details>'
+        + '<details class="rozwijka byok-opcjonalne" id="byok-opcjonalne"' + (inny ? ' open' : '') + '><summary>' + ikona('chevron-down') + bezpieczny(tekst('byok-opcjonalne', '')) + '</summary>'
+        + window.htmlPolaKlucza('start', 'openai', { opis: tekst('byok-openai-opis', '') })
+        + window.htmlPolaKlucza('start', 'eleven', { opis: tekst('byok-eleven-opis', '') }) + '</details>'
+        + '<p class="tekst-pomoc byok-przyklad">' + bezpieczny(tekst('byok-przyklad', '')) + ' <button type="button" class="btn-link" onclick="startPomin();otworzPrzyklad()">' + bezpieczny(tekst('e1-przyklad', '')) + '</button></p>';
+      dalej.disabled = !window.maKlucz('anthropic');
+      dalej.textContent = tekst('start-dalej', 'Dalej');
+      pomin.textContent = tekst('byok-pozniej', '');
+      pomin.onclick = function(){ try { sessionStorage.setItem('cai_kreator_pozniej', '1'); } catch(e){} window.startPomin(); };
+      fokus = dostawcaKreatora ? el('start-pole-' + dostawcaKreatora) : null;
+    } else if (n === 'firma') {
+      var c = typeof getLlmsConfig === 'function' ? getLlmsConfig() : {};
+      cel.innerHTML = naglowek(bezpieczny(tekst('byok-2-tytul', '')), bezpieczny(tekst('byok-2-opis', '')))
+        + poleTekstu('byok-firma-nazwa', tekst('byok-firma-nazwa', ''), c.name)
+        + poleTekstu('byok-firma-adres', tekst('byok-firma-adres', ''), c.siteUrl, 'https://')
+        + poleTekstu('byok-firma-opis', tekst('byok-firma-opis', ''), c.description, '', true)
+        + '<p class="tekst-pomoc">' + bezpieczny(tekst('byok-2-potem', '')) + '</p>';
+      dalej.textContent = tekst('byok-zapisz-dalej', '');
+      pomin.textContent = tekst('byok-pomin', '');
+      pomin.onclick = function(){ krok++; rysuj(); };
+    } else {
+      var a = s && s.uzycie && s.uzycie.artykul;
+      var ile = a && a.limit !== null ? Math.max(0, a.limit - a.zuzyte) : null;
+      var opis = ile === null ? tekst('byok-3-opis', '') : tekst(s.okres === 'zawsze' ? 'byok-3-opis-darmowe' : 'byok-3-opis-pakiet', '').replace('{n}', ile);
+      var t = el('topic'), uw = el('use-web');
+      var pusta = !((typeof docs !== 'undefined' && docs.length) || window._bazaSerwerLiczba);
+      cel.innerHTML = naglowek(bezpieczny(tekst('byok-3-tytul', '')), bezpieczny(opis))
+        + poleTekstu('byok-temat', tekst('byok-temat', ''), t ? t.value : '')
+        + '<div class="byok-podpowiedzi"><span class="tekst-pomoc">' + bezpieczny(tekst('byok-podpowiedzi', '')) + '</span>'
+        + [1, 2, 3].map(function(i){ return '<button type="button" class="btn-secondary btn-maly" onclick="var p=document.getElementById(\'byok-temat\');p.value=this.textContent;p.focus()">' + bezpieczny(tekst('byok-podpowiedz-' + i, '')) + '</button>'; }).join('') + '</div>'
+        + '<label class="ozn-wiersz" for="byok-siec"><input type="checkbox" id="byok-siec"' + ((uw && uw.checked) || pusta ? ' checked' : '') + '><span><b>' + bezpieczny(tekst('byok-siec', '')) + '</b><small>'
+        + bezpieczny(tekst(pusta ? 'byok-siec-pusta' : 'byok-siec-opis', '')) + '</small></span></label>';
+      dalej.textContent = tekst('byok-napisz', '');
+    }
+    var tytul = el('start-tytul');
+    if (el('start-modal').style.display === 'flex') { try { (fokus || tytul).focus({ preventScroll: true }); } catch(e){} }
+  }
+  function zapiszFirme(){
+    var w = function(id){ var p = el(id); return p ? p.value.trim() : ''; };
+    var nazwa = w('byok-firma-nazwa'), adres = w('byok-firma-adres'), opis = w('byok-firma-opis');
+    if (!nazwa && !adres && !opis) return;
+    var c = typeof getLlmsConfig === 'function' ? getLlmsConfig() : {};
+    c.name = nazwa; c.siteUrl = adres; c.description = opis;
+    try { magazyn.setItem('cai-llms', JSON.stringify(c)); } catch(e){}
+    if (typeof zapiszMarkeNaSerwerze === 'function') zapiszMarkeNaSerwerze(c);
+  }
+  function dalejWlasny(){
+    var n = kroki[krok];
+    if (n === 'klucz') {
+      if (!window.maKlucz('anthropic')) { var p = el('start-pole-anthropic'); if (p) p.focus(); return; }
+      krok++; rysuj(); return;
+    }
+    if (n === 'firma') { zapiszFirme(); krok++; rysuj(); return; }
+    var temat = (el('byok-temat') || {}).value || '', siec = el('byok-siec');
+    zamknij();
+    var t = el('topic'), uw = el('use-web');
+    if (t && temat.trim()) { t.value = temat.trim(); t.dispatchEvent(new Event('input', { bubbles: true })); }
+    if (uw && siec && uw.checked !== siec.checked) { uw.checked = siec.checked; uw.dispatchEvent(new Event('change', { bubbles: true })); }
+    if (t && temat.trim() && typeof generate === 'function') setTimeout(function(){ generate(); }, 50);
+    else if (t) t.focus();
+  }
+  // Zapisany klucz Anthropic odblokowuje "Dalej" w pierwszym kroku.
+  document.addEventListener('cai-klucz-zapisany', function(e){
+    if (el('start-modal').style.display !== 'flex' || kroki[krok] !== 'klucz') return;
+    if (e.detail && e.detail.dostawca === 'anthropic') el('start-dalej').disabled = false;
+  });
+  /** Kreator od razu na kroku klucza (blad klucza, karta "Podlacz klucz", Grafika i Audio bez klucza). */
+  window.otworzKreatorKlucza = function(dostawca, powod){
+    ustawKroki();
+    if (!kontoNaWlasnychKluczach()) {
+      // Konta zespolu: jak dzis, kreator na drugim ekranie (klucze).
+      window.otworzStart();
+      if (typeof window.startDalej === 'function') window.startDalej();
+      return;
+    }
+    dostawcaKreatora = dostawca || 'anthropic';
+    powodKreatora = powod || '';
+    krok = 0;
+    el('start-modal').style.display = 'flex';
+    rysuj();
+  };
+
   /** Format, nie prawdziwość - sprawdzenie klucza u dostawcy kosztowałoby wywołanie. */
   function zlyFormat(wartosc, prefiks){
     return Boolean(wartosc) && prefiks && wartosc.indexOf(prefiks) !== 0;
@@ -20494,6 +21013,7 @@ async function kbAudioTranscribeAndOpen(file) {
   }
 
   window.startDalej = function(){
+    if (KROKI_WLASNE.indexOf(kroki[krok]) >= 0) { dalejWlasny(); return; }
     if (kroki[krok] === 'klucze' && !zapiszKrokKluczy()) return;
     if (krok === kroki.length - 1) return zamknij();
     krok++;
@@ -20511,22 +21031,713 @@ async function kbAudioTranscribeAndOpen(file) {
   /** Otwarcie z menu - zawsze od pierwszego ekranu. */
   window.otworzStart = function(){
     krok = 0;
+    dostawcaKreatora = ''; powodKreatora = '';
     el('start-modal').style.display = 'flex';
     rysuj();
   };
 
   document.addEventListener('DOMContentLoaded', function(){
-    var byl = null;
-    try { byl = magazyn.getItem(PAMIEC); } catch(e){ byl = '1'; }
-    if (byl) return;
-    // Pakiet przydaje sie na pierwszym ekranie, ale kreator ma sie pokazac
-    // takze wtedy, gdy serwer o nim nie odpowie.
-    var pokaz = function(){ el('start-modal').style.display = 'flex'; rysuj(); };
-    if (typeof window.odswiezPakiet === 'function'){
-      window.odswiezPakiet().then(function(d){ window.pakietStanStart = d || null; pokaz(); });
-    } else {
-      pokaz();
+    // R9-D: rodzaj konta (kreator BYOK albo zespolu) przychodzi z /api/konto, zanim kreator sie pokaze.
+    (window.kontoGotowe || Promise.resolve()).then(function(){
+      var byl = null;
+      try { byl = magazyn.getItem(PAMIEC); } catch(e){ byl = '1'; }
+      // Konto BYOK bez klucza widzi kreator przy kazdym wejsciu, dopoki nie zapisze klucza albo w tej sesji
+      // nie wybierze "Zrobie to pozniej" (UX 2.4); wtedy zostaje karta "Podlacz klucz".
+      var bezKlucza = typeof window.kontoBezKlucza === 'function' && window.kontoBezKlucza('anthropic');
+      var pozniej = false; try { pozniej = !!sessionStorage.getItem('cai_kreator_pozniej'); } catch(e){}
+      if (byl && !(bezKlucza && !pozniej)) return;
+      // Pakiet przydaje sie na pierwszym ekranie, ale kreator ma sie pokazac
+      // takze wtedy, gdy serwer o nim nie odpowie.
+      var pokaz = function(){
+        // R9-D (KOD8-24): nie nad zaczetym tematem, nie nad innym oknem i nie po "Pomin" w miedzyczasie.
+        var t = el('topic'), juz = null;
+        try { juz = magazyn.getItem(PAMIEC); } catch(e){ juz = '1'; }
+        if ((juz && !(bezKlucza && !pozniej)) || (t && t.value.trim()) || document.querySelector('.overlay.open')) return;
+        el('start-modal').style.display = 'flex'; rysuj();
+      };
+      if (typeof window.odswiezPakiet === 'function'){
+        window.odswiezPakiet().then(function(d){ window.pakietStanStart = d || null; pokaz(); });
+      } else {
+        pokaz();
+      }
+    });
+  });
+})();
+</script>
+<!-- R9-D: KONTO (wariant proxy). Stan konta z /api/konto, klucze BYOK (C: /api/klucze), Konto i platnosci,
+     zakup (B: /api/platnosci/*), powrot ze Stripe, paski stanu, wylogowanie z wyborem co z kluczami (M-10). -->
+<div class="overlay" id="konto-modal" onclick="if(event.target===this)zamknijKonto()">
+  <div class="modal konto-okno" aria-labelledby="konto-tytul">
+    <div class="modal-head"><h3 id="konto-tytul" data-i18n="konto-tytul">Konto</h3><button type="button" class="modal-close" onclick="zamknijKonto()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+    <div id="konto-tresc" class="konto-tresc"></div>
+  </div>
+</div>
+<div class="overlay" id="wyloguj-modal" onclick="if(event.target===this)zamknijWyloguj()">
+  <div class="modal" style="width:460px" aria-labelledby="wyloguj-tytul">
+    <div class="modal-head"><h3 id="wyloguj-tytul" data-i18n="wyl-tytul">Wylogować się?</h3><button type="button" class="modal-close" onclick="zamknijWyloguj()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+    <p class="tekst-zwykly" data-i18n="wyl-opis">Zapamiętane klucze API zostają na tym urządzeniu także po wylogowaniu (najwyżej 30 dni) i inne konto ich nie odczyta. Jeśli to wspólny komputer, usuń je przy wylogowaniu.</p>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" id="wyloguj-usun" onclick="wylogujIUsunKlucze()" data-i18n="wyl-usun">Wyloguj i usuń klucze</button>
+      <button type="button" class="btn-generate" id="wyloguj-zostaw" onclick="wylogujZostawKlucze()" data-i18n="wyl-zostaw">Wyloguj się</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="platnosc-modal" onclick="if(event.target===this)zamknijPlatnosc()">
+  <div class="modal" style="width:480px" aria-labelledby="platnosc-tytul">
+    <div class="modal-head"><h3 id="platnosc-tytul" data-i18n="plat-ok-tytul">Płatność przyjęta</h3><button type="button" class="modal-close" onclick="zamknijPlatnosc()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+    <div id="platnosc-tresc" class="tekst-zwykly platnosc-tresc" role="status" aria-live="polite"></div>
+    <div class="modal-footer"><button type="button" class="btn-generate" onclick="zamknijPlatnosc()" data-i18n="plat-zacznij">Zacznij pisać</button></div>
+  </div>
+</div>
+<script>
+(function(){
+  var DOSTAWCY = ['anthropic', 'openai', 'eleven'];
+  var NAZWA = { anthropic: 'Anthropic', openai: 'OpenAI', eleven: 'ElevenLabs' };
+  var PREFIKS = { anthropic: 'sk-ant-', openai: 'sk-', eleven: '' };
+  var ZYWE = ['aktywna', 'probna', 'anulowana', 'zalegla'];
+  var STRONA_KLUCZA = { pl: 'https://content-ai.net/klucz-api/', en: 'https://content-ai.net/en/api-key/' };
+  var STRONA_BEZPIECZENSTWA = { pl: 'https://content-ai.net/#bezpieczenstwo', en: 'https://content-ai.net/en/#bezpieczenstwo' };
+  var CENNIK = { pl: 'https://content-ai.net/#cennik', en: 'https://content-ai.net/en/#cennik' };
+
+  function el(id){ return document.getElementById(id); }
+  function tekst(klucz, zapas){ try { return _t(klucz) || zapas; } catch(e){ return zapas; } }
+  function esc(s){ return escapeHtml(String(s == null ? '' : s)); }
+  function stan(){ return window.STAN_KONTA || null; }
+  function wlasne(){ return kontoNaWlasnychKluczach(); }
+  function samoobsluga(){ var s = stan(); return !!s && (s.pochodzenie === 'samoobsluga' || s.zrodloKluczy === 'wlasne'); }
+  function jezyk(){ return currentLang === 'en' ? 'en' : 'pl'; }
+  function json(o){ return o.json().catch(function(){ return {}; }); }
+  function kodOdpowiedzi(o, d){ return (o && o.headers && o.headers.get('X-CAI-Kod')) || (d && d.kod) || ''; }
+  function postJson(url, cialo, metoda){
+    return fetch(url, { method: metoda || 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cialo || {}) })
+      .then(function(o){ return json(o).then(function(d){ return { o: o, d: d || {} }; }); });
+  }
+  // Daty z serwera: ms albo s od epoki (Stripe liczy w sekundach) albo ISO.
+  function data(v, krotko){
+    if (v == null || v === '') return '';
+    var n = typeof v === 'number' ? v : (/^\d+$/.test(String(v)) ? Number(v) : Date.parse(v));
+    if (!isFinite(n)) return '';
+    if (n < 1e11) n *= 1000;
+    return new Date(n).toLocaleDateString(jezyk() === 'en' ? 'en-GB' : 'pl-PL', krotko ? { day: 'numeric', month: 'long' } : { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  function kwota(groszy, waluta){
+    var w = String(waluta || '').toUpperCase(), n = Number(groszy) / 100;
+    if (!w || !isFinite(n)) return '';
+    try { return new Intl.NumberFormat(jezyk() === 'en' ? 'en-IE' : 'pl-PL', { style: 'currency', currency: w, minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 }).format(n); }
+    catch(e){ return n + ' ' + w; }
+  }
+  window.kontoSamoobslugowe = samoobsluga;
+
+  // ── Stan konta ─────────────────────────────────────────────────────────────
+  // /api/konto (A1). Do czasu scalenia kont serwer odpowiada 501: wtedy stan z /auth/me i /api/pakiet
+  // (pole _zapas), a wybory (oznaczenia) zostaja w tej przegladarce.
+  function odswiezStanKonta(){
+    return fetch('/api/konto', { headers: { Accept: 'application/json' }, cache: 'no-store' }).then(function(o){
+      if (o.status === 401) return null;
+      if (!o.ok) throw new Error('HTTP ' + o.status);
+      return o.json();
+    }).then(function(d){
+      if (d === null) return null;
+      if (!d || typeof d !== 'object' || !d.login) throw new Error('brak stanu');
+      ustawStan(d);
+      return d;
+    }).catch(function(){ return stanZapasowy(); });
+  }
+  function stanZapasowy(){
+    var ja = fetch('/auth/me', { cache: 'no-store' }).then(function(o){ return o.ok ? o.json() : null; }).catch(function(){ return null; });
+    var pak = typeof window.odswiezPakiet === 'function' ? window.odswiezPakiet() : Promise.resolve(null);
+    return Promise.all([ja, pak]).then(function(w){
+      var me = w[0], p = w[1] || window.STAN_PAKIETU || null;
+      if (!me || !me.login) return null;
+      var org = me.organizacja || { id: 'glowna', mozeZarzadzac: me.rola === 'admin' };
+      var d = { login: me.login, email: me.email || null, emailPotwierdzony: true, rola: me.rola,
+        pochodzenie: org.id && org.id !== 'glowna' ? 'samoobsluga' : 'admin', zrodloKluczy: (p && p.zrodloKluczy) || 'serwera',
+        organizacja: org, pakiet: p, subskrypcja: (p && p.subskrypcja) || { stan: 'brak' }, platnosci: { wlaczone: false }, _zapas: true };
+      ustawStan(d);
+      return d;
+    });
+  }
+  function ustawStan(d){
+    window.STAN_KONTA = d;
+    document.body.classList.toggle('konto-wlasne', d.zrodloKluczy === 'wlasne');
+    document.body.classList.toggle('konto-samoobslugowe', samoobsluga());
+    if (typeof rysujPrzelacznikiOznaczen === 'function') rysujPrzelacznikiOznaczen();
+    rysujWszystko();
+  }
+  window.odswiezStanKonta = odswiezStanKonta;
+
+  // ── Klucze ─────────────────────────────────────────────────────────────────
+  // Konto 'wlasne': klucze w zaszyfrowanych ciasteczkach HttpOnly (C, SEC8-04); stan z /api/klucze z koncowka.
+  // Bez tej trasy (serwer przed scaleniem C) i dla kont zespolu: jak dzis, w tej przegladarce (cai_klucz_*).
+  function stanKluczyLokalny(){
+    var w = { zrodloKluczy: (stan() && stan().zrodloKluczy) || 'serwera', _lokalnie: true };
+    DOSTAWCY.forEach(function(d){
+      var k = ''; try { k = (magazyn.getItem('cai_klucz_' + d) || '').trim(); } catch(e){}
+      w[d] = k ? { ustawiony: true, koncowka: k.slice(-4), zapamietany: true } : { ustawiony: false };
+    });
+    return w;
+  }
+  function odswiezKlucze(){
+    if (!wlasne()) { window.STAN_KLUCZY = stanKluczyLokalny(); return Promise.resolve(window.STAN_KLUCZY); }
+    return fetch('/api/klucze', { cache: 'no-store' }).then(function(o){
+      if (!o.ok) throw new Error('HTTP ' + o.status);
+      return o.json();
+    }).then(function(d){
+      if (!d || typeof d !== 'object' || !d.anthropic) throw new Error('zly stan');
+      window.STAN_KLUCZY = d;
+      return przeniesKluczeZMagazynu().then(function(){ return window.STAN_KLUCZY; });
+    }).catch(function(){ window.STAN_KLUCZY = stanKluczyLokalny(); return window.STAN_KLUCZY; });
+  }
+  function kluczeWCiasteczkach(){ return !!(window.STAN_KLUCZY && !window.STAN_KLUCZY._lokalnie); }
+  window.maKlucz = function(d){ var k = window.STAN_KLUCZY; return !!(k && k[d] && k[d].ustawiony && !k[d].niewazny); };
+  // Brak klucza wiemy na pewno tylko na koncie BYOK z odczytanym stanem kluczy.
+  window.kontoBezKlucza = function(d){ return wlasne() && !!window.STAN_KLUCZY && !window.maKlucz(d || 'anthropic'); };
+  function ustawZmienna(d, wartosc){
+    try { if (d === 'anthropic') API_KEY = wartosc; else if (d === 'openai') OPENAI_API_KEY = wartosc; else ELEVEN_API_KEY = wartosc; } catch(e){}
+  }
+  // Jednorazowe przeniesienie kluczy z localStorage do ciasteczek (projekt SEC8-04, rozdz. 4); usuwamy je dopiero po zapisie.
+  function przeniesKluczeZMagazynu(){
+    var cialo = { zapamietaj: true }, jest = false;
+    DOSTAWCY.forEach(function(d){
+      var k = ''; try { k = (magazyn.getItem('cai_klucz_' + d) || '').trim(); } catch(e){}
+      if (k) { cialo[d] = k; jest = true; }
+    });
+    if (!jest) return Promise.resolve();
+    return postJson('/api/klucze', cialo).then(function(w){
+      if (!w.o.ok || w.d.ok !== true || !w.d.anthropic) return;
+      DOSTAWCY.forEach(function(d){ if (cialo[d]) { try { magazyn.removeItem('cai_klucz_' + d); } catch(e){} ustawZmienna(d, ''); } });
+      window.STAN_KLUCZY = w.d;
+    }).catch(function(){});
+  }
+  function poZmianieKluczy(){
+    if (typeof updateCostDisplay === 'function') updateCostDisplay();
+    rysujWszystko();
+    try { document.dispatchEvent(new CustomEvent('cai-klucze')); } catch(e){}
+  }
+  function zapiszLokalnie(d, klucz){
+    try { magazyn.setItem('cai_klucz_' + d, klucz); } catch(e){}
+    ustawZmienna(d, klucz);
+    window.STAN_KLUCZY = stanKluczyLokalny();
+    poZmianieKluczy();
+    return Promise.resolve({ ok: true, lokalnie: true });
+  }
+  // -> { ok, lokalnie?, zapamietany?, powod?, ponowZa? }
+  function zapiszKlucz(d, klucz, zapamietaj){
+    klucz = String(klucz || '').trim();
+    if (!klucz) return Promise.resolve({ ok: false, powod: 'pusty' });
+    if (PREFIKS[d] && klucz.indexOf(PREFIKS[d]) !== 0) return Promise.resolve({ ok: false, powod: 'format' });
+    if (d === 'openai' && /^sk-ant-/.test(klucz)) return Promise.resolve({ ok: false, powod: 'inny-dostawca' });
+    if (!kluczeWCiasteczkach()) return zapiszLokalnie(d, klucz);
+    return postJson('/api/klucze', { dostawca: d, klucz: klucz, zapamietaj: zapamietaj !== false, sprawdz: true }).then(function(w){
+      var kod = kodOdpowiedzi(w.o, w.d);
+      if (w.o.ok && w.d.ok === true && w.d.anthropic) { window.STAN_KLUCZY = w.d; poZmianieKluczy(); return { ok: true, zapamietany: zapamietaj !== false }; }
+      if (w.o.ok && w.d.ok === false) return { ok: false, powod: w.d.powod || 'zly-klucz' };
+      if (kod === 'zly-klucz') return { ok: false, powod: w.d.format === 'administracyjny' || w.d.format === 'inny-dostawca' ? w.d.format : 'format' };
+      if (kod === 'za-duzo-prob' || w.o.status === 429) return { ok: false, powod: 'za-duzo-prob', ponowZa: w.d.ponowZa };
+      return { ok: false, powod: 'zapis' };
+    }).catch(function(){ return { ok: false, powod: 'siec' }; });
+  }
+  function sprawdzKlucz(d){
+    return postJson('/api/klucze/sprawdz', { dostawca: d }).then(function(w){
+      if (w.o.ok) return w.d.ok ? { ok: true } : { ok: false, powod: w.d.powod || 'zly-klucz' };
+      if (w.o.status === 429) return { ok: false, powod: 'za-duzo-prob', ponowZa: w.d.ponowZa };
+      return { ok: false, powod: 'niedostepne' };
+    }).catch(function(){ return { ok: false, powod: 'siec' }; });
+  }
+  function usunKlucz(d){
+    if (!kluczeWCiasteczkach()) {
+      var lista = d === 'wszystkie' ? DOSTAWCY : [d];
+      lista.forEach(function(x){ try { magazyn.removeItem('cai_klucz_' + x); } catch(e){} ustawZmienna(x, ''); });
+      window.STAN_KLUCZY = stanKluczyLokalny();
+      poZmianieKluczy();
+      return Promise.resolve({ ok: true });
     }
+    return postJson('/api/klucze?dostawca=' + encodeURIComponent(d), {}, 'DELETE').then(function(w){
+      if (w.o.ok && w.d.anthropic) { window.STAN_KLUCZY = w.d; poZmianieKluczy(); return { ok: true }; }
+      return { ok: false };
+    }).catch(function(){ return { ok: false, powod: 'siec' }; });
+  }
+  window.zapiszKluczKonta = zapiszKlucz;
+  window.usunKluczKonta = usunKlucz;
+
+  // Pole klucza: kreator, Konto, karty Grafiki i Audio. Prefiks rozroznia miejsca (identyfikatory pol).
+  window.htmlPolaKlucza = function(prefiks, d, opcje){
+    var o = opcje || {};
+    var id = prefiks + '-pole-' + d;
+    return '<div class="byok-pole" data-dostawca="' + d + '">'
+      + '<label class="byok-etykieta" for="' + id + '">' + esc(tekst('byok-pole', 'Klucz API {DOSTAWCA}').replace('{DOSTAWCA}', NAZWA[d])) + '</label>'
+      + (o.opis ? '<div class="tekst-pomoc byok-pole-opis">' + esc(o.opis) + '</div>' : '')
+      + '<div class="byok-wiersz">'
+      + '<input id="' + id + '" type="password" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="' + esc(PREFIKS[d] ? PREFIKS[d] + '…' : '') + '" aria-describedby="' + prefiks + '-wynik-' + d + '"'
+      + ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();sprawdzIZapiszKlucz(\'' + prefiks + '\',\'' + d + '\')}">'
+      + '<button type="button" class="btn-secondary byok-pokaz" onclick="pokazKluczPola(\'' + id + '\', this)" aria-pressed="false">' + esc(tekst('byok-pokaz', 'Pokaż')) + '</button>'
+      + '<button type="button" class="btn-generate byok-zapisz" onclick="sprawdzIZapiszKlucz(\'' + prefiks + '\',\'' + d + '\')">' + esc(tekst('byok-sprawdz', 'Sprawdź i zapisz')) + '</button>'
+      + '</div>'
+      + '<p class="tekst-pomoc byok-wynik" id="' + prefiks + '-wynik-' + d + '" role="status" aria-live="polite"></p>'
+      + '</div>';
+  };
+  window.htmlZapamietaj = function(prefiks){
+    if (!kluczeWCiasteczkach()) return '';
+    return '<label class="ozn-wiersz byok-zapamietaj" for="' + prefiks + '-zapamietaj"><input type="checkbox" id="' + prefiks + '-zapamietaj" checked>'
+      + '<span><b>' + esc(tekst('byok-zapamietaj', 'Zapamiętaj na tym urządzeniu')) + '</b><small>' + esc(tekst('byok-zapamietaj-opis', '')) + '</small></span></label>';
+  };
+  window.pokazKluczPola = function(id, przycisk){
+    var p = el(id); if (!p) return;
+    var jawny = p.type === 'password';
+    p.type = jawny ? 'text' : 'password';
+    if (przycisk) { przycisk.setAttribute('aria-pressed', String(jawny)); przycisk.textContent = tekst(jawny ? 'byok-ukryj' : 'byok-pokaz', ''); }
+  };
+  function wynikPola(cel, rodzaj, tresc){
+    if (!cel) return;
+    cel.className = 'tekst-pomoc byok-wynik' + (rodzaj ? ' byok-wynik-' + rodzaj : '');
+    cel.innerHTML = (rodzaj === 'trwa' ? ikona('loader', 'kreci') : rodzaj === 'ok' ? ikona('circle-check') : rodzaj === 'blad' ? ikona('triangle-alert') : '') + '<span>' + esc(tresc) + '</span>';
+  }
+  function tekstPowodu(d, w){
+    var n = NAZWA[d];
+    var k = { pusty: 'byok-pusty', format: d === 'anthropic' ? 'byok-zly-format-anthropic' : d === 'openai' ? 'byok-zly-format-openai' : 'byok-zly-format',
+      administracyjny: 'byok-administracyjny', 'inny-dostawca': 'byok-inny-dostawca', 'zly-klucz': 'byok-odrzucony', 'brak-uprawnien': 'byok-brak-uprawnien',
+      'dostawca-niedostepny': 'byok-niedostepny', 'za-duzo-prob': 'byok-za-duzo', siec: 'err-siec', niedostepne: 'byok-sprawdzenie-niedostepne', 'brak-klucza': 'byok-brak' }[w.powod] || 'byok-blad-zapisu';
+    return tekst(k, '').replace(/\{DOSTAWCA\}/g, n).replace('{s}', String(w.ponowZa || 60));
+  }
+  window.sprawdzIZapiszKlucz = function(prefiks, d){
+    var pole = el(prefiks + '-pole-' + d), cel = el(prefiks + '-wynik-' + d), zap = el(prefiks + '-zapamietaj');
+    var klucz = pole ? pole.value.trim() : '';
+    if (!klucz) { wynikPola(cel, 'blad', tekstPowodu(d, { powod: 'pusty' })); if (pole) pole.focus(); return Promise.resolve({ ok: false }); }
+    wynikPola(cel, 'trwa', tekst('byok-sprawdzam', '').replace('{DOSTAWCA}', NAZWA[d]));
+    var przyciski = pole && pole.closest('.byok-pole') ? pole.closest('.byok-pole').querySelectorAll('button') : [];
+    Array.prototype.forEach.call(przyciski, function(b){ b.disabled = true; });
+    return zapiszKlucz(d, klucz, !zap || zap.checked).then(function(w){
+      Array.prototype.forEach.call(przyciski, function(b){ b.disabled = false; });
+      if (w.ok) {
+        if (pole) { pole.value = ''; pole.type = 'password'; }
+        // Konto przerysowuje sie po zapisie (nowy stan klucza): wynik trafia do wiersza tego dostawcy.
+        var cel2 = (prefiks === 'konto' && el('konto-stan-' + d)) || el(prefiks + '-wynik-' + d) || cel;
+        wynikPola(cel2, 'ok', tekst(w.lokalnie ? 'byok-ok-lokalnie' : (w.zapamietany ? 'byok-ok' : 'byok-ok-sesja'), ''));
+        try { document.dispatchEvent(new CustomEvent('cai-klucz-zapisany', { detail: { dostawca: d, prefiks: prefiks } })); } catch(e){}
+      } else {
+        wynikPola(cel, 'blad', tekstPowodu(d, w));
+        if (pole) pole.focus();
+      }
+      return w;
+    });
+  };
+
+  // Kreator klucza: nie czesciej niz raz na 30 s, gdy odmowa przyjdzie z kilku rownoleglych zapytan.
+  var ostatniKreator = 0;
+  window.otworzKreatorKluczaRaz = function(d, powod){
+    if (Date.now() - ostatniKreator < 30000) return;
+    ostatniKreator = Date.now();
+    if (typeof window.otworzKreatorKlucza === 'function') window.otworzKreatorKlucza(d, powod);
+  };
+  // Odmowy serwera z kodem X-CAI-Kod (opakowany fetch w bloku pakietu).
+  window.poOdmowieSerwera = function(kod, odp, dostawca){
+    if (kod === 'sesja') { window.sesjaWygasla(); return; }
+    if (kod === 'brak-klucza') {
+      odp.clone().json().then(function(d){ window.otworzKreatorKluczaRaz(kodDostawcyBledu((d && d.dostawca) || dostawca)); })
+        .catch(function(){ window.otworzKreatorKluczaRaz(dostawca); });
+      return;
+    }
+    if (kod === 'zly-klucz') {
+      var d = kodDostawcyBledu(odp.headers.get('X-CAI-Dostawca') || dostawca);
+      var k = window.STAN_KLUCZY;
+      if (k && k[d] && wlasne()) { k[d].niewazny = true; rysujWszystko(); }
+      if (wlasne()) window.otworzKreatorKluczaRaz(d, 'odrzucony');
+      return;
+    }
+    if (kod === 'email-niepotwierdzony') { odmowaEmail = true; rysujPaski(); return; }
+    if (kod === 'zgoda-wymagana') { odmowaZgody = true; rysujPaski(); }
+  };
+
+  // ── Wygasla sesja: jedna obsluga dla wszystkich wywolan API (prosba F, KOD8-10) ──
+  var sesjaZgloszona = false, odmowaEmail = false, odmowaZgody = false;
+  window.sesjaWygasla = function(){
+    if (sesjaZgloszona) return;
+    sesjaZgloszona = true;
+    try { if (typeof zapiszSzkic === 'function') zapiszSzkic(); } catch(e){}
+    rysujPaski();
+  };
+  window.zalogujPonownie = function(){
+    try { if (typeof editMode !== 'undefined' && editMode) toggleEdit(); } catch(e){}
+    try { if (typeof zapiszSzkic === 'function') zapiszSzkic(); } catch(e){}
+    location.reload();
+  };
+
+  // ── Paski stanu nad aplikacja ──────────────────────────────────────────────
+  function nazwaPlanu(plan){
+    var s = stan(), lista = (s && s.platnosci && s.platnosci.plany) || [];
+    var p = lista.filter(function(x){ return x.plan === plan; })[0];
+    if (p) return jezyk() === 'en' && p.nazwaEn ? p.nazwaEn : p.nazwa;
+    var pk = window.STAN_PAKIETU || (s && s.pakiet);
+    if (pk && pk.plan === plan) return jezyk() === 'en' && pk.nazwaEn ? pk.nazwaEn : pk.nazwa;
+    return plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : '';
+  }
+  function rysujPaski(){
+    var c = el('konto-paski'); if (!c) return;
+    var s = stan(), lista = [];
+    if (sesjaZgloszona) lista.push(['sesja', 'blad', 'log-out', tekst('pasek-sesja', ''), [['kb-sesja-zaloguj', 'zalogujPonownie()']]]);
+    if (s && samoobsluga()) {
+      var pl = s.platnosci || {}, sub = s.subskrypcja || {};
+      var zg = s.zgody && s.zgody.regulamin;
+      if (odmowaZgody || (zg && zg.wymagaAkceptacji)) lista.push(['zgoda', 'uwaga', 'scale', tekst('pasek-zgoda', ''), [['pasek-zgoda-akcja', "location.assign('/konto/zgody')"]]]);
+      if ((s.email && s.emailPotwierdzony === false && !s._zapas) || odmowaEmail) lista.push(['email', 'uwaga', 'mail', tekst('pasek-email', '').replace('{EMAIL}', s.email || ''), [['btn-wyslij-link', 'wyslijPotwierdzenieEmail()'], ['pasek-zmien-adres', "location.assign('/konto')"]]]);
+      if (sub.stan === 'zalegla') lista.push(['zalegla', 'blad', 'triangle-alert', tekst('plat-odnowienie-nieudane', '').replace('{PAKIET}', nazwaPlanu(sub.plan)).replace('{DATA}', data(sub.dostepDo || sub.okresDo)), [['plat-odnowienie-przycisk', 'otworzPanelPlatnosci()']]]);
+      if (sub.stan === 'wygasla') lista.push(['wygasla', 'uwaga', 'package', tekst('sub-wygasla', '').replace('{PAKIET}', nazwaPlanu(sub.plan)).replace('{DATA}', data(sub.okresDo)), [['sub-wybierz', "otworzPakiet('zakup')"]]]);
+      if (pl.wlaczone && pl.tryb === 'test') lista.push(['test', 'info', 'info', tekst('pasek-test', ''), []]);
+    }
+    c.innerHTML = lista.map(function(p){
+      return '<div class="konto-pasek konto-pasek-' + p[1] + '" data-pasek="' + p[0] + '" role="' + (p[1] === 'blad' ? 'alert' : 'status') + '">'
+        + ikona(p[2]) + '<span class="konto-pasek-tekst">' + esc(p[3]) + '</span>'
+        + p[4].map(function(a){ return '<button type="button" class="btn-link" onclick="' + a[1] + '">' + esc(tekst(a[0], '')) + '</button>'; }).join('')
+        + '</div>';
+    }).join('');
+    c.hidden = !lista.length;
+  }
+  window.wyslijPotwierdzenieEmail = function(){
+    return postJson('/api/konto/potwierdzenie', {}).then(function(w){
+      if (w.o.ok && w.d.ok) pokazPowiadomienie(tekst('potw-ponow-ok', ''), 'ok');
+      else if (w.o.status === 429) pokazPowiadomienie(tekst('potw-ponow-czekaj', '').replace('{s}', String(w.d.ponowZa || 60)), 'uwaga');
+      else powiadomBlad(tekst('potw-ponow-blad', ''));
+    }).catch(function(){ powiadomBlad(tekst('err-siec', '')); });
+  };
+
+  // ── Karta w miejscu "Wygeneruj": bez klucza (E1) i po wyczerpaniu puli (A4, UX8-06) ──
+  function stanArtykulow(){
+    var p = window.STAN_PAKIETU || (stan() && stan().pakiet) || null;
+    var a = p && p.uzycie && p.uzycie.artykul;
+    if (!a || a.limit === null || !(a.limit > 0)) return null;
+    return { limit: a.limit, zostalo: Math.max(0, a.limit - a.zuzyte), okres: p.okres };
+  }
+  function dataOdnowienia(){
+    var s = stan(), sub = s && s.subskrypcja;
+    if (sub && sub.okresDo && ZYWE.indexOf(sub.stan) >= 0) return data(sub.okresDo, true);
+    var t = new Date(); return data(new Date(t.getFullYear(), t.getMonth() + 1, 1).getTime(), true);
+  }
+  window.dataOdnowieniaPakietu = dataOdnowienia;
+  function mozeKupic(){ var pl = stan() && stan().platnosci; return !!(pl && pl.wlaczone && pl.mozeKupic && pl.sprzedaz !== false); }
+  function rysujKarte(){
+    var karta = el('konto-karta'); if (!karta) return;
+    var rodzaj = '', a = stanArtykulow();
+    if (samoobsluga()) {
+      if (window.kontoBezKlucza('anthropic')) rodzaj = 'klucz';
+      else if (a && a.zostalo === 0) rodzaj = a.okres === 'zawsze' ? 'darmowe' : 'okres';
+    }
+    document.body.classList.toggle('karta-konta', !!rodzaj);
+    karta.hidden = !rodzaj;
+    karta.setAttribute('data-karta', rodzaj);
+    if (!rodzaj) { karta.innerHTML = ''; return; }
+    var h = '';
+    if (rodzaj === 'klucz') {
+      var odrzucony = window.STAN_KLUCZY && window.STAN_KLUCZY.anthropic && window.STAN_KLUCZY.anthropic.niewazny;
+      h = '<p class="konto-karta-tytul">' + esc(tekst(odrzucony ? 'e1-odrzucony' : 'e1-tytul', '')) + '</p>'
+        + '<p class="konto-karta-opis">' + esc(tekst('e1-opis', '')) + '</p>'
+        + '<div class="konto-karta-akcje"><button type="button" class="btn-generate" id="e1-podlacz" onclick="otworzKreatorKlucza(\'anthropic\')">' + ikona('key-round') + '<span>' + esc(tekst('e1-podlacz', '')) + '</span></button>'
+        + '<button type="button" class="btn-link" onclick="otworzPrzyklad()">' + esc(tekst('e1-przyklad', '')) + '</button></div>';
+    } else {
+      var opis = rodzaj === 'darmowe'
+        ? tekst('a4-darmowe', '').replace(/\{m\}/g, a.limit)
+        : tekst('a4-okres', '').replace(/\{m\}/g, a.limit).replace('{DATA}', dataOdnowienia());
+      h = '<p class="konto-karta-tytul">' + esc(opis) + '</p>'
+        + (mozeKupic()
+          ? '<div class="konto-karta-akcje"><button type="button" class="btn-generate" id="a4-wybierz" onclick="otworzPakiet(\'zakup\')">' + ikona('package') + '<span>' + esc(tekst(rodzaj === 'darmowe' ? 'a4-wybierz' : 'pakiet-zmien', '')) + '</span></button></div>'
+          : '<p class="konto-karta-opis">' + esc(tekst('a4-bez-zakupu', '')) + '</p>');
+    }
+    karta.innerHTML = h;
+  }
+
+  // Odznaka pakietu konta jednoosobowego (UX 2.4): "Darmowe: 2 z 3", "Darmowe wykorzystane · Wybierz pakiet",
+  // stan subskrypcji obok nazwy. Konta zespolu: jak dzis.
+  window.przerysujOdznakeKonta = function(b, p){
+    if (!b || !p || !samoobsluga()) return;
+    var s = stan(), sub = (s && s.subskrypcja) || {}, a = stanArtykulow();
+    var nazwa = jezyk() === 'en' && p.nazwaEn ? p.nazwaEn : p.nazwa;
+    var pelny, krotki, alarm = false;
+    if (sub.stan === 'zalegla') { pelny = nazwa + ' · ' + tekst('odznaka-zalegla', ''); krotki = tekst('odznaka-zalegla', ''); alarm = true; }
+    else if (sub.stan === 'anulowana' && sub.okresDo) { pelny = nazwa + ' · ' + tekst('odznaka-do', '').replace('{DATA}', data(sub.okresDo, true)); krotki = tekst('odznaka-do', '').replace('{DATA}', data(sub.okresDo, true)); }
+    else if (a && a.okres === 'zawsze') {
+      if (a.zostalo === 0) { pelny = tekst('odznaka-darmowe-koniec', ''); krotki = tekst('odznaka-wybierz', ''); alarm = true; }
+      else { pelny = tekst('odznaka-darmowe', '').replace('{n}', a.zostalo).replace('{m}', a.limit); krotki = pelny; }
+    } else return;
+    b.innerHTML = '<span class="pakiet-licznik">' + esc(pelny) + '</span><span class="pakiet-licznik-krotko">' + esc(krotki) + '</span>';
+    b.setAttribute('aria-label', pelny);
+    b.classList.toggle('pakiet-alarm', alarm);
+  };
+
+  // ── Zakup w oknie pakietu (UX8-20, prawo pkt 3) ────────────────────────────
+  var wybranyPlan = null, wybranaWaluta = null;
+  function walutaStartowa(pl){
+    var w = (pl.waluty || []).map(function(x){ return String(x).toLowerCase(); });
+    if (jezyk() === 'pl' && w.indexOf('pln') >= 0) return 'pln';
+    if (w.indexOf('eur') >= 0) return 'eur';
+    return String(pl.walutaDomyslna || w[0] || 'eur').toLowerCase();
+  }
+  function adresDokumentu(nazwa){
+    var s = stan(), a = (s && s.adresy) || {};
+    if (nazwa === 'regulamin' && a.dokumentRegulaminu) return a.dokumentRegulaminu;
+    return (jezyk() === 'en' ? '/en/dokumenty/' : '/dokumenty/') + nazwa;
+  }
+  function emailRachunku(){
+    var s = stan();
+    return (s && s.platnosci && s.platnosci.rachunek && s.platnosci.rachunek.email) || (s && s.uslugodawca && s.uslugodawca.email) || 'kontakt@content-ai.net';
+  }
+  function opisSubskrypcji(sub){
+    var n = nazwaPlanu(sub.plan);
+    if (sub.stan === 'aktywna' || sub.stan === 'probna') return tekst('sub-aktywna', '').replace('{PAKIET}', n).replace('{DATA}', data(sub.okresDo));
+    if (sub.stan === 'anulowana') return tekst('sub-anulowana', '').replace('{PAKIET}', n).replace('{DATA}', data(sub.okresDo));
+    if (sub.stan === 'zalegla') return tekst('plat-odnowienie-nieudane', '').replace('{PAKIET}', n).replace('{DATA}', data(sub.dostepDo || sub.okresDo));
+    if (sub.stan === 'wygasla') return tekst('sub-wygasla', '').replace('{PAKIET}', n).replace('{DATA}', data(sub.okresDo));
+    return '';
+  }
+  function cenaPlanu(p, w){ return p && p.ceny && p.ceny[w] != null ? kwota(p.ceny[w], w) : ''; }
+  window.rysujZakupWPakiecie = function(cel){
+    if (!cel) return;
+    var s = stan();
+    if (!s || !samoobsluga()) { cel.hidden = true; cel.innerHTML = ''; return; }
+    var pl = s.platnosci || {}, sub = s.subskrypcja || { stan: 'brak' }, h = '';
+    if (pl.wlaczone && pl.tryb === 'test') h += '<p class="konto-pasek konto-pasek-info zakup-test">' + ikona('info') + '<span>' + esc(tekst('pasek-test', '')) + '</span></p>';
+    if (ZYWE.indexOf(sub.stan) >= 0) {
+      h += '<div class="zakup-stan"><p class="tekst-zwykly">' + esc(opisSubskrypcji(sub)) + '</p>'
+        + (pl.maPanel ? '<button type="button" class="btn-secondary" id="zakup-panel" onclick="otworzPanelPlatnosci()">' + esc(tekst('plat-ustawienia-portal', '')) + '</button><p class="tekst-pomoc">' + esc(tekst('plat-ustawienia-portal-opis', '')) + '</p>' : '')
+        + '</div>';
+    } else if (pl.wlaczone && pl.sprzedaz === false) {
+      h += '<p class="tekst-zwykly">' + esc(tekst('zakup-wstrzymany', '')) + '</p>';
+    } else if (mozeKupic() && pl.plany && pl.plany.length) {
+      var waluty = (pl.waluty || []).map(function(x){ return String(x).toLowerCase(); });
+      if (!wybranaWaluta || waluty.indexOf(wybranaWaluta) < 0) wybranaWaluta = walutaStartowa(pl);
+      if (!wybranyPlan || !pl.plany.some(function(p){ return p.plan === wybranyPlan; })) wybranyPlan = (pl.plany.filter(function(p){ return p.plan === 'standard'; })[0] || pl.plany[0]).plan;
+      var plan = pl.plany.filter(function(p){ return p.plan === wybranyPlan; })[0];
+      var cena = cenaPlanu(plan, wybranaWaluta);
+      h += '<div class="zakup" id="zakup">'
+        + '<div class="zakup-naglowek"><b id="zakup-tytul">' + esc(tekst('zakup-tytul', '')) + '</b>'
+        + (waluty.length > 1 ? '<div class="segmenty" role="group" aria-label="' + esc(tekst('zakup-waluta', '')) + '">' + waluty.map(function(w){
+            return '<button type="button" aria-pressed="' + (w === wybranaWaluta) + '" onclick="wybierzWaluteZakupu(\'' + w + '\')">' + esc(w.toUpperCase()) + '</button>'; }).join('') + '</div>' : '')
+        + '</div>'
+        + '<div class="zakup-karty" role="radiogroup" aria-labelledby="zakup-tytul">' + pl.plany.map(function(p){
+            var nazwa = jezyk() === 'en' && p.nazwaEn ? p.nazwaEn : p.nazwa;
+            return '<button type="button" class="zakup-karta" role="radio" aria-checked="' + (p.plan === wybranyPlan) + '" onclick="wybierzPlanZakupu(\'' + esc(p.plan) + '\')">'
+              + '<span class="zakup-karta-nazwa">' + esc(nazwa) + (p.plan === 'standard' ? ' <span class="znacznik-pakietu">' + esc(tekst('zakup-polecany', '')) + '</span>' : '') + '</span>'
+              + '<span class="zakup-karta-cena">' + esc(tekst('zakup-cena-miesiac', '').replace('{CENA}', cenaPlanu(p, wybranaWaluta))) + '</span></button>'; }).join('') + '</div>'
+        + '<p class="tekst-pomoc"><a class="link-akcent" href="' + CENNIK[jezyk()] + '" target="_blank" rel="noopener">' + esc(tekst('pakiet-cennik', '')) + '</a></p>'
+        + '<p class="tekst-pomoc zakup-podsumowanie" id="zakup-podsumowanie">' + esc(tekst('zakup-podsumowanie', '').replace('{PAKIET}', plan ? (jezyk() === 'en' && plan.nazwaEn ? plan.nazwaEn : plan.nazwa) : '').replace('{CENA}', cena)) + '</p>'
+        + '<label class="ozn-wiersz" for="zakup-zgoda-regulamin"><input type="checkbox" id="zakup-zgoda-regulamin" onchange="odswiezPrzyciskZakupu()"><span>'
+        + esc(tekst('zakup-zgoda-1a', '')) + '<a class="link-akcent" href="' + esc(adresDokumentu('regulamin')) + '" target="_blank" rel="noopener">' + esc(tekst('zakup-regulamin', '')) + '</a>'
+        + esc(tekst('zakup-zgoda-1b', '')) + '<a class="link-akcent" href="' + esc(adresDokumentu('odstapienie')) + '" target="_blank" rel="noopener">' + esc(tekst('zakup-pouczenie', '')) + '</a>' + esc(tekst('zakup-zgoda-1c', '')) + '</span></label>'
+        + (pl.wymagaZgodyNaWykonanie !== false ? '<label class="ozn-wiersz" for="zakup-zgoda-wykonanie"><input type="checkbox" id="zakup-zgoda-wykonanie" onchange="odswiezPrzyciskZakupu()"><span>'
+            + esc(tekst(pl.zwrot === 'pelny' ? 'zakup-zgoda-2-pelny' : 'zakup-zgoda-2', '')) + '</span></label>' : '')
+        + '<button type="button" class="btn-generate zakup-przycisk" id="zakup-przycisk" disabled onclick="przejdzDoPlatnosci()">' + esc(tekst('zakup-przejdz', '').replace('{CENA}', cena)) + '</button>'
+        + '<p class="tekst-pomoc stan-blad" id="zakup-blad" role="alert" hidden></p>'
+        + '<p class="tekst-pomoc">' + esc(tekst('zakup-stopka', '').replace('{EMAIL}', emailRachunku())) + '</p>'
+        + '</div>';
+    }
+    cel.innerHTML = h;
+    cel.hidden = !h;
+  };
+  window.wybierzPlanZakupu = function(plan){ wybranyPlan = plan; window.rysujZakupWPakiecie(el('pakiet-zakup')); var b = document.querySelector('#pakiet-zakup .zakup-karta[aria-checked="true"]'); if (b) b.focus(); };
+  window.wybierzWaluteZakupu = function(w){ wybranaWaluta = w; window.rysujZakupWPakiecie(el('pakiet-zakup')); };
+  window.odswiezPrzyciskZakupu = function(){
+    var b = el('zakup-przycisk'); if (!b) return;
+    var z1 = el('zakup-zgoda-regulamin'), z2 = el('zakup-zgoda-wykonanie');
+    b.disabled = !(z1 && z1.checked) || !!(z2 && !z2.checked);
+  };
+  function bladZakupu(kod, d){
+    var cel = el('zakup-blad');
+    var k = { 'subskrypcja-istnieje': 'zakup-bl-istnieje', 'sprzedaz-wstrzymana': 'zakup-wstrzymany', 'zakup-niedozwolony': 'zakup-bl-niedozwolony',
+      'plan-niedostepny': 'zakup-bl-plan', 'dostawca-platnosci-niedostepny': 'zakup-bl-stripe', 'za-duzo-prob': 'zakup-bl-za-duzo',
+      'platnosci-wylaczone': 'zakup-bl-wylaczone', siec: 'err-siec' }[kod] || 'zakup-bl-inny';
+    var t = tekst(k, '').replace('{s}', String((d && d.ponowZa) || 60));
+    if (cel) { cel.textContent = t; cel.hidden = false; } else powiadomBlad(t);
+    if (kod === 'subskrypcja-istnieje') odswiezStanKonta();
+  }
+  window.przejdzDoPlatnosci = function(){
+    var b = el('zakup-przycisk'), z2 = el('zakup-zgoda-wykonanie');
+    if (b) { b.disabled = true; b.classList.add('btn-working'); }
+    var koniec = function(){ if (b) { b.classList.remove('btn-working'); window.odswiezPrzyciskZakupu(); } };
+    postJson('/api/platnosci/zakup', { plan: wybranyPlan, waluta: wybranaWaluta, zgodaNaWykonanie: !!(z2 && z2.checked) }).then(function(w){
+      if (w.o.ok && w.d.url) { location.assign(w.d.url); return; }
+      koniec(); bladZakupu(kodOdpowiedzi(w.o, w.d), w.d);
+    }).catch(function(){ koniec(); bladZakupu('siec'); });
+  };
+  window.otworzPanelPlatnosci = function(){
+    postJson('/api/platnosci/panel', {}).then(function(w){
+      if (w.o.ok && w.d.url) { location.assign(w.d.url); return; }
+      var kod = kodOdpowiedzi(w.o, w.d);
+      powiadomBlad(tekst(kod === 'brak-subskrypcji' ? 'zakup-bl-brak-subskrypcji' : kod === 'dostawca-platnosci-niedostepny' ? 'zakup-bl-stripe' : 'zakup-bl-inny', ''));
+    }).catch(function(){ powiadomBlad(tekst('err-siec', '')); });
+  };
+
+  // ── Powrot ze Stripe (?platnosc=ok|anulowana): aktywacja z webhooka i wariant opoznienia (A6, UX8-20) ──
+  window.zamknijPlatnosc = function(){ el('platnosc-modal').classList.remove('open'); };
+  function trescPlatnosci(klucz, tytul, trwa){
+    ustawTekst(el('platnosc-tytul'), tytul);
+    el('platnosc-tresc').innerHTML = (trwa ? '<span class="platnosc-trwa">' + ikona('loader', 'kreci') + '</span>' : '') + '<span>' + esc(klucz) + '</span>';
+  }
+  function czekajNaPakiet(){
+    el('platnosc-modal').classList.add('open');
+    trescPlatnosci(tekst('plat-oczekuje', ''), 'plat-ok-tytul', true);
+    var start = Date.now();
+    (function krok(){
+      odswiezStanKonta().then(function(s){
+        var sub = s && s.subskrypcja;
+        if (sub && (sub.stan === 'aktywna' || sub.stan === 'probna')) {
+          trescPlatnosci(tekst('plat-ok-tekst', '').replace('{PAKIET}', nazwaPlanu(sub.plan)).replace('{DATA}', data(sub.okresDo)).replace('{EMAIL}', (s && s.email) || ''), 'plat-ok-tytul', false);
+          if (typeof window.odswiezPakiet === 'function') window.odswiezPakiet();
+          return;
+        }
+        if (Date.now() - start > 30000) { trescPlatnosci(tekst('plat-opoznienie', '').replace('{EMAIL}', emailRachunku()), 'plat-opoznienie-tytul', false); return; }
+        setTimeout(krok, 2000);
+      });
+    })();
+  }
+  function powrotZPlatnosci(){
+    var q; try { q = new URLSearchParams(location.search); } catch(e){ return; }
+    var w = q.get('platnosc'); if (!w) return;
+    q.delete('platnosc');
+    try { history.replaceState(history.state, '', location.pathname + (q.toString() ? '?' + q.toString() : '') + location.hash); } catch(e){}
+    if (w === 'ok') czekajNaPakiet();
+    else pokazPowiadomienie(tekst('plat-przerwana', ''), 'info', 9000);
+  }
+
+  // ── Ekran Konto (UX8-21, makieta A7) ───────────────────────────────────────
+  window.zamknijKonto = function(){ el('konto-modal').classList.remove('open'); };
+  window.otworzKonto = function(sekcja){
+    if (typeof closeSettingsMenu === 'function') closeSettingsMenu();
+    el('konto-modal').classList.add('open');
+    rysujKonto();
+    Promise.all([odswiezStanKonta(), odswiezKlucze()]).then(function(){ rysujKonto(); if (sekcja && el('konto-' + sekcja)) el('konto-' + sekcja).scrollIntoView({ block: 'start' }); });
+  };
+  function sekcja(id, tytul, tresc){ return '<section class="konto-sekcja" id="konto-' + id + '" aria-labelledby="konto-' + id + '-t"><h4 id="konto-' + id + '-t">' + esc(tytul) + '</h4>' + tresc + '</section>'; }
+  function wierszKlucza(d){
+    var k = (window.STAN_KLUCZY || {})[d] || {};
+    var opis = tekst('byok-' + d + '-opis', '');
+    var stanTxt = k.ustawiony
+      ? (k.niewazny ? tekst('konto-klucz-odrzucony', '') : tekst('konto-klucz-ustawiony', '').replace('{KONCOWKA}', k.koncowka || '')
+          + (k.zapamietany && k.wygasa ? ' · ' + tekst('konto-klucz-do', '').replace('{DATA}', data(k.wygasa)) : (k.zapamietany === false ? ' · ' + tekst('konto-klucz-sesja', '') : '')))
+      : tekst('konto-klucz-brak', '');
+    return '<div class="konto-klucz" data-dostawca="' + d + '">'
+      + '<div class="konto-klucz-glowa"><div><b>' + esc(NAZWA[d]) + '</b><small>' + esc(opis) + '</small></div>'
+      + '<span class="konto-klucz-stan' + (k.ustawiony && !k.niewazny ? ' stan-ok' : '') + '">' + esc(stanTxt) + '</span></div>'
+      + '<div class="konto-klucz-akcje">'
+      + (k.ustawiony && kluczeWCiasteczkach() ? '<button type="button" class="btn-secondary btn-maly" onclick="sprawdzKluczKonta(\'' + d + '\')">' + esc(tekst('konto-sprawdz', '')) + '</button>' : '')
+      + '<button type="button" class="btn-secondary btn-maly" aria-expanded="false" onclick="pokazZmianeKlucza(\'' + d + '\', this)">' + esc(tekst(k.ustawiony ? 'konto-zmien' : 'konto-dodaj', '')) + '</button>'
+      + (k.ustawiony ? '<button type="button" class="btn-secondary btn-maly niszcz" onclick="usunKluczZKonta(\'' + d + '\')">' + esc(tekst('konto-usun-klucz', '')) + '</button>' : '')
+      + '</div>'
+      + '<p class="tekst-pomoc byok-wynik" id="konto-stan-' + d + '" role="status" aria-live="polite"></p>'
+      + '<div class="konto-klucz-zmiana" id="konto-zmiana-' + d + '" hidden>' + window.htmlPolaKlucza('konto', d) + '</div>'
+      + '</div>';
+  }
+  window.sprawdzKluczKonta = function(d){
+    var cel = el('konto-stan-' + d);
+    wynikPola(cel, 'trwa', tekst('byok-sprawdzam', '').replace('{DOSTAWCA}', NAZWA[d]));
+    sprawdzKlucz(d).then(function(w){ wynikPola(cel, w.ok ? 'ok' : 'blad', w.ok ? tekst('konto-klucz-dziala', '') : tekstPowodu(d, w)); });
+  };
+  window.pokazZmianeKlucza = function(d, przycisk){
+    var z = el('konto-zmiana-' + d); if (!z) return;
+    z.hidden = !z.hidden;
+    if (przycisk) przycisk.setAttribute('aria-expanded', String(!z.hidden));
+    if (!z.hidden) { var p = el('konto-pole-' + d); if (p) p.focus(); }
+  };
+  window.usunKluczZKonta = function(d){
+    usunKlucz(d).then(function(w){
+      if (!w.ok) { wynikPola(el('konto-stan-' + d), 'blad', tekst('konto-usun-blad', '')); return; }
+      rysujKonto();
+      pokazPowiadomienie(tekst('konto-klucz-usuniety', '').replace('{DOSTAWCA}', NAZWA[d]), 'ok');
+    });
+  };
+  function rysujKonto(){
+    var cel = el('konto-tresc'); if (!cel || !el('konto-modal').classList.contains('open')) return;
+    var s = stan() || {}, pl = s.platnosci || {}, sub = s.subskrypcja || { stan: 'brak' }, p = window.STAN_PAKIETU || s.pakiet || {};
+    var mozl = s.mozliwosci || {}, a = stanArtykulow(), h = '';
+    // Kto jest zalogowany.
+    h += '<div class="konto-kto">' + ikona('user') + '<div><b>' + esc(s.email || s.login || '') + '</b>'
+      + (s.email && s.emailPotwierdzony === false && !s._zapas ? '<small class="stan-blad">' + esc(tekst('konto-email-niepotwierdzony', '')) + '</small>' : '') + '</div></div>';
+    // Pakiet i platnosci.
+    var pakietH = '<p class="tekst-zwykly"><b>' + esc(jezyk() === 'en' && p.nazwaEn ? p.nazwaEn : (p.nazwa || '')) + '</b>'
+      + (a ? ' · ' + esc(tekst('pakiet-zostalo', '').replace('{n}', a.zostalo).replace('{m}', a.limit)) + (a.okres === 'zawsze' ? ' · ' + esc(tekst('konto-pula-jednorazowa', '')) : ' · ' + esc(tekst('konto-licznik-wraca', '').replace('{DATA}', dataOdnowienia()))) : '')
+      + '</p>';
+    if (ZYWE.indexOf(sub.stan) >= 0 || sub.stan === 'wygasla') pakietH += '<p class="tekst-zwykly">' + esc(opisSubskrypcji(sub)) + '</p>';
+    if (pl.wlaczone && pl.tryb === 'test') pakietH += '<p class="tekst-pomoc">' + esc(tekst('pasek-test', '')) + '</p>';
+    var akcje = [];
+    if (pl.maPanel) akcje.push('<button type="button" class="btn-secondary" onclick="otworzPanelPlatnosci()">' + esc(tekst('plat-ustawienia-portal', '')) + '</button>');
+    else if (mozeKupic()) akcje.push('<button type="button" class="btn-generate" onclick="zamknijKonto();otworzPakiet(\'zakup\')">' + esc(tekst('pakiet-zmien', '')) + '</button>');
+    akcje.push('<button type="button" class="btn-secondary" onclick="zamknijKonto();otworzPakiet()">' + esc(tekst('konto-szczegoly-pakietu', '')) + '</button>');
+    pakietH += '<div class="konto-akcje">' + akcje.join('') + '</div>';
+    if (pl.maPanel) pakietH += '<p class="tekst-pomoc">' + esc(tekst('plat-ustawienia-portal-opis', '')) + '</p>';
+    if (pl.wlaczone) pakietH += '<p class="tekst-pomoc">' + esc(tekst('plat-ustawienia-rachunek', '').replace('{EMAIL_KONTAKT}', emailRachunku())) + '</p>';
+    if (pl.odstapienie && pl.odstapienie.mozliwe) pakietH += '<p class="tekst-pomoc">' + esc(tekst('konto-odstapienie', '').replace('{DATA}', data(pl.odstapienie.do))) + ' <a class="link-akcent" href="/konto/odstapienie?z=aplikacja&amp;lang=' + jezyk() + '">' + esc(tekst('konto-odstap', '')) + '</a></p>';
+    else if (pl.wlaczone && ZYWE.indexOf(sub.stan) >= 0) pakietH += '<p class="tekst-pomoc">' + esc(tekst('konto-odstapienie-14', '')) + ' <a class="link-akcent" href="/konto#platnosci">' + esc(tekst('konto-ustawienia-serwera', '')) + '</a></p>';
+    h += sekcja('pakiet', tekst('plat-ustawienia-tytul', ''), pakietH);
+    // Klucze API (konto na wlasnych kluczach).
+    if (wlasne()) h += sekcja('klucze', tekst('konto-klucze', ''), '<p class="tekst-pomoc">' + esc(tekst(kluczeWCiasteczkach() ? 'konto-klucze-opis' : 'konto-klucze-opis-lokalnie', '')) + '</p>'
+      + DOSTAWCY.map(wierszKlucza).join('') + window.htmlZapamietaj('konto'));
+    // Firma i marka.
+    h += sekcja('firma', tekst('konto-firma', ''), '<p class="tekst-pomoc">' + esc(tekst('konto-firma-opis', '')) + '</p><div class="konto-akcje">'
+      + '<button type="button" class="btn-secondary" onclick="zamknijKonto();openLlmsModal()">' + esc(tekst('settings-llms-title', '')) + '</button>'
+      + '<button type="button" class="btn-secondary" onclick="zamknijKonto();openBvModal()">' + esc(tekst('settings-bv-title', '')) + '</button></div>');
+    // Oznaczenia AI: te same przelaczniki co przy eksporcie, publikacji, grafice i audio.
+    h += sekcja('oznaczenia', tekst('konto-oznaczenia', ''), '<p class="tekst-pomoc">' + esc(tekst('konto-oznaczenia-opis', '')) + '</p>'
+      + ['tekst', 'grafika', 'audio'].map(function(r){ return '<label class="ozn-wiersz" for="konto-ozn-' + r + '"><input type="checkbox" id="konto-ozn-' + r + '" data-oznaczenie="' + r + '" onchange="ustawWyborOznaczenia(\'' + r + '\', this.checked)"><span>' + esc(tekst('konto-ozn-' + r, '')) + '</span></label>'; }).join(''));
+    // Twoje dane.
+    var dane = [];
+    if (!s._zapas && mozl.eksport !== false) dane.push('<a class="btn-secondary" href="' + esc((s.adresy && s.adresy.eksport) || '/konto/eksport') + '" download>' + ikona('download') + esc(tekst('konto-pobierz-dane', '')) + '</a>');
+    dane.push('<button type="button" class="btn-secondary" onclick="eksportujHistorie()">' + ikona('history') + esc(tekst('konto-eksport-historii', '')) + '</button>');
+    h += sekcja('dane', tekst('konto-dane', ''), '<p class="tekst-pomoc">' + esc(tekst('konto-dane-opis', '')) + '</p><div class="konto-akcje">' + dane.join('') + '</div>');
+    // Konto: e-mail, haslo, wylogowanie wszedzie i usuniecie sa na ekranie serwera (bez JS, A1).
+    var konto = [];
+    if (!s._zapas) konto.push('<a class="btn-secondary" href="' + esc((s.adresy && s.adresy.konto) || '/konto') + '">' + esc(tekst('konto-email-haslo', '')) + '</a>');
+    if (!s._zapas && mozl.usuniecie) konto.push('<a class="btn-secondary niszcz" href="' + esc((s.adresy && s.adresy.usun) || '/konto/usun') + '">' + ikona('trash-2') + esc(tekst('konto-usun', '')) + '</a>');
+    konto.push('<button type="button" class="btn-secondary" onclick="zamknijKonto();wyloguj()">' + ikona('log-out') + esc(tekst('menu-wyloguj', '')) + '</button>');
+    h += sekcja('konto', tekst('konto-sekcja-konto', ''), '<div class="konto-akcje">' + konto.join('') + '</div>');
+    cel.innerHTML = h;
+    if (typeof rysujPrzelacznikiOznaczen === 'function') rysujPrzelacznikiOznaczen();
+  }
+
+  // ── Wylogowanie z wyborem co z kluczami (UX8-09, M-10: zwykle wylogowanie zostawia zapamietane klucze) ──
+  window.zapytajPrzyWylogowaniu = function(){
+    if (!wlasne()) return false;
+    var k = window.STAN_KLUCZY;
+    if (!k || !DOSTAWCY.some(function(d){ return k[d] && k[d].ustawiony; })) return false;
+    if (typeof closeSettingsMenu === 'function') closeSettingsMenu();
+    el('wyloguj-modal').classList.add('open');
+    return true;
+  };
+  window.zamknijWyloguj = function(){ el('wyloguj-modal').classList.remove('open'); };
+  window.wylogujZostawKlucze = function(){ window.zamknijWyloguj(); wyloguj({ zostawKlucze: true }); };
+  window.wylogujIUsunKlucze = function(){
+    var dalej = function(){ window.zamknijWyloguj(); wyloguj({ zostawKlucze: false }); };
+    if (!kluczeWCiasteczkach()) return dalej();
+    postJson('/api/klucze?dostawca=wszystkie', {}, 'DELETE').then(dalej, dalej);
+  };
+
+  // ── Ustawienia konta (wybor etykiet AI) zapisane na serwerze: POST /api/konto/ustawienia ──
+  window.zapiszUstawieniaKonta = function(zmiany){
+    var s = stan(); if (!s || s._zapas) return Promise.resolve(false);
+    return postJson('/api/konto/ustawienia', zmiany).then(function(w){
+      if (w.o.ok && w.d.oznaczenia && window.STAN_KONTA) { window.STAN_KONTA.oznaczenia = w.d.oznaczenia; if (typeof rysujPrzelacznikiOznaczen === 'function') rysujPrzelacznikiOznaczen(); }
+      return w.o.ok;
+    }).catch(function(){ return false; });
+  };
+
+  function rysujWszystko(){
+    rysujPaski();
+    rysujKarte();
+    var poz = el('konto-item'); if (poz) poz.hidden = !samoobsluga();
+    if (typeof window.przerysujPakiet === 'function') window.przerysujPakiet();
+    if (typeof window.rysujKartyKluczyModulow === 'function') window.rysujKartyKluczyModulow();
+    rysujKonto();
+  }
+  window.rysujStanKonta = rysujWszystko;
+
+  // Start: stan konta i kluczy jeszcze przed DOMContentLoaded (kreator i karta czekaja na window.kontoGotowe).
+  window.kontoGotowe = odswiezStanKonta().then(function(){ return odswiezKlucze(); }).then(function(){ rysujWszystko(); }).catch(function(){});
+  document.addEventListener('DOMContentLoaded', function(){
+    window.kontoGotowe.then(function(){ rysujWszystko(); powrotZPlatnosci(); });
+  });
+  // Powrot z karty Stripe albo z innej karty: swiezy stan pakietu i subskrypcji.
+  var ostatnieOdswiezenie = Date.now();
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState !== 'visible' || Date.now() - ostatnieOdswiezenie < 15000) return;
+    ostatnieOdswiezenie = Date.now();
+    if (typeof window.odswiezPakiet === 'function') window.odswiezPakiet();
+    odswiezStanKonta().then(function(){ return odswiezKlucze(); }).then(rysujWszystko);
   });
 })();
 </script>
