@@ -21636,7 +21636,8 @@ async function kbAudioTranscribeAndOpen(file) {
     var q; try { q = new URLSearchParams(location.search); } catch(e){ return; }
     var w = q.get('platnosc'); if (!w) return;
     q.delete('platnosc');
-    try { history.replaceState(history.state, '', location.pathname + (q.toString() ? '?' + q.toString() : '') + location.hash); } catch(e){}
+    // window.history: w aplikacji `history` to lista artykulow (Historia).
+    try { window.history.replaceState(window.history.state, '', location.pathname + (q.toString() ? '?' + q.toString() : '') + location.hash); } catch(e){}
     if (w === 'ok') czekajNaPakiet();
     else pokazPowiadomienie(tekst('plat-przerwana', ''), 'info', 9000);
   }
