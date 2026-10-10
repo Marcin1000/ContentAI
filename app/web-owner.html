@@ -11387,6 +11387,7 @@ function stylePdf() {
 // Wspolna rama dokumentu PDF (artykul i raport widocznosci).
 // R9-D: `ai` (wlasciwosciAI) dokleja /Keywords i wlasny klucz /DigitalSourceType (pdfmake przepuszcza
 // klucze Info bez spacji); pakiet XMP dopisuje pdfZXmp po zbudowaniu pliku.
+// Tytul w stopce i marka w naglowku bez emoji (EMOJI_PDF, R9-F): kroje PDF ich nie maja, w pliku byl pusty znak.
 function dokumentPdf(tresc, tytul, opis, jezyk, ai) {
   const marka = nazwaMarki();
   const info = { title: tytul, author: marka || '', subject: opis || '', creator: 'Content AI', producer: 'Content AI' };
@@ -11402,12 +11403,12 @@ function dokumentPdf(tresc, tytul, opis, jezyk, ai) {
     pageBreakBefore: function (wezel, dalejNaStronie) { return wezel.headlineLevel === 1 && dalejNaStronie.length === 0; },
     header: function () {
       return marka ? { margin: [71, 34, 71, 0], stack: [
-        { text: marka, font: 'Schibsted', fontSize: 8.5, color: DRUK.tekst2, characterSpacing: 0.3 },
+        { text: String(marka).replace(EMOJI_PDF, '').trim(), font: 'Schibsted', fontSize: 8.5, color: DRUK.tekst2, characterSpacing: 0.3 },
         { canvas: [{ type: 'line', x1: 0, y1: 6, x2: PDF_SZER, y2: 6, lineWidth: 0.5, lineColor: DRUK.liniaStrony }] }] } : null;
     },
     footer: function (strona, stron) {
       return { margin: [71, 24, 71, 0], columns: [
-        { text: skrotTekstu(tytul, 70), style: 'meta2' },
+        { text: skrotTekstu(String(tytul || '').replace(EMOJI_PDF, '').trim(), 70), style: 'meta2' },
         { text: strona + ' / ' + stron, style: 'meta2', alignment: 'right', width: 'auto' }] };
     },
     content: tresc,

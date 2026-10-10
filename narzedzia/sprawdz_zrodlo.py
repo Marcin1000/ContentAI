@@ -1531,6 +1531,9 @@ KONTROLE += [
      'window.rysujKartyKluczyModulow = function(){', None, ('proxy',)),
     ('R9-D/motyw-po-wyborze', 'PR8-26: ciasteczko cai_motyw dopiero po wyborze motywu',
      'if (wybrany !== null) zapiszMotyw(); else usunMotyw();', '    zapiszMotyw();\n    if (!wdrozone) return;', ('proxy',)),
+    ('R9-D/pdf-stopka-emoji', 'KOD8-35 (prosba F): tytul w stopce i marka w naglowku PDF bez emoji (EMOJI_PDF)',
+     "{ text: skrotTekstu(String(tytul || '').replace(EMOJI_PDF, '').trim(), 70), style: 'meta2' },",
+     "{ text: skrotTekstu(tytul, 70), style: 'meta2' },", None),
 ]
 
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi

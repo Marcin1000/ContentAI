@@ -426,6 +426,17 @@ async function scenariuszOznaczenia(b) {
     console.log('info  AI PDF: pymupdf niedostepny - XMP sprawdzony w bajtach pliku');
   }
   wynik('AI PDF: bez widocznej etykiety, gdy przelacznik wylaczony', JSON.stringify(dd || {}).indexOf(ETYKIETA_PL) < 0);
+  // KOD8-35 (prosba F): tytul ze stopki i marka z naglowka bez emoji - kroje PDF ich nie maja (pusty znak w pliku).
+  const rama = await s.evaluate(() => {
+    const marka = window.nazwaMarki;
+    window.nazwaMarki = () => 'Kawiarnia \u2615 Mała';
+    try {
+      const d = dokumentPdf([], '\u{1F525} Oferta \u{1F1F5}\u{1F1F1} na zimę 1\uFE0F\u20E3', '', 'pl-PL');
+      return { stopka: d.footer(1, 2).columns[0].text, naglowek: d.header().stack[0].text, tytul: d.info.title };
+    } finally { window.nazwaMarki = marka; }
+  });
+  wynik('PDF: tytul w stopce i marka w naglowku bez emoji (litery zostaja), w metadanych tytul bez zmian',
+    rama.stopka === 'Oferta na zimę 1' && rama.naglowek === 'Kawiarnia Mała' && /\u{1F525}/u.test(rama.tytul), JSON.stringify(rama));
 
   const txt = (await pobierz(s, () => dlTxt(), 'ai')).dane.toString('utf8');
   wynik('AI TXT: bez etykiety, gdy przelacznik wylaczony', txt.indexOf(ETYKIETA_PL) < 0);
