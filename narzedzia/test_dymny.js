@@ -431,7 +431,8 @@ async function wariantProxy(b) {
   await generuj(s, 'Artykul na wlasnym kluczu');
   const k1 = await kosztKafel();
   wynik('proxy: wlasny klucz - koszt na Twoich kluczach z podzialem na dostawcow',
-    k1.widoczny && /Twoich|your/i.test(k1.etykieta) && /Anthropic \$0[,.]\d{3}/.test(k1.pod) && !/\$0[,.]000$/.test(k1.wartosc), JSON.stringify(k1));
+    k1.widoczny && /Twoich|your/i.test(k1.etykieta) && /Anthropic (0,\d{2,3}\u00a0USD|\$0\.\d{2,3})/.test(k1.pod)
+    && parseFloat(k1.wartosc.replace(/[^\d,.]/g, '').replace(',', '.')) > 0, JSON.stringify(k1));
   await s.evaluate(() => { magazyn.removeItem('cai_klucz_anthropic'); API_KEY = ''; updateCostDisplay(); });
 
   // Telefon w tle: polaczenie zrywa sie w trakcie generowania (przelaczenie aplikacji),
@@ -2296,6 +2297,155 @@ async function wariantKreatorTematR9D(b) {
   await k.close();
 }
 
+// Uwagi Marcina z testu premiery na test.content-ai.net (R9-T). Konto 'darmowy' gra konto samoobslugowe (stan konta
+// i klucze z page.route jak w wariantSamoobsluga), konto 'standard' daje gotowy artykul, wersje i Historie.
+// 1) "..." przy karcie "Podlacz klucz" rozwija sie w granicach ekranu (komputer i telefon), 2) zgoda przy zakupie jednym
+// zdaniem z dwoma linkami, 3) uciety klucz sk-ant-...: komunikat o niepelnym kluczu bez zapytania do serwera (klucz
+// administracyjny idzie do serwera i dostaje swoj komunikat), 4) pasek wyniku bez plakietki i wersji na srodku kolumny
+// artykulu, z "Przed | Po" jak dotad przy prawej krawedzi, 5) pakiet zakonczony odstapieniem: data odstapienia, nie koniec
+// oplaconego miesiaca, 6) Historia: tytul wpisu konczy sie przed koszem.
+// Pada na main 1f9ec7c: menu od x < 0, zgoda w 5 liniach, "zaczyna sie od sk-ant-", pasek przy prawej krawedzi,
+// "wygasl 11 listopada 2099", tytul pod ikona kosza.
+async function wariantUwagiTestuPremiery(b) {
+  const bledy = [];
+  const st = { emailPotwierdzony: true, aktywna: false, wygasla: null };
+  let klucze = { zrodloKluczy: 'wlasne', zapis: true, dostawcy: ['anthropic', 'openai', 'eleven'], anthropic: { ustawiony: false }, openai: { ustawiony: false }, eleven: { ustawiony: false } };
+  const postyKluczy = [];
+  const stanKonta = () => {
+    const o = stanKontaSamoobslugi(st);
+    if (st.wygasla) {
+      o.subskrypcja = { stan: 'wygasla', plan: 'standard', okresDo: st.wygasla.okresDo, waluta: 'eur', dostepDo: null };
+      o.platnosci.odstapienie = st.wygasla.odstapienie;
+    }
+    return o;
+  };
+  const kontekstSamoobslugi = async (opcje) => {
+    const k = await b.newContext(Object.assign({ serviceWorkers: 'block', locale: 'pl-PL' }, opcje));
+    await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+    k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+    await k.route(/\/api\/konto$/, (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(stanKonta()) }));
+    await k.route(/\/api\/klucze(\/[a-z]+)?(\?.*)?$/, (r) => {
+      const z = r.request();
+      if (z.method() === 'POST' && /\/api\/klucze$/.test(z.url())) {
+        const d = JSON.parse(z.postData() || '{}');
+        postyKluczy.push(String(d.klucz || ''));
+        if (/^sk-ant-admin/.test(d.klucz || '')) return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: false, zapisano: false, dostawca: d.dostawca, powod: 'administracyjny' }) });
+        klucze = Object.assign({}, klucze, { [d.dostawca]: { ustawiony: true, koncowka: String(d.klucz).slice(-4), zapamietany: true, wygasa: Date.now() + 30 * 864e5 } });
+        return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(Object.assign({ ok: true, zapisano: true }, klucze)) });
+      }
+      return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(klucze) });
+    });
+    return k;
+  };
+  const menuBriefu = async (s, dotyk) => {
+    await s.waitForFunction(() => document.body.classList.contains('karta-konta') && !document.getElementById('konto-karta').hidden, null, { timeout: 8000 });
+    if (dotyk) await s.tap('#grupa-brief-wrap > button'); else await s.click('#grupa-brief-wrap > button');
+    await s.waitForTimeout(300);
+    const m = await s.evaluate(() => { const e = document.getElementById('grupa-brief-menu'), r = e.getBoundingClientRect();
+      return { otwarte: e.classList.contains('open'), l: Math.round(r.left), p: Math.round(r.right), g: Math.round(r.top), d: Math.round(r.bottom), w: innerWidth, h: innerHeight }; });
+    await s.evaluate(() => zamknijGrupyPaska());
+    return m;
+  };
+  const zgoda = (s, linie) => s.evaluate((maks) => { const sp = document.querySelector('label[for="zakup-zgoda-regulamin"] > span');
+    if (!sp) return { brak: true };
+    const r = sp.getBoundingClientRect(), lh = parseFloat(getComputedStyle(sp).lineHeight) || 20;
+    return { linie: Math.round(r.height / lh), maks, linki: sp.querySelectorAll('a').length, tekst: sp.textContent.replace(/\s+/g, ' ').trim() }; }, linie);
+
+  // 1-3. Komputer, konto bez klucza: karta "Podlacz klucz" w miejscu Wygeneruj, "..." przy lewej krawedzi Briefu.
+  const k = await kontekstSamoobslugi({ viewport: { width: 1440, height: 900 } });
+  const s = await zaloguj(k, 'darmowy');
+  const m1 = await menuBriefu(s, false);
+  wynik('komputer: R9-T karta "Podlacz klucz": menu "..." (Wiecej zadan) w granicach ekranu', m1.otwarte && m1.l >= 0 && m1.p <= m1.w && m1.g >= 0 && m1.d <= m1.h, JSON.stringify(m1));
+  await s.evaluate(() => otworzPakiet('zakup'));
+  await krok('R9-T okno zakupu', s.waitForSelector('#zakup-zgoda-regulamin', { timeout: 5000 }));
+  const z1 = await zgoda(s, 2);
+  wynik('komputer: R9-T zgoda przy zakupie jednym zdaniem (najwyzej 2 linie) z linkami do regulaminu i pouczenia',
+    !z1.brak && z1.linie <= z1.maks && z1.linki === 2 && /^Akceptuję Regulamin i zapoznałem się z pouczeniem o prawie odstąpienia\.$/.test(z1.tekst), JSON.stringify(z1));
+  await zamknijOkna();
+  await s.evaluate(() => otworzKreatorKlucza('anthropic'));
+  await krok('R9-T kreator klucza', s.waitForSelector('#start-pole-anthropic', { state: 'visible', timeout: 5000 }));
+  const sprawdzKlucz = async (klucz) => {
+    await s.fill('#start-pole-anthropic', klucz);
+    await s.evaluate(() => { document.getElementById('start-wynik-anthropic').textContent = ''; });
+    await s.click('#start-tresc .byok-pole[data-dostawca="anthropic"] .byok-zapisz');
+    await s.waitForFunction(() => { const t = document.getElementById('start-wynik-anthropic').textContent; return t && !/Sprawdzam/.test(t); }, null, { timeout: 5000 }).catch(() => {});
+    return s.evaluate(() => document.getElementById('start-wynik-anthropic').textContent.trim());
+  };
+  const uciety = await sprawdzKlucz('sk-ant-473274849398');
+  const poUcietym = postyKluczy.length;
+  wynik('komputer: R9-T uciety klucz sk-ant-...: "klucz jest niepelny" (nie "zaczyna sie od sk-ant-"), bez zapytania do serwera',
+    /niepełny/.test(uciety) && /sk-ant-api/.test(uciety) && !/To nie wygląda na klucz/.test(uciety) && poUcietym === 0, JSON.stringify({ uciety, postyKluczy }));
+  const admin = await sprawdzKlucz('sk-ant-admin01-' + 'a'.repeat(40));
+  wynik('komputer: R9-T klucz administracyjny dalej idzie do serwera i dostaje komunikat o kluczu administracyjnym',
+    /klucz administracyjny/.test(admin) && !/niepełny/.test(admin) && postyKluczy.some((x) => /^sk-ant-admin01-/.test(x)), JSON.stringify({ admin, postyKluczy }));
+  await s.evaluate(() => { if (typeof startPomin === 'function') startPomin(); });
+
+  // 5. Pakiet zakonczony odstapieniem 11 pazdziernika, oplacony do 11 listopada: pasek mowi o odstapieniu, bez daty konca okresu.
+  const pasekKonta = async () => {
+    await s.reload({ waitUntil: 'load' });
+    await s.waitForFunction(() => /Pakiet Standard/.test(document.getElementById('konto-paski').textContent), null, { timeout: 8000 }).catch(() => {});
+    return s.evaluate(() => document.getElementById('konto-paski').textContent.replace(/\s+/g, ' ').trim());
+  };
+  st.wygasla = { okresDo: Date.UTC(2099, 10, 11, 12), odstapienie: { mozliwe: false, powod: 'zlozone', do: null, zlozone: { czas: Date.UTC(2026, 9, 11, 14, 58), stan: 'zwrocono', kwota: 1839, waluta: 'eur' } } };
+  const p1 = await pasekKonta();
+  wynik('komputer: R9-T pakiet zakonczony odstapieniem: "zakonczyl sie 11 pazdziernika 2026 po odstapieniu", bez daty konca okresu',
+    /Pakiet Standard zakończył się 11 października 2026 po odstąpieniu od umowy/.test(p1) && !/2099|wygasł/.test(p1), p1);
+  st.wygasla.odstapienie = { mozliwe: false, powod: 'brak-umowy', do: null, zlozone: null };
+  const p2 = await pasekKonta();
+  wynik('komputer: R9-T pakiet zakonczony przed koncem okresu bez odstapienia: "zostal zakonczony", bez daty z przyszlosci',
+    /Pakiet Standard został zakończony/.test(p2) && !/2099|wygasł/.test(p2), p2);
+  st.wygasla.okresDo = Date.UTC(2026, 8, 30, 12);
+  const p3 = await pasekKonta();
+  wynik('komputer: R9-T pakiet wygasly po koncu okresu: "wygasl 30 wrzesnia 2026" jak dotad', /Pakiet Standard wygasł 30 września 2026/.test(p3), p3);
+  st.wygasla = null;
+  await k.close();
+
+  // 1-2. Telefon: menu "..." jako arkusz od dolu w granicach ekranu, zgoda najwyzej w 3 liniach.
+  klucze = Object.assign({}, klucze, { anthropic: { ustawiony: false } });
+  const kt = await kontekstSamoobslugi({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+  const t = await zaloguj(kt, 'darmowy');
+  const m2 = await menuBriefu(t, true);
+  wynik('telefon: R9-T karta "Podlacz klucz": menu "..." w granicach ekranu', m2.otwarte && m2.l >= 0 && m2.p <= m2.w && m2.g >= 0 && m2.d <= m2.h, JSON.stringify(m2));
+  await t.evaluate(() => otworzPakiet('zakup'));
+  await krok('R9-T okno zakupu (telefon)', t.waitForSelector('#zakup-zgoda-regulamin', { timeout: 5000 }));
+  const z2 = await zgoda(t, 3);
+  wynik('telefon: R9-T zgoda przy zakupie najwyzej w 3 liniach, z linkami', !z2.brak && z2.linie <= z2.maks && z2.linki === 2, JSON.stringify(z2));
+  if (bledow) await zrzut(t, 'r9t-telefon');
+  await kt.close();
+
+  // 4, 6. Konto zespolu: pasek wyniku po zwyklym artykule i po samokorekcie, Historia z dlugim tytulem.
+  const kz = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, locale: 'pl-PL' });
+  await kz.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  kz.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  const z = await zaloguj(kz, 'standard');
+  await generuj(z, 'Kosmos to wielka niewiadoma. Co wiemy na temat tego, co jest poza wszechświatem i w czym on się rozszerza');
+  const pasek = () => z.evaluate(() => {
+    const p = document.querySelector('.pasek-akcje').getBoundingClientRect(), a = document.getElementById('article').getBoundingClientRect();
+    const bar = document.querySelector('.output-bar'), br = bar.getBoundingClientRect(), cs = getComputedStyle(bar);
+    return { wersje: document.getElementById('versions-bar').classList.contains('show'), odSrodka: Math.round((p.left + p.right) / 2 - (a.left + a.right) / 2),
+      odPrawej: Math.round(br.right - parseFloat(cs.paddingRight) - p.right), lewy: Math.round(p.left), prawy: Math.round(p.right), artykul: [Math.round(a.left), Math.round(a.right)] };
+  });
+  const w1 = await pasek();
+  wynik('komputer: R9-T pasek wyniku bez plakietki i wersji: przyciski na srodku kolumny artykulu (nie przy prawej krawedzi)',
+    !w1.wersje && Math.abs(w1.odSrodka) <= 12 && w1.odPrawej > 40, JSON.stringify(w1));
+  await z.fill('#topic', 'Czy na Marsie było życie? Co historia Marsa mówi nam o przyszłości Ziemi');
+  await z.evaluate(() => { document.getElementById('use-web').checked = true; if (!premiumMode) togglePremium(); generate(true); });
+  await krok('R9-T artykul z samokorekta', z.waitForFunction(() => versions.length >= 2 && /ready/.test(document.getElementById('out-badge').className) && !document.getElementById('gen-btn').disabled, null, { timeout: 90000 }));
+  await z.waitForTimeout(300);
+  const w2 = await pasek();
+  wynik('komputer: R9-T z "Przed | Po" pasek jak dotad: wersje z lewej, przyciski przy prawej krawedzi kolumny', w2.wersje && Math.abs(w2.odPrawej) <= 2, JSON.stringify(w2));
+  await z.evaluate(() => { if (premiumMode) togglePremium(); switchTab('history', document.querySelector('.tab[onclick*="history"]')); });
+  await krok('R9-T Historia', z.waitForSelector('#h-list-inner .h-item', { timeout: 5000 }));
+  const h = await z.evaluate(() => [...document.querySelectorAll('#h-list-inner .h-item')].map((e) => {
+    const tt = e.querySelector('.h-item-topic').getBoundingClientRect(), u = e.querySelector('.h-usun').getBoundingClientRect();
+    return { tytul: Math.round(tt.right), kosz: Math.round(u.left), linie: Math.round(tt.height) };
+  }));
+  wynik('komputer: R9-T Historia: tytul kazdego wpisu konczy sie przed ikona kosza', h.length >= 2 && h.every((x) => x.tytul <= x.kosz), JSON.stringify(h));
+  wynik('R9-T: bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+  if (bledow) await zrzut(z, 'r9t-komputer');
+  await kz.close();
+}
+
 // PR8-26: ciasteczko motywu dopiero po wyborze motywu (bez wyboru brak ciasteczka).
 async function wariantMotywR9D(b) {
   const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, locale: 'pl-PL' });
@@ -2644,6 +2794,7 @@ async function wariantR9Zakup(b) {
     await osobno(wariantKreatorTematR9D, b);
     await osobno(wariantSamoobsluga, b);
     await osobno(wariantR9DZakupWAplikacji, b);
+    await osobno(wariantUwagiTestuPremiery, b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));

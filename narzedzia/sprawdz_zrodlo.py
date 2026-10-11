@@ -1071,7 +1071,7 @@ KONTROLE += [
      "resEl.innerHTML = htmlBleduCms(r.status, err.message || '', 'wp');", "escapeHtml(err.message || 'błąd')", None),
     ("R3D/genind", "bez martwego wskaznika _genInd", None, "_genInd", None),
     ("R3D/liczby", "liczby z ulamkiem w jezyku interfejsu (koszt, srednie pozycje)",
-     "el.textContent = '$' + formatujLiczbe(wszystko ? Math.max(suma, sessionCost) : suma, 3, true);", "sessionCost.toFixed(3)", None),
+     "el.textContent = kwotaUsd(wszystko ? Math.max(suma, sessionCost) : suma);", "sessionCost.toFixed(3)", None),
 ]
 
 
@@ -1599,6 +1599,31 @@ KONTROLE += [
      "if (as && as.value && typeof audioZArtykulu === 'function' && as.value === audioZArtykulu.auto) as.value = '';", None, None),
     ("R9-UT/siec-koszt-wlasny", "UX8-14 przy wlasnym kluczu: pod Szukaj w sieci zdanie o koszcie wyszukiwania na kluczu uzytkownika",
      "body.konto-wlasne .toggle-row .koszt-wlasny { display: block; }", None, None),
+]
+
+# Uwagi Marcina z testu premiery na test.content-ai.net (runda 9). Scenariusz wariantUwagiTestuPremiery w test_dymny.js.
+KONTROLE += [
+    ("R9-T/menu-brief-lewo", "karta Podlacz klucz / Wybierz pakiet: menu ... rozwija sie w prawo, nie poza lewa krawedz ekranu",
+     "body.karta-konta:not(.is-mobile) #grupa-brief-menu { right: auto; left: 0; }", None, None),
+    ("R9-T/zgody-zdanie", "zgoda przy zakupie jednym zdaniem z dwoma linkami (bez kolumny tytul nad opisem)",
+     ".zakup label.ozn-wiersz > span { display: block; }", None, None),
+    ("R9-T/klucz-niepelny", "uciety klucz sk-ant-...: komunikat o niepelnym kluczu zamiast 'zaczyna sie od sk-ant-'",
+     "if (d === 'anthropic' && !/^sk-ant-admin/i.test(klucz) && !/^sk-ant-api\\d{2}-[A-Za-z0-9_-]{20,}$/.test(klucz)) return Promise.resolve({ ok: false, powod: 'niepelny' });",
+     None, ("proxy",)),
+    ("R9-T/pasek-srodek", "pasek wyniku bez plakietki i wersji: przyciski na srodku kolumny artykulu, nie przy prawej krawedzi",
+     "body:not(.is-mobile) .output-bar:not(:has(#versions-bar.show)):has(#out-badge:is(.ready, [data-i18n=\"badge-done\"], [data-i18n=\"badge-ready\"])) .pasek-akcje { margin-inline: auto; }",
+     None, None),
+    ("R9-T/zakonczona-wczesniej", "pakiet zakonczony przed koncem okresu (odstapienie): data odstapienia, nie koniec oplaconego miesiaca",
+     "if (zl && zl.czas) return tekst('sub-zakonczona-odstapienie', '').replace('{PAKIET}', nazwa).replace('{DATA}', data(zl.czas));",
+     None, ("proxy",)),
+    ("R9-T/historia-kosz", "Historia: tytul wpisu konczy sie przed ikona kosza (odstep na .h-usun)",
+     "#h-list-inner > .h-item { padding-left: calc(var(--hist-wciecie) - 2px); padding-right: calc(var(--h-dotyk, 44px) + var(--s-8)); }",
+     "#h-list-inner > .h-item { padding-left: calc(var(--hist-wciecie) - 2px); padding-right: var(--hist-wciecie); }", None),
+    ("R9-T/koszt-usd", "koszt API po polsku '1,98 USD', po angielsku '$1.98' (nie '$1,984')",
+     "return currentLang === 'en' ? '$' + liczba : liczba + '\\u00a0USD';",
+     "el.textContent = '$' + formatujLiczbe(", None),
+    ("R9-T/koszt-laczny", "kreator klucza nie obiecuje kosztu kazdego tekstu: Historia pokazuje laczny szacunek",
+     "Łączny szacunkowy koszt na Twoich kluczach zobaczysz w Historii.", "Koszt każdego tekstu zobaczysz w Historii.", ("proxy",)),
 ]
 
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi
