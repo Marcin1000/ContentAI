@@ -93,6 +93,12 @@ const KODY = {
     pl: 'To konto nie ma subskrypcji.',
     en: 'This account has no subscription.',
   },
+  // B: zmiana pakietu subskrypcji anulowanej na koniec okresu albo z zalegla platnoscia; pole powod = anulowana | zalegla
+  'zmiana-niedostepna': {
+    status: 409,
+    pl: 'Pakietu tej subskrypcji nie można teraz zmienić. Otwórz panel subskrypcji.',
+    en: 'The plan of this subscription cannot be changed right now. Open the subscription portal.',
+  },
   // B (PR8-31): pole powod = brak-umowy | po-terminie | zlozone
   'odstapienie-niedostepne': {
     status: 409,
@@ -119,7 +125,10 @@ const KODY = {
 
 const NAZWY_DOSTAWCOW = { anthropic: 'Anthropic', openai: 'OpenAI', eleven: 'ElevenLabs', nvidia: 'NVIDIA' };
 
-/** Jezyk zapasowego komunikatu z Accept-Language (pierwszy z pl/en wg wag; domyslnie pl). */
+/**
+ * Jezyk zapasowego komunikatu z Accept-Language: pierwszy z pl/en wg wag; inne jezyki -> en (jak ekrany i aplikacja,
+ * KOD8-26, R9-W); bez naglowka -> pl.
+ */
 function jezykZadania(req) {
   const naglowek = String((req && req.headers && req.headers['accept-language']) || '');
   const pozycje = naglowek.split(',').map((c, i) => {
@@ -131,7 +140,7 @@ function jezykZadania(req) {
     if (p.tag === 'pl' || p.tag.startsWith('pl-')) return 'pl';
     if (p.tag === 'en' || p.tag.startsWith('en-')) return 'en';
   }
-  return 'pl';
+  return pozycje.some((p) => p.tag !== '*') ? 'en' : 'pl';
 }
 
 /** Tekst komunikatu dla kodu w jezyku, z podstawionymi polami ({dostawca}, {ponowZa}). */

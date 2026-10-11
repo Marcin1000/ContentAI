@@ -309,10 +309,23 @@ function pakietNaSprzedaz(kontekst, pakiet) {
   return p && p.sprzedaz ? pakiet : '';
 }
 
-/** Po rejestracji albo dla zalogowanego z ?pakiet=: ekran zakupu (B), gdy platnosci dzialaja. */
-function celPoRejestracji(kontekst, pakiet) {
-  return pakietNaSprzedaz(kontekst, pakiet) && kontekst.funkcjaWlaczona('platnosci')
-    ? `/konto/zakup?plan=${encodeURIComponent(pakiet)}&z=app` : '/';
+/**
+ * Po rejestracji albo dla zalogowanego z ?pakiet=: ekran zakupu (B), gdy platnosci dzialaja, inaczej aplikacja.
+ * Jezyk ekranu rejestracji idzie dalej (R9-W): na ekran zakupu zawsze, do aplikacji tylko wtedy, gdy rozni sie od
+ * jezyka przegladarki (np. angielska strona przy polskiej przegladarce), bo inaczej aplikacja wybierze go sama.
+ */
+function celPoRejestracji(kontekst, pakiet, jezyk, req) {
+  const j = jezyk === 'en' || jezyk === 'pl' ? jezyk : '';
+  if (pakietNaSprzedaz(kontekst, pakiet) && kontekst.funkcjaWlaczona('platnosci')) {
+    return `/konto/zakup?plan=${encodeURIComponent(pakiet)}&z=app${j ? `&lang=${j}` : ''}`;
+  }
+  const przegladarka = jezykPrzegladarki(req);
+  return j && j !== przegladarka ? `/?lang=${j}` : '/';
+}
+
+/** Jezyk z samych ustawien przegladarki (Accept-Language), bez ?lang= i pol formularza. */
+function jezykPrzegladarki(req) {
+  return require('./logowanie.js').jezykZNaglowka(req && req.headers ? req.headers['accept-language'] : '');
 }
 
 /** Stopka ekranow: konto na wlasnym kluczu (i ekrany publiczne przy otwartej rejestracji) mowi o kluczu w przegladarce. */
@@ -642,7 +655,7 @@ async function rejestracja(req, res, kontekst) {
       return wyslijHtml(res, kontekst, 200, ekrany.ekranSprawdzPoczty({ jezyk, adresLogowania: `/?lang=${jezyk}`, przelacznikHref: `/rejestracja?wyslano=1&lang=${jezyk === 'en' ? 'pl' : 'en'}` }));
     }
     // Zalogowany nie zaklada drugiego konta: aplikacja albo zakup wybranego pakietu (STR8-03).
-    if (kontekst.sesjaZadania(req)) return przekieruj(res, celPoRejestracji(kontekst, url.searchParams.get('pakiet')));
+    if (kontekst.sesjaZadania(req)) return przekieruj(res, celPoRejestracji(kontekst, url.searchParams.get('pakiet'), jezyk, req));
     return ekranRejestracji(res, kontekst, 200, jezyk, { pakiet: url.searchParams.get('pakiet') || '' });
   }
   if (metoda !== 'POST') return metodaNiedozwolona(res, kontekst, 'GET, HEAD, POST');
@@ -725,7 +738,7 @@ async function rejestracja(req, res, kontekst) {
   await wyslijLinkPotwierdzenia(kontekst, konto, jezyk);
   // Logowanie od razu po rejestracji (ARCH8-06): generowanie na wlasnym kluczu dziala,
   // zasoby oplacane przez serwer czekaja na potwierdzenie adresu.
-  return przekieruj(res, celPoRejestracji(kontekst, pakiet), { 'Set-Cookie': kontekst.ciasteczkoSesji(konto) });
+  return przekieruj(res, celPoRejestracji(kontekst, pakiet, jezyk, req), { 'Set-Cookie': kontekst.ciasteczkoSesji(konto) });
 }
 
 /** Token z odnosnika: potwierdzenie albo zmiana adresu (takze zuzyty - ekran "juz potwierdzony"). */

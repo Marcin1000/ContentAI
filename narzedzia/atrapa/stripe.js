@@ -19,8 +19,14 @@
  * wymagany naglowek Stripe-Version):
  *   POST /v1/customers, GET|POST /v1/customers/:id
  *   POST /v1/checkout/sessions, GET /v1/checkout/sessions/:id
- *   POST /v1/billing_portal/sessions
+ *   POST /v1/billing_portal/sessions (takze flow_data[type]=subscription_update_confirm: potwierdzenie zmiany ceny;
+ *     configuration=bpc_bez_zmiany udaje panel bez zmiany pakietu i odrzuca taki przeplyw)
  *   GET /v1/subscriptions?customer=&status=all, POST /v1/subscriptions, GET|POST|DELETE /v1/subscriptions/:id
+ *   GET /v1/subscription_schedules/:id (obnizka z panelu: harmonogram, nowa cena od konca okresu)
+ *   POST /v1/invoiceitems, DELETE /v1/invoiceitems/:id (pozycja do rozliczenia: trzyma walute klienta)
+ * Waluta klienta jak w Stripe (2025): blokuja ja tylko zywe obiekty (subskrypcja poza canceled/incomplete_expired,
+ * harmonogram przed koncem, pozycja do rozliczenia); po ich koncu nowa subskrypcja moze byc w innej walucie
+ * i zmienia walute klienta. Inaczej: 400 "You cannot combine currencies on a single customer".
  *   GET /v1/prices/:id, GET /v1/invoices/:id, GET /v1/invoices?customer=&status=, GET /v1/invoice_payments?invoice=
  *   POST /v1/refunds, GET /v1/refunds?charge=|payment_intent=, GET /v1/charges/:id, GET /v1/payment_intents/:id
  *   POST /v1/payment_methods/:id/attach (pm_card_visa, pm_card_chargeCustomerFail)
@@ -29,9 +35,11 @@
  * Strony przegladarki (formularze bez JS):
  *   GET|POST /c/pay/:sesja      "Zaplac karta testowa" (z krajem adresu rozliczeniowego), karta 0341
  *                               (pozniejsze obciazenia odrzucane), "Karta odrzucona", "Wroc"
- *   GET|POST /p/session/:id     "Anuluj na koniec okresu", "Wznow", "Zmien pakiet", "Zaktualizuj karte", "Wroc"
+ *   GET|POST /p/session/:id     "Anuluj na koniec okresu", "Wznow", "Zmien pakiet", "Zaktualizuj karte", "Wroc";
+ *                               sesja z flow_data: "Potwierdz" (wyzsza cena od razu z doplata proporcjonalna,
+ *                               nizsza od konca okresu przez harmonogram) i "Wstecz"
  *   Akcja zmienia stan, wysyla zdarzenia (przed przekierowaniem) i przekierowuje na success_url,
- *   cancel_url albo return_url.
+ *   cancel_url, return_url albo flow_data[after_completion][redirect][return_url].
  * Sterowanie:
  *   POST /_atrapa/czas { dni, godziny, sekundy }   przesuwa zegar: odnowienia, nieudane obciazenia karty
  *                                                    0341 z ponowieniami (po 3, 5 i 7 dniach, potem anulowanie),
@@ -116,6 +124,7 @@ function wyczysc() {
     ceny: cenyStartowe(),
     klienci: new Map(), sesje: new Map(), subskrypcje: new Map(), faktury: new Map(), platnosciFaktur: new Map(),
     intencje: new Map(), obciazenia: new Map(), zwroty: new Map(), panele: new Map(), metody: new Map(), zegary: new Map(),
+    harmonogramy: new Map(), pozycje: new Map(),
     idempotencja: new Map(),
     zdarzenia: [], doWyslania: [], dostarczone: [], nieudane: [],
     webhooki: 'wlaczone', kolejnosc: KONF.kolejnosc,
@@ -365,18 +374,69 @@ function utworzSubskrypcje({ idKlienta, cena, waluta, metadane, dniProby, metoda
     cancellation_details: { comment: null, feedback: null, reason: null }, collection_method: 'charge_automatically', created: teraz,
     currency: waluta, customer: idKlienta, default_payment_method: metoda || null, ended_at: null,
     items: lista([{ id: nowyId('si'), object: 'subscription_item', created: teraz, current_period_start: teraz, current_period_end: koniecOkresu, price: pc, quantity: 1, subscription: id }], `/v1/subscription_items?subscription=${id}`),
-    latest_invoice: null, livemode: false, metadata: metadane || {}, start_date: teraz, status: proba ? 'trialing' : 'incomplete',
+    latest_invoice: null, livemode: false, metadata: metadane || {}, schedule: null, start_date: teraz, status: proba ? 'trialing' : 'incomplete',
     test_clock: (S.klienci.get(idKlienta) || {}).test_clock || null, trial_end: koniecProby, trial_start: proba ? teraz : null,
     _ponowienia: 0, _zrodlo: zrodlo || 'api',
   };
   S.subskrypcje.set(id, sub);
+  // Nowa subskrypcja ustawia walute klienta (blokade sprawdzaja wywolujacy: walutaZablokowana).
   const klient = S.klienci.get(idKlienta);
-  if (klient && !klient.currency) klient.currency = waluta;
+  if (klient) klient.currency = waluta;
   const f = wystawFakture(sub, { powod: 'subscription_create', od: teraz, do: koniecOkresu, kwota: proba ? 0 : kwota });
   return { sub, faktura: f };
 }
 
 function okresKoniec(sub) { return Math.max(...sub.items.data.map((i) => i.current_period_end)); }
+
+/**
+ * Waluta, ktora trzymaja zywe obiekty klienta (jak Stripe od 2023: subskrypcja poza canceled i incomplete_expired,
+ * harmonogram not_started albo active, pozycja do rozliczenia bez faktury). Zakonczone obiekty nie blokuja.
+ *   -> 'eur' | null
+ */
+function walutaZablokowana(idKlienta) {
+  for (const s of S.subskrypcje.values()) if (s.customer === idKlienta && !['canceled', 'incomplete_expired'].includes(s.status)) return s.currency;
+  for (const h of S.harmonogramy.values()) if (h.customer === idKlienta && ['not_started', 'active'].includes(h.status)) return h._waluta;
+  for (const p of S.pozycje.values()) if (p.customer === idKlienta && !p.invoice) return p.currency;
+  return null;
+}
+
+function bladWaluty(zablokowana) {
+  return bladStripe(400, 'invalid_request_error', `You cannot combine currencies on a single customer. This customer has an active subscription, `
+    + `subscription schedule, discount, quote, or invoice item with currency ${zablokowana}.`, { param: 'currency' });
+}
+
+/** Cena w walucie subskrypcji (obiekt jak items.data[].price: currency i unit_amount tej waluty). */
+function cenaWWalucie(cena, waluta) {
+  const pc = cenaPubliczna(cena);
+  if (cena.currency !== waluta) { pc.currency = waluta; pc.unit_amount = kwotaCeny(cena, waluta); pc.unit_amount_decimal = String(pc.unit_amount); }
+  return pc;
+}
+
+function publiczny(h) {
+  const c = klon(h);
+  for (const k of Object.keys(c)) if (k.startsWith('_')) delete c[k];
+  return c;
+}
+
+/**
+ * Koniec okresu subskrypcji z harmonogramem (obnizka z panelu): nastepna faza wchodzi przed fakturą odnowienia,
+ * harmonogram sie konczy (end_behavior release), subskrypcja traci pole schedule. -> true gdy zmieniono cene
+ */
+function wejdzWFaze(sub, koniec) {
+  const h = sub.schedule ? S.harmonogramy.get(sub.schedule) : null;
+  if (!h || h.status !== 'active') return false;
+  const faza = h.phases.find((f) => f.start_date >= koniec - 1 && f.start_date <= koniec + 1);
+  if (!faza) return false;
+  const cena = S.ceny.get(faza.items[0].price);
+  if (!cena) return false;
+  sub.items.data[0].price = cenaWWalucie(cena, sub.currency);
+  h.status = 'released';
+  h.released_at = koniec;
+  h.released_subscription = sub.id;
+  h.current_phase = null;
+  sub.schedule = null;
+  return true;
+}
 
 function zmienStatus(sub, status) {
   const byl = sub.status;
@@ -393,6 +453,9 @@ function anulujTeraz(sub, teraz, powod = 'cancellation_requested') {
   // otwarta faktura po anulowaniu: bez dalszych prob
   const f = S.faktury.get(sub.latest_invoice);
   if (f && f.status === 'open') { f.status = 'void'; f.next_payment_attempt = null; }
+  // harmonogram anulowanej subskrypcji konczy sie z nia (nie trzyma juz waluty klienta)
+  const h = sub.schedule ? S.harmonogramy.get(sub.schedule) : null;
+  if (h && ['not_started', 'active'].includes(h.status)) { h.status = 'canceled'; h.canceled_at = teraz; }
   zdarzenie('customer.subscription.deleted', subskrypcjaPubliczna(sub), poprzednie);
 }
 
@@ -433,9 +496,11 @@ function przetworzCzas(idZegara) {
       if (koniec > teraz) continue;
       if (sub.status === 'past_due') continue;          // czeka na ponowienie albo anulowanie
       if (sub.cancel_at_period_end) { anulujTeraz(sub, koniec); tu += 1; continue; }
-      // odnowienie (albo koniec okresu probnego)
+      // odnowienie (albo koniec okresu probnego); zaplanowana obnizka wchodzi przed faktura odnowienia
       const element = sub.items.data[0];
       const zProby = sub.status === 'trialing';
+      const cenaPrzed = element.price.id;
+      const zFazy = wejdzWFaze(sub, koniec);
       element.current_period_start = koniec;
       element.current_period_end = dodajMiesiac(koniec);
       sub.billing_cycle_anchor = element.current_period_end;
@@ -444,6 +509,7 @@ function przetworzCzas(idZegara) {
       nowa.created = koniec;
       if (zaplacFakture(nowa, sub)) {
         if (zProby) { zmienStatus(sub, 'active'); zdarzenie('customer.subscription.updated', subskrypcjaPubliczna(sub), { status: 'trialing' }); }
+        else if (zFazy) zdarzenie('customer.subscription.updated', subskrypcjaPubliczna(sub), { items: { data: [{ current_period_end: koniec, price: { id: cenaPrzed } }] }, schedule: 'released' });
         else zdarzenie('customer.subscription.updated', subskrypcjaPubliczna(sub), { items: { data: [{ current_period_end: koniec }] } });
       } else {
         const byl = zmienStatus(sub, 'past_due');
@@ -540,6 +606,88 @@ ${komunikat ? `<p id="komunikat" role="status">${esc(komunikat)}</p>` : ''}
 </form></div></main></body></html>`;
 }
 
+/** Dzien (RRRR-MM-DD) chwili w sekundach. */
+function dzien(sekundy) { return new Date(sekundy * 1000).toISOString().slice(0, 10); }
+
+/**
+ * Wycena zmiany ceny jak w panelu Stripe z rozliczeniem proporcjonalnym: wyzsza cena od razu z doplata za pozostale
+ * dni okresu (roznica cen razy pozostala czesc okresu), nizsza od konca okresu (harmonogram), rowna od razu bez doplaty.
+ *   -> { rodzaj: 'od-razu'|'od-konca-okresu', doplata, obecna, nowa, od }
+ */
+function wycenaZmiany(sub, cena) {
+  const element = sub.items.data[0];
+  const obecna = element.price.unit_amount;
+  const nowa = kwotaCeny(cena, sub.currency);
+  const teraz = terazDla(sub.customer);
+  if (nowa < obecna) return { rodzaj: 'od-konca-okresu', doplata: 0, obecna, nowa, od: element.current_period_end };
+  const okres = Math.max(1, element.current_period_end - element.current_period_start);
+  const zostalo = Math.max(0, element.current_period_end - teraz);
+  return { rodzaj: 'od-razu', doplata: Math.round(((nowa - obecna) * zostalo) / okres), obecna, nowa, od: teraz };
+}
+
+function stronaPotwierdzenia(panel, komunikat) {
+  const prz = panel._przeplyw;
+  const sub = S.subskrypcje.get(prz.sub);
+  const cena = S.ceny.get(prz.cena);
+  const w = wycenaZmiany(sub, cena);
+  const opis = w.rodzaj === 'od-razu'
+    ? `<p id="doplata">Do zapłaty dziś: <b>${esc(kwotaTekst(w.doplata, sub.currency))}</b> (proporcjonalnie za pozostałe dni okresu)</p>`
+      + `<p id="potem">Potem ${esc(kwotaTekst(w.nowa, sub.currency))} miesięcznie.</p>`
+    : `<p id="od-kiedy">Zmiana od <b>${esc(dzien(w.od))}</b> (koniec bieżącego okresu). Do tego czasu zostaje obecny pakiet.</p>`
+      + `<p id="potem">Opłata miesięczna od ${esc(dzien(w.od))}: ${esc(kwotaTekst(w.nowa, sub.currency))}.</p>`;
+  return `<!DOCTYPE html><html lang="pl"><head><meta charset="utf-8"><title>Atrapa Stripe: potwierdź aktualizację</title><style>${STYL}</style></head><body>
+<main><h1>Atrapa Customer Portal: potwierdź aktualizację</h1>
+${komunikat ? `<p class="blad" id="komunikat" role="alert">${esc(komunikat)}</p>` : ''}
+<div class="karta"><p id="cel">${esc(cena ? cena.nickname : '?')}</p>${opis}
+<form method="POST" action="/p/session/${esc(panel.id)}">
+<button class="glowny" name="akcja" value="potwierdz" id="potwierdz">Potwierdź</button>
+<button name="akcja" value="wroc" id="wroc">Wstecz</button>
+</form></div></main></body></html>`;
+}
+
+/** Potwierdzenie zmiany ceny z przeplywu subscription_update_confirm. -> przekierowanie albo blad. */
+function potwierdzZmiane(panel) {
+  const prz = panel._przeplyw;
+  const sub = S.subskrypcje.get(prz.sub);
+  if (!sub || !['active', 'trialing'].includes(sub.status) || sub.cancel_at_period_end) {
+    return html(409, stronaPotwierdzenia(panel, 'Tej subskrypcji nie można już zaktualizować.'), 'zmiana-niedostepna');
+  }
+  const cena = S.ceny.get(prz.cena);
+  const w = wycenaZmiany(sub, cena);
+  const element = sub.items.data[0];
+  const poprzednia = element.price.id;
+  if (w.rodzaj === 'od-konca-okresu') {
+    // obnizka na koniec okresu: harmonogram z dwiema fazami, subskrypcja wskazuje go w polu schedule
+    const stary = sub.schedule ? S.harmonogramy.get(sub.schedule) : null;
+    if (stary && ['not_started', 'active'].includes(stary.status)) { stary.status = 'released'; stary.released_at = terazDla(sub.customer); }
+    const id = nowyId('sub_sched', 24);
+    S.harmonogramy.set(id, {
+      id, object: 'subscription_schedule', customer: sub.customer, subscription: sub.id, status: 'active', end_behavior: 'release',
+      created: terazDla(sub.customer), canceled_at: null, released_at: null, released_subscription: null,
+      current_phase: { start_date: element.current_period_start, end_date: element.current_period_end },
+      phases: [
+        { start_date: element.current_period_start, end_date: element.current_period_end, items: [{ price: poprzednia, quantity: 1 }], proration_behavior: 'none' },
+        { start_date: element.current_period_end, end_date: dodajMiesiac(element.current_period_end), items: [{ price: cena.id, quantity: 1 }], proration_behavior: 'none' },
+      ],
+      _waluta: sub.currency,
+    });
+    sub.schedule = id;
+    zdarzenie('customer.subscription.updated', subskrypcjaPubliczna(sub), { schedule: null });
+  } else {
+    // wyzsza (albo rowna) cena od razu, doplata proporcjonalna na osobnej fakturze oplaconej karta subskrypcji
+    element.price = cenaWWalucie(cena, sub.currency);
+    if (w.doplata > 0) {
+      const f = wystawFakture(sub, { powod: 'subscription_update', od: terazDla(sub.customer), do: element.current_period_end, kwota: w.doplata });
+      if (!zaplacFakture(f, sub)) {
+        element.price = cenaWWalucie(S.ceny.get(poprzednia), sub.currency);
+        return html(402, stronaPotwierdzenia(panel, 'Karta odrzucona: pakiet bez zmian.'), 'zmiana-odrzucona');
+      }
+    }
+    zdarzenie('customer.subscription.updated', subskrypcjaPubliczna(sub), { items: { data: [{ price: { id: poprzednia } }] } });
+  }
+  return przekieruj(prz.poZakonczeniu || panel.return_url, 'zmiana-potwierdzona');
+}
+
 function zaplacSesje(sesja, akcja, kraj) {
   const klient = S.klienci.get(sesja.customer);
   const rodzaj = akcja === 'zaplac-0341' ? 'odrzucajaca' : 'ok';
@@ -592,6 +740,13 @@ function obsluzStroneCheckout(metoda, id, dane) {
 function obsluzStronePanelu(metoda, id, dane) {
   const panel = S.panele.get(id);
   if (!panel) return html(404, '<!DOCTYPE html><p>Nie ma takiej sesji panelu.</p>', 'panel-brak');
+  if (panel._przeplyw) {
+    if (metoda === 'GET') return html(200, stronaPotwierdzenia(panel), 'panel-potwierdzenie');
+    const akcja = String(dane.akcja || '');
+    if (akcja === 'wroc') return przekieruj(panel.return_url, 'panel-wroc');
+    if (akcja === 'potwierdz') return potwierdzZmiane(panel);
+    return html(400, stronaPotwierdzenia(panel, 'Nieznana akcja.'), 'panel-zla-akcja');
+  }
   if (metoda === 'GET') return html(200, stronaPanelu(panel), 'panel-strona');
   const akcja = String(dane.akcja || '');
   if (akcja === 'wroc') return przekieruj(panel.return_url, 'panel-wroc');
@@ -655,9 +810,8 @@ function zSesjaCheckout(p, baza) {
   if (kwotaCeny(cena, waluta) === null) {
     return { blad: bladStripe(400, 'invalid_request_error', `The price ${cena.id} does not have a currency option for ${waluta}`, { param: 'currency' }) };
   }
-  if (klient.currency && klient.currency !== waluta) {
-    return { blad: bladStripe(400, 'invalid_request_error', `You cannot combine currencies on a single customer. This customer has had a subscription or payment in ${klient.currency}, but you are trying to pay in ${waluta}.`, { code: 'currency_mismatch' }) };
-  }
+  const zablokowana = walutaZablokowana(klient.id);
+  if (zablokowana && zablokowana !== waluta) return { blad: bladWaluty(zablokowana) };
   if (!p.success_url) return { blad: bladStripe(400, 'invalid_request_error', 'Missing required param: success_url.', { param: 'success_url' }) };
   const id = nowyId('cs_test', 40);
   const teraz = terazGlobalnie();
@@ -676,6 +830,39 @@ function zSesjaCheckout(p, baza) {
   };
   S.sesje.set(id, s);
   return { obiekt: s };
+}
+
+/**
+ * flow_data sesji panelu jak w Stripe: tylko subscription_update_confirm, subskrypcja tego klienta, aktywna i bez
+ * anulowania, dokladnie jedna pozycja (jej id), cena z waluta subskrypcji; konfiguracja bpc_bez_zmiany udaje panel
+ * bez zmiany pakietu (cena spoza features.subscription_update.products). -> { przeplyw } albo { blad }
+ */
+function przeplywZmiany(p) {
+  const f = p.flow_data || {};
+  const parametr = (n) => `flow_data[subscription_update_confirm][${n}]`;
+  if (f.type !== 'subscription_update_confirm') {
+    return { blad: bladStripe(400, 'invalid_request_error', 'atrapa: obslugiwany tylko flow_data[type]=subscription_update_confirm', { param: 'flow_data[type]' }) };
+  }
+  const c = f.subscription_update_confirm || {};
+  const sub = S.subskrypcje.get(c.subscription);
+  if (!sub) return { blad: brakObiektu('subscription', c.subscription) };
+  if (sub.customer !== p.customer) return { blad: bladStripe(400, 'invalid_request_error', 'The subscription does not belong to this customer.', { param: parametr('subscription') }) };
+  if (!['active', 'trialing'].includes(sub.status) || sub.cancel_at_period_end || sub.cancel_at) {
+    return { blad: bladStripe(400, 'invalid_request_error', 'This subscription cannot be updated because it is canceled or scheduled to cancel.', { param: parametr('subscription') }) };
+  }
+  const pozycje = Array.isArray(c.items) ? c.items : [];
+  if (pozycje.length !== 1 || !pozycje[0].id) return { blad: bladStripe(400, 'invalid_request_error', 'Exactly one item with id is required.', { param: parametr('items') }) };
+  if (pozycje[0].id !== sub.items.data[0].id) return { blad: brakObiektu('subscription_item', pozycje[0].id) };
+  const cena = S.ceny.get(pozycje[0].price);
+  if (!cena) return { blad: brakObiektu('price', pozycje[0].price) };
+  if (p.configuration === 'bpc_bez_zmiany' || !cena.active || cena.recurring.interval !== 'month') {
+    return { blad: bladStripe(400, 'invalid_request_error', `The price ${cena.id} is not included in the customer portal configuration (features.subscription_update.products).`, { param: parametr('items[0][price]') }) };
+  }
+  if (kwotaCeny(cena, sub.currency) === null) {
+    return { blad: bladStripe(400, 'invalid_request_error', `The price ${cena.id} does not have a currency option for ${sub.currency}`, { param: parametr('items[0][price]') }) };
+  }
+  const po = f.after_completion || {};
+  return { przeplyw: { sub: sub.id, cena: cena.id, poZakonczeniu: po.type === 'redirect' && po.redirect ? po.redirect.return_url || null : null } };
 }
 
 function podpisParametrow(metoda, sciezka, bufor) {
@@ -721,14 +908,48 @@ function trasaApi(metoda, sciezka, p, rozwin, baza, klucz) {
     const s = S.sesje.get(m[1]);
     return s ? json(200, sesjaPubliczna(s), 'checkout-odczyt') : brakObiektu('checkout.session', m[1]);
   }
-  // Panel klienta
+  // Panel klienta (z flow_data: od razu potwierdzenie zmiany ceny subskrypcji)
   if (sciezka === '/v1/billing_portal/sessions' && metoda === 'POST') {
     if (!S.klienci.has(p.customer)) return brakObiektu('customer', p.customer);
     if (p.configuration && !/^bpc_/.test(p.configuration)) return brakObiektu('billing_portal.configuration', p.configuration);
+    let przeplyw = null;
+    if (p.flow_data) {
+      const w = przeplywZmiany(p);
+      if (w.blad) return w.blad;
+      przeplyw = w.przeplyw;
+    }
     const id = nowyId('bps', 24);
-    const panel = { id, object: 'billing_portal.session', configuration: p.configuration || 'bpc_atrapa', created: terazGlobalnie(), customer: p.customer, livemode: false, locale: p.locale || null, return_url: p.return_url || null, url: `${baza}/p/session/${id}` };
+    const panel = {
+      id, object: 'billing_portal.session', configuration: p.configuration || 'bpc_atrapa', created: terazGlobalnie(), customer: p.customer,
+      flow: p.flow_data ? klon(p.flow_data) : null, livemode: false, locale: p.locale || null, return_url: p.return_url || null, url: `${baza}/p/session/${id}`,
+      _przeplyw: przeplyw,
+    };
     S.panele.set(id, panel);
-    return json(200, panel, 'panel-utworz');
+    return json(200, publiczny(panel), przeplyw ? 'panel-zmiana-utworz' : 'panel-utworz');
+  }
+  // Harmonogramy subskrypcji (obnizka z panelu na koniec okresu)
+  if ((m = /^\/v1\/subscription_schedules\/([^/]+)$/.exec(sciezka)) && metoda === 'GET') {
+    const h = S.harmonogramy.get(m[1]);
+    return h ? json(200, publiczny(h), 'harmonogram') : brakObiektu('subscription_schedule', m[1]);
+  }
+  // Pozycje do rozliczenia (trzymaja walute klienta do nastepnej faktury)
+  if (sciezka === '/v1/invoiceitems' && metoda === 'POST') {
+    const klient = S.klienci.get(p.customer);
+    if (!klient) return brakObiektu('customer', p.customer);
+    const waluta = String(p.currency || klient.currency || '').toLowerCase();
+    if (!/^[a-z]{3}$/.test(waluta)) return bladStripe(400, 'invalid_request_error', 'Missing required param: currency.', { param: 'currency' });
+    const zablokowana = walutaZablokowana(klient.id);
+    if (zablokowana && zablokowana !== waluta) return bladWaluty(zablokowana);
+    const id = nowyId('ii', 24);
+    const poz = { id, object: 'invoiceitem', amount: Number(p.amount) || 0, currency: waluta, customer: klient.id, date: terazDla(klient.id), description: p.description || null, invoice: null, livemode: false };
+    S.pozycje.set(id, poz);
+    klient.currency = waluta;
+    return json(200, poz, 'pozycja-utworz');
+  }
+  if ((m = /^\/v1\/invoiceitems\/([^/]+)$/.exec(sciezka)) && metoda === 'DELETE') {
+    if (!S.pozycje.has(m[1])) return brakObiektu('invoiceitem', m[1]);
+    S.pozycje.delete(m[1]);
+    return json(200, { id: m[1], object: 'invoiceitem', deleted: true }, 'pozycja-usun');
   }
   // Subskrypcje
   if (sciezka === '/v1/subscriptions' && metoda === 'GET') {
@@ -747,6 +968,8 @@ function trasaApi(metoda, sciezka, p, rozwin, baza, klucz) {
     if (!cena) return brakObiektu('price', pozycja && pozycja.price);
     const waluta = String(p.currency || klient.currency || cena.currency).toLowerCase();
     if (kwotaCeny(cena, waluta) === null) return bladStripe(400, 'invalid_request_error', `The price ${cena.id} does not have a currency option for ${waluta}`, { param: 'currency' });
+    const zablokowana = walutaZablokowana(klient.id);
+    if (zablokowana && zablokowana !== waluta) return bladWaluty(zablokowana);
     const metodaPl = p.default_payment_method || klient.invoice_settings.default_payment_method;
     if (!metodaPl || !S.metody.has(metodaPl)) return bladStripe(400, 'invalid_request_error', 'This customer has no attached payment source or default payment method.', { code: 'resource_missing' });
     const { sub, faktura } = utworzSubskrypcje({ idKlienta: klient.id, cena, waluta, metadane: p.metadata, dniProby: p.trial_period_days, metoda: metodaPl, zrodlo: 'api' });
@@ -889,6 +1112,7 @@ function stanAtrapy() {
     teraz: terazGlobalnie(), przesuniecie: S.przesuniecie, webhooki: S.webhooki, kolejnosc: S.kolejnosc,
     klienci: obiekty(S.klienci), sesje: obiekty(S.sesje, sesjaPubliczna), subskrypcje: obiekty(S.subskrypcje, subskrypcjaPubliczna),
     faktury: obiekty(S.faktury), zwroty: obiekty(S.zwroty), obciazenia: obiekty(S.obciazenia), zegary: obiekty(S.zegary),
+    harmonogramy: obiekty(S.harmonogramy, publiczny), pozycje: obiekty(S.pozycje),
     zdarzenia: S.zdarzenia.map((e) => ({ id: e.id, typ: e.type, obiekt: e.data.object.id })),
     dostarczone: S.dostarczone.slice(-100), nieudane: S.nieudane.map((e) => ({ id: e.id, typ: e.type })), doWyslania: S.doWyslania.length,
   };

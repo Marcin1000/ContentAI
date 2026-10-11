@@ -108,9 +108,10 @@ const T = {
 const INFORMACJE = new Set(['openseo']);
 
 /**
- * Jezyk z Accept-Language: decyduje jezyk przegladarki z najwyzsza waga q, tak jak
- * w aplikacji (navigator.language): polski -> pl, kazdy inny -> en (KOD8-26: klient
- * z Niemiec dostawal polski ekran logowania, a po zalogowaniu angielska aplikacje).
+ * Jezyk z Accept-Language (jezyki z ustawien przegladarki, domyslnie z systemu): pierwszy z obslugiwanych (pl, en)
+ * wedlug wagi q, tak jak w aplikacji (navigator.languages). Zaden obslugiwany -> en (KOD8-26: klient z Niemiec
+ * dostawal polski ekran logowania, a po zalogowaniu angielska aplikacje). "de, pl;q=0.8, en;q=0.5" -> pl: polski
+ * stoi u tej osoby wyzej niz angielski (wczesniej liczyl sie tylko pierwszy jezyk, wiec wychodzil angielski).
  * Brak naglowka (curl, skrypt) -> polski, jak dotad.
  */
 function jezykZNaglowka(naglowek) {
@@ -121,7 +122,8 @@ function jezykZNaglowka(naglowek) {
   }).filter((p) => p.tag && p.tag !== '*' && p.q > 0);
   pozycje.sort((a, b) => b.q - a.q || a.i - b.i);
   if (!pozycje.length) return 'pl';
-  return pozycje[0].tag === 'pl' || pozycje[0].tag.startsWith('pl-') ? 'pl' : 'en';
+  const pierwszy = pozycje.map((p) => p.tag.split('-')[0]).find((t) => t === 'pl' || t === 'en');
+  return pierwszy || 'en';
 }
 
 function esc(s) {

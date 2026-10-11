@@ -252,6 +252,22 @@ function testyJednostkowe(sprawdz) {
   sprawdz('sekcja konta (A1): stan pakietu, formularz panelu, "Odstąp od umowy tutaj", rachunek na prosbe',
     /Pakiet Standard, aktywny/.test(sekcja) && /action="\/konto\/panel"/.test(sekcja) && /id="odstap"/.test(sekcja) && /Odstąp od umowy tutaj/.test(sekcja)
     && /Rachunek wystawiamy na prośbę/.test(sekcja) && ekrany.sekcjaKonta({ stan: { platnosci: { wlaczone: false } } }) === '');
+  // R9-W: zmiana pakietu z ekranu /konto i zaplanowana obnizka
+  const planyStanu = [{ plan: 'standard', nazwa: 'Standard', ceny: { eur: 1900, pln: 7900 } }, { plan: 'premium', nazwa: 'Premium', ceny: { eur: 4900, pln: 19900 } }];
+  const zZmiana = (subskrypcja, inne = {}) => ekrany.sekcjaKonta({
+    jezyk: 'pl', pakiety: plany.PLANY,
+    stan: { subskrypcja, platnosci: { wlaczone: true, tryb: 'live', maPanel: true, mozeZmienic: true, plany: planyStanu, ...inne } },
+  });
+  const wyzszy = zZmiana({ stan: 'aktywna', plan: 'standard', waluta: 'eur', okresDo: teraz2 + 20 * DOBA, zmiana: null });
+  const zaplanowana = zZmiana({ stan: 'aktywna', plan: 'premium', waluta: 'pln', okresDo: teraz2 + 20 * DOBA, zmiana: { plan: 'standard', od: teraz2 + 20 * DOBA } });
+  const bezNazwy = zZmiana({ stan: 'aktywna', plan: 'premium', waluta: 'pln', okresDo: teraz2 + 20 * DOBA, zmiana: { plan: null, od: teraz2 + 20 * DOBA } });
+  const bezZmiany = zZmiana({ stan: 'aktywna', plan: 'standard', waluta: 'eur', okresDo: teraz2 + 20 * DOBA }, { mozeZmienic: false });
+  const bezTwardych = (s) => s.replace(/&nbsp;/g, ' ');
+  sprawdz('R9-W sekcja konta: przycisk "Przejdź na Premium · 49,00 € miesięcznie" (POST /konto/zmiana, waluta subskrypcji), zaplanowana obnizka jako zdanie bez przycisku',
+    /<form method="POST" action="\/konto\/zmiana"><input type="hidden" name="plan" value="premium">/.test(wyzszy) && /id="zmiana-premium" class="przycisk-2">Przejdź na Premium · 49,00\s*€ miesięcznie/.test(wyzszy)
+    && /Kwotę i datę zmiany zobaczysz na stronie Stripe/.test(bezTwardych(wyzszy)) && /Od \d+ \S+ \d{4} pakiet Standard\./.test(zaplanowana) && !/action="\/konto\/zmiana"/.test(zaplanowana)
+    && /Zmiana pakietu zaplanowana od \d+ \S+ \d{4}\. Szczegóły są w panelu subskrypcji\./.test(bezTwardych(bezNazwy)) && !/action="\/konto\/zmiana"/.test(bezNazwy)
+    && !/action="\/konto\/zmiana"/.test(bezZmiany) && bezMyslnikow(wyzszy + zaplanowana + bezNazwy));
 }
 
 // ─── 2. Atrapa: ksztalt modulu (przeniesione z testy-magazyn.js) ─────────────
@@ -582,8 +598,9 @@ async function testyZakupu(sprawdz) {
       && stanL.platnosci.odrzucenie.kraj === 'US' && plany.planEfektywny(kl) === 'darmowy');
     const v = await nowyKlient(t, { jezyk: 'en' });
     const kupDe = await kup(t, v.cookie, { waluta: 'eur', kraj: 'DE', jezyk: 'en' });
+    // zakup po angielsku przy przegladarce bez naglowka (polski): jezyk wraca z klientem do aplikacji (R9-W)
     sprawdz('kraj z listy (DE, EUR): zakup aktywny, kraj w rejestrze do progu sprzedazy UE',
-      kupDe.lokalizacja === '/?platnosc=ok' && t.magazyn.platnosciKonta(v.login)[0].kraj === 'DE' && t.magazyn.platnosciKonta(v.login)[0].waluta === 'eur');
+      kupDe.lokalizacja === '/?platnosc=ok&lang=en' && t.magazyn.platnosciKonta(v.login)[0].kraj === 'DE' && t.magazyn.platnosciKonta(v.login)[0].waluta === 'eur');
 
     console.log('\n  platnosci (B) - odstapienie w 14 dni (PR8-31, D-03)');
     const m = await nowyKlient(t);
@@ -613,8 +630,9 @@ async function testyZakupu(sprawdz) {
     sprawdz('odstapienie: drugie oswiadczenie 409 odstapienie-niedostepne (zlozone), stan konta pokazuje przyjete oswiadczenie',
       znowuOdst.status === 409 && znowuOdst.headers.get('x-cai-kod') === 'odstapienie-niedostepne' && znowuJ.powod === 'zlozone'
       && stanM.platnosci.odstapienie.powod === 'zlozone' && stanM.platnosci.odstapienie.zlozone.kwota === odst.kwotaZwrotu);
-    const wymuszona = await (await t.zadanie('/api/platnosci/zakup', t.json(m.cookie, { plan: 'standard', waluta: 'eur', jezyk: 'en', zgodaNaWykonanie: true }))).json();
-    sprawdz('waluta klienta, ktory juz placil, wygrywa (Stripe nie laczy walut u klienta)', wymuszona.waluta === 'pln');
+    // R9-W: po odstapieniu waluta znowu do wyboru (zakup w innej walucie: testyZmianyPakietu); wczesniej wymuszona na zawsze.
+    sprawdz('R9-W waluta po odstapieniu: bez wymuszonej waluty (wczesniej PLN na zawsze), domyslna z jezyka; przy zywej subskrypcji wymuszona',
+      stanM.platnosci.walutaWymuszona === null && stanM.platnosci.walutaDomyslna === 'pln' && stanA.platnosci.walutaWymuszona === 'pln');
 
     const n = await nowyKlient(t);
     await kup(t, n.cookie, {});
@@ -877,6 +895,225 @@ async function testyZakupu(sprawdz) {
   }
 }
 
+// ─── 5a. R9-W: waluta po koncu subskrypcji, zmiana pakietu z aplikacji ───────
+
+async function testyZmianyPakietu(sprawdz) {
+  await sterowanie('/_atrapa/reset');
+  const t = await serwerZPlatnosciami();
+  const ponowienia = stripe.USTAWIENIA.ponowieniaMs.slice();
+  stripe.USTAWIENIA.ponowieniaMs = [5, 10];
+  const stanKonta = async (k) => (await t.zadanie('/api/platnosci/stan', { headers: { cookie: k.cookie } })).json();
+  const odstap = (k) => t.zadanie('/api/platnosci/odstapienie', t.json(k.cookie, { potwierdzam: true }));
+  const zmiana = (k, cialo, naglowki) => t.zadanie('/api/platnosci/zmiana', t.json(k.cookie, cialo, naglowki));
+  /** Potwierdzenie na stronie atrapy i powrot z ciasteczkiem: { atrapa, powrot (adres 303 serwera) }. */
+  const potwierdz = async (k, url) => {
+    const p = await formularzAtrapy(url, { akcja: 'potwierdz' });
+    const r = p.lokalizacja && p.lokalizacja.startsWith(t.adres) ? await t.zadanie(p.lokalizacja.replace(t.adres, ''), { headers: { cookie: k.cookie } }) : null;
+    return { atrapa: p, powrot: r ? r.headers.get('location') : null };
+  };
+  try {
+    console.log('\n  platnosci (R9-W) - waluta po zakonczonej subskrypcji (zgloszenie: ceny w EUR zamiast PLN)');
+    // Przypadek z testu premiery: pierwszy zakup recznie w EUR, odstapienie, potem polski interfejs pokazywal juz tylko EUR.
+    const a = await nowyKlient(t);
+    await kup(t, a.cookie, { waluta: 'eur' });
+    const kaEur = konto(t, a.login);
+    await odstap(a);
+    await az(() => konto(t, a.login).subskrypcjaStan === 'wygasla');
+    const stanA = await stanKonta(a);
+    const ekranA = await (await t.zadanie('/konto/zakup?plan=standard', { headers: { cookie: a.cookie } })).text();
+    sprawdz('R9-W po odstapieniu od subskrypcji w EUR: stan bez wymuszonej waluty, domyslnie PLN (polski), ekran zakupu z przelacznikiem i ceną w zł',
+      kaEur.subskrypcjaWaluta === 'eur' && stanA.platnosci.walutaWymuszona === null && stanA.platnosci.walutaDomyslna === 'pln'
+      && /id="waluty"/.test(ekranA) && !/id="waluta-wymuszona"/.test(ekranA) && /79,00\s*zł/.test(ekranA));
+    const zakupPln = await t.zadanie('/api/platnosci/zakup', t.json(a.cookie, { plan: 'standard', zgodaNaWykonanie: true, zgodaRegulamin: true }));
+    const zakupPlnJ = await zakupPln.json();
+    const sesjaPln = (await wywolaniaAtrapy()).filter((x) => x.sciezka === '/v1/checkout/sessions' && x.metoda === 'POST').pop();
+    const zaplataPln = await formularzAtrapy(zakupPlnJ.url, { akcja: 'zaplac', kraj: 'PL' });
+    await t.zadanie(zaplataPln.lokalizacja.replace(t.adres, ''), { headers: { cookie: a.cookie } });
+    const kaPln = konto(t, a.login);
+    sprawdz('R9-W ten sam klient Stripe po EUR kupuje w PLN: sesja Checkout w pln na tym samym kliencie, subskrypcja aktywna w pln',
+      zakupPln.status === 200 && zakupPlnJ.waluta === 'pln' && sesjaPln.parametry.currency === 'pln' && sesjaPln.parametry.customer === kaEur.platnikKlient
+      && kaPln.subskrypcjaStan === 'aktywna' && kaPln.subskrypcjaWaluta === 'pln' && kaPln.platnikKlient === kaEur.platnikKlient
+      && atrapa.stan().klienci.get(kaPln.platnikKlient).currency === 'pln');
+    const stanAPln = await stanKonta(a);
+    sprawdz('R9-W przy zywej subskrypcji waluta wymuszona (zmiana pakietu w jej walucie); waluty wedlug miejsca z konfiguracji',
+      stanAPln.platnosci.walutaWymuszona === 'pln' && stanAPln.platnosci.walutaWPolsce === 'pln' && stanAPln.platnosci.walutaPozaPolska === 'eur');
+
+    // Waluta trzymana jeszcze w Stripe (pozycja do rozliczenia): jasna odmowa zamiast "operator nie odpowiada".
+    const b = await nowyKlient(t);
+    await kup(t, b.cookie, {});
+    await odstap(b);
+    await az(() => konto(t, b.login).subskrypcjaStan === 'wygasla');
+    const pozycja = await apiAtrapy('POST', '/invoiceitems', { customer: konto(t, b.login).platnikKlient, amount: 500, currency: 'pln' });
+    const zablokowanaApi = await t.zadanie('/api/platnosci/zakup', t.json(b.cookie, { plan: 'standard', waluta: 'eur', zgodaNaWykonanie: true }));
+    const zablokowanaJ = await zablokowanaApi.json();
+    const zablokowanaEkran = await t.zadanie('/konto/zakup', t.formularz(b.cookie, { plan: 'standard', waluta: 'eur', z: 'app', jezyk: 'pl', zgoda_regulamin: '1', zgoda_wykonanie: '1' }));
+    const zablokowanaHtml = (await zablokowanaEkran.text()).replace(/&nbsp;/g, ' ');
+    await apiAtrapy('DELETE', `/invoiceitems/${pozycja.json.id}`);
+    const poUsunieciu = await t.zadanie('/api/platnosci/zakup', t.json(b.cookie, { plan: 'standard', waluta: 'eur', zgodaNaWykonanie: true }));
+    sprawdz('R9-W waluta trzymana w Stripe (pozycja do rozliczenia w PLN): zakup w EUR -> 400 plan-niedostepny, powod waluta-konta, walutaKonta pln; ekran mowi co wybrac; bez pozycji EUR przechodzi',
+      pozycja.status === 200 && zablokowanaApi.status === 400 && zablokowanaApi.headers.get('x-cai-kod') === 'plan-niedostepny'
+      && zablokowanaJ.powod === 'waluta-konta' && zablokowanaJ.walutaKonta === 'pln' && zablokowanaJ.waluta === 'eur'
+      && zablokowanaEkran.status === 400 && /nie rozliczymy teraz w EUR: w Stripe jest jeszcze otwarte rozliczenie w PLN\. Wybierz PLN/.test(zablokowanaHtml)
+      && poUsunieciu.status === 200);
+    // Zywa subskrypcja w Stripe, ktorej stan do nas nie doszedl (webhooki wylaczone): po odrzuceniu waluty stan z API i 409.
+    const c = await nowyKlient(t);
+    await kup(t, c.cookie, {});
+    await odstap(c);
+    await az(() => konto(t, c.login).subskrypcjaStan === 'wygasla');
+    await sterowanie('/_atrapa/ustaw', { webhooki: 'wylaczone' });
+    const klientC = konto(t, c.login).platnikKlient;
+    const metodaC = await apiAtrapy('POST', '/payment_methods/pm_card_visa/attach', { customer: klientC });
+    await apiAtrapy('POST', '/subscriptions', { customer: klientC, items: [{ price: 'price_atrapa_standard' }], currency: 'pln', default_payment_method: metodaC.json.id });
+    const zywaNieznana = await t.zadanie('/api/platnosci/zakup', t.json(c.cookie, { plan: 'premium', waluta: 'eur', zgodaNaWykonanie: true }));
+    await sterowanie('/_atrapa/ustaw', { webhooki: 'wlaczone' });
+    await sterowanie('/_atrapa/zdarzenia/ponow');
+    sprawdz('R9-W odrzucona waluta, bo w Stripe jest zywa subskrypcja bez webhooka: stan z API, 409 subskrypcja-istnieje (nie druga subskrypcja)',
+      zywaNieznana.status === 409 && zywaNieznana.headers.get('x-cai-kod') === 'subskrypcja-istnieje' && konto(t, c.login).subskrypcjaStan === 'aktywna');
+
+    console.log('\n  platnosci (R9-W) - zmiana pakietu z aplikacji (zgloszenie: wyzszy pakiet tylko w panelu Stripe)');
+    const d = await nowyKlient(t);
+    await kup(t, d.cookie, {});
+    const kd = konto(t, d.login);
+    const stanD = await stanKonta(d);
+    sprawdz('R9-W stan konta: mozeZmienic przy aktywnej subskrypcji, bez zaplanowanej zmiany, adres /konto/zmiana',
+      stanD.platnosci.mozeZmienic === true && stanD.subskrypcja.zmiana === null && stanD.platnosci.adresy.zmiana === '/konto/zmiana');
+    const wyzej = await zmiana(d, { plan: 'premium', jezyk: 'pl', z: 'app' });
+    const wyzejJ = await wyzej.json();
+    const sesjaPanelu = (await wywolaniaAtrapy()).filter((x) => x.sciezka === '/v1/billing_portal/sessions' && x.metoda === 'POST').pop();
+    const fd = sesjaPanelu.parametry.flow_data || {};
+    const subD = atrapa.stan().subskrypcje.get(kd.platnikSubskrypcja);
+    sprawdz('R9-W POST /api/platnosci/zmiana: { url panelu, premium, pln, 19900 }; sesja panelu z flow_data subscription_update_confirm (subskrypcja, pozycja, cena Premium, powrot po potwierdzeniu)',
+      wyzej.status === 200 && wyzejJ.url.startsWith(`${URL_ATRAPY}/p/session/`) && wyzejJ.plan === 'premium' && wyzejJ.waluta === 'pln' && wyzejJ.kwota === 19900
+      && wyzejJ.panel === 'potwierdzenie' && sesjaPanelu.parametry.customer === kd.platnikKlient && fd.type === 'subscription_update_confirm'
+      && fd.subscription_update_confirm.subscription === kd.platnikSubskrypcja && fd.subscription_update_confirm.items[0].id === subD.items.data[0].id
+      && fd.subscription_update_confirm.items[0].price === 'price_atrapa_premium' && fd.subscription_update_confirm.items[0].quantity === '1'
+      && fd.after_completion.type === 'redirect' && fd.after_completion.redirect.return_url === `${t.adres}/konto/platnosc?wynik=zmiana&plan=premium&z=app`
+      && sesjaPanelu.parametry.return_url === `${t.adres}/?konto=1` && sesjaPanelu.parametry.locale === 'pl' && /^zmiana-/.test(sesjaPanelu.idempotencja));
+    const wplatyDPrzed = new Set(t.magazyn.platnosciKonta(d.login).map((x) => x.id));
+    const poWyzej = await potwierdz(d, wyzejJ.url);
+    await az(() => t.magazyn.platnosciKonta(d.login).length === wplatyDPrzed.size + 1);
+    const kdPremium = konto(t, d.login);
+    // ta sama sekunda co zakup: kolejnosc po dacie oplacenia niepewna, wiec nowa wplata po identyfikatorze
+    const doplata = t.magazyn.platnosciKonta(d.login).find((x) => !wplatyDPrzed.has(x.id));
+    sprawdz('R9-W potwierdzenie wyzszego pakietu u dostawcy: powrot /?platnosc=zmiana&plan=premium, od razu Premium, doplata proporcjonalna w rejestrze wplat',
+      poWyzej.atrapa.status === 303 && poWyzej.powrot === '/?platnosc=zmiana&plan=premium' && kdPremium.subskrypcjaPlan === 'premium'
+      && kdPremium.subskrypcjaStan === 'aktywna' && plany.planEfektywny(kdPremium) === 'premium' && doplata && doplata.plan === 'premium'
+      && doplata.kwota > 11000 && doplata.kwota <= 12000 && doplata.waluta === 'pln');
+    // Nizszy pakiet z ekranu /konto (formularz): obnizka na koniec okresu przez harmonogram dostawcy.
+    const nizejEkran = await t.zadanie('/konto/zmiana', t.formularz(d.cookie, { plan: 'standard', z: 'konto', jezyk: 'pl' }));
+    const nizejUrl = nizejEkran.headers.get('location');
+    const poNizej = await potwierdz(d, nizejUrl);
+    const stanDNizej = await stanKonta(d);
+    const kdNizej = konto(t, d.login);
+    const ekranKontaD = await (await t.zadanie('/konto?platnosc=zmiana', { headers: { cookie: d.cookie } })).text();
+    sprawdz('R9-W formularz POST /konto/zmiana: 303 do panelu dostawcy z CSP form-action; po potwierdzeniu powrot na /konto?platnosc=zmiana&plan=standard',
+      nizejEkran.status === 303 && nizejUrl.startsWith(`${URL_ATRAPY}/p/session/`) && nizejEkran.headers.get('content-security-policy').includes(URL_ATRAPY)
+      && poNizej.powrot === '/konto?platnosc=zmiana&plan=standard');
+    sprawdz('R9-W obnizka zaplanowana na koniec okresu: Premium do konca okresu, w stanie konta zmiana { standard, od okresDo }, na /konto zdanie o zmianie bez drugiego przycisku',
+      kdNizej.subskrypcjaPlan === 'premium' && /schedule/.test(kdNizej.subskrypcjaSurowy) && stanDNizej.subskrypcja.zmiana
+      && stanDNizej.subskrypcja.zmiana.plan === 'standard' && stanDNizej.subskrypcja.zmiana.od === kdNizej.okresDo
+      && /Od \d+ \S+ \d{4} pakiet Standard\./.test(ekranKontaD) && /id="platnosci-zmiana"/.test(ekranKontaD) && !/id="zmiana-standard"/.test(ekranKontaD));
+    await sterowanie('/_atrapa/czas', { dni: 32 });
+    await az(() => konto(t, d.login).subskrypcjaPlan === 'standard');
+    const kdPoOkresie = konto(t, d.login);
+    const stanDPo = await stanKonta(d);
+    const odnowienieD = t.magazyn.platnosciKonta(d.login).pop();
+    sprawdz('R9-W koniec okresu: harmonogram wchodzi, pakiet Standard, zmiana znika ze stanu, odnowienie 79 zl w rejestrze',
+      kdPoOkresie.subskrypcjaPlan === 'standard' && kdPoOkresie.subskrypcjaStan === 'aktywna' && stanDPo.subskrypcja.zmiana === null
+      && t.magazyn.meta(`platnosci:zmiana:${d.login}`) === null && odnowienieD.kwota === 7900 && odnowienieD.plan === 'standard');
+
+    // Harmonogram bez odczytu (klucz bez uprawnienia): pakiet zmiany z powrotu po potwierdzeniu, data z konca okresu.
+    const e = await nowyKlient(t);
+    await kup(t, e.cookie, { plan: 'premium' });
+    await sterowanie('/_atrapa/blad', { wzor: '^/v1/subscription_schedules/', status: 403, razy: 50, metoda: 'GET' });
+    const nizejE = await (await zmiana(e, { plan: 'standard' })).json();
+    const poNizejE = await potwierdz(e, nizejE.url);
+    const stanE = await stanKonta(e);
+    await webhook(t, zdarzenieTestowe('customer.subscription.updated', { id: konto(t, e.login).platnikSubskrypcja, object: 'subscription', customer: konto(t, e.login).platnikKlient }));
+    const stanE2 = await stanKonta(e);
+    await sterowanie('/_atrapa/blad', {});
+    sprawdz('R9-W harmonogram bez odczytu (403): zmiana z pakietem z powrotu po potwierdzeniu i data konca okresu, kolejne zdarzenie jej nie gubi',
+      poNizejE.powrot === '/?platnosc=zmiana&plan=standard' && stanE.subskrypcja.zmiana && stanE.subskrypcja.zmiana.plan === 'standard'
+      && stanE.subskrypcja.zmiana.od === konto(t, e.login).okresDo && stanE2.subskrypcja.zmiana && stanE2.subskrypcja.zmiana.plan === 'standard');
+
+    console.log('\n  platnosci (R9-W) - odmowy zmiany pakietu');
+    const tenSam = await zmiana(e, { plan: 'premium' });
+    const tenSamJ = await tenSam.json();
+    const darmowy = await zmiana(e, { plan: 'darmowy' });
+    const f = await nowyKlient(t);
+    const bezSub = await zmiana(f, { plan: 'premium' });
+    const bezSubEkran = await t.zadanie('/konto/zmiana', t.formularz(f.cookie, { plan: 'premium', z: 'app', jezyk: 'pl' }));
+    const cStandard = await t.zaloguj('standard');
+    const zespol = await t.zadanie('/api/platnosci/zmiana', t.json(cStandard, { plan: 'premium' }));
+    sprawdz('R9-W odmowy: ten sam pakiet 400 (powod ten-sam), Darmowy 400 plan-niedostepny, bez subskrypcji 409 brak-subskrypcji (formularz -> ekran zakupu), konto zespolu 403',
+      tenSam.status === 400 && tenSamJ.powod === 'ten-sam' && darmowy.status === 400 && darmowy.headers.get('x-cai-kod') === 'plan-niedostepny'
+      && bezSub.status === 409 && bezSub.headers.get('x-cai-kod') === 'brak-subskrypcji' && bezSubEkran.status === 303
+      && bezSubEkran.headers.get('location') === '/konto/zakup?plan=premium&z=app&lang=pl' && zespol.status === 403 && zespol.headers.get('x-cai-kod') === 'zakup-niedozwolony');
+    const g = await nowyKlient(t);
+    await kup(t, g.cookie, {});
+    const panelG = await (await t.zadanie('/api/platnosci/panel', t.json(g.cookie, {}))).json();
+    await formularzAtrapy(panelG.url, { akcja: 'anuluj' });
+    const anulowana = await zmiana(g, { plan: 'premium' });
+    const anulowanaJ = await anulowana.json();
+    const anulowanaEkran = await t.zadanie('/konto/zmiana', t.formularz(g.cookie, { plan: 'premium', z: 'konto', jezyk: 'pl' }));
+    const anulowanaHtml = await anulowanaEkran.text();
+    const stanG = await stanKonta(g);
+    sprawdz('R9-W subskrypcja anulowana na koniec okresu: 409 zmiana-niedostepna (powod anulowana), ekran z panelem subskrypcji, mozeZmienic false',
+      anulowana.status === 409 && anulowana.headers.get('x-cai-kod') === 'zmiana-niedostepna' && anulowanaJ.powod === 'anulowana'
+      && anulowanaEkran.status === 409 && /Najpierw wznów subskrypcję/.test(anulowanaHtml) && /id="panel-subskrypcji"/.test(anulowanaHtml)
+      && stanG.platnosci.mozeZmienic === false);
+    // Stan u nas aktywny, u dostawcy subskrypcja juz anulowana (zdarzenie nie doszlo): synchronizacja i 409 brak-subskrypcji.
+    const h = await nowyKlient(t);
+    await kup(t, h.cookie, {});
+    await sterowanie('/_atrapa/ustaw', { webhooki: 'wylaczone' });
+    await apiAtrapy('DELETE', `/subscriptions/${konto(t, h.login).platnikSubskrypcja}`);
+    const nieaktualna = await zmiana(h, { plan: 'premium' });
+    await sterowanie('/_atrapa/ustaw', { webhooki: 'wlaczone' });
+    await sterowanie('/_atrapa/zdarzenia/ponow');
+    sprawdz('R9-W stan nieaktualny (subskrypcja anulowana u dostawcy bez webhooka): adapter wykrywa stan, synchronizacja, 409 brak-subskrypcji',
+      nieaktualna.status === 409 && nieaktualna.headers.get('x-cai-kod') === 'brak-subskrypcji' && konto(t, h.login).subskrypcjaStan === 'wygasla');
+    // Panel bez zmiany pakietu w ustawieniach (dostawca odrzuca flow_data): zwykly panel zamiast bledu.
+    const i = await nowyKlient(t);
+    await kup(t, i.cookie, {});
+    const konfPanelu = t.KONF.platnosci.stripe.portalKonfiguracja;
+    t.KONF.platnosci.stripe.portalKonfiguracja = 'bpc_bez_zmiany';
+    const zwykly = await zmiana(i, { plan: 'premium' });
+    const zwyklyJ = await zwykly.json();
+    t.KONF.platnosci.stripe.portalKonfiguracja = konfPanelu;
+    const panelZwykly = await (await fetch(zwyklyJ.url)).text();
+    sprawdz('R9-W dostawca odrzuca potwierdzenie zmiany (panel bez zmiany pakietu): 200 ze zwyklym panelem (panel: zwykly), w nim zmiana tez jest',
+      zwykly.status === 200 && zwyklyJ.panel === 'zwykly' && zwyklyJ.url.startsWith(`${URL_ATRAPY}/p/session/`) && /id="zmien"/.test(panelZwykly));
+    // "Wybierz Premium" przy subskrypcji Standard (np. ze strony): ekran "Masz juz subskrypcje" z przyciskiem zmiany pakietu.
+    const istnieje = await t.zadanie('/konto/zakup?plan=premium&z=app', { headers: { cookie: i.cookie } });
+    const istniejeHtml = await istnieje.text();
+    sprawdz('R9-W ekran "Masz juz subskrypcje" dla innego pakietu: formularz /konto/zmiana na ten pakiet (cena w walucie subskrypcji), opis bez "Pakiet zmienisz w panelu" i panel jako drugi przycisk',
+      istnieje.status === 409 && /action="\/konto\/zmiana"/.test(istniejeHtml) && /name="plan" value="premium"/.test(istniejeHtml)
+      && /id="zmiana-premium"[^>]*>Przejdź na Premium · 199,00\s*zł miesięcznie/.test(istniejeHtml)
+      && /Na pakiet Premium przejdziesz bez nowej subskrypcji\./.test(istniejeHtml) && !/Pakiet zmienisz/.test(istniejeHtml)
+      && /id="panel-subskrypcji" class="przycisk-2"/.test(istniejeHtml));
+
+    console.log('\n  platnosci (R9-W) - jezyk zakupu wraca z klientem (jawny wybor inny niz przegladarka)');
+    const j = await nowyKlient(t);
+    const zakupEn = await (await t.zadanie('/api/platnosci/zakup', t.json(j.cookie, { plan: 'standard', waluta: 'eur', jezyk: 'en', zgodaNaWykonanie: true }))).json();
+    const sesjaEn = (await wywolaniaAtrapy()).filter((x) => x.sciezka === '/v1/checkout/sessions' && x.metoda === 'POST').pop();
+    const zaplataEn = await formularzAtrapy(zakupEn.url, { akcja: 'zaplac', kraj: 'DE' });
+    const powrotEn = await t.zadanie(zaplataEn.lokalizacja.replace(t.adres, ''), { headers: { cookie: j.cookie } });
+    const zakupPlJ = await (await t.zadanie('/api/platnosci/zakup', t.json(f.cookie, { plan: 'standard', jezyk: 'pl', zgodaNaWykonanie: true }))).json();
+    const sesjaPl = (await wywolaniaAtrapy()).filter((x) => x.sciezka === '/v1/checkout/sessions' && x.metoda === 'POST').pop();
+    const zmianaEn = await (await zmiana(j, { plan: 'premium', jezyk: 'en' })).json();
+    const panelEn = (await wywolaniaAtrapy()).filter((x) => x.sciezka === '/v1/billing_portal/sessions' && x.metoda === 'POST').pop();
+    sprawdz('R9-W angielski zakup przy polskiej przegladarce: &lang=en w adresach powrotu (Checkout, panel), powrot /?platnosc=ok&lang=en; ten sam jezyk bez parametru',
+      /&lang=en$/.test(sesjaEn.parametry.success_url) && /&lang=en$/.test(sesjaEn.parametry.cancel_url) && powrotEn.headers.get('location') === '/?platnosc=ok&lang=en'
+      && !!zakupPlJ.url && !/lang=/.test(sesjaPl.parametry.success_url) && !!zmianaEn.url && panelEn.parametry.return_url === `${t.adres}/?konto=1&lang=en`
+      && /&lang=en$/.test(panelEn.parametry.flow_data.after_completion.redirect.return_url));
+  } finally {
+    stripe.USTAWIENIA.ponowieniaMs = ponowienia;
+    await sterowanie('/_atrapa/blad', {});
+    await sterowanie('/_atrapa/ustaw', { webhooki: 'wlaczone' });
+    await t.zamknij();
+  }
+}
+
 // ─── 6. KOD8-13 i KOD8-20: liczniki pakietu ──────────────────────────────────
 
 async function testyLicznikow(sprawdz) {
@@ -954,6 +1191,7 @@ async function uruchom({ sprawdz }) {
     await testyWylaczone(sprawdz);
     await testyKonfiguracji(sprawdz);
     await testyZakupu(sprawdz);
+    await testyZmianyPakietu(sprawdz);
     await testyLicznikow(sprawdz);
   } finally {
     await new Promise((r) => serwerAtrapy.close(r));

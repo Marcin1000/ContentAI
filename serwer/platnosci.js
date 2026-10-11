@@ -14,11 +14,15 @@
 //        GET  /konto/zakup?plan=&waluta=&z=app|konto     ekran zakupu (CSP z hostami dostawcy)
 //        POST /konto/zakup (plan, waluta, zgoda_regulamin=1, zgoda_wykonanie=1, z)   303 do Checkout
 //        POST /konto/panel (z)                             303 do panelu klienta dostawcy
+//        POST /konto/zmiana (plan, z)                      303 do potwierdzenia zmiany pakietu w panelu dostawcy
 //        GET  /konto/platnosc?wynik=ok|anulowana&sesja=&z= powrot: synchronizacja bez czekania na webhook,
 //                                                          303 /?platnosc=ok|oczekuje|kraj|anulowana (z=konto: /konto?...)
+//        GET  /konto/platnosc?wynik=zmiana&plan=&z=        powrot po potwierdzeniu zmiany pakietu: synchronizacja,
+//                                                          303 /?platnosc=zmiana&plan= (z=konto: /konto?...)
 //        GET|POST /konto/odstapienie                       odstapienie w 14 dni (PR8-31, art. 11a dyrektywy 2011/83/UE)
 //        POST /api/platnosci/zakup { plan, waluta, zgodaNaWykonanie, zgodaRegulamin?, z? } -> { url, plan, waluta, kwota }
 //        POST /api/platnosci/panel { z? }                  -> { url }
+//        POST /api/platnosci/zmiana { plan, z? }           -> { url, plan, waluta, kwota } (zmiana pakietu zywej subskrypcji)
 //        GET  /api/platnosci/stan                          -> stanDlaKonta (lekkie odpytywanie po powrocie z Checkout)
 //        GET  /api/platnosci/odstapienie                   -> { mozliwe, powod, zawarcie, termin, szacunek }
 //        POST /api/platnosci/odstapienie { potwierdzam: true } -> { ok, odstapienie }
@@ -56,7 +60,7 @@ const SYNCHRONIZACJA_W_TLE_CO_MS = 10 * 60_000;
 const METODY = new Set(['card', 'blik', 'link', 'sepa_debit', 'paypal', 'auto']);
 const KRAJE_UE = new Set(['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT',
   'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE']);
-const TRASY = new Set(['/konto/zakup', '/konto/panel', '/konto/platnosc', '/konto/odstapienie']);
+const TRASY = new Set(['/konto/zakup', '/konto/panel', '/konto/zmiana', '/konto/platnosc', '/konto/odstapienie']);
 const HTML = 'text/html; charset=utf-8';
 
 // Sesje zakupu: 10 na godzine na konto (ARCH8-19).
@@ -327,10 +331,15 @@ function zakazZakupu(konto, konf) {
   return null;
 }
 
-/** Waluta zakupu: waluta klienta, ktory juz placil (Stripe nie laczy walut), potem wybrana, potem z jezyka. */
-function walutaDla(konto, konf, jezyk, zadana) {
+/**
+ * Waluta zakupu: przy zywej subskrypcji jej waluta (zmiana pakietu; Stripe nie laczy walut u klienta z zywa
+ * subskrypcja), potem wybrana, potem z jezyka. Po zakonczonej subskrypcji (wygasla, odstapienie) klient wybiera
+ * walute od nowa jak nowy: Stripe zmienia walute klienta przy nowej subskrypcji. Wczesniej waluta ostatniej
+ * subskrypcji zostawala na zawsze: test w EUR po odstapieniu dawal juz tylko ceny w euro.
+ */
+function walutaDla(konto, konf, jezyk, zadana, teraz = Date.now()) {
   const p = konf.platnosci;
-  if (klientKonta(konto, konf) && konto.subskrypcjaWaluta && p.waluty.includes(konto.subskrypcjaWaluta)) {
+  if (zywa(konto, konf, teraz) && konto.subskrypcjaWaluta && p.waluty.includes(konto.subskrypcjaWaluta)) {
     return { waluta: konto.subskrypcjaWaluta, wymuszona: true };
   }
   const z = String(zadana || '').toLowerCase();
@@ -512,6 +521,21 @@ function zapiszWplate(konf, w, login) {
   return nowa;
 }
 
+/**
+ * Zaplanowana zmiana pakietu (harmonogram u dostawcy, np. obnizka na koniec okresu) w meta konta: { subskrypcja,
+ * plan, od }. Bez zmiany wpis znika. Pakiet nieznany u dostawcy: zostaje ten zapamietany przy powrocie z potwierdzenia.
+ */
+function zapiszZmiane(login, st) {
+  const klucz = `platnosci:zmiana:${login}`;
+  if (!st.zmiana || !st.idSubskrypcji) {
+    if (magazyn.meta(klucz) !== null) magazyn.ustawMeta(klucz, null);
+    return;
+  }
+  const byla = jsonMeta(klucz);
+  const plan = st.zmiana.plan || (byla && byla.subskrypcja === st.idSubskrypcji ? byla.plan : null) || null;
+  magazyn.ustawMeta(klucz, JSON.stringify({ subskrypcja: st.idSubskrypcji, plan, od: Number(st.zmiana.od) || null }));
+}
+
 /** Synchronizacja BEZ zamka (wolajacy go trzyma). -> { login, stan } */
 async function synchronizujBezZamka(konf, idKlienta, { login = null, teraz = Date.now(), importujWplaty = false } = {}) {
   const p = konf.platnosci;
@@ -527,6 +551,7 @@ async function synchronizujBezZamka(konf, idKlienta, { login = null, teraz = Dat
   }
   if (!konto) return { login: null, stan: st };
   magazyn.zastosujStanSubskrypcji(konto.login, st, teraz);
+  zapiszZmiane(konto.login, st);
   if (importujWplaty) {
     for (const w of await a.faktury({ idKlienta, konf, plany })) zapiszWplate(konf, w, konto.login);
   }
@@ -602,6 +627,21 @@ function synchronizacjaWTle(konto, konf) {
 
 // ─── Zakup, panel, powrot (ARCH8-19) ─────────────────────────────────────────
 
+/**
+ * "&lang=xx" do adresow powrotu od dostawcy, gdy jezyk zakupu rozni sie od jezyka przegladarki (kontekst.jezyk
+ * zapytania POST bez ?lang=): jawny wybor jezyka (angielska strona, przelacznik w aplikacji) wraca z klientem do
+ * aplikacji. Ten sam jezyk: bez parametru, aplikacja wybierze go sama.
+ */
+function parametrJezyka(kontekst, jezyk) {
+  return (jezyk === 'pl' || jezyk === 'en') && jezyk !== ((kontekst && kontekst.jezyk) || 'pl') ? `&lang=${jezyk}` : '';
+}
+
+/** Adres powrotu z panelu dostawcy: aplikacja z otwartym Kontem albo ekran /konto (z jawnym jezykiem, gdy inny). */
+function adresPowrotuZPanelu(konf, z, lang) {
+  const adres = konf.adresPubliczny;
+  return z === 'konto' ? `${adres}/konto${lang ? `?${lang.slice(1)}` : ''}` : `${adres}/?konto=1${lang}`;
+}
+
 function tekstPrzyciskuCheckout(jezyk, kwota, waluta) {
   const cena = ekrany.kwotaTekst(kwota, waluta, jezyk);
   return jezyk === 'en'
@@ -629,8 +669,8 @@ async function rozpocznijZakup({ konto, plan, waluta: zadana, jezyk = 'pl', z = 
   const pl = plany.PLANY[plan];
   if (!pl || !pl.sprzedaz) throw new Odmowa('plan-niedostepny', { plan: plan || null, waluta: zadana || null });
   if (zadana && !p.waluty.includes(String(zadana).toLowerCase())) throw new Odmowa('plan-niedostepny', { plan, waluta: String(zadana) });
-  const { waluta } = walutaDla(konto, konf, jezyk, zadana);
-  if (zywa(konto, konf, teraz)) throw new Odmowa('subskrypcja-istnieje', { stan: konto.subskrypcjaStan, plan: konto.subskrypcjaPlan });
+  const { waluta } = walutaDla(konto, konf, jezyk, zadana, teraz);
+  if (zywa(konto, konf, teraz)) throw new Odmowa('subskrypcja-istnieje', { stan: konto.subskrypcjaStan, plan: konto.subskrypcjaPlan, cel: plan });
   if (zgodaNaWykonanie !== true) {
     throw new Odmowa('zgoda-wymagana', { zgoda: 'natychmiastowe-wykonanie', komunikat: jezyk === 'en'
       ? 'Request that the service begins immediately to buy a plan.' : 'Żeby kupić pakiet, zaznacz żądanie rozpoczęcia świadczenia przed upływem 14 dni.' });
@@ -654,24 +694,120 @@ async function rozpocznijZakup({ konto, plan, waluta: zadana, jezyk = 'pl', z = 
   }
   const adres = konf.adresPubliczny;
   const zz = z === 'konto' ? 'konto' : 'app';
-  const { url, idSesji } = await a.rozpocznijZakup({
-    konto, idKlienta, plan, waluta, jezyk,
-    adresPowrotu: `${adres}/konto/platnosc?wynik=ok&sesja={CHECKOUT_SESSION_ID}&z=${zz}`,
-    adresRezygnacji: `${adres}/konto/platnosc?wynik=anulowana&z=${zz}`,
-    metadane: { zgoda: String(idZgody), regulamin: wersja || '' },
-    tekstPrzycisku: tekstPrzyciskuCheckout(jezyk, kwota, waluta),
-    konf,
-  });
+  const lang = parametrJezyka(kontekst, jezyk);
+  let sesja;
+  try {
+    sesja = await a.rozpocznijZakup({
+      konto, idKlienta, plan, waluta, jezyk,
+      adresPowrotu: `${adres}/konto/platnosc?wynik=ok&sesja={CHECKOUT_SESSION_ID}&z=${zz}${lang}`,
+      adresRezygnacji: `${adres}/konto/platnosc?wynik=anulowana&z=${zz}${lang}`,
+      metadane: { zgoda: String(idZgody), regulamin: wersja || '' },
+      tekstPrzycisku: tekstPrzyciskuCheckout(jezyk, kwota, waluta),
+      konf,
+    });
+  } catch (e) {
+    if (!e || !e.konfliktWaluty) throw e;
+    throw await odmowaKonfliktuWaluty(konf, konto, idKlienta, { plan, waluta, walutaKlienta: e.walutaKlienta });
+  }
   console.log(`[platnosci] sesja zakupu ${plan}/${waluta} dla ${konto.login}`);
-  return { url, idSesji, plan, waluta, kwota };
+  return { url: sesja.url, idSesji: sesja.idSesji, plan, waluta, kwota };
+}
+
+/**
+ * Dostawca trzyma jeszcze inna walute klienta (zywa subskrypcja, ktorej stan nie dotarl, harmonogram, pozycja do
+ * rozliczenia): stan z API i odmowa, ktora mowi, co zrobic. Zywa subskrypcja -> 409 subskrypcja-istnieje,
+ * inaczej 400 plan-niedostepny z powodem 'waluta-konta' i waluta, w ktorej konto da sie rozliczyc.
+ */
+async function odmowaKonfliktuWaluty(konf, konto, idKlienta, { plan, waluta, walutaKlienta }) {
+  console.warn(`[platnosci] ${konto.login}: dostawca odrzucil zakup w ${waluta} (waluta klienta ${walutaKlienta || 'inna'})`);
+  try {
+    await synchronizujKlienta(konf, idKlienta, { login: konto.login });
+  } catch (e) {
+    console.error(`[platnosci] ${konto.login}: synchronizacja po odrzuceniu waluty: ${e.message}`);
+  }
+  const k = magazyn.konto(konto.login) || konto;
+  if (zywa(k, konf)) return new Odmowa('subskrypcja-istnieje', { stan: k.subskrypcjaStan, plan: k.subskrypcjaPlan });
+  const walutaKonta = [walutaKlienta, k.subskrypcjaWaluta].find((w) => w && w !== waluta && konf.platnosci.waluty.includes(w)) || null;
+  return new Odmowa('plan-niedostepny', { plan, waluta, powod: 'waluta-konta', walutaKonta });
 }
 
 async function otworzPanel({ konto, jezyk = 'pl', z = 'app', kontekst }) {
   const konf = kontekst.KONF;
   const idKlienta = klientKonta(konto, konf);
   if (!idKlienta) throw new Odmowa('brak-subskrypcji');
-  const adres = konf.adresPubliczny;
-  return adapter(konf).otworzPanel({ idKlienta, jezyk, adresPowrotu: z === 'konto' ? `${adres}/konto` : `${adres}/?konto=1`, konf });
+  return adapter(konf).otworzPanel({ idKlienta, jezyk, adresPowrotu: adresPowrotuZPanelu(konf, z, parametrJezyka(kontekst, jezyk)), konf });
+}
+
+/** Zmiana pakietu mozliwa teraz: zywa subskrypcja aktywna albo probna (nie anulowana, nie zalegla) w znanym pakiecie. */
+function mozeZmienicPakiet(konto, konf) {
+  return Boolean(klientKonta(konto, konf)) && Boolean(konto.platnikSubskrypcja) && ['aktywna', 'probna'].includes(konto.subskrypcjaStan)
+    && Boolean(plany.PLANY[konto.subskrypcjaPlan]) && !zakazZakupu(konto, konf);
+}
+
+/**
+ * Zmiana pakietu zywej subskrypcji z aplikacji (Standard <-> Premium, prosba Marcina 2026-10-11): panel dostawcy
+ * od razu na ekranie potwierdzenia zmiany na wybrany pakiet; kwote doplaty albo date zmiany pokazuje dostawca, a
+ * po potwierdzeniu klient wraca na /konto/platnosc?wynik=zmiana. Waluta subskrypcji (Stripe nie zmienia waluty
+ * zywej subskrypcji). Wyzszy pakiet przy PLATNOSCI_WSTRZYMAJ_PO_PROGU liczy sie jak sprzedaz (roznica ceny).
+ * Odrzucenie sesji z potwierdzeniem przez dostawce (4xx, np. cena spoza ustawien panelu): zwykly panel, w ktorym
+ * zmiana tez jest, i wpis w dzienniku.
+ *   -> { url, plan, waluta, kwota, panel: 'potwierdzenie'|'zwykly' } albo throw Odmowa / BladDostawcy
+ */
+async function zmienPakiet({ konto, plan, jezyk = 'pl', z = 'app', kontekst }) {
+  const konf = kontekst.KONF;
+  const teraz = Date.now();
+  const zakaz = zakazZakupu(konto, konf);
+  if (zakaz) throw new Odmowa(zakaz);
+  const idKlienta = klientKonta(konto, konf);
+  if (!idKlienta || !zywa(konto, konf, teraz) || !konto.platnikSubskrypcja) throw new Odmowa('brak-subskrypcji');
+  if (!mozeZmienicPakiet(konto, konf)) throw new Odmowa('zmiana-niedostepna', { powod: konto.subskrypcjaStan, plan: konto.subskrypcjaPlan });
+  const pl = plany.PLANY[plan];
+  if (!pl || !pl.sprzedaz) throw new Odmowa('plan-niedostepny', { plan: plan || null });
+  if (plan === konto.subskrypcjaPlan) throw new Odmowa('plan-niedostepny', { plan, powod: 'ten-sam' });
+  const waluta = konto.subskrypcjaWaluta;
+  const kwota = await kwotaDlaZakupu(konf, plan, waluta);
+  const obecny = plany.PLANY[konto.subskrypcjaPlan];
+  if ((pl.kolejnosc || 0) > (obecny.kolejnosc || 0)) {
+    const kwotaObecna = (kwotyDoWyswietlenia(konf) || {})[konto.subskrypcjaPlan];
+    const wstrzymanie = wstrzymanieZakupu(konf, Math.max(0, kwota - Number((kwotaObecna && kwotaObecna[waluta]) || 0)), waluta, teraz);
+    if (wstrzymanie) throw new Odmowa('sprzedaz-wstrzymana', wstrzymanie);
+  }
+  const limit = LIMIT_SESJI.ocen({ login: konto.login });
+  if (!limit.wolno) throw new Odmowa('za-duzo-prob', { ponowZa: limit.ponowZa });
+  const a = adapter(konf);
+  const zz = z === 'konto' ? 'konto' : 'app';
+  const lang = parametrJezyka(kontekst, jezyk);
+  const adresPowrotu = adresPowrotuZPanelu(konf, zz, lang);
+  try {
+    const w = await a.zmienPakiet({
+      idKlienta, idSubskrypcji: konto.platnikSubskrypcja, plan, waluta, jezyk, adresPowrotu,
+      adresPoZmianie: `${konf.adresPubliczny}/konto/platnosc?wynik=zmiana&plan=${encodeURIComponent(plan)}&z=${zz}${lang}`, konf,
+    });
+    console.log(`[platnosci] zmiana pakietu ${konto.subskrypcjaPlan} -> ${plan} (${waluta}) dla ${konto.login}`);
+    return { url: w.url, plan, waluta, kwota, panel: 'potwierdzenie' };
+  } catch (e) {
+    if (!(e instanceof a.BladDostawcy) || e.przejsciowy) throw e;
+    if (e.niezgodnyStan) {
+      // Stan u dostawcy inny niz u nas (zdarzenie jeszcze nie doszlo): synchronizacja i odmowa wedlug swiezego stanu.
+      try { await synchronizujKlienta(konf, idKlienta, { login: konto.login }); } catch (e2) { console.error(`[platnosci] ${konto.login}: ${e2.message}`); }
+      const k = magazyn.konto(konto.login) || konto;
+      if (!zywa(k, konf)) throw new Odmowa('brak-subskrypcji');
+      if (k.subskrypcjaPlan === plan) throw new Odmowa('plan-niedostepny', { plan, powod: 'ten-sam' });
+      throw new Odmowa('zmiana-niedostepna', { powod: k.subskrypcjaStan, plan: k.subskrypcjaPlan });
+    }
+    console.error(`[platnosci] zmiana pakietu przez panel z potwierdzeniem odrzucona (${e.message}); otwieram zwykly panel. `
+      + 'Sprawdz w panelu Stripe: Customer portal > Subscriptions > zmiana pakietu z obiema cenami');
+    const w = await a.otworzPanel({ idKlienta, jezyk, adresPowrotu, konf });
+    return { url: w.url, plan, waluta, kwota, panel: 'zwykly' };
+  }
+}
+
+/** Po powrocie z potwierdzenia zmiany: pakiet zaplanowanej zmiany, gdy dostawca go nie podal (harmonogram bez odczytu). */
+function uzupelnijZmiane(login, plan) {
+  const klucz = `platnosci:zmiana:${login}`;
+  const z = jsonMeta(klucz);
+  if (!z || z.plan || !plany.PLANY[plan]) return;
+  magazyn.ustawMeta(klucz, JSON.stringify({ ...z, plan }));
 }
 
 /** Wplaty jednej umowy z rejestru; brakujace (webhook jeszcze nie doszedl) dociagane z API. */
@@ -985,7 +1121,15 @@ function tekstOdmowy(odmowa, jezyk) {
   switch (odmowa.kod) {
     case 'zakup-niedozwolony': return odmowa.pola.powod === 'cudza-sesja' ? t.obcaPlatnosc : t.zakupNiedozwolony;
     case 'sprzedaz-wstrzymana': return t.sprzedazWstrzymana;
-    case 'plan-niedostepny': return t.planNiedostepny;
+    case 'plan-niedostepny':
+      if (odmowa.pola.powod === 'ten-sam') return t.planTenSam;
+      if (odmowa.pola.powod === 'waluta-konta') {
+        return odmowa.pola.walutaKonta
+          ? ekrany.wstaw(t.planWalutaKonta, { waluta: String(odmowa.pola.waluta || '').toUpperCase(), walutaKonta: String(odmowa.pola.walutaKonta).toUpperCase() })
+          : ekrany.wstaw(t.planWalutaKontaInna, { waluta: String(odmowa.pola.waluta || '').toUpperCase() });
+      }
+      return t.planNiedostepny;
+    case 'zmiana-niedostepna': return odmowa.pola.powod === 'zalegla' ? t.zmianaZalegla : t.zmianaAnulowana;
     case 'za-duzo-prob': return ekrany.wstaw(t.zaDuzoProb, { min: Math.max(1, Math.ceil((odmowa.pola.ponowZa || 60) / 60)) });
     case 'dostawca-platnosci-niedostepny': return t.dostawcaNiedostepny;
     case 'platnosci-wylaczone': return t.platnosciWylaczone;
@@ -1004,16 +1148,32 @@ function ekranBledu(kontekst, res, e, jezyk, z) {
   if (!(e instanceof Odmowa)) console.error(`[platnosci] ${e.message}`);
   const status = odmowa.status || (bledyKodow()[odmowa.kod] || {}).status || 503;
   const przyciski = [];
-  if (odmowa.kod === 'subskrypcja-istnieje' || (odmowa.kod === 'odstapienie-niedostepne' && odmowa.pola.powod === 'po-terminie')) {
-    przyciski.push({ rodzaj: 'formularz', adres: '/konto/panel', pola: { z }, tekst: t.panel, id: 'panel-subskrypcji' });
+  const dodatkowe = [];
+  // Zywa subskrypcja, a klient wybral inny pakiet (np. "Wybierz Premium" na stronie przy subskrypcji Standard):
+  // od razu przycisk zmiany pakietu, panel subskrypcji jako drugi.
+  let zmiana = null;
+  if (odmowa.kod === 'subskrypcja-istnieje' && odmowa.pola.cel && odmowa.pola.cel !== odmowa.pola.plan && kontekst.konto) {
+    try {
+      const stanK = stanDlaKonta(magazyn.konto(kontekst.konto.login) || kontekst.konto, { ...kontekst, jezyk });
+      zmiana = ekrany.pakietyDoZmiany(stanK, plany.PLANY, jezyk).find((x) => x.plan === odmowa.pola.cel) || null;
+    } catch { zmiana = null; }
+  }
+  if (zmiana) {
+    przyciski.push({ rodzaj: 'formularz', adres: '/konto/zmiana', pola: { plan: zmiana.plan, z, jezyk }, id: `zmiana-${zmiana.plan}`,
+      tekst: ekrany.wstaw(t.zmianaPrzycisk, { pakiet: zmiana.nazwa, cena: ekrany.kwotaTekst(zmiana.kwota, zmiana.waluta, jezyk) }) });
+    dodatkowe.push(t.zmianaOpis);
+  }
+  if (odmowa.kod === 'subskrypcja-istnieje' || odmowa.kod === 'zmiana-niedostepna' || (odmowa.kod === 'odstapienie-niedostepne' && odmowa.pola.powod === 'po-terminie')) {
+    przyciski.push({ rodzaj: 'formularz', adres: '/konto/panel', pola: { z }, tekst: t.panel, id: 'panel-subskrypcji', klasa: zmiana ? 'przycisk-2' : '' });
   }
   const tytul = odmowa.kod === 'subskrypcja-istnieje' ? t.subskrypcjaIstniejeTytul
-    : (odmowa.kod === 'odstapienie-niedostepne' ? t.odstNiemozliweTytul : t.niedostepnyTytul);
+    : (odmowa.kod === 'odstapienie-niedostepne' ? t.odstNiemozliweTytul : (odmowa.kod === 'zmiana-niedostepna' || odmowa.pola.powod === 'ten-sam' ? t.zmianaTytul : t.niedostepnyTytul));
+  const pakiet = ekrany.nazwaPakietu(plany.PLANY[odmowa.pola.plan], jezyk) || odmowa.pola.plan || '';
   const opis = odmowa.kod === 'subskrypcja-istnieje'
-    ? ekrany.wstaw(t.subskrypcjaIstnieje, { pakiet: ekrany.nazwaPakietu(plany.PLANY[odmowa.pola.plan], jezyk) || odmowa.pola.plan || '' })
+    ? ekrany.wstaw(zmiana ? t.subskrypcjaIstniejeZmiana : t.subskrypcjaIstnieje, { pakiet, cel: zmiana ? zmiana.nazwa : '' })
     : tekstOdmowy(odmowa, jezyk);
   ustawCsp(res, konf);
-  wyslijHtml(kontekst, res, status, ekrany.ekranKomunikatu({ jezyk, tytul, opis, przyciski, tryb: konf.platnosci.tryb, uslugodawca: konf.uslugodawca, z }), odmowa.kod);
+  wyslijHtml(kontekst, res, status, ekrany.ekranKomunikatu({ jezyk, tytul, opis, dodatkowe, przyciski, tryb: konf.platnosci.tryb, uslugodawca: konf.uslugodawca, z }), odmowa.kod);
 }
 
 function bledyKodow() {
@@ -1060,7 +1220,7 @@ async function obsluzZakupEkran(sciezka, req, res, kontekst) {
       if (!konf.platnosci.sprzedaz) throw new Odmowa('sprzedaz-wstrzymana');
       const zakaz = zakazZakupu(konto, konf);
       if (zakaz) throw new Odmowa(zakaz);
-      if (zywa(konto, konf)) throw new Odmowa('subskrypcja-istnieje', { plan: konto.subskrypcjaPlan });
+      if (zywa(konto, konf)) throw new Odmowa('subskrypcja-istnieje', { plan: konto.subskrypcjaPlan, cel: u.get('plan') });
       // ceny u dostawcy sprawdzone przed pokazaniem (bez sieci i z cenami z konfiguracji: ekran i tak sie pokaze)
       if (!cenyZPamieci(konf)) {
         try { await odswiezCeny(konf); } catch (e) { if (!kwotyDoWyswietlenia(konf)) throw e; }
@@ -1126,15 +1286,56 @@ async function obsluzPanelEkran(req, res, kontekst) {
   return true;
 }
 
+/** POST /konto/zmiana (plan, z, jezyk): formularz sekcji konta -> 303 do potwierdzenia zmiany pakietu u dostawcy. */
+async function obsluzZmianeEkran(req, res, kontekst) {
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    kontekst.odpowiedzTekst(res, 405, 'Metoda niedozwolona');
+    return true;
+  }
+  const dane = Object.fromEntries(new URLSearchParams((await kontekst.czytajCialo(req, 4096)).toString('utf8')));
+  const jezyk = jezykZ(kontekst, req, dane);
+  const z = zParam(dane.z);
+  try {
+    const w = await zmienPakiet({ konto: kontekst.konto, plan: dane.plan, jezyk, z, kontekst });
+    ustawCsp(res, kontekst.KONF);
+    res.writeHead(303, { Location: w.url, 'Cache-Control': 'no-store' });
+    res.end();
+  } catch (e) {
+    if (e instanceof Odmowa && e.kod === 'brak-subskrypcji') {
+      // bez zywej subskrypcji nie ma czego zmieniac: ekran zakupu wybranego pakietu
+      res.writeHead(303, { Location: `/konto/zakup?plan=${encodeURIComponent(String(dane.plan || ''))}&z=${z}&lang=${jezyk}` });
+      res.end();
+      return true;
+    }
+    ekranBledu(kontekst, res, e, jezyk, z);
+  }
+  return true;
+}
+
 async function obsluzPowrot(req, res, kontekst) {
   const u = kontekst.url.searchParams;
   const z = zParam(u.get('z'));
   const baza = z === 'konto' ? '/konto' : '/';
   const jezyk = jezykZ(kontekst, req);
+  // jawny jezyk zakupu (parametrJezyka) wraca z klientem do aplikacji albo na /konto
+  const lang = ['pl', 'en'].includes(u.get('lang')) ? `&lang=${u.get('lang')}` : '';
   const idz = (wynik) => {
-    res.writeHead(303, { Location: `${baza}?platnosc=${wynik}`, 'Cache-Control': 'no-store' });
+    res.writeHead(303, { Location: `${baza}?platnosc=${wynik}${lang}`, 'Cache-Control': 'no-store' });
     res.end();
   };
+  if (u.get('wynik') === 'zmiana') {
+    // Po potwierdzeniu zmiany pakietu w panelu dostawcy: stan z API bez czekania na webhook. Plan z adresu sluzy
+    // tylko komunikatowi i nazwie zaplanowanej zmiany, gdy dostawca jej nie podal (stan i tak z API).
+    const plan = plany.PLANY[u.get('plan')] && plany.PLANY[u.get('plan')].sprzedaz ? u.get('plan') : '';
+    try {
+      if (await synchronizujKonto(kontekst.KONF, kontekst.konto.login) && plan) uzupelnijZmiane(kontekst.konto.login, plan);
+    } catch (e) {
+      console.error(`[platnosci] powrot po zmianie pakietu: ${e.message}`);
+    }
+    idz(`zmiana${plan ? `&plan=${plan}` : ''}`);
+    return true;
+  }
   if (u.get('wynik') !== 'ok') { idz('anulowana'); return true; }
   const idSesji = String(u.get('sesja') || '');
   if (!/^cs_[A-Za-z0-9_]{8,250}$/.test(idSesji)) { idz('anulowana'); return true; }
@@ -1241,6 +1442,12 @@ async function obsluzApi(sciezka, req, res, kontekst) {
       kontekst.odpowiedzJson(res, 200, { url: w.url });
       return true;
     }
+    if (sciezka === '/api/platnosci/zmiana' && req.method === 'POST') {
+      const d = await cialoApi(req, kontekst, 4096);
+      const w = await zmienPakiet({ konto, plan: d.plan, jezyk: d.jezyk === 'en' || d.jezyk === 'pl' ? d.jezyk : jezyk, z: d.z, kontekst });
+      kontekst.odpowiedzJson(res, 200, { url: w.url, plan: w.plan, waluta: w.waluta, kwota: w.kwota, panel: w.panel });
+      return true;
+    }
     if (sciezka === '/api/platnosci/odstapienie' && req.method === 'GET') {
       const o = stanOdstapienia(konto, kontekst.KONF);
       kontekst.odpowiedzJson(res, 200, {
@@ -1288,6 +1495,7 @@ async function obsluz(sciezka, req, res, kontekst) {
   if (sciezka.startsWith('/api/platnosci/')) return obsluzApi(sciezka, req, res, kontekst);
   if (sciezka === '/konto/zakup') return obsluzZakupEkran(sciezka, req, res, kontekst);
   if (sciezka === '/konto/panel') return obsluzPanelEkran(req, res, kontekst);
+  if (sciezka === '/konto/zmiana') return obsluzZmianeEkran(req, res, kontekst);
   if (sciezka === '/konto/platnosc') return obsluzPowrot(req, res, kontekst);
   return obsluzOdstapienieEkran(req, res, kontekst);
 }
@@ -1407,9 +1615,12 @@ async function obsluzWebhook(sciezka, req, res, kontekst) {
 /**
  * Sekcje `subskrypcja` i `platnosci` odpowiedzi GET /api/konto (rozdz. 4.4) dla konta. Synchronicznie,
  * bez sieci (kwoty z konfiguracji albo z pamieci cen).
- *   stanDlaKonta(konto, kontekst) -> { subskrypcja: { stan, plan, okresDo, waluta, dostepDo },
+ *   stanDlaKonta(konto, kontekst) -> { subskrypcja: { stan, plan, okresDo, waluta, dostepDo, zmiana: null | { plan, od } },
  *     platnosci: { wlaczone, sprzedaz, tryb, dostawca, waluty, walutaDomyslna, wymagaZgodyNaWykonanie, mozeKupic, maPanel,
- *                  plany: [...], (B:) walutaWymuszona, zakupNiedozwolony, kraje, zwrot, odstapienie, odrzucenie, adresy, rachunek } }
+ *                  plany: [...], (B:) walutaWymuszona, zakupNiedozwolony, kraje, zwrot, odstapienie, odrzucenie, adresy, rachunek,
+ *                  mozeZmienic, walutaWPolsce, walutaPozaPolska } }
+ * walutaWymuszona: waluta zywej subskrypcji (zmiana pakietu tylko w niej). walutaWPolsce/walutaPozaPolska: domyslna
+ * waluta zakupu wedlug miejsca, ktore aplikacja zna ze strefy czasowej urzadzenia (prosba Marcina 2026-10-11).
  */
 function stanDlaKonta(konto, kontekst) {
   zapamietaj(kontekst);
@@ -1421,6 +1632,7 @@ function stanDlaKonta(konto, kontekst) {
     okresDo: Number(k.okresDo) || null,
     waluta: k.subskrypcjaWaluta || null,
     dostepDo: plany.dostepDo(k, teraz),
+    zmiana: null,
   };
   const konf = kontekst && kontekst.KONF;
   if (!konf || !wlaczone(kontekst)) {
@@ -1428,7 +1640,7 @@ function stanDlaKonta(konto, kontekst) {
       subskrypcja,
       platnosci: {
         wlaczone: false, sprzedaz: false, tryb: null, dostawca: null, waluty: [], walutaDomyslna: null,
-        wymagaZgodyNaWykonanie: true, mozeKupic: false, maPanel: false, plany: [],
+        wymagaZgodyNaWykonanie: true, mozeKupic: false, maPanel: false, mozeZmienic: false, plany: [],
       },
     };
   }
@@ -1443,6 +1655,8 @@ function stanDlaKonta(konto, kontekst) {
   const zyw = zywa(k, konf, teraz);
   const odst = k.login ? stanOdstapienia(k, konf, teraz) : { mozliwe: false, powod: 'brak-umowy' };
   const odrzucenie = k.login ? jsonMeta(`platnosci:odrzucono:${k.login}`) : null;
+  const zm = k.login && zyw ? jsonMeta(`platnosci:zmiana:${k.login}`) : null;
+  if (zm && zm.subskrypcja === k.platnikSubskrypcja) subskrypcja.zmiana = { plan: plany.PLANY[zm.plan] ? zm.plan : null, od: Number(zm.od) || null };
   return {
     subskrypcja,
     platnosci: {
@@ -1473,8 +1687,11 @@ function stanDlaKonta(konto, kontekst) {
           } : null,
         },
       odrzucenie: odrzucenie ? { powod: 'kraj', kraj: odrzucenie.kraj, czas: odrzucenie.czas } : null,
-      adresy: { zakup: '/konto/zakup', panel: '/konto/panel', odstapienie: '/konto/odstapienie' },
+      adresy: { zakup: '/konto/zakup', panel: '/konto/panel', odstapienie: '/konto/odstapienie', zmiana: '/konto/zmiana' },
       rachunek: { email: (konf.uslugodawca && konf.uslugodawca.email) || null },
+      mozeZmienic: k.login ? mozeZmienicPakiet(k, konf) : false,
+      walutaWPolsce: p.waluty.includes(p.walutaPl) ? p.walutaPl : waluta,
+      walutaPozaPolska: p.waluty.includes(p.walutaDomyslna) ? p.walutaDomyslna : waluta,
     },
   };
 }
@@ -1570,6 +1787,6 @@ module.exports = {
   // CLI (platnosci-cli.js), testy, narzedzia
   Odmowa, adapter, odswiezCeny, kwotyDoWyswietlenia, parsujCenyWyswietlane, synchronizujKlienta, synchronizujKonto, uzgodnij,
   stanProgow, sprawdzProgi, przychodOkresu, okresZNazwy, kwartal, dzienWarszawy, terminOdstapienia, czesciWarszawa, polnocWarszawy,
-  wyliczZwrot, stanOdstapienia, odstap, rozpocznijZakup, otworzPanel, powiazKonto, klientKonta, walutaDla, zapiszWplate,
-  KRAJE_UE, STAN,
+  wyliczZwrot, stanOdstapienia, odstap, rozpocznijZakup, otworzPanel, zmienPakiet, mozeZmienicPakiet, powiazKonto, klientKonta,
+  walutaDla, zapiszWplate, KRAJE_UE, STAN,
 };
