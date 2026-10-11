@@ -108,9 +108,13 @@ async function testyDomyslne(sprawdz) {
       return (/<html lang="(\w+)"/.exec(h) || [])[1];
     };
     sprawdz('KOD8-26: przegladarka spoza PL/EN dostaje ekran po angielsku (jak aplikacja), polska i brak naglowka po polsku',
-      await jezyk('de-DE,de;q=0.9') === 'en' && await jezyk('de-DE,de;q=0.9,pl;q=0.8') === 'en' && await jezyk('uk') === 'en'
+      await jezyk('de-DE,de;q=0.9') === 'en' && await jezyk('uk') === 'en'
       && await jezyk('pl') === 'pl' && await jezyk('pl-PL,en;q=0.5') === 'pl' && await jezyk(null) === 'pl'
       && await jezyk('en-US,pl;q=0.9') === 'en');
+    // R9-W: pierwszy obslugiwany jezyk z listy przegladarki (jak navigator.languages w aplikacji), nie tylko pierwszy.
+    sprawdz('R9-W: jezyk ekranu to pierwszy z obslugiwanych (pl, en) na liscie przegladarki: "de, pl" po polsku, "de, en, pl" po angielsku',
+      await jezyk('de-DE,de;q=0.9,pl;q=0.8') === 'pl' && await jezyk('de-DE,de;q=0.9,en;q=0.8,pl;q=0.7') === 'en'
+      && await jezyk('fr;q=0.9,pl-PL;q=0.95') === 'pl' && await jezyk('de-AT,en-GB;q=0.8') === 'en');
 
     const haslo = await t.zadanie('/haslo');
     const hasloHtml = await tekst(haslo);

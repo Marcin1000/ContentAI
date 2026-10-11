@@ -50,6 +50,7 @@ const T = {
     wrocKonto: 'Wróć do konta',
     bladZgody: 'Zaznacz oba pola zgody, żeby przejść do płatności.',
     subskrypcjaIstnieje: 'Masz już subskrypcję pakietu {pakiet}. Pakiet zmienisz, kartę zaktualizujesz albo subskrypcję anulujesz w panelu subskrypcji.',
+    subskrypcjaIstniejeZmiana: 'Masz już subskrypcję pakietu {pakiet}. Na pakiet {cel} przejdziesz bez nowej subskrypcji. Kartę zaktualizujesz albo subskrypcję anulujesz w panelu subskrypcji.',
     subskrypcjaIstniejeTytul: 'Masz już subskrypcję',
     panel: 'Zarządzaj subskrypcją',
     panelOpis: 'Otworzy się panel Stripe. Zmienisz w nim pakiet albo kartę, pobierzesz potwierdzenia płatności i anulujesz subskrypcję.',
@@ -57,6 +58,12 @@ const T = {
     zakupNiedozwolony: 'Pakiet tego konta zmienia administrator.',
     sprzedazWstrzymana: 'Sprzedaż pakietów jest chwilowo wstrzymana. Zarządzanie subskrypcją działa.',
     planNiedostepny: 'Ten pakiet nie jest teraz dostępny w wybranej walucie.',
+    planWalutaKonta: 'Tego konta nie rozliczymy teraz w {waluta}: w Stripe jest jeszcze otwarte rozliczenie w {walutaKonta}. Wybierz {walutaKonta} albo napisz do nas.',
+    planWalutaKontaInna: 'Tego konta nie rozliczymy teraz w {waluta}: w Stripe jest jeszcze otwarte rozliczenie w innej walucie. Wybierz inną walutę albo napisz do nas.',
+    planTenSam: 'To jest Twój obecny pakiet.',
+    zmianaTytul: 'Zmiana pakietu',
+    zmianaAnulowana: 'Subskrypcja kończy się z końcem okresu, więc pakietu nie da się teraz zmienić. Najpierw wznów subskrypcję w panelu subskrypcji.',
+    zmianaZalegla: 'Ostatnia płatność się nie udała, więc pakietu nie da się teraz zmienić. Najpierw zaktualizuj kartę w panelu subskrypcji.',
     zaDuzoProb: 'Za dużo prób w krótkim czasie. Spróbuj ponownie za {min} min.',
     dostawcaNiedostepny: 'Operator płatności nie odpowiada. Nic nie pobraliśmy. Spróbuj za chwilę.',
     platnosciWylaczone: 'Płatności są wyłączone na tym serwerze.',
@@ -97,6 +104,11 @@ const T = {
     sekcjaOdstap: 'Odstąp od umowy tutaj',
     sekcjaOdstapOpis: 'Kupiłeś pakiet mniej niż 14 dni temu? Możesz odstąpić od umowy do {data}.',
     sekcjaRachunek: 'Rachunek wystawiamy na prośbę: napisz na {email} w ciągu 3 miesięcy od końca miesiąca płatności i podaj jej datę.',
+    zmianaPrzycisk: 'Przejdź na {pakiet} · {cena} miesięcznie',
+    zmianaOpis: 'Kwotę i datę zmiany zobaczysz na stronie Stripe, zanim ją potwierdzisz.',
+    sekcjaZmianaZaplanowana: 'Od {data} pakiet {pakiet}.',
+    sekcjaZmianaBezNazwy: 'Zmiana pakietu zaplanowana od {data}. Szczegóły są w panelu subskrypcji.',
+    sekcjaZmianaPrzyjeta: 'Zmiana pakietu zapisana. Jeśli nie widzisz jej niżej, odśwież stronę za chwilę.',
     cechy: {
       artykul: (n) => (n === null ? 'bez limitu artykułów' : `${n} ${odmiana(n, ['artykuł', 'artykuły', 'artykułów'])} miesięcznie`),
       grafika: (n) => (n === null ? 'bez limitu grafik' : `${n} ${odmiana(n, ['grafika', 'grafiki', 'grafik'])}`),
@@ -135,6 +147,7 @@ const T = {
     wrocKonto: 'Back to your account',
     bladZgody: 'Tick both consent boxes to continue to payment.',
     subskrypcjaIstnieje: 'You already have a {pakiet} subscription. Change the plan, update the card or cancel in the subscription portal.',
+    subskrypcjaIstniejeZmiana: 'You already have a {pakiet} subscription. You can switch to {cel} without a new subscription. Update the card or cancel in the subscription portal.',
     subskrypcjaIstniejeTytul: 'You already have a subscription',
     panel: 'Manage subscription',
     panelOpis: 'This opens the Stripe portal, where you can change your plan or card, download payment confirmations and cancel your subscription.',
@@ -142,6 +155,12 @@ const T = {
     zakupNiedozwolony: 'The plan of this account is managed by the administrator.',
     sprzedazWstrzymana: 'Plan sales are paused for now. Subscription management still works.',
     planNiedostepny: 'This plan is not available in the selected currency right now.',
+    planWalutaKonta: 'We cannot bill this account in {waluta} right now: Stripe still has an open billing item in {walutaKonta}. Choose {walutaKonta} or contact us.',
+    planWalutaKontaInna: 'We cannot bill this account in {waluta} right now: Stripe still has an open billing item in another currency. Choose another currency or contact us.',
+    planTenSam: 'This is your current plan.',
+    zmianaTytul: 'Plan change',
+    zmianaAnulowana: 'Your subscription ends at the end of the period, so the plan cannot be changed right now. Resume the subscription in the subscription portal first.',
+    zmianaZalegla: 'The last payment failed, so the plan cannot be changed right now. Update your card in the subscription portal first.',
     zaDuzoProb: 'Too many attempts in a short time. Try again in {min} min.',
     dostawcaNiedostepny: 'The payment provider is not responding. Nothing was charged. Please try again shortly.',
     platnosciWylaczone: 'Payments are disabled on this server.',
@@ -182,6 +201,11 @@ const T = {
     sekcjaOdstap: 'Withdraw from the contract here',
     sekcjaOdstapOpis: 'Bought the plan less than 14 days ago? You can withdraw from the contract until {data}.',
     sekcjaRachunek: 'We issue a receipt on request: write to {email} within 3 months of the end of the month of payment, giving its date.',
+    zmianaPrzycisk: 'Switch to {pakiet} · {cena} per month',
+    zmianaOpis: 'You will see the amount and the date of the change on the Stripe page before you confirm it.',
+    sekcjaZmianaZaplanowana: 'From {data}: {pakiet} plan.',
+    sekcjaZmianaBezNazwy: 'A plan change is scheduled from {data}. Details are in the subscription portal.',
+    sekcjaZmianaPrzyjeta: 'Plan change saved. If you do not see it below yet, refresh the page in a moment.',
     cechy: {
       artykul: (n) => (n === null ? 'unlimited articles' : `${n} ${n === 1 ? 'article' : 'articles'} per month`),
       grafika: (n) => (n === null ? 'unlimited images' : `${n} ${n === 1 ? 'image' : 'images'}`),
@@ -270,6 +294,8 @@ const STYL_PLATNOSCI = `<style>
 .inny{margin:0 0 18px;font-size:14px;color:var(--c-tekst-2)}
 .inny a{display:inline-flex;align-items:center;min-height:44px}
 .drobne.odstep{margin-top:16px}
+button.przycisk-2{background:transparent;color:var(--c-tekst);border:1px solid var(--c-linia-2);font-weight:500}
+button.przycisk-2:hover,button.przycisk-2:active{background:transparent;border-color:var(--c-ramka)}
 </style>`;
 
 /** Teksty szkieletu logowania z wlasna stopka ekranow platnosci. */
@@ -350,15 +376,15 @@ ${stopkaUslugodawcy(uslugodawca, jezyk)}`;
 }
 
 /**
- * Ekran komunikatu (odmowa, wynik). przyciski: [{ rodzaj: 'link'|'formularz', tekst, adres, pola }]
- * (formularz POST na wlasne pochodzenie, np. panel subskrypcji).
+ * Ekran komunikatu (odmowa, wynik). przyciski: [{ rodzaj: 'link'|'formularz', tekst, adres, pola, id, klasa }]
+ * (formularz POST na wlasne pochodzenie, np. panel subskrypcji; klasa 'przycisk-2' = przycisk drugorzedny).
  */
 function ekranKomunikatu({ jezyk = 'pl', tytul, opis = '', dodatkowe = [], przyciski = [], tryb = '', uslugodawca = {}, info = false, z = 'app' } = {}) {
   const t = teksty(jezyk);
   const guziki = przyciski.map((p) => {
     if (p.rodzaj === 'formularz') {
       const pola = Object.entries(p.pola || {}).map(([k, v]) => `<input type="hidden" name="${esc(k)}" value="${esc(v)}">`).join('');
-      return `      <form method="POST" action="${esc(p.adres)}">${pola}<button type="submit"${p.id ? ` id="${esc(p.id)}"` : ''}>${esc(p.tekst)}</button></form>\n`;
+      return `      <form method="POST" action="${esc(p.adres)}">${pola}<button type="submit"${p.id ? ` id="${esc(p.id)}"` : ''}${p.klasa ? ` class="${esc(p.klasa)}"` : ''}>${esc(p.tekst)}</button></form>\n`;
     }
     return `      <a class="wtorny" href="${esc(p.adres)}"${p.id ? ` id="${esc(p.id)}"` : ''}>${esc(p.tekst)}</a>\n`;
   }).join('');
@@ -403,13 +429,51 @@ ${stopkaUslugodawcy(uslugodawca, jezyk)}`;
   return logowanie.szkielet(tSzkieletu(jezyk), t.odstTytul, srodek, { przelacznik: false });
 }
 
+/** Zaplanowana zmiana pakietu (harmonogram u dostawcy) jako zdanie albo ''. */
+function tekstZmiany(zmiana, pakiety, jezyk) {
+  if (!zmiana || !zmiana.od) return '';
+  const t = teksty(jezyk);
+  const data = dataTekst(zmiana.od, jezyk);
+  return zmiana.plan && pakiety[zmiana.plan]
+    ? wstaw(t.sekcjaZmianaZaplanowana, { data, pakiet: nazwaPakietu(pakiety[zmiana.plan], jezyk) })
+    : wstaw(t.sekcjaZmianaBezNazwy, { data });
+}
+
+/**
+ * Pakiety, na ktore mozna przejsc z zywej subskrypcji: na sprzedaz, inne niz obecny i niz zaplanowany, z cena w walucie
+ * subskrypcji. Zaplanowana zmiana na nieznany pakiet: zadnego przycisku (szczegoly w panelu subskrypcji).
+ * stan = platnosci.stanDlaKonta(...). -> [{ plan, nazwa, kwota, waluta, wyzszy }]
+ */
+function pakietyDoZmiany(stan, pakiety, jezyk) {
+  const s = (stan && stan.subskrypcja) || {};
+  const p = (stan && stan.platnosci) || {};
+  if (!p.mozeZmienic || !s.waluta || (s.zmiana && !s.zmiana.plan)) return [];
+  const obecny = pakiety[s.plan] || {};
+  return (p.plany || []).filter((x) => x.plan !== s.plan && !(s.zmiana && s.zmiana.plan === x.plan) && x.ceny && x.ceny[s.waluta] != null)
+    .map((x) => ({ plan: x.plan, nazwa: nazwaPakietu(pakiety[x.plan] || x, jezyk), kwota: x.ceny[s.waluta], waluta: s.waluta,
+      wyzszy: ((pakiety[x.plan] || {}).kolejnosc || 0) > (obecny.kolejnosc || 0) }));
+}
+
+/**
+ * Formularze "Przejdz na pakiet ..." (POST /konto/zmiana) dla ekranow serwera. Przycisk glowny tylko dla wyzszego
+ * pakietu i tylko gdy drugie = false (sekcja konta: wszystkie drugie, glownym zostaje panel subskrypcji).
+ */
+function formularzeZmiany(lista, jezyk, z, { drugie = false } = {}) {
+  const t = teksty(jezyk);
+  return lista.map((x) => `      <form method="POST" action="/konto/zmiana"><input type="hidden" name="plan" value="${esc(x.plan)}">`
+    + `<input type="hidden" name="z" value="${z === 'konto' ? 'konto' : 'app'}"><input type="hidden" name="jezyk" value="${jezyk === 'en' ? 'en' : 'pl'}">`
+    + `<button type="submit" id="zmiana-${esc(x.plan)}"${drugie || !x.wyzszy ? ' class="przycisk-2"' : ''}>`
+    + `${esc(wstaw(t.zmianaPrzycisk, { pakiet: x.nazwa, cena: kwotaTekst(x.kwota, x.waluta, jezyk) }))}</button></form>`);
+}
+
 /**
  * Sekcja "Pakiet i platnosci" ekranu /konto (A1). stan = platnosci.stanDlaKonta(konto, kontekst),
- * pakiety domyslnie z plany.js. Formularz panelu (POST /konto/panel -> 303 do Stripe) wymaga na tej
- * stronie CSP z hostami dostawcy: konta.js wola platnosci.cspEkranu(res, kontekst) przed wyslaniem
- * ekranu (przegladarka stosuje form-action strony z formularzem takze do przekierowania).
+ * pakiety domyslnie z plany.js. Formularze panelu (POST /konto/panel) i zmiany pakietu (POST /konto/zmiana)
+ * przekierowuja 303 do Stripe, wiec ta strona potrzebuje CSP z hostami dostawcy: konta.js wola
+ * platnosci.cspEkranu(res, kontekst) przed wyslaniem ekranu (przegladarka stosuje form-action strony z
+ * formularzem takze do przekierowania). kontekst.url z ?platnosc=zmiana: potwierdzenie po powrocie ze Stripe.
  */
-function sekcjaKonta({ jezyk = 'pl', stan, pakiety = null } = {}) {
+function sekcjaKonta({ jezyk = 'pl', stan, pakiety = null, kontekst = null } = {}) {
   const t = teksty(jezyk);
   if (!stan || !stan.platnosci || !stan.platnosci.wlaczone) return '';
   if (!pakiety) pakiety = require('./plany.js').PLANY;
@@ -426,9 +490,19 @@ function sekcjaKonta({ jezyk = 'pl', stan, pakiety = null } = {}) {
     case 'wygasla': opis = wstaw(t.sekcjaWygasla, { pakiet: nazwa }); break;
     default: opis = t.sekcjaBrak;
   }
+  const zmiana = tekstZmiany(s.zmiana, pakiety, jezyk);
+  if (zmiana) opis += ` ${zmiana}`;
+  let powrot = null;
+  try { powrot = kontekst && kontekst.url ? kontekst.url.searchParams.get('platnosc') : null; } catch { powrot = null; }
   const czesci = [`    <section class="platnosci" id="platnosci" aria-labelledby="platnosci-tytul">`, `      <h2 id="platnosci-tytul">${esc(t.sekcjaTytul)}</h2>`];
   if (p.tryb === 'test') czesci.push(`      <p class="pasek-testowy" role="status">${akapit(t.trybTestowy)}</p>`);
+  if (powrot === 'zmiana') czesci.push(`      <p class="komunikat info" id="platnosci-zmiana" role="status">${logowanie.IKONA_INFO}<span>${esc(t.sekcjaZmianaPrzyjeta)}</span></p>`);
   czesci.push(`      <p id="platnosci-stan">${akapit(opis)}</p>`);
+  const doZmiany = pakietyDoZmiany(stan, pakiety, jezyk);
+  if (doZmiany.length) {
+    czesci.push(...formularzeZmiany(doZmiany, jezyk, 'konto', { drugie: true }));
+    czesci.push(`      <p class="drobne">${akapit(t.zmianaOpis)}</p>`);
+  }
   if (p.maPanel) {
     czesci.push(`      <form method="POST" action="/konto/panel"><input type="hidden" name="z" value="konto"><button type="submit" id="panel-subskrypcji">${esc(t.panel)}</button></form>`);
     czesci.push(`      <p class="drobne">${akapit(t.panelOpis)}</p>`);
@@ -457,4 +531,5 @@ function cspPlatnosci(cspBazowa, hosty) {
 module.exports = {
   T, teksty, wstaw, kwotaTekst, dataTekst, cechyPakietu, nazwaPakietu, odmiana, opisZwrotu,
   ekranZakupu, ekranKomunikatu, ekranOdstapienia, sekcjaKonta, cspPlatnosci, hostDozwolony,
+  tekstZmiany, pakietyDoZmiany, formularzeZmiany,
 };

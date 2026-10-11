@@ -56,7 +56,30 @@
   try { jasnySystem = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches); } catch (e) {}
   var ciemny = pref === null ? !jasnySystem : pref === '1';
   d.setAttribute('data-theme', ciemny ? 'dark' : 'light');
-  var jezyk = czytaj('cai_lang') || ((navigator.language || 'pl').toLowerCase().indexOf('pl') === 0 ? 'pl' : 'en');
+  // R9-W: jezyk zapamietany (wybor w aplikacji), potem jawny wybor z adresu (?lang= po zakupie albo rejestracji na
+  // angielskiej stronie przy polskiej przegladarce: zapamietany, ale nie nadpisuje wyboru z aplikacji), potem pierwszy
+  // obslugiwany (pl, en) z jezykow przegladarki (navigator.languages, z ustawien systemu): "de, pl" -> pl, "de" -> en.
+  function jezykPrzegladarki() {
+    var lista = [];
+    try { lista = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'pl']; } catch (e) { lista = ['pl']; }
+    for (var i = 0; i < lista.length; i++) {
+      var t = String(lista[i] || '').toLowerCase().split('-')[0];
+      if (t === 'pl' || t === 'en') return t;
+    }
+    return lista.length ? 'en' : 'pl';
+  }
+  window.caiJezykPrzegladarki = jezykPrzegladarki;
+  var zAdresu = '', zapamietany = czytaj('cai_lang');
+  try { var mj = /[?&]lang=(pl|en)(?:&|$)/.exec(location.search); zAdresu = mj ? mj[1] : ''; } catch (e) {}
+  if (zAdresu) {
+    if (!zapamietany) { try { if (ls) ls.setItem('cai_lang', zAdresu); } catch (e) {} }
+    try {
+      var bezLang = new URLSearchParams(location.search);
+      bezLang.delete('lang');
+      window.history.replaceState(window.history.state, '', location.pathname + (bezLang.toString() ? '?' + bezLang.toString() : '') + location.hash);
+    } catch (e) {}
+  }
+  var jezyk = zapamietany || zAdresu || jezykPrzegladarki();
   d.lang = jezyk;
   d.className += ' bez-anim jezyk-' + jezyk + (jezyk !== 'pl' ? ' i18n-czeka' : '');
   var mobilny = false;
@@ -3259,6 +3282,10 @@ body.karta-konta #gen-btn { display: none; }
 .zakup-test { margin: 0 0 var(--s-12); border: 1px solid var(--c-linia); border-radius: var(--r-md); }
 .zakup-stan { display: flex; flex-direction: column; gap: var(--s-8); align-items: flex-start; }
 .zakup-stan p { margin: 0; }
+/* R9-W: zmiana pakietu zywej subskrypcji pod stanem subskrypcji; karta obecnego i zaplanowanego pakietu bez wyboru */
+.zmiana-pakietu { margin-top: var(--s-16); padding-top: var(--s-16); border-top: 1px solid var(--c-linia); }
+.zakup-karta[aria-disabled="true"] { cursor: default; background: transparent; }
+.zakup-karta[aria-disabled="true"]:hover { border-color: var(--c-ramka); }
 /* ekran Konto (A7) */
 .modal.konto-okno { width: 640px; }
 .konto-tresc { display: flex; flex-direction: column; gap: var(--s-16); }
@@ -5177,7 +5204,9 @@ function czytajJson(klucz, domyslnie) {
   try { var v = magazyn.getItem(klucz); return v ? JSON.parse(v) : domyslnie; }
   catch (e) { console.warn('[magazyn] uszkodzony ' + klucz); return domyslnie; }
 }
-var currentLang = magazyn.getItem('cai_lang') || ((navigator.language||'pl').toLowerCase().indexOf('pl')===0 ? 'pl' : 'en');
+// Jezyk z wyboru (zapamietany albo ?lang= w adresie), inaczej z jezykow przegladarki: ten sam wynik co skrypt startowy (R9-W).
+var currentLang = magazyn.getItem('cai_lang') || (window.CAI_START && window.CAI_START.jezyk)
+  || (typeof window.caiJezykPrzegladarki === 'function' ? window.caiJezykPrzegladarki() : ((navigator.language||'pl').toLowerCase().indexOf('pl')===0 ? 'pl' : 'en'));
 
 var I18N = {
   pl: {
@@ -5733,11 +5762,22 @@ var I18N = {
     'zakup-zgoda-2':'Żądam rozpoczęcia świadczenia usługi przed upływem 14 dni na odstąpienie od umowy. Wiem, że jeśli odstąpię od umowy, zapłacę za okres, w którym pakiet był dostępny.',
     'zakup-zgoda-2-pelny':'Żądam rozpoczęcia świadczenia usługi przed upływem 14 dni na odstąpienie od umowy. Wiem, że mogę odstąpić od umowy w ciągu 14 dni i otrzymać zwrot całej kwoty.',
     'zakup-przejdz':'Przejdź do płatności · {CENA}','zakup-stopka':'Cena dotyczy narzędzia: za pracę modelu płacisz dostawcy na swoim kluczu. Potwierdzenie płatności wysyła Stripe. Rachunek wystawimy na prośbę: {EMAIL}.',
-    'zakup-wstrzymany':'Sprzedaż pakietów jest chwilowo wstrzymana. Spróbuj później albo napisz do nas.','zakup-bl-istnieje':'To konto ma już aktywną subskrypcję. Pakiet zmienisz w panelu Stripe: Zarządzaj subskrypcją.',
+    'zakup-wstrzymany':'Sprzedaż pakietów jest chwilowo wstrzymana. Spróbuj później albo napisz do nas.','zakup-bl-istnieje':'To konto ma już aktywną subskrypcję. Pakiet zmienisz w tym oknie albo w panelu Stripe.',
     'zakup-bl-niedozwolony':'Pakiet tego konta zmienia administrator zespołu.','zakup-bl-plan':'Ten pakiet nie jest dostępny w wybranej walucie. Wybierz inną walutę.',
     'zakup-bl-stripe':'Stripe chwilowo nie odpowiada. Spróbuj ponownie za chwilę.','zakup-bl-za-duzo':'Za dużo prób w krótkim czasie. Spróbuj ponownie za {min} min.',
     'zakup-bl-wylaczone':'Płatności są wyłączone na tym serwerze.','zakup-bl-inny':'Nie udało się przejść do płatności. Spróbuj ponownie za chwilę.','zakup-bl-brak-subskrypcji':'To konto nie ma jeszcze subskrypcji. Wybierz pakiet w oknie pakietu.',
-    'zakup-bl-zgoda':'Zaznacz oba pola zgody, żeby przejść do płatności.','zakup-waluta-wymuszona':'Płacisz w {WALUTA}, tak jak przy poprzedniej subskrypcji tego konta.',
+    'zakup-bl-zgoda':'Zaznacz oba pola zgody, żeby przejść do płatności.','zakup-waluta-wymuszona':'Płacisz w {WALUTA}, w walucie Twojej subskrypcji.',
+    'zakup-bl-waluta-konta':'Tego konta nie rozliczymy teraz w {WALUTA}: w Stripe jest jeszcze otwarte rozliczenie w {WALUTA_KONTA}. Wybierz {WALUTA_KONTA} albo napisz do nas.',
+    'zakup-bl-waluta-konta-inna':'Tego konta nie rozliczymy teraz w {WALUTA}: w Stripe jest jeszcze otwarte rozliczenie w innej walucie. Wybierz inną walutę albo napisz do nas.',
+    'zmiana-tytul':'Zmień pakiet','zmiana-obecny':'obecny','zmiana-od':'od {DATA}',
+    'zmiana-opis':'Pakiet {PAKIET}: {CENA} miesięcznie. Kwotę i datę zmiany zobaczysz na stronie Stripe, zanim ją potwierdzisz.','zmiana-przejdz':'Przejdź na {PAKIET} · {CENA}',
+    'zmiana-zaplanowana':'Od {DATA} pakiet {PAKIET}.','zmiana-zaplanowana-bez-nazwy':'Zmiana pakietu zaplanowana od {DATA}.','zmiana-zaplanowana-opis':'Szczegóły zmiany są w panelu Stripe: Zarządzaj subskrypcją.',
+    'zmiana-bl-ten-sam':'To jest Twój obecny pakiet.','zmiana-bl-niedostepna':'Pakietu nie da się teraz zmienić: subskrypcja jest anulowana albo ostatnia płatność się nie udała. Otwórz panel Stripe: Zarządzaj subskrypcją.',
+    'zmiana-bl-brak':'To konto nie ma aktywnej subskrypcji. Wybierz pakiet w tym oknie.','zmiana-bl-inny':'Nie udało się otworzyć zmiany pakietu. Spróbuj ponownie za chwilę.',
+    'zmiana-ok-tytul':'Pakiet zmieniony','zmiana-ok-tekst':'Masz teraz pakiet {PAKIET}. Następne odnowienie: {DATA}.',
+    'zmiana-plan-tytul':'Zmiana zaplanowana','zmiana-plan-tekst':'Pakiet {PAKIET} zacznie działać {DATA}. Do tego czasu masz pakiet {OBECNY}.',
+    'zmiana-czeka-tytul':'Zmiana pakietu','zmiana-czeka':'Czekamy na potwierdzenie zmiany od Stripe. To zwykle kilka sekund; okno odświeży się samo.',
+    'zmiana-opoznienie':'Stripe jeszcze nie potwierdził zmiany. Pakiet zmieni się sam, gdy potwierdzenie dotrze. Jeśli to potrwa dłużej, napisz do nas: {EMAIL}.',
     'start-menu-title':'Konfiguracja konta','start-menu-sub':'klucze API i pierwsze kroki',
     'start-dalej':'Dalej','start-wstecz':'Wstecz','start-pomin':'Pomiń kreator',
     'start-krok-z':'Krok {n} z {m}',
@@ -6602,11 +6642,22 @@ var I18N = {
     'zakup-zgoda-1c':'.','zakup-zgoda-2':'I request that the service begins before the 14-day withdrawal period ends. I understand that if I withdraw, I will pay for the period in which the plan was available.',
     'zakup-zgoda-2-pelny':'I request that the service begins before the 14-day withdrawal period ends. I understand that I can withdraw within 14 days and receive a full refund.',
     'zakup-przejdz':'Continue to payment · {CENA}','zakup-stopka':'The price covers the tool: you pay the provider for model usage on your own key. Stripe sends the payment confirmation. We issue a receipt on request: {EMAIL}.',
-    'zakup-wstrzymany':'Plan sales are paused for now. Try again later or write to us.','zakup-bl-istnieje':'This account already has an active subscription. You can change the plan in the Stripe portal: Manage subscription.',
+    'zakup-wstrzymany':'Plan sales are paused for now. Try again later or write to us.','zakup-bl-istnieje':'This account already has an active subscription. You can change the plan in this window or in the Stripe portal.',
     'zakup-bl-niedozwolony':'The plan of this account is changed by your team administrator.','zakup-bl-plan':'This plan is not available in the selected currency. Choose another currency.',
     'zakup-bl-stripe':'Stripe is not responding right now. Try again in a moment.','zakup-bl-za-duzo':'Too many attempts in a short time. Try again in {min} min.',
     'zakup-bl-wylaczone':'Payments are turned off on this server.','zakup-bl-inny':'Could not continue to payment. Try again in a moment.','zakup-bl-brak-subskrypcji':'This account has no subscription yet. Choose a plan in the plan window.',
-    'zakup-bl-zgoda':'Tick both consent boxes to continue to payment.','zakup-waluta-wymuszona':'You pay in {WALUTA}, as with this account\'s previous subscription.',
+    'zakup-bl-zgoda':'Tick both consent boxes to continue to payment.','zakup-waluta-wymuszona':'You pay in {WALUTA}, the currency of your subscription.',
+    'zakup-bl-waluta-konta':'We cannot bill this account in {WALUTA} right now: Stripe still has an open billing item in {WALUTA_KONTA}. Choose {WALUTA_KONTA} or contact us.',
+    'zakup-bl-waluta-konta-inna':'We cannot bill this account in {WALUTA} right now: Stripe still has an open billing item in another currency. Choose another currency or contact us.',
+    'zmiana-tytul':'Change plan','zmiana-obecny':'current','zmiana-od':'from {DATA}',
+    'zmiana-opis':'{PAKIET} plan: {CENA} per month. You will see the amount and the date of the change on the Stripe page before you confirm it.','zmiana-przejdz':'Switch to {PAKIET} · {CENA}',
+    'zmiana-zaplanowana':'From {DATA}: {PAKIET} plan.','zmiana-zaplanowana-bez-nazwy':'A plan change is scheduled from {DATA}.','zmiana-zaplanowana-opis':'The details of the change are in the Stripe portal: Manage subscription.',
+    'zmiana-bl-ten-sam':'This is your current plan.','zmiana-bl-niedostepna':'The plan cannot be changed right now: the subscription is cancelled or the last payment failed. Open the Stripe portal: Manage subscription.',
+    'zmiana-bl-brak':'This account has no active subscription. Choose a plan in this window.','zmiana-bl-inny':'Could not open the plan change. Try again in a moment.',
+    'zmiana-ok-tytul':'Plan changed','zmiana-ok-tekst':'You are now on the {PAKIET} plan. Next renewal: {DATA}.',
+    'zmiana-plan-tytul':'Change scheduled','zmiana-plan-tekst':'The {PAKIET} plan starts on {DATA}. Until then you keep the {OBECNY} plan.',
+    'zmiana-czeka-tytul':'Plan change','zmiana-czeka':'We are waiting for Stripe to confirm the change. This usually takes a few seconds; this window will refresh on its own.',
+    'zmiana-opoznienie':'Stripe has not confirmed the change yet. Your plan will change on its own when the confirmation arrives. If it takes longer, write to us: {EMAIL}.',
     'start-menu-title':'Account setup','start-menu-sub':'API keys and first steps',
     'start-dalej':'Next','start-wstecz':'Back','start-pomin':'Skip setup',
     'start-krok-z':'Step {n} of {m}',
@@ -21009,8 +21060,11 @@ async function kbAudioTranscribeAndOpen(file) {
       return;
     }
     el('pakiet-nazwa').textContent = poJezyku('nazwa');
-    el('pakiet-opis').textContent = poJezyku('opis') + ' '
-      + tekst(stan.okres === 'miesiac' ? 'pakiet-okres-miesiac' : 'pakiet-okres-zawsze', '');
+    // Zdanie o odnawianiu licznikow tylko przy liczniku z limitem: Premium (wszystko bez limitu) mowilo
+    // "Liczniki odnawiają się pierwszego dnia miesiąca", choc w oknie nie ma zadnego licznika (R9-W).
+    var zLimitem = PULE.concat(['wywolanie']).some(function(n){ var poz = stan.uzycie && stan.uzycie[n]; return poz && poz.limit !== null && poz.limit > 0; });
+    el('pakiet-opis').textContent = poJezyku('opis')
+      + (zLimitem ? ' ' + tekst(stan.okres === 'miesiac' ? 'pakiet-okres-miesiac' : 'pakiet-okres-zawsze', '') : '');
 
     var html = PULE.map(function(n){
       var poz = stan.uzycie && stan.uzycie[n];
@@ -21075,10 +21129,11 @@ async function kbAudioTranscribeAndOpen(file) {
     el('pakiet-modal').style.display = 'flex';
     rysujTresc();
     var swiezy = odswiez();
-    // R9-D (UX8-20): "Wybierz pakiet" prowadzi od razu do kart pakietow (klik 1 z 2). Swiezy stan
-    // przerysowuje okno, wiec sekcje szukamy po kazdym rysowaniu.
-    if (cel === 'zakup') {
-      var przewin = function(){ var z = el('zakup'); if (!z) return; try { z.scrollIntoView({ block: 'start' }); var k = z.querySelector('.zakup-karta[aria-checked="true"]'); if (k) k.focus({ preventScroll: true }); } catch(e){} };
+    // R9-D (UX8-20): "Wybierz pakiet" prowadzi od razu do kart pakietow (klik 1 z 2), a "Zmien pakiet" z Konta
+    // (R9-W) do kart zmiany. Swiezy stan przerysowuje okno, wiec sekcje szukamy po kazdym rysowaniu.
+    if (cel === 'zakup' || cel === 'zmiana') {
+      var idSekcji = cel === 'zmiana' ? 'zmiana-pakietu' : 'zakup';
+      var przewin = function(){ var z = el(idSekcji); if (!z) return; try { z.scrollIntoView({ block: 'start' }); var k = z.querySelector('.zakup-karta[aria-checked="true"]'); if (k) k.focus({ preventScroll: true }); } catch(e){} };
       setTimeout(przewin, 60);
       if (swiezy && swiezy.then) swiezy.then(function(){ setTimeout(przewin, 0); });
     }
@@ -21567,9 +21622,14 @@ async function kbAudioTranscribeAndOpen(file) {
       // takze wtedy, gdy serwer o nim nie odpowie.
       var pokaz = function(){
         // R9-D (KOD8-24): nie nad zaczetym tematem, nie nad innym oknem i nie po "Pomin" w miedzyczasie.
+        // Okna .okno-tlo (Pakiet, Klucze API, Bazy, Frazy SEO) otwiera style.display, nie klasa .open: kreator po
+        // spoznionej odpowiedzi /api/pakiet wchodzil nad okno pakietu otwarte w miedzyczasie i zaslanial zgody (R9-W).
         var t = el('topic'), juz = null;
         try { juz = magazyn.getItem(PAMIEC); } catch(e){ juz = '1'; }
-        if ((juz && !(bezKlucza && !pozniej)) || (t && t.value.trim()) || document.querySelector('.overlay.open')) return;
+        var inneOkno = document.querySelector('.overlay.open') || [].some.call(document.querySelectorAll('.okno-tlo'), function(o){
+          return o.id !== 'start-modal' && o.style.display === 'flex';
+        });
+        if ((juz && !(bezKlucza && !pozniej)) || (t && t.value.trim()) || inneOkno) return;
         el('start-modal').style.display = 'flex'; rysuj();
       };
       if (typeof window.odswiezPakiet === 'function'){
@@ -21973,10 +22033,11 @@ async function kbAudioTranscribeAndOpen(file) {
     if (!a || a.limit === null || !(a.limit > 0)) return null;
     return { limit: a.limit, zostalo: Math.max(0, a.limit - a.zuzyte), okres: p.okres };
   }
+  // Liczniki miesieczne wracaja 1. dnia miesiaca (serwer liczy okres 'RRRR-MM' w UTC, plany.okresTeraz), niezaleznie
+  // od dnia odnowienia subskrypcji: Konto mowilo "licznik wraca 11 listopada" (data odnowienia), a liczniki zerowaly sie 1.
   function dataOdnowienia(){
-    var s = stan(), sub = s && s.subskrypcja;
-    if (sub && sub.okresDo && ZYWE.indexOf(sub.stan) >= 0) return data(sub.okresDo, true);
-    var t = new Date(); return data(new Date(t.getFullYear(), t.getMonth() + 1, 1).getTime(), true);
+    var t = new Date();
+    return data(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() + 1, 1), true);
   }
   window.dataOdnowieniaPakietu = dataOdnowienia;
   function mozeKupic(){ var pl = stan() && stan().platnosci; return !!(pl && pl.wlaczone && pl.mozeKupic && pl.sprzedaz !== false); }
@@ -22032,16 +22093,27 @@ async function kbAudioTranscribeAndOpen(file) {
 
   // ── Zakup w oknie pakietu (UX8-20, prawo pkt 3) ────────────────────────────
   var wybranyPlan = null, wybranaWaluta = null;
-  // Kontrakt B: waluta bez kwoty w plany[].ceny to pozycja wstrzymana (ukryta); klient, ktory juz placil,
-  // placi tylko w swojej walucie (walutaWymuszona, Stripe nie laczy walut u klienta).
+  // Kontrakt B: waluta bez kwoty w plany[].ceny to pozycja wstrzymana (ukryta); przy zywej subskrypcji tylko jej
+  // waluta (walutaWymuszona, Stripe nie laczy walut u klienta z zywa subskrypcja). Po koncu subskrypcji wybor od nowa.
   function walutyZakupu(pl){
     var w = (pl.waluty || []).map(function(x){ return String(x).toLowerCase(); })
       .filter(function(x){ return (pl.plany || []).some(function(p){ return p.ceny && p.ceny[x] != null; }); });
     var wym = pl.walutaWymuszona ? String(pl.walutaWymuszona).toLowerCase() : '';
     return wym ? w.filter(function(x){ return x === wym; }) : w;
   }
+  // R9-W (prosba Marcina): waluta wedlug miejsca, z ktorego klient sie laczy. Miejsce zna strefa czasowa urzadzenia:
+  // Europe/Warsaw = Polska (walutaWPolsce, PLN), inna strefa = walutaPozaPolska (EUR). Strefa nie wychodzi z
+  // przegladarki i nie zmienia sie przez VPN. Bez strefy (UTC, Etc/*: serwery, tryby prywatnosci) waluta wedlug jezyka.
+  function walutaZMiejsca(pl){
+    var strefa = '';
+    try { strefa = String(Intl.DateTimeFormat().resolvedOptions().timeZone || ''); } catch(e){}
+    if (!strefa || /^(UTC|GMT|Etc\/|Universal$|Zulu$)/i.test(strefa)) return '';
+    return String((strefa === 'Europe/Warsaw' ? pl.walutaWPolsce || 'pln' : pl.walutaPozaPolska || 'eur')).toLowerCase();
+  }
   function walutaStartowa(pl){
     var w = walutyZakupu(pl);
+    var m = walutaZMiejsca(pl);
+    if (m && w.indexOf(m) >= 0) return m;
     if (jezyk() === 'pl' && w.indexOf('pln') >= 0) return 'pln';
     if (w.indexOf('eur') >= 0) return 'eur';
     var d = String(pl.walutaDomyslna || '').toLowerCase();
@@ -22065,6 +22137,73 @@ async function kbAudioTranscribeAndOpen(file) {
     return '';
   }
   function cenaPlanu(p, w){ return p && p.ceny && p.ceny[w] != null ? kwota(p.ceny[w], w) : ''; }
+  function nazwaZPlanu(p){ return p ? (jezyk() === 'en' && p.nazwaEn ? p.nazwaEn : p.nazwa) : ''; }
+
+  // ── Zmiana pakietu zywej subskrypcji (R9-W): karty w walucie subskrypcji, przycisk prowadzi na ekran potwierdzenia
+  // u Stripe (POST /api/platnosci/zmiana -> panel z flow_data). Obecny i zaplanowany pakiet bez wyboru. ──
+  var wybranyPlanZmiany = null;
+  function walutaSubskrypcji(pl, sub){ return String(sub.waluta || pl.walutaWymuszona || '').toLowerCase(); }
+  function planyDoZmiany(pl, sub){
+    var w = walutaSubskrypcji(pl, sub);
+    if (!pl.mozeZmienic || !w || (sub.zmiana && !sub.zmiana.plan)) return [];
+    return (pl.plany || []).filter(function(p){ return p.plan !== sub.plan && !(sub.zmiana && sub.zmiana.plan === p.plan) && p.ceny && p.ceny[w] != null; });
+  }
+  window.planyDoZmianyPakietu = function(){ var s = stan(); return s ? planyDoZmiany(s.platnosci || {}, s.subskrypcja || {}) : []; };
+  // Zaplanowana zmiana (obnizka na koniec okresu w Stripe) jako zdanie albo ''.
+  function tekstZmianyPakietu(sub){
+    var z = sub && sub.zmiana;
+    if (!z || !z.od) return '';
+    return z.plan ? tekst('zmiana-zaplanowana', '').replace('{DATA}', data(z.od)).replace('{PAKIET}', nazwaPlanu(z.plan))
+      : tekst('zmiana-zaplanowana-bez-nazwy', '').replace('{DATA}', data(z.od)) + ' ' + tekst('zmiana-zaplanowana-opis', '');
+  }
+  function htmlZmianyPakietu(pl, sub){
+    var w = walutaSubskrypcji(pl, sub), cele = planyDoZmiany(pl, sub);
+    if (!cele.length) return '';
+    if (!wybranyPlanZmiany || !cele.some(function(p){ return p.plan === wybranyPlanZmiany; })) wybranyPlanZmiany = cele[0].plan;
+    var cel = cele.filter(function(p){ return p.plan === wybranyPlanZmiany; })[0];
+    var karty = (pl.plany || []).filter(function(p){ return p.ceny && p.ceny[w] != null; }).map(function(p){
+      var obecny = p.plan === sub.plan, zaplanowany = !!(sub.zmiana && sub.zmiana.plan === p.plan), mozna = !obecny && !zaplanowany;
+      var znak = obecny ? tekst('zmiana-obecny', '') : (zaplanowany ? tekst('zmiana-od', '').replace('{DATA}', data(sub.zmiana.od, true)) : '');
+      return '<button type="button" class="zakup-karta" role="radio" data-plan="' + esc(p.plan) + '" aria-checked="' + (mozna && p.plan === wybranyPlanZmiany) + '"'
+        + (mozna ? ' onclick="wybierzPlanZmiany(\'' + esc(p.plan) + '\')"' : ' aria-disabled="true" tabindex="-1"') + '>'
+        + '<span class="zakup-karta-nazwa">' + esc(nazwaZPlanu(p)) + (znak ? ' <span class="znacznik-pakietu">' + esc(znak) + '</span>' : '') + '</span>'
+        + '<span class="zakup-karta-cena">' + esc(tekst('zakup-cena-miesiac', '').replace('{CENA}', cenaPlanu(p, w))) + '</span></button>';
+    }).join('');
+    return '<div class="zakup zmiana-pakietu" id="zmiana-pakietu">'
+      + '<div class="zakup-naglowek"><b id="zmiana-tytul">' + esc(tekst('zmiana-tytul', '')) + '</b></div>'
+      + '<div class="zakup-karty" role="radiogroup" aria-labelledby="zmiana-tytul">' + karty + '</div>'
+      + '<p class="tekst-pomoc"><a class="link-akcent" href="' + CENNIK[jezyk()] + '" target="_blank" rel="noopener">' + esc(tekst('pakiet-cennik', '')) + '</a></p>'
+      + '<p class="tekst-pomoc" id="zmiana-opis">' + esc(tekst('zmiana-opis', '').replace('{PAKIET}', nazwaZPlanu(cel)).replace('{CENA}', cenaPlanu(cel, w))) + '</p>'
+      + '<div class="zakup-akcje"><button type="button" class="btn-generate zakup-przycisk" id="zmiana-przycisk" onclick="przejdzDoZmianyPakietu()">'
+      + esc(tekst('zmiana-przejdz', '').replace('{PAKIET}', nazwaZPlanu(cel)).replace('{CENA}', cenaPlanu(cel, w))) + '</button></div>'
+      + '<p class="tekst-pomoc stan-blad" id="zmiana-blad" role="alert" hidden></p>'
+      + '</div>';
+  }
+  window.wybierzPlanZmiany = function(plan){
+    wybranyPlanZmiany = plan;
+    window.rysujZakupWPakiecie(el('pakiet-zakup'));
+    var b = document.querySelector('#zmiana-pakietu .zakup-karta[aria-checked="true"]'); if (b) b.focus();
+  };
+  function bladZmiany(kod, d){
+    var cel = el('zmiana-blad');
+    var k = { 'plan-niedostepny': d && d.powod === 'ten-sam' ? 'zmiana-bl-ten-sam' : 'zakup-bl-plan', 'zmiana-niedostepna': 'zmiana-bl-niedostepna',
+      'brak-subskrypcji': 'zmiana-bl-brak', 'dostawca-platnosci-niedostepny': 'zakup-bl-stripe', 'za-duzo-prob': 'zakup-bl-za-duzo',
+      'zakup-niedozwolony': 'zakup-bl-niedozwolony', 'sprzedaz-wstrzymana': 'zakup-wstrzymany', 'platnosci-wylaczone': 'zakup-bl-wylaczone', siec: 'err-siec' }[kod] || 'zmiana-bl-inny';
+    var t = tekst(k, '').replace('{min}', String(Math.max(1, Math.ceil(((d && d.ponowZa) || 60) / 60))));
+    if (cel) { cel.textContent = t; cel.hidden = false; } else powiadomBlad(t);
+    // Stan u nas byl nieaktualny (serwer zsynchronizowal go ze Stripe): okno pokaze swiezy.
+    if (kod === 'brak-subskrypcji' || kod === 'zmiana-niedostepna' || (kod === 'plan-niedostepny' && d && d.powod === 'ten-sam')) odswiezStanKonta();
+  }
+  window.przejdzDoZmianyPakietu = function(){
+    var b = el('zmiana-przycisk');
+    if (b) { b.disabled = true; b.classList.add('btn-working'); }
+    var koniec = function(){ if (b) { b.disabled = false; b.classList.remove('btn-working'); } };
+    postJson('/api/platnosci/zmiana', { plan: wybranyPlanZmiany, jezyk: jezyk(), z: 'app' }).then(function(w){
+      if (w.o.ok && w.d.url) { location.assign(w.d.url); return; }
+      koniec(); bladZmiany(kodOdpowiedzi(w.o, w.d), w.d);
+    }).catch(function(){ koniec(); bladZmiany('siec'); });
+  };
+
   window.rysujZakupWPakiecie = function(cel){
     if (!cel) return;
     var s = stan();
@@ -22072,9 +22211,11 @@ async function kbAudioTranscribeAndOpen(file) {
     var pl = s.platnosci || {}, sub = s.subskrypcja || { stan: 'brak' }, h = '';
     if (pl.wlaczone && pl.tryb === 'test') h += '<p class="konto-pasek konto-pasek-info zakup-test">' + ikona('info') + '<span>' + esc(tekst('pasek-test', '')) + '</span></p>';
     if (ZYWE.indexOf(sub.stan) >= 0) {
+      var zaplanowana = tekstZmianyPakietu(sub);
       h += '<div class="zakup-stan"><p class="tekst-zwykly">' + esc(opisSubskrypcji(sub)) + '</p>'
+        + (zaplanowana ? '<p class="tekst-zwykly" id="zmiana-zaplanowana">' + esc(zaplanowana) + '</p>' : '')
         + (pl.maPanel ? '<button type="button" class="btn-secondary" id="zakup-panel" onclick="otworzPanelPlatnosci()">' + esc(tekst(sub.stan === 'anulowana' ? 'sub-wznow' : 'plat-ustawienia-portal', '')) + '</button><p class="tekst-pomoc">' + esc(tekst('plat-ustawienia-portal-opis', '')) + '</p>' : '')
-        + '</div>';
+        + '</div>' + htmlZmianyPakietu(pl, sub);
     } else if (pl.wlaczone && pl.sprzedaz === false) {
       h += '<p class="tekst-zwykly">' + esc(tekst('zakup-wstrzymany', '')) + '</p>';
     } else if (mozeKupic() && pl.plany && pl.plany.length && walutyZakupu(pl).length) {
@@ -22130,6 +22271,11 @@ async function kbAudioTranscribeAndOpen(file) {
     if (kod === 'zgoda-wymagana' && d && d.wersja) k = 'err-zgoda-wymagana';
     // ponowZa w sekundach (limit sesji zakupu liczony w godzinie): w komunikacie minuty, jak na ekranie B.
     var t = tekst(k, '').replace('{min}', String(Math.max(1, Math.ceil(((d && d.ponowZa) || 60) / 60))));
+    // R9-W: Stripe trzyma jeszcze inna walute konta (np. pozycja do rozliczenia): komunikat mowi, ktora wybrac.
+    if (kod === 'plan-niedostepny' && d && d.powod === 'waluta-konta') {
+      var wz = String(d.waluta || '').toUpperCase(), wk = String(d.walutaKonta || '').toUpperCase();
+      t = wk ? tekst('zakup-bl-waluta-konta', '').replace('{WALUTA}', wz).replace(/\{WALUTA_KONTA\}/g, wk) : tekst('zakup-bl-waluta-konta-inna', '').replace('{WALUTA}', wz);
+    }
     if (cel) { cel.textContent = t; cel.hidden = false; } else powiadomBlad(t);
     if (kod === 'subskrypcja-istnieje') odswiezStanKonta();
   }
@@ -22174,18 +22320,44 @@ async function kbAudioTranscribeAndOpen(file) {
       });
     })();
   }
+  // Powrot po potwierdzeniu zmiany pakietu u Stripe (?platnosc=zmiana&plan=): wyzszy pakiet dziala od razu, nizszy
+  // zwykle od konca okresu (harmonogram w Stripe). Stan z serwera, ktory zsynchronizowal go przed przekierowaniem.
+  function czekajNaZmiane(plan){
+    el('platnosc-modal').classList.add('open');
+    ustawTekst(el('platnosc-dalej'), 'okno-zamknij');
+    trescPlatnosci(tekst('zmiana-czeka', ''), 'zmiana-czeka-tytul', true);
+    var start = Date.now();
+    (function krok(){
+      odswiezStanKonta().then(function(s){
+        var sub = (s && s.subskrypcja) || {};
+        if (plan && sub.plan === plan && ZYWE.indexOf(sub.stan) >= 0) {
+          trescPlatnosci(tekst('zmiana-ok-tekst', '').replace('{PAKIET}', nazwaPlanu(plan)).replace('{DATA}', data(sub.okresDo)), 'zmiana-ok-tytul', false);
+          if (typeof window.odswiezPakiet === 'function') window.odswiezPakiet();
+          return;
+        }
+        var z = sub.zmiana;
+        if (z && z.od && (!plan || !z.plan || z.plan === plan)) {
+          trescPlatnosci(tekst('zmiana-plan-tekst', '').replace('{PAKIET}', nazwaPlanu(z.plan || plan)).replace('{DATA}', data(z.od)).replace('{OBECNY}', nazwaPlanu(sub.plan)), 'zmiana-plan-tytul', false);
+          return;
+        }
+        if (Date.now() - start > 20000) { trescPlatnosci(tekst('zmiana-opoznienie', '').replace('{EMAIL}', emailRachunku()), 'zmiana-czeka-tytul', false); return; }
+        setTimeout(krok, 2000);
+      });
+    })();
+  }
   function powrotZPlatnosci(){
     // Konta zespolu kupuja (jesli w ogole) na ekranach serwera: w aplikacji jak dzis.
     if (!samoobsluga()) return;
     var q; try { q = new URLSearchParams(location.search); } catch(e){ return; }
     // ?konto=1: powrot z panelu klienta Stripe (kontrakt B) - z powrotem na ekran Konto.
-    var w = q.get('platnosc'), doKonta = q.get('konto') === '1';
+    var w = q.get('platnosc'), doKonta = q.get('konto') === '1', plan = q.get('plan');
     if (!w && !doKonta) return;
-    q.delete('platnosc'); q.delete('konto');
+    q.delete('platnosc'); q.delete('konto'); q.delete('plan');
     // window.history: w aplikacji `history` to lista artykulow (Historia).
     try { window.history.replaceState(window.history.state, '', location.pathname + (q.toString() ? '?' + q.toString() : '') + location.hash); } catch(e){}
     if (!w) { window.otworzKonto(); return; }
     if (w === 'ok' || w === 'oczekuje') czekajNaPakiet();
+    else if (w === 'zmiana') czekajNaZmiane(/^[a-z0-9_-]{1,32}$/.test(plan || '') ? plan : '');
     else if (w === 'kraj') odrzuconyKraj();
     else pokazPowiadomienie(tekst('plat-przerwana', ''), 'info', 9000);
   }
@@ -22260,10 +22432,16 @@ async function kbAudioTranscribeAndOpen(file) {
       + (a ? ' · ' + esc(tekst('pakiet-zostalo', '').replace('{n}', a.zostalo).replace('{m}', a.limit)) + (a.okres === 'zawsze' ? ' · ' + esc(tekst('konto-pula-jednorazowa', '')) : ' · ' + esc(tekst('konto-licznik-wraca', '').replace('{DATA}', dataOdnowienia()))) : '')
       + '</p>';
     if (ZYWE.indexOf(sub.stan) >= 0 || sub.stan === 'wygasla') pakietH += '<p class="tekst-zwykly">' + esc(opisSubskrypcji(sub)) + '</p>';
+    var zaplanowana = ZYWE.indexOf(sub.stan) >= 0 ? tekstZmianyPakietu(sub) : '';
+    if (zaplanowana) pakietH += '<p class="tekst-zwykly" id="konto-zmiana-zaplanowana">' + esc(zaplanowana) + '</p>';
     if (pl.wlaczone && pl.tryb === 'test') pakietH += '<p class="tekst-pomoc">' + esc(tekst('pasek-test', '')) + '</p>';
     var akcje = [];
-    if (pl.maPanel) akcje.push('<button type="button" class="btn-secondary" onclick="otworzPanelPlatnosci()">' + esc(tekst(sub.stan === 'anulowana' ? 'sub-wznow' : 'plat-ustawienia-portal', '')) + '</button>');
+    // R9-W: "Zmień pakiet" przy zywej subskrypcji prowadzi do kart zmiany w oknie pakietu (potwierdzenie u Stripe),
+    // bez niej do zakupu, takze po zakonczonej subskrypcji (wczesniej panel Stripe chowal wtedy zakup). Panel Stripe
+    // zostaje do karty, potwierdzen platnosci i anulowania.
+    if (ZYWE.indexOf(sub.stan) >= 0 && planyDoZmiany(pl, sub).length) akcje.push('<button type="button" class="btn-generate" id="konto-zmien-pakiet" onclick="zamknijKonto();otworzPakiet(\'zmiana\')">' + esc(tekst('pakiet-zmien', '')) + '</button>');
     else if (mozeKupic()) akcje.push('<button type="button" class="btn-generate" onclick="zamknijKonto();otworzPakiet(\'zakup\')">' + esc(tekst('pakiet-zmien', '')) + '</button>');
+    if (pl.maPanel) akcje.push('<button type="button" class="btn-secondary" onclick="otworzPanelPlatnosci()">' + esc(tekst(sub.stan === 'anulowana' ? 'sub-wznow' : 'plat-ustawienia-portal', '')) + '</button>');
     akcje.push('<button type="button" class="btn-secondary" onclick="zamknijKonto();otworzPakiet()">' + esc(tekst('konto-szczegoly-pakietu', '')) + '</button>');
     pakietH += '<div class="konto-akcje">' + akcje.join('') + '</div>';
     if (pl.maPanel) pakietH += '<p class="tekst-pomoc">' + esc(tekst('plat-ustawienia-portal-opis', '')) + '</p>';

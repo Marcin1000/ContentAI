@@ -31,7 +31,30 @@
   try { jasnySystem = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches); } catch (e) {}
   var ciemny = pref === null ? !jasnySystem : pref === '1';
   d.setAttribute('data-theme', ciemny ? 'dark' : 'light');
-  var jezyk = czytaj('cai_lang') || ((navigator.language || 'pl').toLowerCase().indexOf('pl') === 0 ? 'pl' : 'en');
+  // R9-W: jezyk zapamietany (wybor w aplikacji), potem jawny wybor z adresu (?lang= po zakupie albo rejestracji na
+  // angielskiej stronie przy polskiej przegladarce: zapamietany, ale nie nadpisuje wyboru z aplikacji), potem pierwszy
+  // obslugiwany (pl, en) z jezykow przegladarki (navigator.languages, z ustawien systemu): "de, pl" -> pl, "de" -> en.
+  function jezykPrzegladarki() {
+    var lista = [];
+    try { lista = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'pl']; } catch (e) { lista = ['pl']; }
+    for (var i = 0; i < lista.length; i++) {
+      var t = String(lista[i] || '').toLowerCase().split('-')[0];
+      if (t === 'pl' || t === 'en') return t;
+    }
+    return lista.length ? 'en' : 'pl';
+  }
+  window.caiJezykPrzegladarki = jezykPrzegladarki;
+  var zAdresu = '', zapamietany = czytaj('cai_lang');
+  try { var mj = /[?&]lang=(pl|en)(?:&|$)/.exec(location.search); zAdresu = mj ? mj[1] : ''; } catch (e) {}
+  if (zAdresu) {
+    if (!zapamietany) { try { if (ls) ls.setItem('cai_lang', zAdresu); } catch (e) {} }
+    try {
+      var bezLang = new URLSearchParams(location.search);
+      bezLang.delete('lang');
+      window.history.replaceState(window.history.state, '', location.pathname + (bezLang.toString() ? '?' + bezLang.toString() : '') + location.hash);
+    } catch (e) {}
+  }
+  var jezyk = zapamietany || zAdresu || jezykPrzegladarki();
   d.lang = jezyk;
   d.className += ' bez-anim jezyk-' + jezyk + (jezyk !== 'pl' ? ' i18n-czeka' : '');
   var mobilny = false;
@@ -3234,6 +3257,10 @@ body.karta-konta #gen-btn { display: none; }
 .zakup-test { margin: 0 0 var(--s-12); border: 1px solid var(--c-linia); border-radius: var(--r-md); }
 .zakup-stan { display: flex; flex-direction: column; gap: var(--s-8); align-items: flex-start; }
 .zakup-stan p { margin: 0; }
+/* R9-W: zmiana pakietu zywej subskrypcji pod stanem subskrypcji; karta obecnego i zaplanowanego pakietu bez wyboru */
+.zmiana-pakietu { margin-top: var(--s-16); padding-top: var(--s-16); border-top: 1px solid var(--c-linia); }
+.zakup-karta[aria-disabled="true"] { cursor: default; background: transparent; }
+.zakup-karta[aria-disabled="true"]:hover { border-color: var(--c-ramka); }
 /* ekran Konto (A7) */
 .modal.konto-okno { width: 640px; }
 .konto-tresc { display: flex; flex-direction: column; gap: var(--s-16); }
@@ -5060,7 +5087,9 @@ function czytajJson(klucz, domyslnie) {
   try { var v = magazyn.getItem(klucz); return v ? JSON.parse(v) : domyslnie; }
   catch (e) { console.warn('[magazyn] uszkodzony ' + klucz); return domyslnie; }
 }
-var currentLang = magazyn.getItem('cai_lang') || ((navigator.language||'pl').toLowerCase().indexOf('pl')===0 ? 'pl' : 'en');
+// Jezyk z wyboru (zapamietany albo ?lang= w adresie), inaczej z jezykow przegladarki: ten sam wynik co skrypt startowy (R9-W).
+var currentLang = magazyn.getItem('cai_lang') || (window.CAI_START && window.CAI_START.jezyk)
+  || (typeof window.caiJezykPrzegladarki === 'function' ? window.caiJezykPrzegladarki() : ((navigator.language||'pl').toLowerCase().indexOf('pl')===0 ? 'pl' : 'en'));
 
 var I18N = {
   pl: {

@@ -13,8 +13,12 @@
 //   ostrzezeniaKonfiguracji(konf)          -> [ostrzezenia]
 //   async przygotujKlienta({ konto, jezyk, konf })                         -> idKlienta (klucz idempotencji klient-<tryb>-<login>)
 //   async rozpocznijZakup({ konto, idKlienta, plan, waluta, jezyk, adresPowrotu, adresRezygnacji, metadane, tekstPrzycisku, konf })
-//                                                                          -> { url, idSesji }
+//                                                                          -> { url, idSesji }; waluta zablokowana u klienta:
+//                                                                             BladDostawcy z konfliktWaluty i walutaKlienta
 //   async otworzPanel({ idKlienta, jezyk, adresPowrotu, konf })            -> { url }
+//   async zmienPakiet({ idKlienta, idSubskrypcji, plan, waluta, jezyk, adresPowrotu, adresPoZmianie, konf })
+//                                                                          -> { url } (panel od razu na potwierdzeniu zmiany);
+//                                                                             subskrypcja bez zmiany: BladDostawcy z niezgodnyStan
 //   zweryfikujZdarzenie(surowe, naglowki, konf, teraz)                     -> zdarzenie albo throw BladPodpisu
 //   rozpoznajZdarzenie(zdarzenie)          -> { id, typ, tryb, utworzone, idKlienta, login, idSesji, idFaktury, idObciazenia } | null
 //   async stanKlienta({ idKlienta, konf, plany })                          -> StanSubskrypcji
@@ -29,7 +33,8 @@
 //   hostyPrzekierowan(konf)                -> ['https://checkout.stripe.com', 'https://billing.stripe.com']
 //
 // StanSubskrypcji: { stan: 'brak'|'probna'|'aktywna'|'zalegla'|'anulowana'|'wygasla', plan, idSubskrypcji,
-//                    okresDo (ms), waluta, surowy, od (ms: zawarcie umowy), kraj }
+//                    okresDo (ms), waluta, surowy, od (ms: zawarcie umowy), kraj,
+//                    zmiana: null | { plan (null = nieznany), od (ms) } - zaplanowana zmiana pakietu (harmonogram) }
 // Wplata: { id, idKlienta, idSubskrypcji, kwota, waluta, kraj, oplacono, okresOd, okresDo, status, plan, idCeny,
 //           idPlatnosci, powod, tryb }
 //
@@ -374,14 +379,79 @@ async function rozpocznijZakup({ konto, idKlienta, plan, waluta, jezyk = 'pl', a
   if (p.nipKlienta) parametry.tax_id_collection = { enabled: true };
   if (p.podatki) parametry.automatic_tax = { enabled: true };
   if (tekstPrzycisku) parametry.custom_text = { submit: { message: String(tekstPrzycisku).slice(0, 1200) } };
-  const sesja = await zapytanie(konf, 'POST', '/checkout/sessions', parametry, { idempotencja: `zakup-${crypto.randomUUID()}` });
+  let sesja;
+  try {
+    sesja = await zapytanie(konf, 'POST', '/checkout/sessions', parametry, { idempotencja: `zakup-${crypto.randomUUID()}` });
+  } catch (e) {
+    throw oznaczKonfliktWaluty(e);
+  }
   return { url: sesja.url, idSesji: sesja.id };
+}
+
+/**
+ * Stripe trzyma walute klienta, dopoki klient ma zywa subskrypcje, harmonogram zmiany, rabat, otwarta oferte albo
+ * pozycje do rozliczenia ("You cannot combine currencies on a single customer"); po zakonczonej subskrypcji nowa
+ * moze byc w innej walucie. Taki blad dostaje znacznik konfliktWaluty i walutaKlienta (z komunikatu, gdy jest):
+ * rdzen odpowiada wtedy jasna odmowa zamiast "operator nie odpowiada".
+ */
+function oznaczKonfliktWaluty(e) {
+  if (!(e instanceof BladDostawcy) || e.statusDostawcy !== 400) return e;
+  if (e.kod !== 'currency_mismatch' && !/combine currencies/i.test(e.komunikatDostawcy || '')) return e;
+  e.konfliktWaluty = true;
+  const m = /currency ([a-z]{3})\b/i.exec(e.komunikatDostawcy || '');
+  e.walutaKlienta = m ? m[1].toLowerCase() : null;
+  return e;
 }
 
 async function otworzPanel({ idKlienta, jezyk = 'pl', adresPowrotu, konf }) {
   const parametry = { customer: idKlienta, return_url: adresPowrotu, locale: jezyk === 'en' ? 'en' : 'pl' };
   if (s(konf).portalKonfiguracja) parametry.configuration = s(konf).portalKonfiguracja;
   const p = await zapytanie(konf, 'POST', '/billing_portal/sessions', parametry, { idempotencja: `panel-${crypto.randomUUID()}` });
+  return { url: p.url };
+}
+
+/** Subskrypcja w stanie, ktory nie pozwala na zmiane pakietu (rdzen synchronizuje stan i odmawia). */
+function bladStanu(powod) {
+  const e = new BladDostawcy({ status: 409, typ: 'stan-subskrypcji', komunikat: powod, metoda: 'GET', sciezka: '/subscriptions' });
+  e.niezgodnyStan = true;
+  return e;
+}
+
+/**
+ * Zmiana pakietu zywej subskrypcji z aplikacji: sesja panelu klienta od razu na ekranie potwierdzenia zmiany na
+ * wybrana cene (flow_data subscription_update_confirm). Doplate albo date zmiany pokazuje Stripe wedlug ustawien
+ * panelu (Customer portal: zmiana pakietu z obiema cenami, rozliczenie proporcjonalne, obnizka na koniec okresu).
+ * Po potwierdzeniu klient wraca na adresPoZmianie, a "Wstecz" w panelu prowadzi na adresPowrotu. Cena w walucie
+ * subskrypcji (cena wielowalutowa: ten sam identyfikator dla obu walut).
+ *   -> { url }; subskrypcja innego klienta, zakonczona, anulowana na koniec okresu, z kilkoma pozycjami albo juz
+ *      w tym pakiecie: BladDostawcy z niezgodnyStan
+ */
+async function zmienPakiet({ idKlienta, idSubskrypcji, plan, waluta, jezyk = 'pl', adresPowrotu, adresPoZmianie, konf }) {
+  const sub = await zapytanie(konf, 'GET', `/subscriptions/${encodeURIComponent(idSubskrypcji)}`);
+  const klient = typeof sub.customer === 'string' ? sub.customer : (sub.customer && sub.customer.id) || null;
+  const elementy = (sub.items && sub.items.data) || [];
+  if (klient !== idKlienta) throw bladStanu('subskrypcja innego klienta');
+  if (!['active', 'trialing'].includes(sub.status) || sub.cancel_at_period_end || sub.cancel_at) {
+    throw bladStanu(`subskrypcja ${sub.status}${sub.cancel_at_period_end || sub.cancel_at ? ' z anulowaniem' : ''}`);
+  }
+  if (elementy.length !== 1) throw bladStanu('subskrypcja z kilkoma pozycjami');
+  const wal = String(sub.currency || waluta || '').toLowerCase();
+  const cena = idCeny(konf, plan, wal);
+  if (!cena) throw new BladDostawcy({ status: 400, typ: 'konfiguracja', komunikat: `brak ceny ${plan}/${wal}`, metoda: 'POST', sciezka: '/billing_portal/sessions' });
+  const obecna = elementy[0].price ? (typeof elementy[0].price === 'string' ? elementy[0].price : elementy[0].price.id) : null;
+  if (obecna === cena) throw bladStanu('subskrypcja juz w tym pakiecie');
+  const parametry = {
+    customer: idKlienta,
+    return_url: adresPowrotu,
+    locale: jezyk === 'en' ? 'en' : 'pl',
+    flow_data: {
+      type: 'subscription_update_confirm',
+      subscription_update_confirm: { subscription: sub.id, items: [{ id: elementy[0].id, price: cena, quantity: 1 }] },
+      after_completion: { type: 'redirect', redirect: { return_url: adresPoZmianie } },
+    },
+  };
+  if (s(konf).portalKonfiguracja) parametry.configuration = s(konf).portalKonfiguracja;
+  const p = await zapytanie(konf, 'POST', '/billing_portal/sessions', parametry, { idempotencja: `zmiana-${crypto.randomUUID()}` });
   return { url: p.url };
 }
 
@@ -449,12 +519,43 @@ async function stanKlienta({ idKlienta, konf, plany }) {
   }
   let okresDo = koniecOkresu(wybrana);
   if (wybrana.cancel_at && stan === 'anulowana') okresDo = Math.min(okresDo || Infinity, Number(wybrana.cancel_at) * 1000);
-  const surowy = [wybrana.status, wybrana.cancel_at_period_end ? 'cancel_at_period_end' : null, wybrana.cancel_at ? 'cancel_at' : null]
-    .filter(Boolean).join(',');
+  const surowy = [wybrana.status, wybrana.cancel_at_period_end ? 'cancel_at_period_end' : null, wybrana.cancel_at ? 'cancel_at' : null,
+    wybrana.schedule ? 'schedule' : null].filter(Boolean).join(',');
+  const zmiana = wybrana.schedule && (stan === 'aktywna' || stan === 'probna') ? await zaplanowanaZmiana(konf, plany, wybrana, okresDo) : null;
   return {
     stan, plan, idSubskrypcji: wybrana.id, okresDo, waluta: wybrana.currency ? String(wybrana.currency).toLowerCase() : null,
-    surowy, od: wybrana.start_date ? Number(wybrana.start_date) * 1000 : null, kraj: null,
+    surowy, od: wybrana.start_date ? Number(wybrana.start_date) * 1000 : null, kraj: null, zmiana,
   };
+}
+
+const OSTRZEZENIA = new Set();
+
+/**
+ * Zaplanowana zmiana pakietu z harmonogramu subskrypcji (panel Stripe zapisuje tak obnizke na koniec okresu):
+ * pakiet i chwila nastepnej fazy. Harmonogram bez odczytu (klucz bez uprawnienia do harmonogramow albo inny
+ * blad 4xx): zmiana z nieznanym pakietem od konca okresu. Harmonogram zakonczony albo bez nastepnej fazy: null.
+ *   -> null | { plan, od }
+ */
+async function zaplanowanaZmiana(konf, plany, sub, okresDo) {
+  const id = typeof sub.schedule === 'string' ? sub.schedule : sub.schedule && sub.schedule.id;
+  let h;
+  try {
+    h = await zapytanie(konf, 'GET', `/subscription_schedules/${encodeURIComponent(id)}`);
+  } catch (e) {
+    if (!(e instanceof BladDostawcy) || e.przejsciowy) throw e;
+    if (!OSTRZEZENIA.has(`harmonogram-${e.statusDostawcy}`)) {
+      OSTRZEZENIA.add(`harmonogram-${e.statusDostawcy}`);
+      console.warn(`[platnosci] harmonogram subskrypcji bez odczytu (${e.message}): zaplanowana zmiana pakietu bez nazwy pakietu`);
+    }
+    return { plan: null, od: okresDo };
+  }
+  if (['canceled', 'released', 'completed'].includes(h.status)) return null;
+  const teraz = Date.now() / 1000;
+  const nastepna = (h.phases || []).filter((f) => Number(f.start_date) > teraz).sort((a, b) => Number(a.start_date) - Number(b.start_date))[0];
+  if (!nastepna) return null;
+  const e = (nastepna.items || [])[0];
+  const cena = e ? (typeof e.price === 'string' ? e.price : (e.price && e.price.id) || null) : null;
+  return { plan: planZCeny(konf, plany, cena), od: Number(nastepna.start_date) * 1000 };
 }
 
 /** Anuluje od razu wszystkie niezakonczone subskrypcje klienta (usuniecie konta). */
@@ -613,6 +714,7 @@ module.exports = {
   przygotujKlienta,
   rozpocznijZakup,
   otworzPanel,
+  zmienPakiet,
   zweryfikujZdarzenie,
   rozpoznajZdarzenie,
   stanKlienta,

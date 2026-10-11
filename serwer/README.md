@@ -1214,8 +1214,18 @@ z `PLATNOSCI_KRAJE` (D-04), odstąpienie w 14 dni ze zwrotem proporcjonalnym (D-
   `zakup`) przed przekierowaniem; identyfikator zgody i wersja idą w `metadata` sesji. Kolejność kontroli:
   sprzedaż, prawo zakupu (konta `glowna` i operator tylko przy `PLATNOSCI_DLA_STARYCH=1`), pakiet,
   waluta, żywa subskrypcja (409), zgoda, limit 10 sesji na godzinę, cena, wyłącznik po progu.
-- **Waluta** (M-1): klient, który już płacił, zawsze w swojej walucie (Stripe nie łączy walut u klienta);
-  potem wybrana; potem z języka (`PLATNOSCI_WALUTA_PL` dla polskiego, `PLATNOSCI_WALUTA_DOMYSLNA` dla innych).
+- **Waluta** (M-1, R9-W): przy żywej subskrypcji tylko jej waluta (`walutaWymuszona`; Stripe nie łączy walut
+  u klienta z żywą subskrypcją); potem wybrana; potem z języka (`PLATNOSCI_WALUTA_PL` dla polskiego,
+  `PLATNOSCI_WALUTA_DOMYSLNA` dla innych). Po końcu subskrypcji (anulowanie, odstąpienie, wygaśnięcie) wybór
+  od nowa: wcześniej konto, które raz zapłaciło w EUR, widziało EUR na zawsze. Aplikacja wybiera walutę
+  startową według strefy czasowej urządzenia (`Europe/Warsaw` = `walutaWPolsce`, inna = `walutaPozaPolska`,
+  UTC i `Etc/*` = według języka), klient może ją przełączyć. Gdy Stripe mimo to odmówi waluty (pozostałość
+  u klienta, np. niezapłacona pozycja faktury), zakup kończy się `400 plan-niedostepny` z `powod: 'waluta-konta'`
+  i `walutaKonta`, a ekran podpowiada walutę konta.
+- **Język** (R9-W): `?lang=` w adresie, potem pierwszy obsługiwany (`pl`, `en`) z `Accept-Language`
+  (`de, pl` -> `pl`, `de` -> `en`, bez nagłówka `pl`). Aplikacja: wybór zapamiętany w aplikacji, potem `?lang=`
+  (tylko bez zapamiętanego wyboru), potem `navigator.languages` w tej samej kolejności. Przekierowania płatności,
+  rejestracji i panelu niosą `lang` tylko wtedy, gdy różni się od języka przeglądarki.
 - **Checkout**: `mode=subscription`, `currency` przy cenie wielowalutowej, `client_reference_id` = login,
   adres rozliczeniowy wymagany, metody z `PLATNOSCI_METODY` (`auto` = ustawienia panelu Stripe; BLIK tylko
   dla PLN; Przelewy24 odrzucane, PR8-13), bez `automatic_tax` i `tax_id_collection` (opcje
@@ -1231,7 +1241,18 @@ z `PLATNOSCI_KRAJE` (D-04), odstąpienie w 14 dni ze zwrotem proporcjonalnym (D-
   `/?platnosc=ok|oczekuje|kraj|anulowana` (przy `z=konto` na `/konto?platnosc=...`). `oczekuje`: aplikacja
   odpytuje `GET /api/platnosci/stan`, webhook dokończy.
 - **Panel klienta**: `POST /api/platnosci/panel` albo formularz `POST /konto/panel` (303 do Customer Portal,
-  powrót `/?konto=1` albo `/konto`). Zmiana pakietu, karty i anulowanie na koniec okresu są w Portalu.
+  powrót `/?konto=1` albo `/konto`). Karta, anulowanie na koniec okresu i wznowienie są w Portalu.
+- **Zmiana pakietu** (R9-W): wybór w aplikacji (okno pakietu, "Zmień pakiet" w Koncie) albo na `/konto`,
+  potwierdzenie na stronie Stripe. `POST /api/platnosci/zmiana` albo formularz `POST /konto/zmiana` tworzy sesję
+  Portalu z `flow_data[type]=subscription_update_confirm` (nowa cena w walucie subskrypcji): Stripe pokazuje
+  dopłatę albo datę zmiany, uwierzytelnia płatność (SCA) i wraca na `/konto/platnosc?wynik=zmiana&plan=`, a stąd
+  na `/?platnosc=zmiana` (aplikacja czeka na webhook) albo `/konto?platnosc=zmiana`. Wyższy pakiet: od razu,
+  dopłata za resztę okresu według ustawień proporcji w Portalu. Niższy: od następnego okresu (Stripe zakłada
+  harmonogram, `subscription_schedule`), do tego czasu zostaje obecny; serwer czyta harmonogram
+  (`subskrypcja.zmiana: { plan, od }`, przy braku uprawnienia do harmonogramów plan z parametru powrotu).
+  Kontrola przed sesją: żywa subskrypcja `aktywna`/`probna` bez anulowania (inaczej `409 zmiana-niedostepna`),
+  inny pakiet w sprzedaży, wyłącznik po progu dla wyższego pakietu (różnica cen), limit sesji. Gdy Stripe odrzuci
+  przepływ (np. konfiguracja Portalu bez zmiany pakietu), klient dostaje zwykły Portal (`panel: 'zwykly'`).
 - **Webhook** `POST /platnosci/webhook/stripe` (ARCH8-15): przed sesją i CSRF, podpis HMAC na surowych
   bajtach (`Stripe-Signature`, kilka `v1`, kilka sekretów w `STRIPE_SEKRET_WEBHOOKA` na czas zmiany,
   tolerancja 300 s), idempotencja po `event.id` (`platnosci_zdarzenia`), zdarzenie innego trybu
@@ -1269,18 +1290,21 @@ z `PLATNOSCI_KRAJE` (D-04), odstąpienie w 14 dni ze zwrotem proporcjonalnym (D-
 | Trasa | Ciało | Odpowiedź | Odmowy (`X-CAI-Kod`) |
 |---|---|---|---|
 | `GET /api/platnosci/stan` | - | `{ subskrypcja, platnosci }` jak w `/api/konto` (niżej) | `404 platnosci-wylaczone` |
-| `POST /api/platnosci/zakup` | `{ plan, waluta?, zgodaNaWykonanie: true, zgodaRegulamin?, jezyk?, z? }` | `{ url, plan, waluta, kwota }` | `403 zgoda-wymagana`, `400 plan-niedostepny` (`powod: 'cena'`), `409 subskrypcja-istnieje`, `403 zakup-niedozwolony`, `403 sprzedaz-wstrzymana` (`powod: 'konfiguracja'\|'prog'`), `429 za-duzo-prob` (`ponowZa`), `503 dostawca-platnosci-niedostepny` |
+| `POST /api/platnosci/zakup` | `{ plan, waluta?, zgodaNaWykonanie: true, zgodaRegulamin?, jezyk?, z? }` | `{ url, plan, waluta, kwota }` | `403 zgoda-wymagana`, `400 plan-niedostepny` (`powod: 'cena'\|'waluta-konta'`, `walutaKonta`), `409 subskrypcja-istnieje`, `403 zakup-niedozwolony`, `403 sprzedaz-wstrzymana` (`powod: 'konfiguracja'\|'prog'`), `429 za-duzo-prob` (`ponowZa`), `503 dostawca-platnosci-niedostepny` |
 | `POST /api/platnosci/panel` | `{ jezyk?, z? }` | `{ url }` | `409 brak-subskrypcji`, `503` |
+| `POST /api/platnosci/zmiana` | `{ plan, jezyk?, z? }` | `{ url, plan, waluta, kwota, panel: 'potwierdzenie'\|'zwykly' }` | `409 brak-subskrypcji`, `409 zmiana-niedostepna` (`powod`: stan subskrypcji), `400 plan-niedostepny` (`powod: 'ten-sam'\|'cena'`), `403 zakup-niedozwolony`, `403 sprzedaz-wstrzymana`, `429 za-duzo-prob`, `503` |
 | `GET /api/platnosci/odstapienie` | - | `{ mozliwe, powod, zawarcie, termin, szacunek: { kwota, waluta, tryb, dniUzyte, dniOkresu }, plan }` | - |
 | `POST /api/platnosci/odstapienie` | `{ potwierdzam: true }` | `{ ok, odstapienie: { id, zlozone, zwrot: { kwota, waluta, tryb, dniUzyte, dniOkresu, najpozniej } } }` | `403 zgoda-wymagana`, `409 odstapienie-niedostepne` (`powod: 'brak-umowy'\|'zlozone'\|'po-terminie'`), `503` (oświadczenie zapisane) |
 
 `platnosci.stanDlaKonta(konto, kontekst)` (synchronicznie, bez sieci) daje sekcje `/api/konto`:
-`subskrypcja: { stan, plan, okresDo, waluta, dostepDo }` i `platnosci: { wlaczone, sprzedaz, tryb, dostawca,
-waluty, walutaDomyslna, wymagaZgodyNaWykonanie, mozeKupic, maPanel, plany: [{ plan, nazwa, nazwaEn, opis,
-opisEn, limity, funkcje, limitDokumentow, ceny: { eur: 1900, pln: 7900 } }] }` oraz pola B: `walutaWymuszona`
-(waluta klienta, który już płacił), `zakupNiedozwolony`, `kraje`, `zwrot` (tryb), `odstapienie: { mozliwe,
+`subskrypcja: { stan, plan, okresDo, waluta, dostepDo, zmiana }` (`zmiana: null | { plan, od }`, zaplanowany
+niższy pakiet; `plan: null`, gdy nieznany) i `platnosci: { wlaczone, sprzedaz, tryb, dostawca,
+waluty, walutaDomyslna, wymagaZgodyNaWykonanie, mozeKupic, maPanel, mozeZmienic, plany: [{ plan, nazwa, nazwaEn,
+opis, opisEn, limity, funkcje, limitDokumentow, ceny: { eur: 1900, pln: 7900 } }] }` oraz pola B: `walutaWymuszona`
+(waluta żywej subskrypcji), `walutaWPolsce` i `walutaPozaPolska` (domyślna waluta według miejsca, R9-W),
+`zakupNiedozwolony`, `kraje`, `zwrot` (tryb), `odstapienie: { mozliwe,
 do, zawarcie, szacunek, adres, ponowienie }` albo `{ mozliwe: false, powod, do, zlozone: { czas, stan, kwota,
-waluta } }`, `odrzucenie: { powod: 'kraj', kraj, czas }`, `adresy: { zakup, panel, odstapienie }`,
+waluta } }`, `odrzucenie: { powod: 'kraj', kraj, czas }`, `adresy: { zakup, panel, odstapienie, zmiana }`,
 `rachunek: { email }`. Kwoty w jednostkach najmniejszych (grosze, centy), czasy w ms.
 
 ### Kontrakt dla kont (A1) i poczty (C)
@@ -1323,11 +1347,15 @@ Przed testem (raz, w panelu Stripe w trybie testowym, przełącznik "Test mode")
    i 49 EUR z opcją waluty PLN 79 i 199 zł ("Add another currency"). Identyfikatory cen (`price_...`)
    do `STRIPE_CENA_STANDARD` i `STRIPE_CENA_PREMIUM`.
 2. Settings > Billing > Customer portal: zmiana karty TAK, anulowanie TAK (na koniec okresu), zmiana pakietu
-   TAK (obie ceny), historia faktur NIE, adres powrotu `https://test.content-ai.net/konto`.
+   TAK (produkty Standard i Premium z obiema cenami; bez nich Stripe odrzuca potwierdzenie zmiany z aplikacji
+   i klient trafia do zwykłego Portalu), proporcje "Prorate charges and credits" z fakturą od razu ("Invoice
+   immediately"), obniżenie pakietu "At the end of billing period", historia faktur NIE, adres powrotu
+   `https://test.content-ai.net/konto`.
 3. Settings > Customer emails: potwierdzenia udanych płatności, zwroty, nieudane płatności i wygasające
    karty TAK; wysyłka faktur NIE.
 4. Developers > API keys > Create restricted key "content-ai-serwer": zapis Customers, Checkout Sessions,
-   Customer portal, Subscriptions, Refunds; odczyt Prices, Products, Invoices, Invoice Payments, Charges ->
+   Customer portal, Subscriptions, Refunds; odczyt Prices, Products, Invoices, Invoice Payments, Charges
+   (oraz Subscription schedules, jeśli panel pokazuje je osobno: data i pakiet zaplanowanej zmiany) ->
    `STRIPE_KLUCZ` (`rk_test_...`). Osobny klucz `sk_test_...` tylko do skryptu T8 (nigdy w pliku środowiska).
 5. Developers > Webhooks > Add endpoint `https://test.content-ai.net/platnosci/webhook/stripe`, zdarzenia:
    `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`,
@@ -1344,13 +1372,14 @@ Przed testem (raz, w panelu Stripe w trybie testowym, przełącznik "Test mode")
 |---|---|---|
 | T1 | Rejestracja nowego konta, e-mail potwierdzający (A1, C) | konto potwierdzone, sesja od razu |
 | T2 | "Generuj" bez klucza; zły klucz; dobry klucz (C, D) | kreator bez zapytania; "odrzucony"; artykuł |
-| T3 | Trzy artykuły, czwarty (D) | okno pakietu: PLN przy polskim interfejsie, EUR przy angielskim |
+| T3 | Trzy artykuły, czwarty (D) | okno pakietu: PLN na urządzeniu w polskiej strefie czasowej, EUR w innej (np. Berlin); interfejs według języków przeglądarki |
 | T4 | Zakup Standard w PLN kartą `4242 4242 4242 4242` (dowolna przyszła data, CVC); na ekranie zakupu najpierw "Przejdź do płatności" bez zgód | bez zgód komunikat przy polach; w Checkout tekst o obowiązku zapłaty 79,00 zł co miesiąc i napis przycisku do zapisania dla prawnika (P-05); powrót, "Pakiet aktywny"; `platnosci-synchronizuj <login>` pokazuje `aktywna (standard)`; w panelu Stripe zdarzenia webhooka z odpowiedzią 200; `przychod` pokazuje 79,00 zł; e-mail potwierdzenia umowy (gdy C doda szablon `zakup-potwierdzenie`) |
 | T4a | To samo konto: "Odstąp od umowy tutaj" i "Potwierdź odstąpienie od umowy" | "Odstąpienie przyjęte", w Stripe zwrot (Payments > płatność > Refunds) na kwotę z ekranu (79,00 zł minus rozpoczęte doby), konto w pakiecie Darmowym, `ewidencja` z wierszem zwrotu |
 | T5 | Drugie konto, interfejs angielski, zakup w EUR; w Checkout kraj adresu np. Niemcy | waluta `eur` (parametr `currency` przy cenie wielowalutowej działa); `przychod` liczy sprzedaż do UE (DE) |
 | T5a | Trzecie konto, w Checkout kraj adresu spoza UE (np. United States) | powrót z komunikatem o kraju, subskrypcja anulowana i zwrócona w całości |
 | T6 | Karta 3D Secure `4000 0027 6000 3184`; karta odrzucana `4000 0000 0000 0002`; przy `PLATNOSCI_METODY=card,blik` BLIK w PLN | po uwierzytelnieniu `aktywna`; odrzucenie: błąd w Checkout, stan bez zmian; BLIK: sprawdzić, czy Stripe przyjmuje go w subskrypcji (inaczej zostaje `card`) |
-| T7 | Portal ("Zarządzaj subskrypcją"): Premium, powrót do Standard, anulowanie, wznowienie, zmiana karty | stany `aktywna` -> `anulowana` (do daty) -> `aktywna`; pakiet zgodny z ceną |
+| T7 | Konto > "Zmień pakiet" > Premium > potwierdzenie w Stripe; potem "Zmień pakiet" > Standard; Portal ("Zarządzaj subskrypcją"): anulowanie, wznowienie, zmiana karty | Premium od razu, w Stripe dopłata za resztę okresu (faktura `subscription_update`), w aplikacji "Pakiet zmieniony"; Standard: "Zmiana zaplanowana" z datą końca okresu, do tej daty Premium; stany `aktywna` -> `anulowana` (do daty) -> `aktywna` |
+| T7a | Konto z T4a (po odstąpieniu w PLN) albo nowe: zakup w EUR, odstąpienie, potem zakup w PLN | okno zakupu bez komunikatu "płacisz w EUR", PLN do wyboru; zakup w PLN przechodzi |
 | T8 | `STRIPE_KLUCZ_ZEGARY=sk_test_... STRIPE_CENA_STANDARD=price_... node narzedzia/test_platnosci_stripe.js --login <login> --waluta pln --cli "sudo serwer/cli.sh --srodowisko /etc/contentai/srodowisko-test" --sprzataj` | kod 0: zegar przesunięty o miesiąc, `invoice.paid`, nowy `okres_do`, druga wpłata w rejestrze |
 | T9 | To samo z `--karta 0341 --miesiace 2` | miesiąc 1: `zalegla` (baner, pakiet przez `PLATNOSCI_ZALEGLA_DNI`); po ponowieniach Stripe (ustawienia Smart Retries) `wygasla` i pakiet Darmowy |
 | T10 | Developers > Webhooks: "Resend" kilku zdarzeń; wyłączyć punkt końcowy, anulować w Portalu, włączyć i `platnosci-synchronizuj` | duplikaty bez skutków (200, `powtorzone`); stan dogoniony przez uzgadnianie |

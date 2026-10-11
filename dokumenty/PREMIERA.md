@@ -338,7 +338,9 @@ Każdy krok ma w tabeli "czego się spodziewać". Wynik (zrzuty albo notatki) wy
 
 Gdy etap 6 przeszedł, Stripe zweryfikował konto, a księgowa potwierdziła kasę rejestrującą:
 1. W Stripe w trybie live utwórz to samo co w etapie 6 (produkty, ceny, portal, klucz ograniczony,
-   webhook na `https://app.content-ai.net/platnosci/webhook/stripe`).
+   webhook na `https://app.content-ai.net/platnosci/webhook/stripe`). Portal live ma osobne ustawienia:
+   zmiana pakietu z oboma produktami, proporcje z fakturą od razu, obniżenie pakietu na koniec okresu
+   (README, punkt 2). Bez tego przycisk "Zmień pakiet" w aplikacji otworzy zwykły panel Stripe.
 2. `sudo nano /etc/contentai/srodowisko`: `PLATNOSCI=stripe`, `PLATNOSCI_TRYB=live`, wszystkie
    `STRIPE_*` z trybu live, `PLATNOSCI_CENY_WYSWIETLANE="standard:eur=19,pln=79;premium:eur=49,pln=199"` (w cudzysłowie: średnik bez niego przerywa wczytanie pliku w `cli.sh`),
    na końcu `CAI_REJESTRACJA=1`.

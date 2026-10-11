@@ -2796,6 +2796,245 @@ async function wariantR9Zakup(b) {
   }
 }
 
+// R9-W: zgloszenia z testu premiery. (1) Ceny w EUR zamiast PLN: po zakupie testowym w EUR i odstapieniu konto
+// pokazywalo juz tylko EUR. (2) Wyzszy pakiet tylko w panelu Stripe: zmiana pakietu z aplikacji (karty w oknie pakietu,
+// potwierdzenie u Stripe, powrot z komunikatem, obnizka zaplanowana na koniec okresu). (3) Konto: "licznik wraca 11
+// listopada" (data odnowienia), a liczniki wracaja 1. dnia miesiaca. (4) Premium: zdanie o licznikach bez licznikow.
+// (5) Jezyk z listy jezykow przegladarki, waluta wedlug strefy czasowej urzadzenia (Polska = PLN, inaczej EUR).
+// Osobny serwer z rejestracja (A1), kluczami w ciasteczkach (C) i platnosciami na atrapie Stripe (B).
+async function wariantR9W(b) {
+  const atrapaStripe = require('./atrapa/stripe.js');
+  const portStripe = await wolnyPort();
+  const portSerwera = await wolnyPort();
+  const sekret = 'whsec_dymny_r9w_123456';
+  const adres = 'http://127.0.0.1:' + portSerwera;
+  const urlStripe = 'http://127.0.0.1:' + portStripe;
+  const srvStripe = atrapaStripe.uruchom(portStripe, { sekret, webhook: adres + '/platnosci/webhook/stripe' });
+  const kat = przygotujDane();
+  const env = Object.assign({}, process.env, {
+    CAI_UZYTKOWNICY: path.join(kat, 'uzytkownicy.json'), CAI_BAZA: path.join(kat, 'baza'), CAI_UZYCIE: path.join(kat, 'uzycie'),
+    CAI_MARKA: kat, CAI_SEKRET_PLIK: path.join(kat, 'sekret'), PORT: String(portSerwera), CAI_HOST: '127.0.0.1', CAI_ZAUFANE_ADRESY: '127.0.0.1',
+    ANTHROPIC_KEY: 'test-anthropic', CAI_URL_ANTHROPIC: 'http://127.0.0.1:' + PORT_ATRAPY + '/v1/messages',
+    CAI_REJESTRACJA: '1', CAI_ADRES_PUBLICZNY: adres, CAI_POCZTA_LOG: path.join(kat, 'poczta.jsonl'),
+    CAI_REGULAMIN_WERSJA: '2026-10-v1', CAI_POLITYKA_WERSJA: '2026-10-v1', CAI_KLUCZ_CIASTEK: require('crypto').randomBytes(32).toString('base64'),
+    PLATNOSCI: 'stripe', PLATNOSCI_TRYB: 'test', STRIPE_KLUCZ: 'rk_test_atrapa', STRIPE_SEKRET_WEBHOOKA: sekret,
+    STRIPE_CENA_STANDARD: 'price_atrapa_standard', STRIPE_CENA_PREMIUM: 'price_atrapa_premium', STRIPE_URL_API: urlStripe,
+    STRIPE_HOSTY_PRZEKIEROWAN: urlStripe, PLATNOSCI_CENY_WYSWIETLANE: 'standard:eur=19,pln=79;premium:eur=49,pln=199',
+    CAI_USLUGODAWCA_IMIE_NAZWISKO: 'Jan Testowy', CAI_USLUGODAWCA_ADRES: 'ul. Testowa 1, 00-001 Warszawa', CAI_USLUGODAWCA_EMAIL: 'kontakt@example.com',
+  });
+  const serwer = spawn(process.execPath, [path.join(REPO, 'serwer', 'server.js')], { cwd: REPO, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  let log = '';
+  serwer.stdout.on('data', (d) => { log += d; });
+  serwer.stderr.on('data', (d) => { log += d; });
+  const bledy = [];
+  const konteksty = [];
+  const HASLO_W = 'mocne-haslo-do-testu-42';
+  const kontekst = async (opcje, jezyki) => {
+    const k = await b.newContext(Object.assign({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 } }, opcje));
+    await k.addInitScript((lista) => {
+      try { sessionStorage.setItem('cin_splash', '1'); sessionStorage.setItem('cai_kreator_pozniej', '1'); } catch (e) { /* bez magazynu */ }
+      if (lista) Object.defineProperty(navigator, 'languages', { get: () => lista });
+    }, jezyki || null);
+    k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+    konteksty.push(k);
+    return k;
+  };
+  const zarejestruj = async (s, email, sciezka) => {
+    await s.goto(adres + (sciezka || '/rejestracja'), { waitUntil: 'load' });
+    await s.fill('#email', email);
+    await s.fill('#haslo', HASLO_W);
+    await s.check('#zgoda_regulamin');
+    await s.check('#zgoda_wiek');
+    await s.waitForTimeout(3200);                       // podpisany znacznik: formularz szybszy niz 3 s to automat
+    await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"]')]);
+    await s.waitForFunction(() => !!(window.STAN_KONTA && window.STAN_KONTA.pochodzenie === 'samoobsluga' && !window.STAN_KONTA._zapas), null, { timeout: 10000 });
+  };
+  const zaloguj = async (s, email) => {
+    await s.goto(adres + '/', { waitUntil: 'load' });
+    await s.fill('input[name="login"]', email);
+    await s.fill('input[type="password"]', HASLO_W);
+    await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"]')]);
+    await s.waitForFunction(() => !!(window.STAN_KONTA && window.STAN_KONTA.platnosci && window.STAN_KONTA.platnosci.wlaczone), null, { timeout: 10000 });
+  };
+  const oknoZakupu = async (s) => {
+    await s.evaluate(() => otworzPakiet('zakup'));
+    await s.waitForSelector('#zakup .zakup-karta', { timeout: 8000 });
+    return s.evaluate(() => ({ waluta: (document.querySelector('#zakup .segmenty [aria-pressed="true"]') || {}).textContent || '',
+      przelacznik: !!document.querySelector('#zakup .segmenty'), wymuszona: !!document.getElementById('zakup-waluta-wymuszona'),
+      karty: [...document.querySelectorAll('#zakup .zakup-karta')].map((x) => x.textContent.replace(/\s+/g, ' ').trim()), jezyk: document.documentElement.lang }));
+  };
+  const kup = async (s, waluta) => {
+    await oknoZakupu(s);
+    if (waluta) await s.evaluate((w) => wybierzWaluteZakupu(w), waluta);
+    await s.check('#zakup-zgoda-regulamin');
+    await s.check('#zakup-zgoda-wykonanie');
+    await Promise.all([s.waitForURL((u) => String(u).startsWith(urlStripe), { timeout: 15000 }), s.click('#zakup-przycisk')]);
+    await Promise.all([s.waitForNavigation({ url: (u) => String(u).startsWith(adres + '/?platnosc='), waitUntil: 'load', timeout: 15000 }), s.click('#zaplac')]);
+    await s.waitForFunction(() => /jest aktywny do/.test((document.getElementById('platnosc-tresc') || {}).textContent || ''), null, { timeout: 20000 });
+    await s.evaluate(() => zamknijPlatnosc());
+  };
+  const stanSub = (s) => s.evaluate(async () => (await (await fetch('/api/platnosci/stan')).json()).subskrypcja);
+  try {
+    await czekajNaPort(portSerwera, 15000);
+    // ── (1) Waluta po zakonczonej subskrypcji: zakup w EUR (recznie, jak w tescie), odstapienie, potem PLN ──
+    const k1 = await kontekst({ locale: 'pl-PL', timezoneId: 'Europe/Warsaw' });
+    // Wolne lacze: odpowiedz /api/pakiet przychodzi, gdy okno pakietu jest juz otwarte. Kreator klucza (nowe konto bez
+    // klucza) czeka na te odpowiedz i wchodzil wtedy nad okno pakietu, zaslaniajac zgody (pelny przebieg testu).
+    let opozniajPakiet = true;
+    await k1.route('**/api/pakiet', async (r) => {
+      if (opozniajPakiet) await new Promise((ok) => setTimeout(ok, 1500));
+      await r.continue().catch(() => {});
+    });
+    const s = await k1.newPage();
+    await krok('R9-W rejestracja konta (A1)', zarejestruj(s, 'zmiana.pakietu@firma-przyklad.pl'));
+    const start = await oknoZakupu(s);
+    wynik('R9-W polska przegladarka w Polsce (strefa Europe/Warsaw): okno zakupu po polsku, domyslnie PLN, z przelacznikiem',
+      start.jezyk === 'pl' && start.waluta === 'PLN' && start.przelacznik && /79\s?zł/.test(start.karty[0]), JSON.stringify(start));
+    await krok('R9-W spozniona odpowiedz /api/pakiet dla kreatora', s.waitForFunction(() => window.pakietStanStart !== undefined, null, { timeout: 10000 }));
+    opozniajPakiet = false;
+    const nadOknem = await s.evaluate(() => {
+      const c = document.getElementById('zakup-zgoda-regulamin');
+      c.scrollIntoView({ block: 'center' });
+      const r = c.getBoundingClientRect();
+      return { kreator: getComputedStyle(document.getElementById('start-modal')).display, naZgodzie: document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === c };
+    });
+    wynik('R9-W kreator klucza po spoznionej odpowiedzi /api/pakiet nie wchodzi nad otwarte okno pakietu (zgody da sie zaznaczyc)',
+      nadOknem.kreator === 'none' && nadOknem.naZgodzie, JSON.stringify(nadOknem));
+    await krok('R9-W zakup w EUR (recznie przelaczone, jak w tescie premiery)', kup(s, 'eur'));
+    const eur = await stanSub(s);
+    await s.goto(adres + '/konto/odstapienie?z=app&lang=pl', { waitUntil: 'load' });
+    await krok('R9-W odstapienie od umowy', Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('#potwierdz-odstapienie')]));
+    await s.goto(adres + '/', { waitUntil: 'load' });
+    await s.waitForFunction(() => !!(window.STAN_KONTA && window.STAN_KONTA.subskrypcja && window.STAN_KONTA.subskrypcja.stan === 'wygasla'), null, { timeout: 10000 });
+    const poOdst = await oknoZakupu(s);
+    wynik('R9-W po odstapieniu od subskrypcji w EUR: okno zakupu znowu z przelacznikiem i domyslnym PLN, bez "Płacisz w EUR, tak jak przy poprzedniej subskrypcji"',
+      eur.waluta === 'eur' && poOdst.waluta === 'PLN' && poOdst.przelacznik && !poOdst.wymuszona && /79\s?zł/.test(poOdst.karty[0]), JSON.stringify({ eur: eur.waluta, poOdst }));
+    await s.evaluate(() => zamknijPakiet());
+    await krok('R9-W zakup w PLN po EUR (ten sam klient Stripe)', kup(s, ''));
+    const pln = await stanSub(s);
+    wynik('R9-W zakup w PLN po wczesniejszej subskrypcji w EUR: subskrypcja aktywna w PLN', pln.stan === 'aktywna' && pln.waluta === 'pln' && pln.plan === 'standard', JSON.stringify(pln));
+    // ── (3) Konto: licznik wraca 1. dnia miesiaca; (2) "Zmien pakiet" prowadzi do kart zmiany ──
+    await s.evaluate(() => otworzKonto());
+    await krok('R9-W Konto z przyciskiem Zmien pakiet', s.waitForSelector('#konto-zmien-pakiet', { timeout: 8000 }));
+    const konto = await s.evaluate(() => {
+      const t = new Date();
+      const pierwszy = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() + 1, 1)).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' });
+      const sub = window.STAN_KONTA.subskrypcja;
+      return { tekst: document.getElementById('konto-tresc').textContent.replace(/\s+/g, ' '), pierwszy,
+        odnowienie: new Date(sub.okresDo).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' }) };
+    });
+    wynik('R9-W Konto: "licznik wraca" 1. dnia nastepnego miesiaca, nie w dniu odnowienia subskrypcji',
+      konto.tekst.indexOf('licznik wraca ' + konto.pierwszy) >= 0 && (konto.pierwszy === konto.odnowienie || konto.tekst.indexOf('licznik wraca ' + konto.odnowienie) < 0),
+      JSON.stringify({ pierwszy: konto.pierwszy, odnowienie: konto.odnowienie, fragment: (konto.tekst.match(/licznik wraca [^·]{0,20}/) || [''])[0] }));
+    await s.click('#konto-zmien-pakiet');
+    await krok('R9-W okno pakietu z kartami zmiany', s.waitForSelector('#zmiana-pakietu #zmiana-przycisk', { timeout: 8000 }));
+    const zmiana = await s.evaluate(() => ({
+      karty: [...document.querySelectorAll('#zmiana-pakietu .zakup-karta')].map((x) => ({ plan: x.dataset.plan, wybrana: x.getAttribute('aria-checked'), zablokowana: x.getAttribute('aria-disabled'), tekst: x.textContent.replace(/\s+/g, ' ').trim() })),
+      przycisk: document.getElementById('zmiana-przycisk').textContent, opis: document.getElementById('zmiana-opis').textContent,
+      widoczna: (() => { const r = document.getElementById('zmiana-pakietu').getBoundingClientRect(); return r.width > 0 && r.top < innerHeight && r.bottom > 0; })(),
+    }));
+    wynik('R9-W okno pakietu: Standard "obecny" bez wyboru, Premium wybrany, przycisk "Przejdź na Premium · 199 zł", opis z informacja o potwierdzeniu u Stripe, sekcja przewinieta do widoku',
+      zmiana.karty.length === 2 && zmiana.karty[0].plan === 'standard' && zmiana.karty[0].zablokowana === 'true' && /obecny/.test(zmiana.karty[0].tekst)
+      && zmiana.karty[1].plan === 'premium' && zmiana.karty[1].wybrana === 'true' && /^Przejdź na Premium · 199\s?zł$/.test(zmiana.przycisk.trim())
+      && /zobaczysz na stronie Stripe/.test(zmiana.opis) && zmiana.widoczna, JSON.stringify(zmiana));
+    if (process.env.CAI_TEST_ZRZUTY_R9W) await zrzut(s, 'r9w-zmiana-komputer');
+    await krok('R9-W przejscie do potwierdzenia zmiany u Stripe', Promise.all([s.waitForURL((u) => String(u).startsWith(urlStripe + '/p/session/'), { timeout: 15000 }), s.click('#zmiana-przycisk')]));
+    const doplata = await s.textContent('#doplata');
+    await krok('R9-W potwierdzenie i powrot do aplikacji', Promise.all([s.waitForNavigation({ url: (u) => String(u).startsWith(adres + '/?platnosc=zmiana'), waitUntil: 'load', timeout: 15000 }), s.click('#potwierdz')]));
+    await krok('R9-W komunikat po zmianie', s.waitForFunction(() => /Masz teraz pakiet Premium/.test((document.getElementById('platnosc-tresc') || {}).textContent || ''), null, { timeout: 20000 }));
+    const poZmianie = await s.evaluate(async () => ({ tytul: document.getElementById('platnosc-tytul').textContent, adres: location.search,
+      pakiet: (await (await fetch('/api/pakiet')).json()).plan }));
+    wynik('R9-W wyzszy pakiet: u Stripe doplata proporcjonalna, po potwierdzeniu "Pakiet zmieniony", od razu Premium, adres bez ?platnosc',
+      /Do zapłaty dziś: 1[12]\d,\d{2} PLN/.test(doplata) && poZmianie.tytul === 'Pakiet zmieniony' && poZmianie.pakiet === 'premium' && !/platnosc|plan=/.test(poZmianie.adres),
+      JSON.stringify({ doplata, poZmianie }));
+    await s.evaluate(() => zamknijPlatnosc());
+    // ── (4) Premium: bez zdania o licznikach; telefon: karty zmiany w oknie ──
+    await s.evaluate(() => otworzPakiet('zmiana'));
+    await s.waitForSelector('#zmiana-pakietu #zmiana-przycisk', { timeout: 8000 });
+    const premium = await s.evaluate(() => ({ opis: document.getElementById('pakiet-opis').textContent, przycisk: document.getElementById('zmiana-przycisk').textContent }));
+    wynik('R9-W Premium: opis pakietu bez "Liczniki odnawiają się..." (brak licznikow z limitem), w oknie zmiana na Standard',
+      /bez limitów/.test(premium.opis) && !/Liczniki odnawiają/.test(premium.opis) && /^Przejdź na Standard · 79\s?zł$/.test(premium.przycisk.trim()), JSON.stringify(premium));
+    const k1t = await kontekst({ locale: 'pl-PL', timezoneId: 'Europe/Warsaw', viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 });
+    const st = await k1t.newPage();
+    await zaloguj(st, 'zmiana.pakietu@firma-przyklad.pl');
+    await st.evaluate(() => otworzPakiet('zmiana'));
+    await st.waitForSelector('#zmiana-pakietu #zmiana-przycisk', { timeout: 8000 });
+    await st.waitForTimeout(300);
+    const tel = await st.evaluate(() => {
+      const r = (x) => { const b = x.getBoundingClientRect(); return { l: Math.round(b.left), r: Math.round(b.right), t: Math.round(b.top), b: Math.round(b.bottom) }; };
+      return { szer: innerWidth, sekcja: r(document.getElementById('zmiana-pakietu')), przycisk: r(document.getElementById('zmiana-przycisk')),
+        karty: [...document.querySelectorAll('#zmiana-pakietu .zakup-karta')].map(r), przewijanie: document.documentElement.scrollWidth > innerWidth };
+    });
+    wynik('R9-W telefon 412 px: sekcja zmiany, karty i przycisk w szerokosci ekranu, bez przewijania w bok',
+      tel.sekcja.l >= 0 && tel.sekcja.r <= tel.szer && tel.przycisk.r <= tel.szer && tel.karty.every((x) => x.l >= 0 && x.r <= tel.szer) && !tel.przewijanie, JSON.stringify(tel));
+    if (process.env.CAI_TEST_ZRZUTY_R9W) await zrzut(st, 'r9w-zmiana-telefon');
+    // ── (2) Nizszy pakiet: zaplanowany na koniec okresu ──
+    await krok('R9-W przejscie do potwierdzenia obnizki', Promise.all([s.waitForURL((u) => String(u).startsWith(urlStripe + '/p/session/'), { timeout: 15000 }), s.click('#zmiana-przycisk')]));
+    const odKiedy = await s.textContent('#od-kiedy');
+    await krok('R9-W potwierdzenie obnizki i powrot', Promise.all([s.waitForNavigation({ url: (u) => String(u).startsWith(adres + '/?platnosc=zmiana'), waitUntil: 'load', timeout: 15000 }), s.click('#potwierdz')]));
+    await krok('R9-W komunikat o zaplanowanej zmianie', s.waitForFunction(() => /zacznie działać/.test((document.getElementById('platnosc-tresc') || {}).textContent || ''), null, { timeout: 20000 }));
+    const plan = await s.evaluate(() => ({ tytul: document.getElementById('platnosc-tytul').textContent, tekst: document.getElementById('platnosc-tresc').textContent }));
+    await s.evaluate(() => { zamknijPlatnosc(); otworzPakiet(); });
+    await s.waitForSelector('#pakiet-zakup .zakup-stan', { timeout: 8000 });
+    const poObnizce = await s.evaluate(() => ({ zaplanowana: (document.getElementById('zmiana-zaplanowana') || {}).textContent || '', sekcja: !!document.getElementById('zmiana-pakietu'),
+      pakiet: window.STAN_PAKIETU && window.STAN_PAKIETU.plan }));
+    await s.evaluate(() => { zamknijPakiet(); otworzKonto(); });
+    await s.waitForFunction(() => /Pakiet Premium jest aktywny/.test(document.getElementById('konto-tresc').textContent), null, { timeout: 8000 });
+    const kontoPo = await s.evaluate(() => ({ zaplanowana: (document.getElementById('konto-zmiana-zaplanowana') || {}).textContent || '', przycisk: !!document.getElementById('konto-zmien-pakiet') }));
+    wynik('R9-W nizszy pakiet: u Stripe zmiana od konca okresu, "Zmiana zaplanowana: Pakiet Standard zacznie działać ... Do tego czasu masz pakiet Premium", w oknie i Koncie zdanie o zmianie, bez drugiej zmiany',
+      /Zmiana od \d{4}-\d{2}-\d{2}/.test(odKiedy) && plan.tytul === 'Zmiana zaplanowana' && /Pakiet Standard zacznie działać \d+ \S+ \d{4}\. Do tego czasu masz pakiet Premium\./.test(plan.tekst)
+      && /^Od \d+ \S+ \d{4} pakiet Standard\.$/.test(poObnizce.zaplanowana) && !poObnizce.sekcja && poObnizce.pakiet === 'premium'
+      && /^Od \d+ \S+ \d{4} pakiet Standard\.$/.test(kontoPo.zaplanowana) && !kontoPo.przycisk, JSON.stringify({ odKiedy, plan, poObnizce, kontoPo }));
+    await s.evaluate(() => zamknijKonto());
+    // ── (5) Jezyk z listy jezykow przegladarki, waluta ze strefy czasowej urzadzenia ──
+    const k2 = await kontekst({ locale: 'en-US', timezoneId: 'Europe/Warsaw' });
+    const s2 = await k2.newPage();
+    await krok('R9-W rejestracja z angielska przegladarka w Polsce', zarejestruj(s2, 'waluta.miejsce@firma-przyklad.pl'));
+    const enPl = await oknoZakupu(s2);
+    wynik('R9-W angielska przegladarka w Polsce (Europe/Warsaw): aplikacja po angielsku, ceny domyslnie w PLN (karta polska), przelacznik zostaje',
+      enPl.jezyk === 'en' && enPl.waluta === 'PLN' && enPl.przelacznik && /PLN\s?79|79\s?PLN|zł|PLN/.test(enPl.karty[0]), JSON.stringify(enPl));
+    const k3 = await kontekst({ locale: 'pl-PL', timezoneId: 'Europe/Berlin' });
+    const s3 = await k3.newPage();
+    await krok('R9-W logowanie z polska przegladarka w Niemczech', zaloguj(s3, 'waluta.miejsce@firma-przyklad.pl'));
+    const plDe = await oknoZakupu(s3);
+    wynik('R9-W polska przegladarka w Niemczech (Europe/Berlin): aplikacja po polsku, ceny domyslnie w EUR', plDe.jezyk === 'pl' && plDe.waluta === 'EUR' && /19\s?€/.test(plDe.karty[0]), JSON.stringify(plDe));
+    // ?lang= niesie serwer, gdy jezyk wybrany na stronie rozni sie od jezyka przegladarki (rejestracja na angielskiej
+    // stronie przy polskiej przegladarce, powrot z zakupu): pierwsze wejscie w tym jezyku, potem wybor zapamietany.
+    const k6 = await kontekst({ locale: 'pl-PL', timezoneId: 'Europe/Warsaw' });
+    const s6 = await k6.newPage();
+    await krok('R9-W rejestracja na angielskiej stronie przy polskiej przegladarce', zarejestruj(s6, 'jezyk.strony@firma-przyklad.pl', '/rejestracja?lang=en'));
+    const zAdresu = await s6.evaluate(() => ({ jezyk: document.documentElement.lang, adres: location.search, zapisany: localStorage.getItem('cai_lang') }));
+    await s6.goto(adres + '/?lang=pl', { waitUntil: 'load' });
+    const zapamietany = await s6.evaluate(() => ({ jezyk: document.documentElement.lang, adres: location.search }));
+    wynik('R9-W rejestracja po angielsku przy polskiej przegladarce: aplikacja po angielsku (?lang=en zapamietany i usuniety z adresu), pozniejszy ?lang= nie nadpisuje zapamietanego wyboru',
+      zAdresu.jezyk === 'en' && zAdresu.adres === '' && zAdresu.zapisany === 'en' && zapamietany.jezyk === 'en' && zapamietany.adres === '', JSON.stringify({ zAdresu, zapamietany }));
+    // Bez locale: Chromium z locale wysyla Accept-Language z samego locale i pomija extraHTTPHeaders.
+    const k4 = await kontekst({ timezoneId: 'Europe/Berlin', extraHTTPHeaders: { 'Accept-Language': 'de-DE,de;q=0.9,pl;q=0.8' } }, ['de-DE', 'de', 'pl-PL']);
+    const s4 = await k4.newPage();
+    await s4.goto(adres + '/', { waitUntil: 'load' });
+    const ekranDePl = await s4.evaluate(() => document.documentElement.lang);
+    await krok('R9-W logowanie z niemiecka przegladarka z polskim na liscie', zaloguj(s4, 'waluta.miejsce@firma-przyklad.pl'));
+    const appDePl = await s4.evaluate(() => document.documentElement.lang);
+    const k5 = await kontekst({ locale: 'de-DE', timezoneId: 'Europe/Berlin' });
+    const s5 = await k5.newPage();
+    await s5.goto(adres + '/', { waitUntil: 'load' });
+    const ekranDe = await s5.evaluate(() => document.documentElement.lang);
+    await krok('R9-W logowanie z niemiecka przegladarka', zaloguj(s5, 'waluta.miejsce@firma-przyklad.pl'));
+    const appDe = await oknoZakupu(s5);
+    wynik('R9-W jezyk z listy przegladarki: "de, pl" -> ekran logowania i aplikacja po polsku; samo "de" -> po angielsku, z cenami w EUR (Niemcy)',
+      ekranDePl === 'pl' && appDePl === 'pl' && ekranDe === 'en' && appDe.jezyk === 'en' && appDe.waluta === 'EUR', JSON.stringify({ ekranDePl, appDePl, ekranDe, appDe }));
+    wynik('R9-W bez bledow JavaScript', !bledy.length, bledy.join(' | '));
+    if (bledow) await zrzut(s, 'r9w-zmiana');
+  } catch (e) {
+    wynik('R9-W scenariusz przerwany', false, (e && e.message || String(e)).split('\n')[0] + ' | ' + log.split('\n').slice(-5).join(' '));
+  } finally {
+    for (const k of konteksty) await k.close().catch(() => {});
+    serwer.kill();
+    await new Promise((r) => srvStripe.close(r));
+    fs.rmSync(kat, { recursive: true, force: true });
+  }
+}
+
 (async () => {
   await przygotujPorty();
   const serwerPlikow = await uruchomSerwerPlikow();
@@ -2826,6 +3065,7 @@ async function wariantR9Zakup(b) {
     await osobno(wariantSamoobsluga, b);
     await osobno(wariantR9DZakupWAplikacji, b);
     await osobno(wariantUwagiTestuPremiery, b);
+    await osobno(wariantR9W, b);
   } catch (e) {
     wynik('test przerwany wyjatkiem', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));
     console.log(serwer.log().split('\n').slice(-20).join('\n'));
