@@ -2282,7 +2282,11 @@ async function wariantKreatorTematR9D(b) {
   await s.waitForTimeout(4000);
   const zTematem = await s.evaluate(() => ({ kreator: getComputedStyle(document.getElementById('start-modal')).display, temat: document.getElementById('topic').value }));
   await s.fill('#topic', '');
-  await s.waitForTimeout(300);
+  // Szkic zapisuje sie 400 ms po ostatniej zmianie; druga karta przywrocilaby wczesniej zapisany temat
+  // i kreator slusznie by sie nie pokazal. Czekamy na zapis pustego tematu, nie na stala chwile.
+  await krok('R9-D KOD8-24 szkic bez tematu', s.waitForFunction(() => {
+    try { return JSON.parse(magazyn.getItem('cai_szkic') || '{}').topic === ''; } catch (e) { return false; }
+  }, null, { timeout: 5000 }));
   const s2 = await k.newPage();
   await s2.goto('http://127.0.0.1:' + PORT_SERWERA + '/', { waitUntil: 'load' });
   await s2.waitForFunction(() => getComputedStyle(document.getElementById('start-modal')).display === 'flex', null, { timeout: 10000 }).catch(() => {});
