@@ -281,7 +281,7 @@ async function scenariuszStanu(b) {
 
   // ── Liczby po polsku ──
   const liczby = await s.evaluate(() => ({ koszt: (document.getElementById('h-cost') || {}).textContent || '', fog: (document.getElementById('stat-fog') || {}).textContent || '' }));
-  // R9-T: po polsku kwota przed waluta ("0,012 USD"); "$1,984" czytalo sie jak 1984 dolary.
+  // R9-T: po polsku kwota przed waluta ("0,08 USD"); "$1,984" czytalo sie jak 1984 dolary.
   wynik('liczby: koszt sesji z przecinkiem dziesietnym i USD po kwocie (PL)', /^\d+,\d{2,3}\u00a0USD$/.test(liczby.koszt), liczby.koszt);
   wynik('liczby: FOG bez kropki dziesietnej (PL)', !/\d\.\d/.test(liczby.fog), liczby.fog);
   wynik('stan: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));

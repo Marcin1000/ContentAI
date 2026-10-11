@@ -1622,6 +1622,9 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 .h-item.active { background: var(--c-wcisk); border-left-color: var(--c-akcent-mocny); }
 .h-item-topic, .h-item-title { font-size: var(--t-sm); font-weight: var(--g-mocny); color: var(--c-tekst); }
 .h-item-meta { font-family: var(--f-ui); font-size: var(--t-xs); color: var(--c-tekst-3); }
+/* koszt tego tekstu na liscie Historii: kwota z waluta w jednym kawalku (bez tabular-nums: w tym kroju przecinek
+   dostawal szerokosc cyfry i kwota wygladala jak "0 , 088") */
+.h-koszt { white-space: nowrap; }
 .htag-filter, .img-fmt-btn { display: inline-flex; align-items: center; height: var(--h-xs); padding: 0 var(--s-8); border: 1px solid var(--c-linia-2);
   border-radius: var(--r-pelny); background: transparent; color: var(--c-tekst-2); font-family: var(--f-ui); font-size: var(--t-xs);
   font-weight: var(--g-sredni); cursor: pointer; transition: background-color var(--m-1) var(--e-std), border-color var(--m-1) var(--e-std); }
@@ -5756,7 +5759,7 @@ var I18N = {
     'start-4-opis':'Wpisz temat, dodaj słowa kluczowe i kliknij „Wygeneruj treść”. Licznik pakietu jest zawsze w prawym górnym rogu: kliknięcie pokazuje, ile zostało.',
     'start-4-lista':'Gdzie szukać reszty: Baza wiedzy, Historia i Widoczność AI są w pasku na górze (na telefonie w dolnym pasku i w Koncie), a w menu konta ustawisz markę, głos marki i integrację z CMS. Nic z tego nie jest potrzebne do pierwszego artykułu.',
     'byok-1-tytul':'Podłącz swój klucz Anthropic','byok-1-opis':'Content AI pisze teksty modelem firmy Anthropic. Klucz API działa jak hasło do Twojego konta u Anthropic: płacisz dostawcy tylko za to, czego użyjesz, a nam za narzędzie.',
-    'byok-koszt':'Ile to kosztuje? Artykuł około 800 słów z ocenami i kontrolą faktów to orientacyjnie 0,25-0,50 USD. Wyszukiwanie w sieci i samokorekta zwiększają koszt. Łączny szacunkowy koszt na Twoich kluczach zobaczysz w Historii.',
+    'byok-koszt':'Ile to kosztuje? Artykuł około 800 słów z ocenami i kontrolą faktów to orientacyjnie 0,25-0,50 USD. Wyszukiwanie w sieci i samokorekta zwiększają koszt. Szacunkowy koszt każdego tekstu zobaczysz w Historii.',
     'byok-jest':'Klucz Anthropic jest zapisany (kończy się na {KONCOWKA}). Możesz przejść dalej albo wkleić nowy.','byok-gdzie':'Klucz zapisuje się tylko w tej przeglądarce. Przy każdym zapytaniu aplikacja przesyła go do serwera Content AI, który przekazuje go dostawcy i niczego nie zapisuje. Opłaty za korzystanie z modeli ponosisz u dostawcy, na jego warunkach. Warunki dostawcy akceptujesz sam, zakładając u niego konto.',
     'byok-bezpieczenstwo':'Więcej o bezpieczeństwie','byok-nie-mam':'Nie masz klucza? Około 10 minut','byok-krok-1':'Załóż konto w konsoli Anthropic na platform.claude.com (to osobne konto, niezależne od czatu z Claude).',
     'byok-krok-2':'W Settings, potem Billing, kliknij „Buy credits” i doładuj konto, na przykład 10 USD.','byok-krok-3':'Zalecane: w Billing ustaw „Spend limits”, czyli miesięczny limit wydatków.',
@@ -5859,7 +5862,7 @@ var I18N = {
 //@@ELSE
     'nokey-title':'Brak klucza API','nokey-line1':'Otwórz plik w edytorze tekstowym i znajdź linię:','nokey-line2':'Zastąp WSTAW_TUTAJ_NOWY_KLUCZ_API swoim kluczem z console.anthropic.com','badge-nokey':'brak klucza',
 //@@ENDIF
-    'hist-docs-base':'Dokumenty w bazie','hist-cost':'Szac. koszt API','hist-cost-wlasne':'Szacunkowy koszt na Twoich kluczach','hist-cost-wczesniej':'wcześniej',
+    'hist-docs-base':'Dokumenty w bazie','hist-cost':'Szac. koszt API','hist-cost-wlasne':'Szacunkowy koszt na Twoich kluczach','hist-cost-wczesniej':'wcześniej','hist-koszt-wpisu':'Szacunkowy koszt tego tekstu: generowanie i praca na nim (oceny, fakty, poprawki, przeróbki)',
     'hist-filter-all':'Wszystkie','hist-filter-hybrid':'Hybryda',
     'bulk-gen-all-txt':'Generuj wszystkie','improve-action-txt':'Popraw tekst',
     // ── Spinner generowania ──
@@ -6625,7 +6628,7 @@ var I18N = {
     'start-4-opis':'Enter a topic, add keywords and click “Generate content”. Your plan counter is always in the top right corner: click it to see what is left.',
     'start-4-lista':'Where to find the rest: the knowledge base, History and AI visibility are in the top bar (on a phone in the bottom bar and under Account), and the account menu holds your brand, brand voice and CMS integration. None of it is needed for a first article.',
     'byok-1-tytul':'Connect your Anthropic key','byok-1-opis':'Content AI writes with Anthropic\'s model. An API key works like a password to your Anthropic account: you pay the provider only for what you use, and us for the tool.',
-    'byok-koszt':'What does it cost? An article of about 800 words with scores and a fact check costs roughly $0.25-0.50. Web search and self-review increase the cost. You will see the total estimated cost on your keys in History.',
+    'byok-koszt':'What does it cost? An article of about 800 words with scores and a fact check costs roughly $0.25-0.50. Web search and self-review increase the cost. You will see the estimated cost of each text in History.',
     'byok-jest':'Your Anthropic key is saved (it ends in {KONCOWKA}). You can continue or paste a new one.','byok-gdzie':'Your key is stored only in this browser. With each request the app sends it to the Content AI server, which passes it to the provider and stores nothing. You pay the provider for model usage, under the provider\'s terms. You accept the provider\'s terms yourself when you open an account with them.',
     'byok-bezpieczenstwo':'More about security','byok-nie-mam':'No key yet? About 10 minutes','byok-krok-1':'Create an account in the Anthropic console at platform.claude.com (a separate account, independent of the Claude chat).',
     'byok-krok-2':'In Settings, then Billing, click “Buy credits” and add credit, for example $10.','byok-krok-3':'Recommended: in Billing, set “Spend limits”, a monthly cap on spending.',
@@ -6785,7 +6788,7 @@ var I18N = {
 //@@ELSE
     'nokey-title':'Missing API key','nokey-line1':'Open the file in a text editor and find the line:','nokey-line2':'Replace WSTAW_TUTAJ_NOWY_KLUCZ_API with your key from console.anthropic.com','badge-nokey':'no key',
 //@@ENDIF
-    'hist-docs-base':'Documents in base','hist-cost':'Est. API cost','hist-cost-wlasne':'Estimated cost on your keys','hist-cost-wczesniej':'earlier',
+    'hist-docs-base':'Documents in base','hist-cost':'Est. API cost','hist-cost-wlasne':'Estimated cost on your keys','hist-cost-wczesniej':'earlier','hist-koszt-wpisu':'Estimated cost of this text: generation and work on it (scores, fact check, improvements, rewrites)',
     'hist-filter-all':'All','hist-filter-hybrid':'Hybrid',
     'bulk-gen-all-txt':'Generate all','improve-action-txt':'Improve the text',
     // ── Spinner ──
@@ -7421,6 +7424,30 @@ function dodajKoszt(dostawca, kwota) {
   magazyn.setItem('cai_koszty_v1', JSON.stringify(kosztyApi));
   updateCostDisplay();
 }
+// Koszt kazdego tekstu w Historii (h.koszt, USD). Liczy sie tylko praca na tekscie: wywolania modelu
+// oznaczone w apiFetch jako doArtykulu (generowanie, samokorekta, wyszukiwanie, fakty, tytuly, luki,
+// oceny, przerobki). Bazy wiedzy, tematow, planu, glosu marki, Widocznosci AI, grafik i audio tu nie ma.
+// Kubelek wybierany w chwili wyslania: generowanie zbiera koszt, a po zapisie wpisu wskazuje go, wiec
+// odpowiedz, ktora przyjdzie pozniej (albo gdy w Wyniku jest juz inny tekst), trafia do swojego wpisu.
+// Po generowaniu praca na tekscie liczy sie do wpisu otwartego w Wyniku (biezacyHist). Jak kafel kosztu:
+// konto na kluczach serwera nie widzi kosztu firmy, wiec jego wpisy kosztu nie dostaja.
+let kubelekGenerowania = null; // { suma, wpis } albo null poza generowaniem
+let zapisKosztuT = null;
+function kubelekArtykulu() {
+  if (kubelekGenerowania) return kubelekGenerowania;
+  return biezacyHist != null ? { wpis: biezacyHist } : null;
+}
+function dodajKosztArtykulu(kubelek, dostawca, kwota) {
+  if (!kubelek || !(kwota > 0)) return;
+  if (window.API_ENDPOINT_OVERRIDE && !kontoAdmin && !naWlasnymKluczu(dostawca)) return;
+  if (kubelek.wpis == null) { kubelek.suma = (kubelek.suma || 0) + kwota; return; }
+  const h = wpisHistorii(kubelek.wpis);
+  if (!h) return; // wpis usuniety w trakcie
+  h.koszt = (h.koszt || 0) + kwota;
+  h.zm = Date.now(); // nowszy koszt wygrywa przy scalaniu kart (jak reczne poprawki, KOD8-09)
+  clearTimeout(zapisKosztuT);
+  zapisKosztuT = setTimeout(function () { renderHistory(); saveState(); }, 400);
+}
 
 // ─── API FETCH Z AUTOMATYCZNYM RETRY (rate limit 429) ─────────────────────────
 // Przekształca wiadomość Anthropic → format OpenAI Chat (obsługa vision)
@@ -7637,6 +7664,9 @@ async function apiFetch(options, maxRetries = 3) {
   const WAIT_STEPS = [20, 40, 60]; // sekundy oczekiwania między próbami
   let endpoint = API_ENDPOINT;
   let gptMode = false;
+  // Koszt tekstu: kubelek w chwili wyslania (przed przebudowa zapytania dla GPT), pole nie idzie do fetch.
+  const kubelekKosztu = options && options.doArtykulu ? kubelekArtykulu() : null;
+  if (options && 'doArtykulu' in options) { options = Object.assign({}, options); delete options.doArtykulu; }
 
   // Wariant GPT-only: treść przez Azure OpenAI Chat Completions (zero Anthropic)
   if (USE_AZURE_GPT && AZURE_OPENAI_CHAT_URL && !AZURE_OPENAI_CHAT_URL.startsWith('WSTAW')) {
@@ -7687,7 +7717,9 @@ async function apiFetch(options, maxRetries = 3) {
           const text = (data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
           const inp = (data.usage && data.usage.prompt_tokens)     || 0;
           const out = (data.usage && data.usage.completion_tokens) || 0;
-          dodajKoszt('openai', (inp * 0.000003) + (out * 0.000015));
+          const kosztGpt = (inp * 0.000003) + (out * 0.000015);
+          dodajKoszt('openai', kosztGpt);
+          dodajKosztArtykulu(kubelekKosztu, 'openai', kosztGpt);
           const conv = { content: [{ type: 'text', text }], usage: { input_tokens: inp, output_tokens: out } };
           return new Response(JSON.stringify(conv), { status: 200, headers: { 'Content-Type': 'application/json' } });
         }
@@ -7698,7 +7730,9 @@ async function apiFetch(options, maxRetries = 3) {
       if (res.ok || res.status < 500) {
         res.clone().json().then(d => {
           if (d.usage) {
-            dodajKoszt('anthropic', kosztOdpowiedzi(d));
+            const koszt = kosztOdpowiedzi(d);
+            dodajKoszt('anthropic', koszt);
+            dodajKosztArtykulu(kubelekKosztu, 'anthropic', koszt);
           }
         }).catch(() => {});
       }
@@ -8000,10 +8034,11 @@ function formatujLiczbe(x, miejsca, stale) {
   return n.toLocaleString(currentLang === 'en' ? 'en-US' : 'pl-PL', { maximumFractionDigits: m, minimumFractionDigits: stale ? m : 0 });
 }
 // Koszt API w USD jak w tekstach aplikacji: po polsku "1,98 USD", po angielsku "$1.98". Wczesniej "$" stal
-// przed liczba z polskim przecinkiem: "$1,984" czyta sie jak 1984 dolary. Ponizej 0,10 USD trzy miejsca (0,012 USD).
+// przed liczba z polskim przecinkiem: "$1,984" czyta sie jak 1984 dolary. Dwa miejsca (koszt tekstu to zwykle
+// od kilku centow do dolara, lista Historii jednolita); ponizej 0,01 USD trzy, zeby drobny koszt nie byl "0,00".
 function kwotaUsd(x) {
   const n = Number(x) || 0;
-  const liczba = formatujLiczbe(n, n > 0 && n < 0.1 ? 3 : 2, true);
+  const liczba = formatujLiczbe(n, n > 0 && n < 0.01 ? 3 : 2, true);
   return currentLang === 'en' ? '$' + liczba : liczba + '\u00a0USD';
 }
 // Po powrocie sieci przycisk ponowienia w komunikacie bledu staje sie glowna akcja.
@@ -9106,6 +9141,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
       : 'SEO content evaluator. Respond ONLY with valid JSON: {"score":0-100,"issues":["issue in ' + (currentLang === 'en' ? 'English' : 'Polish') + ', max 60 chars"]}. Max 5 issues. Check: keyword in H1/H2, meta description, content completeness, no thin paragraphs, natural keyword use.';
 
     const evalRes = await apiFetch({
+      doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 500,
@@ -9151,6 +9187,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
   let improved = null;
   try {
     const impRes = await apiFetch({
+      doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(premiumMaxTokens),
@@ -9356,6 +9393,8 @@ async function generate(skipPremiumModal = false, opcje = null) {
     return false;
   }
 
+  // Koszt tego tekstu (Historia): wywolania generowania zbieraja koszt tutaj, wpis dostaje go przy zapisie.
+  kubelekGenerowania = { suma: 0, wpis: null };
   try {
     // Tylko zaznaczone zrodla (kod-06): nic nie zaznaczone = bez dokumentow z tej przegladarki.
     const activeDocs = getSelectedDocs();
@@ -9543,7 +9582,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
     }
     const data = useWeb
       ? await wywolajZWyszukiwaniem(cialoArtykulu, naglowkiArtykulu)
-      : await (await apiFetch({ method: 'POST', headers: naglowkiArtykulu,
+      : await (await apiFetch({ doArtykulu: true, method: 'POST', headers: naglowkiArtykulu,
           body: JSON.stringify(cialoArtykulu) })).json();
     // Typ i status bledu ida dalej: komunikat zalezy od nich (zly klucz, brak
     // srodkow, za dlugi tekst), tak samo jak to, czy ponowienie ma sens.
@@ -9609,6 +9648,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
       document.getElementById('spin-sub').textContent = _t('spin-sub-seo');
       try {
         const r = await apiFetch({
+          doArtykulu: true, // koszt tego tekstu w Historii
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
           body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 400,
@@ -9627,6 +9667,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
       document.getElementById('spin-sub').textContent = _t('spin-sub-aio');
       try {
         const r = await apiFetch({
+          doArtykulu: true, // koszt tego tekstu w Historii
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
           body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 400,
@@ -9682,6 +9723,7 @@ ${html}`;
 
       try {
         const improveRes = await apiFetch({
+          doArtykulu: true, // koszt tego tekstu w Historii
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
           body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(getMaxTokens()), system: editorRole + blokPrzepisywania(), messages: [{ role: 'user', content: improvePrompt }] })
@@ -9768,6 +9810,7 @@ ${html}`;
 
   // Sprawdź czy html zawiera błąd
   if (!html || bladGenerowania) {
+    kubelekGenerowania = null; // bez wpisu historii koszt zostaje tylko w lacznej sumie
     wyczyscStatystyki();
     const art = document.getElementById('article');
     art.innerHTML = html || '<p class="komunikat-bledu">' + escapeHtml(_t('msg-no-api-resp')) + '</p>';
@@ -9864,6 +9907,12 @@ ${html}`;
   kontekstArt = { temat: topic, frazy: frazy.slice(0, 50), typ: ctype, jezyk: lang, ton: tone, dlugosc: length, extra: extra,
     ai: nowePochodzenieAI(poprawaWklejonego ? 'zlozone' : 'ai') }; // R9-D (PR8-18): pochodzenie tekstu do oznaczen
   Object.assign(history[0], { id: noweIdWpisu(), ts: Date.now(), kontekst: kontekstArt });
+  // Koszt generowania do wpisu; kubelek wskazuje teraz wpis, wiec spoznione odpowiedzi tez do niego trafia.
+  if (kubelekGenerowania) {
+    if (kubelekGenerowania.suma > 0) history[0].koszt = kubelekGenerowania.suma;
+    kubelekGenerowania.wpis = history[0].id;
+    kubelekGenerowania = null;
+  }
   biezacyHist = history[0].id;
   magazyn.setItem('cai_biezacy', biezacyHist);
   // Lista historii i zapis po pierwszym malowaniu artykulu: w tym samym zadaniu
@@ -9922,7 +9971,7 @@ function renderHistory() {
   inner.innerHTML = filtered.map((h, i) => `
     <div class="h-item${h.id === previewHistory._podglad ? ' active' : ''}" data-id="${h.id}" onclick="previewHistory('${h.id}')">
       <div class="h-item-topic">${escapeHtml(h.topic)}</div>
-      <div class="h-item-meta">${escapeHtml(nazwaTypu(h.type))} · ~${h.words} ${_t('hist-words-suffix')} · ${escapeHtml(czasWpisu(h))}</div>
+      <div class="h-item-meta">${escapeHtml(nazwaTypu(h.type))} · ~${h.words} ${_t('hist-words-suffix')} · ${escapeHtml(czasWpisu(h))}${h.koszt > 0 ? ` · <span class="h-koszt" title="${escapeHtml(_t('hist-koszt-wpisu'))}">${escapeHtml(kwotaUsd(h.koszt))}</span>` : ''}</div>
       <button type="button" class="h-usun" onclick="event.stopPropagation();usunWpisHistorii('${h.id}')" title="${_t('hist-usun')}" aria-label="${_t('hist-usun')}">${ikona('trash-2', 'ikona-s')}</button>
     </div>`).join('');
   // Nie auto-ładuj artykułu przy zmianie filtra - użytkownik klika sam
@@ -10079,6 +10128,7 @@ async function wywolajZWyszukiwaniem(cialo, naglowki, maxRund = 4) {
 //@@ENDIF
     }
     const res = await apiFetch({
+      doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST', headers: h,
       body: JSON.stringify(Object.assign({}, cialo, { messages: wiadomosci })),
     });
@@ -10756,6 +10806,7 @@ async function uruchomKontroleFaktow(wymus) {
 
   try {
     const res = await apiFetch({
+      doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -11888,7 +11939,7 @@ function eksportujHistorie() {
   const en = currentLang === 'en', data = dzisIso(), tytul = _t('hist-eksport-tytul').replace('{data}', data);
   const wpisy = history.map(function (h) {
     return { id: h.id, ts: h.ts || null, topic: h.topic || '', type: h.type || '', words: h.words || 0, time: h.time || '',
-      jezyk: h.jezyk || '', kontekst: h.kontekst || null, html: h.html || '' };
+      jezyk: h.jezyk || '', kontekst: h.kontekst || null, koszt: h.koszt > 0 ? h.koszt : null, html: h.html || '' };
   });
   const dane = JSON.stringify({ aplikacja: 'Content AI', rodzaj: 'historia', wersja: 1, wyeksportowano: new Date().toISOString(), wpisy: wpisy }).replace(/</g, '\\u003c');
   let dok = '<!doctype html><html lang="' + (en ? 'en' : 'pl') + '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
@@ -12401,6 +12452,7 @@ async function openTitlesPanel() {
 
   try {
     const res = await apiFetch({
+      doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 600,
@@ -12583,6 +12635,7 @@ async function fetchSerpContext(topic, kwText) {
     const _serpLang = ({ 'Polski':'Polish','English':'English','Deutsch':'German','Čeština':'Czech' })[document.getElementById('lang')?.value] || 'Polish';
   try {
     const res = await apiFetch({
+      doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST',
       headers: {
         'Content-Type': 'application/json', 'x-api-key': API_KEY,
@@ -12984,6 +13037,7 @@ async function runGapAnalysis() {
 
   try {
     const res = await apiFetch({
+      doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 900,
@@ -13157,7 +13211,7 @@ async function improveFromGaps() {
   try {
     const data = zSiecia
       ? await wywolajZWyszukiwaniem(cialo, naglowki)
-      : await (await apiFetch({ method: 'POST', headers: naglowki, body: JSON.stringify(cialo) })).json();
+      : await (await apiFetch({ doArtykulu: true, method: 'POST', headers: naglowki, body: JSON.stringify(cialo) })).json();
     if (!data || data.error) throw bladOdpowiedzi(data || {});
     if (nrArt !== numerArtykulu) { pokazPowiadomienie(_t('gap-inny-artykul'), 'uwaga'); return; }
     // Tekst po ostatnim wyniku wyszukiwania (zapowiedz "Wyszukam..." nie trafia do artykulu).
@@ -13769,6 +13823,7 @@ async function toggleSeoPanel(forceRefresh = false) {
   if (forceRefresh) ocenyWToku.seo.delete(currentHash);
   const zapytaj = async () => {
     const res = await apiFetch({
+      doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 600,
@@ -13885,6 +13940,7 @@ async function toggleAioPanel(forceRefresh = false) {
   if (forceRefresh) ocenyWToku.aio.delete(currentHashAio);
   const zapytaj = async () => {
     const res = await apiFetch({
+      doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 600,
@@ -14775,7 +14831,8 @@ function saveState() {
   // wypadaja najstarsze wpisy historii - z komunikatem, ile ich bylo.
   const wpisDoZapisu = h => ({
     id: h.id, ts: h.ts, topic: h.topic, type: h.type, words: h.words, time: h.time,
-    html: h.html || '', jezyk: h.jezyk || '', kontekst: h.kontekst || null, zm: h.zm || h.ts || 0
+    html: h.html || '', jezyk: h.jezyk || '', kontekst: h.kontekst || null, zm: h.zm || h.ts || 0,
+    koszt: h.koszt > 0 ? h.koszt : undefined // koszt tego tekstu (USD); bez kosztu pole nie trafia do magazynu
   });
   // R9-F (KOD8-09): najpierw wpisy zapisane przez inne karty tego konta - zapis calej listy z pamieci
   // tej karty kasowal artykuly z drugiej karty.
@@ -16039,6 +16096,7 @@ WAŻNE: Zwróć TYLKO tekst landing page, gotowy do wklejenia.`
 
   try {
     const res = await apiFetch({
+      doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(2500),

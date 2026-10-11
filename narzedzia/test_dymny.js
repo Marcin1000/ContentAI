@@ -433,6 +433,37 @@ async function wariantProxy(b) {
   wynik('proxy: wlasny klucz - koszt na Twoich kluczach z podzialem na dostawcow',
     k1.widoczny && /Twoich|your/i.test(k1.etykieta) && /Anthropic (0,\d{2,3}\u00a0USD|\$0\.\d{2,3})/.test(k1.pod)
     && parseFloat(k1.wartosc.replace(/[^\d,.]/g, '').replace(',', '.')) > 0, JSON.stringify(k1));
+
+  // R9-K: koszt kazdego tekstu w Historii. Wpis z kluczy serwera kosztu nie ma (koszt firmy); wpis na wlasnym kluczu ma
+  // koszt generowania rowny kosztowi na wlasnym kluczu (kazde wywolanie generowania oznaczone), na liscie i w magazynie.
+  // Pada bez R9-K: wpis bez kosztu, lista bez kwoty.
+  const wpisyK = await s.evaluate(() => ({ nowy: history[0].koszt || 0, serwera: history[1] ? (history[1].koszt || 0) : -1,
+    wlasne: Object.values(kosztyApi.wlasne).reduce((a, b) => a + b, 0) }));
+  await s.waitForFunction(() => { try { const z = JSON.parse(magazyn.getItem(LS.HISTORY)); return !!z[0] && z[0].koszt > 0; } catch (e) { return false; } }, null, { timeout: 5000 }).catch(() => {});
+  const listaK = await s.evaluate(() => { renderHistory(); const e = document.querySelector('#h-list-inner .h-item .h-koszt');
+    let zapisany = 0; try { zapisany = JSON.parse(magazyn.getItem(LS.HISTORY))[0].koszt || 0; } catch (er) { /* bez zapisu */ }
+    return { napis: e ? e.textContent : '', tytul: e ? e.title : '', zapisany, wpisyZKosztem: document.querySelectorAll('#h-list-inner .h-koszt').length }; });
+  wynik('proxy: R9-K wpis na wlasnym kluczu ma koszt generowania (rowny kosztowi na wlasnym kluczu), wpis z kluczy serwera bez kosztu',
+    wpisyK.nowy > 0 && wpisyK.serwera === 0 && Math.abs(wpisyK.nowy - wpisyK.wlasne) < 1e-9, JSON.stringify(wpisyK));
+  wynik('proxy: R9-K lista Historii: koszt tekstu przy wpisie (kwota z waluta, opis w title), koszt zapisany w magazynie przegladarki',
+    /^(\d+,\d{2,3} USD|\$\d+\.\d{2,3})$/.test(listaK.napis) && /koszt|cost/i.test(listaK.tytul) && listaK.wpisyZKosztem === 1 && listaK.zapisany > 0, JSON.stringify(listaK));
+  // Ocena SEO otwartego tekstu dolicza sie do jego wpisu; Podpowiedz tematy (nie praca na tekscie) tylko do lacznej sumy.
+  const przedSeo = await s.evaluate(() => history[0].koszt || 0);
+  await s.evaluate(() => toggleSeoPanel(true));
+  await s.waitForFunction((x) => (history[0].koszt || 0) > x, przedSeo, { timeout: 15000 }).catch(() => {});
+  const poSeo = await s.evaluate(() => history[0].koszt || 0);
+  await s.evaluate(() => { otworzTematy(); document.getElementById('tematy-zapotrzebowanie').value = 'Klienci pytaja o pompy ciepla'; generujTematy(); });
+  await s.waitForFunction(() => !document.querySelector('#tematy-wynik .seo-loading'), null, { timeout: 30000 }).catch(() => {});
+  await s.waitForTimeout(300);
+  const poTematach = await s.evaluate(() => ({ wpis: history[0].koszt || 0, wlasne: Object.values(kosztyApi.wlasne).reduce((a, b) => a + b, 0) }));
+  await s.evaluate(() => zamknijTematy());
+  wynik('proxy: R9-K ocena SEO otwartego tekstu dolicza sie do jego wpisu, Podpowiedz tematy nie (tylko laczna suma)',
+    poSeo > przedSeo && Math.abs(poTematach.wpis - poSeo) < 1e-9 && poTematach.wlasne > poSeo + 1e-9, JSON.stringify({ przedSeo, poSeo, poTematach }));
+  // Kolejny artykul ma wlasny koszt (nie sume poprzednich), poprzedni wpis zostaje bez zmian.
+  await generuj(s, 'Drugi artykul na wlasnym kluczu');
+  const drugi = await s.evaluate(() => ({ nowy: history[0].koszt || 0, poprzedni: history[1] ? (history[1].koszt || 0) : -1 }));
+  wynik('proxy: R9-K kolejny artykul z wlasnym kosztem (nie suma poprzednich), poprzedni wpis bez zmian',
+    drugi.nowy > 0 && drugi.nowy < wpisyK.nowy * 1.5 && Math.abs(drugi.poprzedni - poTematach.wpis) < 1e-9, JSON.stringify({ pierwszy: wpisyK.nowy, drugi }));
   await s.evaluate(() => { magazyn.removeItem('cai_klucz_anthropic'); API_KEY = ''; updateCostDisplay(); });
 
   // Telefon w tle: polaczenie zrywa sie w trakcie generowania (przelaczenie aplikacji),
