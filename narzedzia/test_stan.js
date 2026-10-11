@@ -281,7 +281,8 @@ async function scenariuszStanu(b) {
 
   // ── Liczby po polsku ──
   const liczby = await s.evaluate(() => ({ koszt: (document.getElementById('h-cost') || {}).textContent || '', fog: (document.getElementById('stat-fog') || {}).textContent || '' }));
-  wynik('liczby: koszt sesji z przecinkiem dziesietnym (PL)', /^\$\d+,\d{3}$/.test(liczby.koszt), liczby.koszt);
+  // R9-T: po polsku kwota przed waluta ("0,012 USD"); "$1,984" czytalo sie jak 1984 dolary.
+  wynik('liczby: koszt sesji z przecinkiem dziesietnym i USD po kwocie (PL)', /^\d+,\d{2,3}\u00a0USD$/.test(liczby.koszt), liczby.koszt);
   wynik('liczby: FOG bez kropki dziesietnej (PL)', !/\d\.\d/.test(liczby.fog), liczby.fog);
   wynik('stan: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
   if (bledow) await zrzut(s, 'stan');
@@ -529,7 +530,7 @@ async function scenariuszBledow(b) {
   await generuj(e.s, 'English article for numbers', false);
   await krok('artykul EN', czekajNaKoniec(e.s));
   const kosztEn = await e.s.evaluate(() => (document.getElementById('h-cost') || {}).textContent || '');
-  wynik('EN: koszt sesji z kropka dziesietna', /^\$\d+\.\d{3}$/.test(kosztEn), kosztEn);
+  wynik('EN: koszt sesji z kropka dziesietna', /^\$\d+\.\d{2,3}$/.test(kosztEn), kosztEn);
   wynik('EN: bez bledow JavaScript', !e.bledyJs.length, e.bledyJs.join(' | '));
   await e.k.close();
 }

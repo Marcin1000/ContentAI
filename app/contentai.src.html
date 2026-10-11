@@ -1963,6 +1963,9 @@ body.brief-zwiniety:not(.is-mobile) .form-col { display: none; }
 .generuj-rzad .grupa-wrap > button { height: 100%; width: var(--h-lg); min-height: var(--h-lg); padding: 0; }
 .generuj-rzad .grupa-wrap > button::after { display: none; }
 #grupa-brief-menu { top: auto; bottom: calc(100% + 6px); right: 0; min-width: 280px; }
+/* R9-T: przy karcie "Podlacz klucz" albo "Wybierz pakiet" Wygeneruj jest schowany i "..." stoi przy lewej krawedzi
+   Briefu: menu przypiete prawa krawedzia wychodzilo poza ekran (uwaga Marcina z testu premiery). Telefon: arkusz od dolu. */
+body.karta-konta:not(.is-mobile) #grupa-brief-menu { right: auto; left: 0; }
 .btn-premium { justify-content: flex-start; min-height: 0; height: auto; padding: 0; border: 0; background: none; gap: var(--s-8);
   color: var(--c-tekst-2); font-size: var(--t-sm); font-weight: var(--g-normal); white-space: normal; text-align: left; }
 .btn-premium:hover, .btn-premium.active, .btn-premium:active { background: none; border: 0; transform: none; color: var(--c-tekst); }
@@ -2532,6 +2535,12 @@ body:not(.is-mobile) #out-badge::before { content: ""; flex: none; width: 6px; h
 body:not(.is-mobile) #out-badge.running::before { animation: kropka-puls 1.2s var(--e-std) infinite; }
 body:not(.is-mobile) #out-badge:is([data-i18n="badge-error"], [data-i18n="badge-nokey"]) { background: var(--c-blad-tlo); color: var(--c-blad); border-color: var(--c-blad-ramka); }
 @media (prefers-reduced-motion: reduce) { body:not(.is-mobile) #out-badge.running::before { animation: none; } }
+/* R9-T: lewa czesc paska pusta (plakietka tylko dla czytnika, bez "Przed | Po"): przyciski na srodku kolumny
+   artykulu. Dosuniete do prawej krawedzi wygladaly na przesuniete (uwaga Marcina z testu premiery).
+   Z widoczna plakietka albo wersjami zostaje uklad: plakietka lub wersje z lewej, przyciski z prawej. */
+body:not(.is-mobile) .output-bar:not(:has(#versions-bar.show)):has(#out-badge:is(.ready, [data-i18n="badge-done"], [data-i18n="badge-ready"])) { column-gap: 0; }
+body:not(.is-mobile) .output-bar:not(:has(#versions-bar.show)):has(#out-badge:is(.ready, [data-i18n="badge-done"], [data-i18n="badge-ready"])) .output-bar-left { flex: 0 0 0; }
+body:not(.is-mobile) .output-bar:not(:has(#versions-bar.show)):has(#out-badge:is(.ready, [data-i18n="badge-done"], [data-i18n="badge-ready"])) .pasek-akcje { margin-inline: auto; }
 /* dwie wersje samokorekty: zwarty segment "Przed | Po" (pelna nazwa w title i aria-label, wynikTelefonu) */
 body:not(.is-mobile) .versions-bar.show { flex: none; align-items: center; }
 body:not(.is-mobile) .versions-bar .ver-btn .ver-pelna { display: none; }
@@ -2887,7 +2896,8 @@ body.is-mobile #tab-history .h-list-col { border-right: 0; }
 #tab-history .history-panel { padding-left: var(--hist-wciecie) !important; padding-right: var(--hist-wciecie) !important; }
 #h-list-col > div:first-child { padding: var(--s-8) var(--hist-wciecie) !important; }
 #h-list-inner { padding: 0 0 var(--s-8) !important; }
-#h-list-inner > .h-item { padding-left: calc(var(--hist-wciecie) - 2px); padding-right: var(--hist-wciecie); }
+/* Prawy odstep to miejsce na kosz (.h-usun, 44 px przy prawej krawedzi): samo wciecie wpuszczalo tytul pod ikone. */
+#h-list-inner > .h-item { padding-left: calc(var(--hist-wciecie) - 2px); padding-right: calc(var(--h-dotyk, 44px) + var(--s-8)); }
 #h-list-inner > :not(.h-item) { padding-left: var(--hist-wciecie) !important; padding-right: var(--hist-wciecie) !important; }
 
 /* UX4-13: Konto - Motyw i Jezyk z ikona w takim samym kafelku jak pozostale pozycje, przelaczniki rownej szerokosci */
@@ -3238,6 +3248,8 @@ body.karta-konta #gen-btn { display: none; }
 .zakup-karta-cena { font-size: var(--t-sm); color: var(--c-tekst-2); }
 .zakup p { margin: 0; }
 .zakup .ozn-wiersz { margin-top: 0; }
+/* Zgoda to jedno zdanie z dwoma linkami: bez kolumny z ozn-wiersz (tytul nad opisem), inaczej rozpada sie na 5 linii. */
+.zakup label.ozn-wiersz > span { display: block; }
 .zakup .btn-generate.zakup-przycisk { width: 100%; flex: 1 1 100%; justify-content: center; }
 .zakup-przycisk:disabled { opacity: .55; cursor: not-allowed; }
 .zakup-przycisk.btn-working { cursor: progress; }
@@ -5744,7 +5756,7 @@ var I18N = {
     'start-4-opis':'Wpisz temat, dodaj słowa kluczowe i kliknij „Wygeneruj treść”. Licznik pakietu jest zawsze w prawym górnym rogu: kliknięcie pokazuje, ile zostało.',
     'start-4-lista':'Gdzie szukać reszty: Baza wiedzy, Historia i Widoczność AI są w pasku na górze (na telefonie w dolnym pasku i w Koncie), a w menu konta ustawisz markę, głos marki i integrację z CMS. Nic z tego nie jest potrzebne do pierwszego artykułu.',
     'byok-1-tytul':'Podłącz swój klucz Anthropic','byok-1-opis':'Content AI pisze teksty modelem firmy Anthropic. Klucz API działa jak hasło do Twojego konta u Anthropic: płacisz dostawcy tylko za to, czego użyjesz, a nam za narzędzie.',
-    'byok-koszt':'Ile to kosztuje? Artykuł około 800 słów z ocenami i kontrolą faktów to orientacyjnie 0,25-0,50 USD. Wyszukiwanie w sieci i samokorekta zwiększają koszt. Koszt każdego tekstu zobaczysz w Historii.',
+    'byok-koszt':'Ile to kosztuje? Artykuł około 800 słów z ocenami i kontrolą faktów to orientacyjnie 0,25-0,50 USD. Wyszukiwanie w sieci i samokorekta zwiększają koszt. Łączny szacunkowy koszt na Twoich kluczach zobaczysz w Historii.',
     'byok-jest':'Klucz Anthropic jest zapisany (kończy się na {KONCOWKA}). Możesz przejść dalej albo wkleić nowy.','byok-gdzie':'Klucz zapisuje się tylko w tej przeglądarce. Przy każdym zapytaniu aplikacja przesyła go do serwera Content AI, który przekazuje go dostawcy i niczego nie zapisuje. Opłaty za korzystanie z modeli ponosisz u dostawcy, na jego warunkach. Warunki dostawcy akceptujesz sam, zakładając u niego konto.',
     'byok-bezpieczenstwo':'Więcej o bezpieczeństwie','byok-nie-mam':'Nie masz klucza? Około 10 minut','byok-krok-1':'Załóż konto w konsoli Anthropic na platform.claude.com (to osobne konto, niezależne od czatu z Claude).',
     'byok-krok-2':'W Settings, potem Billing, kliknij „Buy credits” i doładuj konto, na przykład 10 USD.','byok-krok-3':'Zalecane: w Billing ustaw „Spend limits”, czyli miesięczny limit wydatków.',
@@ -5759,7 +5771,7 @@ var I18N = {
     'byok-siec-opis':'Czego brakuje w bazie wiedzy, AI znajdzie w sieci i wymieni źródła pod tekstem.','byok-napisz':'Napisz artykuł','byok-pole':'Klucz API {DOSTAWCA}',
     'byok-pokaz':'Pokaż','byok-ukryj':'Ukryj','byok-sprawdz':'Sprawdź i zapisz','byok-zapamietaj':'Zapamiętaj na tym urządzeniu','byok-zapamietaj-opis':'Klucz zostaje przez 30 dni, także po wylogowaniu. Bez tego znika po zamknięciu przeglądarki.',
     'byok-sprawdzam':'Sprawdzam klucz u {DOSTAWCA}…','byok-ok':'Klucz działa i jest zapisany na tym urządzeniu.','byok-ok-sesja':'Klucz działa. Zostanie w tej przeglądarce do jej zamknięcia.',
-    'byok-ok-lokalnie':'Klucz zapisany w tej przeglądarce.','byok-pusty':'Wklej klucz API w pole powyżej.','byok-zly-format-anthropic':'To nie wygląda na klucz Anthropic. Klucz zaczyna się od „sk-ant-”. Skopiuj go w całości z konsoli Anthropic.',
+    'byok-ok-lokalnie':'Klucz zapisany w tej przeglądarce.','byok-pusty':'Wklej klucz API w pole powyżej.','byok-zly-format-anthropic':'To nie wygląda na klucz Anthropic. Klucz zaczyna się od „sk-ant-”. Skopiuj go w całości z konsoli Anthropic.','byok-niepelny':'Ten klucz jest niepełny: prawdziwy klucz Anthropic jest dłuższy i zaczyna się od „sk-ant-api”. Skopiuj go w całości z konsoli Anthropic (przycisk kopiowania obok klucza).',
     'byok-zly-format-openai':'To nie wygląda na klucz OpenAI. Klucz zaczyna się od „sk-”. Skopiuj go w całości z platform.openai.com.','byok-zly-format':'To nie wygląda na klucz {DOSTAWCA}. Skopiuj go w całości z konsoli dostawcy.',
     'byok-administracyjny':'To klucz administracyjny. Utwórz w konsoli {DOSTAWCA} zwykły klucz API i wklej go tutaj.','byok-inny-dostawca':'To klucz innego dostawcy. Wklej klucz {DOSTAWCA}.',
     'byok-odrzucony':'{DOSTAWCA} nie przyjął tego klucza. Skopiuj go jeszcze raz w całości albo utwórz nowy w konsoli dostawcy.','byok-brak-uprawnien':'Klucz działa, ale nie ma dostępu do modeli, których używa aplikacja. Sprawdź ustawienia klucza w konsoli {DOSTAWCA}.',
@@ -5997,7 +6009,7 @@ var I18N = {
     'plat-kraj-tytul':'Płatność anulowana','plat-kraj':'Adres rozliczeniowy tej płatności jest spoza Unii Europejskiej ({KRAJ}), a pakiety sprzedajemy tylko klientom z Unii. Subskrypcję anulowaliśmy, a całą kwotę zwrócimy na kartę. Konto działa dalej w dotychczasowym pakiecie.',
     'plat-odnowienie-przycisk':'Zaktualizuj kartę','plat-ustawienia-tytul':'Pakiet i płatności','plat-ustawienia-portal':'Zarządzaj subskrypcją','plat-ustawienia-portal-opis':'Otworzy się panel Stripe. Zmienisz w nim pakiet albo kartę, pobierzesz potwierdzenia płatności i anulujesz subskrypcję.',
     'plat-ustawienia-rachunek':'Rachunek wystawiamy na prośbę: napisz na {EMAIL_KONTAKT} w ciągu 3 miesięcy od końca miesiąca płatności i podaj jej datę.','sub-aktywna':'Pakiet {PAKIET} jest aktywny. Następne odnowienie: {DATA}.',
-    'sub-anulowana':'Subskrypcja anulowana. Pakiet {PAKIET} działa do {DATA}, potem konto przejdzie na pakiet Darmowy.','sub-wygasla':'Pakiet {PAKIET} wygasł {DATA}. Konto działa w pakiecie Darmowym: historia tekstów i dokumenty zostają, a limity są takie jak w tym pakiecie.',
+    'sub-anulowana':'Subskrypcja anulowana. Pakiet {PAKIET} działa do {DATA}, potem konto przejdzie na pakiet Darmowy.','sub-wygasla':'Pakiet {PAKIET} wygasł {DATA}. Konto działa w pakiecie Darmowym: historia tekstów i dokumenty zostają, a limity są takie jak w tym pakiecie.','sub-zakonczona':'Pakiet {PAKIET} został zakończony. Konto działa w pakiecie Darmowym: historia tekstów i dokumenty zostają, a limity są takie jak w tym pakiecie.','sub-zakonczona-odstapienie':'Pakiet {PAKIET} zakończył się {DATA} po odstąpieniu od umowy. Konto działa w pakiecie Darmowym: historia tekstów i dokumenty zostają, a limity są takie jak w tym pakiecie.',
     'sub-wznow':'Wznów subskrypcję',
     'sub-wybierz':'Wybierz pakiet','pasek-test':'Tryb testowy płatności: karta testowa Stripe, bez prawdziwych pieniędzy.','pasek-sesja':'Sesja wygasła. Zaloguj się ponownie: temat i ustawienia briefu zostaną na miejscu.',
     'pasek-zgoda':'Zmieniliśmy regulamin. Przeczytaj i zaakceptuj nową wersję, żeby dalej korzystać z aplikacji.','pasek-zgoda-akcja':'Przeczytaj i zaakceptuj',
@@ -6613,7 +6625,7 @@ var I18N = {
     'start-4-opis':'Enter a topic, add keywords and click “Generate content”. Your plan counter is always in the top right corner: click it to see what is left.',
     'start-4-lista':'Where to find the rest: the knowledge base, History and AI visibility are in the top bar (on a phone in the bottom bar and under Account), and the account menu holds your brand, brand voice and CMS integration. None of it is needed for a first article.',
     'byok-1-tytul':'Connect your Anthropic key','byok-1-opis':'Content AI writes with Anthropic\'s model. An API key works like a password to your Anthropic account: you pay the provider only for what you use, and us for the tool.',
-    'byok-koszt':'What does it cost? An article of about 800 words with scores and a fact check costs roughly $0.25-0.50. Web search and self-review increase the cost. You will see the cost of each text in History.',
+    'byok-koszt':'What does it cost? An article of about 800 words with scores and a fact check costs roughly $0.25-0.50. Web search and self-review increase the cost. You will see the total estimated cost on your keys in History.',
     'byok-jest':'Your Anthropic key is saved (it ends in {KONCOWKA}). You can continue or paste a new one.','byok-gdzie':'Your key is stored only in this browser. With each request the app sends it to the Content AI server, which passes it to the provider and stores nothing. You pay the provider for model usage, under the provider\'s terms. You accept the provider\'s terms yourself when you open an account with them.',
     'byok-bezpieczenstwo':'More about security','byok-nie-mam':'No key yet? About 10 minutes','byok-krok-1':'Create an account in the Anthropic console at platform.claude.com (a separate account, independent of the Claude chat).',
     'byok-krok-2':'In Settings, then Billing, click “Buy credits” and add credit, for example $10.','byok-krok-3':'Recommended: in Billing, set “Spend limits”, a monthly cap on spending.',
@@ -6628,7 +6640,7 @@ var I18N = {
     'byok-siec-opis':'Whatever is missing from the knowledge base, the AI finds on the web and lists the sources under the text.','byok-napisz':'Write the article',
     'byok-pole':'{DOSTAWCA} API key','byok-pokaz':'Show','byok-ukryj':'Hide','byok-sprawdz':'Check and save','byok-zapamietaj':'Remember on this device','byok-zapamietaj-opis':'The key stays for 30 days, also after you sign out. Without this it disappears when you close the browser.',
     'byok-sprawdzam':'Checking the key with {DOSTAWCA}…','byok-ok':'The key works and is saved on this device.','byok-ok-sesja':'The key works. It stays in this browser until you close it.',
-    'byok-ok-lokalnie':'Key saved in this browser.','byok-pusty':'Paste your API key into the field above.','byok-zly-format-anthropic':'That does not look like an Anthropic key. It starts with “sk-ant-”. Copy the whole key from the Anthropic console.',
+    'byok-ok-lokalnie':'Key saved in this browser.','byok-pusty':'Paste your API key into the field above.','byok-zly-format-anthropic':'That does not look like an Anthropic key. It starts with “sk-ant-”. Copy the whole key from the Anthropic console.','byok-niepelny':'This key is incomplete: a real Anthropic key is longer and starts with “sk-ant-api”. Copy the whole key from the Anthropic console (copy button next to the key).',
     'byok-zly-format-openai':'That does not look like an OpenAI key. It starts with “sk-”. Copy the whole key from platform.openai.com.','byok-zly-format':'That does not look like a {DOSTAWCA} key. Copy the whole key from the provider console.',
     'byok-administracyjny':'That is an admin key. Create a regular API key in the {DOSTAWCA} console and paste it here.','byok-inny-dostawca':'That is another provider\'s key. Paste your {DOSTAWCA} key.',
     'byok-odrzucony':'{DOSTAWCA} did not accept this key. Copy it again in full or create a new one in the provider console.','byok-brak-uprawnien':'The key works but has no access to the models the app uses. Check the key settings in the {DOSTAWCA} console.',
@@ -6684,7 +6696,7 @@ var I18N = {
     'plat-ustawienia-rachunek':'We issue a receipt on request: write to {EMAIL_KONTAKT} within 3 months of the end of the month of payment, giving its date.',
     'sub-aktywna':'Your {PAKIET} plan is active. Next renewal: {DATA}.','sub-anulowana':'Subscription cancelled. Your {PAKIET} plan stays active until {DATA}, then your account moves to the Free plan.',
     'sub-wznow':'Resume subscription',
-    'sub-wygasla':'Your {PAKIET} plan ended on {DATA}. Your account is now on the Free plan: your text history and documents stay, and that plan\'s limits apply.',
+    'sub-wygasla':'Your {PAKIET} plan ended on {DATA}. Your account is now on the Free plan: your text history and documents stay, and that plan\'s limits apply.','sub-zakonczona':'Your {PAKIET} plan has ended. Your account is now on the Free plan: your text history and documents stay, and that plan\'s limits apply.','sub-zakonczona-odstapienie':'Your {PAKIET} plan ended on {DATA} after you withdrew from the contract. Your account is now on the Free plan: your text history and documents stay, and that plan\'s limits apply.',
     'sub-wybierz':'Choose a plan','pasek-test':'Payment test mode: Stripe test card, no real money.','pasek-sesja':'Your session has expired. Sign in again: the topic and brief settings will stay in place.',
     'pasek-zgoda':'We have changed the Terms of Service. Read and accept the new version to keep using the app.','pasek-zgoda-akcja':'Read and accept','pasek-email':'Confirm the address {EMAIL}: the link is in the message from Content AI.',
     'pasek-zmien-adres':'Change address','potw-ponow-ok':'We have sent a new link. Check your inbox, including the spam folder.','potw-ponow-czekaj':'You can send the link again in {s} s.',
@@ -7987,6 +7999,13 @@ function formatujLiczbe(x, miejsca, stale) {
   const m = miejsca == null ? 1 : miejsca;
   return n.toLocaleString(currentLang === 'en' ? 'en-US' : 'pl-PL', { maximumFractionDigits: m, minimumFractionDigits: stale ? m : 0 });
 }
+// Koszt API w USD jak w tekstach aplikacji: po polsku "1,98 USD", po angielsku "$1.98". Wczesniej "$" stal
+// przed liczba z polskim przecinkiem: "$1,984" czyta sie jak 1984 dolary. Ponizej 0,10 USD trzy miejsca (0,012 USD).
+function kwotaUsd(x) {
+  const n = Number(x) || 0;
+  const liczba = formatujLiczbe(n, n > 0 && n < 0.1 ? 3 : 2, true);
+  return currentLang === 'en' ? '$' + liczba : liczba + '\u00a0USD';
+}
 // Po powrocie sieci przycisk ponowienia w komunikacie bledu staje sie glowna akcja.
 window.addEventListener('online', function () {
   document.querySelectorAll('.ponow-generowanie').forEach(function (b) { b.classList.remove('btn-secondary'); b.classList.add('btn-generate'); });
@@ -8647,15 +8666,15 @@ function updateCostDisplay() {
   const suma = Object.keys(mapa).reduce(function (s, k) { return s + (mapa[k] || 0); }, 0);
   const maKlucz = ['anthropic', 'openai', 'eleven'].some(naWlasnymKluczu);
   if (kafel) kafel.hidden = !(wszystko || maKlucz || suma > 0);
-  el.textContent = '$' + formatujLiczbe(wszystko ? Math.max(suma, sessionCost) : suma, 3, true);
+  el.textContent = kwotaUsd(wszystko ? Math.max(suma, sessionCost) : suma);
   const lbl = document.getElementById('h-cost-lbl');
   if (lbl) lbl.textContent = _t(wszystko ? 'hist-cost' : 'hist-cost-wlasne');
   const pod = document.getElementById('h-cost-pod');
   const czesci = Object.keys(NAZWY).filter(function (k) { return mapa[k] > 0; })
-    .map(function (k) { return NAZWY[k] + ' $' + formatujLiczbe(mapa[k], 3, true); });
+    .map(function (k) { return NAZWY[k] + ' ' + kwotaUsd(mapa[k]); });
   // Koszt sprzed liczenia po dostawcach (stary licznik) - bez niego suma nie zgadzalaby sie z podzialem.
   const wczesniej = wszystko ? sessionCost - suma : 0;
-  if (wczesniej >= 0.0005) czesci.push(_t('hist-cost-wczesniej') + ' $' + formatujLiczbe(wczesniej, 3, true));
+  if (wczesniej >= 0.0005) czesci.push(_t('hist-cost-wczesniej') + ' ' + kwotaUsd(wczesniej));
   if (pod) pod.textContent = czesci.join('\n');
 }
 function updateSerpWarn() {
@@ -19596,7 +19615,7 @@ function audioHistTopic(){ var s=document.getElementById('au-source'); var v=(s&
 function audioHistSave(type, html, cost){ var e={ topic:audioHistTopic(), type:type, html:html, ts:new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}), sig:null, blob:null, buffer:null, dur:0, cost:cost||0 }; audioHistory.unshift(e); if(audioHistory.length>20) audioHistory.length=20; audioCurEntry=e; audioRenderHistory(); }
 function audioHistAttach(buffer, blob, dur, sig, ttsCost){ var e=audioCurEntry; if(!e) return; e.buffer=buffer; e.blob=blob; e.dur=dur; e.sig=sig; e.cost=(e.cost||0)+(ttsCost||0); var sc=document.getElementById('au-script'); if(sc) e.html=sc.innerHTML; audioRenderHistory(); }
 // R5: wpis historii to przycisk (klawiatura); ikona zamiast emoji, rodzaj po polsku/angielsku zamiast surowej wartosci
-function audioRenderHistory(){ var w=document.getElementById('au-history-wrap'); if(!w) return; if(!audioHistory.length){ w.style.display='none'; w.innerHTML=''; return; } w.style.display='block'; var rows=audioHistory.map(function(e,i){ var ico=ikona(e.buffer?'volume-2':'notebook-pen'); var c=e.cost?(' \u00B7 $'+e.cost.toFixed(3)):''; return '<button type="button" class="au-hist-item" onclick="audioHistLoad('+i+')"><span class="au-hist-ikona">'+ico+'</span><span class="au-hist-tekst"><span class="au-hist-topic">'+escapeHtml(e.topic||'-')+'</span><span class="au-hist-meta">'+escapeHtml(_t('au-typ-'+e.type))+' \u00B7 '+e.ts+c+'</span></span></button>'; }).join(''); w.innerHTML='<div class="field-label">'+_t('audio-hist')+'</div><div class="au-hist-lista">'+rows+'</div>'; }
+function audioRenderHistory(){ var w=document.getElementById('au-history-wrap'); if(!w) return; if(!audioHistory.length){ w.style.display='none'; w.innerHTML=''; return; } w.style.display='block'; var rows=audioHistory.map(function(e,i){ var ico=ikona(e.buffer?'volume-2':'notebook-pen'); var c=e.cost?(' \u00B7 '+kwotaUsd(e.cost)):''; return '<button type="button" class="au-hist-item" onclick="audioHistLoad('+i+')"><span class="au-hist-ikona">'+ico+'</span><span class="au-hist-tekst"><span class="au-hist-topic">'+escapeHtml(e.topic||'-')+'</span><span class="au-hist-meta">'+escapeHtml(_t('au-typ-'+e.type))+' \u00B7 '+e.ts+c+'</span></span></button>'; }).join(''); w.innerHTML='<div class="field-label">'+_t('audio-hist')+'</div><div class="au-hist-lista">'+rows+'</div>'; }
 function audioHistLoad(i){ var e=audioHistory[i]; if(!e) return; audioBarClose(); var ty=document.getElementById('au-type'); if(ty) ty.value=e.type; audioSetType(); var sc=document.getElementById('au-script'); if(sc) sc.innerHTML=e.html; audioResultType=e.type; var rw=document.getElementById('au-result-wrap'); if(rw) rw.style.display='block'; var sa=document.getElementById('au-script-actions'), ta=document.getElementById('au-trans-actions'); if(e.type==='transcription'){ if(sa)sa.style.display='none'; if(ta)ta.style.display='flex'; } else { if(sa)sa.style.display='flex'; if(ta)ta.style.display='none'; } audioInvalidate(); if(e.buffer){ AUDIO.buffer=e.buffer; AUDIO.blob=e.blob; AUDIO.dur=e.dur; AUDIO.sig=e.sig; AUDIO.offset=0; AUDIO.playing=false; } audioCurEntry=e; if(rw&&rw.scrollIntoView){ try{ rw.scrollIntoView({block:'start'}); }catch(_e){} } }
 function fmtTime(s){ s=Math.max(0,s|0); var m=(s/60)|0, ss=s%60; return m+':'+(ss<10?'0':'')+ss; }
 function audioSig(){ var sc=document.getElementById('au-script'); return [audioType(), audioEng(), (document.getElementById('au-voices')||{}).value, [audioVoiceFor(0),audioVoiceFor(1),audioVoiceFor(2),audioVoiceFor(3)].join(','), voiceCfg.elevenModel, zapowiedzAudioAI(jezykModuluAudio()), (sc?sc.innerText:'')].join('|'); }
@@ -21697,6 +21716,9 @@ async function kbAudioTranscribeAndOpen(file) {
     if (!klucz) return Promise.resolve({ ok: false, powod: 'pusty' });
     if (PREFIKS[d] && klucz.indexOf(PREFIKS[d]) !== 0) return Promise.resolve({ ok: false, powod: 'format' });
     if (d === 'openai' && /^sk-ant-/.test(klucz)) return Promise.resolve({ ok: false, powod: 'inny-dostawca' });
+    // Poczatek sie zgadza, ale klucz jest uciety (wzor jak w serwer/klucze.js): "zaczyna sie od sk-ant-" mylilo.
+    // Klucz administracyjny (sk-ant-admin) rozpoznaje serwer i odpowiada wlasnym komunikatem.
+    if (d === 'anthropic' && !/^sk-ant-admin/i.test(klucz) && !/^sk-ant-api\d{2}-[A-Za-z0-9_-]{20,}$/.test(klucz)) return Promise.resolve({ ok: false, powod: 'niepelny' });
     if (!kluczeWCiasteczkach()) return zapiszLokalnie(d, klucz);
     return postJson('/api/klucze', { dostawca: d, klucz: klucz, zapamietaj: zapamietaj !== false, sprawdz: true }).then(function(w){
       var kod = kodOdpowiedzi(w.o, w.d);
@@ -21767,7 +21789,7 @@ async function kbAudioTranscribeAndOpen(file) {
   function tekstPowodu(d, w){
     var n = NAZWA[d];
     var k = { pusty: 'byok-pusty', format: d === 'anthropic' ? 'byok-zly-format-anthropic' : d === 'openai' ? 'byok-zly-format-openai' : 'byok-zly-format',
-      administracyjny: 'byok-administracyjny', 'inny-dostawca': 'byok-inny-dostawca', 'zly-klucz': 'byok-odrzucony', 'brak-uprawnien': 'byok-brak-uprawnien',
+      niepelny: 'byok-niepelny', administracyjny: 'byok-administracyjny', 'inny-dostawca': 'byok-inny-dostawca', 'zly-klucz': 'byok-odrzucony', 'brak-uprawnien': 'byok-brak-uprawnien',
       'dostawca-niedostepny': 'byok-niedostepny', 'za-duzo-prob': 'byok-za-duzo', siec: 'err-siec', niedostepne: 'byok-sprawdzenie-niedostepne', 'brak-klucza': 'byok-brak' }[w.powod] || 'byok-blad-zapisu';
     return tekst(k, '').replace(/\{DOSTAWCA\}/g, n).replace('{s}', String(w.ponowZa || 60));
   }
@@ -21837,6 +21859,18 @@ async function kbAudioTranscribeAndOpen(file) {
   };
 
   // ── Paski stanu nad aplikacja ──────────────────────────────────────────────
+  // Odstapienie albo anulowanie od razu konczy subskrypcje, a okresDo zostaje koncem oplaconego miesiaca:
+  // "wygasl 11 listopada" w pazdzierniku mylilo. Data w przyszlosci = koniec wczesniej: data odstapienia,
+  // gdy jest, inaczej bez daty.
+  function tekstWygaslej(sub, nazwa){
+    if (sub.okresDo && Number(sub.okresDo) > Date.now()) {
+      var s = stan(), pl = (s && s.platnosci) || {};
+      var zl = pl.odstapienie && !pl.odstapienie.mozliwe && pl.odstapienie.zlozone;
+      if (zl && zl.czas) return tekst('sub-zakonczona-odstapienie', '').replace('{PAKIET}', nazwa).replace('{DATA}', data(zl.czas));
+      return tekst('sub-zakonczona', '').replace('{PAKIET}', nazwa);
+    }
+    return tekst('sub-wygasla', '').replace('{PAKIET}', nazwa).replace('{DATA}', data(sub.okresDo));
+  }
   function nazwaPlanu(plan){
     var s = stan(), lista = (s && s.platnosci && s.platnosci.plany) || [];
     var p = lista.filter(function(x){ return x.plan === plan; })[0];
@@ -21855,7 +21889,7 @@ async function kbAudioTranscribeAndOpen(file) {
       if (odmowaZgody || (zg && zg.wymagaAkceptacji)) lista.push(['zgoda', 'uwaga', 'scale', tekst('pasek-zgoda', ''), [['pasek-zgoda-akcja', "location.assign('/konto/zgody')"]]]);
       if ((s.email && s.emailPotwierdzony === false && !s._zapas) || odmowaEmail) lista.push(['email', 'uwaga', 'mail', tekst('pasek-email', '').replace('{EMAIL}', s.email || ''), [['btn-wyslij-link', 'wyslijPotwierdzenieEmail()'], ['pasek-zmien-adres', "location.assign('/konto')"]]]);
       if (sub.stan === 'zalegla') lista.push(['zalegla', 'blad', 'triangle-alert', tekst('plat-odnowienie-nieudane', '').replace('{PAKIET}', nazwaPlanu(sub.plan)).replace('{DATA}', data(sub.dostepDo || sub.okresDo)), [['plat-odnowienie-przycisk', 'otworzPanelPlatnosci()']]]);
-      if (sub.stan === 'wygasla') lista.push(['wygasla', 'uwaga', 'package', tekst('sub-wygasla', '').replace('{PAKIET}', nazwaPlanu(sub.plan)).replace('{DATA}', data(sub.okresDo)), [['sub-wybierz', "otworzPakiet('zakup')"]]]);
+      if (sub.stan === 'wygasla') lista.push(['wygasla', 'uwaga', 'package', tekstWygaslej(sub, nazwaPlanu(sub.plan)), [['sub-wybierz', "otworzPakiet('zakup')"]]]);
       if (pl.wlaczone && pl.tryb === 'test') lista.push(['test', 'info', 'info', tekst('pasek-test', ''), []]);
     }
     c.innerHTML = lista.map(function(p){
@@ -21969,7 +22003,7 @@ async function kbAudioTranscribeAndOpen(file) {
     if (sub.stan === 'aktywna' || sub.stan === 'probna') return tekst('sub-aktywna', '').replace('{PAKIET}', n).replace('{DATA}', data(sub.okresDo));
     if (sub.stan === 'anulowana') return tekst('sub-anulowana', '').replace('{PAKIET}', n).replace('{DATA}', data(sub.okresDo));
     if (sub.stan === 'zalegla') return tekst('plat-odnowienie-nieudane', '').replace('{PAKIET}', n).replace('{DATA}', data(sub.dostepDo || sub.okresDo));
-    if (sub.stan === 'wygasla') return tekst('sub-wygasla', '').replace('{PAKIET}', n).replace('{DATA}', data(sub.okresDo));
+    if (sub.stan === 'wygasla') return tekstWygaslej(sub, n);
     return '';
   }
   function cenaPlanu(p, w){ return p && p.ceny && p.ceny[w] != null ? kwota(p.ceny[w], w) : ''; }
