@@ -1335,7 +1335,7 @@ Przed testem (raz, w panelu Stripe w trybie testowym, przełącznik "Test mode")
    "Signing secret" (`whsec_...`) -> `STRIPE_SEKRET_WEBHOOKA`.
 6. `/etc/contentai/srodowisko-test`: `PLATNOSCI=stripe`, `PLATNOSCI_TRYB=test`, `STRIPE_KLUCZ`,
    `STRIPE_SEKRET_WEBHOOKA`, `STRIPE_CENA_STANDARD`, `STRIPE_CENA_PREMIUM`,
-   `PLATNOSCI_CENY_WYSWIETLANE=standard:eur=19,pln=79;premium:eur=49,pln=199`,
+   `PLATNOSCI_CENY_WYSWIETLANE="standard:eur=19,pln=79;premium:eur=49,pln=199"` (w cudzysłowie: średnik bez niego przerywa wczytanie pliku w `cli.sh`),
    `CAI_ADRES_PUBLICZNY=https://test.content-ai.net`, `CAI_USLUGODAWCA_IMIE_NAZWISKO`, `CAI_USLUGODAWCA_ADRES`,
    `CAI_USLUGODAWCA_EMAIL` (wartości tylko w pliku środowiska). Restart usługi testowej, potem
    `sudo serwer/cli.sh --srodowisko /etc/contentai/srodowisko-test platnosci-sprawdz` -> "Gotowe (kod 0)".
