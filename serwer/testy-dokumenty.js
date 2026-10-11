@@ -93,6 +93,16 @@ async function uruchom({ sprawdz }) {
     sprawdz('regulamin (PR8-11): potwierdzenie platnosci od Stripe i rachunek na zadanie w 3 miesiace, ceny koncowe',
       reg('pl').includes('potwierdzenie płatności') && reg('pl').includes('wystawia rachunek') && reg('pl').includes('ceny końcowe')
       && reg('en').includes('issues a receipt'));
+    sprawdz('regulamin 2026-10-v2 (R9-W): zmiana Pakietu w ustawieniach Konta (drozszy od razu z proporcjonalna doplata, tanszy od kolejnego okresu, '
+      + 'limity nowego Pakietu) i liczniki od 1. dnia miesiaca kalendarzowego jak w Aplikacji, PL i EN',
+      reg('pl').includes('zmienić Pakiet na inny Pakiet płatny w ustawieniach Konta') && reg('pl').includes('przejście na droższy Pakiet działa od razu')
+      && reg('pl').includes('proporcjonalnie do czasu pozostałego do końca tego okresu')
+      && reg('pl').includes('przejście na tańszy Pakiet działa od początku kolejnego okresu rozliczeniowego')
+      && reg('pl').includes('obowiązują limity nowego Pakietu') && reg('pl').includes('pierwszego dnia każdego miesiąca kalendarzowego')
+      && !reg('pl').includes('nie przechodzą na kolejny okres rozliczeniowy')
+      && reg('en').includes('change to another paid Plan at any time in the Account settings') && reg('en').includes('takes effect immediately')
+      && reg('en').includes('takes effect from the start of the next billing period') && reg('en').includes('the limits of the new Plan apply')
+      && reg('en').includes('first day of each calendar month') && !reg('en').includes('do not carry over to the next billing period'));
     sprawdz('regulamin: limit pakietu Darmowego z serwer/plany.js i dni zaleglosci z konfiguracji (domyslnie 7)',
       reg('pl').includes(`limit ${require('./plany.js').PLANY.darmowy.limity.artykul} artykułów`) && reg('pl').includes('w ciągu 7 dni'));
     konf = { ...PELNE, PLATNOSCI_ZALEGLA_DNI: 10 };

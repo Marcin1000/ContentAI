@@ -1,7 +1,7 @@
 ---
 tytul: Content AI Terms of Service
-wersja: 2026-10-v1
-data: 2026-10-09
+wersja: 2026-10-v2
+data: 2026-10-11
 ---
 <!--
 English version of regulamin.pl.md (same numbering, same version). Rendered by the app server at
@@ -58,9 +58,13 @@ concluded in that language (section 6(5)).
 3. The Subscription is paid in advance for each monthly billing period and renews automatically until the User cancels it (section 10). The fee for the next period is charged on its first day.
 4. After each payment the User receives a payment confirmation by email from Stripe. On request made within 3 months after the end of the month in which the service was provided or payment received, the Provider issues a receipt.
 5. If payment for the next period fails, the User is informed by email and the payment is retried. If the payment does not succeed within {{ZALEGLA_DNI}} days, access to the paid Plan is suspended and the Account works under the Free Plan rules (without granting the free article limit again) until a successful payment or the end of the Subscription.
-6. Unused limits do not carry over to the next billing period.
+6. Monthly limits renew on the first day of each calendar month, regardless of the day on which the billing period starts. Unused limits do not carry over to the next month.
 7. With every announcement of a price reduction the Provider also states the lowest price from the 30 days before the reduction.
 8. A Subscription can be ordered by persons whose billing address is in a European Union member state listed in the payment form.
+9. A User with a Subscription may change to another paid Plan at any time in the Account settings. Before the User confirms the change, the Stripe form shows the amount payable or the date of the change. The change does not affect the currency of the Subscription or the dates of the following billing periods:
+   1. a change to a more expensive Plan takes effect immediately: for the rest of the current billing period the User pays the price difference, in proportion to the time left until the end of that period, and from the next period pays the price of the new Plan;
+   2. a change to a cheaper Plan takes effect from the start of the next billing period; until then the User keeps the current Plan;
+   3. from the change, the limits of the new Plan apply, and usage in the current calendar month counts towards them.
 
 ## 6. Conclusion of the contract
 

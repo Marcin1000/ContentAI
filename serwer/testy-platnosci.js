@@ -22,6 +22,8 @@ const platnosci = require('./platnosci.js');
 const ekrany = require('./ekrany-platnosci.js');
 const plany = require('./plany.js');
 const atrapa = require('../narzedzia/atrapa/stripe.js');
+// Wersja regulaminu z naglowka szablonu: test bez CAI_REGULAMIN_WERSJA bierze ja stamtad, jak serwer (wersjaRegulaminu).
+const WERSJA_REGULAMINU = require('./dokumenty-prawne.js').wersje().regulamin;
 
 const DOBA = 24 * 3600_000;
 const SEKRET = 'whsec_atrapa_test_123456';
@@ -447,13 +449,13 @@ async function testyZakupu(sprawdz) {
     sprawdz('Checkout: adresy powrotu z CAI_ADRES_PUBLICZNY, tekst przycisku z obowiazkiem zaplaty, metadane (login, zgoda, regulamin)',
       ps.success_url === `${t.adres}/konto/platnosc?wynik=ok&sesja={CHECKOUT_SESSION_ID}&z=app` && ps.cancel_url === `${t.adres}/konto/platnosc?wynik=anulowana&z=app`
       && /obowiązkiem zapłaty 79,00\s*zł co miesiąc/.test(ps.custom_text.submit.message) && ps.metadata.login === a.login && /^\d+$/.test(ps.metadata.zgoda)
-      && ps.metadata.regulamin === '2026-10-v1' && ps.subscription_data.metadata.plan === 'standard');
+      && ps.metadata.regulamin === WERSJA_REGULAMINU && ps.subscription_data.metadata.plan === 'standard');
     sprawdz('wersja API przypieta w kazdym zapytaniu, klucze idempotencji klienta i sesji',
       wywolania.filter((x) => x.sciezka.startsWith('/v1/')).every((x) => x.wersjaApi === stripe.WERSJA_API)
       && klientW.idempotencja === `klient-test-${a.login}` && klientW.parametry.metadata.login === a.login && /^zakup-/.test(sesjaW.idempotencja));
     const zgody = t.magazyn.zgody(a.login);
     sprawdz('zgody zapisane przed przekierowaniem: natychmiastowe-wykonanie i regulamin z wersja i zrodlem zakup (PR8-31)',
-      zgody.some((x) => x.rodzaj === 'natychmiastowe-wykonanie' && x.wartosc && x.zrodlo === 'zakup' && x.wersja === '2026-10-v1')
+      zgody.some((x) => x.rodzaj === 'natychmiastowe-wykonanie' && x.wartosc && x.zrodlo === 'zakup' && x.wersja === WERSJA_REGULAMINU)
       && zgody.some((x) => x.rodzaj === 'regulamin' && x.zrodlo === 'zakup'));
     const zaplata = await formularzAtrapy(zj.url, { akcja: 'zaplac', kraj: 'PL' });
     const powrot = await t.zadanie(zaplata.lokalizacja.replace(t.adres, ''), { headers: { cookie: a.cookie } });

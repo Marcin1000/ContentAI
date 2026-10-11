@@ -1,7 +1,7 @@
 ---
 tytul: Regulamin serwisu Content AI
-wersja: 2026-10-v1
-data: 2026-10-09
+wersja: 2026-10-v2
+data: 2026-10-11
 ---
 <!--
 Szablon renderuje serwer aplikacji pod /dokumenty/regulamin (serwer/dokumenty-prawne.js).
@@ -70,14 +70,24 @@ Decyzja koordynatora (DECYZJE-R9 D-01): sprzedaż wszystkim, z informacją z ust
 3. Subskrypcja jest opłacana z góry za każdy miesięczny okres rozliczeniowy i odnawia się automatycznie, dopóki Użytkownik z niej nie zrezygnuje (§ 10). Opłata za kolejny okres jest pobierana w dniu jego rozpoczęcia.
 4. Po każdej płatności Użytkownik otrzymuje od Stripe e-mailem potwierdzenie płatności. Na żądanie zgłoszone w ciągu 3 miesięcy od końca miesiąca, w którym wykonano usługę lub otrzymano zapłatę, Usługodawca wystawia rachunek.
 5. Jeżeli płatność za kolejny okres się nie powiedzie, Użytkownik otrzymuje o tym wiadomość e-mail, a płatność jest ponawiana. Jeżeli płatność nie powiedzie się w ciągu {{ZALEGLA_DNI}} dni, dostęp do Pakietu płatnego zostaje wstrzymany, a Konto działa na zasadach Pakietu Darmowego (bez ponownego przyznania limitu darmowych artykułów) do czasu skutecznej płatności albo zakończenia Subskrypcji.
-6. Niewykorzystane limity nie przechodzą na kolejny okres rozliczeniowy.
+6. Limity miesięczne odnawiają się pierwszego dnia każdego miesiąca kalendarzowego, niezależnie od dnia, w którym zaczyna się okres rozliczeniowy. Niewykorzystane limity nie przechodzą na kolejny miesiąc.
 7. Przy każdej informacji o obniżce ceny Usługodawca podaje także najniższą cenę z 30 dni przed wprowadzeniem obniżki.
 8. Subskrypcję mogą zamówić osoby, których adres rozliczeniowy znajduje się w państwie członkowskim Unii Europejskiej wskazanym w formularzu płatności.
+9. Użytkownik z Subskrypcją może w każdej chwili zmienić Pakiet na inny Pakiet płatny w ustawieniach Konta. Przed potwierdzeniem zmiany formularz Stripe pokazuje kwotę do zapłaty albo datę zmiany. Zmiana nie wpływa na walutę Subskrypcji ani na daty kolejnych okresów rozliczeniowych:
+   1. przejście na droższy Pakiet działa od razu: za pozostałą część bieżącego okresu rozliczeniowego Użytkownik dopłaca różnicę cen, proporcjonalnie do czasu pozostałego do końca tego okresu, a od kolejnego okresu płaci cenę nowego Pakietu;
+   2. przejście na tańszy Pakiet działa od początku kolejnego okresu rozliczeniowego; do tego czasu Użytkownik korzysta z dotychczasowego Pakietu;
+   3. od chwili zmiany obowiązują limity nowego Pakietu, a wykorzystanie z bieżącego miesiąca kalendarzowego wlicza się do tych limitów.
 
 <!--
 KSIĘGOWA K-03: rachunek na żądanie, treść dokumentu. PR8-11: w tekstach Serwisu nie pada nazwa dokumentu sprzedaży
 z VAT, tylko potwierdzenie płatności od Stripe i rachunek na żądanie.
 D-04: lista państw w konfiguracji płatności (wykonawca B); ust. 8 musi się z nią zgadzać.
+R9-W (wersja 2026-10-v2): ust. 6 jak w Aplikacji i Cenniku (liczniki od 1. dnia miesiąca kalendarzowego, UTC), ust. 9
+jak w Aplikacji: zmiana Pakietu potwierdzana w panelu Stripe, droższy od razu z proporcjonalną dopłatą, tańszy od
+kolejnego okresu. PRAWNIK: (1) czy przejście na droższy Pakiet to nowa umowa z nowym terminem odstąpienia (§ 9)
+i potwierdzeniem na trwałym nośniku (§ 6 ust. 4); dziś termin biegnie od zawarcia pierwotnej umowy, a dopłatę
+potwierdza e-mail od Stripe; (2) czy ust. 9 pkt 3 (wykorzystanie z miesiąca wlicza się do limitów tańszego Pakietu)
+wymaga osobnej informacji przed potwierdzeniem zmiany.
 -->
 
 ## § 6. Zawarcie umowy
