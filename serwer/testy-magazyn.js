@@ -785,7 +785,7 @@ function testyPlikowWdrozenia(sprawdz) {
   const cliSh = path.join(__dirname, 'cli.sh');
   const tresc = fs.readFileSync(cliSh, 'utf8');
   sprawdz('cli.sh: wykonywalny, laduje srodowisko uslugi i uruchamia uzytkownicy.js jako konto uslugi',
-    (fs.statSync(cliSh).mode & 0o111) !== 0 && /\/etc\/contentai\/srodowisko/.test(tresc) && /sudo -E -u/.test(tresc)
+    (fs.statSync(cliSh).mode & 0o111) !== 0 && /\/etc\/contentai\/srodowisko/.test(tresc) && /exec runuser -u "\$KONTO" --/.test(tresc)
     && /--disable-warning=ExperimentalWarning/.test(tresc) && /uzytkownicy\.js/.test(tresc));
   const readme = fs.readFileSync(path.join(__dirname, 'README.md'), 'utf8');
   const zmienne = new Set();

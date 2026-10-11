@@ -47,4 +47,10 @@ set -a
 set +a
 
 cd "$KATALOG/.."
+# runuser zmienia konto i zostawia zmienne procesu (poza HOME, SHELL, USER, LOGNAME).
+# Nie uzywamy tu sudo -E: nowsze sudo (np. sudo-rs w Ubuntu) ignoruje -E, a wtedy
+# CLI dzialaloby bez konfiguracji uslugi, np. poczta-test w trybie log zamiast resend.
+if command -v runuser >/dev/null 2>&1; then
+  exec runuser -u "$KONTO" -- "$NODE" --disable-warning=ExperimentalWarning "$KATALOG/uzytkownicy.js" "$@"
+fi
 exec sudo -E -u "$KONTO" -- "$NODE" --disable-warning=ExperimentalWarning "$KATALOG/uzytkownicy.js" "$@"
