@@ -20,6 +20,8 @@ const klucze = require('./klucze.js');
 const platnosci = require('./platnosci.js');
 const dzierzawy = require('./dzierzawy.js');
 const plany = require('./plany.js');
+// Wersje dokumentow z naglowkow szablonow: konfiguracja testu jak produkcja (CAI_REGULAMIN_WERSJA = wersja regulaminu).
+const WERSJE = require('./dokumenty-prawne.js').wersje();
 
 const DLUGIE = [String.fromCharCode(0x2014), String.fromCharCode(0x2013)];
 const DOBRE_HASLO = 'mocne-haslo-do-testu-42';
@@ -28,7 +30,7 @@ function srodowiskoRejestracji(dodatkowe = {}) {
   return {
     CAI_REJESTRACJA: '1', CAI_ADRES_PUBLICZNY: 'https://app.example.com',
     CAI_USLUGODAWCA_IMIE_NAZWISKO: 'Jan Testowy', CAI_USLUGODAWCA_ADRES: 'ul. Testowa 1, 00-001 Warszawa',
-    CAI_USLUGODAWCA_EMAIL: 'kontakt@example.com', CAI_REGULAMIN_WERSJA: '2026-10-v1', CAI_POLITYKA_WERSJA: '2026-10-v1',
+    CAI_USLUGODAWCA_EMAIL: 'kontakt@example.com', CAI_REGULAMIN_WERSJA: WERSJE.regulamin, CAI_POLITYKA_WERSJA: WERSJE.prywatnosc,
     CAI_KLUCZ_CIASTEK: crypto.randomBytes(32).toString('base64'),
     ...dodatkowe,
   };
@@ -284,8 +286,8 @@ async function testyRejestracji(sprawdz) {
     const zgody = t.magazyn.zgody(konto.login);
     sprawdz('rejestracja: zgody z wersja i czasem (regulamin, polityka, pelnoletnosc), stan regulaminu w koncie, bez IP (CAI_ZGODY_IP=0)',
       zgody.length === 3 && zgody.every((z) => z.zrodlo === 'rejestracja' && z.wartosc === true && z.ip === null && z.czas > 0)
-      && zgody.find((z) => z.rodzaj === 'regulamin').wersja === '2026-10-v1' && zgody.find((z) => z.rodzaj === 'polityka').wersja === '2026-10-v1'
-      && Boolean(zgody.find((z) => z.rodzaj === 'pelnoletnosc')) && konto.regulaminWersja === '2026-10-v1' && konto.regulaminCzas > 0);
+      && zgody.find((z) => z.rodzaj === 'regulamin').wersja === WERSJE.regulamin && zgody.find((z) => z.rodzaj === 'polityka').wersja === WERSJE.prywatnosc
+      && Boolean(zgody.find((z) => z.rodzaj === 'pelnoletnosc')) && konto.regulaminWersja === WERSJE.regulamin && konto.regulaminCzas > 0);
     const list = ostatniList(t, 'anna.kowalska@firma.pl', 'potwierdzenie');
     const token = tokenZListu(list);
     const plikiBazy = [t.KONF.sqlite, `${t.KONF.sqlite}-wal`].filter((p) => fs.existsSync(p)).map((p) => fs.readFileSync(p));
@@ -297,8 +299,8 @@ async function testyRejestracji(sprawdz) {
     const stan = await (await t.zadanie('/api/konto', { headers: { cookie } })).json();
     sprawdz('po rejestracji: /auth/me i /api/konto (niepotwierdzony, link wyslany, darmowy na wlasnym kluczu, zgody aktualne)',
       me.login === konto.login && me.email === 'anna.kowalska@firma.pl' && stan.emailPotwierdzony === false && stan.potwierdzenie.wyslano === true
-      && stan.pakiet.plan === 'darmowy' && stan.zrodloKluczy === 'wlasne' && stan.zgody.regulamin.wersja === '2026-10-v1'
-      && stan.zgody.regulamin.wymagaAkceptacji === false && stan.zgody.polityka.wersja === '2026-10-v1' && stan.organizacja.mozeZarzadzac === true
+      && stan.pakiet.plan === 'darmowy' && stan.zrodloKluczy === 'wlasne' && stan.zgody.regulamin.wersja === WERSJE.regulamin
+      && stan.zgody.regulamin.wymagaAkceptacji === false && stan.zgody.polityka.wersja === WERSJE.prywatnosc && stan.organizacja.mozeZarzadzac === true
       && stan.uslugodawca.nazwa === 'Jan Testowy' && stan.mozliwosci.usuniecie === true);
 
     const znowu = await zarejestruj(t, { email: 'ANNA.KOWALSKA@firma.pl' });
@@ -648,7 +650,7 @@ async function testyKonta(sprawdz) {
       marketing.status === 200 && marketingJson.zgody.marketing === true && t.magazyn.konto(login).marketing === true
       && t.magazyn.zgody(login).some((z) => z.rodzaj === 'marketing' && z.wartosc === true && z.zrodlo === 'aplikacja')
       && staraWersja.status === 400 && (await staraWersja.json()).aktualna === '2026-11-v2' && nieznane.status === 400);
-    t.KONF.regulaminWersja = '2026-10-v1';
+    t.KONF.regulaminWersja = WERSJE.regulamin;
   } finally {
     klucze.ciasteczkaUsuwajace = pierwotneCiasteczka;
     await t.zamknij();
@@ -760,7 +762,7 @@ async function testyCli(sprawdz) {
     sprawdz('CLI pokaz <e-mail|login>: konto, organizacja, klucze, pakiet, zgody z wersja; bez hasha i soli',
       pokaz.status === 0 && pokaz.stdout.includes(`Konto ${klient.login} (samoobsługowe`) && /e-mail:\s+ewa\.klient@firma\.pl \(niepotwierdzony\)/.test(pokaz.stdout)
       && pokaz.stdout.includes(klient.organizacja) && /klucze API:\s+własne/.test(pokaz.stdout) && /pakiet:\s+darmowy/.test(pokaz.stdout)
-      && /artykul 0 z 3/.test(pokaz.stdout) && /regulamin\s+2026-10-v1\s+tak\s+rejestracja/.test(pokaz.stdout) && /polityka/.test(pokaz.stdout)
+      && /artykul 0 z 3/.test(pokaz.stdout) && new RegExp(`regulamin\\s+${WERSJE.regulamin}\\s+tak\\s+rejestracja`).test(pokaz.stdout) && /polityka/.test(pokaz.stdout)
       && !pokaz.stdout.includes(klient.hash) && !pokaz.stdout.includes(klient.sol)
       && pokazZespolu.status === 0 && /e-mail:\s+brak \(loguje się loginem\)/.test(pokazZespolu.stdout) && /organizacja:\s+glowna/.test(pokazZespolu.stdout)
       && /klucze API:\s+serwera/.test(pokazZespolu.stdout));

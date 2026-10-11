@@ -749,7 +749,8 @@ async function testySerwera(sprawdz) {
     srodowisko: {
       CAI_REJESTRACJA: '1', CAI_ADRES_PUBLICZNY: 'https://app.example.com', CAI_USLUGODAWCA_IMIE_NAZWISKO: 'Jan Testowy',
       CAI_USLUGODAWCA_ADRES: 'ul. Testowa 1, 00-001 Warszawa', CAI_USLUGODAWCA_EMAIL: 'kontakt@example.com',
-      CAI_REGULAMIN_WERSJA: '2026-10-v1', CAI_POLITYKA_WERSJA: '2026-10-v1', CAI_KLUCZ_CIASTEK: crypto.randomBytes(32).toString('base64'),
+      CAI_REGULAMIN_WERSJA: require('./dokumenty-prawne.js').wersje().regulamin, CAI_POLITYKA_WERSJA: require('./dokumenty-prawne.js').wersje().prywatnosc,
+      CAI_KLUCZ_CIASTEK: crypto.randomBytes(32).toString('base64'),
     },
   });
   try {

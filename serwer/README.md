@@ -251,8 +251,8 @@ usługodawcy) wyłącznie w `/etc/contentai/srodowisko`.
 | `PLATNOSCI_TRYB` | - | `test` albo `live`; wymagane przy `PLATNOSCI`, sprawdzane z prefiksem klucza |
 | `PLATNOSCI_SPRZEDAZ` | `1` | `0` = brak nowych zakupów; webhook, panel i uzgadnianie działają |
 | `PLATNOSCI_WALUTY` | `eur,pln` | waluty oferowane |
-| `PLATNOSCI_WALUTA_DOMYSLNA` | `eur` | waluta dla interfejsu innego niż polski |
-| `PLATNOSCI_WALUTA_PL` | `pln` | waluta dla interfejsu polskiego (M-1) |
+| `PLATNOSCI_WALUTA_DOMYSLNA` | `eur` | waluta dla interfejsu innego niż polski i dla urządzeń poza strefą czasową Polski (`walutaPozaPolska`, R9-W) |
+| `PLATNOSCI_WALUTA_PL` | `pln` | waluta dla interfejsu polskiego (M-1) i dla urządzeń w strefie `Europe/Warsaw` (`walutaWPolsce`, R9-W) |
 | `PLATNOSCI_CENY_WYSWIETLANE` | - | `standard:eur=19,pln=79;premium:eur=49,pln=199`; puste = kwoty od dostawcy |
 | `PLATNOSCI_ZALEGLA_DNI` | `7` | okres łaski przy zaległej płatności |
 | `PLATNOSCI_DLA_STARYCH` | `0` | `1` = konta `glowna` mogą kupować (M-7) |

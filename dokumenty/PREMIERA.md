@@ -246,7 +246,7 @@ CAI_USLUGODAWCA_ADRES="ulica 1, 00-000 Miasto"
 CAI_USLUGODAWCA_TELEFON="+48 000 000 000"
 CAI_USLUGODAWCA_EMAIL="kontakt@content-ai.net"
 CAI_USLUGODAWCA_WWW=https://content-ai.net
-CAI_REGULAMIN_WERSJA=2026-10-v1
+CAI_REGULAMIN_WERSJA=2026-10-v2
 CAI_POLITYKA_WERSJA=2026-10-v1
 ```
 
@@ -338,12 +338,15 @@ Każdy krok ma w tabeli "czego się spodziewać". Wynik (zrzuty albo notatki) wy
 
 Gdy etap 6 przeszedł, Stripe zweryfikował konto, a księgowa potwierdziła kasę rejestrującą:
 1. W Stripe w trybie live utwórz to samo co w etapie 6 (produkty, ceny, portal, klucz ograniczony,
-   webhook na `https://app.content-ai.net/platnosci/webhook/stripe`). Portal live ma osobne ustawienia:
+   webhook na `https://app.content-ai.net/platnosci/webhook/stripe`). Portal live ma osobne ustawienia
+   (https://dashboard.stripe.com/settings/billing/portal, w wyszukiwarce panelu: "Customer portal"):
    zmiana pakietu z oboma produktami, proporcje z fakturą od razu, obniżenie pakietu na koniec okresu
    (README, punkt 2). Bez tego przycisk "Zmień pakiet" w aplikacji otworzy zwykły panel Stripe.
 2. `sudo nano /etc/contentai/srodowisko`: `PLATNOSCI=stripe`, `PLATNOSCI_TRYB=live`, wszystkie
    `STRIPE_*` z trybu live, `PLATNOSCI_CENY_WYSWIETLANE="standard:eur=19,pln=79;premium:eur=49,pln=199"` (w cudzysłowie: średnik bez niego przerywa wczytanie pliku w `cli.sh`),
-   na końcu `CAI_REJESTRACJA=1`.
+   `CAI_REGULAMIN_WERSJA=2026-10-v2` (wersja z nagłówka `dokumenty-prawne/regulamin.pl.md`; ta sama
+   zmiana w `/etc/contentai/srodowisko-test`), na końcu `CAI_REJESTRACJA=1`. Konta, które zaakceptowały
+   poprzednią wersję regulaminu, przy następnym wejściu zaakceptują nową.
 
 ```bash
 sudo systemctl restart contentai
@@ -351,7 +354,8 @@ sudo serwer/cli.sh platnosci-sprawdz
 sudo journalctl -u contentai --no-pager -n 20 | grep -E 'rejestracja|platnosci'
 ```
 
-Oczekiwane: kod 0 i `rejestracja: otwarta, platnosci: stripe (live)`.
+Oczekiwane: kod 0 i `rejestracja: otwarta, platnosci: stripe (live)`. W dzienniku nie ma wpisu
+`wersja w konfiguracji rozna od dokumentu` (wersja regulaminu w konfiguracji = wersja dokumentu).
 3. Jeden prawdziwy zakup Twoją kartą, potem zwrot: `sudo serwer/cli.sh zwrot <login> --pelny --wykonaj`.
 4. Ogłoszenie (LinkedIn, Product Hunt).
 

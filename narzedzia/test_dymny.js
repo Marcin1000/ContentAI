@@ -25,6 +25,8 @@ const http = require('http');
 const { spawn } = require('child_process');
 
 const REPO = path.resolve(__dirname, '..');
+// Wersje dokumentow z naglowkow szablonow: serwery testow skonfigurowane jak produkcja (CAI_REGULAMIN_WERSJA = wersja regulaminu).
+const WERSJE_DOKUMENTOW = require(path.join(REPO, 'serwer', 'dokumenty-prawne.js')).wersje();
 let chromium;
 try { ({ chromium } = require('playwright')); }
 catch (e) { console.error('Brak pakietu playwright: npm install --no-save playwright && npx playwright install chromium'); process.exit(1); }
@@ -2509,7 +2511,7 @@ async function wariantR9DZakupWAplikacji(b) {
     CAI_MARKA: kat, CAI_SEKRET_PLIK: path.join(kat, 'sekret'), PORT: String(portSerwera), CAI_HOST: '127.0.0.1', CAI_ZAUFANE_ADRESY: '127.0.0.1',
     ANTHROPIC_KEY: 'test-anthropic', CAI_URL_ANTHROPIC: 'http://127.0.0.1:' + PORT_ATRAPY + '/v1/messages',
     CAI_REJESTRACJA: '1', CAI_ADRES_PUBLICZNY: adres, CAI_POCZTA_LOG: path.join(kat, 'poczta.jsonl'),
-    CAI_REGULAMIN_WERSJA: '2026-10-v1', CAI_POLITYKA_WERSJA: '2026-10-v1', CAI_KLUCZ_CIASTEK: require('crypto').randomBytes(32).toString('base64'),
+    CAI_REGULAMIN_WERSJA: WERSJE_DOKUMENTOW.regulamin, CAI_POLITYKA_WERSJA: WERSJE_DOKUMENTOW.prywatnosc, CAI_KLUCZ_CIASTEK: require('crypto').randomBytes(32).toString('base64'),
     PLATNOSCI: 'stripe', PLATNOSCI_TRYB: 'test', STRIPE_KLUCZ: 'rk_test_atrapa', STRIPE_SEKRET_WEBHOOKA: sekret,
     STRIPE_CENA_STANDARD: 'price_atrapa_standard', STRIPE_CENA_PREMIUM: 'price_atrapa_premium', STRIPE_URL_API: urlStripe,
     STRIPE_HOSTY_PRZEKIEROWAN: urlStripe, PLATNOSCI_CENY_WYSWIETLANE: 'standard:eur=19,pln=79;premium:eur=49,pln=199',
@@ -2629,7 +2631,7 @@ async function wariantR9Rejestracja(b) {
     ANTHROPIC_KEY: 'test-anthropic', CAI_URL_ANTHROPIC: 'http://127.0.0.1:' + PORT_ATRAPY + '/v1/messages',
     CAI_REJESTRACJA: '1', CAI_ADRES_PUBLICZNY: adres, CAI_POCZTA_LOG: plikPoczty,
     CAI_USLUGODAWCA_IMIE_NAZWISKO: 'Jan Testowy', CAI_USLUGODAWCA_ADRES: 'ul. Testowa 1, 00-001 Warszawa',
-    CAI_USLUGODAWCA_EMAIL: 'kontakt@example.com', CAI_REGULAMIN_WERSJA: '2026-10-v1', CAI_POLITYKA_WERSJA: '2026-10-v1',
+    CAI_USLUGODAWCA_EMAIL: 'kontakt@example.com', CAI_REGULAMIN_WERSJA: WERSJE_DOKUMENTOW.regulamin, CAI_POLITYKA_WERSJA: WERSJE_DOKUMENTOW.prywatnosc,
     CAI_KLUCZ_CIASTEK: require('crypto').randomBytes(32).toString('base64'),
   });
   const p = spawn(process.execPath, [path.join(REPO, 'serwer', 'server.js')], { cwd: REPO, env, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -2816,11 +2818,14 @@ async function wariantR9W(b) {
     CAI_MARKA: kat, CAI_SEKRET_PLIK: path.join(kat, 'sekret'), PORT: String(portSerwera), CAI_HOST: '127.0.0.1', CAI_ZAUFANE_ADRESY: '127.0.0.1',
     ANTHROPIC_KEY: 'test-anthropic', CAI_URL_ANTHROPIC: 'http://127.0.0.1:' + PORT_ATRAPY + '/v1/messages',
     CAI_REJESTRACJA: '1', CAI_ADRES_PUBLICZNY: adres, CAI_POCZTA_LOG: path.join(kat, 'poczta.jsonl'),
-    CAI_REGULAMIN_WERSJA: '2026-10-v1', CAI_POLITYKA_WERSJA: '2026-10-v1', CAI_KLUCZ_CIASTEK: require('crypto').randomBytes(32).toString('base64'),
+    CAI_REGULAMIN_WERSJA: WERSJE_DOKUMENTOW.regulamin, CAI_POLITYKA_WERSJA: WERSJE_DOKUMENTOW.prywatnosc, CAI_KLUCZ_CIASTEK: require('crypto').randomBytes(32).toString('base64'),
     PLATNOSCI: 'stripe', PLATNOSCI_TRYB: 'test', STRIPE_KLUCZ: 'rk_test_atrapa', STRIPE_SEKRET_WEBHOOKA: sekret,
     STRIPE_CENA_STANDARD: 'price_atrapa_standard', STRIPE_CENA_PREMIUM: 'price_atrapa_premium', STRIPE_URL_API: urlStripe,
     STRIPE_HOSTY_PRZEKIEROWAN: urlStripe, PLATNOSCI_CENY_WYSWIETLANE: 'standard:eur=19,pln=79;premium:eur=49,pln=199',
     CAI_USLUGODAWCA_IMIE_NAZWISKO: 'Jan Testowy', CAI_USLUGODAWCA_ADRES: 'ul. Testowa 1, 00-001 Warszawa', CAI_USLUGODAWCA_EMAIL: 'kontakt@example.com',
+    // Adres OpenSEO w aplikacji (pozycja menu "wdrozona"), bez portu: /api/seo/projekty odpowiada 200 z dostepne: false,
+    // jak serwer testowy bez kontenera OpenSEO (zgloszenie Marcina z test.content-ai.net).
+    CAI_OPENSEO_ADRES: 'https://openseo.example.test',
   });
   const serwer = spawn(process.execPath, [path.join(REPO, 'serwer', 'server.js')], { cwd: REPO, env, stdio: ['ignore', 'pipe', 'pipe'] });
   let log = '';
@@ -3023,6 +3028,37 @@ async function wariantR9W(b) {
     const appDe = await oknoZakupu(s5);
     wynik('R9-W jezyk z listy przegladarki: "de, pl" -> ekran logowania i aplikacja po polsku; samo "de" -> po angielsku, z cenami w EUR (Niemcy)',
       ekranDePl === 'pl' && appDePl === 'pl' && ekranDe === 'en' && appDe.jezyk === 'en' && appDe.waluta === 'EUR', JSON.stringify({ ekranDePl, appDePl, ekranDe, appDe }));
+    // ── (6) OpenSEO: klient bez OpenSEO w pakiecie nie widzi wejsc (OpenSEO dla klientow po premierze), zespol jak dotad ──
+    // Styl inline, ktory przelacza kod (pozycja telefonu ma osobna regule CSS na komputerze).
+    const widoczneSeo = (p) => p.evaluate(() => {
+      const widac = (id) => { const e = document.getElementById(id); return !!e && e.style.display !== 'none'; };
+      return { frazy: widac('seo-frazy-btn'), menu: widac('openseo-item'), menuTel: widac('openseo-item-tel') };
+    });
+    const funkcjePakietu = async (p) => {
+      await p.evaluate(() => otworzPakiet());
+      await p.waitForSelector('#pakiet-funkcje div', { timeout: 8000 });
+      return p.evaluate(() => document.getElementById('pakiet-funkcje').textContent.replace(/\s+/g, ' '));
+    };
+    await s2.goto(adres + '/', { waitUntil: 'load' });
+    await s2.evaluate(() => window.kontoGotowe);
+    await s2.waitForTimeout(800);                       // stary kod pokazywal przycisk i menu po odpowiedzi /api/seo/projekty
+    const klientSeo = await widoczneSeo(s2);
+    const klientFunkcje = await funkcjePakietu(s2);
+    const k7 = await kontekst({ locale: 'pl-PL', timezoneId: 'Europe/Warsaw' });
+    const s7 = await k7.newPage();
+    await s7.goto(adres + '/', { waitUntil: 'load' });
+    await s7.fill('input[name="login"]', 'premium');
+    await s7.fill('input[type="password"]', HASLO);
+    await krok('R9-W logowanie konta zespolu (Premium, organizacja glowna)', Promise.all([s7.waitForNavigation({ waitUntil: 'load' }), s7.click('button[type="submit"]')]));
+    await s7.evaluate(() => window.kontoGotowe);
+    await s7.waitForFunction(() => document.getElementById('openseo-item').style.display !== 'none', null, { timeout: 8000 }).catch(() => {});
+    await s7.waitForTimeout(300);
+    const zespolSeo = await widoczneSeo(s7);
+    const zespolFunkcje = await funkcjePakietu(s7);
+    wynik('R9-W OpenSEO: klient bez OpenSEO w pakiecie bez przycisku fraz, pozycji menu i wiersza "OpenSEO: niedostępne"; zespol (Premium) z menu i funkcja w pakiecie; serwer bez OpenSEO bez przycisku fraz',
+      !klientSeo.frazy && !klientSeo.menu && !klientSeo.menuTel && !/OpenSEO/.test(klientFunkcje)
+      && zespolSeo.menu && zespolSeo.menuTel && !zespolSeo.frazy && /Dane z OpenSEO/.test(zespolFunkcje),
+      JSON.stringify({ klientSeo, klientFunkcje, zespolSeo, zespolFunkcje }));
     wynik('R9-W bez bledow JavaScript', !bledy.length, bledy.join(' | '));
     if (bledow) await zrzut(s, 'r9w-zmiana');
   } catch (e) {

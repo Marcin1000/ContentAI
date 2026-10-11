@@ -20327,6 +20327,28 @@ async function kbAudioTranscribeAndOpen(file) {
   };
 
   /**
+   * Czy pokazac wejscia do OpenSEO: { menu, frazy }. Konto samoobslugowe bez OpenSEO w pakiecie nie dostaje ich
+   * wcale (R9-W, zgloszenie Marcina z test.content-ai.net): OpenSEO dla klientow bedzie po premierze, a dzis menu
+   * prowadzilo do strony "brak dostepu", przycisk przy frazach do okna "Zaloz projekt w OpenSEO". Pozostale konta:
+   * menu jak dotad, frazy tylko gdy serwer potwierdzi OpenSEO (200 bez dostepne: false; serwer bez OpenSEO odpowiada
+   * 200 z dostepne: false i przycisk pokazywal sie wszystkim). Jedno zapytanie na wejscie, wspolne dla wszystkich miejsc.
+   */
+  var dostep = null;
+  window.dostepOpenSeo = function(){
+    if (dostep) return dostep;
+    dostep = (window.kontoGotowe || Promise.resolve()).then(function(){
+      var s = window.STAN_KONTA, f = s && s.pakiet && s.pakiet.funkcje;
+      var klient = typeof window.kontoSamoobslugowe === 'function' && window.kontoSamoobslugowe();
+      if (klient && !(f && f.openseo)) return { menu: false, frazy: false };
+      return fetch('/api/seo/projekty').then(function(o){
+        if (!o.ok) return { menu: true, frazy: false };
+        return o.json().then(function(d){ return { menu: true, frazy: !(d && d.dostepne === false) }; });
+      }).catch(function(){ return { menu: true, frazy: false }; });
+    });
+    return dostep;
+  };
+
+  /**
    * Wybor jasny/ciemny podajemy dalej ciasteczkiem, zeby OpenSEO otwieralo sie
    * w tym samym motywie. localStorage odpada - OpenSEO stoi pod inna poddomena,
    * a to inne zrodlo. Domena ciasteczka bierze sie z konfiguracji serwera
@@ -20365,10 +20387,13 @@ async function kbAudioTranscribeAndOpen(file) {
     var wybrany = null; try { wybrany = magazyn.getItem('cai-dark'); } catch(e){}
     if (wybrany !== null) zapiszMotyw(); else usunMotyw();
     if (!wdrozone) return;
-    var poz = document.getElementById('openseo-item');
-    if (poz) poz.style.display = '';
-    var pozTel = document.getElementById('openseo-item-tel'); // R9-G (UX8-13): ta sama pozycja w arkuszu Konto na telefonie
-    if (pozTel) pozTel.style.display = '';
+    window.dostepOpenSeo().then(function(d){
+      if (!d.menu) return;
+      var poz = document.getElementById('openseo-item');
+      if (poz) poz.style.display = '';
+      var pozTel = document.getElementById('openseo-item-tel'); // R9-G (UX8-13): ta sama pozycja w arkuszu Konto na telefonie
+      if (pozTel) pozTel.style.display = '';
+    });
   });
 })();
 </script>
@@ -20585,6 +20610,9 @@ async function kbAudioTranscribeAndOpen(file) {
     try {
       var temat = (document.getElementById('topic') || {}).value || '';
       if (!temat.trim()) return;
+      // Bez dostepu do fraz OpenSEO (konto bez OpenSEO, serwer bez OpenSEO) Brief bez zapytania, ktore i tak skonczyloby sie
+      // odmowa (402 albo 501 w konsoli przy kazdym Briefie).
+      if (typeof window.dostepOpenSeo === 'function' && !(await window.dostepOpenSeo()).frazy) return;
 
       var odp = await fetch('/api/seo/frazy?szukaj=' + encodeURIComponent(temat.trim().split(/\s+/)[0]));
       if (!odp.ok) return;
@@ -20609,13 +20637,14 @@ async function kbAudioTranscribeAndOpen(file) {
   };
 
   // Przycisk przy polu fraz pokazuje sie dopiero, gdy serwer potwierdzi, ze
-  // OpenSEO faktycznie odpowiada. Inaczej otwieraloby sie puste okno z bledem.
+  // OpenSEO faktycznie odpowiada, a konto moze z niego korzystac (dostepOpenSeo).
+  // Inaczej otwieraloby sie puste okno "Nie ma jeszcze fraz z OpenSEO".
   document.addEventListener('DOMContentLoaded', function(){
-    fetch('/api/seo/projekty').then(function(o){
-      if (!o.ok) return;
+    window.dostepOpenSeo().then(function(d){
+      if (!d.frazy) return;
       var b = el('seo-frazy-btn');
       if (b) b.style.display = 'flex';
-    }).catch(function(){});
+    });
   });
 })();
 </script>
@@ -20802,7 +20831,12 @@ async function kbAudioTranscribeAndOpen(file) {
     el('pakiet-funkcje').innerHTML =
       '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">'
       + bezpieczny(tekst('pakiet-funkcje','Funkcje w tym pakiecie')) + '</div>'
-      + FUNKCJE.map(function(f){
+      // R9-W: OpenSEO dla klientow bedzie po premierze; konto samoobslugowe bez niego nie widzi wiersza "niedostepne"
+      // (w zadnym pakiecie, takze w Premium, go dzis nie ma).
+      + FUNKCJE.filter(function(f){
+          return f !== 'openseo' || Boolean(stan.funkcje && stan.funkcje.openseo)
+            || !(typeof window.kontoSamoobslugowe === 'function' && window.kontoSamoobslugowe());
+        }).map(function(f){
           var ma = Boolean(stan.funkcje && stan.funkcje[f]);
           return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 0;color:'
             + (ma ? 'var(--text2)' : 'var(--text3)') + '">'
