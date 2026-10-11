@@ -299,7 +299,9 @@ sprawdzasz zakup, odstąpienie i portal klienta, zanim ktokolwiek zapłaci napra
 
 1. Cloudflare DNS: rekord `test` (A, adres serwera 95.216.216.175, pomarańczowa chmurka).
 2. Caddy: odkomentuj blok `test.content-ai.net` ze wzorca, hasło: `caddy hash-password`
-   (wynik w miejsce `WSTAW_TUTAJ_HASH_BCRYPT`), `validate`, `reload` jak w etapie 2.
+   (wynik w miejsce `WSTAW_TUTAJ_HASH_BCRYPT`), `validate`, `reload` jak w etapie 2. Jeśli pozostałe
+   bloki mają linię `bind` (np. Tailscale zajmuje port 443 na swoim adresie), skopiuj ją też do bloku
+   `test`; bez niej `reload` kończy się błędem `address already in use`.
 3. Kopia aplikacji i usługa testowa:
 
 ```bash
@@ -317,10 +319,14 @@ sudo nano /etc/contentai/srodowisko-test
    "Test w prawdziwym trybie testowym Stripe", punkty 1-6.
 
 ```bash
+sudo /srv/contentai-test/serwer/cli.sh --srodowisko /etc/contentai/srodowisko-test dodaj marcin admin
 sudo cp /srv/contentai-test/serwer/contentai-test.service /etc/systemd/system/
 sudo systemctl daemon-reload && sudo systemctl enable --now contentai-test
 sudo /srv/contentai-test/serwer/cli.sh --srodowisko /etc/contentai/srodowisko-test platnosci-sprawdz
 ```
+
+   Pierwsze polecenie zakłada konto administratora (pyta o hasło): bez żadnego konta serwer nie
+   wystartuje, także przy otwartej rejestracji.
 
 Oczekiwane: "Gotowe (kod 0)". Potem przejdź kroki T1-T12 z tej samej sekcji README (rejestracja,
 klucz, 3 artykuły, zakup kartą testową `4242 4242 4242 4242`, odstąpienie, portal, kraj spoza UE).
@@ -334,7 +340,7 @@ Gdy etap 6 przeszedł, Stripe zweryfikował konto, a księgowa potwierdziła kas
 1. W Stripe w trybie live utwórz to samo co w etapie 6 (produkty, ceny, portal, klucz ograniczony,
    webhook na `https://app.content-ai.net/platnosci/webhook/stripe`).
 2. `sudo nano /etc/contentai/srodowisko`: `PLATNOSCI=stripe`, `PLATNOSCI_TRYB=live`, wszystkie
-   `STRIPE_*` z trybu live, `PLATNOSCI_CENY_WYSWIETLANE=standard:eur=19,pln=79;premium:eur=49,pln=199`,
+   `STRIPE_*` z trybu live, `PLATNOSCI_CENY_WYSWIETLANE="standard:eur=19,pln=79;premium:eur=49,pln=199"` (w cudzysłowie: średnik bez niego przerywa wczytanie pliku w `cli.sh`),
    na końcu `CAI_REJESTRACJA=1`.
 
 ```bash
