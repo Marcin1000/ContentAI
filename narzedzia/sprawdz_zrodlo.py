@@ -1622,8 +1622,20 @@ KONTROLE += [
     ("R9-T/koszt-usd", "koszt API po polsku '1,98 USD', po angielsku '$1.98' (nie '$1,984')",
      "return currentLang === 'en' ? '$' + liczba : liczba + '\\u00a0USD';",
      "el.textContent = '$' + formatujLiczbe(", None),
-    ("R9-T/koszt-laczny", "kreator klucza nie obiecuje kosztu kazdego tekstu: Historia pokazuje laczny szacunek",
-     "Łączny szacunkowy koszt na Twoich kluczach zobaczysz w Historii.", "Koszt każdego tekstu zobaczysz w Historii.", ("proxy",)),
+    ("R9-T/koszt-kreator", "kreator klucza: koszt kazdego tekstu w Historii (R9-K), nie obietnica bez pokrycia",
+     "Szacunkowy koszt każdego tekstu zobaczysz w Historii.", "Koszt każdego tekstu zobaczysz w Historii.", ("proxy",)),
+]
+
+# Koszt kazdego tekstu w Historii (runda 9, po tescie premiery). Scenariusz w wariantProxy (test_dymny.js).
+KONTROLE += [
+    ("R9-K/kubelek", "apiFetch: wywolanie pracy na tekscie (doArtykulu) liczy koszt do artykulu z chwili wyslania",
+     "const kubelekKosztu = options && options.doArtykulu ? kubelekArtykulu() : null;", None, None),
+    ("R9-K/generowanie", "generowanie zbiera koszt w kubelku, po zapisie wpisu kubelek wskazuje wpis (spoznione odpowiedzi)",
+     "kubelekGenerowania.wpis = history[0].id;", None, None),
+    ("R9-K/zapis", "koszt wpisu zapisany w magazynie przegladarki razem z wpisem",
+     "koszt: h.koszt > 0 ? h.koszt : undefined", None, None),
+    ("R9-K/lista", "lista Historii: koszt tego tekstu w metadanych wpisu (kwotaUsd)",
+     "${h.koszt > 0 ? ` · <span class=\"h-koszt\" title=\"${escapeHtml(_t('hist-koszt-wpisu'))}\">${escapeHtml(kwotaUsd(h.koszt))}</span>` : ''}", None, None),
 ]
 
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi
