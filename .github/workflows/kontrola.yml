@@ -103,6 +103,12 @@ jobs:
       - name: Teksty - bez dlugich myslnikow
         run: python3 narzedzia/audyt_myslniki.py
 
+      # Decyzja 2026-10-12: w tekstach dla klienta (strona produktowa, aplikacja,
+      # ekrany kont i platnosci, e-maile) nie ma srednika. Dokumenty prawne,
+      # prompty dla modelu i komunikaty dla operatora sa poza kontrola.
+      - name: Teksty - bez srednikow
+        run: python3 narzedzia/audyt_sredniki.py
+
       # Jedyna kontrola, która URUCHAMIA aplikację: Chromium, atrapa dostawców AI
       # (narzedzia/atrapa/dostawcy.js) i serwer z kontami testowymi. Generuje
       # artykuły, przerywa, klika okna, loguje dwa konta. Podpisy wyżej mówią,

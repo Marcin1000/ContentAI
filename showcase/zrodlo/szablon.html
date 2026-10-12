@@ -405,9 +405,10 @@
           <h3>{{t:feat-kb-t}}</h3>
           <p>{{t:feat-kb-p}}</p>
           <div class="podglad frag" aria-hidden="true">
-            <div><span>{{t:demo-plik-1}}</span><i><b class="w92"></b></i><span class="mono">0,92</span></div>
-            <div><span>{{t:demo-plik-3}}</span><i><b class="w86"></b></i><span class="mono">0,86</span></div>
-            <div><span>{{t:demo-plik-2}}</span><i><b class="w71"></b></i><span class="mono">0,71</span></div>
+            <span class="ps-et">{{t:feat-kb-trafnosc}}</span>
+            <div><span>{{t:demo-plik-1}}</span><i><b class="w92"></b></i><span class="mono">92%</span></div>
+            <div><span>{{t:demo-plik-3}}</span><i><b class="w86"></b></i><span class="mono">86%</span></div>
+            <div><span>{{t:demo-plik-2}}</span><i><b class="w71"></b></i><span class="mono">71%</span></div>
           </div>
         </article>
         <article class="kafel kb4 wej">
@@ -614,6 +615,8 @@
             <tr><th scope="row">{{t:plan-tab-audio}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-audio-darmowy}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-audio-standard}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-audio-premium}}</td></tr>
             <tr><th scope="row">{{t:plan-tab-trans}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-trans-darmowy}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-trans-standard}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-trans-premium}}</td></tr>
             <tr><th scope="row">{{t:plan-tab-dok}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-dok-darmowy}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-dok-standard}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-dok-premium}}</td></tr>
+            {# strony z adresu (/api/strona) i sprawdzenia linkow (/api/odnosniki): limitySerwera.strony w plany.js, pilnuje LICZBY_PAKIETOW #}
+            <tr><th scope="row">{{t:plan-tab-strony}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-strony-darmowy}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-strony-standard}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-strony-premium}}</td></tr>
             <tr><th scope="row">{{t:plan-tab-oceny}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-tak}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-tak}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-tak}}</td></tr>
             <tr><th scope="row">{{t:plan-tab-eksport}}</th><td data-et="{{a:plan-free-name}}">{{t:plan-tab-tak}}</td><td data-et="{{a:plan-std-name}}">{{t:plan-tab-tak}}</td><td data-et="{{a:plan-pro-name}}">{{t:plan-tab-tak}}</td></tr>
             {# serp i cms: zgodnosc z funkcjami w plany.js pilnuje FUNKCJE_W_TABELI w buduj_strone.py #}
@@ -650,7 +653,6 @@
         <details><summary>{{t:faq-12-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-12-a}}</p></details>
         <details><summary>{{t:faq-13-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-13-a}}</p></details>
         <details><summary>{{t:faq-14-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-14-a}}</p></details>
-        <details><summary>{{t:faq-15-q}}<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>{{t:faq-15-a}}</p></details>
       </div>
     </div>
   </section>

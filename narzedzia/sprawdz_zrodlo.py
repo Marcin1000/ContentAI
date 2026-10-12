@@ -1690,6 +1690,23 @@ KONTROLE += [
      "'zakup-bl-istnieje':'To konto ma już aktywną subskrypcję. Pakiet zmienisz w panelu Stripe: Zarządzaj subskrypcją.'", ("proxy",)),
 ]
 
+# Uwagi Marcina do strony produktowej (2026-10-12): bez srednikow w tekstach strony i aplikacji
+# (narzedzia/audyt_sredniki.py pilnuje calosci), tu slady zmian w kodzie aplikacji.
+KONTROLE += [
+    ("R9-S/vis-opis", "opis wyniku Widocznosci AI ze slownika (PL i EN), bez srednika wpisanego na sztywno w kodzie",
+     "escapeHtml(_t('vis-obecnosc-opis').replace('{pct}', pct))",
+     "'%; wskaźnik obniża ją za dalsze pozycje i niestabilność.'", None),
+    ("R9-S/audio-bez-cors", "blad polaczenia z audio bez uwagi o CORS i proxy (klient i tak idzie przez serwer, ElevenLabs tez)",
+     "'err-audio-siec':'Nie udało się połączyć z usługą audio. Sprawdź połączenie z internetem i klucz API, a potem spróbuj ponownie.'",
+     "OpenAI TTS jest blokowane przez CORS przeglądarki i wymaga proxy;", None),
+    ("R9-S/zakup-podsumowanie", "podsumowanie zakupu bez srednikow, zdanie w zdanie jak ekran platnosci serwera",
+     "w ustawieniach konta. Pakiet działa do końca opłaconego miesiąca. Cena jest ceną końcową. Do generowania potrzebny jest Twój klucz API. Opłaty",
+     "w ustawieniach konta; pakiet działa do końca opłaconego miesiąca.", ("proxy",)),
+    ("R9-S/czekanie-stripe", "czekanie na potwierdzenie Stripe (platnosc i zmiana pakietu) bez srednika",
+     "'plat-oczekuje':'Czekamy na potwierdzenie płatności od Stripe. To zwykle kilka sekund. Okno odświeży się samo.'",
+     "To zwykle kilka sekund; okno odświeży się samo.", None),
+]
+
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi
 # do przegladarki bez przetworzenia, kazda z nich jest potrojona -> SyntaxError
 # "Identifier ... has already been declared" wywala caly blok <script> i zabija UI.

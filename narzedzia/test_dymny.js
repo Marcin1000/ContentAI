@@ -2957,8 +2957,10 @@ async function wariantR9W(b) {
     await s.evaluate(() => otworzPakiet('zmiana'));
     await s.waitForSelector('#zmiana-pakietu #zmiana-przycisk', { timeout: 8000 });
     const premium = await s.evaluate(() => ({ opis: document.getElementById('pakiet-opis').textContent, przycisk: document.getElementById('zmiana-przycisk').textContent }));
-    wynik('R9-W Premium: opis pakietu bez "Liczniki odnawiają się..." (brak licznikow z limitem), w oknie zmiana na Standard',
-      /bez limitów/.test(premium.opis) && !/Liczniki odnawiają/.test(premium.opis) && /^Przejdź na Standard · 79\s?zł$/.test(premium.przycisk.trim()), JSON.stringify(premium));
+    // Opis z plany.js wymienia, co jest bez limitu (pula stron ma limit takze w Premium, 2026-10-12).
+    wynik('R9-W Premium: opis "Bez limitu artykułów, grafik, audio i transkrypcji." bez "Liczniki odnawiają się..." (brak licznikow z limitem), w oknie zmiana na Standard',
+      premium.opis.trim() === 'Bez limitu artykułów, grafik, audio i transkrypcji.' && !/Liczniki odnawiają/.test(premium.opis)
+      && /^Przejdź na Standard · 79\s?zł$/.test(premium.przycisk.trim()), JSON.stringify(premium));
     const k1t = await kontekst({ locale: 'pl-PL', timezoneId: 'Europe/Warsaw', viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 });
     const st = await k1t.newPage();
     await zaloguj(st, 'zmiana.pakietu@firma-przyklad.pl');

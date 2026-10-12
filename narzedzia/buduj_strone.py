@@ -56,6 +56,7 @@ KORZEN = Path(__file__).resolve().parent.parent
 SHOWCASE = KORZEN / 'showcase'
 ZRODLO = SHOWCASE / 'zrodlo'
 PLANY_JS = KORZEN / 'serwer' / 'plany.js'
+APLIKACJA = KORZEN / 'app' / 'contentai.src.html'
 DOKUMENTY_PRAWNE = KORZEN / 'dokumenty-prawne'
 KONFIGURACJA = ZRODLO / 'konfiguracja.json'
 
@@ -102,6 +103,10 @@ LICZBY_PAKIETOW = {
     'plan-tab-trans-standard': ['standard.transkrypcja'],
     'plan-tab-dok-darmowy': ['darmowy.dokumenty'],
     'plan-tab-dok-standard': ['standard.dokumenty'],
+    # pula serwera na strony z adresu i sprawdzenia linkow (limitySerwera.strony), takze w Premium
+    'plan-tab-strony-darmowy': ['darmowy.strony'],
+    'plan-tab-strony-standard': ['standard.strony'],
+    'plan-tab-strony-premium': ['premium.strony'],
 }
 # Teksty, ktore mowia „bez limitu" (w plany.js musi stac null) albo „nie" (w plany.js 0).
 BEZ_LIMITU = {
@@ -127,10 +132,13 @@ FUNKCJE_W_TABELI = {
 DLUGIE_MYSLNIKI = ('\u2014', '\u2013')
 # Sformulowania, ktorych na stronie byc nie moze: nazwa dokumentu sprzedazy z VAT (PR8-11), AI Act tylko „wspiera wymogi
 # przejrzystosci" (PR8-04), samoobsluga zamiast formularza (STR8-03), uslugi nieuzywane na produkcji
-# (DECYZJE-R9, konfiguracja produkcji), funkcja wysylek z wdrozenia klienta (STR8-11), marki klientow.
+# (DECYZJE-R9, konfiguracja produkcji), funkcja wysylek z wdrozenia klienta (STR8-11), marki klientow,
+# konta zakladane przez administratora (strona jest dla samoobslugi, 2026-10-12) i „bez limitow" o pakiecie,
+# ktory ma pule serwera z limitem (limitySerwera.strony takze w Premium).
 ZAKAZANE = re.compile(
     r'faktur|invoice|w pe\u0142ni zgodn|pe\u0142n\w* zgodno\u015b\u0107|fully compliant|full compliance'
     r'|Popro\u015b o dost\u0119p|Request access|Konto zak\u0142ada administrator|administrator creates'
+    r'|za\u0142o\u017cone przez administratora|created by an administrator|limit\u00f3w sztukowych|per-item limits'
     r'|OpenSEO|DataForSEO|NVIDIA|rynk\w* eksportow|export market|\bDHL\b', re.I)
 MAKS_TYTUL = 70
 MAKS_OPIS = 160
@@ -165,6 +173,9 @@ def czytaj_plany():
             wynik['%s.%s' % (nazwa, pole)] = mm.group(1) if mm else None
         mm = re.search(r'limitDokumentow:\s*(\d+|null)', blok)
         wynik['%s.dokumenty' % nazwa] = mm.group(1) if mm else None
+        serwer = re.search(r'\blimitySerwera:\s*\{(.*?)\}', blok, re.S)
+        mm = re.search(r'\bstrony:\s*(\d+|null)', serwer.group(1)) if serwer else None
+        wynik['%s.strony' % nazwa] = mm.group(1) if mm else None
         funkcje = re.search(r'\bfunkcje:\s*\{(.*?)\}', blok, re.S)
         for pole in FUNKCJE_W_TABELI:
             mm = re.search(r'\b%s:\s*(true|false)' % pole, funkcje.group(1)) if funkcje else None
@@ -630,6 +641,21 @@ def sprawdz_teksty(teksty, plany, znane_zmienne):
     return bledy
 
 
+def sprawdz_funkcje_aplikacji(teksty):
+    """Strona nie obiecuje funkcji, ktora aplikacja ma wylaczona flaga (2026-10-12: dyktowanie)."""
+    bledy = []
+    m = re.search(r'\bconst VOICE_INPUT_ENABLED = (true|false);', APLIKACJA.read_text(encoding='utf-8'))
+    if not m:
+        return ['app/contentai.src.html: nie znaleziono flagi VOICE_INPUT_ENABLED']
+    if m.group(1) == 'false':
+        for jezyk in JEZYKI:
+            for k, v in teksty[jezyk].items():
+                if re.search(r'dyktow|dictat', v, re.I):
+                    bledy.append('teksty.json: %s/%s obiecuje dyktowanie, a aplikacja ma je wylaczone '
+                                 '(VOICE_INPUT_ENABLED = false)' % (jezyk, k))
+    return bledy
+
+
 def klucze_szablonu(szablon):
     return {m.group(2).strip() for m in ZNACZNIK.finditer(szablon) if m.group(1) in 'ta'}
 
@@ -650,6 +676,7 @@ def zbuduj(plik_konfiguracji=KONFIGURACJA):
     wspolne = {j: zmienne_jezyka(j, konf, wersje) for j in JEZYKI}
     znane_zmienne = set(wspolne['pl'])
     bledy.extend(sprawdz_teksty(teksty, plany, znane_zmienne))
+    bledy.extend(sprawdz_funkcje_aplikacji(teksty))
     uzyte = set()
     pliki = {}
     for nazwa, sciezki in STRONY:

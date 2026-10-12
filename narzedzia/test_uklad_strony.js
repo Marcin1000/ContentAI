@@ -12,7 +12,8 @@
  *
  *   1. brak poziomego przewijania strony (scrollingElement.scrollWidth <= innerWidth),
  *   2. zaden widoczny tekst ani element interaktywny nie wychodzi poza ekran ani poza
- *      rodzica z overflow hidden/clip; nie ma tekstu uciętego bez wielokropka,
+ *      rodzica z overflow hidden/clip; nie ma tekstu uciętego bez wielokropka; tekst
+ *      nie wychodzi poza komorke tabeli,
  *   3. pasek przewijany w poziomie tylko z zanikaniem na brzegu i z widocznym kawalkiem
  *      nastepnego elementu (inaczej wyglada jak blad),
  *   4. teksty nie nachodza na siebie,
@@ -21,7 +22,8 @@
  *   6. cele dotyku na telefonie maja co najmniej 44 px (poza linkami w zdaniu),
  *   7. pismo co najmniej 12 px i kontrast tekstu co najmniej AA (4,5:1; duzy tekst 3:1),
  *   8. elementy jednego rzedu (karty, kafle, liczby) maja naglowki na tej samej wysokosci,
- *      a w tresci nie ma pustego pasa wyzszego niz 40% okna,
+ *      dolny wiersz stopki jest jednym wierszem, linia grafu w Bezpieczenstwie biegnie od pierwszego
+ *      do ostatniego kolka bez przerw, a w tresci nie ma pustego pasa wyzszego niz 40% okna,
  *   9. interakcje: na kazdej szerokosci naglowek ma nawigacje po sekcjach (linki albo menu),
  *      menu otwiera sie bez przewijania strony i zamyka po wyborze, kazdy link menu
  *      (i nawigacji na komputerze) prowadzi do sekcji z tytulem pod naglowkiem strony, a pasek
@@ -217,6 +219,12 @@ function kontroleUkladu(opcje) {
     }
   }
 
+  // 2b. tekst wychodzacy poza komorke tabeli: na telefonie kolumny cennika sa waskie, a twarda spacja
+  //     („5000 miesiecznie") nie pozwalala zlamac wiersza - tekst wchodzil na margines strony (2026-10-12)
+  for (const e of elementy.filter(x => x.matches('td, th'))) {
+    if (e.clientWidth > 0 && e.scrollWidth > e.clientWidth + 1) problemy.push('tekst wychodzi poza komorke tabeli: ' + opis(e));
+  }
+
   // 4. teksty nachodzace na siebie (rozne bloki tekstu, kazdy wiersz osobno)
   const blok = e => { let x = e; while (x && styl(x).display === 'inline') x = x.parentElement; return x; };
   const nieruchome = e => { for (let x = e; x && x !== document.body; x = x.parentElement) { const p = styl(x).position; if (p === 'fixed' || p === 'sticky') return x; } return null; };
@@ -333,6 +341,44 @@ function kontroleRzedow() {
       const tops = naglowki.map(n => n.getBoundingClientRect().top);
       if (Math.max(...tops) - Math.min(...tops) > 3)
         problemy.push('rzad nierowny w ' + sel + ': naglowki na wysokosciach ' + tops.map(Math.round).join(', ') + ' („' + naglowki[0].textContent.trim().slice(0, 24) + '"...)');
+    }
+  }
+  // Dolny wiersz stopki to jeden wiersz: znak pod „© 2026 Content AI" wygladal na telefonie jak blad (2026-10-12).
+  for (const dol of document.querySelectorAll('.stopka-dol')) {
+    const tops = [...dol.children].filter(widoczny).map(d => d.getBoundingClientRect().top);
+    if (tops.length > 1 && Math.max(...tops) - Math.min(...tops) > 3)
+      problemy.push('dolny wiersz stopki w ' + tops.length + ' wierszach (element pod tekstem praw autorskich)');
+  }
+  return problemy;
+}
+
+// 8c. Linia grafu (Bezpieczenstwo, „Jak zapytanie trafia do modelu AI"): przerywana linia zaczyna sie
+// w pierwszym kolku, konczy w ostatnim i nie ma przerw miedzy kolkami. Linia rysowana od stalego miejsca
+// listy wystawala nad pierwsze kolko, gdy opis punktu mial kilka wierszy (uwaga z telefonu, 2026-10-12).
+// Pseudo-elementy nie maja getBoundingClientRect, wiec odcinki liczymy z ich top/bottom.
+function kontroleLinii() {
+  const problemy = [];
+  for (const lista of document.querySelectorAll('.droga-lista')) {
+    const kolka = [...lista.querySelectorAll('.droga-ik')].map(k => k.getBoundingClientRect()).filter(r => r.height > 0);
+    if (kolka.length < 2) continue;
+    const odcinki = [];
+    for (const el of [lista, ...lista.children]) for (const pseudo of ['::before', '::after']) {
+      const s = getComputedStyle(el, pseudo);
+      if (s.content === 'none' || s.content === 'normal' || s.position !== 'absolute' || s.borderLeftStyle !== 'dashed') continue;
+      const r = el.getBoundingClientRect();
+      odcinki.push([r.top + parseFloat(s.top), r.bottom - parseFloat(s.bottom)]);
+    }
+    if (!odcinki.length) { problemy.push('graf bez linii laczacej kolka'); continue; }
+    odcinki.sort((x, y) => x[0] - y[0]);
+    const gora = odcinki[0][0], dol = Math.max(...odcinki.map(o => o[1]));
+    const pierwsze = kolka[0], ostatnie = kolka[kolka.length - 1];
+    if (gora < pierwsze.top - 1) problemy.push('linia grafu wystaje ' + Math.round(pierwsze.top - gora) + ' px nad pierwsze kolko');
+    if (dol > ostatnie.bottom + 1) problemy.push('linia grafu wystaje ' + Math.round(dol - ostatnie.bottom) + ' px pod ostatnie kolko');
+    // miedzy kolejnymi kolkami linia bez przerw
+    for (let i = 0; i + 1 < kolka.length; i++) {
+      let y = kolka[i].bottom;
+      for (const [od, doY] of odcinki) if (od <= y + 1 && doY > y) y = doY;
+      if (y < kolka[i + 1].top - 1) problemy.push('przerwa w linii grafu miedzy kolkiem ' + (i + 1) + ' i ' + (i + 2));
     }
   }
   return problemy;
@@ -453,6 +499,9 @@ async function sprawdzStrone(przegladarka, baza, [w, h], motyw, sciezka, zFokuse
     const s = document.createElement('style');
     s.textContent = 'main>section{content-visibility:visible!important}';
     document.head.appendChild(s);
+    // Zwiniete bloki (tabela cennika na telefonie, odpowiedzi FAQ) tez sa czytane: bez rozwiniecia
+    // test nie widzial, ze „5000 miesiecznie" wychodzi poza kolumne (2026-10-12).
+    document.querySelectorAll('details').forEach(d => { d.open = true; });
   });
   // powiekszone pismo (ustawienie „rozmiar tekstu" w Samsung Internet / Androidzie): kazdy element dostaje pismo x skala
   if (skala) await strona.evaluate(k => {
@@ -463,6 +512,7 @@ async function sprawdzStrone(przegladarka, baza, [w, h], motyw, sciezka, zFokuse
   await strona.waitForTimeout(150);
   problemy.push(...await strona.evaluate(kontroleUkladu, { telefon }));
   problemy.push(...await strona.evaluate(kontroleRzedow));
+  problemy.push(...await strona.evaluate(kontroleLinii));
   problemy.push(...await strona.evaluate(kontrolePustych));
   // fixed/sticky w kilku miejscach strony
   const wys = await strona.evaluate(() => document.documentElement.scrollHeight);
