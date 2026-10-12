@@ -19,13 +19,14 @@ const { wolnoWyjsc } = require('./server.js');
 let zaliczone = 0;
 const bledy = [];
 
-function sprawdz(opis, warunek) {
+function sprawdz(opis, warunek, szczegol) {
   if (warunek) {
     zaliczone += 1;
     console.log(`  ok    ${opis}`);
   } else {
     bledy.push(opis);
-    console.log(`  BLAD  ${opis}`);
+    // szczegol (opcjonalny) tylko przy bledzie: co faktycznie przyszlo
+    console.log(`  BLAD  ${opis}${szczegol ? `  [${String(szczegol).slice(0, 400)}]` : ''}`);
   }
 }
 
@@ -1567,7 +1568,7 @@ async function testyPoprawek() {
       let b = {};
       try { b = JSON.parse(cialo || '{}'); } catch { /* multipart albo pusto */ }
       const tekst = JSON.stringify(b.messages || '');
-      zapytaniaAtrapy.push({ url: req.url, model: b.model, tekst });
+      zapytaniaAtrapy.push({ url: req.url, model: b.model, tekst, beta: req.headers['anthropic-beta'] || '', fallbacks: b.fallbacks });
       const odpowiedz = () => {
         if (res.destroyed) return;
         if (req.url.startsWith('/v1/images')) {
@@ -1575,6 +1576,10 @@ async function testyPoprawek() {
           return res.end(JSON.stringify({ data: [{ b64_json: 'AAAA' }] }));
         }
         res.writeHead(200, { 'Content-Type': 'application/json' });
+        // Odmowa filtra jak w API (Opus 5.5): HTTP 200, stop_reason "refusal", bez tekstu
+        if (/ODMOWA/.test(tekst)) {
+          return res.end(JSON.stringify({ content: [], stop_reason: 'refusal', stop_details: { type: 'refusal', category: 'bio' }, usage: { input_tokens: 1, output_tokens: 0 } }));
+        }
         res.end(JSON.stringify({ content: [{ type: 'text', text: '<h1>Artykul z atrapy</h1>' }], usage: { input_tokens: 1, output_tokens: 1 } }));
       };
       const zwloka = /WOLNO/.test(tekst) ? 2500 : 0;
@@ -1771,13 +1776,14 @@ async function testyPoprawek() {
 
     console.log('\n  koszt: modele, max_tokens, grafiki');
     {
-      sprawdz('modele odczytane z aplikacji (MODEL_*)', srv.DOZWOLONE.modele.has('claude-opus-5') && srv.DOZWOLONE.modele.has('claude-sonnet-5'));
+      sprawdz('modele odczytane z aplikacji (MODEL_*), model tresci Opus 5.5',
+        srv.DOZWOLONE.modele.has('claude-opus-5-5') && srv.DOZWOLONE.modele.has('claude-sonnet-5') && srv.DOZWOLONE.modelTresci === 'claude-opus-5-5');
       sprawdz('rozmiary grafik odczytane z IMG_FORMATS', ['1536x1024', '1024x1024', '1024x1536'].every((r) => srv.DOZWOLONE.rozmiary.has(r)));
       const przed = zapytaniaAtrapy.length;
       const zlyModel = await zadanie('/api', json(cAdmin, { model: 'claude-opus-dowolny', max_tokens: 10, messages: [{ role: 'user', content: 'x' }] }));
       const zlyModelJson = await zlyModel.json();
       sprawdz('model spoza listy -> 400 z komunikatem', zlyModel.status === 400 && /nie jest dostępny/.test(zlyModelJson.error.message));
-      const duzo = await zadanie('/api', json(cAdmin, { model: 'claude-opus-5', max_tokens: 128000, messages: [{ role: 'user', content: 'x' }] }));
+      const duzo = await zadanie('/api', json(cAdmin, { model: 'claude-opus-5-5', max_tokens: 128000, messages: [{ role: 'user', content: 'x' }] }));
       sprawdz('max_tokens powyzej sufitu -> 400', duzo.status === 400);
       sprawdz('odrzucone zapytania nie dotarly do dostawcy', zapytaniaAtrapy.length === przed);
       const ok = await zadanie('/api', json(cAdmin, { model: 'claude-sonnet-5', max_tokens: 1000, messages: [{ role: 'user', content: 'x' }] }));
@@ -1791,13 +1797,46 @@ async function testyPoprawek() {
       // gpt-image-1 OpenAI wylacza 23.10.2026: CAI_MODEL_GRAFIKI podmienia model, ktory przyslala aplikacja
       sprawdz('/api/images: CAI_MODEL_GRAFIKI podmienia model wyslany przez aplikacje',
         zapytaniaAtrapy.filter((z) => z.url === '/v1/images/generations').every((z) => z.model === 'gpt-image-2.5-flare'));
+
+      // Opus 5.5 (2026-10-12): zapasowy model po odmowie filtra. Serwer sam buduje naglowki do Anthropic,
+      // wiec dopisuje beta przy fallbacks "default"; lista modeli zapasowych odpada (drozszy model na koszt serwera).
+      const wiad = (t) => [{ role: 'user', content: t }];
+      const przedZ = zapytaniaAtrapy.length;
+      const zZapasem = await zadanie('/api', json(cAdmin, { model: 'claude-opus-5-5', fallbacks: 'default', max_tokens: 100, messages: wiad('zapas') }));
+      const bezZapasu = await zadanie('/api', json(cAdmin, { model: 'claude-opus-5-5', max_tokens: 100, messages: wiad('bez zapasu') }));
+      const lista = await zadanie('/api', json(cAdmin, { model: 'claude-opus-5-5', fallbacks: [{ model: 'claude-fable-5-1' }], max_tokens: 100, messages: wiad('lista') }));
+      const listaJson = await lista.json();
+      const zapZ = zapytaniaAtrapy.slice(przedZ);
+      sprawdz('fallbacks "default": serwer dopisuje anthropic-beta server-side-fallback-2026-07-01, bez fallbacks bez naglowka beta',
+        zZapasem.status === 200 && bezZapasu.status === 200 && zapZ.length === 2
+          && zapZ[0].beta === 'server-side-fallback-2026-07-01' && zapZ[0].fallbacks === 'default' && zapZ[1].beta === '', JSON.stringify(zapZ));
+      sprawdz('fallbacks z lista modeli -> 400 z komunikatem, nie dociera do dostawcy',
+        lista.status === 400 && /tylko wartość "default"/.test(listaJson.error.message) && zapytaniaAtrapy.length === przedZ + 2);
+      // CAI_MODEL_TRESCI: ten sam prompt na innym modelu tresci (porownanie jakosci, powrot bez zmiany kodu)
+      const przedM = zapytaniaAtrapy.length;
+      srv.KONF.modelTresci = 'claude-opus-5';
+      const podmieniony = await zadanie('/api', json(cAdmin, { model: 'claude-opus-5-5', max_tokens: 100, messages: wiad('podmiana') }));
+      const pomocniczy = await zadanie('/api', json(cAdmin, { model: 'claude-sonnet-5', max_tokens: 100, messages: wiad('pomocniczy') }));
+      srv.KONF.modelTresci = 'claude-fable-5-1';
+      const obcy = await zadanie('/api', json(cAdmin, { model: 'claude-opus-5-5', max_tokens: 100, messages: wiad('spoza listy') }));
+      srv.KONF.modelTresci = '';
+      const zapM = zapytaniaAtrapy.slice(przedM).map((z) => z.model);
+      sprawdz('CAI_MODEL_TRESCI=claude-opus-5: model tresci aplikacji idzie jako claude-opus-5, pomocniczy bez zmian, model spoza listy ignorowany',
+        podmieniony.status === 200 && pomocniczy.status === 200 && obcy.status === 200
+          && zapM.join() === 'claude-opus-5,claude-sonnet-5,claude-opus-5-5', zapM.join());
+      const konfZla = srv.sprawdzKonfiguracje(Object.assign({}, srv.KONF, { modelTresci: 'claude-fable-5-1' }));
+      const konfDobra = srv.sprawdzKonfiguracje(Object.assign({}, srv.KONF, { modelTresci: 'claude-opus-5' }));
+      sprawdz('kontrola konfiguracji: CAI_MODEL_TRESCI spoza listy to blad (zostaje model z aplikacji), claude-opus-5 bez bledu',
+        konfZla.modelTresci.bledy.length === 1 && /claude-opus-5-5, claude-opus-5/.test(konfZla.modelTresci.bledy[0]) && !konfDobra.modelTresci.bledy.length,
+        JSON.stringify({ zla: konfZla.modelTresci, dobra: konfDobra.modelTresci }));
+      srv.sprawdzKonfiguracje();
     }
 
     console.log('\n  SERP a artykul z wyszukiwaniem (CAI_SERP=dataforseo)');
     {
       const przed = zapytaniaAtrapy.length;
       const artykul = await zadanie('/api', json(cDarm, {
-        model: 'claude-opus-5', max_tokens: 4000, tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        model: 'claude-opus-5-5', max_tokens: 4000, tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         system: 'Jestes redaktorem SEO.', messages: [{ role: 'user', content: 'Napisz artykul o wysylce paczek.' }],
       }, { 'x-cai-czynnosc': 'artykul' }));
       const tresc = await artykul.json();
@@ -1836,18 +1875,26 @@ async function testyPoprawek() {
       setTimeout(() => ster.abort(), 1000);
       let zerwane = false;
       try {
-        await zadanie('/api', { ...json(cStd, { model: 'claude-opus-5', max_tokens: 6000, messages: [{ role: 'user', content: 'WOLNO artykul' }] }, { 'x-cai-czynnosc': 'artykul' }), signal: ster.signal });
+        await zadanie('/api', { ...json(cStd, { model: 'claude-opus-5-5', max_tokens: 6000, messages: [{ role: 'user', content: 'WOLNO artykul' }] }, { 'x-cai-czynnosc': 'artykul' }), signal: ster.signal });
       } catch { zerwane = true; }
       await new Promise((r) => setTimeout(r, 2200));
       sprawdz('zapytanie zerwane przez klienta po 1 s', zerwane);
       sprawdz('zerwane zapytanie nie zwieksza licznika pakietu', licznik() === przed);
       sprawdz('zerwanie przerywa tez wywolanie dostawcy', przerwaneWAtrapie.some((t) => t.includes('WOLNO artykul')));
-      const normalne = await zadanie('/api', json(cStd, { model: 'claude-opus-5', max_tokens: 6000, messages: [{ role: 'user', content: 'artykul' }] }, { 'x-cai-czynnosc': 'artykul' }));
+      const normalne = await zadanie('/api', json(cStd, { model: 'claude-opus-5-5', max_tokens: 6000, messages: [{ role: 'user', content: 'artykul' }] }, { 'x-cai-czynnosc': 'artykul' }));
       sprawdz('udane zapytanie liczy sie normalnie', normalne.status === 200 && licznik() === przed + 2);
+      // Opus 5.5: odmowa filtra (HTTP 200, stop_reason "refusal") nie zabiera artykulu z pakietu, wywolanie liczy sie
+      const ile = (pole) => Object.values(magazyn.uzycieKonta('standard')).reduce((s, o) => s + (o[pole] || 0), 0);
+      const [artPrzed, wywPrzed] = [ile('artykul'), ile('wywolanie')];
+      const odmowa = await zadanie('/api', json(cStd, { model: 'claude-opus-5-5', fallbacks: 'default', max_tokens: 6000, messages: [{ role: 'user', content: 'ODMOWA artykul' }] }, { 'x-cai-czynnosc': 'artykul' }));
+      const odmowaJson = await odmowa.json();
+      sprawdz('odmowa filtra modelu: odpowiedz przechodzi do aplikacji, artykul wraca do pakietu, wywolanie policzone',
+        odmowa.status === 200 && odmowaJson.stop_reason === 'refusal' && ile('artykul') === artPrzed && ile('wywolanie') === wywPrzed + 1,
+        JSON.stringify({ status: odmowa.status, art: [artPrzed, ile('artykul')], wyw: [wywPrzed, ile('wywolanie')] }));
 
       // Zadanie w tle (X-Zadanie): telefon zrywa polaczenie po 0,8 s, serwer prowadzi
       // wywolanie dalej, ponowienie z tym samym identyfikatorem odbiera gotowy wynik.
-      const cialoZ = { model: 'claude-opus-5', max_tokens: 6000, messages: [{ role: 'user', content: 'WOLNO artykul w tle' }] };
+      const cialoZ = { model: 'claude-opus-5-5', max_tokens: 6000, messages: [{ role: 'user', content: 'WOLNO artykul w tle' }] };
       const wTle = (id, signal) => zadanie('/api', { ...json(cStd, cialoZ, { 'x-cai-czynnosc': 'artykul', 'x-zadanie': id }), signal });
       const ileWywolan = () => zapytaniaAtrapy.filter((z) => z.tekst.includes('WOLNO artykul w tle')).length;
       const przedZ = licznik();

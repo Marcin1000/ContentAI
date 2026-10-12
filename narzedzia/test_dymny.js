@@ -1840,7 +1840,8 @@ async function wariantR9Zrozumialosc(b) {
       grafika: [t('#grupa-brief-menu button[onclick="openImgPanelSmart()"]'), t('#img-btn'), t('#img-panel .modul-tytul')],
       audio: [t('#grupa-brief-menu button[onclick="openAudioPanel()"]'), t('#audio-panel .modul-tytul')],
       baza: [t('#kb-tab [data-i18n="kb-reopen"]'), t('#mnav-kb [data-i18n="nav-base"]'), t('.layout > .sidebar h2'), t('#mobile-sidebar h2'), t('[data-i18n="bazas-menu-title"]'), t('#bazas-modal .tekst-tytul')],
-      glos: [t('[data-i18n="settings-voice-title"]'), t('#voice-modal h3')],
+      // przy wylaczonym dyktowaniu pozycja menu dostaje klucz settings-voice-title-czytanie (2026-10-12)
+      glos: [t('.settings-item-tytul[data-i18n^="settings-voice-title"]'), t('#voice-modal h3')],
       poprawianie: [t('#premium-btn [data-i18n="btn-premium"]'), t('#premium-fix-btn'), t('#grupa-brief-menu button[onclick="openImproveModal()"]'), t('#gap-improve-btn')],
     };
   });
@@ -2053,7 +2054,7 @@ async function wariantSamoobsluga(b) {
     karta: !document.getElementById('konto-karta').hidden, gen: getComputedStyle(document.getElementById('gen-btn')).display,
     pasek: document.getElementById('konto-paski').textContent }));
   wynik('R9-D: kreator BYOK "Krok 1 z 3" z kosztem artykulu, przewodnikiem po kluczu, warunkami dostawcy (D-01) i "Zapamietaj" zaznaczonym',
-    start.postep === 'Krok 1 z 3' && /klucz Anthropic/.test(start.tytul) && start.dalej && /0,25-0,50 USD/.test(start.koszt) && start.przewodnik === 5 && start.zapamietaj
+    start.postep === 'Krok 1 z 3' && /klucz Anthropic/.test(start.tytul) && start.dalej && /0,20-0,40 USD/.test(start.koszt) && start.przewodnik === 5 && start.zapamietaj
     && /na jego warunkach/.test(start.warunki), JSON.stringify(start));
   wynik('R9-D: bez klucza karta "Podlacz klucz" w miejscu Wygeneruj (E1), pasek trybu testowego platnosci i potwierdzenia e-maila',
     start.karta && start.gen === 'none' && /Tryb testowy płatności/.test(start.pasek) && /Potwierdź adres anna@example\.com/.test(start.pasek), JSON.stringify(start));

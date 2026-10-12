@@ -42,7 +42,9 @@ Uzycie:
 albo w EN, tekst w slowniku nie jest nigdzie uzyty, slowniki maja rozne klucze, konfiguracja jest bledna, w wyniku
 zostal znacznik szablonu, dlugi myslnik albo zakazane sformulowanie (ZAKAZANE), tytul albo opis strony sa za dlugie,
 liczba znakow w przykladzie opisu meta nie zgadza sie z tekstem, liczby i funkcje pakietow w tekstach rozjechaly
-sie z serwer/plany.js, albo wersje dokumentow prawnych PL i EN sa rozne.
+sie z serwer/plany.js, stawki modeli w wyliczeniu kosztu (key-3-jak) roznia sie od cennika aplikacji (CENY_MODELI),
+kreator klucza w aplikacji (byok-koszt) podaje inny koszt artykulu niz konfiguracja, albo wersje dokumentow
+prawnych PL i EN sa rozne.
 """
 import datetime
 import hashlib
@@ -406,7 +408,7 @@ def zmienne_jezyka(jezyk, konf, wersje):
         'rejestracja_standard': rej + '?pakiet=standard' + ('&amp;lang=en' if en else ''),
         'rejestracja_premium': rej + '?pakiet=premium' + ('&amp;lang=en' if en else ''),
         'email': konf['email'],
-        # zakres kosztu w jednym wierszu („0,25-0,50 USD" nie lamie sie na lacznik)
+        # zakres kosztu w jednym wierszu („0,20-0,40 USD" nie lamie sie na lacznik)
         'koszt_artykulu': '<span class="nw">%s</span>' % html.escape(
             twarde_pl(konf['koszt']['pl']) if jezyk == 'pl' else konf['koszt']['en']),
         'data_stanu': data_slownie(konf['data_stanu'], jezyk),
@@ -656,6 +658,46 @@ def sprawdz_funkcje_aplikacji(teksty):
     return bledy
 
 
+# Wyliczenie kosztu artykulu (key-3-jak) podaje stawki modelu piszacego i pomocniczego. Musza byc takie jak w cenniku
+# aplikacji (CENY_MODELI dla MODEL_TRESCI i MODEL_POMOCNICZY), inaczej zmiana modelu zostawia na stronie stare ceny
+# (2026-10-12: claude-opus-5-5 po 4 i 20 USD zamiast 5 i 25 USD).
+STAWKI_W_TEKSCIE = {
+    'pl': 'model piszący {0} USD za milion tokenów wejścia i {1} USD za milion tokenów wyjścia, model pomocniczy {2} i {3} USD',
+    'en': 'the writing model costs ${0} per million input tokens and ${1} per million output tokens, the helper model ${2} and ${3}',
+}
+
+
+def sprawdz_stawki_modelu(teksty):
+    zrodlo = APLIKACJA.read_text(encoding='utf-8')
+    modele = dict(re.findall(r"\bconst (MODEL_TRESCI|MODEL_POMOCNICZY)\s*=\s*'([^']+)';", zrodlo))
+    blok = re.search(r'\bconst CENY_MODELI = \{(.*?)\n\};', zrodlo, re.S)
+    if len(modele) != 2 or not blok:
+        return ['app/contentai.src.html: nie znaleziono MODEL_TRESCI, MODEL_POMOCNICZY albo cennika CENY_MODELI']
+    ceny = {m: (a, b) for m, a, b in re.findall(r"'([^']+)':\s*\[([\d.]+),\s*([\d.]+)\]", blok.group(1))}
+    brak = [modele[r] for r in ('MODEL_TRESCI', 'MODEL_POMOCNICZY') if modele[r] not in ceny]
+    if brak:
+        return ['app/contentai.src.html: brak stawek %s w CENY_MODELI' % ', '.join(brak)]
+    liczby = ceny[modele['MODEL_TRESCI']] + ceny[modele['MODEL_POMOCNICZY']]
+    bledy = []
+    for jezyk, wzor in STAWKI_W_TEKSCIE.items():
+        oczekiwane = wzor.format(*[x.replace('.', ',') if jezyk == 'pl' else x for x in liczby])
+        for k in warianty_klucza(teksty[jezyk], 'key-3-jak') or ['key-3-jak']:
+            if oczekiwane not in czysty_tekst(teksty[jezyk].get(k, '')).replace(NBSP, ' '):
+                bledy.append('teksty.json: %s/%s nie podaje stawek z cennika aplikacji (%s), oczekiwane: „%s"'
+                             % (jezyk, k, modele['MODEL_TRESCI'], oczekiwane))
+    return bledy
+
+
+def sprawdz_koszt_w_aplikacji(konf):
+    """Kreator klucza w aplikacji (byok-koszt, slownik PL, potem EN) podaje ten sam koszt artykulu co strona."""
+    teksty = re.findall(r"'byok-koszt':'([^']*)'", APLIKACJA.read_text(encoding='utf-8'))
+    if len(teksty) != len(JEZYKI):
+        return ['app/contentai.src.html: tekstow byok-koszt jest %d, a powinien byc jeden na jezyk' % len(teksty)]
+    return ['app/contentai.src.html: byok-koszt (%s) nie podaje kosztu artykulu „%s" z konfiguracja.json'
+            % (jezyk, konf['koszt'][jezyk])
+            for jezyk, tekst in zip(JEZYKI, teksty) if konf['koszt'][jezyk] not in tekst.replace(NBSP, ' ')]
+
+
 def klucze_szablonu(szablon):
     return {m.group(2).strip() for m in ZNACZNIK.finditer(szablon) if m.group(1) in 'ta'}
 
@@ -677,6 +719,8 @@ def zbuduj(plik_konfiguracji=KONFIGURACJA):
     znane_zmienne = set(wspolne['pl'])
     bledy.extend(sprawdz_teksty(teksty, plany, znane_zmienne))
     bledy.extend(sprawdz_funkcje_aplikacji(teksty))
+    bledy.extend(sprawdz_stawki_modelu(teksty))
+    bledy.extend(sprawdz_koszt_w_aplikacji(konf))
     uzyte = set()
     pliki = {}
     for nazwa, sciezki in STRONY:

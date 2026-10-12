@@ -1241,6 +1241,7 @@ body.is-mobile .link-dialog .link-backdrop { display:block; }
 
 /* ── Mikrofony dyktowania ukryte do czasu wersji serwerowej (flaga VOICE_INPUT_ENABLED) ── */
 body:not(.voice-input-on) .mic-btn { display:none !important; }
+body:not(.voice-input-on) .tylko-dyktowanie { display:none !important; }
 
 /* ── Zwijany panel Bazy wiedzy (desktop) ── */
 .sidebar { transition: transform .25s ease; }
@@ -3427,7 +3428,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
         </div>
         <div class="settings-item" onclick="openVoiceSettings();closeSettingsMenu()">
           <span><svg class="ikona" aria-hidden="true"><use href="#i-volume-2"/></svg></span>
-          <div><div class="settings-item-tytul" data-i18n="settings-voice-title">Czytanie na głos i dyktowanie</div><div class="settings-item-opis" data-i18n="settings-voice-sub">silnik głosu i mikrofon</div></div>
+          <div><div class="settings-item-tytul" data-i18n="settings-voice-title" data-i18n-bez-dyktowania="settings-voice-title-czytanie">Czytanie na głos i dyktowanie</div><div class="settings-item-opis" data-i18n="settings-voice-sub" data-i18n-bez-dyktowania="settings-voice-sub-czytanie">silnik głosu i mikrofon</div></div>
         </div>
         <hr>
         <div class="menu-wiersz"><span><svg class="ikona" aria-hidden="true"><use href="#i-moon"/></svg><span data-i18n="menu-motyw">Motyw</span></span><div class="segmenty" role="group" aria-label="Motyw" data-i18n-label="menu-motyw"><button type="button" id="motyw-ciemny" aria-pressed="true" onclick="ustawMotyw(true);event.stopPropagation()" data-i18n="motyw-ciemny">Ciemny</button><button type="button" id="motyw-jasny" aria-pressed="false" onclick="ustawMotyw(false);event.stopPropagation()" data-i18n="motyw-jasny">Jasny</button></div></div>
@@ -4523,8 +4524,8 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
 </div>
 <div class="overlay" id="voice-modal" onclick="if(event.target===this)closeVoiceSettings()">
   <div class="modal" style="width:480px">
-    <div class="modal-head"><h3 data-i18n="voice-modal-title">Czytanie na głos i dyktowanie</h3><button class="modal-close" onclick="closeVoiceSettings()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
-    <p class="tekst-2" style="margin-top:0" data-i18n="voice-modal-desc">Czytanie wygenerowanych treści na głos oraz dyktowanie do pól. Silnik przeglądarki działa lokalnie i za darmo. ElevenLabs i OpenAI dają wyższą jakość, ale wysyłają tekst lub audio do API.</p>
+    <div class="modal-head"><h3 data-i18n="voice-modal-title" data-i18n-bez-dyktowania="voice-modal-title-czytanie">Czytanie na głos i dyktowanie</h3><button class="modal-close" onclick="closeVoiceSettings()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+    <p class="tekst-2" style="margin-top:0" data-i18n="voice-modal-desc" data-i18n-bez-dyktowania="voice-modal-desc-czytanie">Czytanie wygenerowanych treści na głos oraz dyktowanie do pól. Silnik przeglądarki działa lokalnie i za darmo. ElevenLabs i OpenAI dają wyższą jakość, ale wysyłają tekst lub audio do API.</p>
     <div style="display:flex;flex-direction:column;gap:14px;margin-top:6px">
       <label class="field-label" style="display:block">
         <span class="tekst-maly" data-i18n="voice-engine">Silnik mowy (czytanie)</span>
@@ -4566,14 +4567,14 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
         <span class="tekst-maly"><span data-i18n="voice-rate">Tempo</span>: <span id="vc-rate-val">1,00×</span></span>
         <input type="range" id="vc-rate" min="0.5" max="1.5" step="0.05" value="1" oninput="document.getElementById('vc-rate-val').textContent=tempoUI(this.value)" style="width:100%;margin-top:6px" />
       </label>
-      <label class="field-label" style="display:block">
+      <label class="field-label tylko-dyktowanie" style="display:block">
         <span class="tekst-maly" data-i18n="voice-stt">Dyktowanie (mowa na tekst)</span>
         <select id="vc-stt" style="width:100%;margin-top:5px">
           <option value="web" data-i18n="voice-stt-web">Przeglądarka</option>
           <option value="openai" data-i18n="voice-stt-openai">OpenAI (transkrypcja)</option>
         </select>
       </label>
-      <div class="tekst-pomoc" style="background:var(--surface2);border-radius:6px;padding:9px 12px" data-i18n="voice-disclosure">Głos jest generowany przez AI, nie jest to nagranie człowieka. Dyktowanie oraz głosy ElevenLabs i OpenAI wysyłają dane do API. Silnik przeglądarki dla dyktowania korzysta z usługi dostawcy przeglądarki.</div>
+      <div class="tekst-pomoc" style="background:var(--surface2);border-radius:6px;padding:9px 12px" data-i18n="voice-disclosure" data-i18n-bez-dyktowania="voice-disclosure-czytanie">Głos jest generowany przez AI, nie jest to nagranie człowieka. Dyktowanie oraz głosy ElevenLabs i OpenAI wysyłają dane do API. Silnik przeglądarki dla dyktowania korzysta z usługi dostawcy przeglądarki.</div>
       <div style="display:flex;justify-content:flex-end">
         <button class="btn-generate" style="width:auto" onclick="voiceApply()" data-i18n="voice-save">Zapisz</button>
       </div>
@@ -5220,6 +5221,10 @@ var I18N = {
     'voice-mic-insecure':'Mikrofon wymaga HTTPS. Otwórz aplikację przez intranet/serwer (adres https), nie jako lokalny plik.','voice-no-eleven-key':'Brak klucza ElevenLabs - ustaw klucz lub użyj proxy albo innego silnika.',
     'tts-read':'Czytaj na głos','tts-stop':'Zatrzymaj','tts-generating':'Generuję audio…','tts-dl':'Pobierz MP3','tts-dl-title':'Pobierz audio mp3 (OpenAI)',
     'settings-voice-title':'Czytanie na głos i dyktowanie','settings-voice-sub':'silnik głosu i mikrofon',
+    'settings-voice-title-czytanie':'Czytanie na głos','settings-voice-sub-czytanie':'silnik i tempo głosu',
+    'voice-modal-title-czytanie':'Czytanie na głos',
+    'voice-modal-desc-czytanie':'Czytanie wygenerowanych treści na głos. Silnik przeglądarki działa lokalnie i za darmo. ElevenLabs i OpenAI dają wyższą jakość, ale wysyłają tekst do API.',
+    'voice-disclosure-czytanie':'Głos jest generowany przez AI, nie jest to nagranie człowieka. Głosy ElevenLabs i OpenAI wysyłają tekst do API.',
     'voice-modal-title':'Czytanie na głos i dyktowanie','voice-modal-desc':'Czytanie wygenerowanych treści na głos oraz dyktowanie do pól. Silnik przeglądarki działa lokalnie i za darmo. ElevenLabs i OpenAI dają wyższą jakość, ale wysyłają tekst lub audio do API.',
     'voice-engine':'Silnik mowy (czytanie)','voice-engine-web':'Przeglądarka (za darmo, lokalnie)','voice-engine-openai':'OpenAI (wysoka jakość)',
     'voice-oa-voice':'Głos OpenAI','voice-rate':'Tempo','voice-stt':'Dyktowanie (mowa na tekst)','voice-stt-web':'Przeglądarka','voice-stt-openai':'OpenAI (transkrypcja)',
@@ -5705,7 +5710,7 @@ var I18N = {
     'start-4-opis':'Wpisz temat, dodaj słowa kluczowe i kliknij „Wygeneruj treść”. Licznik pakietu jest zawsze w prawym górnym rogu: kliknięcie pokazuje, ile zostało.',
     'start-4-lista':'Gdzie szukać reszty: Baza wiedzy, Historia i Widoczność AI są w pasku na górze (na telefonie w dolnym pasku i w Koncie), a w menu konta ustawisz markę, głos marki i integrację z CMS. Nic z tego nie jest potrzebne do pierwszego artykułu.',
     'byok-1-tytul':'Podłącz swój klucz Anthropic','byok-1-opis':'Content AI pisze teksty modelem firmy Anthropic. Klucz API działa jak hasło do Twojego konta u Anthropic: płacisz dostawcy tylko za to, czego użyjesz, a nam za narzędzie.',
-    'byok-koszt':'Ile to kosztuje? Artykuł około 800 słów z ocenami i kontrolą faktów to orientacyjnie 0,25-0,50 USD. Wyszukiwanie w sieci i samokorekta zwiększają koszt. Szacunkowy koszt każdego tekstu zobaczysz w Historii.',
+    'byok-koszt':'Ile to kosztuje? Artykuł około 800 słów z ocenami i kontrolą faktów to orientacyjnie 0,20-0,40 USD. Wyszukiwanie w sieci i samokorekta zwiększają koszt. Szacunkowy koszt każdego tekstu zobaczysz w Historii.',
     'byok-jest':'Klucz Anthropic jest zapisany (kończy się na {KONCOWKA}). Możesz przejść dalej albo wkleić nowy.','byok-gdzie':'Klucz zapisuje się tylko w tej przeglądarce. Przy każdym zapytaniu aplikacja przesyła go do serwera Content AI, który przekazuje go dostawcy i niczego nie zapisuje. Opłaty za korzystanie z modeli ponosisz u dostawcy, na jego warunkach. Warunki dostawcy akceptujesz sam, zakładając u niego konto.',
     'byok-bezpieczenstwo':'Więcej o bezpieczeństwie','byok-nie-mam':'Nie masz klucza? Około 10 minut','byok-krok-1':'Załóż konto w konsoli Anthropic na platform.claude.com (to osobne konto, niezależne od czatu z Claude).',
     'byok-krok-2':'W Settings, potem Billing, kliknij „Buy credits” i doładuj konto, na przykład 10 USD.','byok-krok-3':'Zalecane: w Billing ustaw „Spend limits”, czyli miesięczny limit wydatków.',
@@ -5875,6 +5880,7 @@ var I18N = {
     'err-transkrypcja-za-duzy':'Plik ma {mb} MB, a transkrypcja przyjmuje najwyżej 25 MB. Podziel nagranie na części albo zapisz je w niższej jakości (np. mono, 64 kb/s) i spróbuj ponownie.',
     'err-model':'Dostawca AI nie udostępnia temu kluczowi API modelu, którego używa aplikacja. Sprawdź dostęp do modeli w panelu dostawcy albo zgłoś to administratorowi.',
     'err-moderacja':'Dostawca AI odrzucił zapytanie na podstawie swoich zasad dotyczących treści. Zmień opis albo wytyczne i spróbuj jeszcze raz.',
+    'err-odmowa-modelu':'Model AI odmówił odpowiedzi, bo zadziałał filtr bezpieczeństwa dostawcy. Sformułuj temat inaczej albo usuń ze źródeł fragment, który mógł go uruchomić, i spróbuj jeszcze raz.',
     'err-przerwano':'Zapytanie zostało przerwane.','err-szczegoly':'Szczegóły techniczne',
     'err-audio-siec':'Nie udało się połączyć z usługą audio. Sprawdź połączenie z internetem i klucz API, a potem spróbuj ponownie.',
     'err-stt':'Nie udało się zamienić nagrania na tekst.','err-audio-skrypt':'Nie udało się przygotować skryptu audio.','gap-blad':'Analiza luk się nie udała.',
@@ -6063,6 +6069,10 @@ var I18N = {
     'voice-mic-insecure':'Microphone requires HTTPS. Open the app via the intranet/server (https address), not as a local file.','voice-no-eleven-key':'Missing ElevenLabs key - set the key or use proxy or another engine.',
     'tts-read':'Read aloud','tts-stop':'Stop','tts-generating':'Generating audio…','tts-dl':'Download MP3','tts-dl-title':'Download audio mp3 (OpenAI)',
     'settings-voice-title':'Read aloud and dictation','settings-voice-sub':'voice engine and microphone',
+    'settings-voice-title-czytanie':'Read aloud','settings-voice-sub-czytanie':'voice engine and speed',
+    'voice-modal-title-czytanie':'Read aloud',
+    'voice-modal-desc-czytanie':'Read generated content aloud. The browser engine runs locally and free. ElevenLabs and OpenAI give higher quality but send text to the API.',
+    'voice-disclosure-czytanie':'The voice is AI-generated, not a human recording. The ElevenLabs and OpenAI voices send text to the API.',
     'voice-modal-title':'Read aloud and dictation','voice-modal-desc':'Read generated content aloud and dictate into fields. The browser engine runs locally and free. ElevenLabs and OpenAI give higher quality but send text or audio to the API.',
     'voice-engine':'Speech engine (reading)','voice-engine-web':'Browser (free, local)','voice-engine-openai':'OpenAI (high quality)',
     'voice-oa-voice':'OpenAI voice','voice-rate':'Speed','voice-stt':'Dictation (speech to text)','voice-stt-web':'Browser','voice-stt-openai':'OpenAI (transcription)',
@@ -6549,7 +6559,7 @@ var I18N = {
     'start-4-opis':'Enter a topic, add keywords and click “Generate content”. Your plan counter is always in the top right corner: click it to see what is left.',
     'start-4-lista':'Where to find the rest: the knowledge base, History and AI visibility are in the top bar (on a phone in the bottom bar and under Account), and the account menu holds your brand, brand voice and CMS integration. None of it is needed for a first article.',
     'byok-1-tytul':'Connect your Anthropic key','byok-1-opis':'Content AI writes with Anthropic\'s model. An API key works like a password to your Anthropic account: you pay the provider only for what you use, and us for the tool.',
-    'byok-koszt':'What does it cost? An article of about 800 words with scores and a fact check costs roughly $0.25-0.50. Web search and self-review increase the cost. You will see the estimated cost of each text in History.',
+    'byok-koszt':'What does it cost? An article of about 800 words with scores and a fact check costs roughly $0.20-0.40. Web search and self-review increase the cost. You will see the estimated cost of each text in History.',
     'byok-jest':'Your Anthropic key is saved (it ends in {KONCOWKA}). You can continue or paste a new one.','byok-gdzie':'Your key is stored only in this browser. With each request the app sends it to the Content AI server, which passes it to the provider and stores nothing. You pay the provider for model usage, under the provider\'s terms. You accept the provider\'s terms yourself when you open an account with them.',
     'byok-bezpieczenstwo':'More about security','byok-nie-mam':'No key yet? About 10 minutes','byok-krok-1':'Create an account in the Anthropic console at platform.claude.com (a separate account, independent of the Claude chat).',
     'byok-krok-2':'In Settings, then Billing, click “Buy credits” and add credit, for example $10.','byok-krok-3':'Recommended: in Billing, set “Spend limits”, a monthly cap on spending.',
@@ -6779,6 +6789,7 @@ var I18N = {
     'err-transkrypcja-za-duzy':'The file is {mb} MB, but transcription accepts at most 25 MB. Split the recording into parts or save it at a lower quality (e.g. mono, 64 kbps) and try again.',
     'err-model':'The AI provider does not give this API key access to the model the app uses. Check model access in the provider dashboard or tell your administrator.',
     'err-moderacja':'The AI provider rejected the request under its content policy. Change the description or guidelines, then try again.',
+    'err-odmowa-modelu':'The AI model declined to answer because a safety filter at the provider was triggered. Rephrase the topic or remove the part of the sources that may have triggered it, then try again.',
     'err-przerwano':'The request was stopped.','err-szczegoly':'Technical details',
     'err-audio-siec':'Could not reach the audio service. Check your internet connection and API key, then try again.',
     'err-stt':'Could not turn the recording into text.','err-audio-skrypt':'Could not prepare the audio script.','gap-blad':'The gap analysis failed.',
@@ -7025,14 +7036,23 @@ const MODEL_GRAFIKI = 'gpt-image-2.5-flare';
 // merytoryczne, wiec idzie na najmocniejszy model.
 // MODEL_POMOCNICZY obsluguje czynnosci, ktore nie decyduja o jakosci tekstu
 // (warianty tytulow, prompt do grafiki, odpytanie SERP).
-const MODEL_TRESCI     = 'claude-opus-5';
+const MODEL_TRESCI     = 'claude-opus-5-5';
 const MODEL_POMOCNICZY = 'claude-sonnet-5';
 
 // UWAGA przy podmianie modelu: modele z rodziny 5 odrzucaja pole `temperature`
 // (HTTP 400) i mysla domyslnie, a tokeny myslenia licza sie do `max_tokens`.
-// Dlatego krotkie wywolania zwracajace JSON maja `thinking: {type:'disabled'}`
-// (patrz BEZ_MYSLENIA), a generowanie artykulu dostaje zapas tokenow.
+// Opus 5.5 (2026-10-12) mysli ZAWSZE: `thinking: {type:'disabled'}` to dla niego blad 400,
+// a o dlugosci myslenia decyduje `output_config.effort` (domyslnie medium). Dlatego:
+// - krotkie wywolania JSON na MODEL_TRESCI maja niski wysilek (WYSILEK_OCENY) i zapas
+//   tokenow na krotkie rozumowanie (zRezerwaOceny),
+// - BEZ_MYSLENIA zostaje tylko dla MODEL_POMOCNICZY (Sonnet 5 je przyjmuje, Sonnet 5.5 juz nie),
+// - generowanie i przepisywanie nie podaja effort: kazdy model dziala na swoim domyslnym
+//   (Opus 5.5 medium, Opus 5 high), wiec podmiana modelu na serwerze (CAI_MODEL_TRESCI)
+//   odtwarza dawne zachowanie bez zmiany kodu.
 const BEZ_MYSLENIA = { type: 'disabled' };
+const WYSILEK_OCENY = { effort: 'low' };
+const REZERWA_OCENY = 4000;
+function zRezerwaOceny(tokeny) { return tokeny + REZERWA_OCENY; }
 
 // Dotychczasowe budzety (2500 / 4500 / 7500 tokenow) byly policzone na sam
 // tekst. Model, ktory najpierw rozumuje, zuzylby na to czesc limitu i artykul
@@ -7044,7 +7064,10 @@ function zRezerwa(tokeny) { return tokeny + REZERWA_MYSLENIA; }
 // licznikowi kosztu w interfejsie. Wczesniej stawka Sonneta byla wpisana
 // na sztywno w trzech miejscach i po zmianie modelu pokazywalaby nieprawde.
 const CENY_MODELI = {
+  'claude-opus-5-5':   [4, 20],
   'claude-opus-5':     [5, 25],
+  // model zapasowy po odmowie filtra (fallbacks "default"), odpowiedz podaje model, ktory pisal
+  'claude-opus-4-8':   [5, 25],
   'claude-sonnet-5':   [2, 10],
   'claude-sonnet-4-6': [3, 15],
   'claude-haiku-4-5':  [1, 5],
@@ -7535,6 +7558,28 @@ window.addEventListener('load', function () { setTimeout(odbierzArtykulWToku, 40
 // R6 (E-08): odliczanie przed ponowieniem po 429 trafia tez tam, gdzie patrzy autor (np. przycisk
 // Luk) - spinner generowania jest wtedy ukryty. Funkcja (sekundy, proba, z ilu) albo null.
 let komunikatPonawiania = null;
+// Zapasowy model po stronie API (Opus 5.5, 2026-10-12): odmowa filtra bezpieczenstwa (np. bio, cyber)
+// przy fallbacks "default" idzie na model polecany przez Anthropic dla tej kategorii, zamiast konczyc
+// zapytanie (beta server-side-fallback-2026-07-01, tylko MODEL_TRESCI). W wariancie proxy naglowek
+// beta dopisuje serwer, bo sam buduje naglowki do Anthropic.
+const BETA_ZAPASOWEGO_MODELU = 'server-side-fallback-2026-07-01';
+function zZapasowymModelem(options) {
+  let b;
+  try { b = JSON.parse(options && options.body); } catch (e) { return options; }
+  if (!b || b.model !== MODEL_TRESCI || b.fallbacks !== undefined) return options;
+  b.fallbacks = 'default';
+  const zmienione = Object.assign({}, options, { body: JSON.stringify(b) });
+  return zmienione;
+}
+// Odmowa (stop_reason "refusal", HTTP 200 z pusta albo urwana trescia) jako zwykly blad: urwany tekst
+// nie moze wygladac na gotowy, a komunikat mowi, co sie stalo (err-odmowa-modelu), zamiast "pusta odpowiedz".
+function odpowiedzOdmowy(d) {
+  const kat = d.stop_details && d.stop_details.category ? String(d.stop_details.category) : '';
+  return new Response(JSON.stringify({ content: [], stop_reason: 'refusal', model: d.model, usage: d.usage,
+    error: { type: 'refusal', message: 'refusal' + (kat ? ': ' + kat : '') } }),
+    { status: 422, headers: { 'Content-Type': 'application/json' } });
+}
+
 async function apiFetch(options, maxRetries = 3) {
   const WAIT_STEPS = [20, 40, 60]; // sekundy oczekiwania między próbami
   let endpoint = API_ENDPOINT;
@@ -7573,6 +7618,9 @@ async function apiFetch(options, maxRetries = 3) {
     } catch (e) {}
   }
 
+  // Foundry i tryb GPT nie maja zapasowego modelu po stronie API.
+  if (!gptMode && endpoint === API_ENDPOINT) options = zZapasowymModelem(options);
+
   // Generowanie mozna przerwac: kazde wywolanie w jego trakcie dostaje
   // wspolny sygnal, takze odliczanie przed ponowieniem po 429.
   const sygnal = options.signal || (przerwanieGenerowania && przerwanieGenerowania.signal) || null;
@@ -7603,13 +7651,14 @@ async function apiFetch(options, maxRetries = 3) {
       }
       // Śledź koszt tokenów z udanych wywołań (Anthropic / Azure Claude)
       if (res.ok || res.status < 500) {
-        res.clone().json().then(d => {
-          if (d.usage) {
-            const koszt = kosztOdpowiedzi(d);
-            dodajKoszt('anthropic', koszt);
-            dodajKosztArtykulu(kubelekKosztu, 'anthropic', koszt);
-          }
-        }).catch(() => {});
+        const d = await res.clone().json().catch(() => null);
+        if (d && d.usage) {
+          const koszt = kosztOdpowiedzi(d);
+          dodajKoszt('anthropic', koszt);
+          dodajKosztArtykulu(kubelekKosztu, 'anthropic', koszt);
+        }
+        // Odmowa liczy sie do kosztu (wyzej), ale dalej idzie jako blad, takze gdy odmowil model zapasowy.
+        if (d && d.stop_reason === 'refusal') return odpowiedzOdmowy(d);
       }
       return res;
     }           // OK lub inny błąd - zwróć
@@ -7700,6 +7749,8 @@ function rodzajBledu(e) {
   if (e.name === 'AbortError') return 'przerwano';
   if (e.name === 'TypeError' && /fetch|network|load failed/i.test(m)) return 'siec';
   if (e.name === 'SyntaxError' || /Unexpected token|is not valid JSON|JSON\.parse/i.test(m)) return 'odpowiedz';
+  // Odmowa filtra bezpieczenstwa modelu (odpowiedzOdmowy w apiFetch): ponowienie tego samego nic nie da.
+  if (/\brefusal\b/.test(typ)) return 'odmowa-modelu';
   // R9-D: wlasne odmowy serwera rozpoznajemy po kodzie, nie po tresci (UX8-22).
   const kc = String(e.kodCai || '');
   if (kc === 'brak-klucza') return 'brak-klucza';
@@ -7745,7 +7796,7 @@ const BLEDY_KLUCZE = {
 Object.assign(BLEDY_KLUCZE, {
   'brak-klucza': 'err-brak-klucza', email: 'err-email-niepotwierdzony', zgoda: 'err-zgoda-wymagana',
   'limit-wydatkow-wlasny': 'err-limit-wydatkow-wlasny', 'limit-wydatkow-konta': 'err-limit-wydatkow-konta',
-  'weryfikacja-openai': 'err-weryfikacja-openai',
+  'weryfikacja-openai': 'err-weryfikacja-openai', 'odmowa-modelu': 'err-odmowa-modelu',
 });
 const BLEDY_WLASNE = {
   klucz: 'err-klucz-wlasny', srodki: 'err-srodki-wlasny', uprawnienia: 'err-uprawnienia-wlasny',
@@ -7972,6 +8023,59 @@ function blokDaty() {
     + 'use ' + rok + ' - never a year you remember from training.';
 }
 
+// ─── BEZ SREDNIKOW ───────────────────────────────────────────────────────────
+// Decyzja 2026-10-12: w tekstach dla klienta nie ma srednika, takze w generowanych artykulach.
+// Zasada idzie do modelu (blokInterpunkcji), a bezSrednikow to siatka bezpieczenstwa na to, co i tak
+// napisze: „a; b" -> „a. B", srednik na koncu punktu listy znika. Tylko swiezy tekst z modelu: Historia
+// i eksport zostaja bez zmian (tam srednik mogl wpisac uzytkownik).
+function blokInterpunkcji() {
+  return '\n\nPUNCTUATION: Never use a semicolon (;). Where a semicolon would join two clauses, end the sentence '
+    + 'with a period and start a new one, or join the clauses with a comma and a conjunction. '
+    + 'End list items without a semicolon.';
+}
+function wielkaNaPoczatku(t) { return t.replace(/^(\s*)(\S)/, function (m, sp, z) { return sp + z.toLocaleUpperCase(); }); }
+// Zwykly tekst (przerobki w polu tekstowym): ten sam zabieg wiersz po wierszu. Srednik na koncu punktu
+// listy (\u201e- ", \u201e* ", \u201e\u2022 ", \u201e1. ", \u201e1) ") znika, a na koncu zwyklego wiersza staje sie kropka, jak w akapicie.
+function bezSrednikowTekst(t) {
+  return String(t || '')
+    .replace(/;([ \t\u00a0]+)(\S)/g, function (m, sp, z) { return '.' + sp + z.toLocaleUpperCase(); })
+    .replace(/^(.*);([ \t\u00a0]*)$/gm, function (m, wiersz, sp) {
+      return wiersz + (/^\s*([-*\u2022]|\d+[.)])\s/.test(wiersz) ? '' : '.') + sp;
+    });
+}
+function bezSrednikow(html) {
+  if (!html || String(html).indexOf(';') === -1) return html;
+  const wrap = document.createElement('div');
+  wrap.innerHTML = html;
+  const BLOK = 'li, p, td, th, h1, h2, h3, h4, h5, h6, dd, dt, blockquote, figcaption, caption';
+  const KOD = 'code, pre, script, style';
+  const wezly = [];
+  const it = document.createTreeWalker(wrap, NodeFilter.SHOW_TEXT);
+  while (it.nextNode()) wezly.push(it.currentNode);
+  wezly.forEach(function (w, i) {
+    const rodzic = w.parentElement;
+    if (w.nodeValue.indexOf(';') === -1 || !rodzic || rodzic.closest(KOD)) return;
+    let t = w.nodeValue.replace(/;(\s+)(\S)/g, function (m, sp, z) { return '.' + sp + z.toLocaleUpperCase(); });
+    const koniec = /;(\s*)$/.exec(t);
+    if (koniec) {
+      // Srednik na koncu wezla: dalszy tekst w tym samym bloku (np. po <strong>) zaczyna nowe zdanie.
+      const blok = rodzic.closest(BLOK);
+      let dalej = null;
+      for (let j = i + 1; j < wezly.length && blok && blok.contains(wezly[j]); j++) {
+        if (/\S/.test(wezly[j].nodeValue)) { dalej = wezly[j]; break; }
+      }
+      if (dalej && !(dalej.parentElement && dalej.parentElement.closest(KOD))) {
+        t = t.slice(0, koniec.index) + '.' + koniec[1];
+        dalej.nodeValue = wielkaNaPoczatku(dalej.nodeValue);
+      } else {
+        t = t.slice(0, koniec.index) + (rodzic.closest('li') ? '' : '.') + koniec[1];
+      }
+    }
+    w.nodeValue = t;
+  });
+  return wrap.innerHTML;
+}
+
 // Sciezki przepisujace gotowy tekst (korekta premium, poprawa po ocenie,
 // przerobki na inne formaty) nie widza bazy wiedzy - dostaja sam artykul.
 // Dlatego nie wolno im wprowadzac zadnego nowego faktu: wszystko, co mialo
@@ -7984,7 +8088,8 @@ function blokPrzepisywania() {
     + '- You may reorder, shorten, split, retitle and rephrase. You may not enrich.\n'
     + '- If an instruction asks for something the text cannot support, apply the part '
     + 'you can and leave the rest. An unfixed remark is better than an invented fact.\n'
-    + '- Keep every figure exactly as it stands, including its units and its wording.';
+    + '- Keep every figure exactly as it stands, including its units and its wording.'
+    + blokInterpunkcji();
 }
 
 // ─── RZETELNOSC TRESCI ───────────────────────────────────────────────────────
@@ -8941,7 +9046,7 @@ async function runPostGenerationPremium() {
   try {
     const articleText = kopia.innerText || kopia.textContent || '';
     const surowy = await doPremiumCorrection(doModelu, articleText, topic, kwText, ctype);
-    const improved = surowy && surowy !== doModelu ? oczyscHtmlModelu(surowy) : '';
+    const improved = surowy && surowy !== doModelu ? bezSrednikow(oczyscHtmlModelu(surowy)) : '';
     if (improved) {
       zmiana = true;
       art.innerHTML = wstawBlokZrodel(improved, zrodlaBox ? zrodlaBox.outerHTML : '');
@@ -9008,7 +9113,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
       doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 500,
+      body: JSON.stringify({ model: MODEL_TRESCI, output_config: WYSILEK_OCENY, max_tokens: zRezerwaOceny(500),
         // R6-F (E-19): fraza jako sztuczny podmiot zdania to uwaga do poprawy.
         system: evalSys + '\n' + REGULA_FRAZY_PODMIOTU + ' Report such a sentence as an issue.',
         messages: [{ role: 'user', content: `Topic: ${topic}\nKeywords: ${kwText}\n\nArticle:\n${articleText}` }]
@@ -9374,7 +9479,7 @@ ${(ctype !== 'FAQ page' && !isPress) ? `- MANDATORY: End the article, immediatel
     if (isDirectional) systemPrompt += directionalBlock();
     if (isPress) systemPrompt += pressBlock(pressDate);
     // Rok w tytule albo w zdaniu ma byc biezacy, nie ten, ktory model pamieta.
-    systemPrompt += blokDaty();
+    systemPrompt += blokDaty() + blokInterpunkcji();
     // Reguly z audytu agencji. Doklejane na koncu, zeby przebijaly wczesniejsze
     // wymagania formy: gdy zrodlo nie ma liczby, brak liczby wygrywa z szablonem.
     systemPrompt += blokRzetelnosci({ ton: tonKanoniczny(), odbiorca: odbiorcaTekstu(), uzupelnia: useWeb });
@@ -9465,6 +9570,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
     stanSieci = useWeb ? statystykiWyszukiwania(data) : null;
     html = html.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
     if (lang === 'Polski') { html = html.replace(/[—–]/g, '-'); }
+    html = bezSrednikow(html);
     // Wszystkie linki w nowej zakładce
     html = html.replace(/<a\s+href=/gi, '<a target="_blank" rel="noopener" href=').replace(/target="_blank"\s+target="_blank"/gi, 'target="_blank"');
     // Ujednolic linki marki z zapisem, ktorego marka faktycznie uzywa.
@@ -9509,7 +9615,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
           doArtykulu: true, // koszt tego tekstu w Historii
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-          body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 400,
+          body: JSON.stringify({ model: MODEL_TRESCI, output_config: WYSILEK_OCENY, max_tokens: zRezerwaOceny(400),
             system: 'You are a content SEO expert evaluating AI-generated content from a company knowledge base. Evaluate ONLY content-level SEO. Respond ONLY with valid JSON no markdown: {"score":0-100,"issues":["short issue in ' + (currentLang === 'en' ? 'English' : 'Polish') + ' max 50 chars"]}. Max 4 issues. Evaluate: keyword usage in headings and body text, H1/H2 structure, meta description presence, content completeness. CRITICAL: Do NOT penalize for missing data (prices, case studies, competitor comparisons) - the content reflects what is in the knowledge base. Do NOT penalize for: internal links, technical SEO, backlinks, page title. The article is COMPLETE if it has a conclusion paragraph.',
             messages: [{ role: 'user', content: `Topic: ${topic}\nKeywords: ${kwText}\n\nArticle:\n${articleText}` }]
           })
@@ -9528,7 +9634,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
           doArtykulu: true, // koszt tego tekstu w Historii
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-          body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 400,
+          body: JSON.stringify({ model: MODEL_TRESCI, output_config: WYSILEK_OCENY, max_tokens: zRezerwaOceny(400),
             system: 'AIO expert evaluating AI-generated content from a company knowledge base for Google AI Overviews. Respond ONLY with valid JSON no markdown: {"score":0-100,"issues":["short issue in ' + (currentLang === 'en' ? 'English' : 'Polish') + ' max 50 chars"]}. Evaluate: direct answer in first para, extractable self-contained passages, entity/product definitions, topic coverage based on available knowledge, no fluff. Max 4 issues. Do NOT flag missing data (prices, case studies) - the content reflects what the knowledge base contains. Evaluate the article AS IS - do not penalize for absent sections if the article has a clear conclusion.',
             messages: [{ role: 'user', content: `Topic: ${topic}\nKeywords: ${kwText}\n\nArticle:\n${articleText}` }]
           })
@@ -9588,7 +9694,7 @@ ${html}`;
         });
         const improveData = await improveRes.json();
         if (!improveData.error) {
-          const improved = oczyscHtmlModelu((improveData.content||[]).map(b=>b.text||'').join('').replace(/```html\s*/i,'').replace(/```\s*$/i,'').trim());
+          const improved = bezSrednikow(oczyscHtmlModelu((improveData.content||[]).map(b=>b.text||'').join('').replace(/```html\s*/i,'').replace(/```\s*$/i,'').trim()));
           if (improved) {
             const improvedFinal = lang === 'Polski' ? improved.replace(/[—–]/g, '-') : improved;
             const origLabel = _t('ver-original') + ' (' + scores + ')';
@@ -9612,7 +9718,7 @@ ${html}`;
       // Blad samokorekty nie kasuje gotowego artykulu, ale autor musi o nim wiedziec
       // (wczesniej odznaka mowila "gotowe" bez slowa). Przerwij konczy cale generowanie.
       let premiumHtml = html;
-      try { premiumHtml = oczyscHtmlModelu(await doPremiumCorrection(html, articleTextP, topic, kwText, ctype)); }
+      try { premiumHtml = bezSrednikow(oczyscHtmlModelu(await doPremiumCorrection(html, articleTextP, topic, kwText, ctype))); }
       catch (e) { if (e && e.name === 'AbortError') throw e; powiadomBladApi(e, null, null, _t('msg-premium-blad')); }
       if (premiumHtml && premiumHtml !== html) {
         const origLabel = _t('ver-before-premium');
@@ -12886,7 +12992,7 @@ async function runGapAnalysis() {
       doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 900,
+      body: JSON.stringify({ model: MODEL_TRESCI, output_config: WYSILEK_OCENY, max_tokens: zRezerwaOceny(900),
         system: 'You are a semantic SEO expert. Compare an article to SERP topics and return ONLY valid JSON (no markdown): {"missing":["topic",...],"present":["topic",...],"competitors":["topic",...],"msg":"one sentence assessment in ' + (currentLang === 'en' ? 'English' : 'Polish') + '"}. Copy each topic name exactly as listed and put EVERY listed topic in exactly one of the two lists. A topic is present only when the article actually discusses it, not when it merely mentions a word from it. "competitors" lists the topics (from either list) that are about another company\'s brand, product or service rather than the article\'s own subject.',
         messages: [{ role: 'user', content: 'Keyword: ' + kwText + '\nSERP topics (full list): ' + tematy.join(', ') + '\n\nArticle:\n' + articleText }]
       })
@@ -13038,7 +13144,8 @@ async function improveFromGaps() {
         : 'Write a section only for a topic the sources below actually cover. ')
       + 'Only for a topic that neither the sources' + (zSiecia ? ' nor a search' : '') + ' cover, write exactly one line:\n'
       + '<h2>TOPIC</h2><p data-brak="1">' + tekstWJezyku('gap-brak-pokrycia', jezykEtykiet()) + '</p>\n'
-      + 'Never pad such a section with general statements.',
+      + 'Never pad such a section with general statements.'
+      + blokInterpunkcji(),
     messages: [{ role: 'user', content:
       'Article topic: ' + topic + '\nKeywords: ' + kwText +
       '\nOutput language: ' + outLang +
@@ -13093,7 +13200,7 @@ async function improveFromGaps() {
     const sekcje = [];
     grupy.forEach((g) => {
       const kont = document.createElement('div');
-      kont.innerHTML = oczyscHtmlModelu(g.html);
+      kont.innerHTML = bezSrednikow(oczyscHtmlModelu(g.html));
       kont.querySelectorAll('h2').forEach((h) => {
         const czesci = [h];
         let n = h.nextElementSibling;
@@ -13672,7 +13779,7 @@ async function toggleSeoPanel(forceRefresh = false) {
       doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 600,
+      body: JSON.stringify({ model: MODEL_TRESCI, output_config: WYSILEK_OCENY, max_tokens: zRezerwaOceny(600),
         system: 'You are a content SEO expert evaluating AI-generated content from a company knowledge base. Evaluate ONLY content-level SEO. Respond ONLY with valid JSON, no markdown fences: {"score": 0-100, "items": [{"ok": true/false, "text": "short observation in ' + (currentLang === 'en' ? 'English' : 'Polish') + ', max 60 chars"}]}. Give exactly 5 items covering: 1) keyword usage in H1/H2/body text, 2) heading structure quality, 3) article completeness - has BLUF (number in first paragraph), body sections AND Kluczowe wnioski with metrics, 4) meta description quality, 5) brand SALIENCE - is the main brand/product named specifically (not generic "branża") at least once per H2 section. CRITICAL: Do NOT penalize for: missing prices/case studies/competitor data, internal links, technical SEO, backlinks, page title.' + regulaJezykaUwag(),
         messages: [{ role: 'user', content: `Temat: ${topic}\nSłowa kluczowe: ${kwText}\n\nArtykuł:\n${articleText}` }]
       })
@@ -13789,7 +13896,7 @@ async function toggleAioPanel(forceRefresh = false) {
       doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: MODEL_TRESCI, thinking: BEZ_MYSLENIA, max_tokens: 600,
+      body: JSON.stringify({ model: MODEL_TRESCI, output_config: WYSILEK_OCENY, max_tokens: zRezerwaOceny(600),
         system: `You are an AIO (AI Overview Optimization) expert. Evaluate the article against these 6 AIO criteria and respond ONLY with valid JSON, no markdown fences:
 {"score": 0-100, "items": [{"ok": true/false, "text": "short observation in ${currentLang === 'en' ? 'English' : 'Polish'}, max 60 chars"}]}
 
@@ -15465,7 +15572,7 @@ async function generujTematy() {
           + 'Vary the search intent across the set: informational, comparison, how-to, decision-stage. '
           + 'Do not repeat the same angle twice. '
           + 'Respond ONLY with valid JSON, no markdown: {"tematy":[{"temat":"the title","dlaczego":"one short sentence on who searches for this and why it is worth writing"}]}. '
-          + 'All text MUST be in ' + jezyk + '.' + blokDaty(),
+          + 'All text MUST be in ' + jezyk + '.' + blokDaty() + blokInterpunkcji(),
         messages: [{ role: 'user', content: 'Business need:\n' + opis + (wiedza ? '\n\nKnowledge base excerpts:\n' + wiedza : '') }]
       })
     });
@@ -15945,7 +16052,7 @@ WAŻNE: Zwróć TYLKO tekst landing page, gotowy do wklejenia.`
     const d = await res.json();
     if (d.error) throw bladOdpowiedzi(d, res.status);
     if (nrPrzerobki !== runRepurpose.nr) return;
-    showRepurpose((d.content||[]).map(b=>b.text||'').join('').trim());
+    showRepurpose(bezSrednikowTekst((d.content||[]).map(b=>b.text||'').join('').trim()));
   } catch(e) {
     if (nrPrzerobki !== runRepurpose.nr) return;
     showRepurpose(_t('msg-blad-prefiks') + ' ' + komunikatBleduApi(e));
@@ -16008,6 +16115,8 @@ function updateBulkCount() {
 }
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof VOICE_INPUT_ENABLED !== 'undefined' && VOICE_INPUT_ENABLED) document.body.classList.add('voice-input-on');
+  // Dyktowanie wylaczone: menu i okno glosu bez slowa „dyktowanie" (wariant tekstu przed applyLang nizej).
+  else document.querySelectorAll('[data-i18n-bez-dyktowania]').forEach(function (el) { el.setAttribute('data-i18n', el.getAttribute('data-i18n-bez-dyktowania')); });
   var _sm=document.getElementById('settings-menu'); if(_sm && _sm.parentElement!==document.body) document.body.appendChild(_sm);
   document.addEventListener('pointermove', audioBarScrubMove); document.addEventListener('pointerup', audioBarScrubEnd); document.addEventListener('pointercancel', audioBarScrubEnd);
   try{ if(magazyn.getItem('cai_kb_collapsed')!=='0') document.body.classList.add('kb-collapsed'); }catch(e){}
@@ -19619,7 +19728,7 @@ async function audioGenerate(btn){
   var lang=(document.getElementById('au-lang')||{}).value || (document.getElementById('lang')||{}).value; var L=lm[lang]||'Polish';
   var n=parseInt((document.getElementById('au-voices')||{}).value||'2',10);
   var gens=[]; for(var gx=0; gx<Math.max(1,n); gx++){ gens.push(audioGenderFor(gx)); }
-  var system=audioScriptSystem(t,n,L,gens);
+  var system=audioScriptSystem(t,n,L,gens)+blokInterpunkcji();
   var user=(t==='audiobook'?'Convert the following into audiobook narration:\n\n':'Topic or source material:\n\n')+src;
   window._audioBusy=true; var sp=document.getElementById('au-gen-label'); var oldsp=sp?sp.textContent:''; if(sp) sp.textContent=_t('audio-gen-loading'); var gIco=document.getElementById('au-gen-icon'); var oldIco=gIco?gIco.innerHTML:''; if(gIco) gIco.innerHTML='<span class="au-spin"></span>'; btn.disabled=true; btn.classList.add('btn-working');
   try{
@@ -19628,7 +19737,7 @@ async function audioGenerate(btn){
     if(!res.ok || !data.content){ throw bladOdpowiedzi(data, res.status); }
     var scriptCost=0; if(data.usage){ try{ scriptCost=kosztOdpowiedzi(data); /* do sumy dolicza juz apiFetch */ }catch(e){} }
     var html=(data.content||[]).map(function(c){return c.text||'';}).join('').trim();
-    var sc=document.getElementById('au-script'); html=oczyscHtmlModelu(html); sc.innerHTML=html||'<p>(brak treści)</p>';
+    var sc=document.getElementById('au-script'); html=bezSrednikow(oczyscHtmlModelu(html)); sc.innerHTML=html||'<p>(brak treści)</p>';
     document.getElementById('au-result-wrap').style.display='block';
     var sa=document.getElementById('au-script-actions'); if(sa) sa.style.display='flex';
     var ta=document.getElementById('au-trans-actions'); if(ta) ta.style.display='none';

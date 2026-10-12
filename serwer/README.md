@@ -162,6 +162,7 @@ Wszystko przez zmienne środowiskowe.
 | `CAI_DOSTAWCA` | `anthropic` | `anthropic` albo `nvidia` |
 | `CAI_MODEL_NVIDIA` | `nvidia/llama-3.3-nemotron-super-49b-v1.5` | model przy `nvidia` |
 | `CAI_MODEL_GRAFIKI` | - (model z aplikacji: `gpt-image-2.5-flare`) | podmienia model grafik OpenAI w każdym zapytaniu, np. gdy dostawca wycofa model |
+| `CAI_MODEL_TRESCI` | - (model z aplikacji: `claude-opus-5-5`) | podmienia model treści (`MODEL_TRESCI` aplikacji) w każdym zapytaniu: `claude-opus-5-5` albo `claude-opus-5`, np. do porównania jakości na serwerze testowym albo powrotu do Opus 5 bez zmiany kodu |
 | `CAI_URL_NVIDIA` | `https://integrate.api.nvidia.com/v1/chat/completions` | endpoint NIM |
 | `CAI_URL_ANTHROPIC` | `https://api.anthropic.com/v1/messages` | endpoint Anthropic (nadpisanie dla atrapy w testach i bram zgodnych z API) |
 | `CAI_URL_OPENAI` | `https://api.openai.com/v1` | baza API OpenAI (grafiki, TTS, transkrypcja; nadpisanie dla atrapy) |
@@ -532,6 +533,9 @@ Dwie rzeczy warte uwagi przy zmianach:
   kończy się zwykle tym, że nie wiadomo, dlaczego komuś coś nie działa.
 - Zliczanie następuje **po udanej odpowiedzi dostawcy**. Gdy generowanie padnie na błędzie
   API, użytkownik nie traci sztuki z pakietu - dostał przecież nic.
+- Odmowa filtra bezpieczeństwa modelu przychodzi jako HTTP 200 ze `stop_reason: "refusal"`
+  (także gdy odmówi model zapasowy). Tekstu nie ma, więc artykuł wraca do pakietu, a wywołanie
+  liczy się jak każde inne (sufit kosztu).
 
 #### Artykuł to nie to samo co wywołanie modelu
 
@@ -1630,8 +1634,8 @@ i hreflang, a `audyt_showcase.py` i `test_uklad_strony.js` sprawdzają te same s
 | `dokumenty` | `https://app.content-ai.net/dokumenty/` | odnośniki do dokumentów prawnych (stopka, cennik, zakończenie, podstrony) |
 | `email_kontakt` | `kontakt@content-ai.net` | stopka, FAQ, AI Act (`mailto:`); w Cloudflare wyłącz Email Address Obfuscation i Rocket Loader, inaczej CSP zablokuje ich skrypt |
 | `ceny` | `standard:eur=19,pln=79;premium:eur=49,pln=199` | ten sam zapis i te same kwoty co `PLATNOSCI_CENY_WYSWIETLANE`; ceny końcowe; PL w zł, EN w EUR, druga waluta w notce; także JSON-LD `offers` |
-| `koszt_artykulu` | `{"pl": "0,25-0,50 USD", "en": "$0.25-0.50"}` | szacunek kosztu modelu za artykuł (hero, cennik, FAQ, klucz API); wyliczenie i stawki w tekście `key-3-jak` |
-| `data_stanu` | `2026-10-09` | „Stan na ..." podstron klucz API i AI Act (data odczytu cenników dostawców) |
+| `koszt_artykulu` | `{"pl": "0,20-0,40 USD", "en": "$0.20-0.40"}` | szacunek kosztu modelu za artykuł (hero, cennik, FAQ, klucz API); wyliczenie i stawki w tekście `key-3-jak` |
+| `data_stanu` | `2026-10-12` | „Stan na ..." podstron klucz API i AI Act (data odczytu cenników dostawców) |
 | `audio_liczone` | `fragmenty` | jak serwer liczy audio: `fragmenty` (każde wywołanie lektora, uczciwy opis w cenniku) albo `nagrania` (jedno nagranie na budowanie; wariant tekstów `@nagrania`) |
 | `oznaczenia` | `[]` | formaty, które aplikacja naprawdę oznacza: `docx`, `pdf`, `cms`, `jsonld`, `png`, `mp3`, `txt`, `etykiety` (widoczne etykiety); pusta lista = wariant `@przejsciowy` (FAQ i AI Act bez „wspiera wymogi" i bez opisu oznaczeń w plikach) |
 
