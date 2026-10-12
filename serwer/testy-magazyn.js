@@ -535,6 +535,12 @@ function testyModulow(sprawdz) {
     sprawdz('plany: pakiety na sprzedaz i kolejnosc w tabeli (limity i bramki bez zmian)',
       plany.PLANY.darmowy.sprzedaz === false && plany.PLANY.standard.sprzedaz && plany.PLANY.premium.kolejnosc === 2
       && plany.PLANY.darmowy.limity.artykul === 3 && plany.PLANY.standard.limity.wywolanie === 750);
+    // 2026-10-12: opis pakietu (okno Pakiet w aplikacji) nie obiecuje "wszystkiego bez limitow", gdy pakiet
+    // ma pule serwera z limitem (Premium: 5000 stron z adresu i sprawdzen linkow miesiecznie).
+    sprawdz('plany: opis pakietu z pula serwera nie mowi „wszystko bez limitow", Premium wymienia, co jest bez limitu',
+      Object.values(plany.PLANY).filter((p) => Object.values(p.limitySerwera).some((l) => l > 0))
+        .every((p) => !/wszystko|sztukow/i.test(p.opis) && !/everything|per-item/i.test(p.opisEn))
+      && /^Bez limitu artykułów/.test(plany.PLANY.premium.opis) && /^Unlimited articles/.test(plany.PLANY.premium.opisEn));
   } finally {
     magazyn.zamknij();
     fs.rmSync(kat, { recursive: true, force: true });

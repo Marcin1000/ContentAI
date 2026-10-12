@@ -195,7 +195,7 @@ const TRESCI = {
         akapity: (d, k) => [
           `potwierdzamy zawarcie umowy o subskrypcję pakietu ${d.pakiet} w serwisie Content AI.`,
           daneUslugodawcy(k.uslugodawca, 'pl') ? `Usługodawca: ${daneUslugodawcy(k.uslugodawca, 'pl')}.` : '',
-          `Data zawarcia umowy: ${d.dataZawarcia}. Cena${d.kwota ? `: ${d.kwota} miesięcznie` : ' miesięczna według cennika pakietu'}, płatna z góry; subskrypcja odnawia się automatycznie co miesiąc.${d.nastepnaPlatnosc ? ` Kolejna płatność: ${d.nastepnaPlatnosc}.` : ''}`,
+          `Data zawarcia umowy: ${d.dataZawarcia}. Cena${d.kwota ? `: ${d.kwota} miesięcznie` : ' miesięczna według cennika pakietu'}, płatna z góry. Subskrypcja odnawia się automatycznie co miesiąc.${d.nastepnaPlatnosc ? ` Kolejna płatność: ${d.nastepnaPlatnosc}.` : ''}`,
           'Rezygnacja: w każdej chwili w ustawieniach konta (pakiet działa do końca opłaconego miesiąca).',
           `Prawo odstąpienia: możesz odstąpić od umowy w ciągu 14 dni${d.terminOdstapienia ? ` (do ${d.terminOdstapienia})` : ''}, bez podania przyczyny, przyciskiem w ustawieniach konta, e-mailem albo listem.${maZalaczniki(d) ? ' Pouczenie i wzór formularza są w załączniku.' : ''}`,
           d.zadanieWykonania
@@ -342,7 +342,7 @@ const TRESCI = {
         akapity: (d, k) => [
           `we confirm the conclusion of the subscription contract for the ${d.pakiet} plan in the Content AI service.`,
           daneUslugodawcy(k.uslugodawca, 'en') ? `Service provider: ${daneUslugodawcy(k.uslugodawca, 'en')}.` : '',
-          `Date of the contract: ${d.dataZawarcia}. Price${d.kwota ? `: ${d.kwota} per month` : ': monthly, as in the plan price list'}, paid in advance; the subscription renews automatically every month.${d.nastepnaPlatnosc ? ` Next payment: ${d.nastepnaPlatnosc}.` : ''}`,
+          `Date of the contract: ${d.dataZawarcia}. Price${d.kwota ? `: ${d.kwota} per month` : ': monthly, as in the plan price list'}, paid in advance. The subscription renews automatically every month.${d.nastepnaPlatnosc ? ` Next payment: ${d.nastepnaPlatnosc}.` : ''}`,
           'Cancellation: at any time in the account settings (the plan works until the end of the paid month).',
           `Right of withdrawal: you can withdraw from the contract within 14 days${d.terminOdstapienia ? ` (until ${d.terminOdstapienia})` : ''} without giving a reason, with the button in the account settings, by email or by letter.${maZalaczniki(d) ? ' The information and the model form are attached.' : ''}`,
           d.zadanieWykonania

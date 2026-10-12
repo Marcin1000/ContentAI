@@ -509,7 +509,7 @@ html.js .fk.is-in .nota.aktywna{transition-delay:0ms}
 .frag i b{border-radius:2px;background:var(--c-dowod)}
 html.js .kafel:not(.is-in) .frag i b{transform:scaleX(0)}
 .zrodla-sieci{display:grid;gap:6px;font-family:var(--f-mono);font-size:12px;color:var(--c-tekst-2)}
-.zrodla-sieci .ps-et{font-family:var(--f-ui);font-size:var(--t-xs);font-weight:600;color:var(--c-tekst-3)}
+.zrodla-sieci .ps-et,.frag .ps-et{font-family:var(--f-ui);font-size:var(--t-xs);font-weight:600;color:var(--c-tekst-3)}
 .zrodla-sieci span:not(.ps-et){display:flex;align-items:center;gap:8px}
 .zrodla-sieci i{font-style:normal;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:4px;background:var(--c-dowod-tlo);color:var(--c-dowod);font-size:12px}
 .mini-wyniki{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
@@ -649,7 +649,6 @@ html.js .kafel:not(.is-in) .frag i b{transform:scaleX(0)}
 .stopka a:hover{color:var(--c-tekst)}
 .stopka-dol{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:var(--s-48);padding-top:var(--s-20);font-size:var(--t-sm);color:var(--c-tekst-3)}
 .stopka-dol::before{content:"";position:absolute;top:0;left:var(--margines);right:var(--margines);border-top:1px solid var(--c-linia)}
-.stopka-znak svg{width:16px;height:16px;fill:var(--c-akcent)}
 
 /* ============ 21. Pasek akcji na telefonie ============ */
 .pasek-cta{display:none}
@@ -845,7 +844,6 @@ html.js .kafel:not(.is-in) .frag i b{transform:scaleX(0)}
   .faq-lista summary{font-size:var(--t-lg)}
   .faq-lista details p{padding-right:0}
   .stopka-siatka{grid-template-columns:1fr}
-  .stopka-dol{flex-direction:column;align-items:flex-start;gap:var(--s-12)}
   /* telefon: kroki jako pionowa oś czasu (decyzja agencja-strona-projekt D1); makiety ekranów ukryte - hero pokazuje te same etapy */
   .kroki{display:block;overflow:visible;margin:0;padding:0}
   .krok{display:block;padding:0;min-height:0;gap:0}

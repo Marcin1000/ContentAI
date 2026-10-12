@@ -88,6 +88,7 @@ Każda propozycja musi się z nimi zgadzać - inaczej nie przejdzie:
 - Każdy tekst interfejsu ma wpis w obu słownikach (PL i EN); `audyt_i18n.py` to sprawdza.
 - Każdy `onclick`/`onchange` musi wskazywać istniejącą funkcję (`audyt_uchwyty.py`).
 - Bez długich myślników (znak U+2014) w interfejsie, na stronie i w dokumentacji (`audyt_myslniki.py`).
+- Bez średnika w tekstach dla klienta: strona, aplikacja, ekrany kont i płatności, e-maile (`audyt_sredniki.py`).
 - Bez prawdziwych kluczy API w repozytorium, wyłącznie `WSTAW_TUTAJ_*`.
 - Bez marki klienta (DHL i in.) w materiałach publicznych.
 - Poprawki pilnuje `narzedzia/sprawdz_zrodlo.py` (podpis kodu po poprawce i przed nią).

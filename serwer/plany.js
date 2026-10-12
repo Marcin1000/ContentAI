@@ -129,8 +129,9 @@ const PLANY = {
   premium: {
     nazwa: 'Premium',
     nazwaEn: 'Premium',
-    opis: 'Wszystko, bez limitów sztukowych.',
-    opisEn: 'Everything, with no per-item limits.',
+    // Bez "wszystko bez limitu": pula serwera na strony (limitySerwera.strony) ma limit takze tu.
+    opis: 'Bez limitu artykułów, grafik, audio i transkrypcji.',
+    opisEn: 'Unlimited articles, images, audio and transcriptions.',
     okres: 'miesiac',
     limity: {
       artykul: null,

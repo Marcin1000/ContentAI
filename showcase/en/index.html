@@ -32,7 +32,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/fonty/literata-latin-pl.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonty/schibsted-grotesk-latin-pl.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/zasoby/strona.css?v=4a0c47ebf0">
+<link rel="stylesheet" href="/zasoby/strona.css?v=5ac392f146">
 
 <script src="/zasoby/motyw.js?v=5fcd5d4153"></script>
 <script src="/zasoby/strona.js?v=43f0c7c7b1" defer></script>
@@ -126,7 +126,7 @@
      "name": "How do I get an API key, and what does the model cost?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "In the Anthropic console you create an account, add credit and create a key; it takes about 10 minutes. You pay the provider for the model on your own account, roughly $0.25-0.50 for an article of about 800 words with scores and a fact check. A step-by-step guide and the calculation are on the “How to get an API key” page."
+      "text": "In the Anthropic console you create an account, add credit and create a key. It takes about 10 minutes. You pay the provider for the model on your own account, roughly $0.25-0.50 for an article of about 800 words with scores and a fact check. A step-by-step guide and the calculation are on the “How to get an API key” page."
      }
     },
     {
@@ -134,7 +134,7 @@
      "name": "Where does my API key go?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Only your browser keeps it, in an encrypted cookie bound to your account; no other account can read it. With “Remember on this device” the key stays for 30 days, also after you sign out; without it, until you close the browser. It is removed by the “Remove key” button, signing out on all devices, changing or resetting your password and deleting your account. With each request the Content AI server passes the key to the AI provider and does not save it to disk or to logs."
+      "text": "Only your browser keeps it, in an encrypted cookie bound to your account. No other account can read it. With “Remember on this device” the key stays for 30 days, also after you sign out. Without it, the key stays until you close the browser. It is removed by the “Remove key” button, signing out on all devices, changing or resetting your password and deleting your account. With each request the Content AI server passes the key to the AI provider and does not save it to disk or to logs."
      }
     },
     {
@@ -211,14 +211,6 @@
     },
     {
      "@type": "Question",
-     "name": "My account was created by an administrator. What changes?",
-     "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "You sign in as before, and your plan, limits and documents stay. Your drafts still run on the server keys, so you do not need your own key or a paid plan. You can still enter your own key if you prefer to pay for the model on your own account."
-     }
-    },
-    {
-     "@type": "Question",
      "name": "Which languages does Content AI support?",
      "acceptedAnswer": {
       "@type": "Answer",
@@ -237,7 +229,6 @@
 
 <svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
 <symbol id="i-znak" viewBox="0 0 32 32"><g fill="currentColor" stroke="none"><path d="M16 1.5 L18.82 12.33 L17.94 13.21 A3.4 3.4 0 0 0 14.06 13.21 L13.18 12.33 Z M30.5 16 L19.67 18.82 L18.79 17.94 A3.4 3.4 0 0 0 18.79 14.06 L19.67 13.18 Z M16 30.5 L13.18 19.67 L14.06 18.79 A3.4 3.4 0 0 0 17.94 18.79 L18.82 19.67 Z M1.5 16 L12.33 13.18 L13.21 14.06 A3.4 3.4 0 0 0 13.21 17.94 L12.33 18.82 Z"/><circle cx="16" cy="16" r="1.6"/></g></symbol>
-<symbol id="i-znak-maly" viewBox="0 0 32 32"><path fill="currentColor" stroke="none" d="M16 1 L19.8 12.2 L18.12 13.88 A3 3 0 0 0 13.88 13.88 L12.2 12.2 Z M31 16 L19.8 19.8 L18.12 18.12 A3 3 0 0 0 18.12 13.88 L19.8 12.2 Z M16 31 L12.2 19.8 L13.88 18.12 A3 3 0 0 0 18.12 18.12 L19.8 19.8 Z M1 16 L12.2 12.2 L13.88 13.88 A3 3 0 0 0 13.88 18.12 L12.2 19.8 Z"/></symbol>
 <symbol id="i-logotyp" viewBox="44.4 8.6 149.2 14.8"><path fill="currentColor" stroke="none" transform="translate(44 9)" d="M7.5 14.2Q5.5 14.2 3.9 13.3Q2.4 12.4 1.6 10.8Q0.7 9.1 0.7 7.0Q0.7 4.8 1.6 3.2Q2.4 1.6 3.9 0.7Q5.4 -0.2 7.5 -0.2Q9.8 -0.2 11.4 0.9Q13.0 2.1 13.5 4.3L11.0 4.9Q10.6 3.4 9.7 2.6Q8.8 1.9 7.5 1.9Q6.2 1.9 5.3 2.5Q4.4 3.2 3.9 4.3Q3.4 5.5 3.4 7.0Q3.4 8.5 3.9 9.7Q4.4 10.9 5.3 11.5Q6.2 12.1 7.4 12.1Q8.8 12.1 9.7 11.4Q10.7 10.6 11.0 9.1L13.6 9.7Q13.0 11.9 11.4 13.1Q9.8 14.2 7.5 14.2Z M24.6 14.2Q22.5 14.2 20.9 13.4Q19.4 12.5 18.6 10.9Q17.7 9.2 17.7 7.0Q17.7 4.8 18.6 3.1Q19.4 1.5 20.9 0.6Q22.5 -0.2 24.6 -0.2Q26.7 -0.2 28.3 0.6Q29.8 1.5 30.7 3.1Q31.5 4.8 31.5 7.0Q31.5 9.2 30.7 10.9Q29.8 12.5 28.3 13.4Q26.7 14.2 24.6 14.2ZM24.6 12.1Q25.9 12.1 26.9 11.5Q27.8 10.9 28.3 9.7Q28.8 8.6 28.8 7.0Q28.8 5.4 28.3 4.3Q27.8 3.1 26.9 2.5Q25.9 1.9 24.6 1.9Q23.3 1.9 22.4 2.5Q21.4 3.1 20.9 4.3Q20.4 5.4 20.4 7.0Q20.4 8.6 20.9 9.7Q21.4 10.9 22.4 11.5Q23.3 12.1 24.6 12.1Z M36.5 14.0V0.0H40.1L46.8 12.5L46.2 12.6V0.0H48.6V14.0H45.1L38.2 1.4L38.9 1.4V14.0Z M58.2 14.0V2.1H53.3V0.0H65.7V2.1H60.8V14.0Z M70.4 14.0V0.0H80.1V2.1H73.0V5.6H79.1V7.6H73.0V11.9H80.2V14.0Z M85.1 14.0V0.0H88.7L95.5 12.5L94.8 12.6V0.0H97.2V14.0H93.7L86.8 1.4L87.5 1.4V14.0Z M106.9 14.0V2.1H101.9V0.0H114.4V2.1H109.4V14.0Z M125.0 14.0 130.6 0.0H133.6L139.2 14.0H136.5L132.1 2.0L127.7 14.0ZM128.4 9.9V7.8H135.8V9.9Z M142.9 14.0V12.0H144.8V2.0H142.9V0.0H149.2V2.0H147.3V12.0H149.2V14.0Z"/></symbol>
 <symbol id="i-arrow-right" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M5 12h14" /> <path vector-effect="non-scaling-stroke" d="m12 5 7 7-7 7" /></symbol>
 <symbol id="i-bot" viewBox="0 0 24 24"><path vector-effect="non-scaling-stroke" d="M12 8V4H8" /> <rect vector-effect="non-scaling-stroke" width="16" height="12" x="4" y="8" rx="2" /> <path vector-effect="non-scaling-stroke" d="M2 14h2" /> <path vector-effect="non-scaling-stroke" d="M20 14h2" /> <path vector-effect="non-scaling-stroke" d="M15 13v2" /> <path vector-effect="non-scaling-stroke" d="M9 13v2" /></symbol>
@@ -414,7 +405,7 @@
       <div class="problemy">
         <article class="problem wej">
           <div class="ilu ilu-1" aria-hidden="true">
-            <span>Google results</span><span>AI Overviews</span><span>answer engines and assistants</span><span>citations in language models</span>
+            <span>Google results</span><span>AI Overviews</span><span>direct answers and voice assistants</span><span>citations in AI chats</span>
             <svg class="ilu-znak"><use href="#i-znak"/></svg>
           </div>
           <h3>Four surfaces, one draft</h3>
@@ -483,8 +474,8 @@
           <div class="krok-tekst">
             <span class="krok-nr">2</span>
             <h3>Sources</h3>
-            <p>PDF, DOCX, XLSX, PPTX, TXT and CSV files, web pages by address, notes and recordings to transcribe. From the server knowledge base, only passages that match the topic reach the draft.</p>
-            <p class="krok-cap">Knowledge base on the server, for your account only</p>
+            <p>PDF, DOCX, XLSX, PPTX, TXT and CSV files, web pages by address, notes and recordings to transcribe. Only the passages that match the topic reach the draft, not whole files.</p>
+            <p class="krok-cap">Upload once, use on any device, visible only to you</p>
           </div>
         </li>
         <li class="krok" id="krok-3">
@@ -556,16 +547,16 @@
   <section class="sekcja" id="powierzchnie" aria-labelledby="h-pow">
     <div class="kont">
       <header class="sek-nag wej">
-        <p class="etyk"><span class="etyk-nr">03</span>Four surfaces</p>
+        <p class="etyk"><span class="etyk-nr">03</span>SEO, AIO, AEO and GEO</p>
         <h2 id="h-pow">One draft. Four ways to be found.</h2>
-        <p class="sek-lead">Content AI writes once and scores the draft separately for each surface: a score, specific findings and a fix instead of a bare number.</p>
+        <p class="sek-lead">SEO is regular Google results, AIO is the AI summaries above them, AEO is direct answers in search engines and voice assistants, and GEO is citations in AI chats. Content AI scores the draft separately for each: a result from 0 to 100 and a list of what to fix. Self-review then improves the draft based on the score.</p>
       </header>
       <div class="pow wej" data-pow="seo">
-        <div class="zakladki" role="tablist" aria-label="Answer surface">
-          <button role="tab" id="t-seo" aria-selected="true" aria-controls="p-pow" data-pow="seo" type="button">SEO <small>classic Google results</small></button>
-          <button role="tab" id="t-aio" aria-selected="false" aria-controls="p-pow" data-pow="aio" type="button" tabindex="-1">AIO <small>AI Overviews in Google</small></button>
-          <button role="tab" id="t-aeo" aria-selected="false" aria-controls="p-pow" data-pow="aeo" type="button" tabindex="-1">AEO <small>answer engines and assistants</small></button>
-          <button role="tab" id="t-geo" aria-selected="false" aria-controls="p-pow" data-pow="geo" type="button" tabindex="-1">GEO <small>citations in language models</small></button>
+        <div class="zakladki" role="tablist" aria-label="Score type">
+          <button role="tab" id="t-seo" aria-selected="true" aria-controls="p-pow" data-pow="seo" type="button">SEO <small>regular Google results</small></button>
+          <button role="tab" id="t-aio" aria-selected="false" aria-controls="p-pow" data-pow="aio" type="button" tabindex="-1">AIO <small>AI summaries in Google</small></button>
+          <button role="tab" id="t-aeo" aria-selected="false" aria-controls="p-pow" data-pow="aeo" type="button" tabindex="-1">AEO <small>direct answers and voice assistants</small></button>
+          <button role="tab" id="t-geo" aria-selected="false" aria-controls="p-pow" data-pow="geo" type="button" tabindex="-1">GEO <small>citations in AI chats</small></button>
         </div>
         <div class="uklad-margines" id="p-pow" role="tabpanel" aria-labelledby="t-seo">
           <article class="kartka kartka-duza" aria-label="One paragraph, four perspectives">
@@ -598,7 +589,7 @@
               </ul>
             </div>
             <div class="pow-opis" data-dla="aeo">
-              <div class="margines-nag"><span class="duza">84</span><span class="opis">AEO score<br>for answer engines</span></div>
+              <div class="margines-nag"><span class="duza">84</span><span class="opis">AEO score<br>for direct answers</span></div>
               <p class="pow-zdanie">A short definition up front and a concise list: the format of an assistant answer.</p>
               <ul class="kryteria">
                 <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>A definition up front, 25-50 words</span></li>
@@ -613,10 +604,10 @@
               <ul class="kryteria">
                 <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>AEO format<small>weight 50%</small></span></li>
                 <li class="ok"><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg><span>Structure and JSON-LD schema<small>weight 30%</small></span></li>
-                <li class="uw"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg><span>Entity: brand and business lines<small>weight 20%; the brand is set in the configuration</small></span></li>
+                <li class="uw"><svg class="ik" aria-hidden="true"><use href="#i-info"/></svg><span>Entity: brand and business lines<small>weight 20%, the brand comes from Brand details</small></span></li>
               </ul>
             </div>
-            <p class="zrodlo-prawdy">Criteria as in the app: the model scores SEO and AIO, while AEO, GEO, keyword density and the fog index are computed by the app itself.</p>
+            <p class="zrodlo-prawdy">Criteria as in the app: an AI model scores SEO and AIO, while the app itself computes AEO, GEO, keyword density and readability.</p>
           </aside>
         </div>
       </div>
@@ -664,7 +655,7 @@
         </aside>
       </div>
       <ul class="fk-dodatki wej">
-        <li><b>Addresses</b>not in the sources, with a made-up path, or dead; the server checks them live</li>
+        <li><b>Addresses</b>not in the sources, with a made-up path, or dead, checked live by the server</li>
         <li><b>Contradictions</b>two different values for the same thing in one draft</li>
         <li><b>Competitors</b>a recommendation of a company on the excluded list</li>
         <li><b>Link text</b>repeated or empty, like “click here”</li>
@@ -692,17 +683,18 @@
         <article class="kafel kb5 wej">
           <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-library"/></svg></span>
           <h3>Knowledge base</h3>
-          <p>Your company documents live on the server, so they are available on any device, and only matching passages reach the draft.</p>
+          <p>Upload your company documents once and use them on any device. When writing, the model receives only the passages that best match the topic.</p>
           <div class="podglad frag" aria-hidden="true">
-            <div><span>crm-offer.pdf</span><i><b class="w92"></b></i><span class="mono">0,92</span></div>
-            <div><span>customer-survey.xlsx</span><i><b class="w86"></b></i><span class="mono">0,86</span></div>
-            <div><span>plan-pricing.pdf</span><i><b class="w71"></b></i><span class="mono">0,71</span></div>
+            <span class="ps-et">Match with the topic</span>
+            <div><span>crm-offer.pdf</span><i><b class="w92"></b></i><span class="mono">92%</span></div>
+            <div><span>customer-survey.xlsx</span><i><b class="w86"></b></i><span class="mono">86%</span></div>
+            <div><span>plan-pricing.pdf</span><i><b class="w71"></b></i><span class="mono">71%</span></div>
           </div>
         </article>
         <article class="kafel kb4 wej">
           <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-globe"/></svg></span>
           <h3>Web research with sources</h3>
-          <p>What the base lacks, the model looks up and cites. Competitor domains can be excluded.</p>
+          <p>With web search on, the model looks online for what your documents do not cover and lists the pages it used under the draft. You can exclude competitor sites in Brand details.</p>
           <div class="podglad zrodla-sieci" aria-hidden="true">
             <span class="ps-et">Sources from the web</span>
             <span><i>1</i>example.org/crm-badanie</span>
@@ -757,7 +749,7 @@
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Content types: article, blog post, FAQ page, landing page, product or service copy and press release</li>
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Brand visibility in AI answers: an on-demand snapshot</li>
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>llms.txt files, robots.txt rules for AI bots and UTM links</li>
-          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Dictation and read-aloud</li>
+          <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Reading drafts aloud</li>
           <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Content in Polish, English, German and Czech</li>
         </ul>
       </div>
@@ -769,7 +761,7 @@
       <header class="sek-nag wej">
         <p class="etyk"><span class="etyk-nr">06</span>AI reliability</p>
         <h2 id="h-rel">Built around the ways AI gets things wrong.</h2>
-        <p class="sek-lead">A language model does not raise an error; it just keeps writing. So every typical failure has its own safeguard here.</p>
+        <p class="sek-lead">A language model does not raise an error. It just keeps writing. So every typical failure has its own safeguard here.</p>
       </header>
       <div class="rel wej">
         <table class="rel-tabela">
@@ -783,7 +775,7 @@
             <tr><td class="rel-nr">06</td><th scope="row">Malformed responses</th><td>A repair pass resolves unclear spots the way a reader would, and shows a clear message when it cannot.</td></tr>
           </tbody>
         </table>
-        <p class="rel-stopka"><svg class="ik" aria-hidden="true"><use href="#i-shield-check"/></svg>Each of these fixes is pinned in automated checks: removing or reverting one stops the release.</p>
+        <p class="rel-stopka"><svg class="ik" aria-hidden="true"><use href="#i-shield-check"/></svg>Each of these safeguards has its own automated test. If a test fails, the new version of the app is not released.</p>
       </div>
     </div>
   </section>
@@ -797,21 +789,21 @@
       </header>
       <div class="sec-siatka">
         <figure class="droga wej" aria-labelledby="droga-tytul">
-          <figcaption id="droga-tytul" class="droga-tytul">How a request travels</figcaption>
+          <figcaption id="droga-tytul" class="droga-tytul">How a request reaches the AI model</figcaption>
           <ol class="droga-lista">
-            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-monitor"/></svg></span><b>Browser</b><span>sends the topic, settings and matching knowledge base passages, plus your API key in an encrypted cookie</span></li>
-            <li class="droga-srodek"><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-server"/></svg></span><b>Content AI server</b><span>checks the session and plan limit, decrypts the key for the duration of the request and forwards it</span><span class="droga-klucz"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg></span></li>
-            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-bot"/></svg></span><b>AI provider</b><span>answers the request and bills it to your account</span></li>
+            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-monitor"/></svg></span><b>Browser</b><span>sends the topic, settings and the passages from your documents that match the topic. It adds your API key, encrypted in a cookie.</span></li>
+            <li class="droga-srodek"><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-server"/></svg></span><b>Content AI server</b><span>checks that you are signed in and still have room in your plan. It decrypts the key only for this request and passes the request to the AI provider.</span><span class="droga-klucz"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg></span></li>
+            <li><span class="droga-ik"><svg class="ik" aria-hidden="true"><use href="#i-bot"/></svg></span><b>AI provider</b><span>writes the answer and charges its cost to your account with the provider</span></li>
           </ol>
-          <p class="droga-nota"><svg class="znacznik ik" aria-hidden="true"><use href="#i-info"/></svg>The server does not save your key: it decrypts it only for the duration of the request.</p>
+          <p class="droga-nota"><svg class="znacznik ik" aria-hidden="true"><use href="#i-info"/></svg>The server does not save your key, either to disk or to logs.</p>
         </figure>
         <ul class="sec-lista">
           <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-key-round"/></svg><h3>Only your browser keeps your API key</h3><p>You save the key in the app, and your browser keeps it in an encrypted cookie that no script on the page and no other account can read. With each request it travels over an encrypted connection to the Content AI server, which passes it to the AI provider. The server does not save the key to disk or to logs and does not use it for anything else.</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-chart-column"/></svg><h3>Model costs on your own account</h3><p>Every model request is billed to your account with the provider, not ours. You set a spend limit in the provider console and can see the estimated cost of each draft in the app, under History.</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-shield-check"/></svg><h3>Passwords and sessions</h3><p>Passwords are hashed with scrypt and a random salt. After 8 failed attempts from one address, sign-in is blocked for 15 minutes. The session lives in a signed HttpOnly cookie.</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-lock"/></svg><h3>Only your account sees your documents</h3><p>Your knowledge base documents are stored on the Content AI server and only your account can see them. When writing, the model provider receives only the passages that match the topic.</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-credit-card"/></svg><h3>Payments through Stripe</h3><p>You enter your card details on Stripe's page. Content AI never sees or stores them; from Stripe it receives only the payment status and the details needed to account for it.</p></li>
-          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-package"/></svg><h3>Nothing from third-party servers</h3><p>The app loads no scripts or fonts from outside: libraries and typefaces come from the same server. The server has zero npm dependencies.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-chart-column"/></svg><h3>Model costs on your own account</h3><p>You pay the provider directly for the model, from your own account with them, with no markup from us. You set a spend limit in the provider console and can see the estimated cost of each draft in the app, under History.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-shield-check"/></svg><h3>Passwords and sign-in</h3><p>We store passwords only as a hash (scrypt with a random salt), so nobody knows them, including us. After 8 failed attempts from one IP address, sign-in is paused for 15 minutes, and after 20 failed attempts on one account within an hour, that account is locked for 15 minutes. Your session lives in a signed cookie that no script on the page can read.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-lock"/></svg><h3>Only your account sees your documents</h3><p>Uploaded documents are stored on the Content AI server and only your account can access them. When a draft is written, the AI model receives only the passages that match the topic, not whole files.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-credit-card"/></svg><h3>Payments through Stripe</h3><p>You enter your card details on Stripe's page. Content AI never sees or stores them. From Stripe we receive only whether the payment went through and the details needed to account for it.</p></li>
+          <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-package"/></svg><h3>Nothing from third-party servers</h3><p>The app loads no scripts or fonts from other servers: libraries and typefaces are on the Content AI server. The server itself uses no ready-made packages downloaded from the internet, so no unreviewed code reaches it with an update.</p></li>
         </ul>
       </div>
     </div>
@@ -824,9 +816,9 @@
         <h2 id="h-who">For teams that write a lot and cannot afford mistakes.</h2>
       </header>
       <ul class="kto">
-        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-megaphone"/></svg><h3>Marketing teams</h3><p>A knowledge base with your company documents, brand voice and brand rules in one place. Every draft follows the same rules.</p></li>
-        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-trending-up"/></svg><h3>SEO agencies</h3><p>SERP analysis, gaps, scores for four surfaces and bulk generation. Finished drafts go straight to WordPress or Drupal.</p></li>
-        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-notebook-pen"/></svg><h3>Writers and editors</h3><p>Dictation, a fact check that quotes the fragment, and versions before and after self-review. Copy ready to publish, not to rewrite.</p></li>
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-megaphone"/></svg><h3>Marketing teams</h3><p>Company documents, brand details and brand voice in one place. Every draft follows the same rules.</p></li>
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-trending-up"/></svg><h3>SEO agencies</h3><p>Google results analysis for a keyword and a list of topics the draft is missing. Plus SEO, AIO, AEO and GEO scores and many articles at once from a list of topics. Finished drafts go straight to WordPress or Drupal.</p></li>
+        <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-notebook-pen"/></svg><h3>Writers and editors</h3><p>The fact check lists the sentences your sources do not support and says why. You switch between the versions before and after self-review with one click. Copy ready to publish, not to rewrite.</p></li>
         <li class="wej"><svg class="ik" aria-hidden="true"><use href="#i-languages"/></svg><h3>Companies selling abroad</h3><p>Content in Polish, English, German and Czech from the same knowledge base, written directly in the chosen language.</p></li>
       </ul>
     </div>
@@ -868,7 +860,7 @@
         <article class="pakiet wej" aria-labelledby="pk-pro">
           <h3 id="pk-pro">Premium</h3>
           <p class="pakiet-cena"><b>€49</b> <span>per month</span></p>
-          <p class="pakiet-opis">Everything, with no per-item limits.</p>
+          <p class="pakiet-opis">For work without counting articles.</p>
           <ul>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>unlimited articles, images, audio and transcriptions</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>unlimited documents in the knowledge base</li>
@@ -878,7 +870,7 @@
         </article>
       </div>
       <div class="pakiety-noty wej">
-        <p class="pakiety-nota">Every plan requires your own Anthropic API key. You pay the model provider for usage on your own account, roughly <span class="nw">$0.25-0.50</span> per article. You pay for a paid plan monthly in advance through Stripe and can change or cancel it in account settings. After cancelling, your plan stays active until the end of the paid month. The prices shown are final prices.</p>
+        <p class="pakiety-nota">Every plan requires your own Anthropic API key. You pay the model provider for usage on your own account, roughly <span class="nw">$0.25-0.50</span> per article of about 800 words. You pay for a paid plan monthly in advance through Stripe and can change or cancel it in account settings. After cancelling, your plan stays active until the end of the paid month. The prices shown are final prices.</p>
         <p class="pakiety-nota pakiety-nota-2">In the purchase window you can pay in euros or in Polish złoty: Standard PLN 79, Premium PLN 199 a month. Monthly counters reset on the first day of the month, and the Free and Standard plans also have a ceiling on model calls to prevent abuse. After each payment Stripe emails you a confirmation, and we issue a receipt on request.</p>
         <p class="pakiety-nota pakiety-nota-2">Payment, cancellation and withdrawal rules are in the <a class="link" href="https://app.content-ai.net/dokumenty/regulamin?lang=en">Terms of Service</a> and the <a class="link" href="https://app.content-ai.net/dokumenty/odstapienie?lang=en">information on the right of withdrawal</a>.</p>
         <p class="pakiety-klucz"><a class="link kafel-link" href="/en/api-key/">How to get an API key and what an article costs<svg class="ik" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></p>
@@ -896,6 +888,8 @@
             <tr><th scope="row">Audio segments</th><td data-et="Free">no</td><td data-et="Standard">20 a month</td><td data-et="Premium">unlimited</td></tr>
             <tr><th scope="row">Transcriptions</th><td data-et="Free">no</td><td data-et="Standard">20 a month</td><td data-et="Premium">unlimited</td></tr>
             <tr><th scope="row">Documents in the knowledge base</th><td data-et="Free">up to 3</td><td data-et="Standard">up to 50</td><td data-et="Premium">unlimited</td></tr>
+
+            <tr><th scope="row">Web pages fetched by address and links checked</th><td data-et="Free">30 to start</td><td data-et="Standard">1000 a month</td><td data-et="Premium">5000 a month</td></tr>
             <tr><th scope="row">SEO, AIO, AEO and GEO scores, fact check</th><td data-et="Free">yes</td><td data-et="Standard">yes</td><td data-et="Premium">yes</td></tr>
             <tr><th scope="row">Repurposing and export: DOCX, PDF, TXT, JSON-LD</th><td data-et="Free">yes</td><td data-et="Standard">yes</td><td data-et="Premium">yes</td></tr>
 
@@ -919,8 +913,8 @@
       <div class="faq-lista wej">
         <details><summary>How is Content AI different from an AI chat?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>A chat answers from the model's memory. Content AI writes from your knowledge base, goes to the web only for missing information and cites it, then scores the draft for SEO, AIO, AEO and GEO and checks the facts. All in one workspace, from topic to publication.</p></details>
         <details><summary>What do I need to get started?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>A Content AI account (email and password) and an Anthropic API key, which powers your drafts. You need the key on every plan, including Free. OpenAI keys (images, voice-over, transcription) and ElevenLabs keys (better voice-over) are optional. The Free plan gives you 3 articles to start, no card needed.</p></details>
-        <details><summary>How do I get an API key, and what does the model cost?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>In the Anthropic console you create an account, add credit and create a key; it takes about 10 minutes. You pay the provider for the model on your own account, roughly <span class="nw">$0.25-0.50</span> for an article of about 800 words with scores and a fact check. A step-by-step guide and the calculation are on the <a class="link" href="/en/api-key/">“How to get an API key”</a> page.</p></details>
-        <details><summary>Where does my API key go?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Only your browser keeps it, in an encrypted cookie bound to your account; no other account can read it. With “Remember on this device” the key stays for 30 days, also after you sign out; without it, until you close the browser. It is removed by the “Remove key” button, signing out on all devices, changing or resetting your password and deleting your account. With each request the Content AI server passes the key to the AI provider and does not save it to disk or to logs.</p></details>
+        <details><summary>How do I get an API key, and what does the model cost?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>In the Anthropic console you create an account, add credit and create a key. It takes about 10 minutes. You pay the provider for the model on your own account, roughly <span class="nw">$0.25-0.50</span> for an article of about 800 words with scores and a fact check. A step-by-step guide and the calculation are on the <a class="link" href="/en/api-key/">“How to get an API key”</a> page.</p></details>
+        <details><summary>Where does my API key go?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Only your browser keeps it, in an encrypted cookie bound to your account. No other account can read it. With “Remember on this device” the key stays for 30 days, also after you sign out. Without it, the key stays until you close the browser. It is removed by the “Remove key” button, signing out on all devices, changing or resetting your password and deleting your account. With each request the Content AI server passes the key to the AI provider and does not save it to disk or to logs.</p></details>
         <details><summary>Where do the facts come from?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>From the knowledge base. With web search on, missing information comes from the pages listed under the article. Information about your company always comes from the base only.</p></details>
         <details><summary>Will the text be error-free?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>No AI tool can guarantee that. Content AI reduces the risk: figures and links come from the sources, and the fact check lists the sentences the sources do not support, quoting each one. A person always has the final say.</p></details>
         <details><summary>How do I pay for a plan?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>You pay for paid plans through Stripe, monthly in advance, in euros or Polish złoty: you choose the currency in the purchase window. You enter your card details on Stripe's page, and Content AI never sees them. Paid plans are available to customers with a billing address in the European Union. After each payment Stripe emails you a confirmation.</p></details>
@@ -930,7 +924,6 @@
         <details><summary>Where do my documents go?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Knowledge base documents are stored on the Content AI server and only your account can see them. When writing, the model provider receives only the passages that match the topic. Finished texts and their history stay in your browser.</p></details>
         <details><summary>Which AI models does Content AI use?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Drafts, scores and the fact check come from Anthropic models. Images, voice-over and transcription use OpenAI models, and the better voice-over uses ElevenLabs. Each provider bills usage to your own API key.</p></details>
         <details><summary>Where does the SERP data come from?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>The Google results analysis is run by the model with web search, on your API key. It is an estimate of the results, not a ranking measurement. SERP analysis is available from the Standard plan up.</p></details>
-        <details><summary>My account was created by an administrator. What changes?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>You sign in as before, and your plan, limits and documents stay. Your drafts still run on the server keys, so you do not need your own key or a paid plan. You can still enter your own key if you prefer to pay for the model on your own account.</p></details>
         <details><summary>Which languages does Content AI support?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>The interface is in Polish and English. Content can be written in Polish, English, German and Czech.</p></details>
       </div>
     </div>
@@ -971,7 +964,7 @@
         <svg class="logo-tekst" aria-hidden="true" focusable="false"><use href="#i-logotyp"/></svg>
       </a>
       <p>Content for SEO, AIO, AEO and GEO, written from your sources.</p>
-      <p class="stopka-uwaga">No third-party scripts, fonts or analytics on this site.</p>
+      <p class="stopka-uwaga">No tracking: this site has no analytics and loads no scripts or fonts from other servers.</p>
     </div>
     <nav class="stopka-kol" id="stopka-spis" aria-labelledby="st-produkt">
       <h2 id="st-produkt">Product</h2>
@@ -1006,7 +999,6 @@
   </div>
   <div class="kont stopka-dol">
     <span>© 2026 Content AI</span>
-    <span class="stopka-znak" aria-hidden="true"><svg><use href="#i-znak-maly"/></svg></span>
   </div>
 </footer>
 
