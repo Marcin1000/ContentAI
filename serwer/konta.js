@@ -723,7 +723,9 @@ async function rejestracja(req, res, kontekst) {
       const k = magazyn.utworzOrganizacjeIKonto({
         email: adres, hash: skrot.hash, sol: skrot.sol, jezyk, plan: null, zrodloKluczy: 'wlasne', teraz,
       });
-      magazyn.zmienKonto(k.login, { regulaminWersja: KONF.regulaminWersja, regulaminCzas: teraz });
+      // Rejestracja loguje od razu (ciasteczko sesji nizej), wiec to tez logowanie: "pokaz" w CLI pokazywal
+      // "ostatnie logowanie: -" przy koncie, ktore wlasnie kupilo pakiet (2026-10-12).
+      magazyn.zmienKonto(k.login, { regulaminWersja: KONF.regulaminWersja, regulaminCzas: teraz, ostatnieLogowanie: teraz });
       const zgoda = (rodzaj, wersja) => magazyn.dopiszZgode({ login: k.login, rodzaj, wersja, wartosc: true, zrodlo: 'rejestracja', ip: ipZgody, teraz });
       zgoda('regulamin', KONF.regulaminWersja);
       zgoda('polityka', KONF.politykaWersja);
@@ -920,7 +922,8 @@ async function noweHaslo(req, res, kontekst) {
     if (!k || k.email !== z.rec.email) return null;
     // Nowe haslo odcina wszystkie dotychczasowe sesje (sesjeOd), a link z tej skrzynki
     // potwierdza tez sam adres.
-    magazyn.zmienKonto(k.login, { hash: skrot.hash, sol: skrot.sol, sesjeOd: teraz, emailPotwierdzony: k.emailPotwierdzony || teraz });
+    // Nowe haslo z linku loguje od razu (ciasteczko sesji nizej), wiec zapisujemy tez ostatnie logowanie.
+    magazyn.zmienKonto(k.login, { hash: skrot.hash, sol: skrot.sol, sesjeOd: teraz, emailPotwierdzony: k.emailPotwierdzony || teraz, ostatnieLogowanie: teraz });
     magazyn.usunTokeny(k.login, ['reset']);
     return magazyn.kontoZOrganizacja(k.login);
   });

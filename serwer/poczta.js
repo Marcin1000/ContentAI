@@ -10,9 +10,10 @@
 //           CAI_POCZTA_KLUCZ, limit czasu 10 s, jedno ponowienie po 1 s przy bledzie sieci, 429
 //           i 5xx z tym samym naglowkiem Idempotency-Key (Resend nie wysle tej samej wiadomosci
 //           drugi raz, gdy pierwsza proba jednak doszla).
-// Sledzenie otwarc i klikniec (PR8-27): wiadomosci nie maja obrazkow ani przekierowan, a samo
+// Sledzenie otwarc i klikniec (PR8-27): wiadomosci nie maja przekierowan ani obrazkow z serwera, a samo
 // sledzenie wylacza sie w Resend w ustawieniach domeny (README "Poczta"; poczta-test pokazuje,
-// czy jest wylaczone, gdy klucz pozwala odczytac domeny).
+// czy jest wylaczone, gdy klucz pozwala odczytac domeny). Znak marki w naglowku (2026-10-12) jedzie
+// w samej wiadomosci jako zalacznik z Content-ID (zasoby/poczta-znak.png), wiec otwarcie nic nie pobiera.
 // Odnosnik z tokenem NIGDY nie trafia do dziennika systemowego ani do /api/status: dziennik dostaje
 // szablon, zamaskowany adres, wynik i identyfikator wiadomosci, a opis bledu dostawcy jest
 // przyciety, bez adresow e-mail i bez adresow URL.
@@ -26,9 +27,12 @@
 //   (dane.zalaczniki w linii skrocone do { nazwa, typ, bajtow })
 // Zalaczniki (potwierdzenie umowy na trwalym nosniku, PR8-31, platnosci.js B): dane.zalaczniki
 // [{ nazwa, typ, tresc }] -> attachments Resend [{ filename, content (base64), content_type }];
-// najwyzej 5, kazdy do 2 MB, nazwa pliku tylko z bezpiecznych znakow.
+// najwyzej 5, kazdy do 2 MB, nazwa pliku tylko z bezpiecznych znakow. Znak marki dochodzi osobno
+// (content_id = szablony.ZNAK_CID) i nie liczy sie do tych zalacznikow ani do "zalacznikow: N" w dzienniku.
 
 const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
 const pliki = require('./pliki.js');
 const szablony = require('./poczta-szablony.js');
 
@@ -37,6 +41,13 @@ const PONOWIENIE_MS = 1000;
 const ZALACZNIKI_MAKS = 5;
 const ZALACZNIK_MAKS_BAJTOW = 2 * 1024 * 1024;
 const STAN = { tryb: 'log', wyslanych: 0, bledow: 0, ostatniBlad: null, ostatniBladCzas: null };
+// Znak marki do naglowka (narzedzia/grafiki_marki.js). Bez pliku naglowek ma sam napis CONTENT AI.
+const ZNAK = (() => {
+  try { return fs.readFileSync(path.join(__dirname, 'zasoby', 'poczta-znak.png')); } catch { return null; }
+})();
+const ZALACZNIK_ZNAKU = ZNAK
+  ? { filename: 'content-ai.png', content: ZNAK.toString('base64'), content_type: 'image/png', content_id: szablony.ZNAK_CID }
+  : null;
 const czekaj = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function maskujAdres(adres) {
@@ -104,7 +115,10 @@ async function wyslijResend({ adres, szablon, wiadomosc, zalaczniki = [] }, konf
     tags: [{ name: 'rodzaj', value: szablon }],
   };
   if (konfPoczty.odpowiedz) cialo.reply_to = konfPoczty.odpowiedz;
-  if (zalaczniki.length) cialo.attachments = zalaczniki;
+  // Znak marki tylko wtedy, gdy HTML go wola (szablon z opcje.znak), inaczej bylby zwyklym zalacznikiem.
+  const zZnakiem = ZALACZNIK_ZNAKU && String(wiadomosc.html || '').includes(`cid:${szablony.ZNAK_CID}`)
+    ? [...zalaczniki, ZALACZNIK_ZNAKU] : zalaczniki;
+  if (zZnakiem.length) cialo.attachments = zZnakiem;
   const tresc = JSON.stringify(cialo);
   const idempotencja = `cai-${crypto.randomUUID()}`;
   const url = `${String(konfPoczty.url || 'https://api.resend.com').replace(/\/+$/, '')}/emails`;
@@ -155,7 +169,7 @@ async function wyslij({ do: adres, szablon, jezyk = 'pl', dane = {} } = {}, konf
   if (!doKogo || !szablon) return { ok: false, tryb, blad: 'brak adresu albo szablonu' };
   let wiadomosc;
   try {
-    wiadomosc = szablony.renderuj(szablon, jezyk, { email: doKogo, ...dane }, konf);
+    wiadomosc = szablony.renderuj(szablon, jezyk, { email: doKogo, ...dane }, konf, { znak: Boolean(ZNAK) });
   } catch (e) {
     zanotujBlad(e.message);
     console.error(`[poczta] ${szablon}: ${e.message}`);

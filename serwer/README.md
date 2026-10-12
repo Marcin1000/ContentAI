@@ -1338,11 +1338,15 @@ waluta } }`, `odrzucenie: { powod: 'kraj', kraj, czas }`, `adresy: { zakup, pane
 | Polecenie | Co robi |
 |---|---|
 | `platnosci-sprawdz` | konfiguracja, ceny u dostawcy (z porównaniem z `PLATNOSCI_CENY_WYSWIETLANE`), ostatni webhook, nieprzetworzone zdarzenia, uzgadnianie, odstąpienia z błędem, przychód kwartału; kod 0 = gotowe do sprzedaży |
-| `platnosci-synchronizuj [login]` | uzgodnienie stanu i wpłat z Stripe, dokończenie odstąpień z błędem |
-| `platnosci-powiaz <login> <cus_...> [--zamien]` | powiązanie konta z klientem Stripe, tylko `PLATNOSCI_TRYB=test` (skrypt testu z zegarem) |
+| `platnosci-synchronizuj [login\|e-mail]` | uzgodnienie stanu i wpłat z Stripe, dokończenie odstąpień z błędem |
+| `platnosci-powiaz <login\|e-mail> <cus_...> [--zamien]` | powiązanie konta z klientem Stripe, tylko `PLATNOSCI_TRYB=test` (skrypt testu z zegarem) |
 | `przychod [RRRR-Qn\|RRRR]` | wpłaty minus zwroty per waluta i kraj, razem w PLN, procent limitu kwartalnego, sprzedaż do innych krajów UE w roku |
 | `ewidencja <od> <do> [--dziennie]` | CSV (średnik, przecinek dziesiętny) wpłat i zwrotów do ewidencji sprzedaży: data, rodzaj, identyfikator, konto, kraj, kwota, waluta, PLN, narastająco w kwartale, pakiet, okres; `--dziennie`: sumy dzienne. Kolumny potwierdza księgowa (PR8-12) |
-| `zwrot <login> [--zlozone RRRR-MM-DD[THH:MM]] [--pelny] [--wykonaj]` | odstąpienie zgłoszone e-mailem albo listem: bez `--wykonaj` tylko wyliczenie; `--zlozone` = chwila otrzymania oświadczenia (czas polski); `--pelny` = zwrot całości |
+| `zwrot <login\|e-mail> [--zlozone RRRR-MM-DD[THH:MM]] [--pelny] [--wykonaj]` | odstąpienie zgłoszone e-mailem albo listem: bez `--wykonaj` tylko wyliczenie; `--zlozone` = chwila otrzymania oświadczenia (czas polski); `--pelny` = zwrot całości |
+
+Konto wskazuje login albo adres e-mail (z `@`, wielkość liter bez znaczenia). Konta samoobsługowe mają
+loginy `k-...`, a klient pisze z adresu e-mail, więc adres wystarczy: `zwrot klient@firma.pl --pelny`.
+Tak samo `pokaz`, `email`, `klucze`, `organizacja`, `haslo`, `plan`, `rola` i `usun` w `uzytkownicy.js`.
 
 ### Test w prawdziwym trybie testowym Stripe (T1-T12, PROJEKT-TECHNICZNY 12.4)
 
@@ -1490,8 +1494,11 @@ atrapa `narzedzia/atrapa/poczta.js` (API jak Resend).
   wyśle wiadomości drugi raz). Brak klucza albo nadawcy: funkcja wyłączona, poczta schodzi na `log`.
 - Odnośnik z tokenem nigdy nie trafia do dziennika ani do `/api/status` (sekcja `poczta`: `tryb`,
   `wyslanych`, `bledow`, `ostatniBlad` bez adresów i odnośników).
-- Szablony PL i EN (tekst + prosty HTML, przycisk, bez obrazków i pikseli, stopka z danymi
-  usługodawcy): `potwierdzenie`, `reset`, `haslo-zmienione`, `zmiana-email`, `zmiana-email-info`,
+- Szablony PL i EN (tekst + prosty HTML, przycisk, bez pikseli śledzących, stopka z danymi
+  usługodawcy). Nagłówek: znak marki i napis CONTENT AI. Znak (`serwer/zasoby/poczta-znak.png`,
+  z `narzedzia/grafiki_marki.js`) jedzie w samej wiadomości jako załącznik z Content-ID
+  (`<img src="cid:content-ai-znak">`), więc otwarcie maila niczego nie pobiera z serwera. Napis jest
+  tekstem, więc markę widać także z wyłączonymi obrazkami. Szablony: `potwierdzenie`, `reset`, `haslo-zmienione`, `zmiana-email`, `zmiana-email-info`,
   `konto-usuniete`, `prog-przychodu`, `powitanie`, `konto-istnieje`, `test`, `zakup-potwierdzenie`
   i `odstapienie-potwierdzenie` (trwały nośnik umowy, PR8-31; pola `dane` jak w sekcji
   "Płatności"). Pola każdego szablonu: nagłówek `serwer/poczta-szablony.js`. Rozliczenia
@@ -1558,7 +1565,7 @@ Wykonawca C, testy `serwer/testy-odpornosc.js` (wołane z `testy-byok.js`).
 
 Content AI oznacza wyniki zgodnie z art. 50 AI Act w dwóch warstwach (projekt, rozdz. 9).
 Wykonawca D: `serwer/oznaczenia.js`, aplikacja (`app/contentai.src.html`, blok „OZNACZENIA AI”)
-i `app/pwa/lib/docx-natywny-3.js`.
+i `app/pwa/lib/docx-natywny-4.js`.
 
 **Warstwa maszynowa** (zawsze, gdy rodzaj ma `metadane: true`), kod źródła z IPTC Digital Source
 Type: `trainedAlgorithmicMedia` dla treści z AI, `compositeWithTrainedAlgorithmicMedia` dla tekstu

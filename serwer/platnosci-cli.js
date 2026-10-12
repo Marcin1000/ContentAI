@@ -11,23 +11,25 @@
 //
 // Na serwerze: sudo serwer/cli.sh <polecenie> (srodowisko uslugi, w tym PLATNOSCI i STRIPE_*).
 //   platnosci-sprawdz                 konfiguracja, ceny u dostawcy, webhook, uzgadnianie, progi (kod 0 = gotowe)
-//   platnosci-synchronizuj [login]    uzgodnienie stanu subskrypcji i wplat z dostawca, dokonczenie odstapien z bledem
-//   platnosci-powiaz <login> <cus_..> [--zamien]   tylko tryb test (skrypt narzedzia/test_platnosci_stripe.js)
+//   platnosci-synchronizuj [login|e-mail]   uzgodnienie stanu subskrypcji i wplat z dostawca, dokonczenie odstapien z bledem
+//   platnosci-powiaz <login|e-mail> <cus_..> [--zamien]   tylko tryb test (skrypt narzedzia/test_platnosci_stripe.js)
 //   przychod [RRRR-Qn|RRRR]           wplaty minus zwroty per waluta i kraj, procent limitu kwartalnego, sprzedaz do UE
 //   ewidencja <od> <do> [--dziennie]  CSV (srednik, przecinek dziesietny) do ewidencji sprzedazy, daty RRRR-MM-DD wlacznie
-//   zwrot <login> [--zlozone RRRR-MM-DD[THH:MM]] [--pelny] [--wykonaj]
+//   zwrot <login|e-mail> [--zlozone RRRR-MM-DD[THH:MM]] [--pelny] [--wykonaj]
 //                                     odstapienie zgloszone e-mailem albo listem: bez --wykonaj tylko wyliczenie
+// Konto wskazuje login albo e-mail (z @, jak "pokaz" w uzytkownicy.js): konta samoobslugowe maja loginy k-...,
+// a klient pisze z adresu e-mail (2026-10-12: "zwrot <adres klienta>" konczyl sie "Nie ma konta").
 
 const platnosci = require('./platnosci.js');
 const ekrany = require('./ekrany-platnosci.js');
 
 const POLECENIA = [
   { nazwa: 'platnosci-sprawdz', opis: 'konfiguracja platnosci i ceny u dostawcy (kod 0 = gotowe)', uzycie: 'platnosci-sprawdz' },
-  { nazwa: 'platnosci-synchronizuj', opis: 'uzgodnienie stanu subskrypcji z dostawca', uzycie: 'platnosci-synchronizuj [login]' },
-  { nazwa: 'platnosci-powiaz', opis: 'powiazanie konta z klientem (tylko tryb test)', uzycie: 'platnosci-powiaz <login> <id-klienta> [--zamien]' },
+  { nazwa: 'platnosci-synchronizuj', opis: 'uzgodnienie stanu subskrypcji z dostawca', uzycie: 'platnosci-synchronizuj [login|e-mail]' },
+  { nazwa: 'platnosci-powiaz', opis: 'powiazanie konta z klientem (tylko tryb test)', uzycie: 'platnosci-powiaz <login|e-mail> <id-klienta> [--zamien]' },
   { nazwa: 'przychod', opis: 'sumy wplat w kwartale albo roku (per waluta i kraj)', uzycie: 'przychod [RRRR-Qn|RRRR]' },
   { nazwa: 'ewidencja', opis: 'wplaty i zwroty w okresie jako CSV (ewidencja sprzedazy)', uzycie: 'ewidencja <od RRRR-MM-DD> <do RRRR-MM-DD> [--dziennie]' },
-  { nazwa: 'zwrot', opis: 'odstapienie w 14 dni: wyliczenie, z --wykonaj anulowanie i zwrot', uzycie: 'zwrot <login> [--zlozone RRRR-MM-DD[THH:MM]] [--pelny] [--wykonaj]' },
+  { nazwa: 'zwrot', opis: 'odstapienie w 14 dni: wyliczenie, z --wykonaj anulowanie i zwrot', uzycie: 'zwrot <login|e-mail> [--zlozone RRRR-MM-DD[THH:MM]] [--pelny] [--wykonaj]' },
 ];
 
 function obsluguje(polecenie) {
@@ -60,6 +62,12 @@ function parsujChwile(tekst) {
   const min = m[5] === undefined ? 0 : Number(m[5]);
   if (godz > 23 || min > 59) return null;
   return polnoc + (godz * 60 + min) * 60_000;
+}
+
+/** Konto po loginie albo po e-mailu (rozpoznanym po znaku @, jak "pokaz" w uzytkownicy.js). */
+function kontoZArgumentu(magazyn, arg) {
+  if (!arg) return null;
+  return String(arg).includes('@') ? magazyn.kontoPoEmailu(arg) : magazyn.konto(String(arg));
 }
 
 function flaga(argumenty, nazwa) { return argumenty.includes(nazwa); }
@@ -150,9 +158,11 @@ async function sprawdz(argumenty, kontekst) {
 async function synchronizuj(argumenty, kontekst) {
   const { KONF, magazyn, wypisz, blad } = kontekst;
   if (!wymagaj(kontekst)) return 1;
-  const [login] = pozycyjne(argumenty);
-  if (login && !magazyn.konto(login)) { blad(`Nie ma konta ${login}.`); return 1; }
-  const w = await platnosci.uzgodnij(KONF, { login: login || null, limit: 100000, naSekunde: 3, loguj: (t) => wypisz(`  ${t}`) });
+  const [arg] = pozycyjne(argumenty);
+  const konto = arg ? kontoZArgumentu(magazyn, arg) : null;
+  if (arg && !konto) { blad(`Nie ma konta ${arg}.`); return 1; }
+  const login = konto ? konto.login : null;
+  const w = await platnosci.uzgodnij(KONF, { login, limit: 100000, naSekunde: 3, loguj: (t) => wypisz(`  ${t}`) });
   wypisz(`Uzgodniono kont: ${w.kont}, zmienionych: ${w.zmienionych}, dokończonych odstąpień: ${w.odstapien || 0}, błędów: ${w.bledow}.`);
   if (login && !w.kont) wypisz(`Konto ${login} nie ma klienta płatności w trybie ${KONF.platnosci.tryb}.`);
   return w.bledow ? 1 : 0;
@@ -164,10 +174,11 @@ async function powiaz(argumenty, kontekst) {
   const { KONF, magazyn, wypisz, blad } = kontekst;
   if (!wymagaj(kontekst)) return 1;
   if (KONF.platnosci.tryb !== 'test') { blad('platnosci-powiaz działa tylko w trybie testowym (PLATNOSCI_TRYB=test).'); return 1; }
-  const [login, idKlienta] = pozycyjne(argumenty);
-  if (!login || !/^cus_[A-Za-z0-9]{4,}$/.test(String(idKlienta || ''))) { blad('Użycie: platnosci-powiaz <login> <cus_...> [--zamien]'); return 1; }
-  const konto = magazyn.konto(login);
-  if (!konto) { blad(`Nie ma konta ${login}.`); return 1; }
+  const [arg, idKlienta] = pozycyjne(argumenty);
+  if (!arg || !/^cus_[A-Za-z0-9]{4,}$/.test(String(idKlienta || ''))) { blad('Użycie: platnosci-powiaz <login|e-mail> <cus_...> [--zamien]'); return 1; }
+  const konto = kontoZArgumentu(magazyn, arg);
+  if (!konto) { blad(`Nie ma konta ${arg}.`); return 1; }
+  const { login } = konto;
   if (flaga(argumenty, '--zamien') && konto.platnikKlient && konto.platnikKlient !== idKlienta) {
     magazyn.zmienKonto(login, {
       platnik: null, platnikTryb: null, platnikKlient: null, platnikSubskrypcja: null, subskrypcjaStan: 'brak', subskrypcjaPlan: null,
@@ -323,9 +334,10 @@ async function ewidencja(argumenty, kontekst) {
 async function zwrot(argumenty, kontekst) {
   const { KONF, magazyn, wypisz, blad } = kontekst;
   if (!wymagaj(kontekst)) return 1;
-  const [login] = pozycyjne(argumenty, ['--zlozone']);
-  const konto = login ? magazyn.konto(login) : null;
-  if (!konto) { blad(login ? `Nie ma konta ${login}.` : 'Użycie: zwrot <login> [--zlozone RRRR-MM-DD[THH:MM]] [--pelny] [--wykonaj]'); return 1; }
+  const [arg] = pozycyjne(argumenty, ['--zlozone']);
+  const konto = arg ? kontoZArgumentu(magazyn, arg) : null;
+  if (!konto) { blad(arg ? `Nie ma konta ${arg}.` : 'Użycie: zwrot <login|e-mail> [--zlozone RRRR-MM-DD[THH:MM]] [--pelny] [--wykonaj]'); return 1; }
+  const { login } = konto;
   let zlozone = Date.now();
   if (wartoscFlagi(argumenty, '--zlozone') !== undefined) {
     zlozone = parsujChwile(wartoscFlagi(argumenty, '--zlozone'));

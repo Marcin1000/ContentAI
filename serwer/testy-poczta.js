@@ -2,8 +2,9 @@
 
 // ─── Testy: poczta (wykonawca C, ARCH8-21, PR8-27) ───────────────────────────
 //
-// Szablony PL i EN (wszystkie z listy, bez slowa o fakturach, bez dlugich myslnikow, bez obrazkow,
-// zabezpieczony HTML, odnosnik tylko http(s), stopka uslugodawcy), tryb log (pelna wiadomosc tylko
+// Szablony PL i EN (wszystkie z listy, bez slowa o fakturach, bez dlugich myslnikow, bez obrazkow z adresu,
+// zabezpieczony HTML, odnosnik tylko http(s), stopka uslugodawcy, naglowek CONTENT AI ze znakiem marki
+// z Content-ID), tryb log (pelna wiadomosc tylko
 // w CAI_POCZTA_LOG, w dzienniku zamaskowany adres i ani sladu odnosnika z tokenem), adapter
 // Resend przeciw atrapie narzedzia/atrapa/poczta.js (pola API, Idempotency-Key, jedno ponowienie
 // przy 5xx, 429 i bledzie sieci, bez ponowienia przy 401), stan w /api/status i polecenie
@@ -92,6 +93,15 @@ function testySzablonow({ sprawdz }) {
     && e.tekst.includes('The link is valid for 30 minutes and works once')
     && szablony.renderuj('zmiana-email', 'pl', DANE['zmiana-email'], KONF_BAZOWY).tekst.includes('ważny 24 godziny')
     && szablony.renderuj('potwierdzenie', 'pl', { ...DANE.potwierdzenie, godzin: 1 }, KONF_BAZOWY).tekst.includes('ważny 1 godzinę'));
+  // 2026-10-12 (Marcin: "w mailach potrzebne logo"): naglowek z marka. Jedyny obrazek to znak z Content-ID
+  // (bez adresu http, wiec otwarcie niczego nie pobiera), napis CONTENT AI jest tekstem, nad powitaniem.
+  const zZnakiem = szablony.renderuj('potwierdzenie', 'pl', DANE.potwierdzenie, KONF_BAZOWY, { znak: true });
+  const obrazki = zZnakiem.html.match(/<img\b[^>]*>/gi) || [];
+  sprawdz('szablony: naglowek ze znakiem marki (jeden <img> z cid:, 22 x 22, pusty alt) i napisem CONTENT AI nad powitaniem; bez znaku sam napis',
+    obrazki.length === 1 && obrazki[0].includes(`src="cid:${szablony.ZNAK_CID}"`) && /width="22" height="22"/.test(obrazki[0]) && /alt=""/.test(obrazki[0])
+    && !/src="https?:/i.test(zZnakiem.html) && zZnakiem.html.indexOf('CONTENT AI') > -1
+    && zZnakiem.html.indexOf('CONTENT AI') < zZnakiem.html.indexOf('Dzień dobry') && p.html.includes('>CONTENT AI</td>') && !/<img/i.test(p.html)
+    && zZnakiem.tekst === p.tekst);
   const zly = szablony.renderuj('potwierdzenie', 'pl', { email: '<b>x</b>"@example.com', odnosnik: 'javascript:alert(1)' }, KONF_BAZOWY);
   sprawdz('szablony: wartosci w HTML zabezpieczone, odnosnik inny niz http(s) nie trafia ani do przycisku, ani do tekstu',
     zly.html.includes('&lt;b&gt;x&lt;/b&gt;&quot;@example.com') && !zly.html.includes('<b>x</b>') && !/javascript:/i.test(zly.html + zly.tekst));
@@ -184,6 +194,12 @@ async function testyResend({ sprawdz }) {
       && list.to[0] === 'ola@example.com' && list.subject === 'Set a new password for Content AI' && list.text.includes(ODNOSNIK)
       && list.linki.includes(ODNOSNIK) && list.reply_to === 'kontakt@example.com'
       && list.tags.some((t) => t.name === 'rodzaj' && t.value === 'reset') && /^cai-/.test(wywolanie.idempotencja || ''));
+    let znakPlik = null;
+    try { znakPlik = fs.readFileSync(path.join(__dirname, 'zasoby', 'poczta-znak.png')); } catch { znakPlik = null; }
+    const znakListu = (list.zalaczniki || []).find((z) => z.content_id === 'content-ai-znak');
+    sprawdz('resend: znak marki w samej wiadomosci (Content-ID content-ai-znak, image/png, plik zasoby/poczta-znak.png), wolany z HTML',
+      Boolean(znakPlik) && (list.zalaczniki || []).length === 1 && Boolean(znakListu) && znakListu.content_type === 'image/png' && znakListu.png === true
+      && znakListu.bajty === znakPlik.length && list.html.includes('src="cid:content-ai-znak"') && /CONTENT AI/.test(list.html));
     sprawdz('resend: dziennik bez odnosnika z tokenem i bez pelnego adresu (zamaskowany adres i id wiadomosci)',
       !dziennik.includes(TOKEN) && !dziennik.includes('ola@example.com') && dziennik.includes('o***@example.com') && dziennik.includes(wynik.id));
 
@@ -217,12 +233,14 @@ async function testyResend({ sprawdz }) {
     const zalaczniki = [...DANE['zakup-potwierdzenie'].zalaczniki, { nazwa: 'pusty.txt', typ: 'text/plain', tresc: '' }, { nazwa: '../zly nazwa.txt', typ: 'zly typ', tresc: 'x' }];
     const zZal = await zDziennikiem(() => poczta.wyslij({ do: 'ola@example.com', szablon: 'zakup-potwierdzenie', dane: { ...DANE['zakup-potwierdzenie'], zalaczniki } }, konf));
     const listZal = atrapa.poczta[0] || { zalaczniki: [] };
-    const nazwyZal = listZal.zalaczniki.map((a) => a.filename);
+    // Znak marki (content_id) jedzie zawsze na koncu i nie liczy sie do zalacznikow umowy.
+    const nazwyZal = listZal.zalaczniki.filter((a) => !a.content_id).map((a) => a.filename);
     sprawdz(`resend: zalaczniki do Resend (base64, typ, nazwa bez ukosnikow), pusty pominiety (${nazwyZal.join(', ')})`,
       zZal.wynik.ok === true && nazwyZal.join(',') === 'content-ai-regulamin-pl.txt,content-ai-odstapienie-pl.txt,_zly_nazwa.txt'
       && listZal.zalaczniki[0].tekst === DANE['zakup-potwierdzenie'].zalaczniki[0].tresc && listZal.zalaczniki[1].tekst.includes('ODSTĄPIENIU')
       && listZal.zalaczniki[0].content_type === 'text/plain; charset=utf-8' && listZal.zalaczniki[2].content_type === 'application/octet-stream'
-      && !listZal.text.includes('Paragraf 1') && /zalacznikow: 3/.test(zZal.dziennik));
+      && !listZal.text.includes('Paragraf 1') && /zalacznikow: 3/.test(zZal.dziennik)
+      && listZal.zalaczniki.length === 4 && listZal.zalaczniki[3].content_id === 'content-ai-znak');
 
     // Polecenie poczta-test: wysylka probna i kontrola sledzenia domen (PR8-27).
     const wyjscie = [];

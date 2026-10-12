@@ -800,6 +800,12 @@ async function testyZakupu(sprawdz) {
     const x = await nowyKlient(t);
     await kup(t, x.cookie, {});
     const zwrotSucho = await cli('zwrot', x.login);
+    // 2026-10-12: konto takze po e-mailu (klient pisze z adresu, a login k-... trzeba bylo szukac w "lista").
+    const zwrotEmail = await cli('zwrot', x.email.toUpperCase(), '--pelny');
+    const zwrotNieznany = await cli('zwrot', 'nikt@example.com');
+    sprawdz('CLI zwrot <e-mail>: konto po adresie (wielkosc liter bez znaczenia), wyliczenie jak po loginie; nieznany adres -> kod 1',
+      zwrotEmail.status === 0 && zwrotEmail.stdout.includes(`Konto ${x.login} (${x.email})`) && /Bez zmian/.test(zwrotEmail.stdout)
+      && /tryb zwrotu: pelny/.test(zwrotEmail.stdout) && zwrotNieznany.status === 1 && /Nie ma konta nikt@example\.com/.test(zwrotNieznany.stderr));
     const zwrotTak = await cli('zwrot', x.login, '--wykonaj');
     await az(() => konto(t, x.login).subskrypcjaStan === 'wygasla');
     const odstX = t.magazyn.odstapieniaKonta(x.login)[0];
@@ -817,7 +823,9 @@ async function testyZakupu(sprawdz) {
     sprawdz('CLI platnosci-powiaz (tryb test): wiazanie, konflikt bez --zamien, przepiecie z --zamien',
       powiaz.status === 0 && /Powiązano/.test(powiaz.stdout) && konflikt.status === 1 && zamien.status === 0 && konto(t, y.login).platnikKlient === klientY2.json.id);
     const sync = await cli('platnosci-synchronizuj', a.login);
-    sprawdz('CLI platnosci-synchronizuj <login>: kod 0, stan konta z dostawcy', sync.status === 0 && /Uzgodniono kont: 1/.test(sync.stdout));
+    const syncEmail = await cli('platnosci-synchronizuj', a.email);
+    sprawdz('CLI platnosci-synchronizuj <login|e-mail>: kod 0, stan konta z dostawcy', sync.status === 0 && /Uzgodniono kont: 1/.test(sync.stdout)
+      && syncEmail.status === 0 && /Uzgodniono kont: 1/.test(syncEmail.stdout));
     const skryptStripe = (...dodatkowe) => new Promise((ok) => {
       const proc = spawn(process.execPath, [path.join(__dirname, '..', 'narzedzia', 'test_platnosci_stripe.js'), '--waluta', 'pln',
         '--cli', `${process.execPath} ${path.join(__dirname, 'uzytkownicy.js')}`, ...dodatkowe],

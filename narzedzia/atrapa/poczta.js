@@ -8,7 +8,7 @@
  *   POST /emails                 jak Resend: Authorization: Bearer <klucz> (domyslnie re_atrapa),
  *                                pola from, to, subject i text albo html, opcjonalnie attachments
  *                                [{ filename, content (base64), content_type? }]; zapisuje wiadomosc
- *                                (zalaczniki odkodowane: filename, content_type, bajty, tekst), odpowiada
+ *                                (zalaczniki odkodowane: filename, content_type, content_id, bajty, png, tekst), odpowiada
  *                                { id }. Ten sam Idempotency-Key -> ta sama odpowiedz bez drugiej wiadomosci.
  *   GET  /domains                lista domen z polami open_tracking i click_tracking (jak Resend)
  *   GET  /_atrapa/poczta?do=     zapisane wiadomosci (do 200) z wyciagnietymi odnosnikami (linki: [])
@@ -113,7 +113,9 @@ function obsluz(metoda, sciezkaPelna, naglowki = {}, bufor = Buffer.alloc(0)) {
     reply_to: cialo.reply_to || null, tags: cialo.tags || [], idempotencja: klucz || null, linki: linki(`${cialo.text || ''} ${cialo.html || ''}`),
     zalaczniki: zalaczniki.map((a) => {
       const bufor = Buffer.from(a.content, 'base64');
-      return { filename: a.filename, content_type: a.content_type || null, bajty: bufor.length, tekst: bufor.toString('utf8') };
+      // content_id: obrazek w tresci (znak marki w naglowku, poczta.js), <img src="cid:...">.
+      return { filename: a.filename, content_type: a.content_type || null, content_id: a.content_id || null, bajty: bufor.length,
+        png: bufor.subarray(0, 8).toString('hex') === '89504e470d0a1a0a', tekst: bufor.toString('utf8') };
     }),
   });
   if (poczta.length > 200) poczta.shift();

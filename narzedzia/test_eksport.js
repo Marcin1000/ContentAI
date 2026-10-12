@@ -297,7 +297,13 @@ async function scenariuszPolski(b) {
     JSON.stringify({ H2: sH2, H3: sH3, akapit: poAkapicie }));
   const tekstD = tekstDocx(dok);
   sprawdzTresc('PL DOCX', wszystko);
-  wynik('PL DOCX: naglowek "Źródła" i daty "30 wrz 2025"', /(^|\n)Źródła\n/.test(tekstD) && /\b\d{1,2} (sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru) \d{4}\b/.test(tekstD));
+  // 2026-10-12 (egzoplanety): w DOCX „12" zostawalo na koncu wiersza, a „gru 2016" przechodzilo nizej. Data z twardymi spacjami.
+  wynik('PL DOCX: naglowek "Źródła" i daty "30 wrz 2025" w jednym wierszu (twarde spacje)', /(^|\n)Źródła\n/.test(tekstD)
+    && /\b\d{1,2}\u00a0(sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru)\u00a0\d{4}\b/.test(tekstD)
+    && !/\b\d{1,2} (sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru) \d{4}\b/.test(tekstD));
+  // Nazwa serwisu na koncu tytulu zrodla, gdy powtarza domene (stoi obok niej), odpada (nazwaZrodla).
+  wynik('PL DOCX: nazwy zrodel bez nazwy serwisu powtarzajacej domene ("| Google Search Central", "- Wikipedia, wolna encyklopedia")',
+    !/\| Google Search Central|- Wikipedia, wolna encyklopedia|\| web\.dev|- Schema\.org Type/.test(tekstD));
   wynik('PL DOCX: pusta sekcja z notatka o luce pominieta', tekstD.indexOf('Sekcja bez pokrycia') < 0);
   wynik('PL DOCX: tytul w metadanych = H1', core.indexOf('<dc:title>') >= 0 && tekstDocx('<w:p><w:t>' + (core.match(/<dc:title>([^<]*)<\/dc:title>/) || [])[1] + '</w:t></w:p>').trim() === r.h1);
   const powiadomienia = await s.evaluate(() => [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent).join(' | '));
@@ -315,6 +321,8 @@ async function scenariuszPolski(b) {
   const ddTekst = JSON.stringify(dd || {});
   wynik('PL PDF: plik PDF', pdf.dane.slice(0, 5).toString() === '%PDF-' && pdf.dane.length > 2000, pdf.dane.length + ' B');
   wynik('PL PDF: naglowek zrodel (h2 "Źródła")', !!dd && (dd.content || []).some((e) => e && e.text === 'Źródła' && e.style === 'h2'));
+  wynik('PL PDF: data przy zrodle w jednym wierszu (twarde spacje)', /· \d{1,2}\u00a0(sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru)\u00a0\d{4}/.test(ddTekst)
+    && !/· \d{1,2} (sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru) \d{4}/.test(ddTekst));
   wynik('PL PDF: metadane tytul = H1, A4', !!dd && dd.info && dd.info.title === r.h1 && dd.pageSize === 'A4', dd && JSON.stringify(dd.info));
   sprawdzTresc('PL PDF (definicja)', ddTekst);
   const fitz = pdfPrzezPymupdf(pdf.sciezka);
@@ -379,10 +387,10 @@ async function scenariuszAngielski(b) {
   const dok = zip['word/document.xml'].toString('utf8');
   const style = zip['word/styles.xml'].toString('utf8');
   const tekstD = tekstDocx(dok);
-  wynik('EN DOCX: jezyk en-US, naglowek "Sources", daty po angielsku',
-    /w:lang w:val="en-US"/.test(style) && /(^|\n)Sources\n/.test(tekstD) && /\b\d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4}\b/.test(tekstD),
+  wynik('EN DOCX: jezyk en-US, naglowek "Sources", daty po angielsku w jednym wierszu (twarde spacje)',
+    /w:lang w:val="en-US"/.test(style) && /(^|\n)Sources\n/.test(tekstD) && /\b\d{1,2}\u00a0(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\u00a0\d{4}\b/.test(tekstD),
     tekstD.slice(-400));
-  wynik('EN DOCX: bez polskich etykiet i miesiecy', !/Źródła|Opis meta|znak(i|ów)?\b|\b\d{1,2} (sty|lut|kwi|maj|cze|lip|sie|wrz|paź|lis|gru) \d{4}/.test(tekstD));
+  wynik('EN DOCX: bez polskich etykiet i miesiecy', !/Źródła|Opis meta|znak(i|ów)?\b|\b\d{1,2}[ \u00a0](sty|lut|kwi|maj|cze|lip|sie|wrz|paź|lis|gru)[ \u00a0]\d{4}/.test(tekstD));
   sprawdzTresc('EN DOCX', tekstD);
   const txt = await pobierz(s, () => dlTxt(), 'en');
   const t = txt.dane.toString('utf8');

@@ -170,10 +170,10 @@ Na serwerze: sudo serwer/cli.sh <polecenie> (środowisko i konto usługi).
 
   node serwer/uzytkownicy.js lista
   node serwer/uzytkownicy.js dodaj <login> [admin|uzytkownik]
-  node serwer/uzytkownicy.js haslo <login>
-  node serwer/uzytkownicy.js plan <login> <${Object.keys(plany.PLANY).join('|')}>
-  node serwer/uzytkownicy.js rola  <login> <admin|uzytkownik>
-  node serwer/uzytkownicy.js usun  <login>
+  node serwer/uzytkownicy.js haslo <login|e-mail>
+  node serwer/uzytkownicy.js plan <login|e-mail> <${Object.keys(plany.PLANY).join('|')}>
+  node serwer/uzytkownicy.js rola  <login|e-mail> <admin|uzytkownik>
+  node serwer/uzytkownicy.js usun  <login|e-mail>
   node serwer/uzytkownicy.js prosby [ile]
   node serwer/uzytkownicy.js migruj [--sprawdz]     konta z plików JSON (R8) do bazy
   node serwer/uzytkownicy.js eksport-json           wycofanie do R8: pliki JSON z bazy
@@ -414,7 +414,8 @@ function organizacjaKonta(arg, podpolecenie, reszta) {
 
 async function main() {
   const argumenty = process.argv.slice(2);
-  const [polecenie, login, arg] = argumenty;
+  const [polecenie, loginLubEmail, arg] = argumenty;
+  let login = loginLubEmail;
   // Prosby nie potrzebuja bazy kont - dzialaja nawet przy jej awarii.
   if (polecenie === 'prosby') return wypiszProsby(Math.min(Math.max(Number(login) || 20, 1), 500));
   if (!polecenie || ['pomoc', 'help', '-h', '--help'].includes(polecenie)) return pomoc();
@@ -481,6 +482,15 @@ async function main() {
     console.error(`BŁĄD: konta są jeszcze w ${PLIK_UZYTKOWNIKOW} (format R8).\n`
       + 'Uruchom ponownie usługę (migracja przy starcie) albo, przy zatrzymanej usłudze: uzytkownicy.js migruj');
     process.exit(1);
+  }
+
+  // 2026-10-12: haslo, plan, rola i usun przyjmuja tez e-mail, jak pokaz, email, klucze i organizacja
+  // (konta samoobslugowe maja loginy k-..., a klient pisze z adresu e-mail).
+  if (['haslo', 'plan', 'rola', 'usun'].includes(polecenie) && login && String(login).includes('@')) {
+    const u = magazyn.kontoPoEmailu(login);
+    if (!u) return brakKonta(login);
+    login = u.login;
+    console.log(`Konto ${u.login} (${u.email}).`);
   }
 
   switch (polecenie) {
