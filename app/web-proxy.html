@@ -1674,8 +1674,10 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
   font-optical-sizing: auto; hanging-punctuation: first; text-wrap: pretty; }
 .article h1 { font-family: var(--f-tresc); font-size: 34px; line-height: 1.16; font-weight: 600; letter-spacing: -0.018em; color: var(--c-tekst);
   margin: 0 0 .55em; text-wrap: balance; }
+/* Srodtytuly lamane jak tekst (pretty: pelny pierwszy wiersz, bez samotnego slowa w ostatnim). Wczesniej balance
+   dzielilo dwuwierszowy H2 na dwa wiersze po polowie kolumny (360 z 669 px), co wygladalo jak blad (2026-10-12). */
 .article h2 { font-family: var(--f-tresc); font-size: 24px; line-height: 1.28; font-weight: 600; letter-spacing: -0.01em; color: var(--c-tekst);
-  margin: 1.7em 0 .5em; padding: 0; border: 0; text-wrap: balance; }
+  margin: 1.7em 0 .5em; padding: 0; border: 0; text-wrap: pretty; }
 .article h3 { font-family: var(--f-tresc); font-size: 19px; line-height: 1.35; font-weight: 600; color: var(--c-tekst); margin: 1.3em 0 .35em; }
 .article p, .article li { font-family: var(--f-tresc); font-size: var(--t-tresc); line-height: var(--l-tresc); color: var(--c-tekst); }
 .article p { margin: 0 0 .95em; }
@@ -12117,7 +12119,7 @@ function tekstEksportu(korzen) {
 // R9-D: wersja 2 pliku (pliki pwa/lib ida z immutable na rok, wiec nowa tresc = nowa nazwa) zapisuje
 // oznaczenie AI we wlasciwosciach dokumentu (docProps/custom.xml, cp:keywords) z opcje.wlasciwosciAI.
 async function pobierzDocx(element, opcje, nazwa) {
-  await wczytajSkrypt('pwa/lib/docx-natywny-2.js');
+  await wczytajSkrypt('pwa/lib/docx-natywny-3.js');
   if (!window.DocxNatywny || typeof window.DocxNatywny.zbuduj !== 'function') throw new Error('docx-natywny.js');
   const blob = await window.DocxNatywny.zbuduj(element, opcje);
   pobierzPlik(blob, nazwa);
@@ -12169,8 +12171,10 @@ function stylePdf() {
   return {
     h1: { fontSize: 22, bold: true, lineHeight: 0.81, margin: [0, 0, 0, 10] },
     lead: { fontSize: 12.5, color: DRUK.tekst2, margin: [0, 0, 0, 14] },
-    h2: { fontSize: 15, bold: true, lineHeight: 0.84, margin: [0, 18, 0, 6] },
-    h3: { fontSize: 12, bold: true, lineHeight: 0.88, margin: [0, 12, 0, 4] },
+    // 2026-10-12: po srodtytule widac bylo 2,4 pt (H2) i 1,8 pt (H3) przy 6,4 pt miedzy akapitami - tekst lepil sie
+    // do naglowka. Teraz po H2 okolo 11 pt, po H3 okolo 9 pt, nad naglowkiem bez zmian (naglowek blizej swojego tekstu).
+    h2: { fontSize: 15, bold: true, lineHeight: 0.84, margin: [0, 18, 0, 14.5] },
+    h3: { fontSize: 12, bold: true, lineHeight: 0.88, margin: [0, 12, 0, 11] },
     p: { margin: [0, 0, 0, 7] },
     lista: { margin: [0, 2, 0, 9], markerColor: DRUK.tekst3 },
     li: { margin: [0, 0, 0, 3] },

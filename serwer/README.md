@@ -1558,7 +1558,7 @@ Wykonawca C, testy `serwer/testy-odpornosc.js` (wołane z `testy-byok.js`).
 
 Content AI oznacza wyniki zgodnie z art. 50 AI Act w dwóch warstwach (projekt, rozdz. 9).
 Wykonawca D: `serwer/oznaczenia.js`, aplikacja (`app/contentai.src.html`, blok „OZNACZENIA AI”)
-i `app/pwa/lib/docx-natywny-2.js`.
+i `app/pwa/lib/docx-natywny-3.js`.
 
 **Warstwa maszynowa** (zawsze, gdy rodzaj ma `metadane: true`), kod źródła z IPTC Digital Source
 Type: `trainedAlgorithmicMedia` dla treści z AI, `compositeWithTrainedAlgorithmicMedia` dla tekstu

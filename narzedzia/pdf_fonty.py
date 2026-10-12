@@ -36,7 +36,8 @@ except ImportError:
 
 KORZEN = Path(__file__).resolve().parent.parent
 # Nazwa z data: serwer wysyla pwa/lib z immutable na rok, wiec nowa tresc = nowa nazwa pliku i nowe
-# odwolanie w aplikacji (serwer/README.md, pamiec podreczna plikow statycznych).
+# odwolanie w aplikacji (serwer/README.md, pamiec podreczna plikow statycznych). Stary vfs_fonts.js zostaje
+# w repozytorium dla kart otwartych przed aktualizacja.
 WYNIK = KORZEN / 'app' / 'pwa' / 'lib' / 'vfs_fonts-2026-10.js'
 GF = 'https://raw.githubusercontent.com/google/fonts/main/ofl/'
 # plik -> (adres, SHA-256); wersje: Literata 3.103, Schibsted Grotesk 1.100 (te same co w aplikacji)

@@ -257,6 +257,8 @@ o astrobiologii wychodziło w PDF jako pusty znak. Plik podaje też, jakie znaki
 zostawiać pustą kratkę. Znak, którego nie ma w Schibsted, ale jest w Literacie (σ w nagłówku
 tabeli), dostaje Literatę. Sprawdza to `node narzedzia/test_eksport.js` (tekst PDF przez pymupdf).
 Nowa treść pliku krojów to nowa nazwa z datą, bo serwer wysyła `pwa/lib` z `immutable` na rok.
+Stary `vfs_fonts.js` zostaje w repozytorium dla kart otwartych przed aktualizacją, tak jak
+`docx-natywny.js` i `docx-natywny-2.js` obok generatora DOCX `docx-natywny-3.js`.
 
 ---
 
