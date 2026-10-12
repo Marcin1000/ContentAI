@@ -1324,7 +1324,7 @@ async function scenariuszR9FPdf(b) {
     (function zbierz(w) { if (Array.isArray(w)) { w.forEach(zbierz); return; } if (!w || typeof w !== 'object') { if (typeof w === 'string') teksty.push(w); return; }
       ['text', 'stack', 'ul', 'ol', 'columns'].forEach((p) => { if (w[p] !== undefined) zbierz(w[p]); }); })(trescPdf(el));
     const wszystko = teksty.join('|');
-    // Znaki w krojach PDF (cmap z pwa/lib/vfs_fonts.js): ASCII, U+00A0-017E i kilkanascie znakow typografii.
+    // Znaki starego podzbioru krojow PDF: ASCII, U+00A0-017E i kilkanascie znakow typografii (emoji i tak spoza).
     const TYPOGRAFIA = [0x2013, 0x2014, 0x2018, 0x2019, 0x201A, 0x201C, 0x201D, 0x201E, 0x2022, 0x2026, 0x20AC, 0x2122, 0x2212];
     const wKroju = (c) => { const k = c.codePointAt(0); return k === 10 || (k >= 0x20 && k <= 0x7E) || (k >= 0xA0 && k <= 0x17E) || TYPOGRAFIA.includes(k); };
     return { wszystko, poza: [...wszystko].filter((c) => !wKroju(c)).map((c) => c.codePointAt(0).toString(16)) };
@@ -1824,6 +1824,253 @@ async function scenariuszOpus55(b) {
   await k.close();
 }
 
+// Runda A (2026-10-12): poprawki po artykule o astrobiologii napisanym na produkcji przez Opus 5.5.
+// Fakty: kategoria "Brak w zrodlach", powod bez srednika, stopka "Baza bez pasujacych materialow" zamiast
+// "Baza jest pusta", przycisk "Popraw zdania bez zrodla" (nowa wersja i ponowna kontrola). Oceny SEO i AIO:
+// uwagi pelnym zdaniem bez srednika. Luki: limit naglowkow-pytan, 5-7 punktow wnioskow, akapity do 80 slow.
+// Linki: bez stron spoza tematu. Jedna liczba slow w pasku i w SERP. Reguly faktow i tonu w prompcie.
+// PDF: greka i symbole w krojach, znaki spoza kroju wypadaja, sigma w naglowku tabeli z Literaty.
+async function scenariuszRundaA(b) {
+  const { k, s, bledyJs } = await nowaStrona(b, 'pl', {});
+  const zap = [];
+  s.on('request', (z) => {
+    if (z.method() !== 'POST' || !/anthropic\.com/.test(z.url())) return;
+    try { zap.push(JSON.parse(z.postData() || '{}')); } catch (e) { /* inne cialo */ }
+  });
+  const sys = (z) => String(z.system || '');
+  const usr = (z) => { const m = (z.messages || [])[0]; return m ? (typeof m.content === 'string' ? m.content : JSON.stringify(m.content)) : ''; };
+
+  // 1. Reguly w promptach i funkcje pomocnicze. Brak funkcji daje pusty wynik, reszta sprawdzen idzie dalej.
+  const f = await s.evaluate(() => {
+    const styl = typeof stylPytanLuk === 'function' ? stylPytanLuk : () => '';
+    const el = document.createElement('div');
+    // 6 zdan po 10 slow, zdanie ze skrotem "np. NASA" (granica po "np." wypadalaby najblizej polowy), 6 zdan po 10 slow.
+    const z10 = (n) => 'Zdanie numer ' + n + ' ma dokładnie dziesięć słów w tym akapicie.';
+    const tekst = [1, 2, 3, 4, 5, 6].map(z10).join(' ') + ' Agencje kosmiczne, np. NASA, publikują dane z wielu misji otwarcie.'
+      + ' ' + [7, 8, 9, 10, 11, 12].map(z10).join(' ');
+    el.innerHTML = '<h2>Nagłówek</h2><p>' + tekst + '</p><p>Krótki akapit.</p>';
+    const czesci = typeof podzielDlugieAkapity === 'function' ? podzielDlugieAkapity([...el.children], 80) : [...el.children];
+    const slowa = (t) => t.trim().split(/\s+/).filter(Boolean).length;
+    return {
+      faktySiec: typeof blokFaktow === 'function' ? blokFaktow(true) : '',
+      faktyBaza: typeof blokFaktow === 'function' ? blokFaktow(false) : '',
+      ton: typeof blokTonu === 'function' ? blokTonu('Przyjazny') : '',
+      uwagi: typeof regulaJezykaUwag === 'function' ? regulaJezykaUwag() : '',
+      styl55: styl(5, 5), styl73: styl(7, 3), styl23: styl(2, 3),
+      akapity: czesci.filter((x) => x.tagName === 'P').map((x) => ({ slow: slowa(x.textContent), koniec: x.textContent.trim().slice(-12) })),
+      razem: czesci.map((x) => x.textContent).join(' ').replace(/\s+/g, ' ').trim() === ('Nagłówek ' + tekst + ' Krótki akapit.'),
+      aeo: [typeof AEO_PYTANIA_MAX !== 'undefined' ? AEO_PYTANIA_MAX : null, typeof AEO_LISTA_MAX !== 'undefined' ? AEO_LISTA_MAX : null,
+        typeof AEO_SLOW_AKAPITU !== 'undefined' ? AEO_SLOW_AKAPITU : null],
+    };
+  });
+  wynik('Runda A: reguly faktow - "wedlug X" tylko ze zrodlem tego zdania, nazwane osoby, misje i badania tylko z przypisem, szukanie po angielsku',
+    /"According to X" \("według X"\) may name only the source that supports that very sentence/.test(f.faktySiec) && /According to X/.test(f.faktyBaza)
+      && /named person, mission, probe, study/.test(f.faktySiec) && /search in English as well/.test(f.faktySiec), f.faktySiec.slice(-300));
+  wynik('Runda A: ton przyjazny bez formulek ("Pamiętaj", "Pewnie zastanawiasz się", "Wniosek jest prosty", "Masz w ręku")',
+    /"Pamiętaj", "Pewnie zastanawiasz się", "Wniosek jest prosty", "Masz w ręku"/.test(f.ton) && /same formula to address the reader/.test(f.ton), f.ton.slice(-260));
+  wynik('Runda A: uwagi ocen pelnym zdaniem do 100 znakow, bez srednika', /pełne zdania \(najwyżej 100 znaków\)/.test(f.uwagi) && /Nie używaj średnika/.test(f.uwagi), f.uwagi);
+  wynik('Runda A: Luki - najwyzej 7 naglowkow-pytan (5 istniejacych + 5 nowych: 2 pytania, 3 stwierdzenia), limity wspolne z AEO',
+    /Phrase exactly 2 of the new H2 headings as questions/.test(f.styl55) && /the other 3 as short statements/.test(f.styl55)
+      && /Phrase every new H2 as a short statement/.test(f.styl73) && f.styl23 === 'Phrase each new H2 as a question, like most existing headings.'
+      && f.aeo.join() === '7,7,80', JSON.stringify([f.styl55, f.styl73, f.styl23, f.aeo]));
+  wynik('Runda A: akapit 130 slow dzielony na granicy zdan (do 80 slow, nie po "np."), tresc bez zmian',
+    f.akapity.length === 3 && f.akapity.every((a) => a.slow <= 80) && f.akapity.every((a) => !/np\.$/.test(a.koniec)) && f.razem, JSON.stringify(f.akapity));
+
+  // 2. Artykul z siecia przy Bazie z dokumentem spoza tematu (niezaznaczonym): Fakty porownuja z sieci.
+  await s.evaluate(() => {
+    docs.push({ name: 'Oferta firmy kurierskiej', content: 'Przesyłki kurierskie dla firm. Odbiór paczki w 24 godziny.', icon: '📄', words: 9, added: new Date(), selected: false, url: null });
+    document.getElementById('ctype').value = 'Artykuł SEO';
+  });
+  await generuj(s, 'Astrobiologia i misje kosmiczne', false);
+  await krok('Runda A artykul', czekajNaKoniec(s));
+  const zapOcenaGen = zap.filter((z) => /content SEO expert evaluating/.test(sys(z)) && /"issues"/.test(sys(z)));
+  wynik('Runda A: ocena SEO po generowaniu - uwaga do 100 znakow, pelnym zdaniem, bez srednika',
+    zapOcenaGen.length === 1 && /max 100 chars/.test(sys(zapOcenaGen[0])) && /Nie używaj średnika/.test(sys(zapOcenaGen[0])), zapOcenaGen.map((z) => sys(z).slice(0, 80)).join(' | '));
+  const faktyOtworz = async () => {
+    await s.evaluate(() => { const p = document.getElementById('fakty-panel'); if (p.style.display === 'block') p.style.display = 'none'; przelaczPanelFaktow(); });
+    await s.waitForFunction(() => getComputedStyle(document.getElementById('fakty-loading')).display === 'none'
+      && document.getElementById('fakty-wynik').textContent.trim().length > 0, null, { timeout: 30000 }).catch(() => {});
+  };
+  await faktyOtworz();
+  const fk = await s.evaluate(() => {
+    const w = document.getElementById('fakty-wynik');
+    const brak = w.querySelector('.fakty-uwaga[data-rodzaj="brak"]');
+    const btn = document.getElementById('fakty-popraw-btn');
+    const doPoprawy = (faktyWynik || []).filter((u) => ['liczba', 'brak', 'zakres', 'sprzecznosc', 'konflikt'].indexOf(u.rodzaj) !== -1);
+    return {
+      stan: faktyStan, tekst: w.innerText, stopka: (w.querySelector('.fakty-wzgledem-sieci') || {}).textContent || '',
+      wzorStopki: _t('fakty-wzgledem-sieci-baza'), brakEtykieta: brak ? brak.firstElementChild.textContent.trim() : '',
+      brakIkona: brak ? !!brak.querySelector('use[href="#i-scan-search"]') : false,
+      przycisk: btn ? btn.textContent.trim() : '', ileDoPoprawy: doPoprawy.length,
+      cytaty: doPoprawy.map((u) => String(u.cytat || '').replace(/\s+/g, ' ').trim()),
+      artykul: (document.getElementById('article').innerText || '').replace(/\s+/g, ' '), wersji: versions.length,
+    };
+  });
+  const zapFakty = zap.filter((z) => /You are a fact checker/.test(sys(z)));
+  wynik('Runda A: Fakty - kategoria "Brak w źródłach" z ikona, w prompcie kategoria "brak" i zasada bez srednika',
+    fk.brakEtykieta === 'Brak w źródłach' && fk.brakIkona && zapFakty.length >= 1 && /"brak"/.test(sys(zapFakty[0])) && /Never use a semicolon/.test(sys(zapFakty[0])),
+    JSON.stringify({ etykieta: fk.brakEtykieta, ikona: fk.brakIkona, zapytan: zapFakty.length }));
+  wynik('Runda A: Fakty - wyjasnienia bez srednika (model napisal "a; b")', fk.stan === 'gotowe' && fk.tekst.indexOf(';') === -1, fk.tekst.slice(0, 300));
+  wynik('Runda A: Fakty - Baza z dokumentami bez pasujacych materialow: stopka mowi to wprost, nie "Baza jest pusta"',
+    fk.stopka === fk.wzorStopki && !/pusta/.test(fk.stopka), fk.stopka);
+  wynik('Runda A: Fakty - przycisk "Popraw zdania bez źródła (N)" z liczba uwag do poprawy',
+    fk.ileDoPoprawy >= 2 && fk.przycisk === 'Popraw zdania bez źródła (' + fk.ileDoPoprawy + ')', JSON.stringify({ przycisk: fk.przycisk, n: fk.ileDoPoprawy }));
+
+  const przedPoprawa = zap.length;
+  await s.evaluate(() => { const btn = document.getElementById('fakty-popraw-btn'); if (btn) btn.click(); });
+  await krok('Runda A poprawa zdan', s.waitForFunction(() => versions.some((v) => v.label.indexOf(_t('ver-fakty')) !== -1)
+    && getComputedStyle(document.getElementById('fakty-loading')).display === 'none' && faktyStan === 'gotowe'
+    && document.getElementById('fakty-wynik').textContent.trim().length > 0, null, { timeout: 30000 }));
+  const po = await s.evaluate(() => {
+    const wpis = typeof wpisHistorii === 'function' ? wpisHistorii(biezacyHist) : null;
+    return { artykul: (document.getElementById('article').innerText || '').replace(/\s+/g, ' '), wersje: versions.map((v) => v.label),
+      zrodla: document.querySelectorAll('#article .zrodla-box li').length, historia: !!(wpis && wpis.html === htmlDoZapisu(document.getElementById('article'))) };
+  });
+  const zapPop = zap.slice(przedPoprawa).filter((z) => /^You are a fact-checking editor/.test(sys(z)));
+  const zapFaktyPo = zap.slice(przedPoprawa).filter((z) => /You are a fact checker/.test(sys(z)));
+  const usuniete = fk.cytaty.filter((c) => fk.artykul.indexOf(c) !== -1 && po.artykul.indexOf(c) === -1);
+  wynik('Runda A: Popraw zdania - jedno zapytanie redaktora z lista uwag, bez nowych faktow (blokPrzepisywania), bez listy zrodel w tresci',
+    zapPop.length === 1 && /YOU ARE REWRITING, NOT RESEARCHING/.test(sys(zapPop[0])) && /^FINDINGS \(fragments quoted from the article\):\n1\. "/.test(usr(zapPop[0]))
+      && /ARTICLE \(HTML\):/.test(usr(zapPop[0])) && !/zrodla-box/.test(usr(zapPop[0])), JSON.stringify({ zapytan: zapPop.length, usr: zapPop.length ? usr(zapPop[0]).slice(0, 160) : '' }));
+  wynik('Runda A: Popraw zdania - nowa wersja "Poprawione fakty", zdania z uwag znikaja, lista zrodel zostaje, wpis Historii zapisany, kontrola od nowa',
+    po.wersje.some((l) => /Poprawione fakty/.test(l)) && usuniete.length >= 1 && po.zrodla > 0 && po.historia && zapFaktyPo.length === 1,
+    JSON.stringify({ wersje: po.wersje, usuniete: usuniete.length, cytatow: fk.cytaty.length, zrodla: po.zrodla, historia: po.historia, kontroli: zapFaktyPo.length }));
+
+  // 3. Oceny SEO i AIO: prompt panelu i siatka bezpieczenstwa na srednik przy wyswietlaniu.
+  const przedSeo = zap.length;
+  await s.evaluate(() => { seoOpen = false; toggleSeoPanel(true); });
+  await krok('Runda A ocena SEO', s.waitForFunction(() => !!document.querySelector('#seo-content .seo-items'), null, { timeout: 15000 }));
+  const zapSeo = zap.slice(przedSeo).filter((z) => /content SEO expert evaluating/.test(sys(z)) && /"items"/.test(sys(z)));
+  const oceny = await s.evaluate(() => {
+    showSeoResult({ score: 70, items: [{ ok: false, text: 'Brak liczby w 1. akapicie; wnioski z datami są' }] });
+    const seo = document.querySelector('#seo-content .seo-item-text').textContent;
+    showAioResult({ score: 60, items: [{ ok: true, text: 'Definicje są; brakuje liczby w akapicie' }] });
+    const aio = document.querySelector('#aio-content .seo-item-text').textContent;
+    renderGapResult({ score: 50, msg: 'Artykuł pokrywa część tematów; brakuje kilku wątków.', missing: [], present: [] });
+    return { seo, aio, luki: document.getElementById('gap-msg').textContent };
+  });
+  wynik('Runda A: panel SEO - prompt z uwagami do 100 znakow pelnym zdaniem bez srednika',
+    zapSeo.length === 1 && /max 100 chars/.test(sys(zapSeo[0])) && /Nie używaj średnika/.test(sys(zapSeo[0])), zapSeo.map((z) => sys(z).slice(-200)).join(' | '));
+  wynik('Runda A: uwagi SEO, AIO i komunikat Luk bez srednika ("a; b" -> "a. B")',
+    oceny.seo === 'Brak liczby w 1. akapicie. Wnioski z datami są' && oceny.aio === 'Definicje są. Brakuje liczby w akapicie'
+      && oceny.luki === 'Artykuł pokrywa część tematów. Brakuje kilku wątków.', JSON.stringify(oceny));
+
+  // 4. Jedna liczba slow: tabela i akapity bez odstepow miedzy znacznikami (jak w HTML z modelu).
+  const liczby = await s.evaluate(() => {
+    const art = document.getElementById('article');
+    art.innerHTML = '<h1>Europa Clipper</h1><p>Sonda leci do Jowisza.</p><p>Przelot obok Ziemi w grudniu.</p><h2>Etapy</h2>'
+      + '<table><tr><th>Termin</th><th>Etap misji</th></tr><tr><td>2026</td><td>Asysta Ziemi</td></tr></table>';
+    showArticleStats(art.innerHTML);
+    serpData = { topics: ['etapy misji', 'cel misji'], phrases: ['europa clipper'], avgWords: 900, avgH2: 6, context: '' };
+    renderSerpPanel(false);
+    const wiersz = document.querySelector('#serp-stats .serp-por-wiersz');
+    const liczba = (t) => Number(String(t || '').replace(/\D/g, ''));
+    return { serp: wiersz ? liczba(wiersz.querySelectorAll('strong')[1].textContent) : -1, pasek: liczba(document.getElementById('stat-words').textContent),
+      wspolna: typeof liczbaSlowArtykulu === 'function' ? liczbaSlowArtykulu(art) : -1 };
+  });
+  wynik('Runda A: liczba slow w SERP taka sama jak w pasku statystyk (tabela bez odstepow)', liczby.serp === liczby.pasek && liczby.pasek === liczby.wspolna && liczby.pasek === 18,
+    JSON.stringify(liczby));
+
+  // 5. Luki: artykul z 5 naglowkami-pytaniami i 5 nowych tematow. Prompt: 2 pytania, 5-7 punktow, akapity
+  // ponizej 70 slow. Atrapa daje akapit ponad 80 slow - aplikacja dzieli go na granicy zdan.
+  const przedLuk = zap.length;
+  await s.evaluate(() => {
+    const art = document.getElementById('article');
+    const sekcja = (h) => '<h2>' + h + '</h2><p>Akapit sekcji o astrobiologii, z jednym zdaniem i kilkoma faktami ze źródeł.</p>';
+    art.innerHTML = '<h1>Astrobiologia: jak szukamy życia poza Ziemią</h1><p>Astrobiologia bada, czy życie istnieje poza Ziemią. W 2026 roku trwa kilka misji.</p>'
+      + ['Czym zajmuje się astrobiologia?', 'Dlaczego ekstremofile są ważne?', 'Co pokazały misje na Marsa?', 'Czy biosygnatury dowodzą życia?', 'Na co czekać w 2026 roku?'].map(sekcja).join('')
+      + '<h2>Kluczowe wnioski</h2><ul><li>Pierwszy wniosek z 2026 roku.</li><li>Drugi wniosek.</li><li>Trzeci wniosek.</li><li>Czwarty wniosek.</li><li>Piąty wniosek.</li></ul>'
+      + '<div class="meta-box"><div class="meta-label">Meta description (SEO)</div><p>Opis meta artykułu o astrobiologii.</p></div>';
+    showArticleStats(art.innerHTML);
+    kontekstArt.temat = 'Astrobiologia [atrapa:dlugi-akapit@luki-sekcje]';
+    document.getElementById('use-web').checked = true;
+    serpData = { topics: ['historia astrobiologii', 'panspermia', 'strefa zamieszkiwalna', 'badania w Polsce', 'pochodzenie życia'], phrases: [], avgWords: 900, avgH2: 6, context: '' };
+    document.getElementById('gap-missing').innerHTML = _buildMissingHtml(serpData.topics);
+    window.__rundaAWersji = versions.length;
+    improveFromGaps();
+  });
+  await krok('Runda A poprawa z Luk', s.waitForFunction(() => versions.length > window.__rundaAWersji && !document.getElementById('gap-improve-btn').disabled, null, { timeout: 30000 }));
+  const luki = await s.evaluate(() => {
+    const art = document.getElementById('article');
+    const akapity = [...art.querySelectorAll('p')].filter((p) => !p.closest('.meta-box')).map((p) => p.textContent.trim().split(/\s+/).length);
+    return { akapity, np: [...art.querySelectorAll('p')].some((p) => /np\. NASA, publikują/.test(p.textContent)) };
+  });
+  const zapLuk = zap.slice(przedLuk).filter((z) => /Write ONLY the new HTML sections requested/.test(sys(z)));
+  const uL = zapLuk.length ? usr(zapLuk[0]) : '';
+  wynik('Runda A: Luki - prompt z 2 nowymi pytaniami (limit 7), 5-7 punktami wnioskow i akapitami ponizej 70 slow',
+    zapLuk.length === 1 && /Phrase exactly 2 of the new H2 headings as questions/.test(uL) && /with 5 to 7 bullet points/.test(uL) && /Keep every paragraph under 70 words/.test(uL),
+    uL.slice(-700));
+  wynik('Runda A: Luki - zaden akapit po poprawie nie ma ponad 80 slow (dlugi akapit z modelu podzielony, "np. NASA" w calosci)',
+    luki.akapity.length > 8 && Math.max(...luki.akapity) <= 80 && luki.np, JSON.stringify(luki));
+
+  // 6. Linki: strona spoza tematu nie trafia na liste, odmiana slowa pasuje, bez dopasowan komunikat.
+  const linki = await s.evaluate(() => {
+    const art = document.getElementById('article');
+    art.innerHTML = '<h1>Astrobiologia</h1><p>Astrobiologii poświęcono wiele badań. Łazik Perseverance pobrał próbkę na Marsie.</p>'
+      + '<p>Sonda Europa Clipper agencji NASA leci do Jowisza.</p>';
+    const dhl = { name: '🔗 DHL BInzes - przesyłki kurierskie dla firm', url: 'https://www.dhl.com/pl-pl/biznes/przesylki-kurierskie', content: 'Wysyłaj paczki kurierem DHL. Przesyłki ekspresowe dla firm w całej Polsce.', icon: '🔗', words: 11, added: new Date(), selected: false };
+    const nasa = { name: '🔗 Europa Clipper - NASA Science', url: 'https://science.nasa.gov/mission/europa-clipper/', content: 'Europa Clipper is a NASA mission to Jupiter.', icon: '🔗', words: 8, added: new Date(), selected: false };
+    const astro = { name: '🔗 Astrobiologia w Polsce', url: 'https://astrobio.pl/', content: '', icon: '🔗', words: 0, added: new Date(), selected: false };
+    const zapas = docs.slice();
+    docs.length = 0; docs.push(dhl, nasa, astro);
+    buildLinkSuggestions();
+    const nazwy = [...document.querySelectorAll('#links-list .link-sug-text strong')].map((x) => x.textContent);
+    docs.length = 0; docs.push(dhl);
+    buildLinkSuggestions();
+    const sam = document.getElementById('links-list').textContent.trim();
+    docs.length = 0; zapas.forEach((d) => docs.push(d));
+    return { nazwy, sam, wzor: _t('links-brak-dopasowan') };
+  });
+  wynik('Runda A: Linki - strona firmy kurierskiej nie pasuje do artykulu o astrobiologii, strony NASA i astrobiologii tak (odmiana)',
+    linki.nazwy.length === 2 && linki.nazwy.indexOf('Europa Clipper - NASA Science') !== -1 && linki.nazwy.indexOf('Astrobiologia w Polsce') !== -1
+      && !linki.nazwy.some((n) => /DHL/.test(n)), JSON.stringify(linki.nazwy));
+  wynik('Runda A: Linki - bez pasujacych stron komunikat zamiast calej Bazy', linki.sam === linki.wzor && !/DHL/.test(linki.sam), linki.sam);
+
+  // 7. PDF: greka i symbole w krojach, znaki spoza krojow wypadaja, sigma w naglowku tabeli (Schibsted) z Literaty.
+  await s.evaluate(() => new Promise((ok) => zaladujPdfMake(ok)));
+  const pdf = await s.evaluate(() => {
+    const el = document.createElement('div');
+    el.innerHTML = '<h2>Sygnał 3σ z K2-18b</h2><p>Istotność 3σ, rozmiar 5 μm, próg ≥ 2 i ≤ 9, zmiana → wynik, 3‰. Кириллица Ж и 中文 znikają.</p>'
+      + '<table><tr><th>Próg σ</th><th>Wartość</th></tr><tr><td>3σ</td><td>≈ 0,3%</td></tr></table>';
+    const dd = dokumentPdf(trescPdf(el), 'Sygnał 3σ', 'opis', 'pl', wlasciwosciAI());
+    const opisy = (window.pdfMake && window.pdfMake.znakiKrojow) || {};
+    const pliki = { Literata: 'Literata-Regular.ttf', Schibsted: 'SchibstedGrotesk-SemiBold.ttf' };
+    const zakres = (kroj) => { const z = opisy[pliki[kroj]]; if (!z) return null; const s = new Set();
+      z.split(',').forEach((r) => { const [a, c] = r.split('-').map((x) => parseInt(x, 16)); for (let i = a; i <= (c || a); i++) s.add(i); }); return s; };
+    const poza = [], teksty = [], literataWTh = [];
+    const idz = (w, kroj, wTh) => {
+      if (typeof w === 'string') {
+        teksty.push(w);
+        const z = zakres(kroj);
+        for (const c of w) { const k = c.codePointAt(0); if (k !== 10 && (!z || !z.has(k))) poza.push(kroj + ':' + k.toString(16)); }
+        return;
+      }
+      if (Array.isArray(w)) { w.forEach((x) => idz(x, kroj, wTh)); return; }
+      if (!w || typeof w !== 'object') return;
+      let kr = kroj;
+      [].concat(w.style || []).forEach((st) => { if (dd.styles[st] && dd.styles[st].font) kr = dd.styles[st].font; });
+      if (w.font) kr = w.font;
+      const th = wTh || [].concat(w.style || []).indexOf('th') !== -1;
+      if (th && w.font === 'Literata' && typeof w.text === 'string') literataWTh.push(w.text);
+      if (w.text !== undefined && typeof w.text !== 'number') idz(w.text, kr, th);
+      ['stack', 'ul', 'ol', 'columns'].forEach((p) => { if (w[p] !== undefined) idz(w[p], kr, th); });
+      if (w.table && w.table.body) idz(w.table.body, kr, th);
+    };
+    idz(dd.content, (dd.defaultStyle && dd.defaultStyle.font) || 'Literata', false);
+    const wszystko = teksty.join('|');
+    return { poza: poza.slice(0, 12), opisy: Object.keys(opisy).length, literataWTh,
+      greka: /3σ/.test(wszystko) && /5 μm/.test(wszystko) && /≥ 2 i ≤ 9/.test(wszystko) && /→/.test(wszystko) && /3‰/.test(wszystko) && /≈ 0,3%/.test(wszystko),
+      obce: /[Ж中и]/.test(wszystko) };
+  });
+  wynik('Runda A: PDF - sigma, mikro, nierownosci, strzalka i promil zostaja, cyrylica i chinskie znaki wypadaja (zaden znak poza krojem)',
+    pdf.opisy >= 2 && pdf.greka && !pdf.obce && !pdf.poza.length, JSON.stringify(pdf));
+  wynik('Runda A: PDF - sigma w naglowku tabeli (Schibsted) jako odcinek Literaty', pdf.literataWTh.some((t) => /σ/.test(t)), JSON.stringify(pdf.literataWTh));
+
+  wynik('Runda A: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'runda-a');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
@@ -1835,7 +2082,7 @@ const SCENARIUSZE = [
   ['r9f-luki-darmowy', scenariuszR9FLukiDarmowy], ['r9f-bez-sieci', scenariuszR9FBezSieci],
   ['r9f-prompt-bazy', scenariuszR9FPromptBazy], ['r9f-pomocnicy', scenariuszR9FPomocnicy],
   ['r9f-narracja', scenariuszR9FNarracja], ['r9f-sesja', scenariuszR9FSesja],
-  ['r9f-pokrycie', scenariuszR9FPokrycie], ['opus55', scenariuszOpus55],
+  ['r9f-pokrycie', scenariuszR9FPokrycie], ['opus55', scenariuszOpus55], ['runda-a', scenariuszRundaA],
 ];
 (async () => {
   let b;

@@ -5262,6 +5262,14 @@ var I18N = {
     'fakty-rodzaj-sprzecznosc':'Sprzeczność wewnątrz artykułu',
     'fakty-rodzaj-konflikt':'Polecenie konkurencji',
     'fakty-rodzaj-strona':'Sprawdź na stronie',
+    'fakty-rodzaj-brak':'Brak w źródłach',
+    'fakty-powod-brak':'Żadne źródło nie podaje tej informacji.',
+    'fakty-popraw':'Popraw zdania bez źródła ({n})',
+    'fakty-popraw-opis':'Model usunie albo złagodzi zdania z listy, poza „Sprawdź na stronie”. Nie dopisze nowych faktów. Wynik to nowa wersja artykułu.',
+    'fakty-poprawiam':'Poprawiam zdania…',
+    'fakty-poprawione':'Poprawione zdania: {n}. Kontrola faktów sprawdza artykuł od nowa.',
+    'fakty-poprawa-blad':'Nie udało się poprawić zdań.',
+    'fakty-wzgledem-sieci-baza':'Sprawdzono względem stron z sieci: w Bazie wiedzy nie ma materiałów do tego tematu, więc artykuł porównano z fragmentami stron, które cytował przy pisaniu. Zdania o Twojej firmie nie mają tu potwierdzenia.',
     'fakty-linki-czysto':'Odnośniki bez zastrzeżeń.',
     'zrodla-title':'Źródła z sieci',
     'zrodla-pokaz-wszystkie':'Pokaż wszystkie ({n})','zrodla-zwin':'Zwiń',
@@ -5457,6 +5465,7 @@ var I18N = {
     'msg-copied':'Skopiowano','msg-copied-2':'Skopiowano',
     // Empty states
     'msg-no-urls':'Brak adresów URL w bazie wiedzy. Dodaj linki do stron firmy, aby zobaczyć sugestie.',
+    'links-brak-dopasowan':'Żadna strona z Bazy wiedzy nie pasuje do tego artykułu. Linki pojawią się, gdy artykuł będzie mówił o tym samym co strona.',
     'msg-no-art-analyze':'Brak artykułu do analizy.',
     'msg-no-change':'Wynik nie zmienił się. Wybrane tematy mogą być niezgodne z charakterem artykułu lub wymagają głębszego omówienia. Pomiń je lub spróbuj ponownie z innymi.',
     // Errors
@@ -5628,7 +5637,7 @@ var I18N = {
     'url-label':'Adres URL',
     'bv-modal-full-title':'Głos marki (brand voice)',
     'bv-modal-desc-full':'Wklej 2-5 istniejących artykułów firmowych (lub innych tekstów). Aplikacja wyekstrahuje profil stylu i zastosuje go do wszystkich przyszłych generowań.',
-    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','nowy-artykul':'Nowy artykuł','nowy-artykul-title':'Wyczyść temat, słowa kluczowe i wytyczne, żeby zacząć kolejny artykuł. Poprzedni zostaje w Historii.','nowy-artykul-gotowe':'Możesz pisać nowy artykuł. Poprzedni jest w Historii.','nowy-brief-wyczyszczony':'Brief wyczyszczony.','nowy-cofnij':'Cofnij','ustawienia-domyslne':'Przywróć ustawienia domyślne','ustawienia-domyslne-gotowe':'Przywrócono ustawienia domyślne: typ, długość, ton, język, źródła i opcje zaawansowane.','msg-dopracuj-bez-zmian':'Tekst ma już {n}/100, samokorekta nie znalazła nic do poprawy. Zostaje bez zmian.','ver-serp':'Dopisane tematy','ver-wybor':'Wersja artykułu',
+    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','nowy-artykul':'Nowy artykuł','nowy-artykul-title':'Wyczyść temat, słowa kluczowe i wytyczne, żeby zacząć kolejny artykuł. Poprzedni zostaje w Historii.','nowy-artykul-gotowe':'Możesz pisać nowy artykuł. Poprzedni jest w Historii.','nowy-brief-wyczyszczony':'Brief wyczyszczony.','nowy-cofnij':'Cofnij','ustawienia-domyslne':'Przywróć ustawienia domyślne','ustawienia-domyslne-gotowe':'Przywrócono ustawienia domyślne: typ, długość, ton, język, źródła i opcje zaawansowane.','msg-dopracuj-bez-zmian':'Tekst ma już {n}/100, samokorekta nie znalazła nic do poprawy. Zostaje bez zmian.','ver-serp':'Dopisane tematy','ver-fakty':'Poprawione fakty','ver-wybor':'Wersja artykułu',
     'spin-sub-model':'model przetwarza temat i bazę wiedzy','spin-sub-hybrid2':'optymalizuję jednocześnie pod SEO, AIO i czytelnika',
     'link-suggest-prefix':'Rozważ link do','link-suggest-at':'przy słowach:',
     'gap-still-missing':'Nadal brakujące tematy','gap-szukam':'Szukam źródeł i piszę sekcje…','gap-bez-zrodel':'Nowe sekcje potrzebują źródeł. Baza wiedzy jest pusta, a wyszukiwanie w sieci wyłączone, więc tych tematów nie da się opisać bez zmyślania.','gap-wlacz-siec':'Włącz wyszukiwanie w sieci i dopisz','gap-konkurencja':'konkurencja','gap-konkurencja-title':'Temat o marce lub produkcie konkurencji. Domyślnie odznaczony: w tekście marki to Twoja decyzja.','gap-po-poprawie':'Wynik z dopisanych sekcji. Odśwież, jeśli model ma ocenić cały tekst od nowa.','gap-inny-artykul':'Dopisane sekcje dotyczyły poprzedniego artykułu, więc nie zostały wstawione.','gap-pusto':'Model nie zwrócił nowych sekcji. Spróbuj ponownie.','gap-dopisane':'Dopisano sekcje: {n}. Wynik w zakładce Luki.','gap-serp-blad':'Analiza SERP nie powiodła się przy generowaniu, więc nie ma z czym porównać tekstu. Wygeneruj artykuł ponownie z włączoną analizą SERP.','serp-blad-toast':'Analiza SERP nie powiodła się. Artykuł powstaje bez niej.','gap-pkt':'pkt','gap-bez-zrodel-baza':'Tematy bez pokrycia w zaznaczonych dokumentach: {n}. Nie dodano dla nich pustych sekcji. Włącz wyszukiwanie w sieci albo dodaj materiał do bazy wiedzy.','gap-bez-zrodel-siec':'Tematy bez źródła: {n}. Nie dodano dla nich pustych sekcji, zostają na liście brakujących. Dodaj materiał do bazy wiedzy i spróbuj ponownie.',
@@ -5986,6 +5995,14 @@ var I18N = {
     'fakty-rodzaj-sprzecznosc':'Contradiction inside the article',
     'fakty-rodzaj-konflikt':'Recommends a competitor',
     'fakty-rodzaj-strona':'Check on the page',
+    'fakty-rodzaj-brak':'Not in the sources',
+    'fakty-powod-brak':'No source states this.',
+    'fakty-popraw':'Fix unsupported sentences ({n})',
+    'fakty-popraw-opis':'The model removes or softens the listed sentences, except “Check on the page”. It adds no new facts. The result is a new version of the article.',
+    'fakty-poprawiam':'Fixing sentences…',
+    'fakty-poprawione':'Sentences fixed: {n}. The fact check runs again.',
+    'fakty-poprawa-blad':'Could not fix the sentences.',
+    'fakty-wzgledem-sieci-baza':'Checked against web pages: the knowledge base has nothing on this topic, so the article was compared with the passages it cited while writing. Statements about your company have no confirmation here.',
     'fakty-linki-czysto':'No findings on links.',
     'zrodla-title':'Sources from the web',
     'zrodla-pokaz-wszystkie':'Show all ({n})','zrodla-zwin':'Show less',
@@ -6181,6 +6198,7 @@ var I18N = {
     'msg-copied':'Copied','msg-copied-2':'Copied',
     // Empty states
     'msg-no-urls':'No URLs in the knowledge base. Add links to company pages to see suggestions.',
+    'links-brak-dopasowan':'No page in the knowledge base matches this article. Suggestions appear when the article covers the same subject as a page.',
     'msg-no-art-analyze':'No article to analyze.',
     'msg-no-change':'Score did not change. Selected topics may be incompatible with the article or require deeper coverage. Skip them or try again with different ones.',
     // Errors
@@ -6400,7 +6418,7 @@ var I18N = {
     'url-label':'URL',
     'bv-modal-full-title':'Brand voice',
     'bv-modal-desc-full':'Paste 2-5 existing company articles (or other texts). The app will extract the style profile and apply it to all future generations.',
-    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','nowy-artykul':'New article','nowy-artykul-title':'Clear the topic, keywords and guidelines to start the next article. The previous one stays in History.','nowy-artykul-gotowe':'Ready for a new article. The previous one is in History.','nowy-brief-wyczyszczony':'Brief cleared.','nowy-cofnij':'Undo','ustawienia-domyslne':'Restore default settings','ustawienia-domyslne-gotowe':'Default settings restored: type, length, tone, language, sources and advanced options.','msg-dopracuj-bez-zmian':'The text already scores {n}/100, self-review found nothing to improve. It stays as it is.','ver-serp':'Added topics','ver-wybor':'Article version',
+    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','nowy-artykul':'New article','nowy-artykul-title':'Clear the topic, keywords and guidelines to start the next article. The previous one stays in History.','nowy-artykul-gotowe':'Ready for a new article. The previous one is in History.','nowy-brief-wyczyszczony':'Brief cleared.','nowy-cofnij':'Undo','ustawienia-domyslne':'Restore default settings','ustawienia-domyslne-gotowe':'Default settings restored: type, length, tone, language, sources and advanced options.','msg-dopracuj-bez-zmian':'The text already scores {n}/100, self-review found nothing to improve. It stays as it is.','ver-serp':'Added topics','ver-fakty':'Fact fixes','ver-wybor':'Article version',
     'spin-sub-model':'model processes topic and knowledge base','spin-sub-hybrid2':'optimizing for SEO, AIO and readability simultaneously',
     'link-suggest-prefix':'Consider linking','link-suggest-at':'at words:',
     'gap-still-missing':'Still missing topics','gap-szukam':'Finding sources and writing sections…','gap-bez-zrodel':'New sections need sources. The knowledge base is empty and web search is off, so these topics cannot be covered without inventing facts.','gap-wlacz-siec':'Turn on web search and add','gap-konkurencja':'competitor','gap-konkurencja-title':'A topic about a competing brand or product. Unchecked by default: in brand content this is your call.','gap-po-poprawie':'Score from the added sections. Refresh if the model should rate the whole text again.','gap-inny-artykul':'The added sections were for the previous article, so they were not inserted.','gap-pusto':'The model returned no new sections. Please try again.','gap-dopisane':'Sections added: {n}. See the Gaps tab for the result.','gap-serp-blad':'The SERP analysis failed during generation, so there is nothing to compare the text with. Generate the article again with SERP analysis on.','serp-blad-toast':'The SERP analysis failed. The article is being written without it.','gap-pkt':'pts','gap-bez-zrodel-baza':'Topics not covered by the selected documents: {n}. No empty sections were added. Turn on web search or add material to the knowledge base.','gap-bez-zrodel-siec':'Topics without a source: {n}. No empty sections were added. They stay on the missing list. Add material to the knowledge base and try again.',
@@ -7750,7 +7768,12 @@ function blokFaktow(uzupelnia) {
     + '- If a section would need figures you do not have, write it qualitatively or leave '
     + 'it out. Do not fill a table, a list or a comparison with placeholder values.\n'
     + '- Attribute what you can: when a source names its own data, say where the figure '
-    + 'comes from. Never attribute a figure to a source that does not contain it.';
+    + 'comes from. Never attribute a figure to a source that does not contain it.\n'
+    // Runda A (2026-10-12): „Według Zintegrowanej Platformy Edukacyjnej (...) Oparin 1924" - zdanie
+    // przypisane stronie, ktora tego nie podawala, z nazwiskiem i data z pamieci modelu.
+    + '- "According to X" ("według X") may name only the source that supports that very sentence. '
+    + 'Never attribute a claim, a quotation or a finding to a page, institution or author that '
+    + 'does not state it.';
 
   if (!uzupelnia) {
     return wspolne
@@ -7773,6 +7796,14 @@ function blokFaktow(uzupelnia) {
     + 'may NOT supply a figure, price, rate, percentage or date; the name of an '
     + 'institution, index, register, bulletin or publication; a methodology; a legal, '
     + 'tax or customs rule; or anything about the brand that owns the knowledge base.\n'
+    // Runda A: nazwiska, misje i badania (Tichow 1953, Oparin 1924) szly z pamieci, bez przypisu,
+    // a kontrola faktow nie miala ich z czym porownac.
+    + '- A named person, mission, probe, study, experiment, discovery, award or historical event '
+    + 'goes in only when the knowledge base or a search result you cite in that sentence names it. '
+    + 'Famous does not mean sourced: if you cannot cite it, describe the idea without the name and the year.\n'
+    + '- Many primary sources publish only in English (space agencies, journals, international '
+    + 'bodies, standards). For such a topic search in English as well as in the article language, '
+    + 'and still write the article in the requested language.\n'
     + '- Three outcomes, in this order: the knowledge base has it, or a search finds it, '
     + 'or the article does not claim it. There is no fourth.\n'
     + '- Anything about the brand itself stays knowledge-base only, even when a search '
@@ -7930,7 +7961,13 @@ var OPISY_TONU = {
   'Przyjazny': 'FRIENDLY. Speak to one person, in the second person singular. Short '
     + 'sentences, 8 to 14 words, everyday vocabulary instead of official wording. '
     + 'You may open a section with a question the reader would actually ask. Warm but '
-    + 'never chatty: no filler, no jokes, no exclamation marks.',
+    + 'never chatty: no filler, no jokes, no exclamation marks. '
+    // Runda A (2026-10-12): artykul o astrobiologii mial „Pewnie zastanawiasz się", „Pamiętaj",
+    // „Wniosek dla Ciebie jest prosty" i „Masz w ręku" - ton z formulek, nie z tresci.
+    + 'Warmth comes from plain words and useful detail, not from stock phrases: never write '
+    + '"Pamiętaj", "Pewnie zastanawiasz się", "Wniosek jest prosty", "Masz w ręku", "Warto wiedzieć", '
+    + '"Co ciekawe" or their English equivalents ("Remember", "You may be wondering", '
+    + '"The takeaway is simple").',
   'Neutralny': 'NEUTRAL. Impersonal and factual, close to reference documentation. '
     + 'Avoid the second person; describe the thing, not the reader. Sentences 10 to 18 '
     + 'words. No evaluative adjectives ("najlepszy", "wygodny"), no persuasion. '
@@ -7954,7 +7991,8 @@ function blokTonu(ton) {
   if (!opis) return '';
   return '\n\nTONE - this changes the actual wording, not just the label:\n' + opis
     + '\nThe tone must be recognisable from any single paragraph read on its own. '
-    + 'If the same paragraph would fit another tone unchanged, rewrite it.';
+    + 'If the same paragraph would fit another tone unchanged, rewrite it. '
+    + 'Never use the same formula to address the reader or to open a sentence twice in one text.';
 }
 
 // FRAZY KLUCZOWE. Dwa przypadki z artykulu testowego pokazaly, ze fraza
@@ -8742,7 +8780,7 @@ async function doPremiumCorrection(originalHtml, articleText, topic, kwText, cty
   document.getElementById('spin-label').textContent = _t('spin-premium-improving').replace('{n}', evalResult.score);
   document.getElementById('spin-sub').textContent = _t('msg-spin-premium-fix');
 
-  const issuesList = evalResult.issues.join('; ');
+  const issuesList = evalResult.issues.join('; '); // srednik-dla-modelu: lista uwag w prompcie
   const tmp2 = document.createElement('div'); tmp2.innerHTML = originalHtml;
   const origWords = (tmp2.innerText||'').split(/\s+/).filter(Boolean).length;
   const premiumMaxTokens = Math.min(8000, Math.max(getMaxTokens(), Math.ceil(origWords * 2.5) + 1500));
@@ -9206,7 +9244,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
           body: JSON.stringify({ model: MODEL_TRESCI, output_config: WYSILEK_OCENY, max_tokens: zRezerwaOceny(400),
-            system: 'You are a content SEO expert evaluating AI-generated content from a company knowledge base. Evaluate ONLY content-level SEO. Respond ONLY with valid JSON no markdown: {"score":0-100,"issues":["short issue in ' + (currentLang === 'en' ? 'English' : 'Polish') + ' max 50 chars"]}. Max 4 issues. Evaluate: keyword usage in headings and body text, H1/H2 structure, meta description presence, content completeness. CRITICAL: Do NOT penalize for missing data (prices, case studies, competitor comparisons) - the content reflects what is in the knowledge base. Do NOT penalize for: internal links, technical SEO, backlinks, page title. The article is COMPLETE if it has a conclusion paragraph.',
+            system: 'You are a content SEO expert evaluating AI-generated content from a company knowledge base. Evaluate ONLY content-level SEO. Respond ONLY with valid JSON no markdown: {"score":0-100,"issues":["short issue in ' + (currentLang === 'en' ? 'English' : 'Polish') + ' max ' + DLUGOSC_UWAGI_OCENY + ' chars"]}. Max 4 issues. Evaluate: keyword usage in headings and body text, H1/H2 structure, meta description presence, content completeness. CRITICAL: Do NOT penalize for missing data (prices, case studies, competitor comparisons) - the content reflects what is in the knowledge base. Do NOT penalize for: internal links, technical SEO, backlinks, page title. The article is COMPLETE if it has a conclusion paragraph.' + regulaJezykaUwag(),
             messages: [{ role: 'user', content: `Topic: ${topic}\nKeywords: ${kwText}\n\nArticle:\n${articleText}` }]
           })
         });
@@ -9225,7 +9263,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
           body: JSON.stringify({ model: MODEL_TRESCI, output_config: WYSILEK_OCENY, max_tokens: zRezerwaOceny(400),
-            system: 'AIO expert evaluating AI-generated content from a company knowledge base for Google AI Overviews. Respond ONLY with valid JSON no markdown: {"score":0-100,"issues":["short issue in ' + (currentLang === 'en' ? 'English' : 'Polish') + ' max 50 chars"]}. Evaluate: direct answer in first para, extractable self-contained passages, entity/product definitions, topic coverage based on available knowledge, no fluff. Max 4 issues. Do NOT flag missing data (prices, case studies) - the content reflects what the knowledge base contains. Evaluate the article AS IS - do not penalize for absent sections if the article has a clear conclusion.',
+            system: 'AIO expert evaluating AI-generated content from a company knowledge base for Google AI Overviews. Respond ONLY with valid JSON no markdown: {"score":0-100,"issues":["short issue in ' + (currentLang === 'en' ? 'English' : 'Polish') + ' max ' + DLUGOSC_UWAGI_OCENY + ' chars"]}. Evaluate: direct answer in first para, extractable self-contained passages, entity/product definitions, topic coverage based on available knowledge, no fluff. Max 4 issues. Do NOT flag missing data (prices, case studies) - the content reflects what the knowledge base contains. Evaluate the article AS IS - do not penalize for absent sections if the article has a clear conclusion.' + regulaJezykaUwag(),
             messages: [{ role: 'user', content: `Topic: ${topic}\nKeywords: ${kwText}\n\nArticle:\n${articleText}` }]
           })
         });
@@ -9242,7 +9280,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
       const allIssues = [
         ...(needsSeoFix ? seoResult.issues.map(i => `[SEO] ${i}`) : []),
         ...(needsAioFix ? aioResult.issues.map(i => `[AIO] ${i}`) : []),
-      ].join('; ');
+      ].join('; '); // srednik-dla-modelu: lista uwag w prompcie
 
       const scores = [
         needsSeoFix ? `SEO ${seoResult.score}/100` : null,
@@ -10296,12 +10334,17 @@ async function uruchomKontroleFaktow(wymus) {
   const zSiecia = trybUzupelniania && sieciowe.length > 0;
   const system = 'You are a fact checker reviewing an article against the sources it was '
     + 'written from. You are not an editor: do not rewrite anything, do not praise anything.\n'
-    + 'Report ONLY problems, in these ' + (sieciowe.length ? 'five' : 'four') + ' categories:\n'
+    + 'Report ONLY problems, in these ' + (sieciowe.length ? 'six' : 'five') + ' categories:\n'
     + '  "liczba"    - a number, price, rate, date, deadline, weight or dimension that '
     + 'does not appear in the sources, or appears there with a different value.\n'
     + '  "zakres"    - a claim that stretches a source fact beyond what it says: a '
     + 'different country, a different product, a different kind of customer, a legal or '
     + 'tax rule the sources never state.\n'
+    // Runda A (2026-10-12): zdanie, ktorego nie ma w zadnym zrodle (misja, badanie, wydarzenie, osoba), szlo jako
+    // "zakres" ("Twierdzenie szersze niz zrodlo"), choc uzasadnienie mowilo "zadne zrodlo tego nie podaje".
+    + '  "brak"      - a named fact that NO source supports at all: an event, discovery, study or its '
+    + 'result, mission, person, organisation, publication or quotation that neither the knowledge base '
+    + 'nor any web source mentions. A figure or date goes under "liczba", a stretched source fact under "zakres".\n'
     + '  "sprzecznosc" - two places in the ARTICLE ITSELF that disagree (for example a '
     + 'paragraph and a table giving different values for the same thing).\n'
     + '  "konflikt"  - the article recommends a competitor, a comparison site, an '
@@ -10313,7 +10356,7 @@ async function uruchomKontroleFaktow(wymus) {
           + 'same page, product or topic), but the passage quoted for that page is cut off or does '
           + 'not cover this detail. The passages are SHORT EXCERPTS, often cut mid-sentence, not '
           + 'whole pages: a detail missing from an excerpt is NOT evidence that the page lacks it. '
-          + 'Give "strona": the number of that web source. Use "liczba" or "zakres" only when '
+          + 'Give "strona": the number of that web source. Use "liczba", "brak" or "zakres" only when '
           + 'neither the knowledge base nor any web source deals with the claim at all, or when a '
           + 'source states a different value.\n'
         : '')
@@ -10333,11 +10376,12 @@ async function uruchomKontroleFaktow(wymus) {
     + 'Common-knowledge statements with no figures are not findings. If everything checks '
     + 'out, return an empty list - an empty list is a valid and expected answer.\n'
     + 'Respond ONLY with valid JSON, no markdown, no preamble:\n'
-    + '{"uwagi":[{"rodzaj":"liczba|zakres|sprzecznosc|konflikt' + (sieciowe.length ? '|strona' : '')
+    + '{"uwagi":[{"rodzaj":"liczba|brak|zakres|sprzecznosc|konflikt' + (sieciowe.length ? '|strona' : '')
     + '","cytat":"the exact fragment from the article, max 120 characters","powod":"one sentence in '
     + jezykUwag + ', max 140 characters"' + (sieciowe.length ? ',"strona":1' : '') + '}]}\n'
     + (sieciowe.length ? 'The "strona" field only for rodzaj "strona".\n' : '')
-    + 'Max 12 findings, most serious first.';
+    + 'Max 12 findings, most serious first.'
+    + blokInterpunkcji();
 
   try {
     const res = await apiFetch({
@@ -10403,7 +10447,7 @@ async function uruchomKontroleFaktow(wymus) {
 }
 
 const IKONY_UWAG = {
-  liczba: '🔢', zakres: '↔️', sprzecznosc: '⚠️', konflikt: '🏳️', strona: '🌐',
+  liczba: '🔢', brak: '🔎', zakres: '↔️', sprzecznosc: '⚠️', konflikt: '🏳️', strona: '🌐',
   'link-obcy': '🔗', 'link-sciezka': '🔗', 'link-martwy': '💀', 'link-niesprawdzony': '❔',
   'link-kotwica': '✍️', 'link-powtorka': '✍️', 'link-pusty': '✍️',
 };
@@ -10420,7 +10464,7 @@ function uwagiWedlugWagi(uwagi) {
 // R7-I: uwaga "strona" (model: twierdzenie pochodzi ze strony z sieci, ale cytowany fragment jest
 // urwany) dostaje adres tej strony WYLACZNIE z listy stron, z ktorych powstal tekst (numer z promptu,
 // ewentualnie ten sam adres lub host). Bez strony z listy nie ma czego otworzyc - uwaga wraca do
-// twardej kategorii ("liczba", gdy cytat ma cyfry, inaczej "zakres").
+// twardej kategorii ("liczba", gdy cytat ma cyfry, inaczej "brak": strony z listy nie ma, wiec zrodla tez).
 function uwagiZeStronami(uwagi, strony) {
   strony = (strony || []).filter(function (z) { return z && /^https?:\/\//i.test(String(z.url || '')); });
   return uwagi.map(function (u) {
@@ -10435,7 +10479,7 @@ function uwagiZeStronami(uwagi, strony) {
     }
     const kopia = Object.assign({}, u);
     if (z) { kopia.rodzaj = 'strona'; kopia.adres = z.url; kopia.tytulStrony = z.tytul || ''; }
-    else kopia.rodzaj = /\d/.test(String(u.cytat || '')) ? 'liczba' : 'zakres';
+    else kopia.rodzaj = /\d/.test(String(u.cytat || '')) ? 'liczba' : 'brak';
     return kopia;
   });
 }
@@ -10496,8 +10540,10 @@ function pokazWynikFaktow(uwagi, stan) {
   // (ta sama liczba co w pasku "Siec: N zrodel"). Przelacznik wlaczony bez stron: osobny wariant.
   const stronZSieci = zrodlaSieciowe.filter(function (z) { return z && z.url; }).length;
   if (stan === 'gotowe' && faktyWzgledemSieci) {
+    // Runda A: "Baza wiedzy jest pusta" tylko przy pustej Bazie. Gdy dokumenty sa, ale zaden fragment nie pasowal
+    // do tematu (artykul o astrobiologii, w Bazie strona firmy), notka mowi to wprost.
     stopka += '<div class="fakty-wzgledem-sieci" style="color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
-      + escapeHtml(_t('fakty-wzgledem-sieci')) + '</div>';
+      + escapeHtml(_t(liczbaDokumentow() ? 'fakty-wzgledem-sieci-baza' : 'fakty-wzgledem-sieci')) + '</div>';
   } else if (stan === 'gotowe' && trybUzupelniania && stronZSieci > 0) {
     stopka += '<div class="fakty-tryb-sieci" style="color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
       + escapeHtml(_t('fakty-tryb-uzupelniania')) + '</div>';
@@ -10514,9 +10560,17 @@ function pokazWynikFaktow(uwagi, stan) {
     return;
   }
 
+  // Runda A: zdania bez pokrycia (bez "Sprawdz na stronie" i bez odnosnikow) model poprawia jednym przyciskiem.
+  const doPoprawy = stan === 'gotowe' ? uwagiDoPoprawy(uwagi).length : 0;
+  const poprawa = doPoprawy
+    ? '<button type="button" id="fakty-popraw-btn" class="btn-secondary btn-pelny" style="margin:4px 0 6px" onclick="poprawZdaniaBezZrodla()">'
+      + ikona('pen-line') + escapeHtml(_t('fakty-popraw').replace('{n}', String(doPoprawy))) + '</button>'
+      + '<div class="tekst-pomoc" style="margin-bottom:12px">' + escapeHtml(_t('fakty-popraw-opis')) + '</div>'
+    : '';
   wynikEl.innerHTML = pusty +
     '<div style="margin-bottom:8px;color:var(--text2)">'
     + escapeHtml(_t('fakty-znaleziono').replace('{n}', String(uwagi.length))) + '</div>'
+    + poprawa
     + uwagi.map(function (u) {
       const rodzaj = String(u.rodzaj || '').toLowerCase();
       const cytat = String(u.cytat || '');
@@ -10530,10 +10584,84 @@ function pokazWynikFaktow(uwagi, stan) {
         + (adresWCytacie
           ? '<div class="fakty-adres" style="margin:3px 0">' + linkUwagi(cytat.trim()) + '</div>'
           : '<div style="margin:3px 0;font-style:italic;color:var(--text2);overflow-wrap:anywhere">"' + escapeHtml(cytat) + '"</div>')
-        + '<div>' + escapeHtml(String(u.powod || '') || _t('fakty-powod-' + rodzaj) || '') + '</div>'
+        + '<div>' + escapeHtml(bezSrednikowTekst(String(u.powod || '')) || _t('fakty-powod-' + rodzaj) || '') + '</div>'
         + (linkStrony ? '<div class="fakty-adres" style="margin-top:4px">' + linkStrony + '</div>' : '')
         + '</div>';
     }).join('') + stopka;
+}
+
+// Runda A (2026-10-12): "Popraw zdania bez zrodla". Artykul o astrobiologii mial 11 uwag, z czego 8 to zdania,
+// ktorych nie podawalo zadne ze zrodel. Model usuwa albo lagodzi wskazany szczegol (reguly przepisywania: zadnego
+// nowego faktu), wynik to nowa wersja artykulu, a kontrola faktow liczy sie od nowa. "Sprawdz na stronie"
+// i uwagi o odnosnikach zostaja dla czlowieka: tam zrodlo jest, tylko trzeba je obejrzec.
+const RODZAJE_DO_POPRAWY = ['liczba', 'brak', 'zakres', 'sprzecznosc', 'konflikt'];
+function uwagiDoPoprawy(uwagi) {
+  return (Array.isArray(uwagi) ? uwagi : []).filter(function (u) {
+    return u && RODZAJE_DO_POPRAWY.indexOf(String(u.rodzaj || '').toLowerCase()) !== -1 && String(u.cytat || '').trim();
+  });
+}
+async function poprawZdaniaBezZrodla() {
+  const art = document.getElementById('article');
+  const uwagi = uwagiDoPoprawy(faktyWynik);
+  if (!art || !art.innerHTML.trim() || !uwagi.length || poprawZdaniaBezZrodla.trwa) return;
+  poprawZdaniaBezZrodla.trwa = true;
+  const btn = document.getElementById('fakty-popraw-btn');
+  if (btn) { btn.disabled = true; btn.classList.add('btn-working'); btn.textContent = _t('fakty-poprawiam'); }
+  try {
+    const przedHtml = htmlDoZapisu(art);
+    const kopia = art.cloneNode(true);
+    const box = kopia.querySelector('.zrodla-box');
+    const boxHtml = box ? box.outerHTML : '';
+    if (box) box.remove();
+    const lista = uwagi.map(function (u, i) {
+      return (i + 1) + '. "' + String(u.cytat).replace(/\s+/g, ' ').trim() + '" - ' + String(u.powod || '').replace(/\s+/g, ' ').trim();
+    }).join('\n');
+    const slowa = liczbaSlowArtykulu(art);
+    const system = 'You are a fact-checking editor. A fact check compared the article with its sources and found the '
+      + 'fragments listed under FINDINGS without support. Fix ONLY those places:\n'
+      + '- Remove the unsupported detail (name, figure, date, event, study, attribution). If nothing verifiable is '
+      + 'left of the sentence, remove the whole sentence. Smooth the neighbouring sentence only as much as the cut needs.\n'
+      + '- Remove the same detail wherever the article repeats it (summary list, table, meta description).\n'
+      + '- A contradiction inside the article: keep the statement the rest of the text supports, or drop both.\n'
+      + '- A recommendation of a competitor: remove the recommendation.\n'
+      + '- Do not rewrite anything else. Keep every heading, link, list, table, the meta description block '
+      + '(class="meta-box") and the order of sections exactly as they are.\n'
+      + 'Return ONLY the complete corrected article HTML, no markdown fences, no comments.'
+      + blokPrzepisywania();
+    const res = await apiFetch({
+      doArtykulu: true, // koszt tego tekstu w Historii
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(Math.min(16000, Math.max(getMaxTokens(), Math.ceil(slowa * 3.5) + 800))),
+        system: system,
+        messages: [{ role: 'user', content: 'FINDINGS (fragments quoted from the article):\n' + lista + '\n\nARTICLE (HTML):\n' + kopia.innerHTML }] }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) throw bladOdpowiedzi(data, res.status);
+    let html = (data.content || []).map(function (b) { return b.text || ''; }).join('')
+      .replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+    if (!html) throw new Error(_t('fakty-poprawa-blad'));
+    html = bezSrednikow(oczyscHtmlModelu(html));
+    if (kodJezykaArtykulu() === 'pl') html = html.replace(/[—–]/g, '-');
+    html = wstawBlokZrodel(html, boxHtml);
+    // Jak przy Lukach: artykul z Historii nie ma wersji, wiec oryginal zostaje do porownania.
+    if (!versions.length) addVersion(przedHtml, _t('ver-original'));
+    art.innerHTML = html;
+    uporzadkujArtykul(art);
+    currentText = tekstBlokami(art);
+    showArticleStats(art.innerHTML);
+    addVersion(htmlDoZapisu(art), etykietaWersji(_t('ver-fakty')));
+    if (typeof zapiszRecznePoprawki === 'function') zapiszRecznePoprawki();
+    pokazPowiadomienie(_t('fakty-poprawione').replace('{n}', String(uwagi.length)), 'ok');
+    faktyWynik = null;
+    faktySygnatura = '';
+    uruchomKontroleFaktow(true);
+  } catch (e) {
+    if (!(e && e.name === 'AbortError')) powiadomBladApi(e, null, null, _t('fakty-poprawa-blad'));
+    if (btn && btn.isConnected) { btn.disabled = false; btn.classList.remove('btn-working'); btn.innerHTML = ikona('pen-line') + escapeHtml(_t('fakty-popraw').replace('{n}', String(uwagi.length))); }
+  } finally {
+    poprawZdaniaBezZrodla.trwa = false;
+  }
 }
 
 // ─── ARTICLE STATS ────────────────────────────────────────────────────────────
@@ -11593,7 +11721,7 @@ function opcjeDocxArtykulu(kopia) {
 // "Content AI" ani bursztynu; naglowek strony to nazwa marki z konta (bez niej - pusty),
 // linki w kolorze dowodu z podkresleniem, interlinia 1,42 em (pdfmake mnozy naturalna
 // wysokosc wiersza Literaty 1,485 em przez lineHeight).
-// Kroje marki w PDF (pwa/lib/vfs_fonts.js: Literata i Schibsted Grotesk, podzbior PL).
+// Kroje marki w PDF (pwa/lib/vfs_fonts-2026-10.js: Literata i Schibsted Grotesk, lacinka, greka i symbole).
 function ustawKrojePdf() {
   pdfMake.fonts = {
     Literata: { normal: 'Literata-Regular.ttf', bold: 'Literata-SemiBold.ttf', italics: 'Literata-Italic.ttf', bolditalics: 'Literata-SemiBoldItalic.ttf' },
@@ -11653,15 +11781,16 @@ function dokumentPdf(tresc, tytul, opis, jezyk, ai) {
     pageBreakBefore: function (wezel, dalejNaStronie) { return wezel.headlineLevel === 1 && dalejNaStronie.length === 0; },
     header: function () {
       return marka ? { margin: [71, 34, 71, 0], stack: [
-        { text: String(marka).replace(EMOJI_PDF, '').trim(), font: 'Schibsted', fontSize: 8.5, color: DRUK.tekst2, characterSpacing: 0.3 },
+        { text: tekstWKrojuPdf(String(marka).replace(EMOJI_PDF, '').trim(), 'Schibsted'), font: 'Schibsted', fontSize: 8.5, color: DRUK.tekst2, characterSpacing: 0.3 },
         { canvas: [{ type: 'line', x1: 0, y1: 6, x2: PDF_SZER, y2: 6, lineWidth: 0.5, lineColor: DRUK.liniaStrony }] }] } : null;
     },
     footer: function (strona, stron) {
       return { margin: [71, 24, 71, 0], columns: [
-        { text: skrotTekstu(String(tytul || '').replace(EMOJI_PDF, '').trim(), 70), style: 'meta2' },
+        { text: tekstWKrojuPdf(skrotTekstu(String(tytul || '').replace(EMOJI_PDF, '').trim(), 70), 'Schibsted'), style: 'meta2' },
         { text: strona + ' / ' + stron, style: 'meta2', alignment: 'right', width: 'auto' }] };
     },
-    content: tresc,
+    // Kazdy tekst w kroju, ktory go narysuje (znak spoza krojow wypada zamiast pustego znaku w pliku).
+    content: trescWKrojachPdf(tresc, 'Literata', stylePdf()),
   };
 }
 
@@ -11681,6 +11810,58 @@ function adresDoDokumentu(href) {
 // Emoji (z laczeniami, odcieniami skory, flagami i klawiszami) wypadaja z tekstu PDF razem ze spacja przed nimi
 // ("48 h <flaga>, serwis" -> "48 h, serwis"); (c), (R) i TM sa w kroju, wiec zostaja.
 const EMOJI_PDF = / ?(?:(?![©®™])\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}\u{1F1E6}-\u{1F1FF}\u{E0020}-\u{E007F}︎️‍⃣])+/gu;
+
+// 2026-10-12: kroje PDF podaja swoje znaki (pwa/lib/vfs_fonts-2026-10.js, narzedzia/pdf_fonty.py: lacinka, greka, symbole).
+// Nowa nazwa pliku, bo serwer wysyla pwa/lib z immutable na rok (serwer/README.md, pamiec podreczna).
+// Znak spoza kroju (w artykule o astrobiologii sigma w "3σ") pdfmake zapisywal jako pusty znak \x00. Teraz
+// wypada jak emoji, a znak, ktorego nie ma kroj naglowkow (Schibsted), ale ma Literata, idzie Literata.
+// Zapas: znaki starego podzbioru, gdyby pliku krojow nie bylo albo nie podal znakow.
+const KROJ_PDF = { Literata: 'Literata-Regular.ttf', Schibsted: 'SchibstedGrotesk-SemiBold.ttf' };
+const ZNAKI_PDF_ZAPAS = '0020-007E,00A0-017F,2013-2014,2018-201A,201C-201E,2022,2026,20AC,2122,2212';
+function zakresyKrojuPdf(kroj) {
+  const opisy = (window.pdfMake && window.pdfMake.znakiKrojow) || {};
+  const opis = opisy[KROJ_PDF[kroj] || KROJ_PDF.Literata] || ZNAKI_PDF_ZAPAS;
+  const pamiec = zakresyKrojuPdf.pamiec || (zakresyKrojuPdf.pamiec = {});
+  if (!pamiec[opis]) {
+    pamiec[opis] = opis.split(',').map(function (z) { const c = z.split('-'); return [parseInt(c[0], 16), parseInt(c[1] || c[0], 16)]; });
+  }
+  return pamiec[opis];
+}
+function wKrojuPdf(kod, zakresy) {
+  if (kod === 10) return true;
+  for (let i = 0; i < zakresy.length; i++) { if (kod < zakresy[i][0]) return false; if (kod <= zakresy[i][1]) return true; }
+  return false;
+}
+// Tekst dla kroju: string (same znaki kroju) albo odcinki, gdy czesc znakow narysuje tylko Literata.
+function tekstWKrojuPdf(tekst, kroj) {
+  const wlasny = zakresyKrojuPdf(kroj), literata = zakresyKrojuPdf('Literata');
+  const czesci = [];
+  for (const znak of String(tekst)) {
+    const kod = znak.codePointAt(0);
+    const rodzaj = wKrojuPdf(kod, wlasny) ? 'k' : (kroj !== 'Literata' && wKrojuPdf(kod, literata) ? 'l' : '');
+    if (!rodzaj) continue;
+    const ost = czesci[czesci.length - 1];
+    if (ost && ost.r === rodzaj) ost.t += znak; else czesci.push({ r: rodzaj, t: znak });
+  }
+  if (!czesci.some(function (c) { return c.r === 'l'; })) return czesci.map(function (c) { return c.t; }).join('');
+  return czesci.map(function (c) { return c.r === 'l' ? { text: c.t, font: 'Literata' } : { text: c.t }; });
+}
+// Cala tresc dokumentu pdfmake (artykul i raport): kazdy tekst w kroju, ktory go narysuje.
+function trescWKrojachPdf(wezel, kroj, style) {
+  if (typeof wezel === 'string') return tekstWKrojuPdf(wezel, kroj);
+  if (Array.isArray(wezel)) return wezel.map(function (w) { return trescWKrojachPdf(w, kroj, style); });
+  if (!wezel || typeof wezel !== 'object') return wezel;
+  let k = kroj;
+  [].concat(wezel.style || []).forEach(function (s) { if (style[s] && style[s].font) k = style[s].font; });
+  if (wezel.font) k = wezel.font;
+  const kopia = Object.assign({}, wezel);
+  if (kopia.text !== undefined && typeof kopia.text !== 'number') kopia.text = trescWKrojachPdf(kopia.text, k, style);
+  ['stack', 'ul', 'ol', 'columns'].forEach(function (p) { if (kopia[p] !== undefined) kopia[p] = trescWKrojachPdf(kopia[p], k, style); });
+  if (kopia.table && Array.isArray(kopia.table.body)) {
+    kopia.table = Object.assign({}, kopia.table, { body: kopia.table.body.map(function (w) { return trescWKrojachPdf(w, k, style); }) });
+  }
+  return kopia;
+}
 // Tekst akapitu z formatowaniem: pogrubienie, kursywa, linki (tylko http, https, mailto).
 function inlinePdf(wezly, f, out) {
   wezly.forEach(function (n) {
@@ -11934,7 +12115,7 @@ function zaladujPdfMake(gotowe) {
   if (czekajacy.length) return; // ladowanie trwa: kolejne dotkniecie nie robi drugiego pliku
   czekajacy.push(gotowe);
   toast = pokazPowiadomienie(_t('msg-pdf-przygotowuje'), 'info', 30000);
-  wczytaj('pwa/lib/pdfmake.min.js', function () { wczytaj('pwa/lib/vfs_fonts.js', function () { koniec(true); }); });
+  wczytaj('pwa/lib/pdfmake.min.js', function () { wczytaj('pwa/lib/vfs_fonts-2026-10.js', function () { koniec(true); }); });
 }
 
 function dlPdf() {
@@ -12220,12 +12401,12 @@ function renderSerpPanel(pokaz) {
   // jak blad. Tabela: czolowka obok artykulu, z podpisem; bez kropek, ktore wisialy na koncu linii.
   const statsEl = document.getElementById('serp-stats');
   const art = document.getElementById('article');
+  // Runda A: liczone jak pasek statystyk (kopiaDoStatystyk, tekstBlokami). Wczesniej textContent
+  // z wlasnym filtrem dawal inna liczbe niz pasek (SERP 873 slowa, pasek 868).
   let slowaArt = 0, h2Art = 0;
   if (art && getComputedStyle(art).display !== 'none' && art.textContent.trim()) {
-    const k = art.cloneNode(true);
-    k.querySelectorAll('.zrodla-box, .meta-box, [data-tylko-ekran], [data-brak]').forEach((e) => e.remove());
-    slowaArt = ((k.textContent || '').trim().match(/\S+/g) || []).length;
-    h2Art = k.querySelectorAll('h2').length;
+    slowaArt = liczbaSlowArtykulu(art);
+    h2Art = kopiaDoStatystyk(art).querySelectorAll('h2').length;
   }
   const wiersz = (etykieta, top, wlasny) => '<div class="serp-por-wiersz"><span>' + escapeHtml(etykieta) + '</span><strong>'
     + (top ? formatujLiczbe(top, 0) : '-') + '</strong><strong>' + (wlasny ? formatujLiczbe(wlasny, 0) : '-') + '</strong></div>';
@@ -12373,7 +12554,7 @@ function renderGapResult(parsed) {
   const msgEl  = document.getElementById('gap-msg');
   sEl.textContent = score;
   sEl.style.color = score >= 75 ? 'var(--c-sukces)' : score >= 50 ? 'var(--c-uwaga)' : 'var(--red)';
-  msgEl.textContent  = parsed.msg || '';
+  msgEl.textContent  = bezSrednikowTekst(parsed.msg || '');
   msgEl.style.color  = 'var(--text3)'; // zawsze reset do domyślnego
   msgEl.style.fontSize = '';
   document.getElementById('gap-score-row').style.display = 'flex';
@@ -12441,14 +12622,14 @@ function renderGapDelta(baseline, newResult, selectedTopics) {
     msgEl.textContent = _t('msg-no-change');
     msgEl.style.color = 'var(--c-uwaga)';
   } else if (diff > 0) {
-    msgEl.textContent = newResult.msg || '';
+    msgEl.textContent = bezSrednikowTekst(newResult.msg || '');
     msgEl.style.color = 'var(--c-sukces)';
   } else if (diff < 0) {
     // Nie powinno wystąpić po naprawie deterministycznego score
     msgEl.textContent = _t('msg-spin-reanalyze');
     msgEl.style.color = 'var(--text3)';
   } else {
-    msgEl.textContent = newResult.msg || '';
+    msgEl.textContent = bezSrednikowTekst(newResult.msg || '');
     msgEl.style.color = 'var(--text3)';
   }
   document.getElementById('gap-delta').style.display = 'block';
@@ -12563,7 +12744,7 @@ async function runGapAnalysis() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, output_config: WYSILEK_OCENY, max_tokens: zRezerwaOceny(900),
-        system: 'You are a semantic SEO expert. Compare an article to SERP topics and return ONLY valid JSON (no markdown): {"missing":["topic",...],"present":["topic",...],"competitors":["topic",...],"msg":"one sentence assessment in ' + (currentLang === 'en' ? 'English' : 'Polish') + '"}. Copy each topic name exactly as listed and put EVERY listed topic in exactly one of the two lists. A topic is present only when the article actually discusses it, not when it merely mentions a word from it. "competitors" lists the topics (from either list) that are about another company\'s brand, product or service rather than the article\'s own subject.',
+        system: 'You are a semantic SEO expert. Compare an article to SERP topics and return ONLY valid JSON (no markdown): {"missing":["topic",...],"present":["topic",...],"competitors":["topic",...],"msg":"one sentence assessment in ' + (currentLang === 'en' ? 'English' : 'Polish') + '"}. Copy each topic name exactly as listed and put EVERY listed topic in exactly one of the two lists. A topic is present only when the article actually discusses it, not when it merely mentions a word from it. "competitors" lists the topics (from either list) that are about another company\'s brand, product or service rather than the article\'s own subject.' + blokInterpunkcji(),
         messages: [{ role: 'user', content: 'Keyword: ' + kwText + '\nSERP topics (full list): ' + tematy.join(', ') + '\n\nArticle:\n' + articleText }]
       })
     });
@@ -12615,6 +12796,60 @@ function podobienstwoTematu(a, b) {
   if (!sx.length || !sy.size) return 0;
   const wspolne = sx.filter((w) => sy.has(w)).length;
   return wspolne / Math.max(sx.length, sy.size);
+}
+
+// Runda A (2026-10-12): Luki dopisaly 5 sekcji z pytaniem w naglowku do 5 istniejacych i AEO spadlo
+// z 83 do 33 (10 naglowkow-pytan przy limicie 5-7, lista wnioskow z 8 punktami, akapity 81 i 91 slow).
+// Limity sa wspolne z ocena AEO (renderAeoCheck), wiec poprawa z Luk nie psuje oceny z panelu.
+const AEO_PYTANIA_MIN = 5, AEO_PYTANIA_MAX = 7;   // naglowki-pytania
+const AEO_LISTA_MIN = 3, AEO_LISTA_MAX = 7;       // punkty listy
+const AEO_SLOW_AKAPITU = 80;                      // najdluzszy akapit
+const WNIOSKI_MIN_PUNKTOW = 5;                    // Kluczowe wnioski po poprawie: 5-7 punktow
+const LUKI_SLOW_AKAPITU = 70;                     // prosba do modelu, z zapasem do limitu AEO
+// Artykul z naglowkami-pytaniami: nowe naglowki tez jako pytania, ale razem najwyzej AEO_PYTANIA_MAX.
+function stylPytanLuk(pytajne, nowych) {
+  const wolne = Math.max(0, AEO_PYTANIA_MAX - pytajne);
+  if (nowych <= wolne) return 'Phrase each new H2 as a question, like most existing headings.';
+  if (wolne > 0) {
+    return 'Phrase exactly ' + wolne + ' of the new H2 headings as questions (the ones that read most naturally as a question) '
+      + 'and the other ' + (nowych - wolne) + ' as short statements: the article may have at most ' + AEO_PYTANIA_MAX
+      + ' question headings in total.';
+  }
+  return 'The article already has ' + pytajne + ' question headings, the most it should have. '
+    + 'Phrase every new H2 as a short statement, not as a question.';
+}
+// Akapit dluzszy niz limit dzieli sie na granicy zdan najblizej polowy (i dalej, az kazda czesc sie
+// zmiesci). Granica tylko w tekscie na najwyzszym poziomie akapitu, nie w linku ani w pogrubieniu,
+// i nie po skrocie („np. NASA", „A. Oparin"). Akapit bez takiej granicy zostaje caly.
+const SKROTY_BEZ_KONCA_ZDANIA = /(?:^|[\s(])(?:\p{L}|np|tzw|tj|m\.in|ok|dr|prof|inż|mgr|św|nr|ul|wg|ang|łac|gr|godz|ds|im|e\.g|i\.e|vs|approx|z\.B|bzw|ca|tzn)$/iu;
+function podzielDlugieAkapity(wezly, limit) {
+  const slowa = (t) => ((t || '').match(/\S+/g) || []).length;
+  const dziel = (p) => {
+    const wszystkie = slowa(p.textContent);
+    if (p.tagName !== 'P' || wszystkie <= limit) return [p];
+    let licznik = 0, najlepsza = null, odleglosc = Infinity;
+    Array.from(p.childNodes).forEach((n) => {
+      if (n.nodeType !== 3) { licznik += slowa(n.textContent); return; }
+      const re = /([.!?…])(\s+)(?=[\p{Lu}\d„"(])/gu;
+      let m;
+      while ((m = re.exec(n.nodeValue))) {
+        const przed = n.nodeValue.slice(0, m.index);
+        if (m[1] === '.' && SKROTY_BEZ_KONCA_ZDANIA.test(przed)) continue;
+        const ile = licznik + slowa(przed + m[1]);
+        const d = Math.abs(ile - wszystkie / 2);
+        if (ile > 0 && ile < wszystkie && d < odleglosc) { odleglosc = d; najlepsza = { wezel: n, poz: m.index + m[1].length }; }
+      }
+      licznik += slowa(n.nodeValue);
+    });
+    if (!najlepsza) return [p];
+    let reszta = najlepsza.wezel.splitText(najlepsza.poz);
+    reszta.nodeValue = reszta.nodeValue.replace(/^\s+/, '');
+    najlepsza.wezel.nodeValue = najlepsza.wezel.nodeValue.replace(/\s+$/, '');
+    const p2 = p.cloneNode(false);
+    while (reszta) { const dalej = reszta.nextSibling; p2.appendChild(reszta); reszta = dalej; }
+    return dziel(p).concat(dziel(p2));
+  };
+  return [].concat(...wezly.map(dziel));
 }
 
 async function improveFromGaps() {
@@ -12693,7 +12928,7 @@ async function improveFromGaps() {
   const spis = h2Istniejace.length
     ? '\n\nExisting H2 sections, in order:\n' + h2Istniejace.map((t) => '- ' + t).join('\n')
       + '\nBefore each new <h2>, write one line [AFTER: exact text of the existing H2 it should follow], so the new section lands where it fits the outline; use [AFTER: START] for the very beginning. '
-      + (pytajne * 2 >= h2Istniejace.length ? 'Phrase each new H2 as a question, like most existing headings.' : 'Match the style of the existing H2 headings.')
+      + (pytajne * 2 >= h2Istniejace.length ? stylPytanLuk(pytajne, selectedNow.length) : 'Match the style of the existing H2 headings.')
     : '';
 
   const maxNewTokens = Math.min(9000, selectedNow.length * 650 + 1400);
@@ -12722,9 +12957,10 @@ async function improveFromGaps() {
       '\n\nSOURCES (knowledge base' + (zSiecia ? '; you may also search the web' : ', the only material you may draw facts from') + '):\n' + zrodlaDoKontroli().slice(0, 100000) +
       '\n\nExisting article (context/tone - do NOT repeat):\n' + articlePlainText + spis +
       '\n\nKeep each new section concise: about 120-200 words, no longer than the existing sections; do not pad.' +
+      ' Keep every paragraph under ' + LUKI_SLOW_AKAPITU + ' words: split a longer one into two, because answer engines quote short paragraphs.' +
       '\n\nWrite new HTML sections in ' + outLang + ' (each: <h2>Heading</h2><p>...</p><p>...</p>) for:\n' + topicsList +
       (hasKw
-        ? '\n\nAfter the new sections, write an updated <h2>' + kwSectionName + '</h2><ul><li>...</li></ul> with 5 to 8 bullet points that sum up the WHOLE article, including the new sections. Merge related points; do not list every paragraph.'
+        ? '\n\nAfter the new sections, write an updated <h2>' + kwSectionName + '</h2><ul><li>...</li></ul> with ' + WNIOSKI_MIN_PUNKTOW + ' to ' + AEO_LISTA_MAX + ' bullet points that sum up the WHOLE article, including the new sections. Merge related points; do not list every paragraph.'
         : '') +
       '\n\nReturn ONLY the HTML blocks. No preamble.'
     }]
@@ -12777,8 +13013,9 @@ async function improveFromGaps() {
         while (n && n.tagName !== 'H2') { czesci.push(n); n = n.nextElementSibling; }
         const pusta = czesci.some((el) => el.matches('[data-brak]') || el.querySelector('[data-brak]'));
         const tresc = czesci.slice(1).map((el) => (el.textContent || '').trim()).join(' ');
-        // puste akapity (resztki <p> wokol znacznika [AFTER: ...]) nie ida do artykulu
-        const wezly = czesci.filter((el, i) => i === 0 || (el.textContent || '').trim() || el.querySelector('table, ul, ol'));
+        // puste akapity (resztki <p> wokol znacznika [AFTER: ...]) nie ida do artykulu, a akapit
+        // dluzszy niz pozwala AEO dzieli sie na granicy zdan (Runda A: akapity 81 i 91 slow)
+        const wezly = podzielDlugieAkapity(czesci.filter((el, i) => i === 0 || (el.textContent || '').trim() || el.querySelector('table, ul, ol')), AEO_SLOW_AKAPITU);
         sekcje.push({ tytul: h.textContent.trim(), wezly, cel: g.cel, ok: !pusta && tresc.length > 60 });
       });
     });
@@ -12837,10 +13074,10 @@ async function improveFromGaps() {
       const przed = kotwica === 'start' ? (h2Bazy[0] || null) : kotwica ? (h2Bazy[h2Bazy.indexOf(kotwica) + 1] || null) : null;
       sek.wezly.forEach((el) => kont.insertBefore(el, przed));
     });
-    // Wnioski maja 5-8 punktow. Gdy model mimo to dopisze punkt za kazda nowa sekcje
-    // (wczesniej 16 punktow), zostaja dotychczasowe wnioski.
+    // Wnioski maja 5-7 punktow (lista 3-7 w ocenie AEO, wczesniej 5-8 i AEO spadalo przy 8). Gdy
+    // model mimo to dopisze punkt za kazda nowa sekcje (wczesniej 16 punktow), zostaja dotychczasowe.
     const ileLi = (h) => ((h || '').match(/<li[\s>]/gi) || []).length;
-    const kwBlock = (updatedKw && (ileLi(updatedKw) <= 8 || !originalKw || ileLi(updatedKw) <= ileLi(originalKw)) ? updatedKw : originalKw) || '';
+    const kwBlock = (updatedKw && (ileLi(updatedKw) <= AEO_LISTA_MAX || !originalKw || ileLi(updatedKw) <= ileLi(originalKw)) ? updatedKw : originalKw) || '';
     let updatedHtml = oczyscHtmlModelu(kont.innerHTML.trimEnd()
       + (kwBlock ? '\n' + kwBlock : '')
       + (savedMeta ? '\n' + savedMeta : ''));
@@ -12926,6 +13163,47 @@ function pokazBrakZrodelLuk(tematy, zSiecia) {
 }
 
 // ─── FEATURE: SUGESTIE LINKÓW WEWNĘTRZNYCH ─────────────────────────────────────
+// Runda A (2026-10-12): w artykule o astrobiologii zakladka proponowala strony firmy kurierskiej
+// z Bazy wiedzy, bo kazda strona bez dopasowania szla na liste („zawsze sugeruj URL z bazy"),
+// a dopasowanie bylo po kawalku slowa („art" w „artykuł"). Teraz slowo strony (z nazwy, adresu
+// i poczatku tresci) musi zaczynac slowo artykulu. Dluzsze slowa licza sie po rdzeniu bez dwoch
+// ostatnich liter, bo polski je odmienia (paczka: paczki, paczkę). Jedno slowo z nazwy strony
+// wystarczy, z adresu albo tresci potrzeba dwoch. Brak dopasowan to komunikat, nie cala Baza.
+const SLOWA_BEZ_ZNACZENIA_LINKOW = new Set(['dla','aby','jak','lub','oraz','czy','nie','się','jest','są','był','będzie',
+  'przez','przy','pod','nad','bez','the','and','for','www','com','net','org','html','htm','php','aspx','https','http',
+  'może','można','także','tylko','które','który','która','jego','jej','ich','tego','tym','tej','więcej','bardziej',
+  'strona','stronie','główna','home','menu','kontakt','zobacz','sprawdź','czytaj','dalej','cookies','polityka',
+  'prywatności','regulamin','zaloguj','szukaj','index','page','with','from','this','that','your','more','about']);
+function rdzenSlowaLinku(w) { return w.length >= 6 ? w.slice(0, w.length - 2) : w; }
+function propozycjeLinkow(tekstArtykulu, strony) {
+  // Slowa artykulu malymi literami, a do pokazania w pisowni z artykulu („Clipper", nie „clipper").
+  const pisownia = new Map();
+  (String(tekstArtykulu || '').match(/[\p{L}\p{N}]+/gu) || []).forEach((w) => { const m = w.toLowerCase(); if (!pisownia.has(m)) pisownia.set(m, w); });
+  const slowaArt = [...pisownia.keys()];
+  const wTekscie = (w) => {
+    const r = w.length < 4 ? null : rdzenSlowaLinku(w);
+    const traf = slowaArt.find((a) => (r ? a.startsWith(r) : a === w));
+    return traf ? pisownia.get(traf) : '';
+  };
+  const slowa = (t, min) => (String(t || '').toLowerCase().match(/[\p{L}\p{N}]+/gu) || [])
+    .filter((w) => w.length >= min && !SLOWA_BEZ_ZNACZENIA_LINKOW.has(w) && !/^\d+$/.test(w));
+  const wynik = [];
+  strony.forEach((doc) => {
+    const nazwa = String(doc.name || '').replace(/^🔗\s*/, '');
+    const zNazwy = [...new Set(slowa(nazwa, 3))];
+    const zAdresu = [...new Set(slowa(String(doc.url || '').replace(/^https?:\/\//i, ''), 3))].filter((w) => !zNazwy.includes(w));
+    const zTresci = [...new Set(slowa(String(doc.content || '').substring(0, 500), 4))].slice(0, 10)
+      .filter((w) => !zNazwy.includes(w) && !zAdresu.includes(w));
+    const trafNazwa = zNazwy.map(wTekscie).filter(Boolean);
+    const trafReszta = zAdresu.concat(zTresci).map(wTekscie).filter(Boolean);
+    const trafienia = [...new Set(trafNazwa.concat(trafReszta))];
+    if (!trafNazwa.length && trafienia.length < 2) return;
+    // Najpierw dluzsze slowa: one najlepiej pokazuja miejsce na link.
+    const pokaz = trafienia.slice().sort((a, b) => b.length - a.length).slice(0, 3);
+    wynik.push({ name: nazwa, url: doc.url || '#', matches: pokaz, waga: trafNazwa.length * 2 + trafReszta.length });
+  });
+  return wynik.sort((a, b) => b.waga - a.waga);
+}
 let linksOpen = false;
 function toggleLinksPanel() {
   const panel = document.getElementById('links-panel');
@@ -12965,36 +13243,11 @@ function buildLinkSuggestions() {
     return;
   }
 
-  const artText = (art.innerText || '').toLowerCase();
-  const suggestions = [];
-
-  urlDocs.forEach(doc => {
-    const nameLower = doc.name.toLowerCase().replace(/^🔗\s*/,'');
-    // Słowa z nazwy dokumentu (min. 3 znaki, bez stop words)
-    const stopWords = new Set(['dla','aby','jak','lub','oraz','czy','nie','się','jest','są','był','będzie','przez','przy','pod','nad','bez','the','and','for','www','com','net','org','html']);
-    const nameWords = nameLower.split(/[\s\-_\/\.]+/).filter(w => w.length >= 3 && !stopWords.has(w));
-    // Słowa z URL (domena i ścieżka)
-    const urlLower = (doc.url || '').toLowerCase();
-    const urlWords = urlLower.replace(/https?:\/\//, '').split(/[\/\-_\.?=&]+/).filter(w => w.length >= 3 && !stopWords.has(w));
-    // Słowa z pierwszych 200 znaków contentu
-    const contentWords = (doc.content || '').toLowerCase().substring(0, 500)
-      .split(/[\s,\.!?]+/).filter(w => w.length >= 4 && !stopWords.has(w));
-
-    const allKeywords = [...new Set([...nameWords, ...urlWords, ...contentWords.slice(0,10)])];
-    const found = allKeywords.filter(w => artText.includes(w));
-
-    if (found.length > 0) {
-      // Pokaż najbardziej rozpoznawalne dopasowania
-      const bestMatches = found.filter(w => w.length >= 4).slice(0, 3)
-        .concat(found.filter(w => w.length < 4).slice(0, 2)).slice(0, 3);
-      suggestions.push({ name: doc.name.replace(/^🔗\s*/,''), url: doc.url || '#', matches: bestMatches.length ? bestMatches : found.slice(0,2) });
-    } else {
-      // Fallback: zawsze sugeruj URL z bazy (są tam bo są tematycznie powiązane)
-      suggestions.push({ name: doc.name.replace(/^🔗\s*/,''), url: doc.url || '#', matches: [] });
-    }
-  });
-
-  // suggestions zawsze ma wpisy gdy są urlDocs (fallback)
+  const suggestions = propozycjeLinkow(art.innerText || '', urlDocs);
+  if (!suggestions.length) {
+    listEl.innerHTML = '<span style="color:var(--text3)">' + escapeHtml(_t('links-brak-dopasowan')) + '</span>';
+    return;
+  }
 
   listEl.innerHTML = suggestions.map(s => `
     <div class="link-sug">
@@ -13259,10 +13512,21 @@ function odswiezOtwarteOceny() {
 // ─── SEO ASSESSMENT ───────────────────────────────────────────────────────────
 // Uwagi z ocen SEO i AIO trafiaja do panelu klienta, wiec bez zargonu
 // z promptu (BLUF, "lead"). Zdanie od copywritera, w jezyku uwag.
+// Runda A (2026-10-12): limit 60 znakow przy kryterium z dwiema czesciami dawal skrot
+// telegraficzny ze srednikiem („Brak liczby w 1. akapicie; wnioski z datami są"). Teraz pelne
+// zdanie do 100 znakow, najpierw to, czego brakuje, i bez srednika. Ta sama regula idzie
+// do ocen po generowaniu, bo ich uwagi tez trafiaja do panelu (showSeoResult, showAioResult).
+const DLUGOSC_UWAGI_OCENY = 100;
 function regulaJezykaUwag() {
   return currentLang === 'en'
-    ? '\nWrite findings in plain interface language, without abbreviations such as BLUF.'
-    : '\nPisz uwagi prostym językiem interfejsu, bez skrótów takich jak BLUF i bez słowa lead.';
+    ? '\nWrite findings in plain interface language, without abbreviations such as BLUF. Each finding is one '
+      + 'or two complete sentences (' + DLUGOSC_UWAGI_OCENY + ' characters at most), never a clipped phrase. '
+      + 'When a criterion is only partly met, say first what is missing. Never use a semicolon: separate two '
+      + 'thoughts with a period.'
+    : '\nPisz uwagi prostym językiem interfejsu, bez skrótów takich jak BLUF i bez słowa lead. Każda uwaga to '
+      + 'jedno lub dwa pełne zdania (najwyżej ' + DLUGOSC_UWAGI_OCENY + ' znaków), nigdy urwany skrót. Gdy '
+      + 'kryterium jest spełnione tylko częściowo, napisz najpierw, czego brakuje. Nie używaj średnika: dwie '
+      + 'myśli rozdziel kropką.';
 }
 
 // Cache wyników oceny - stabilny wynik dla tego samego artykułu
@@ -13350,7 +13614,7 @@ async function toggleSeoPanel(forceRefresh = false) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, output_config: WYSILEK_OCENY, max_tokens: zRezerwaOceny(600),
-        system: 'You are a content SEO expert evaluating AI-generated content from a company knowledge base. Evaluate ONLY content-level SEO. Respond ONLY with valid JSON, no markdown fences: {"score": 0-100, "items": [{"ok": true/false, "text": "short observation in ' + (currentLang === 'en' ? 'English' : 'Polish') + ', max 60 chars"}]}. Give exactly 5 items covering: 1) keyword usage in H1/H2/body text, 2) heading structure quality, 3) article completeness - has BLUF (number in first paragraph), body sections AND Kluczowe wnioski with metrics, 4) meta description quality, 5) brand SALIENCE - is the main brand/product named specifically (not generic "branża") at least once per H2 section. CRITICAL: Do NOT penalize for: missing prices/case studies/competitor data, internal links, technical SEO, backlinks, page title.' + regulaJezykaUwag(),
+        system: 'You are a content SEO expert evaluating AI-generated content from a company knowledge base. Evaluate ONLY content-level SEO. Respond ONLY with valid JSON, no markdown fences: {"score": 0-100, "items": [{"ok": true/false, "text": "short observation in ' + (currentLang === 'en' ? 'English' : 'Polish') + ', max ' + DLUGOSC_UWAGI_OCENY + ' chars"}]}. Give exactly 5 items covering: 1) keyword usage in H1/H2/body text, 2) heading structure quality, 3) article completeness - has BLUF (number in first paragraph), body sections AND Kluczowe wnioski with metrics, 4) meta description quality, 5) brand SALIENCE - is the main brand/product named specifically (not generic "branża") at least once per H2 section. CRITICAL: Do NOT penalize for: missing prices/case studies/competitor data, internal links, technical SEO, backlinks, page title.' + regulaJezykaUwag(),
         messages: [{ role: 'user', content: `Temat: ${topic}\nSłowa kluczowe: ${kwText}\n\nArtykuł:\n${articleText}` }]
       })
     });
@@ -13409,7 +13673,7 @@ function przerysujOceny() {
 
 function showSeoResult(r) {
   document.getElementById('seo-content').innerHTML = naglowekOceny(r.score, 'SEO') + `
-    <div class="seo-items">${r.items.map(item=>`<div class="seo-item"><span class="seo-item-icon">${item.ok?ikona('circle-check','ok'):ikona('triangle-alert','uwaga')}</span><span class="seo-item-text">${escapeHtml(item.text)}</span></div>`).join('')}</div>`;
+    <div class="seo-items">${r.items.map(item=>`<div class="seo-item"><span class="seo-item-icon">${item.ok?ikona('circle-check','ok'):ikona('triangle-alert','uwaga')}</span><span class="seo-item-text">${escapeHtml(bezSrednikowTekst(String(item.text || '')))}</span></div>`).join('')}</div>`;
 }
 
 // ─── AIO ASSESSMENT ───────────────────────────────────────────────────────────
@@ -13468,7 +13732,7 @@ async function toggleAioPanel(forceRefresh = false) {
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, output_config: WYSILEK_OCENY, max_tokens: zRezerwaOceny(600),
         system: `You are an AIO (AI Overview Optimization) expert. Evaluate the article against these 6 AIO criteria and respond ONLY with valid JSON, no markdown fences:
-{"score": 0-100, "items": [{"ok": true/false, "text": "short observation in ${currentLang === 'en' ? 'English' : 'Polish'}, max 60 chars"}]}
+{"score": 0-100, "items": [{"ok": true/false, "text": "short observation in ${currentLang === 'en' ? 'English' : 'Polish'}, max ${DLUGOSC_UWAGI_OCENY} chars"}]}
 
 The 6 criteria to evaluate (give one item per criterion):
 1. BLUF: Does the first paragraph contain a key metric/number with source and date context?
@@ -13508,7 +13772,7 @@ function updateAioHeader(fromCache) {
 
 function showAioResult(r) {
   document.getElementById('aio-content').innerHTML = naglowekOceny(r.score, 'AIO') + `
-    <div class="seo-items">${r.items.map(item=>`<div class="seo-item"><span class="seo-item-icon">${item.ok?ikona('circle-check','ok'):ikona('triangle-alert','uwaga')}</span><span class="seo-item-text">${escapeHtml(item.text)}</span></div>`).join('')}</div>`;
+    <div class="seo-items">${r.items.map(item=>`<div class="seo-item"><span class="seo-item-icon">${item.ok?ikona('circle-check','ok'):ikona('triangle-alert','uwaga')}</span><span class="seo-item-text">${escapeHtml(bezSrednikowTekst(String(item.text || '')))}</span></div>`).join('')}</div>`;
 }
 
 // ─── TEMPLATES ────────────────────────────────────────────────────────────────
@@ -16833,7 +17097,7 @@ function buildReport() {
   findings.push((en ? 'Position-weighted visibility score: ' : 'Wskaźnik widoczności ważony pozycją: ') + score + '/100' + (score < pct ? (en ? ' - lower than ' + pct + '% raw presence because of weak positions or instability.' : ' - niżej niż ' + pct + '% surowej obecności z powodu dalszych pozycji lub niestabilności.') : '.'));
   findings.push((en ? 'Presence: ' : 'Obecność: ') + pct + '% (' + present + '/' + n + ') - ' + band + (avgPosition != null ? (en ? ', average position #' : ', średnia pozycja #') + formatujLiczbe(avgPosition) : ''));
   if (avgPosition != null && avgPosition > 3) findings.push(en ? 'Average position is outside the top 3, so the brand is rarely the first source AI cites.' : 'Średnia pozycja jest poza pierwszą trójką, więc marka rzadko jest pierwszym źródłem cytowanym przez AI.');
-  if (absentQ.length) findings.push((en ? 'Absent in ' : 'Nieobecna w ') + absentQ.length + (en ? ' query(ies): ' : ' zapytaniach: ') + absentQ.slice(0, 3).join('; ') + (absentQ.length > 3 ? '...' : ''));
+  if (absentQ.length) findings.push((en ? 'Absent in ' : 'Nieobecna w ') + absentQ.length + (en ? ' query(ies): ' : ' zapytaniach: ') + absentQ.slice(0, 3).join(' · ') + (absentQ.length > 3 ? '...' : ''));
   if (lowPosQ.length) findings.push((en ? 'Ranked #4 or lower in ' : 'Pozycja #4 lub dalej w ') + lowPosQ.length + (en ? ' query(ies).' : ' zapytaniach.'));
   if (unstableQ.length) findings.push((en ? 'Unstable presence in ' : 'Niestabilna obecność w ') + unstableQ.length + (en ? ' query(ies) across iterations.' : ' zapytaniach między iteracjami.'));
   if (compLead) findings.push((en ? 'Top competitor ' : 'Główny konkurent ') + compLead[0] + (en ? ' is cited in ' : ' jest cytowany w ') + compLead[2] + '% ' + (en ? 'of queries' : 'zapytań') + (compLead[1] > brandMentions ? (en ? ', more often than your brand.' : ', częściej niż Twoja marka.') : '.'));
@@ -16880,8 +17144,8 @@ function renderRepModal(rep) {
     const t = rep.trend; const sign = t.scoreDelta > 0 ? '+' : '';
     const dc = t.scoreDelta > 0 ? 'var(--c-sukces)' : t.scoreDelta < 0 ? 'var(--red)' : 'var(--text3)';
     h += '<div style="font-size:12px;color:var(--text2);margin-bottom:4px"><strong>' + (en ? 'Trend vs previous' : 'Trend vs poprzedni') + '</strong> (' + _repDate(t.prevTs) + '): <span style="color:' + dc + '">' + sign + t.scoreDelta + ' pkt</span></div>';
-    if (t.newlyPresent.length) h += '<div style="font-size:12px;color:' + 'var(--c-sukces)' + '">+ ' + (en ? 'newly present' : 'nowo obecne') + ': ' + t.newlyPresent.map(_visEsc).join('; ') + '</div>';
-    if (t.newlyAbsent.length) h += '<div style="font-size:12px;color:var(--red)">- ' + (en ? 'newly absent' : 'nowo nieobecne') + ': ' + t.newlyAbsent.map(_visEsc).join('; ') + '</div>';
+    if (t.newlyPresent.length) h += '<div style="font-size:12px;color:' + 'var(--c-sukces)' + '">+ ' + (en ? 'newly present' : 'nowo obecne') + ': ' + t.newlyPresent.map(_visEsc).join(' · ') + '</div>';
+    if (t.newlyAbsent.length) h += '<div style="font-size:12px;color:var(--red)">- ' + (en ? 'newly absent' : 'nowo nieobecne') + ': ' + t.newlyAbsent.map(_visEsc).join(' · ') + '</div>';
     h += '<div style="height:10px"></div>';
   }
   if (rep.topComp.length) {
@@ -16920,8 +17184,8 @@ function repToText(rep) {
   if (rep.trend) {
     const s = rep.trend.scoreDelta > 0 ? '+' : '';
     L.push((en ? 'Trend vs previous: ' : 'Trend vs poprzedni: ') + s + rep.trend.scoreDelta + ' pkt');
-    if (rep.trend.newlyPresent.length) L.push('  + ' + (en ? 'newly present: ' : 'nowo obecne: ') + rep.trend.newlyPresent.join('; '));
-    if (rep.trend.newlyAbsent.length) L.push('  - ' + (en ? 'newly absent: ' : 'nowo nieobecne: ') + rep.trend.newlyAbsent.join('; '));
+    if (rep.trend.newlyPresent.length) L.push('  + ' + (en ? 'newly present: ' : 'nowo obecne: ') + rep.trend.newlyPresent.join(' · '));
+    if (rep.trend.newlyAbsent.length) L.push('  - ' + (en ? 'newly absent: ' : 'nowo nieobecne: ') + rep.trend.newlyAbsent.join(' · '));
   }
   L.push('');
   if (rep.topComp.length) {
@@ -16968,8 +17232,8 @@ function repToHtml(rep) {
   if (rep.trend) {
     const s = rep.trend.scoreDelta > 0 ? '+' : '';
     b += '<p>' + (en ? 'Trend vs previous' : 'Trend vs poprzedni') + ' (' + _repDate(rep.trend.prevTs) + '): <strong>' + s + rep.trend.scoreDelta + ' pkt</strong></p>';
-    if (rep.trend.newlyPresent.length) b += '<p>' + (en ? 'Newly present' : 'Nowo obecne') + ': ' + rep.trend.newlyPresent.map(_visEsc).join('; ') + '</p>';
-    if (rep.trend.newlyAbsent.length) b += '<p>' + (en ? 'Newly absent' : 'Nowo nieobecne') + ': ' + rep.trend.newlyAbsent.map(_visEsc).join('; ') + '</p>';
+    if (rep.trend.newlyPresent.length) b += '<p>' + (en ? 'Newly present' : 'Nowo obecne') + ': ' + rep.trend.newlyPresent.map(_visEsc).join(' · ') + '</p>';
+    if (rep.trend.newlyAbsent.length) b += '<p>' + (en ? 'Newly absent' : 'Nowo nieobecne') + ': ' + rep.trend.newlyAbsent.map(_visEsc).join(' · ') + '</p>';
   }
   if (rep.topComp.length) {
     b += '<h2>' + (en ? 'Competitors cited by AI' : 'Konkurenci cytowani przez AI') + '</h2>';
@@ -17034,8 +17298,8 @@ function dlReportPdf() {
     if (rep.trend) {
       const s = rep.trend.scoreDelta > 0 ? '+' : '';
       c.push({ text: (en ? 'Trend vs previous: ' : 'Trend vs poprzedni: ') + s + rep.trend.scoreDelta + ' pkt', fontSize: 10, margin: [0, 0, 0, 4] });
-      if (rep.trend.newlyPresent.length) c.push({ text: (en ? 'Newly present: ' : 'Nowo obecne: ') + rep.trend.newlyPresent.join('; '), fontSize: 9, color: '#1B7042', margin: [0, 0, 0, 2] });
-      if (rep.trend.newlyAbsent.length) c.push({ text: (en ? 'Newly absent: ' : 'Nowo nieobecne: ') + rep.trend.newlyAbsent.join('; '), fontSize: 9, color: '#B72B29', margin: [0, 0, 0, 6] });
+      if (rep.trend.newlyPresent.length) c.push({ text: (en ? 'Newly present: ' : 'Nowo obecne: ') + rep.trend.newlyPresent.join(' · '), fontSize: 9, color: '#1B7042', margin: [0, 0, 0, 2] });
+      if (rep.trend.newlyAbsent.length) c.push({ text: (en ? 'Newly absent: ' : 'Nowo nieobecne: ') + rep.trend.newlyAbsent.join(' · '), fontSize: 9, color: '#B72B29', margin: [0, 0, 0, 6] });
     }
     const hcell = t => ({ text: t, style: 'th', fillColor: DRUK.tloTabeli, margin: [2, 3, 2, 3] });
     const tblLayout = { hLineColor: () => DRUK.linia, vLineColor: () => DRUK.linia, hLineWidth: () => 0.5, vLineWidth: () => 0 };
@@ -17069,7 +17333,7 @@ function dlReportPdf() {
   }
   function load(src, cb) { const s = document.createElement('script'); s.src = src; s.onload = cb; s.onerror = () => powiadomBlad(_t('msg-pdf-load-fail')); document.head.appendChild(s); }
   if (window.pdfMake && typeof window.pdfMake.createPdf === 'function') { run(); return; }
-  load('pwa/lib/pdfmake.min.js', () => load('pwa/lib/vfs_fonts.js', run));
+  load('pwa/lib/pdfmake.min.js', () => load('pwa/lib/vfs_fonts-2026-10.js', run));
 }
 // kolory-eksportu:koniec
 
@@ -17152,12 +17416,13 @@ function renderAeoCheck() {
   // R6-F (E-17): odmiana przez liczbe ("32 słowa", "3 nagłówki-pytania", "1 nagłówek-pytanie").
   items.push({ ok: firstWords >= 25 && firstWords <= 50, text: _tn('aeo-definicja', firstWords) });
   items.push({ ok: /\d/.test(firstP), text: _t('aeo-liczba') });
-  items.push({ ok: qH2.length >= 5 && qH2.length <= 7, text: _tn('aeo-faq', qH2.length) });
-  const goodList = lists.some(l => { const n = l.querySelectorAll('li').length; return n >= 3 && n <= 7; });
+  // Limity wspolne z poprawa z Luk (AEO_* przy improveFromGaps).
+  items.push({ ok: qH2.length >= AEO_PYTANIA_MIN && qH2.length <= AEO_PYTANIA_MAX, text: _tn('aeo-faq', qH2.length) });
+  const goodList = lists.some(l => { const n = l.querySelectorAll('li').length; return n >= AEO_LISTA_MIN && n <= AEO_LISTA_MAX; });
   items.push({ ok: goodList, text: _t('aeo-lista') });
   const ratio = h2s.length ? qH2.length / h2s.length : 0;
   items.push({ ok: ratio >= 0.5, text: _t('aeo-pytania-h2').replace('{n}', Math.round(ratio * 100)) });
-  const longP = paras.filter(p => _aeoWords(p.textContent) > 80).length;
+  const longP = paras.filter(p => _aeoWords(p.textContent) > AEO_SLOW_AKAPITU).length;
   items.push({ ok: longP === 0, text: _t('aeo-dlugie-akapity').replace('{n}', longP) });
 
   const okCount = items.filter(i => i.ok).length;
@@ -17209,13 +17474,14 @@ function computeGeo() {
   const firstWords = _aeoWords(firstP);
   const qH2 = h2s.filter(h => h.textContent.trim().endsWith('?'));
 
+  // Te same limity co panel AEO i poprawa z Luk (AEO_* przy improveFromGaps).
   const aeoChecks = [
     firstWords >= 25 && firstWords <= 50,
     /\d/.test(firstP),
-    qH2.length >= 5 && qH2.length <= 7,
-    lists.some(l => { const n = l.querySelectorAll('li').length; return n >= 3 && n <= 7; }),
+    qH2.length >= AEO_PYTANIA_MIN && qH2.length <= AEO_PYTANIA_MAX,
+    lists.some(l => { const n = l.querySelectorAll('li').length; return n >= AEO_LISTA_MIN && n <= AEO_LISTA_MAX; }),
     (h2s.length ? qH2.length / h2s.length : 0) >= 0.5,
-    paras.filter(p => _aeoWords(p.textContent) > 80).length === 0
+    paras.filter(p => _aeoWords(p.textContent) > AEO_SLOW_AKAPITU).length === 0
   ];
   const aeoScore = Math.round(aeoChecks.filter(Boolean).length / aeoChecks.length * 100);
 

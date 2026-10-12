@@ -669,6 +669,12 @@ function odpFakty(cialo, ctx, zn) {
   const uwagi = [];
   if (zLiczba) uwagi.push({ rodzaj: 'liczba', cytat: zLiczba.slice(0, 120), powod: j === 'pl' ? 'Tej wartości nie ma w źródłach; źródła podają inny zakres albo milczą.' : 'This value is not in the sources; they give a different range or none.' });
   if (inne) uwagi.push({ rodzaj: 'zakres', cytat: inne.slice(0, 120), powod: j === 'pl' ? 'Źródła mówią o tym ogólnie, artykuł rozciąga to na wszystkie przypadki.' : 'The sources state this generally; the article extends it to every case.' });
+  // Runda A: kategoria "brak" (nazwany fakt bez zrodla: osoba, misja, badanie) - zdanie bez cyfr,
+  // jak „Termin zaproponował Gawriił Tichow" w artykule o astrobiologii.
+  if (/"brak"/.test(ctx.sys)) {
+    const bezLiczby = zdania.find((s) => s !== zLiczba && s !== inne && !/\d/.test(s) && s.length > 40) || '';
+    if (bezLiczby) uwagi.push({ rodzaj: 'brak', cytat: bezLiczby.slice(0, 120), powod: j === 'pl' ? 'Żadne źródło nie wymienia tego wydarzenia; artykuł podaje je z pamięci.' : 'No source names this event; the article states it from memory.' });
+  }
   // R7-I: prompt z kategoria "strona" i ponumerowanymi stronami z sieci - jedno zdanie "ze strony",
   // ktorej cytowany fragment jest urwany. Na poczatku listy (jak u modelu), aplikacja przesuwa je w dol.
   const nrStrony = (ctx.usr.match(/^\[(\d+)\] https?:\/\//m) || [])[1];
@@ -677,6 +683,30 @@ function odpFakty(cialo, ctx, zn) {
     if (zeStrony) uwagi.unshift({ rodzaj: 'strona', cytat: zeStrony.slice(0, 120), strona: Number(nrStrony), powod: j === 'pl' ? 'Cytowany fragment strony urywa się przed tą wartością.' : 'The quoted passage of the page stops before this value.' });
   }
   return [{ type: 'text', text: tekstJson({ uwagi }, zn) }];
+}
+
+// Runda A: „Popraw zdania bez źródła" - redaktor usuwa zdania z listy FINDINGS. Cytat z kontroli bywa
+// sklejony z naglowkiem (tekst blokami), wiec atrapa szuka w HTML najdluzszej koncowki cytatu i usuwa
+// cale zdanie, w ktorym ta koncowka stoi. Reszta artykulu bez zmian.
+function odpFaktyPoprawa(cialo, ctx, zn) {
+  const czesci = ctx.usr.split(/\n\nARTICLE \(HTML\):\n/);
+  let html = czesci[1] || '';
+  const cytaty = [...String(czesci[0] || '').matchAll(/^\d+\. "(.+)" - /gm)].map((m) => m[1]);
+  for (const c of cytaty) {
+    const koncowka = [60, 40, 25].map((n) => c.slice(-n)).find((t) => t.trim().length >= 12 && html.indexOf(t) >= 0);
+    if (!koncowka) continue;
+    const k0 = html.indexOf(koncowka);
+    // poczatek zdania: za ostatnim znacznikiem albo za koncem poprzedniego zdania
+    const przed = html.slice(0, k0);
+    let od = przed.lastIndexOf('>') + 1;
+    for (const t of przed.matchAll(/[.!?]\s+/g)) od = Math.max(od, t.index + t[0].length);
+    // koniec zdania: kropka (wykrzyknik, pytajnik) albo koniec elementu
+    const reszta = html.slice(k0 + koncowka.length);
+    const k = reszta.search(/[.!?](?=\s|<|$)|<\/(?:p|li|td|th|h[1-6])>/);
+    const koniec = k < 0 ? reszta.length : (/[.!?]/.test(reszta[k]) ? k + 1 : k);
+    html = html.slice(0, od) + reszta.slice(koniec).replace(/^\s+/, '');
+  }
+  return [{ type: 'text', text: html }];
 }
 
 function odpSerp(cialo, ctx, zn) {
@@ -1039,12 +1069,15 @@ function odpLukiSekcje(cialo, ctx, zn) {
   const spis = ((ctx.usr.split(/Existing H2 sections, in order:\n/)[1] || '').split('\n'))
     .map((l) => (l.match(/^- (.+)$/) || [])[1]).filter(Boolean);
   let html = spis.length ? '[AFTER: ' + spis[0] + ']\n' : '';
+  // [atrapa:dlugi-akapit]: pierwszy akapit pierwszej nowej sekcji ma ponad 80 slow, ze skrotem „np. NASA"
+  // w srodku (Runda A: po Lukach akapity mialy 81 i 91 slow, a aplikacja dzieli je na granicy zdan).
+  const dlugi = zn['dlugi-akapit'] ? ' ' + [zd(), zd(), zd(), 'Agencje kosmiczne, np. NASA, publikują dane z misji otwarcie.', zd(), zd(), zd()].join(' ') : '';
   tematy.forEach((tem, i) => {
     if (tematy.length >= 3 && i === tematy.length - 1) {
       html += '<h2>' + esc(wielka(tem)) + '</h2><p data-brak="1">' + esc(brakTekst) + '</p>\n';
       return;
     }
-    html += '<h2>' + esc(wielka(tem)) + '</h2>\n<p>' + esc((j === 'pl' ? 'W kontekście tematu „' + tem + '” źródła wskazują kilka konkretów. ' : 'For "' + tem + '" the sources give a few specifics. ') + zd() + ' ' + zd()) + '</p>\n<p>' + esc(zd() + ' ' + zd()) + '</p>\n';
+    html += '<h2>' + esc(wielka(tem)) + '</h2>\n<p>' + esc((j === 'pl' ? 'W kontekście tematu „' + tem + '” źródła wskazują kilka konkretów. ' : 'For "' + tem + '" the sources give a few specifics. ') + zd() + ' ' + zd() + (i === 0 ? dlugi : '')) + '</p>\n<p>' + esc(zd() + ' ' + zd()) + '</p>\n';
   });
   const nazwa = (ctx.usr.match(/write an updated <h2>([^<]+)<\/h2>/) || [])[1];
   if (nazwa) {
@@ -1289,6 +1322,7 @@ const REGULY = [
   ['narracja', (c) => /A user asks about the brand/.test(c.sys)],
   ['narracja-ocena', (c) => /You evaluate how an AI assistant described a brand/.test(c.sys)],
   ['widocznosc-ai', (c) => /You are a helpful AI assistant answering a user question using web search/.test(c.sys)],
+  ['fakty-poprawa', (c) => /^You are a fact-checking editor/.test(c.sys)],
   ['fakty', (c) => /You are a fact checker/.test(c.sys)],
   ['luki', (c) => /You are a semantic SEO expert\. Compare an article to SERP topics/.test(c.sys)],
   ['luki-sekcje', (c) => /Write ONLY the new HTML sections requested/.test(c.sys)],
@@ -1318,6 +1352,7 @@ const RODZAJE_OPIS = {
   'ocena-premium': 'ocena trybu Premium - JSON score/issues',
   'poprawa': 'poprawa artykulu przez edytora SEO/AIO - HTML',
   'fakty': 'kontrola faktow - JSON uwagi[]',
+  'fakty-poprawa': 'poprawa zdan bez zrodla po kontroli faktow - HTML bez zdan z cytatow',
   'web-fetch': 'pobranie strony do bazy wiedzy (web_fetch_tool_result)',
   'tytuly': 'warianty tytulow H1 - JSON tablica 5 napisow',
   'luki': 'analiza luk semantycznych - JSON score/missing/present/msg',
@@ -1407,6 +1442,7 @@ function odpowiedzAnthropic(cialo) {
     case 'serp': { const r = odpSerp(cialo, ctx, zn); content = r.content; opcje = { szukan: r.szukan }; break; }
     case 'web-fetch': { const r = odpWebFetch(cialo, ctx, zn); content = r.content; opcje = { pobran: r.pobran }; break; }
     case 'fakty': content = blokMyslenia(cialo, 'Compare figures with the sources.').concat(odpFakty(cialo, ctx, zn)); break;
+    case 'fakty-poprawa': content = blokMyslenia(cialo, 'Remove only the unsupported details.').concat(odpFaktyPoprawa(cialo, ctx, zn)); break;
     case 'ocena-premium':
     case 'ocena-seo-generowanie':
     case 'ocena-aio-generowanie': content = odpOcenaIssues(cialo, ctx, zn); break;
