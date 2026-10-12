@@ -1701,6 +1701,129 @@ async function scenariuszR9FPokrycie(b) {
   await k.close();
 }
 
+// Opus 5.5 (2026-10-12): model tresci claude-opus-5-5 z cennikiem 4/20 USD, myslenie zawsze wlaczone (krotkie oceny
+// z effort low zamiast thinking disabled - atrapa odrzuca disabled jak API, 400), zapasowy model po odmowie filtra
+// (fallbacks "default" + naglowek beta), odmowa jako zrozumialy komunikat. Do tego bez srednikow w swiezym
+// tekscie modelu (zasada w promptach i siatka bezpieczenstwa) i okno glosu bez dyktowania (VOICE_INPUT_ENABLED = false).
+async function scenariuszOpus55(b) {
+  const { k, s, bledyJs } = await nowaStrona(b, 'pl', {});
+  const zap = [];
+  s.on('request', (z) => {
+    if (z.method() !== 'POST' || !/anthropic\.com/.test(z.url())) return;
+    try { zap.push({ cialo: JSON.parse(z.postData() || '{}'), beta: z.headers()['anthropic-beta'] || '' }); } catch (e) { /* inne cialo */ }
+  });
+  const odp = [];
+  s.on('response', async (r) => {
+    if (r.request().method() !== 'POST' || !/anthropic\.com/.test(r.url())) return;
+    odp.push(r.status());
+  });
+
+  // Brak funkcji daje null, a nie wyjatek, zeby pozostale sprawdzenia scenariusza tez sie wykonaly.
+  const f = await s.evaluate(() => {
+    const bs = typeof bezSrednikow === 'function' ? bezSrednikow : () => null;
+    const bst = typeof bezSrednikowTekst === 'function' ? bezSrednikowTekst : () => null;
+    const bi = typeof blokInterpunkcji === 'function' ? blokInterpunkcji : () => '';
+    return {
+      model: MODEL_TRESCI,
+      koszt55: kosztOdpowiedzi({ model: 'claude-opus-5-5', usage: { input_tokens: 1000000, output_tokens: 1000000 } }),
+      koszt55data: kosztOdpowiedzi({ model: 'claude-opus-5-5-20261001', usage: { input_tokens: 1000000, output_tokens: 1000000 } }),
+      koszt5: kosztOdpowiedzi({ model: 'claude-opus-5', usage: { input_tokens: 1000000, output_tokens: 1000000 } }),
+      kosztZapas: kosztOdpowiedzi({ model: 'claude-opus-4-8', usage: { input_tokens: 1000000, output_tokens: 1000000 } }),
+      zdanie: bs('<p>Pierwsze zdanie; drugie zdanie.</p>'),
+      lista: bs('<ul><li>punkt pierwszy;</li><li>punkt drugi.</li></ul>'),
+      przezWezel: bs('<p>Tekst; <strong>pogrubiony</strong> dalej.</p>'),
+      koniecAkapitu: bs('<p>Ostatnie zdanie bez kropki;</p>'),
+      kod: bs('<p>Kod <code>a; b</code> zostaje.</p>'),
+      atrybut: bs('<p><a href="https://example.com/?a=1;b=2">link</a> &amp; reszta</p>'),
+      tekst: bst('Post ma dwie czesci; druga dalej.\n- punkt;\n- punkt drugi'),
+      tekstWiersze: bst('Zdanie bez kropki;\n1. krok;\n• punkt;\nDalej'),
+      regula: bi(),
+    };
+  });
+  wynik('Opus 5.5: MODEL_TRESCI = claude-opus-5-5, cennik 4/20 USD (takze wersja z data), Opus 5 i model zapasowy 5/25',
+    f.model === 'claude-opus-5-5' && f.koszt55 === 24 && f.koszt55data === 24 && f.koszt5 === 30 && f.kosztZapas === 30, JSON.stringify(f).slice(0, 200));
+  wynik('bez srednikow: "a; b" -> "a. B", srednik na koncu punktu listy znika, w akapicie -> kropka, przez <strong> wielka litera dalej',
+    f.zdanie === '<p>Pierwsze zdanie. Drugie zdanie.</p>' && f.lista === '<ul><li>punkt pierwszy</li><li>punkt drugi.</li></ul>'
+      && f.przezWezel === '<p>Tekst. <strong>Pogrubiony</strong> dalej.</p>' && f.koniecAkapitu === '<p>Ostatnie zdanie bez kropki.</p>',
+    JSON.stringify([f.zdanie, f.lista, f.przezWezel, f.koniecAkapitu]));
+  wynik('bez srednikow: kod, adres w atrybucie i encja &amp; zostaja, zwykly tekst przerobek wiersz po wierszu',
+    f.kod === '<p>Kod <code>a; b</code> zostaje.</p>' && f.atrybut === '<p><a href="https://example.com/?a=1;b=2">link</a> &amp; reszta</p>'
+      && f.tekst === 'Post ma dwie czesci. Druga dalej.\n- punkt\n- punkt drugi' && /Never use a semicolon/.test(f.regula),
+    JSON.stringify([f.kod, f.atrybut, f.tekst]));
+  wynik('bez srednikow: w zwyklym tekscie srednik na koncu zdania staje sie kropka, na koncu punktu listy (-, 1., •) znika',
+    f.tekstWiersze === 'Zdanie bez kropki.\n1. krok\n• punkt\nDalej', JSON.stringify(f.tekstWiersze));
+
+  // Artykul z wyszukiwaniem: zapasowy model w zapytaniu, zasada interpunkcji w prompcie, srednik z modelu usuniety.
+  await generuj(s, 'Rowery cargo dla firm [atrapa:srednik@artykul] [atrapa:srednik@przerobka]', false);
+  await krok('Opus 5.5 artykul', czekajNaKoniec(s));
+  const art = await s.evaluate(() => ({ tekst: document.getElementById('article').innerText, h1: !!document.querySelector('#article h1') }));
+  const zapArt = zap.filter((z) => z.cialo.model === 'claude-opus-5-5' && /PUNCTUATION: Never use a semicolon/.test(String(z.cialo.system || '')) && Array.isArray(z.cialo.tools));
+  wynik('Opus 5.5: artykul na claude-opus-5-5 z fallbacks "default" i naglowkiem server-side-fallback-2026-07-01, bez thinking disabled',
+    zapArt.length >= 1 && zapArt.every((z) => z.cialo.fallbacks === 'default' && z.beta === 'server-side-fallback-2026-07-01' && !z.cialo.thinking),
+    JSON.stringify(zapArt.map((z) => ({ f: z.cialo.fallbacks, beta: z.beta, t: z.cialo.thinking }))));
+  wynik('bez srednikow: srednik z modelu nie trafia do artykulu (zdanie dzielone, punkt listy bez srednika)',
+    art.h1 && art.tekst.indexOf(';') === -1 && /dwie czesci\. Druga zaczyna sie/.test(art.tekst), art.tekst.slice(-160));
+
+  // Ocena SEO: krotkie wywolanie JSON z effort low i zapasem tokenow zamiast thinking disabled.
+  const przedSeo = zap.length;
+  await s.evaluate(() => { seoOpen = false; toggleSeoPanel(true); });
+  await krok('Opus 5.5 ocena SEO', s.waitForFunction(() => !!document.querySelector('#seo-content .seo-items'), null, { timeout: 15000 }));
+  const zapSeo = zap.slice(przedSeo).filter((z) => /content SEO expert/.test(String(z.cialo.system || '')));
+  wynik('Opus 5.5: ocena SEO z output_config.effort low, bez thinking, max_tokens z zapasem na myslenie (600 + 4000)',
+    zapSeo.length === 1 && zapSeo[0].cialo.output_config && zapSeo[0].cialo.output_config.effort === 'low' && !zapSeo[0].cialo.thinking
+      && zapSeo[0].cialo.max_tokens === 4600 && zapSeo[0].cialo.fallbacks === 'default', JSON.stringify(zapSeo.map((z) => z.cialo.output_config)));
+  wynik('Opus 5.5: zadne zapytanie nie dostalo 400 od atrapy (zasady modelu jak w API)', odp.every((x) => x !== 400), odp.join(','));
+
+  // Przerobka: zwykly tekst bez srednika, zasada interpunkcji w prompcie przepisywania.
+  const przedRp = zap.length;
+  await s.evaluate(() => runRepurpose('linkedin'));
+  await krok('Opus 5.5 przerobka', s.waitForFunction(() => { const o = document.getElementById('repurpose-out'); return o && o.style.display === 'block' && o.value.length > 20; }, null, { timeout: 15000 }));
+  const rp = await s.evaluate(() => document.getElementById('repurpose-out').value);
+  const zapRp = zap.slice(przedRp).filter((z) => /content repurposing specialist/.test(String(z.cialo.system || '')));
+  wynik('bez srednikow: przerobka bez srednika, zasada interpunkcji w prompcie przepisywania',
+    rp.indexOf(';') === -1 && /dwie czesci\. Druga/.test(rp) && zapRp.length === 1 && /PUNCTUATION: Never use a semicolon/.test(zapRp[0].cialo.system), rp.slice(-120));
+
+  // Odmowa filtra: caly lancuch odmawia -> komunikat ze slownika, bez "Sprobuj ponownie"; model zapasowy -> artykul.
+  await generuj(s, 'Badania wirusow [atrapa:odmowa=cala@artykul]', false);
+  await krok('Opus 5.5 odmowa', czekajNaKoniec(s));
+  const odm = await s.evaluate(() => {
+    const kb = document.querySelector('#article .komunikat-bledu');
+    return { tekst: kb ? kb.innerText.replace(/\s+/g, ' ').trim() : '', ponow: !!(kb && kb.querySelector('.ponow-generowanie')), wzor: _t('err-odmowa-modelu') };
+  });
+  wynik('odmowa filtra: komunikat "Model AI odmówił odpowiedzi..." zamiast pustej odpowiedzi, bez przycisku ponowienia',
+    odm.tekst.indexOf(odm.wzor) !== -1 && !odm.ponow && !/refusal/i.test(odm.tekst.replace(odm.wzor, '')), odm.tekst.slice(0, 200));
+  await generuj(s, 'Zdrowie w pracy biurowej [atrapa:odmowa@artykul]', false);
+  await krok('Opus 5.5 model zapasowy', czekajNaKoniec(s));
+  const zapas = await s.evaluate(() => ({ h1: !!document.querySelector('#article h1'), blad: !!document.querySelector('#article .komunikat-bledu'), koszt: (history[0] || {}).koszt || 0 }));
+  wynik('odmowa z modelem zapasowym: artykul powstaje (blok fallback ignorowany), koszt liczony stawka modelu zapasowego',
+    zapas.h1 && !zapas.blad && zapas.koszt > 0, JSON.stringify(zapas));
+
+  // Okno glosu bez dyktowania (VOICE_INPUT_ENABLED = false): menu, tytul, opis i uwaga bez slowa, wybor silnika dyktowania ukryty.
+  const glos = await s.evaluate(() => {
+    openVoiceSettings();
+    const m = document.getElementById('voice-modal');
+    const stt = document.getElementById('vc-stt');
+    const menu = document.querySelector('[data-i18n-bez-dyktowania="settings-voice-title-czytanie"]');
+    const r = { menu: menu ? menu.textContent : '', modal: m.innerText, stt: stt ? stt.closest('label').offsetParent === null : true };
+    closeVoiceSettings();
+    // innerText ukrytego okna zwraca tez tekst ukrytych elementow, wiec po zmianie jezyka otwieramy je ponownie
+    applyLang('en');
+    openVoiceSettings();
+    r.menuEn = menu ? menu.textContent : '';
+    r.modalEn = m.innerText;
+    closeVoiceSettings();
+    applyLang('pl');
+    return r;
+  });
+  wynik('dyktowanie wylaczone: menu "Czytanie na głos", okno bez slowa "dyktowanie" (PL i EN), wybor silnika dyktowania ukryty',
+    glos.menu === 'Czytanie na głos' && glos.menuEn === 'Read aloud' && !/dyktow/i.test(glos.modal) && !/dictat/i.test(glos.modalEn) && glos.stt,
+    JSON.stringify({ menu: glos.menu, menuEn: glos.menuEn, stt: glos.stt, modal: glos.modal.slice(0, 120) }));
+
+  wynik('Opus 5.5: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'opus55');
+  await k.close();
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
@@ -1712,7 +1835,7 @@ const SCENARIUSZE = [
   ['r9f-luki-darmowy', scenariuszR9FLukiDarmowy], ['r9f-bez-sieci', scenariuszR9FBezSieci],
   ['r9f-prompt-bazy', scenariuszR9FPromptBazy], ['r9f-pomocnicy', scenariuszR9FPomocnicy],
   ['r9f-narracja', scenariuszR9FNarracja], ['r9f-sesja', scenariuszR9FSesja],
-  ['r9f-pokrycie', scenariuszR9FPokrycie],
+  ['r9f-pokrycie', scenariuszR9FPokrycie], ['opus55', scenariuszOpus55],
 ];
 (async () => {
   let b;

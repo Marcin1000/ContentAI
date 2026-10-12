@@ -114,6 +114,9 @@ const KONF = {
   // w kazdym zapytaniu o grafike: dostawca wycofuje modele (gpt-image-1 konczy sie 23.10.2026),
   // a zmiana tutaj nie wymaga nowej wersji aplikacji, tylko restartu uslugi.
   modelGrafiki: (process.env.CAI_MODEL_GRAFIKI || '').trim(),
+  // Podmiana modelu tresci (2026-10-12) w kazdym zapytaniu z MODEL_TRESCI aplikacji: porownanie jakosci na
+  // serwerze testowym albo powrot do poprzedniego modelu bez zmiany kodu. Tylko MODELE_TRESCI_ZAMIENNE.
+  modelTresci: (process.env.CAI_MODEL_TRESCI || '').trim(),
   urlNvidia: process.env.CAI_URL_NVIDIA || 'https://integrate.api.nvidia.com/v1/chat/completions',
   // Adresy pozostalych dostawcow. Domyslnie oficjalne API; nadpisanie sluzy
   // atrapie w testach calej aplikacji i bramom zgodnym z tym samym API.
@@ -394,6 +397,16 @@ function sprawdzKonfiguracje(konf = KONF) {
       konf.serpSamoobsluga = konf.dataForSeo.login && konf.dataForSeo.haslo ? 'dataforseo' : 'model';
     }
     dodaj('serpSamoobsluga', Boolean(process.env.CAI_SERP_SAMOOBSLUGA), bledy);
+  }
+
+  // Model tresci (CAI_MODEL_TRESCI): tylko model, ktory przyjmuje te same zapytania co aplikacja.
+  {
+    const bledy = [];
+    if (konf.modelTresci && !MODELE_TRESCI_ZAMIENNE.includes(konf.modelTresci)) {
+      bledy.push(`CAI_MODEL_TRESCI musi byc jednym z: ${MODELE_TRESCI_ZAMIENNE.join(', ')} (jest "${konf.modelTresci}"), zostaje model z aplikacji`);
+      konf.modelTresci = '';
+    }
+    dodaj('modelTresci', Boolean(process.env.CAI_MODEL_TRESCI), bledy);
   }
 
   // Plan nowych kont (decyzja 3): musi istniec w plany.js.
@@ -857,12 +870,17 @@ function ustawHtmlAplikacji(html) {
 // wiec granice stawia serwer. Listy bierzemy z samej aplikacji (stale MODEL_*
 // i IMG_FORMATS), zeby zmiana modelu w aplikacji nie psula generowania.
 
-const MODELE_DOMYSLNE = ['claude-opus-5', 'claude-sonnet-5'];
+const MODELE_DOMYSLNE = ['claude-opus-5-5', 'claude-sonnet-5'];
+// CAI_MODEL_TRESCI moze podmienic MODEL_TRESCI aplikacji tylko na model, ktory przyjmuje te same zapytania
+// (myslenie adaptacyjne, output_config.effort, fallbacks "default"): Opus 5.5 i poprzedni Opus 5.
+const MODELE_TRESCI_ZAMIENNE = ['claude-opus-5-5', 'claude-opus-5'];
 const ROZMIARY_DOMYSLNE = ['1536x1024', '1024x1024', '1024x1536'];
-const DOZWOLONE = { modele: new Set(MODELE_DOMYSLNE), rozmiary: new Set(ROZMIARY_DOMYSLNE) };
+const DOZWOLONE = { modele: new Set(MODELE_DOMYSLNE), rozmiary: new Set(ROZMIARY_DOMYSLNE), modelTresci: MODELE_DOMYSLNE[0] };
 
 function ustalDozwolone(html) {
   const modele = [...String(html).matchAll(/const\s+MODEL_[A-Z_]+\s*=\s*'([a-z0-9][a-z0-9._-]*)'/g)].map((m) => m[1]);
+  const tresci = /const\s+MODEL_TRESCI\s*=\s*'([a-z0-9][a-z0-9._-]*)'/.exec(String(html));
+  DOZWOLONE.modelTresci = tresci ? tresci[1] : MODELE_DOMYSLNE[0];
   const formaty = /const IMG_FORMATS\s*=\s*\[([\s\S]*?)\];/.exec(String(html));
   const rozmiary = formaty ? [...formaty[1].matchAll(/api:\s*'(\d+x\d+)'/g)].map((m) => m[1]) : [];
   DOZWOLONE.modele = new Set([...(modele.length ? modele : MODELE_DOMYSLNE), ...KONF.modeleDodatkowe]);
@@ -879,7 +897,23 @@ function odmowaKosztuTresci(body) {
   if (mt !== undefined && !(Number.isInteger(mt) && mt > 0 && mt <= KONF.maxTokens)) {
     return `max_tokens musi być liczbą całkowitą od 1 do ${KONF.maxTokens}.`;
   }
+  // Zapasowy model po odmowie filtra: tylko "default" (model polecany przez Anthropic). Lista modeli
+  // pozwolilaby klientowi wybrac drozszy model zapasowy na koncie serwera.
+  if (body.fallbacks !== undefined && body.fallbacks !== 'default') {
+    return 'fallbacks: ten serwer przyjmuje tylko wartość "default".';
+  }
   return null;
+}
+
+/** CAI_MODEL_TRESCI po kontroli konfiguracji albo '' (model z aplikacji). */
+function zamiennikTresci() {
+  return MODELE_TRESCI_ZAMIENNE.includes(KONF.modelTresci) ? KONF.modelTresci : '';
+}
+
+/** Odpowiedz Anthropic z odmowa filtra bezpieczenstwa: HTTP 200 ze stop_reason "refusal" (Opus 5.5 ma tez filtr bio). */
+function odmowaModelu(tekst) {
+  if (!String(tekst).includes('"refusal"')) return false;
+  try { return JSON.parse(tekst).stop_reason === 'refusal'; } catch { return false; }
 }
 
 /** To samo dla /api/images: jedna grafika, rozmiar z listy aplikacji. */
@@ -1505,6 +1539,9 @@ async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
   if (odmowa) {
     return odpowiedzJson(res, 400, { type: 'error', error: { type: 'invalid_request_error', message: odmowa }, komunikat: odmowa });
   }
+  // CAI_MODEL_TRESCI: ten sam prompt na innym modelu tresci (odpowiedz podaje model, wiec koszt w aplikacji sie zgadza).
+  const zamiennik = zamiennikTresci();
+  if (zamiennik && body.model === DOZWOLONE.modelTresci) body.model = zamiennik;
 
   // Klucz (BYOK): konto 'wlasne' bez wlasnego klucza konczy sie odmowa, nigdy kluczem
   // serwera; klucz uzytkownika idzie zawsze do Anthropic (cel 'anthropic', SEC8-03).
@@ -1582,11 +1619,16 @@ async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
         'Content-Type': 'application/json',
         'x-api-key': k.klucz,
         'anthropic-version': '2023-06-01',
+        // fallbacks "default" z aplikacji (Opus 5.5): bez tego naglowka beta API odrzuca pole (400).
+        ...(body.fallbacks === 'default' ? { 'anthropic-beta': 'server-side-fallback-2026-07-01' } : {}),
       },
       body: JSON.stringify(body),
     }, h);
     if (!h.klientCzeka()) return undefined;
-    if (odp.ok) for (const czynnosc of czynnosci) policzUzycie(sesja, czynnosc);
+    // Odmowa filtra (takze po modelu zapasowym) nie daje tekstu: sztuka artykulu wraca do pakietu
+    // (rezerwacja oddaje niepotwierdzone w finally), a wywolanie liczy sie jak kazde inne (sufit kosztu).
+    const bezTekstu = odp.ok && odmowaModelu(tekst);
+    if (odp.ok) for (const czynnosc of czynnosci) if (!(bezTekstu && czynnosc === 'artykul')) policzUzycie(sesja, czynnosc);
     return wyslij(res, odp.status, {
       'Content-Type': 'application/json; charset=utf-8', ...naglowkiZlegoKlucza(k, odp.status, tekst, 'anthropic'),
     }, Buffer.from(tekst, 'utf8'));
@@ -2857,6 +2899,7 @@ function start() {
     console.log(`Content AI: http://${KONF.host}:${serwer.address().port}`);
     console.log(`  dostawca tresci: ${KONF.dostawca}${KONF.dostawca === 'nvidia' ? ' (' + KONF.modelNvidia + ')' : ''}`);
     if (KONF.modelGrafiki) console.log(`  model grafik: ${KONF.modelGrafiki} (CAI_MODEL_GRAFIKI)`);
+    if (zamiennikTresci()) console.log(`  model tresci: ${zamiennikTresci()} zamiast ${DOZWOLONE.modelTresci} (CAI_MODEL_TRESCI)`);
     console.log(`  kont: ${kont}, baza: ${KONF.sqlite}, cookie Secure: ${KONF.cookieSecure ? 'tak' : 'NIE (tylko do testow lokalnych)'}`);
     console.log(`  rejestracja: ${funkcjaWlaczona('rejestracja') ? 'otwarta' : 'zamknieta'}, platnosci: ${funkcjaWlaczona('platnosci') ? `${KONF.platnosci.dostawca} (${KONF.platnosci.tryb})` : 'wylaczone'}, poczta: ${KONF.poczta.tryb}`);
     console.log(`  modele: ${[...DOZWOLONE.modele].join(', ')}; max_tokens <= ${KONF.maxTokens}; kompresja: ${KONF.kompresja ? 'tak' : 'nie'}`);

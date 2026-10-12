@@ -230,7 +230,7 @@ KONTROLE = [
 
     # Model byl wpisany na sztywno w ponad dwudziestu miejscach.
     ("F29/stala", "jedna stala modelu tresci",
-     "const MODEL_TRESCI     = 'claude-opus-5';", None, None),
+     "const MODEL_TRESCI     = 'claude-opus-5-5';", None, None),
     ("F29/bezliteralu", "zaden endpoint nie ma modelu wpisanego na sztywno",
      None, "model: 'claude-sonnet-4-6'", None),
     ("F29/bezTemperatury", "brak pola temperature (rodzina 5 odrzuca je bledem)",
@@ -1705,6 +1705,60 @@ KONTROLE += [
     ("R9-S/czekanie-stripe", "czekanie na potwierdzenie Stripe (platnosc i zmiana pakietu) bez srednika",
      "'plat-oczekuje':'Czekamy na potwierdzenie płatności od Stripe. To zwykle kilka sekund. Okno odświeży się samo.'",
      "To zwykle kilka sekund; okno odświeży się samo.", None),
+]
+
+# Opus 5.5 (2026-10-12): model tresci claude-opus-5-5 (4/20 USD zamiast 5/25). Mysli zawsze, wiec
+# thinking disabled to 400, odmowa filtra przychodzi jako HTTP 200 ze stop_reason "refusal", a zapasowy
+# model wlacza fallbacks "default" z naglowkiem beta. Do tego zakaz srednika w zasadach pisania
+# z siatka bezpieczenstwa na swiezy tekst i okno glosu bez dyktowania, dopoki jest wylaczone.
+KONTROLE += [
+    ("R9-O/cennik", "cennik Opus 5.5: 4 USD wejscie i 20 USD wyjscie za milion tokenow",
+     "'claude-opus-5-5':   [4, 20],", None, None),
+    ("R9-O/cennik-zapas", "cennik modelu zapasowego po odmowie filtra (claude-opus-4-8, 5/25), wczesniej stawka Sonneta",
+     "'claude-opus-4-8':   [5, 25],", None, None),
+    ("R9-O/koszt-kreator", "kreator klucza: koszt artykulu po nowej stawce, jak na stronie (koszt_artykulu w konfiguracja.json)",
+     "kontrolą faktów to orientacyjnie 0,20-0,40 USD.", "orientacyjnie 0,25-0,50 USD", ("proxy",)),
+    ("R9-O/bez-disabled", "krotkie oceny JSON na MODEL_TRESCI z effort low i zapasem tokenow, bez thinking disabled (400 na Opus 5.5)",
+     "model: MODEL_TRESCI, output_config: WYSILEK_OCENY, max_tokens: zRezerwaOceny(",
+     "re:model: MODEL_TRESCI,\\s*thinking: BEZ_MYSLENIA", None),
+    ("R9-O/wysilek", "niski wysilek myslenia dla krotkich ocen (Opus 5.5 domyslnie medium)",
+     "const WYSILEK_OCENY = { effort: 'low' };", None, None),
+    ("R9-O/rezerwa-oceny", "zapas tokenow na krotkie rozumowanie przed JSON-em oceny",
+     "function zRezerwaOceny(tokeny) { return tokeny + REZERWA_OCENY; }", None, None),
+    ("R9-O/zapasowy", "model zapasowy po odmowie filtra: fallbacks \"default\" tylko w zapytaniach o MODEL_TRESCI",
+     "if (!b || b.model !== MODEL_TRESCI || b.fallbacks !== undefined) return options;\n  b.fallbacks = 'default';", None, None),
+    ("R9-O/zapasowy-wpiety", "zapasowy model tylko na API Anthropic (Foundry i tryb GPT go nie maja)",
+     "if (!gptMode && endpoint === API_ENDPOINT) options = zZapasowymModelem(options);", None, None),
+    ("R9-O/zapasowy-naglowek", "naglowek beta server-side-fallback-2026-07-01 w zapytaniu z klucza w przegladarce",
+     "zmienione.headers = Object.assign({}, options.headers, { 'anthropic-beta': BETA_ZAPASOWEGO_MODELU });", None, ("keys", "owner")),
+    ("R9-O/zapasowy-proxy", "proxy bez naglowka beta z przegladarki (serwer buduje wlasne naglowki do Anthropic i sam go dopisuje)",
+     None, "{ 'anthropic-beta': BETA_ZAPASOWEGO_MODELU }", ("proxy",)),
+    ("R9-O/odmowa", "odmowa filtra (HTTP 200, stop_reason refusal) jako blad z kosztem, nie pusta albo urwana odpowiedz",
+     "if (d && d.stop_reason === 'refusal') return odpowiedzOdmowy(d);", None, None),
+    ("R9-O/odmowa-rodzaj", "rodzaj bledu odmowa-modelu (bez przycisku ponowienia z tym samym tematem)",
+     "if (/\\brefusal\\b/.test(typ)) return 'odmowa-modelu';", None, None),
+    ("R9-O/odmowa-pl", "komunikat odmowy filtra (PL)",
+     "'err-odmowa-modelu':'Model AI odmówił odpowiedzi, bo zadziałał filtr bezpieczeństwa dostawcy.", None, None),
+    ("R9-O/odmowa-en", "komunikat odmowy filtra (EN)",
+     "'err-odmowa-modelu':'The AI model declined to answer because a safety filter at the provider was triggered.", None, None),
+    ("R9-O/sredniki-artykul", "zakaz srednika w zasadach pisania artykulu",
+     "systemPrompt += blokDaty() + blokInterpunkcji();", None, None),
+    ("R9-O/sredniki-przepisywanie", "zakaz srednika przy przepisywaniu (korekta premium, poprawa po ocenie, przerobki)",
+     "+ '- Keep every figure exactly as it stands, including its units and its wording.'\n    + blokInterpunkcji();", None, None),
+    ("R9-O/sredniki-siatka", "srednik z modelu usuwany ze swiezego artykulu (siatka bezpieczenstwa za zasada)",
+     "html = bezSrednikow(html);", None, None),
+    ("R9-O/sredniki-premium", "srednik usuwany po korekcie premium",
+     "premiumHtml = bezSrednikow(oczyscHtmlModelu(", None, None),
+    ("R9-O/sredniki-przerobki", "przerobki na inne formaty bez srednika",
+     "showRepurpose(bezSrednikowTekst((d.content||[]).map(b=>b.text||'').join('').trim()));", None, None),
+    ("R9-O/sredniki-audio", "scenariusz audio z zasada interpunkcji",
+     "var system=audioScriptSystem(t,n,L,gens)+blokInterpunkcji();", None, None),
+    ("R9-O/dyktowanie-css", "dyktowanie wylaczone: wybor silnika dyktowania ukryty",
+     "body:not(.voice-input-on) .tylko-dyktowanie { display:none !important; }", None, None),
+    ("R9-O/dyktowanie-teksty", "dyktowanie wylaczone: menu i okno glosu mowia tylko o czytaniu na glos",
+     "else document.querySelectorAll('[data-i18n-bez-dyktowania]').forEach(function (el) { el.setAttribute('data-i18n', el.getAttribute('data-i18n-bez-dyktowania')); });", None, None),
+    ("R9-O/dyktowanie-menu", "pozycja menu ustawien z tekstem bez dyktowania",
+     'data-i18n="settings-voice-title" data-i18n-bez-dyktowania="settings-voice-title-czytanie"', None, None),
 ]
 
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi

@@ -33,7 +33,11 @@
  *   [atrapa:c2pa] (grafika: PNG z fragmentem caBX jak manifest C2PA dostawcy)
  *   [atrapa:opoznienie=3000] [atrapa:bez-sieci] [atrapa:siec-blad] [atrapa:pause] [atrapa:max-tokens]
  *   [atrapa:pusty] [atrapa:zly-json] [atrapa:ocena=55] [atrapa:wstep] [atrapa:bez-uwag] [atrapa:fetch-blad]
+ *   [atrapa:odmowa] (filtr odmawia, przy fallbacks "default" odpowiada model zapasowy) [atrapa:odmowa=cala]
+ *   [atrapa:srednik] (srednik w tekscie modelu)
  *   Kazdy mozna zawezic do rodzaju: [atrapa:529@artykul].
+ * Zasady modeli jak w API: Opus 5.5 / Sonnet 5.5 / Fable 5.1 odrzucaja thinking disabled/enabled i wymuszone
+ * narzedzie, fallbacks wymaga naglowka anthropic-beta (400 invalid_request_error).
  *
  * Uzycie jako modul (wariant keys w Playwright):
  *   const atrapa = require('./narzedzia/atrapa/dostawcy.js');
@@ -541,12 +545,53 @@ function wiadomosc(cialo, content, opcje = {}) {
     id: idLos('msg_atrapa_'),
     type: 'message',
     role: 'assistant',
-    model: cialo.model || 'claude-opus-5',
+    model: cialo.model || 'claude-opus-5-5',
     content,
     stop_reason: opcje.stop || 'end_turn',
     stop_sequence: null,
     usage,
   };
+}
+
+// ─── Zasady modeli i odmowa filtra (Opus 5.5, 2026-10-12) ──────────────────
+// Modele, ktore mysla zawsze: thinking disabled/enabled i wymuszone narzedzie to 400.
+const MODELE_ZAWSZE_MYSLA = new Set(['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-fable-5-1']);
+const MODEL_ZAPASOWY = 'claude-opus-4-8';
+function naruszenieZasadModelu(cialo, naglowki) {
+  const model = String(cialo.model || '');
+  const myslenie = cialo.thinking && cialo.thinking.type;
+  if (MODELE_ZAWSZE_MYSLA.has(model) && (myslenie === 'disabled' || myslenie === 'enabled')) {
+    return '"thinking.type.' + myslenie + '" is not supported for this model. Use "thinking.type.adaptive" and "output_config.effort" to control thinking behavior.';
+  }
+  const wybor = cialo.tool_choice && cialo.tool_choice.type;
+  if (MODELE_ZAWSZE_MYSLA.has(model) && (wybor === 'any' || wybor === 'tool')) return 'tool_choice: type "tool" and "any" are not supported for this model.';
+  const wysilek = cialo.output_config && cialo.output_config.effort;
+  if (wysilek !== undefined && ['low', 'medium', 'high', 'xhigh', 'max'].indexOf(wysilek) === -1) return 'output_config.effort: nieznana wartosc (atrapa)';
+  if (cialo.fallbacks !== undefined) {
+    const beta = String(naglowki['anthropic-beta'] || '');
+    if (cialo.fallbacks === 'default') {
+      if (!/\bserver-side-fallback-2026-07-01\b/.test(beta)) return 'fallbacks: "default" requires the anthropic-beta: server-side-fallback-2026-07-01 header (atrapa)';
+    } else if (Array.isArray(cialo.fallbacks)) {
+      if (!/\bserver-side-fallback-2026-06-01\b/.test(beta)) return 'fallbacks: the array form requires the anthropic-beta: server-side-fallback-2026-06-01 header (atrapa)';
+    } else return 'fallbacks: nieznana wartosc (atrapa)';
+  }
+  return null;
+}
+// [atrapa:odmowa]: filtr odmawia, przy fallbacks "default" odpowiada model zapasowy (blok fallback,
+// usage.iterations, model w odpowiedzi). [atrapa:odmowa=cala]: odmawia caly lancuch.
+function odpowiedzZOdmowa(cialo, zn) {
+  if (zn.odmowa === 'cala' || cialo.fallbacks !== 'default') {
+    return { id: idLos('msg_atrapa_'), type: 'message', role: 'assistant', model: cialo.model || 'claude-opus-5-5', content: [],
+      stop_reason: 'refusal', stop_sequence: null, stop_details: { type: 'refusal', category: 'bio', explanation: null },
+      usage: { input_tokens: tokeny(JSON.stringify(cialo.messages || '') + JSON.stringify(cialo.system || '')), output_tokens: 0 } };
+  }
+  const odp = odpowiedzAnthropic(Object.assign({}, cialo, { model: MODEL_ZAPASOWY }));
+  odp.content = [{ type: 'fallback', from: { model: cialo.model }, to: { model: MODEL_ZAPASOWY } }].concat(odp.content);
+  odp.usage.iterations = [
+    { type: 'message', model: cialo.model, input_tokens: odp.usage.input_tokens, output_tokens: 0 },
+    { type: 'fallback_message', model: MODEL_ZAPASOWY, input_tokens: odp.usage.input_tokens, output_tokens: odp.usage.output_tokens },
+  ];
+  return odp;
 }
 
 function blokMyslenia(cialo, opis) {
@@ -1384,6 +1429,15 @@ function odpowiedzAnthropic(cialo) {
     case 'json-ogolny': content = odpOgolnyJson(cialo, ctx, zn); break;
     default: content = [{ type: 'text', text: ctx.jezyk === 'pl' ? 'Odpowiedź atrapy (nieznany rodzaj wywołania).' : 'Mock answer (unknown call type).' }];
   }
+  // [atrapa:srednik]: srednik w tekscie modelu (siatka bezpieczenstwa aplikacji, bezSrednikow, 2026-10-12).
+  if (zn.srednik) {
+    const ostatni = content.filter((b) => b.type === 'text').pop();
+    if (ostatni) {
+      ostatni.text += rodzaj === 'przerobka'
+        ? '\nPost atrapy ma dwie czesci; druga zaczyna sie mala litera.\n- punkt atrapy;'
+        : '<p>Zdanie atrapy ma dwie czesci; druga zaczyna sie mala litera.</p><ul><li>punkt atrapy;</li></ul>';
+    }
+  }
   if (zn.pusty) content = content.filter((b) => b.type !== 'text');
   if (opcje.stop !== 'pause_turn') {
     const p = przytnijDoLimitu(cialo, content, !!zn['max-tokens']);
@@ -1667,6 +1721,11 @@ function obsluz(metoda, sciezkaPelna, naglowki, bufor) {
     const zn = znaczniki(tekst, rodzaj);
     const kod = bladDlaWywolania(rodzaj, zn);
     if (kod) { const b = bladAnthropic(kod); return json(kod, b.json, rodzaj, b.naglowki); }
+    // Zasady prawdziwego API (Opus 5.5, 2026-10-12): atrapa odrzuca to samo co Anthropic, zeby test zlapal
+    // zapytanie, ktore na produkcji skonczyloby sie bledem 400.
+    const naruszenie = naruszenieZasadModelu(cialo, naglowki || {});
+    if (naruszenie) return json(400, { type: 'error', error: { type: 'invalid_request_error', message: naruszenie }, request_id: idLos('req_atrapa_') }, 'zasady-modelu');
+    if (zn.odmowa) { const o = odpowiedzZOdmowa(cialo, zn); return json(200, o, 'odmowa', { 'request-id': idLos('req_atrapa_') }); }
     const odp = odpowiedzAnthropic(cialo);
     return json(200, odp, odp._rodzaj, { 'request-id': idLos('req_atrapa_') });
   }
