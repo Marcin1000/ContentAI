@@ -998,7 +998,7 @@ KONTROLE = [
     # DOCX przez html-docx-js byl HTML-em w opakowaniu (altChunk, strona Letter): Google Docs,
     # LibreOffice i Pages pokazywaly pusty dokument.
     ("R3B/docx", "DOCX z wlasnego generatora WordprocessingML (wszystkie trzy miejsca)",
-     "await wczytajSkrypt('pwa/lib/docx-natywny-3.js');", "wczytajSkrypt('pwa/lib/html-docx.js')", None),
+     "await wczytajSkrypt('pwa/lib/docx-natywny-4.js');", "wczytajSkrypt('pwa/lib/html-docx.js')", None),
     ("R3B/docx-bez-altchunk", "zadne miejsce nie sklada DOCX starym sposobem",
      None, "htmlDocx.asBlob(", None),
     ("R3B/kopia", "wszystkie eksporty z jednej kopii artykulu",
@@ -1315,7 +1315,7 @@ KONTROLE += [
     ("R7-I/fakty-strona-prompt", "Fakty: prompt wie, ze cytowane fragmenty stron sa niepelne (kategoria strona)",
      "'whole pages: a detail missing from an excerpt is NOT evidence that the page lacks it. '", None, None),
     ("R7-I/fakty-strona-adres", "Fakty: 'Sprawdz na stronie' z adresem wylacznie z listy stron z sieci",
-     "if (z) { kopia.rodzaj = 'strona'; kopia.adres = z.url; kopia.tytulStrony = z.tytul || ''; }", None, None),
+     "if (z) { kopia.rodzaj = 'strona'; kopia.adres = z.url; kopia.tytulStrony = nazwaZrodla(z.tytul, z.url); }", None, None),
     ("R7-I/fakty-waga", "Fakty: kolejnosc wagi - 'Sprawdz na stronie' i niesprawdzony adres na koncu listy",
      "const WAGA_UWAG = { strona: 1, 'link-niesprawdzony': 2 };", None, None),
     ("R7-I/fakty-slownik", "Fakty: nowa kategoria i warianty notki w slowniku PL",
@@ -1849,21 +1849,108 @@ KONTROLE += [
     ("R9-B/pdf-h3", "PDF: po H3 11 pt (wczesniej 4 pt)",
      "h3: { fontSize: 12, bold: true, lineHeight: 0.88, margin: [0, 12, 0, 11] },",
      "h3: { fontSize: 12, bold: true, lineHeight: 0.88, margin: [0, 12, 0, 4] },", None),
-    ("R9-B/docx-3", "DOCX z generatora w wersji 3 (wieksze odstepy po srodtytulach, nowa nazwa pliku pwa/lib)",
-     "await wczytajSkrypt('pwa/lib/docx-natywny-3.js');", "wczytajSkrypt('pwa/lib/docx-natywny-2.js')", None),
+    ("R9-B/docx-3", "DOCX z generatora w wersji 3 lub nowszej (wieksze odstepy po srodtytulach, nowa nazwa pliku pwa/lib)",
+     "await wczytajSkrypt('pwa/lib/docx-natywny-4.js');", "wczytajSkrypt('pwa/lib/docx-natywny-2.js')", None),
+]
+
+# Po etapie 7 (2026-10-12, PDF i DOCX artykulu o egzoplanetach, zrzuty kreatora i maila od Marcina): nazwy zrodel bez
+# "Suggested Searches", tytulu rownego domenie i nazwy serwisu powtarzajacej domene (takze w artykulach sprzed poprawki),
+# data przy zrodle w jednym wierszu (PDF i DOCX w wersji 4), regula o frazach i liczbach ze zrodel w innym jezyku,
+# arkusze z wlasna szerokoscia na srodku na tablecie, stopka kreatora na telefonie wg UX4-16, teksty kreatora bez " - ".
+KONTROLE += [
+    ("R9-C/zrodla-nazwa", "nazwa zrodla z jednej funkcji (lista zrodel, PDF, DOCX, WordPress, uwagi Faktow)",
+     "function nazwaZrodla(tytul, url) {", "const nazwa = String(z.tytul || '').replace(", None),
+    ("R9-C/zrodla-ogolne", "tytul ogolny ('Suggested Searches', 'Strona główna', 404) zastepuje ostatni czlon adresu",
+     "const TYTULY_OGOLNE = new Set(['suggested searches', 'search', 'search results',", None, None),
+    ("R9-C/zrodla-adres", "nazwa z adresu: ostatni czlon z co najmniej 3 literami, bez numerow, rozszerzen i czlonow technicznych",
+     "if (/^\\d+$/.test(c) || CZLONY_TECHNICZNE.test(c)) continue;", None, None),
+    ("R9-C/zrodla-serwis", "nazwa serwisu na koncu tytulu odpada, gdy powtarza domene ('- NASA Science', '| Scientific American')",
+     "if (slowa.length && slowa.length <= 5 && (bezTld.indexOf(slowa[0]) >= 0 || etykiety.indexOf(razem) >= 0 || bezTld.join('') === razem)", None, None),
+    ("R9-C/zrodla-domena", "tytul rowny domenie ('astrobiology.nasa.gov') traktowany jak ogolny",
+     "return !r || TYTULY_OGOLNE.has(r) || /^https?\\s/.test(r) || r.replace(/ /g, '') === host.replace(/[^a-z0-9]/g, '');", None, None),
+    ("R9-C/zrodla-stare", "nazwy zrodel w artykulach sprzed poprawki poprawiane przy wyswietleniu i eksporcie (uporzadkujZrodla)",
+     "li.querySelectorAll(':scope > a[href]').forEach(function (a) {", None, None),
+    ("R9-C/zrodla-fakty", "uwaga Faktow 'Sprawdz na stronie': tytul strony z nazwaZrodla",
+     "kopia.tytulStrony = nazwaZrodla(z.tytul, z.url);", "kopia.tytulStrony = z.tytul || '';", None),
+    ("R9-C/pdf-data", "PDF: data przy zrodle z twardymi spacjami (bez '12' na koncu wiersza i 'gru 2016' w nastepnym)",
+     "data ? data.textContent.trim().replace(/\\s+/g, '\\u00a0') : ''].filter(Boolean).join(' · ');",
+     "[domenaZrodla(href), data ? data.textContent.trim() : ''].filter(Boolean).join(' · ');", None),
+    ("R9-C/docx-4", "DOCX z generatora w wersji 4 (data przy zrodle w jednym wierszu, nowa nazwa pliku pwa/lib)",
+     "await wczytajSkrypt('pwa/lib/docx-natywny-4.js');", "wczytajSkrypt('pwa/lib/docx-natywny-3.js')", None),
+    ("R9-C/fakty-jezyk", "regula faktow: fraza ze zrodla w innym jezyku tlumaczona, liczby wg jezyka artykulu (6445, nie 6,445), kazda raz",
+     "never paste a phrase from the source (in a Polish article \"6,445 confirmed exoplanets\" is a defect). ", None, None),
+    ("R9-C/arkusz-srodek", "arkusz z wlasna szerokoscia (kreator, klucze, pakiet, Baza, SEO) na srodku na tablecie, nie przy lewej krawedzi",
+     "body.is-mobile .overlay, body.is-mobile .okno-tlo { align-items: flex-end; justify-content: center; padding: 0; }",
+     "body.is-mobile .overlay, body.is-mobile .okno-tlo { align-items: flex-end; justify-content: stretch; padding: 0; }", None),
+    ("R9-C/kreator-stopka-css", "stopka kreatora na telefonie: kolumna na cala szerokosc, 'Pomin kreator' na srodku nad przyciskami",
+     "body.is-mobile #start-modal .start-stopka { flex-direction: column; align-items: stretch;", None, None),
+    ("R9-C/kreator-stopka", "stopka kreatora z klasami (bez stylu w linii, ktory trzymal przyciski w waskiej kolumnie)",
+     '<div class="start-stopka" id="start-stopka">',
+     '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:22px">', ("proxy",)),
+    ("R9-C/kreator-pierwszy", "telefon chowa Wstecz na pierwszym kroku kreatora (bez pustego miejsca nad Dalej)",
+     "el('start-modal').classList.toggle('start-pierwszy', krok === 0);", None, ("proxy",)),
+    ("R9-C/kreator-teksty-pl", "kreator: tytul i etykiety kluczy bez ' - ' w roli myslnika (PL)",
+     "'start-2-tytul':'Własne klucze API (opcjonalnie)',", "'start-2-tytul':'Klucze API - tylko jeśli chcesz',", ("proxy",)),
+    ("R9-C/kreator-teksty-en", "kreator: tytul i etykiety kluczy bez ' - ' w roli myslnika (EN)",
+     "'start-2-tytul':'Your own API keys (optional)',", "'start-2-tytul':'API keys - only if you want to',", ("proxy",)),
 ]
 
 # Tresc plikow pwa/lib, ktore aplikacja wczytuje (nie przechodza przez budowanie wariantow): (kod, opis, plik, jest, niema).
 KONTROLE_BIBLIOTEK = [
-    ("R9-B/docx-h2", "DOCX: Heading2 20 pt nad i 12 pt pod (wczesniej 18 i 6 pt)", "docx-natywny-3.js",
+    ("R9-B/docx-h2", "DOCX: Heading2 20 pt nad i 12 pt pod (wczesniej 18 i 6 pt)", "docx-natywny-4.js",
      '<w:spacing w:before="400" w:after="240" w:line="264" w:lineRule="auto"/><w:outlineLvl w:val="1"/>', None),
-    ("R9-B/docx-h3", "DOCX: Heading3 16 pt nad i 11 pt pod (wczesniej 12 i 4 pt)", "docx-natywny-3.js",
+    ("R9-B/docx-h3", "DOCX: Heading3 16 pt nad i 11 pt pod (wczesniej 12 i 4 pt)", "docx-natywny-4.js",
      '<w:spacing w:before="320" w:after="220" w:line="264" w:lineRule="auto"/><w:outlineLvl w:val="2"/>', None),
     ("R9-B/stare-pliki", "poprzednia wersja generatora DOCX zostaje dla kart otwartych przed aktualizacja",
      "docx-natywny-2.js", "docx-natywny-2.js", None),
     ("R9-B/stare-kroje", "stary plik krojow PDF zostaje dla kart otwartych przed aktualizacja",
      "vfs_fonts.js", "this.pdfMake.vfs", None),
+    ("R9-C/docx-data", "DOCX: data przy zrodle z twardymi spacjami (generator w wersji 4)", "docx-natywny-4.js",
+     "var data = dataEl ? String(dataEl.textContent || '').replace(/[()]/g, '').replace(/\\s+/g, ' ').trim().replace(/ /g, '\\u00a0') : '';", None),
+    ("R9-C/stare-pliki", "generator DOCX w wersji 3 zostaje dla kart otwartych przed aktualizacja",
+     "docx-natywny-3.js", "docx-natywny-3.js", None),
 ]
+
+# Pliki serwera i narzedzi (sciezka od katalogu repozytorium): (kod, opis, plik, jest, niema).
+KONTROLE_PLIKOW = [
+    ("R9-C/poczta-znak", "e-maile: znak marki w naglowku jako obrazek w samej wiadomosci (Content-ID), napis CONTENT AI tekstem",
+     "serwer/poczta-szablony.js", "<img src=\"cid:${ZNAK_CID}\" width=\"22\" height=\"22\" alt=\"\"", "<img src=\"http"),
+    ("R9-C/poczta-zalacznik", "e-maile: plik znaku dolaczany do wiadomosci w Resend (content_id), tylko gdy HTML go wola",
+     "serwer/poczta.js", "content_type: 'image/png', content_id: szablony.ZNAK_CID }", None),
+    ("R9-C/poczta-plik", "e-maile: plik znaku marki (narzedzia/grafiki_marki.js)", "serwer/zasoby/poczta-znak.png", None, None),
+    ("R9-C/cli-zwrot-email", "CLI: zwrot, platnosci-synchronizuj i platnosci-powiaz przyjmuja e-mail (konta k-... szukano w 'lista')",
+     "serwer/platnosci-cli.js", "return String(arg).includes('@') ? magazyn.kontoPoEmailu(arg) : magazyn.konto(String(arg));",
+     "const konto = login ? magazyn.konto(login) : null;"),
+    ("R9-C/cli-konta-email", "CLI: haslo, plan, rola i usun przyjmuja e-mail jak pokaz",
+     "serwer/uzytkownicy.js", "if (['haslo', 'plan', 'rola', 'usun'].includes(polecenie) && login && String(login).includes('@')) {", None),
+    ("R9-C/logowanie-rejestracja", "rejestracja zapisuje ostatnie logowanie (loguje od razu; 'pokaz' mial '-')",
+     "serwer/konta.js", "regulaminCzas: teraz, ostatnieLogowanie: teraz });", None),
+    ("R9-C/logowanie-reset", "nowe haslo z linku zapisuje ostatnie logowanie (loguje od razu)",
+     "serwer/konta.js", "emailPotwierdzony: k.emailPotwierdzony || teraz, ostatnieLogowanie: teraz });", None),
+]
+
+
+def sprawdz_tresc_plikow(cicho=False):
+    korzen = Path(__file__).resolve().parent.parent
+    bledy = []
+    for kod, opis, plik, jest, niema in KONTROLE_PLIKOW:
+        sciezka = korzen / plik
+        powod = None
+        if not sciezka.is_file():
+            powod = "brak pliku " + plik
+        elif jest is not None or niema is not None:
+            tresc = sciezka.read_text(encoding="utf-8")
+            if jest is not None and jest not in tresc:
+                powod = "brak sladu poprawki"
+            elif niema is not None and niema in tresc:
+                powod = "wrocil stan sprzed poprawki"
+        if powod:
+            bledy.append((kod, opis, powod))
+            if not cicho:
+                print(f"    BLAD  {kod:20} {opis}\n          -> {powod}")
+        elif not cicho:
+            print(f"    ok    {kod:20} {opis}")
+    return bledy
 
 
 def sprawdz_tresc_bibliotek(cicho=False):
@@ -2021,6 +2108,10 @@ def main():
             print("\n  biblioteki pwa/lib")
         bledy = sprawdz_tresc_bibliotek(args.cicho)
         wszystkie_bledy += [("lib", *b) for b in bledy]
+        if not args.cicho:
+            print("\n  pliki serwera i narzedzi")
+        bledy = sprawdz_tresc_plikow(args.cicho)
+        wszystkie_bledy += [("pliki", *b) for b in bledy]
 
     print()
     if wszystkie_bledy:

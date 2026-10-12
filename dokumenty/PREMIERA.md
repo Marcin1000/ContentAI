@@ -356,8 +356,11 @@ sudo journalctl -u contentai --no-pager -n 20 | grep -E 'rejestracja|platnosci'
 
 Oczekiwane: kod 0 i `rejestracja: otwarta, platnosci: stripe (live)`. W dzienniku nie ma wpisu
 `wersja w konfiguracji rozna od dokumentu` (wersja regulaminu w konfiguracji = wersja dokumentu).
-3. Jeden prawdziwy zakup Twoją kartą, potem zwrot: `sudo serwer/cli.sh zwrot <login> --pelny --wykonaj`.
-4. Ogłoszenie (LinkedIn, Product Hunt).
+3. Jeden prawdziwy zakup Twoją kartą, potem zwrot: `sudo serwer/cli.sh zwrot <login albo e-mail> --pelny --wykonaj`.
+   Bez `--wykonaj` polecenie tylko wylicza zwrot.
+4. Wygląd Stripe (logo w Checkout, w panelu subskrypcji i w mailach Stripe): Settings, Branding
+   (https://dashboard.stripe.com/settings/branding), w trybie live. Pliki i kolory: `dokumenty/marka/README.md`.
+5. Ogłoszenie (LinkedIn, Product Hunt): teksty, grafiki i plan dnia w `dokumenty/ogloszenie/`.
 
 ---
 

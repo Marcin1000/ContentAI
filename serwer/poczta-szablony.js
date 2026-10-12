@@ -5,13 +5,16 @@
 // Teksty: AG/runda8/agencja-strona/06-emaile.md (potwierdzenie, reset, powitanie, proba
 // rejestracji na zajety adres), AG/runda8/prawo/zgody-i-komunikaty.md pkt 5 i 6 (potwierdzenie
 // umowy i odstapienia, PR8-31); pozostale napisane w tym samym tonie. Kazdy e-mail ma wersje
-// tekstowa (link pelnym adresem) i prosty HTML: jedna kolumna, przycisk, bez obrazkow i bez
-// pikseli sledzacych, odnosniki prosto do aplikacji (bez przekierowan). Stopka z danymi
+// tekstowa (link pelnym adresem) i prosty HTML: jedna kolumna, przycisk, bez pikseli sledzacych,
+// odnosniki prosto do aplikacji (bez przekierowan). Jedyny obrazek to znak marki w naglowku, dolaczony
+// do samej wiadomosci (Content-ID), wiec otwarcie niczego nie pobiera z serwera. Stopka z danymi
 // uslugodawcy, bez linku rezygnacji (wiadomosci transakcyjne); rozliczenia wysyla Stripe.
 //
 // Kontrakt (WYKONANIE-A0 3.10):
 //   SZABLONY: lista nazw
-//   renderuj(szablon, jezyk, dane, konf) -> { temat, tekst, html }
+//   renderuj(szablon, jezyk, dane, konf, opcje?) -> { temat, tekst, html }
+//     opcje.znak: true = naglowek ze znakiem marki (<img src="cid:ZNAK_CID">, plik dolacza poczta.js);
+//     bez znaku naglowek ma sam napis CONTENT AI.
 //     dane wg szablonu (konta.js A1, platnosci.js B):
 //       potwierdzenie      { odnosnik, email, godzin?, minut? }
 //       reset              { odnosnik, email, minut }
@@ -388,12 +391,27 @@ function stopka(j, powod, konf, kontakt) {
   return [pierwsza, TRESCI[j].powody[powod || 'konto'](hostAplikacji(konf))];
 }
 
+// Naglowek (2026-10-12, Marcin: "w mailach potrzebne logo, bo teraz smutno to wyglada"): znak i napis CONTENT AI
+// jak w gornym pasku aplikacji. Znak to obrazek dolaczony do wiadomosci (Content-ID, poczta.js), nie adres na
+// serwerze: otwarcie maila niczego nie pobiera, wiec zostaje obietnica z polityki prywatnosci (bez pikseli
+// sledzacych). Napis jest tekstem, wiec marke widac takze z wylaczonymi obrazkami. alt pusty: obok jest napis.
+const ZNAK_CID = 'content-ai-znak';
+function htmlNaglowka(znak) {
+  const obraz = znak
+    ? `<td style="padding:0 10px 0 0;vertical-align:middle;line-height:0;"><img src="cid:${ZNAK_CID}" width="22" height="22" alt="" style="display:block;border:0;outline:none;"></td>`
+    : '';
+  return '<tr><td style="padding:20px 28px 18px;border-bottom:1px solid #ecebe6;">'
+    + `<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>${obraz}`
+    + '<td style="vertical-align:middle;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:22px;font-weight:bold;letter-spacing:2px;color:#1a1a19;">CONTENT AI</td>'
+    + '</tr></table></td></tr>';
+}
+
 function htmlPrzycisku(tekst, odnosnik) {
   return `<p style="margin:24px 0;"><a href="${esc(odnosnik)}" style="display:inline-block;background:#111110;color:#ffffff;`
     + `text-decoration:none;padding:12px 22px;border-radius:6px;font-weight:bold;">${esc(tekst)}</a></p>`;
 }
 
-function renderuj(szablon, jezyk, dane = {}, konf = {}) {
+function renderuj(szablon, jezyk, dane = {}, konf = {}, opcje = {}) {
   if (!SZABLONY.includes(szablon)) throw new Error(`nieznany szablon e-maila: ${szablon}`);
   const j = jezyk === 'en' ? 'en' : 'pl';
   const zestaw = TRESCI[j];
@@ -426,7 +444,8 @@ function renderuj(szablon, jezyk, dane = {}, konf = {}) {
     + `<div style="display:none;max-height:0;overflow:hidden;">${esc(podglad)}</div>`
     + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f6f2;"><tr><td align="center" style="padding:24px 12px;">'
     + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:8px;">'
-    + '<tr><td style="padding:28px 28px 8px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.55;color:#1a1a19;">'
+    + htmlNaglowka(Boolean(opcje && opcje.znak))
+    + '<tr><td style="padding:24px 28px 8px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.55;color:#1a1a19;">'
     + akapit(zestaw.powitanie)
     + elementy.map((e) => (typeof e === 'string' ? akapit(e) : htmlPrzycisku(e.przycisk, e.odnosnik))).join('')
     + zapasowy
@@ -437,4 +456,4 @@ function renderuj(szablon, jezyk, dane = {}, konf = {}) {
   return { temat, tekst, html };
 }
 
-module.exports = { SZABLONY, renderuj, odmiana, bezpiecznyOdnosnik };
+module.exports = { SZABLONY, ZNAK_CID, renderuj, odmiana, bezpiecznyOdnosnik };

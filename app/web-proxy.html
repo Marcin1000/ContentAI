@@ -2188,7 +2188,9 @@ body.is-mobile .grupa-menu::before, body.is-mobile .settings-menu.open::before, 
   content: ""; display: block; width: 36px; height: 4px; border-radius: 2px; background: var(--c-linia-2); margin: -6px auto var(--s-10, 10px); }
 body.is-mobile .grupa-backdrop.show { background: transparent; }
 body.is-mobile .settings-menu { top: auto !important; }
-body.is-mobile .overlay, body.is-mobile .okno-tlo { align-items: flex-end; justify-content: stretch; padding: 0; }
+/* 2026-10-12: arkusz z wlasna szerokoscia (style="width:560px": kreator, klucze, pakiet, Baza, SEO) na tablecie
+   i waskim oknie (600-899 px) stal przy lewej krawedzi, z aplikacja widoczna z prawej. Teraz na srodku. */
+body.is-mobile .overlay, body.is-mobile .okno-tlo { align-items: flex-end; justify-content: center; padding: 0; }
 body.is-mobile .overlay .modal, body.is-mobile .okno-tlo > .modal { width: 100%; max-width: 100%; max-height: 92vh; margin: 0; border-radius: var(--r-lg) var(--r-lg) 0 0;
   border-bottom: 0; padding: var(--s-16) var(--s-16) calc(var(--s-16) + env(safe-area-inset-bottom, 0px)); animation: arkusz-wejscie var(--m-4) var(--e-wejscie); }
 body.is-mobile .modal-head { position: sticky; top: calc(var(--s-16) * -1); z-index: 2; margin: calc(var(--s-16) * -1) calc(var(--s-16) * -1) var(--s-12); padding: var(--s-16) var(--s-8) var(--s-8) var(--s-16); background: var(--c-nad); }
@@ -3158,6 +3160,15 @@ body.is-mobile .hist-lokalnie { margin-top: var(--s-8); }
 /* UX8-15: kreator - "Krok n z m" tekstem nad tytulem; tytul przyjmuje fokus programowo (bez ramki jak pole) */
 #start-modal .start-postep { margin: calc(var(--s-10, 10px) * -1) 0 var(--s-8); }
 #start-modal #start-tytul:focus { outline: none; }
+/* 2026-10-12 (zrzut Marcina, telefon i waski ekran): stopka kreatora. Komputer: "Pomin kreator" z lewej, Wstecz i Dalej
+   z prawej. Telefon wg UX4-16: Dalej na cala szerokosc na dole, Wstecz nad nim, "Pomin kreator" na srodku nad przyciskami.
+   Wczesniej rzad przyciskow mial szerokosc tresci, wiec Wstecz i Dalej stawaly waska kolumna przy prawej krawedzi.
+   Na pierwszym kroku telefon chowa Wstecz (komputer zostawia puste miejsce, zeby Dalej nie skakal). */
+#start-modal .start-stopka { display: flex; justify-content: space-between; align-items: center; gap: var(--s-8); margin-top: 22px; }
+#start-modal .start-przyciski { display: flex; gap: var(--s-8); }
+body.is-mobile #start-modal .start-stopka { flex-direction: column; align-items: stretch; gap: var(--s-4); margin-top: var(--s-8); }
+body.is-mobile #start-modal #start-pomin { align-self: center; }
+body.is-mobile #start-modal.start-pierwszy #start-wstecz { display: none; }
 /* UX8-24: przykladowy artykul - komputer: tekst z karta ocen z prawej; telefon: karta ocen nad tekstem */
 .start-przyklad { margin-top: var(--s-12); }
 .przyklad-okno { width: min(1040px, 100%); }
@@ -5706,17 +5717,17 @@ var I18N = {
     'start-zaczynamy':'Zacznij pisać','start-sztuk':'szt.','start-twoj-pakiet':'Twój pakiet',
     'start-1-tytul':'Witaj w Content AI',
     'start-1-opis':'Zanim napiszesz pierwszy artykuł, przejdźmy przez cztery krótkie kroki. Zajmie to minutę, a wszystko można zmienić później w ustawieniach.',
-    'start-2-tytul':'Klucze API - tylko jeśli chcesz',
+    'start-2-tytul':'Własne klucze API (opcjonalnie)',
     'start-2-opis':'Domyślnie generowanie korzysta z kluczy serwera, więc nic tu nie trzeba wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej: koszt modelu przejdzie wtedy na Twój rachunek u dostawcy. Limity pakietu obowiązują tak samo.',
     'start-2-opis-pakiet':'W Twoim pakiecie generowanie korzysta z kluczy serwera, więc nic tu nie trzeba wpisywać. Własne klucze są dostępne od pakietu Standard.',
     'start-2-gdzie':'Klucze zostają tylko w tej przeglądarce. Serwer przekazuje je dostawcy z każdym zapytaniem i niczego nie zapisuje. Na innym urządzeniu trzeba je wpisać ponownie.',
-    'start-2-anthropic':'Anthropic - treść','start-2-openai':'OpenAI - grafiki, lektor, transkrypcja',
-    'start-2-eleven':'ElevenLabs - lepszy lektor (opcjonalnie)',
+    'start-2-anthropic':'Anthropic: pisanie tekstów','start-2-openai':'OpenAI: grafiki, lektor, transkrypcja',
+    'start-2-eleven':'ElevenLabs: lepszy lektor (opcjonalnie)',
     'start-2-zly':'To nie wygląda na klucz API. Anthropic zaczyna się od „sk-ant-”, OpenAI od „sk-”. Zostaw pole puste, jeśli nie masz własnego klucza.',
     'start-3-tytul':'Twoja marka',
     'start-3-opis':'Głos marki to opis tego, jak ma brzmieć Twoja treść: ton, słownictwo, czego unikać. Bez niego artykuły będą poprawne, ale bezosobowe. Możesz to ustawić teraz albo wrócić do tego później.',
     'start-3-otworz':'Otwórz ustawienia głosu marki',
-    'start-3-potem':'Kreator zostaje otwarty - po zapisaniu głosu marki wróć tutaj i kliknij „Dalej”.',
+    'start-3-potem':'Kreator zostaje otwarty. Po zapisaniu głosu marki wróć tutaj i kliknij „Dalej”.',
     'start-4-tytul':'Wszystko gotowe',
     'start-4-opis':'Wpisz temat, dodaj słowa kluczowe i kliknij „Wygeneruj treść”. Licznik pakietu jest zawsze w prawym górnym rogu: kliknięcie pokazuje, ile zostało.',
     'start-4-lista':'Gdzie szukać reszty: Baza wiedzy, Historia i Widoczność AI są w pasku na górze (na telefonie w dolnym pasku i w Koncie), a w menu konta ustawisz markę, głos marki i integrację z CMS. Nic z tego nie jest potrzebne do pierwszego artykułu.',
@@ -6564,17 +6575,17 @@ var I18N = {
     'start-zaczynamy':'Start writing','start-sztuk':'items','start-twoj-pakiet':'Your plan',
     'start-1-tytul':'Welcome to Content AI',
     'start-1-opis':'Before you write your first article, let\'s go through four short steps. It takes a minute, and everything can be changed later in settings.',
-    'start-2-tytul':'API keys - only if you want to',
+    'start-2-tytul':'Your own API keys (optional)',
     'start-2-opis':'By default, generation runs on the server\'s keys, so there is nothing to enter here. If you have your own provider accounts, enter the keys below: model costs then go to your own provider bill. Plan limits apply the same way.',
     'start-2-opis-pakiet':'On your plan, generation runs on the server\'s keys, so there is nothing to enter here. Your own keys are available from the Standard plan up.',
     'start-2-gdzie':'Keys stay in this browser only. The server passes them to the provider with each request and stores nothing. On another device, enter them again.',
-    'start-2-anthropic':'Anthropic - content','start-2-openai':'OpenAI - images, voice-over, transcription',
-    'start-2-eleven':'ElevenLabs - better voice-over (optional)',
+    'start-2-anthropic':'Anthropic: writing','start-2-openai':'OpenAI: images, voice-over, transcription',
+    'start-2-eleven':'ElevenLabs: better voice-over (optional)',
     'start-2-zly':'That does not look like an API key. Anthropic keys start with "sk-ant-", OpenAI with "sk-". Leave the field empty if you do not have your own key.',
     'start-3-tytul':'Your brand',
     'start-3-opis':'Brand voice describes how your content should sound: tone, vocabulary, what to avoid. Without it articles will be correct but impersonal. You can set it now or come back to it later.',
     'start-3-otworz':'Open brand voice settings',
-    'start-3-potem':'The setup stays open - once the brand voice is saved, come back here and click “Next”.',
+    'start-3-potem':'The setup stays open. Once the brand voice is saved, come back here and click “Next”.',
     'start-4-tytul':'All set',
     'start-4-opis':'Enter a topic, add keywords and click “Generate content”. Your plan counter is always in the top right corner: click it to see what is left.',
     'start-4-lista':'Where to find the rest: the knowledge base, History and AI visibility are in the top bar (on a phone in the bottom bar and under Account), and the account menu holds your brand, brand voice and CMS integration. None of it is needed for a first article.',
@@ -8155,7 +8166,14 @@ function blokFaktow(uzupelnia) {
     // przypisane stronie, ktora tego nie podawala, z nazwiskiem i data z pamieci modelu.
     + '- "According to X" ("według X") may name only the source that supports that very sentence. '
     + 'Never attribute a claim, a quotation or a finding to a page, institution or author that '
-    + 'does not state it.';
+    + 'does not state it.\n'
+    // 2026-10-12 (egzoplanety): „potwierdzono już 6,445 confirmed exoplanets, jak podaje archiwum, czyli 6445
+    // takich światów" - licznik ze strony NASA wklejony po angielsku, z angielskim separatorem tysiecy, i powtorzony.
+    + '- A fact from a source in another language is written in the language of the article. Translate the '
+    + 'wording, never paste a phrase from the source (in a Polish article "6,445 confirmed exoplanets" is a defect). '
+    + 'Write numbers the way the article language writes them: Polish uses a comma only for decimals and a space '
+    + 'or nothing between thousands (6445 or 6 445, never 6,445, which reads as six point four). '
+    + 'Give each figure once, in one form.';
 
   if (!uzupelnia) {
     return wspolne
@@ -10331,6 +10349,12 @@ function uporzadkujZrodla(korzen, jezyk) {
     if (l.textContent !== t) l.textContent = t;
   });
   korzen.querySelectorAll('.zrodla-box li').forEach(function (li) {
+    // 2026-10-12: nazwy zrodel w artykulach sprzed poprawki (historia, wersje, eksport) tez bez
+    // „Suggested Searches" i bez nazwy serwisu powtarzajacej domene (nazwaZrodla).
+    li.querySelectorAll(':scope > a[href]').forEach(function (a) {
+      const nowa = nazwaZrodla(a.textContent, a.getAttribute('href'));
+      if (nowa && nowa !== a.textContent) a.textContent = nowa;
+    });
     li.querySelectorAll('time[datetime]').forEach(function (t) {
       const tekst = formatDatyZrodla(t.getAttribute('datetime'), j);
       if (tekst) { if (t.textContent !== tekst) t.textContent = tekst; }
@@ -10396,6 +10420,71 @@ function cudzyslowyPolskie(korzen) {
   }
 }
 
+// Nazwa zrodla pod artykulem (lista zrodel, PDF, DOCX, WordPress).
+// 2026-10-12 (artykul o egzoplanetach): pod tekstem stalo trzy razy \u201eSuggested Searches" (naglowek
+// wyszukiwarki NASA, ktory wyszukiwarka wziela za tytul strony), tytul \u201eastrobiology.nasa.gov" rowny
+// domenie i \u201e... Single Star - NASA Science" tuz przed domena science.nasa.gov. Tytul ogolny albo rowny
+// domenie zastepuje ostatni czlon adresu, a nazwa serwisu na koncu tytulu odpada, gdy powtarza domene.
+const TYTULY_OGOLNE = new Set(['suggested searches', 'search', 'search results', 'home', 'home page', 'homepage',
+  'index', 'untitled', 'untitled document', 'just a moment', 'access denied', 'attention required', 'page not found',
+  'not found', '404', '404 not found', '403 forbidden', 'error', 'loading', 'redirecting', 'sign in', 'log in', 'login',
+  'strona g\u0142\u00f3wna', 'wyniki wyszukiwania', 'szukaj', 'wyszukiwarka', 'bez tytu\u0142u', 'nie znaleziono strony',
+  'zaloguj si\u0119', 'logowanie']);
+// Czlony adresu, ktore nic nie mowia o tresci strony (jezyk, szablon, wersja do druku).
+const CZLONY_TECHNICZNE = /^(?:index|default|home|full_?html|html|amp|print|[a-z]{2}-[a-z]{2})$/i;
+// Ostatni separator w tytule: "Tytul - Serwis", "Tytul | Serwis", "Tytul :: Serwis".
+const SEPARATOR_TYTULU = /^(.*\S)\s+(?:[-|\u2013\u2014\u2022\u00b7]|::)\s+(\S.*)$/;
+
+function rdzenTytulu(t) {
+  return String(t || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
+
+// "https://science.nasa.gov/resource/proxima-b-3d-model" -> "Proxima b 3D model". Ostatni czlon sciezki,
+// ktory ma co najmniej 3 litery (bez numerow, rozszerzen i czlonow technicznych), zdaniem.
+function tytulZAdresu(url) {
+  let u;
+  try { u = new URL(url); } catch (e) { return ''; }
+  const czlony = u.pathname.split('/').filter(Boolean);
+  for (let i = czlony.length - 1; i >= 0; i--) {
+    let c = czlony[i];
+    try { c = decodeURIComponent(c); } catch (e) { /* zostaje zapis z adresu */ }
+    c = c.replace(/\.(?:s?html?|php\d?|aspx?|jsp|cfm)$/i, '');
+    if (/^\d+$/.test(c) || CZLONY_TECHNICZNE.test(c)) continue;
+    const slowa = c.replace(/[-_+.~]+/g, ' ').replace(/\s+/g, ' ').trim();
+    if ((slowa.match(/\p{L}/gu) || []).length < 3) continue;
+    const t = slowa.split(' ').map(function (w) { return /^\d+[a-z]{1,2}$/i.test(w) ? w.toUpperCase() : w; }).join(' ');
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  return '';
+}
+
+function nazwaZrodla(tytul, url) {
+  let t = String(tytul || '').replace(/\s+/g, ' ').trim()
+    // "Krakowskie mamuty - ciekawe.org - ciekawe.org": powtorzona koncowka tytulu strony.
+    .replace(/(\s[-|\u2022\u00b7]\s[^-|\u2022\u00b7]+)\1+$/, '$1')
+    // R7: tytul z naglowka strony PDF ("Strona 1 z 7 Regulamin...", "Page 2 of 9 ...") bez numeru strony.
+    .replace(/^\s*(?:strona|page|seite)\s+\d+\s+(?:z|of|von)\s+\d+\s*[-:|]?\s*/i, '').trim();
+  let host = '';
+  try { host = new URL(url).hostname.toLowerCase().replace(/^www\./, ''); } catch (e) { /* adres bez hosta */ }
+  const etykiety = host.split('.').filter(Boolean);
+  // Nazwa serwisu na koncu ("- NASA Science", "| Scientific American", "- Wikipedia, wolna encyklopedia"):
+  // pierwsze slowo albo calosc to czlon domeny. Tytul przed separatorem musi miec co najmniej 3 litery.
+  const m = SEPARATOR_TYTULU.exec(t);
+  if (m && etykiety.length > 1) {
+    const slowa = rdzenTytulu(m[2]).split(' ').filter(Boolean);
+    const razem = slowa.join('');
+    const bezTld = etykiety.slice(0, -1);
+    if (slowa.length && slowa.length <= 5 && (bezTld.indexOf(slowa[0]) >= 0 || etykiety.indexOf(razem) >= 0 || bezTld.join('') === razem)
+      && (m[1].match(/\p{L}/gu) || []).length >= 3) t = m[1];
+  }
+  const ogolny = function (x) {
+    const r = rdzenTytulu(x).replace(/^www /, '');
+    return !r || TYTULY_OGOLNE.has(r) || /^https?\s/.test(r) || r.replace(/ /g, '') === host.replace(/[^a-z0-9]/g, '');
+  };
+  if (ogolny(t) || ogolny(t.split(/\s+(?:[-|\u2013\u2014\u2022\u00b7]|::)\s+/)[0])) t = tytulZAdresu(url) || host || t;
+  return t || String(url || '');
+}
+
 // Lista zrodel doklejana do artykulu przed blokiem meta description, zeby
 // pojechala razem z tekstem do DOCX-a, PDF-a i WordPressa. Klasa zrodla-box
 // wypada ze statystyk tak samo jak meta-box: to aparat naukowy, nie tresc.
@@ -10403,10 +10492,7 @@ function cudzyslowyPolskie(korzen) {
 function blokZrodel(zrodla) {
   if (!zrodla || !zrodla.length) return '';
   const pozycje = zrodla.map(function (z) {
-    // "Krakowskie mamuty - ciekawe.org - ciekawe.org": powtorzona koncowka tytulu strony.
-    // R7: tytul z naglowka strony PDF ("Strona 1 z 7 Regulamin...", "Page 2 of 9 ...") bez numeru strony.
-    const nazwa = String(z.tytul || '').replace(/(\s[-|\u2022\u00b7]\s[^-|\u2022\u00b7]+)\1+$/, '$1')
-      .replace(/^\s*(?:strona|page|seite)\s+\d+\s+(?:z|of|von)\s+\d+\s*[-:|]?\s*/i, '').trim() || z.url;
+    const nazwa = nazwaZrodla(z.tytul, z.url);
     const data = /^\d{4}-\d{2}-\d{2}$/.test(z.data || '') ? znacznikDatyZrodla(z.data) : '';
     return '<li><a href="' + escapeHtml(z.url) + '" target="_blank" rel="noopener">'
       + escapeHtml(nazwa) + '</a>' + data + '</li>';
@@ -10901,7 +10987,7 @@ function uwagiZeStronami(uwagi, strony) {
         || strony.find(function (s) { return kluczAdresu(s.url).split('/')[0] === host; }) || null;
     }
     const kopia = Object.assign({}, u);
-    if (z) { kopia.rodzaj = 'strona'; kopia.adres = z.url; kopia.tytulStrony = z.tytul || ''; }
+    if (z) { kopia.rodzaj = 'strona'; kopia.adres = z.url; kopia.tytulStrony = nazwaZrodla(z.tytul, z.url); }
     else kopia.rodzaj = /\d/.test(String(u.cytat || '')) ? 'liczba' : 'brak';
     return kopia;
   });
@@ -12118,8 +12204,9 @@ function tekstEksportu(korzen) {
 // DOCX z biblioteki docx-natywny.js (prawdziwy WordprocessingML; wczytywana przy pierwszym uzyciu).
 // R9-D: wersja 2 pliku (pliki pwa/lib ida z immutable na rok, wiec nowa tresc = nowa nazwa) zapisuje
 // oznaczenie AI we wlasciwosciach dokumentu (docProps/custom.xml, cp:keywords) z opcje.wlasciwosciAI.
+// Wersja 3: wiekszy odstep po srodtytulach. Wersja 4 (2026-10-12): data przy zrodle w jednym wierszu.
 async function pobierzDocx(element, opcje, nazwa) {
-  await wczytajSkrypt('pwa/lib/docx-natywny-3.js');
+  await wczytajSkrypt('pwa/lib/docx-natywny-4.js');
   if (!window.DocxNatywny || typeof window.DocxNatywny.zbuduj !== 'function') throw new Error('docx-natywny.js');
   const blob = await window.DocxNatywny.zbuduj(element, opcje);
   pobierzPlik(blob, nazwa);
@@ -12453,7 +12540,8 @@ function trescPdf(korzen) {
       const href = a ? adresDoDokumentu(a.getAttribute('href')) : '';
       const tytul = (a ? a.textContent : li.textContent).replace(/\s+/g, ' ').trim();
       const data = li.querySelector('time');
-      const opis = [domenaZrodla(href), data ? data.textContent.trim() : ''].filter(Boolean).join(' · ');
+      // Data w jednym wierszu (twarde spacje): w DOCX z artykulu o egzoplanetach „12" zostalo na koncu wiersza, „gru 2016" w nastepnym.
+      const opis = [domenaZrodla(href), data ? data.textContent.trim().replace(/\s+/g, '\u00a0') : ''].filter(Boolean).join(' · ');
       const tekst = [/^https?:/i.test(href) ? { text: tytul, link: href, style: 'link' } : { text: tytul }];
       if (opis) tekst.push({ text: '  ' + opis, style: 'meta2' });
       return { text: tekst, margin: [0, 0, 0, 4] };
@@ -21432,9 +21520,9 @@ async function kbAudioTranscribeAndOpen(file) {
     <!-- R9-G (UX8-15): postep tekstem ("Krok 2 z 4"), nie tylko paskami - czytnik ekranu go odczyta -->
     <div class="tekst-pomoc start-postep" id="start-postep"></div>
     <div id="start-tresc"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:22px">
+    <div class="start-stopka" id="start-stopka">
       <button class="btn-link" id="start-pomin" onclick="startPomin()" data-i18n="start-pomin">Pomiń kreator</button>
-      <div style="display:flex;gap:8px">
+      <div class="start-przyciski">
         <button class="btn-secondary" id="start-wstecz" onclick="startWstecz()" data-i18n="start-wstecz">Wstecz</button>
         <button class="btn-generate" id="start-dalej" onclick="startDalej()" data-i18n="start-dalej">Dalej</button>
       </div>
@@ -21499,6 +21587,8 @@ async function kbAudioTranscribeAndOpen(file) {
   function rysuj(){
     ustawKroki();
     rysujKropki();
+    // Telefon chowa "Wstecz" na pierwszym kroku (CSS: #start-modal.start-pierwszy).
+    el('start-modal').classList.toggle('start-pierwszy', krok === 0);
     var cel = el('start-tresc');
     var s = window.pakietStanStart || null;
     if (KROKI_WLASNE.indexOf(kroki[krok]) >= 0) { rysujKrokWlasny(cel, s || window.STAN_PAKIETU || null); return; }
@@ -21525,16 +21615,16 @@ async function kbAudioTranscribeAndOpen(file) {
     else if (kroki[krok] === 'klucze'){
       var wolno = !s || !s.funkcje || s.funkcje.wlasnyKlucz;
       cel.innerHTML = naglowek(
-          tekst('start-2-tytul','Klucze API - tylko jeśli chcesz'),
+          tekst('start-2-tytul','Własne klucze API (opcjonalnie)'),
           wolno
             ? tekst('start-2-opis','Domyślnie generowanie korzysta z kluczy serwera, więc nic tu nie trzeba wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej: koszt modelu przejdzie wtedy na Twój rachunek u dostawcy. Limity pakietu obowiązują tak samo.')
             : tekst('start-2-opis-pakiet','W Twoim pakiecie generowanie korzysta z kluczy serwera, więc nic tu nie trzeba wpisywać. Własne klucze są dostępne od pakietu Standard.'))
         + '<div style="font-size:12px;color:var(--text2);background:var(--surface2);border-left:3px solid var(--c-akcent);padding:10px 12px;border-radius:0 var(--radius) var(--radius) 0;margin-bottom:18px;line-height:1.55">'
           + tekst('start-2-gdzie','Klucze zostają tylko w tej przeglądarce. Serwer przekazuje je dostawcy z każdym zapytaniem i niczego nie zapisuje. Na innym urządzeniu trzeba je wpisać ponownie.')
           + '</div>'
-        + (wolno ? polePola('start-k-anthropic', tekst('start-2-anthropic','Anthropic - treść'), 'sk-ant-...', magazyn.getItem('cai_klucz_anthropic')) : '')
-        + (wolno ? polePola('start-k-openai', tekst('start-2-openai','OpenAI - grafiki, lektor, transkrypcja'), 'sk-proj-...', magazyn.getItem('cai_klucz_openai')) : '')
-        + (wolno ? polePola('start-k-eleven', tekst('start-2-eleven','ElevenLabs - lepszy lektor (opcjonalnie)'), '...', magazyn.getItem('cai_klucz_eleven')) : '')
+        + (wolno ? polePola('start-k-anthropic', tekst('start-2-anthropic','Anthropic: pisanie tekstów'), 'sk-ant-...', magazyn.getItem('cai_klucz_anthropic')) : '')
+        + (wolno ? polePola('start-k-openai', tekst('start-2-openai','OpenAI: grafiki, lektor, transkrypcja'), 'sk-proj-...', magazyn.getItem('cai_klucz_openai')) : '')
+        + (wolno ? polePola('start-k-eleven', tekst('start-2-eleven','ElevenLabs: lepszy lektor (opcjonalnie)'), '...', magazyn.getItem('cai_klucz_eleven')) : '')
         + '<div id="start-k-blad" style="display:none;font-size:12px;color:var(--c-blad);margin-top:-6px"></div>';
     }
 
@@ -21545,7 +21635,7 @@ async function kbAudioTranscribeAndOpen(file) {
         + '<button type="button" class="btn-secondary btn-pelny" onclick="openBvModal()" style="margin-bottom:10px">'
           + tekst('start-3-otworz','Otwórz ustawienia głosu marki') + '</button>'
         + '<div style="font-size:12px;color:var(--text3);line-height:1.55">'
-          + tekst('start-3-potem','Kreator zostaje otwarty - po zapisaniu głosu marki wróć tutaj i kliknij „Dalej”.') + '</div>';
+          + tekst('start-3-potem','Kreator zostaje otwarty. Po zapisaniu głosu marki wróć tutaj i kliknij „Dalej”.') + '</div>';
     }
 
     else {

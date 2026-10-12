@@ -513,12 +513,15 @@ async function testyResetu(sprawdz) {
     for (let i = 0; i < 20; i += 1) await t.zadanie('/auth/login', t.formularz(null, { login: 'ewa@firma.pl', haslo: 'zle-haslo-12345' }, { 'x-real-ip': nowyIp() }));
     const zablokowane = await t.zadanie('/auth/login', t.formularz(null, { login: 'ewa@firma.pl', haslo: DOBRE_HASLO }, { 'x-real-ip': nowyIp() }));
     klucze.ciasteczkaUsuwajace = () => ['cai_klucz_anthropic=; HttpOnly; Path=/; Max-Age=0'];
+    const przedResetem = Date.now();
     const nowe = await t.zadanie('/haslo/nowe', t.formularz(null, { t: token, haslo: 'zupelnie-nowe-haslo-7' }));
     const cNowa = ciasteczkoSesji(nowe);
+    // 2026-10-12: nowe haslo z linku loguje od razu, wiec to tez "ostatnie logowanie" (pokaz w CLI).
+    const logowaniePoResecie = Number(t.magazyn.konto(login).ostatnieLogowanie) || 0;
     const ponownie = await t.zadanie('/haslo/nowe', t.formularz(null, { t: token, haslo: 'jeszcze-inne-haslo-8' }));
     await konta.czekajNaTlo();
-    sprawdz('reset: 303 do aplikacji z nowa sesja i kasowaniem zapamietanych kluczy; token jednorazowy',
-      zablokowane.status === 429 && nowe.status === 303 && nowe.headers.get('location') === '/' && Boolean(cNowa)
+    sprawdz('reset: 303 do aplikacji z nowa sesja i kasowaniem zapamietanych kluczy; token jednorazowy; ostatnie logowanie zapisane',
+      zablokowane.status === 429 && nowe.status === 303 && nowe.headers.get('location') === '/' && Boolean(cNowa) && logowaniePoResecie >= przedResetem
       && ciasteczka(nowe).some((c) => c.startsWith('cai_klucz_anthropic=') && /Max-Age=0/.test(c))
       && ponownie.status === 400 && (await tekst(ponownie)).includes('Link nieważny'));
     sprawdz('reset: stare sesje niewazne (sesjeOd), stare haslo nie dziala, nowe tak (blokada zdjeta), adres potwierdzony, e-mail o zmianie',
@@ -766,6 +769,14 @@ async function testyCli(sprawdz) {
       && !pokaz.stdout.includes(klient.hash) && !pokaz.stdout.includes(klient.sol)
       && pokazZespolu.status === 0 && /e-mail:\s+brak \(loguje się loginem\)/.test(pokazZespolu.stdout) && /organizacja:\s+glowna/.test(pokazZespolu.stdout)
       && /klucze API:\s+serwera/.test(pokazZespolu.stdout));
+    // 2026-10-12: rejestracja loguje od razu, wiec "ostatnie logowanie" ma date (bylo "-" przy koncie, ktore kupilo pakiet).
+    // plan, rola, haslo i usun przyjmuja e-mail jak pokaz (konta samoobslugowe maja loginy k-...).
+    const planEmail = cli('plan', 'Ewa.Klient@firma.pl', 'darmowy');
+    const planNieznany = cli('plan', 'nikt@firma.pl', 'darmowy');
+    sprawdz('CLI: po rejestracji "ostatnie logowanie" z data; plan <e-mail> zmienia konto z tym adresem, nieznany adres kod 1',
+      klient.ostatnieLogowanie > 0 && /ostatnie logowanie:\s+\d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC/.test(pokaz.stdout)
+      && planEmail.status === 0 && planEmail.stdout.includes(`Konto ${klient.login} (ewa.klient@firma.pl).`)
+      && t.magazyn.konto(klient.login).plan === 'darmowy' && planNieznany.status === 1 && /nie ma konta "nikt@firma\.pl"/.test(planNieznany.stderr));
 
     // email: adres od administratora jest potwierdzony; stare linki z e-maili przestaja dzialac.
     const staryReset = t.magazyn.zapiszToken({ login: 'standard', rodzaj: 'reset', email: 'stary@firma.pl', wazneMs: 3600_000 });
@@ -818,7 +829,8 @@ async function testyCli(sprawdz) {
     const pomoc = cli('pomoc');
     sprawdz('CLI pokaz usunietego konta: kod 1 z data i powodem; pomoc wymienia nowe polecenia',
       poUsunieciu.status === 1 && /usunięto .* \(powód: uzytkownik\)/.test(poUsunieciu.stderr)
-      && ['pokaz <login|e-mail>', 'email <login|e-mail>', 'klucze <login|e-mail>', 'organizacja <login|e-mail|id>'].every((p) => pomoc.stdout.includes(p)));
+      && ['pokaz <login|e-mail>', 'email <login|e-mail>', 'klucze <login|e-mail>', 'organizacja <login|e-mail|id>', 'plan <login|e-mail>',
+        'usun  <login|e-mail>', 'zwrot <login|e-mail>'].every((p) => pomoc.stdout.includes(p)));
   } finally {
     await t.zamknij();
   }

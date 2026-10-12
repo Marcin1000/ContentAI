@@ -2119,6 +2119,107 @@ async function scenariuszSrodtytuly(b) {
   }
 }
 
+// Po etapie 7 (2026-10-12, PDF i DOCX artykulu o egzoplanetach oraz zrzuty kreatora od Marcina): nazwy zrodel bez
+// „Suggested Searches" i bez nazwy serwisu powtarzajacej domene (takze w artykulach sprzed poprawki), data przy zrodle
+// w PDF w jednym wierszu, regula o frazach i liczbach ze zrodel w innym jezyku, kreator na telefonie i waskim ekranie.
+async function scenariuszPoEtapie7(b) {
+  const { k, s, bledyJs } = await nowaStrona(b, 'pl', {});
+  // [tytul ze zrodla, adres, nazwa pod artykulem]
+  const ZRODLA = [
+    ['Suggested Searches', 'https://science.nasa.gov/resource/proxima-b-3d-model', 'Proxima b 3D model'],
+    ['Suggested Searches', 'https://science.nasa.gov/asset/hubble/the-trappist-1-habitable-zone', 'The trappist 1 habitable zone'],
+    ['Suggested Searches', 'https://science.nasa.gov/exoplanets/trappist1', 'Trappist1'],
+    ['astrobiology.nasa.gov', 'https://astrobiology.nasa.gov/nai/articles/2016/8/26/implications-of-the-discovery-of-proxima-b/index.html', 'Implications of the discovery of proxima b'],
+    ['NASA Telescope Reveals Largest Batch of Earth-Size, Habitable-Zone Planets Around Single Star - NASA Science',
+      'https://science.nasa.gov/missions/hubble/nasa-telescope-reveals-largest-batch/', 'NASA Telescope Reveals Largest Batch of Earth-Size, Habitable-Zone Planets Around Single Star'],
+    ['Exoplanets - NASA Science', 'https://science.nasa.gov/exoplanets/', 'Exoplanets'],
+    ['The Closest Exoplanet to Earth Could Be "Highly Habitable" | Scientific American', 'https://www.scientificamerican.com/article/closest/',
+      'The Closest Exoplanet to Earth Could Be "Highly Habitable"'],
+    ['Optymalizacja dla wyszukiwarek internetowych - Wikipedia, wolna encyklopedia', 'https://pl.wikipedia.org/wiki/Optymalizacja', 'Optymalizacja dla wyszukiwarek internetowych'],
+    ['The habitability of Proxima Centauri b - II. Possible climates and observability', 'https://www.aanda.org/articles/aa/full_html/2016/12/aa29577-16/aa29577-16.html',
+      'The habitability of Proxima Centauri b - II. Possible climates and observability'],
+    ['EUR-Lex - Access to European Union law', 'https://eur-lex.europa.eu/homepage.html', 'EUR-Lex - Access to European Union law'],
+    ['Krakowskie mamuty - ciekawe.org - ciekawe.org', 'https://ciekawe.org/mamuty', 'Krakowskie mamuty'],
+    ['Strona 1 z 7 Regulamin usługi odbioru', 'https://example.com/regulamin.pdf', 'Regulamin usługi odbioru'],
+    ['Strona główna', 'https://firma.pl/oferta/pompy-ciep%C5%82a', 'Pompy ciepła'],
+    ['', 'https://example.com/', 'example.com'],
+  ];
+  const w = await s.evaluate((ZRODLA) => {
+    const el = document.createElement('div');
+    el.innerHTML = typeof blokZrodel === 'function' ? blokZrodel(ZRODLA.map(([t, u]) => ({ url: u, tytul: t, data: '2016-12-12' }))) : '';
+    const nowe = [...el.querySelectorAll('.zrodla-box li > a')].map((a) => a.textContent);
+    // Artykul sprzed poprawki (historia): tytuly ze zrodla wprost w <a>.
+    const stary = document.createElement('div');
+    stary.innerHTML = '<p>Tekst.</p><div class="zrodla-box"><div class="zrodla-label">Źródła</div><ul>'
+      + ZRODLA.map(([t, u]) => '<li><a href="' + u + '">' + (t || u).replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</a> <span class="zrodlo-data">(<time datetime="2016-12-12">12 gru 2016</time>)</span></li>').join('')
+      + '</ul></div>';
+    if (typeof uporzadkujZrodla === 'function') uporzadkujZrodla(stary, 'pl');
+    const poPoprawce = [...stary.querySelectorAll('.zrodla-box li > a')].map((a) => a.textContent);
+    let pdf = '';
+    try { pdf = JSON.stringify(trescPdf(stary)); } catch (e) { pdf = 'blad: ' + e.message; }
+    return {
+      nowe, poPoprawce, pdf,
+      faktySiec: typeof blokFaktow === 'function' ? blokFaktow(true) : '',
+      faktyBaza: typeof blokFaktow === 'function' ? blokFaktow(false) : '',
+    };
+  }, ZRODLA);
+  const oczekiwane = ZRODLA.map((z) => z[2]);
+  const rozne = (lista) => oczekiwane.map((o, i) => (lista[i] === o ? '' : i + ': ' + lista[i] + ' != ' + o)).filter(Boolean).join(' | ');
+  wynik('Po etapie 7: nazwy zrodel pod nowym artykulem bez „Suggested Searches", tytulu rownego domenie i nazwy serwisu powtarzajacej domene',
+    w.nowe.length === oczekiwane.length && !rozne(w.nowe), rozne(w.nowe) || JSON.stringify(w.nowe).slice(0, 300));
+  wynik('Po etapie 7: to samo w artykule sprzed poprawki (historia, eksport), przy wyswietleniu',
+    w.poPoprawce.length === oczekiwane.length && !rozne(w.poPoprawce), rozne(w.poPoprawce) || JSON.stringify(w.poPoprawce).slice(0, 300));
+  wynik('Po etapie 7: PDF - data przy zrodle w jednym wierszu (twarde spacje), domena obok nazwy bez powtorzenia',
+    /aanda\.org · 12\u00a0gru\u00a02016/.test(w.pdf) && !/· 12 gru 2016/.test(w.pdf) && !/NASA Science/.test(w.pdf), w.pdf.slice(0, 300));
+  wynik('Po etapie 7: regula faktow - fraza ze zrodla w innym jezyku tlumaczona, liczby po polsku (6445, nie 6,445), kazda raz',
+    /never paste a phrase from the source/.test(w.faktySiec) && /never 6,445/.test(w.faktySiec) && /Give each figure once/.test(w.faktySiec)
+      && /never paste a phrase from the source/.test(w.faktyBaza), w.faktySiec.slice(-420));
+  wynik('Po etapie 7 (zrodla): bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'po-etapie-7-zrodla');
+  await k.close();
+
+  // Kreator (konto zespolu, krok 2 z 4) na telefonie, na waskim ekranie (tablet, okno 689 px jak na zrzucie Marcina) i na komputerze.
+  const srv = await serwer();
+  const EKRANY = [
+    ['telefon', { viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true }],
+    ['waski', { viewport: { width: 689, height: 900 }, isMobile: true, hasTouch: true }],
+    ['komputer', { viewport: { width: 1440, height: 900 } }],
+  ];
+  for (const [ekran, opcje] of EKRANY) {
+    const { k: kk, bledyJs: bledyK } = await kontekstProxy(b, opcje);
+    const sk = await zalogujProxy(kk, srv.port, 'premium');
+    await sk.evaluate(() => { window.otworzStart(); window.startDalej(); });
+    await sk.waitForTimeout(400);
+    const m = await sk.evaluate(() => {
+      const r = (id) => { const e = document.getElementById(id); const x = e.getBoundingClientRect(); return { l: x.left, r: x.right, t: x.top, b: x.bottom, w: x.width }; };
+      const okno = document.querySelector('#start-modal > .modal').getBoundingClientRect();
+      return { vw: innerWidth, okno: { l: okno.left, r: okno.right, w: okno.width }, pomin: r('start-pomin'), wstecz: r('start-wstecz'), dalej: r('start-dalej'),
+        tytul: (document.getElementById('start-tytul') || {}).textContent || '', etykiety: [...document.querySelectorAll('#start-tresc label')].map((l) => l.textContent) };
+    });
+    const tekstyBezLacznika = !/ - /.test(m.tytul) && m.etykiety.length === 3 && m.etykiety.every((t) => !/ - /.test(t));
+    if (ekran === 'komputer') {
+      wynik('Po etapie 7: kreator na komputerze - Wstecz i Dalej w jednym rzedzie z prawej, „Pomin kreator" z lewej, tytul i etykiety bez „ - "',
+        Math.abs(m.wstecz.t - m.dalej.t) < 2 && m.wstecz.r <= m.dalej.l && m.pomin.r < m.wstecz.l && tekstyBezLacznika, JSON.stringify(m));
+    } else {
+      const srodek = Math.abs(m.okno.l - (m.vw - m.okno.r)) <= 1;
+      wynik('Po etapie 7: kreator (' + ekran + ') - arkusz na srodku' + (ekran === 'telefon' ? ' i na cala szerokosc' : ' (wczesniej przy lewej krawedzi)'),
+        srodek && (ekran !== 'telefon' || (m.okno.l <= 0.5 && m.okno.w >= m.vw - 1)), JSON.stringify({ okno: m.okno, vw: m.vw }));
+      wynik('Po etapie 7: kreator (' + ekran + ') - Dalej na cala szerokosc na dole, Wstecz nad nim, „Pomin kreator" nad przyciskami (UX4-16)',
+        m.dalej.w >= m.okno.w - 48 && m.wstecz.w >= m.okno.w - 48 && m.dalej.t >= m.wstecz.b && m.pomin.b <= m.wstecz.t + 1 && tekstyBezLacznika,
+        JSON.stringify({ okno: m.okno, pomin: m.pomin, wstecz: m.wstecz, dalej: m.dalej }));
+      await sk.evaluate(() => window.startWstecz());
+      await sk.waitForTimeout(200);
+      const pierwszy = await sk.evaluate(() => ({ wstecz: getComputedStyle(document.getElementById('start-wstecz')).display,
+        dalej: document.getElementById('start-dalej').getBoundingClientRect().width, okno: document.querySelector('#start-modal > .modal').getBoundingClientRect().width }));
+      wynik('Po etapie 7: kreator (' + ekran + ') - na pierwszym kroku bez pustego miejsca po Wstecz, Dalej na cala szerokosc',
+        pierwszy.wstecz === 'none' && pierwszy.dalej >= pierwszy.okno - 48, JSON.stringify(pierwszy));
+    }
+    wynik('Po etapie 7: kreator (' + ekran + ') bez bledow JavaScript', !bledyK.length, bledyK.join(' | '));
+    if (bledow) await zrzut(sk, 'po-etapie-7-kreator-' + ekran);
+    await kk.close();
+  }
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
@@ -2131,7 +2232,7 @@ const SCENARIUSZE = [
   ['r9f-prompt-bazy', scenariuszR9FPromptBazy], ['r9f-pomocnicy', scenariuszR9FPomocnicy],
   ['r9f-narracja', scenariuszR9FNarracja], ['r9f-sesja', scenariuszR9FSesja],
   ['r9f-pokrycie', scenariuszR9FPokrycie], ['opus55', scenariuszOpus55], ['runda-a', scenariuszRundaA],
-  ['srodtytuly', scenariuszSrodtytuly],
+  ['srodtytuly', scenariuszSrodtytuly], ['po-etapie-7', scenariuszPoEtapie7],
 ];
 (async () => {
   let b;
