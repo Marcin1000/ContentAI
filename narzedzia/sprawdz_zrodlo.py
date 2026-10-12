@@ -998,7 +998,7 @@ KONTROLE = [
     # DOCX przez html-docx-js byl HTML-em w opakowaniu (altChunk, strona Letter): Google Docs,
     # LibreOffice i Pages pokazywaly pusty dokument.
     ("R3B/docx", "DOCX z wlasnego generatora WordprocessingML (wszystkie trzy miejsca)",
-     "await wczytajSkrypt('pwa/lib/docx-natywny-2.js');", "wczytajSkrypt('pwa/lib/html-docx.js')", None),
+     "await wczytajSkrypt('pwa/lib/docx-natywny-3.js');", "wczytajSkrypt('pwa/lib/html-docx.js')", None),
     ("R3B/docx-bez-altchunk", "zadne miejsce nie sklada DOCX starym sposobem",
      None, "htmlDocx.asBlob(", None),
     ("R3B/kopia", "wszystkie eksporty z jednej kopii artykulu",
@@ -1836,6 +1836,58 @@ KONTROLE += [
      "wczytaj('pwa/lib/vfs_fonts-2026-10.js'", "'pwa/lib/vfs_fonts.js'", None),
 ]
 
+# Srodtytuly (2026-10-12, zrzut Marcina z produkcji): H2 w aplikacji z text-wrap balance dzielil sie na dwa wiersze
+# po polowie kolumny. Teraz lamany jak tekst (pretty). W PDF i DOCX tekst przylegal do srodtytulu (po H2 6 pt, po H3
+# 4 pt, miedzy akapitami 7 pt), teraz po naglowku wiecej miejsca niz miedzy akapitami. Generator DOCX pod nowa nazwa.
+KONTROLE += [
+    ("R9-B/h2-pretty", "srodtytul H2 lamany jak tekst (pretty), nie na dwa wiersze po polowie kolumny (balance)",
+     "margin: 1.7em 0 .5em; padding: 0; border: 0; text-wrap: pretty; }",
+     "margin: 1.7em 0 .5em; padding: 0; border: 0; text-wrap: balance; }", None),
+    ("R9-B/pdf-h2", "PDF: po H2 14,5 pt (wczesniej 6 pt, mniej niz 7 pt po akapicie)",
+     "h2: { fontSize: 15, bold: true, lineHeight: 0.84, margin: [0, 18, 0, 14.5] },",
+     "h2: { fontSize: 15, bold: true, lineHeight: 0.84, margin: [0, 18, 0, 6] },", None),
+    ("R9-B/pdf-h3", "PDF: po H3 11 pt (wczesniej 4 pt)",
+     "h3: { fontSize: 12, bold: true, lineHeight: 0.88, margin: [0, 12, 0, 11] },",
+     "h3: { fontSize: 12, bold: true, lineHeight: 0.88, margin: [0, 12, 0, 4] },", None),
+    ("R9-B/docx-3", "DOCX z generatora w wersji 3 (wieksze odstepy po srodtytulach, nowa nazwa pliku pwa/lib)",
+     "await wczytajSkrypt('pwa/lib/docx-natywny-3.js');", "wczytajSkrypt('pwa/lib/docx-natywny-2.js')", None),
+]
+
+# Tresc plikow pwa/lib, ktore aplikacja wczytuje (nie przechodza przez budowanie wariantow): (kod, opis, plik, jest, niema).
+KONTROLE_BIBLIOTEK = [
+    ("R9-B/docx-h2", "DOCX: Heading2 20 pt nad i 12 pt pod (wczesniej 18 i 6 pt)", "docx-natywny-3.js",
+     '<w:spacing w:before="400" w:after="240" w:line="264" w:lineRule="auto"/><w:outlineLvl w:val="1"/>', None),
+    ("R9-B/docx-h3", "DOCX: Heading3 16 pt nad i 11 pt pod (wczesniej 12 i 4 pt)", "docx-natywny-3.js",
+     '<w:spacing w:before="320" w:after="220" w:line="264" w:lineRule="auto"/><w:outlineLvl w:val="2"/>', None),
+    ("R9-B/stare-pliki", "poprzednia wersja generatora DOCX zostaje dla kart otwartych przed aktualizacja",
+     "docx-natywny-2.js", "docx-natywny-2.js", None),
+    ("R9-B/stare-kroje", "stary plik krojow PDF zostaje dla kart otwartych przed aktualizacja",
+     "vfs_fonts.js", "this.pdfMake.vfs", None),
+]
+
+
+def sprawdz_tresc_bibliotek(cicho=False):
+    katalog = Path(__file__).resolve().parent.parent / "app" / "pwa" / "lib"
+    bledy = []
+    for kod, opis, plik, jest, niema in KONTROLE_BIBLIOTEK:
+        sciezka = katalog / plik
+        tresc = sciezka.read_text(encoding="utf-8") if sciezka.is_file() else None
+        powod = None
+        if tresc is None:
+            powod = "brak pliku " + plik
+        elif jest is not None and jest not in tresc:
+            powod = "brak sladu poprawki"
+        elif niema is not None and niema in tresc:
+            powod = "wrocil stan sprzed poprawki"
+        if powod:
+            bledy.append((kod, opis, powod))
+            if not cicho:
+                print(f"    BLAD  {kod:20} {opis}\n          -> {powod}")
+        elif not cicho:
+            print(f"    ok    {kod:20} {opis}")
+    return bledy
+
+
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi
 # do przegladarki bez przetworzenia, kazda z nich jest potrojona -> SyntaxError
 # "Identifier ... has already been declared" wywala caly blok <script> i zabija UI.
@@ -1965,6 +2017,10 @@ def main():
             print("\n  warianty w repo")
         bledy = sprawdz_warianty_w_repo(zrodlo, args.cicho)
         wszystkie_bledy += [("repo", *b) for b in bledy]
+        if not args.cicho:
+            print("\n  biblioteki pwa/lib")
+        bledy = sprawdz_tresc_bibliotek(args.cicho)
+        wszystkie_bledy += [("lib", *b) for b in bledy]
 
     print()
     if wszystkie_bledy:

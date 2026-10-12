@@ -133,8 +133,9 @@ const BLEDY = {
 // Surowe zdania dostawcy, ktore nie moga trafic do glownego komunikatu.
 const SUROWE = /invalid x-api-key|prompt is too long|credit balance|does not have permission|exceeds the maximum|Internal server error|Overloaded|Incorrect API key/i;
 
-async function nowaStrona(b, jezyk, stan) {
-  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 } });
+// opcje: dodatkowe ustawienia kontekstu (np. telefon: viewport 390, isMobile, hasTouch).
+async function nowaStrona(b, jezyk, stan, opcje) {
+  const k = await b.newContext(Object.assign({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 } }, opcje || {}));
   await k.addInitScript((jezyk) => {
     try {
       localStorage.setItem('cai_key_anthropic', 'sk-ant-atrapa');
@@ -2071,6 +2072,53 @@ async function scenariuszRundaA(b) {
   await k.close();
 }
 
+// Srodtytuly (2026-10-12, zrzut Marcina z produkcji): H2 z text-wrap balance dzielil sie na dwa wiersze po polowie
+// kolumny ("Czym zajmuje się astrobiologia i / czym różni się od egzobiologii?", 360 z 669 px), co wygladalo jak blad.
+// Teraz pierwszy wiersz dwuwierszowego srodtytulu siega dalej (srednio co najmniej 78% szerokosci), na komputerze
+// i na telefonie. PDF: po H2 i H3 wiecej miejsca niz miedzy akapitami, nad naglowkiem wiecej niz pod nim.
+async function scenariuszSrodtytuly(b) {
+  const H2 = ['Czym zajmuje się astrobiologia i czym różni się od egzobiologii?', 'Czym są biosygnatury i jak pomagają szukać życia pozaziemskiego?',
+    'Gdzie szukać? Misje kosmiczne na Marsa, Europę i Enceladusa', 'Eksploracja kosmosu 2026: na co czekać w tym roku i później?'];
+  for (const [ekran, opcje] of [['komputer', null], ['telefon', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }]]) {
+    const { k, s, bledyJs } = await nowaStrona(b, 'pl', {}, opcje);
+    const w = await s.evaluate((H2) => {
+      const art = document.getElementById('article');
+      art.innerHTML = '<h1>Astrobiologia: jak eksploracja kosmosu szuka życia poza Ziemią</h1><p>Wstęp artykułu.</p>'
+        + H2.map((h) => '<h2>' + h + '</h2><p>' + 'Akapit o astrobiologii i misjach kosmicznych, pisany pełnymi zdaniami. '.repeat(5) + '</p>').join('');
+      art.style.display = 'block';
+      if (document.body.classList.contains('is-mobile') && typeof ustawWidokMobilny === 'function') ustawWidokMobilny('wynik');
+      // Prawe krawedzie wierszy naglowka (od lewej krawedzi naglowka), z prostokatow zakresu tekstu.
+      const linie = (el) => {
+        const r = document.createRange(); r.selectNodeContents(el);
+        const ys = new Map();
+        [...r.getClientRects()].forEach((x) => { const y = Math.round(x.top); ys.set(y, Math.max(ys.get(y) || 0, x.right)); });
+        const lewy = el.getBoundingClientRect().left;
+        return [...ys.keys()].sort((a, c) => a - c).map((y) => ys.get(y) - lewy);
+      };
+      const h2 = [...art.querySelectorAll('h2')].map((h) => ({ szer: h.getBoundingClientRect().width, linie: linie(h) }));
+      const dwa = h2.filter((h) => h.linie.length >= 2);
+      const st = typeof stylePdf === 'function' ? stylePdf() : null;
+      return {
+        zawijanie: getComputedStyle(art.querySelector('h2')).textWrap || '',
+        dwuwierszowe: dwa.length,
+        pierwszy: dwa.map((h) => Math.round(h.linie[0] / h.szer * 100)),
+        pdf: st ? { h2: st.h2.margin, h3: st.h3.margin, p: st.p.margin } : null,
+      };
+    }, H2);
+    const srednia = w.pierwszy.length ? w.pierwszy.reduce((a, c) => a + c, 0) / w.pierwszy.length : 0;
+    wynik('Srodtytuly (' + ekran + '): H2 bez text-wrap balance, pierwszy wiersz dwuwierszowego srodtytulu srednio co najmniej 78% szerokosci',
+      !/balance/.test(w.zawijanie) && w.dwuwierszowe >= 2 && srednia >= 78, JSON.stringify(w));
+    if (ekran === 'komputer') {
+      const p = w.pdf;
+      wynik('Srodtytuly: PDF - po H2 i H3 wiecej miejsca niz miedzy akapitami, nad naglowkiem wiecej niz pod nim',
+        !!p && p.h2[3] >= p.p[3] + 5 && p.h3[3] >= p.p[3] + 3 && p.h2[1] > p.h2[3] && p.h3[1] > p.h3[3], JSON.stringify(p));
+    }
+    wynik('Srodtytuly (' + ekran + '): bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+    if (bledow) await zrzut(s, 'srodtytuly-' + ekran);
+    await k.close();
+  }
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
@@ -2083,6 +2131,7 @@ const SCENARIUSZE = [
   ['r9f-prompt-bazy', scenariuszR9FPromptBazy], ['r9f-pomocnicy', scenariuszR9FPomocnicy],
   ['r9f-narracja', scenariuszR9FNarracja], ['r9f-sesja', scenariuszR9FSesja],
   ['r9f-pokrycie', scenariuszR9FPokrycie], ['opus55', scenariuszOpus55], ['runda-a', scenariuszRundaA],
+  ['srodtytuly', scenariuszSrodtytuly],
 ];
 (async () => {
   let b;

@@ -155,6 +155,33 @@ function pdfPrzezPymupdf(sciezka) {
   try { return JSON.parse(linia); } catch (e) { return null; }
 }
 
+// Srodtytuly (2026-10-12): odstepy w PDF zmierzone na stronie (pymupdf): wiersz H2 (15 pt) albo H3 (12 pt), po nim
+// tekst 11 pt. Zwraca odstepy po naglowku i miedzy akapitami (4-15 pt, bez wierszy w akapicie) albo null bez pymupdf.
+function odstepyPdf(sciezka) {
+  const skrypt = 'import sys, json\ntry:\n  import pymupdf as fitz\nexcept Exception:\n  try:\n    import fitz\n  except Exception:\n    print("BRAK"); sys.exit(0)\n'
+    + 'po, miedzy = [], []\n'
+    + 'for p in fitz.open(sys.argv[1]):\n'
+    + '  w = []\n'
+    + '  for b in p.get_text("dict")["blocks"]:\n'
+    + '    for l in b.get("lines", []):\n'
+    + '      sp = [s for s in l["spans"] if s["text"].strip()]\n'
+    + '      if sp: w.append((l["bbox"][1], l["bbox"][3], max(s["size"] for s in sp)))\n'
+    + '  w.sort()\n'
+    + '  for a, c in zip(w, w[1:]):\n'
+    + '    gap = c[0] - a[1]\n'
+    + '    tekst = abs(c[2] - 11) < 0.2\n'
+    + '    if tekst and (abs(a[2] - 15) < 0.2 or abs(a[2] - 12) < 0.2): po.append(round(gap, 1))\n'
+    + '    elif tekst and abs(a[2] - 11) < 0.2 and 4 < gap < 15: miedzy.append(round(gap, 1))\n'
+    + 'print(json.dumps({"po": po, "miedzy": miedzy}))\n';
+  const r = spawnSync('python3', ['-c', skrypt, sciezka], { encoding: 'utf8' });
+  const linia = String(r.stdout || '').trim().split('\n').pop();
+  if (r.status !== 0 || !linia || /^BRAK/.test(linia)) return null;
+  try { return JSON.parse(linia); } catch (e) { return null; }
+}
+// Najczestszy odstep (przy remisie mniejszy): zwykly odstep miedzy akapitami, bez przejsc do listy i tabeli.
+const najczestszy = (t) => { const n = new Map(); t.forEach((x) => n.set(x, (n.get(x) || 0) + 1));
+  return [...n.entries()].sort((a, c) => (c[1] - a[1]) || (a[0] - c[0]))[0][0]; };
+
 async function nowaStrona(b, wp) {
   const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, acceptDownloads: true });
   await k.addInitScript(PRZED_STARTEM);
@@ -261,6 +288,13 @@ async function scenariuszPolski(b) {
   wynik('PL DOCX: style Title i Heading 2 uzyte i zdefiniowane',
     /w:pStyle w:val="Title"/.test(dok) && /w:pStyle w:val="Heading2"/.test(dok) && /w:styleId="Heading2"/.test(style));
   wynik('PL DOCX: jezyk pl-PL', /w:lang w:val="pl-PL"/.test(style));
+  // Srodtytuly: tekst przylegal do naglowka (po H2 6 pt, po H3 4 pt, miedzy akapitami 7 pt plus interlinia).
+  const odstepStylu = (id) => { const m = style.match(new RegExp('w:styleId="' + id + '"[\\s\\S]*?<w:spacing w:before="(\\d+)" w:after="(\\d+)"')); return m ? { przed: +m[1], po: +m[2] } : null; };
+  const poAkapicie = +((style.match(/<w:pPrDefault><w:pPr><w:widowControl\/><w:spacing w:after="(\d+)"/) || [])[1] || 0);
+  const sH2 = odstepStylu('Heading2'), sH3 = odstepStylu('Heading3');
+  wynik('PL DOCX: po srodtytule wyraznie wiecej miejsca niz po akapicie (H2 i H3), nad srodtytulem wiecej niz pod nim',
+    !!sH2 && !!sH3 && poAkapicie > 0 && sH2.po >= poAkapicie + 80 && sH3.po >= poAkapicie + 60 && sH2.przed > sH2.po && sH3.przed > sH3.po,
+    JSON.stringify({ H2: sH2, H3: sH3, akapit: poAkapicie }));
   const tekstD = tekstDocx(dok);
   sprawdzTresc('PL DOCX', wszystko);
   wynik('PL DOCX: naglowek "Źródła" i daty "30 wrz 2025"', /(^|\n)Źródła\n/.test(tekstD) && /\b\d{1,2} (sty|lut|mar|kwi|maj|cze|lip|sie|wrz|paź|lis|gru) \d{4}\b/.test(tekstD));
@@ -287,6 +321,10 @@ async function scenariuszPolski(b) {
   if (fitz) {
     wynik('PL PDF (pymupdf): tekst ma "Źródła", tytul w metadanych', /Źródła/.test(fitz.tekst) && fitz.meta && fitz.meta.title === r.h1, fitz.meta && fitz.meta.title);
     sprawdzTresc('PL PDF (pymupdf)', fitz.tekst);
+    const ods = odstepyPdf(pdf.sciezka);
+    wynik('PL PDF (pymupdf): po kazdym srodtytule co najmniej 1 pt wiecej miejsca niz zwykly odstep miedzy akapitami',
+      !!ods && ods.po.length >= 2 && ods.miedzy.length >= 2 && Math.min(...ods.po) >= najczestszy(ods.miedzy) + 1,
+      JSON.stringify(ods && { poNaglowku: ods.po, miedzyAkapitami: ods.miedzy }));
     const sym = fitz.tekst.replace(/\u00a0/g, ' ');
     wynik('PL PDF (pymupdf): greka i symbole (3σ, 5 μm, ≥ 2, →, ‰, σ w naglowku tabeli) bez pustego znaku, cyrylica wypada',
       /istotność 3σ/.test(sym) && /5 μm/.test(sym) && /≥ 2/.test(sym) && /→ wynik/.test(sym) && /3‰/.test(sym) && /Próg σ/.test(sym)
