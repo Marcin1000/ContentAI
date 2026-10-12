@@ -58,7 +58,7 @@ Cała aplikacja to **jeden plik HTML** (~664 KB w wariancie `keys`, ~11,9 tys. l
 Nie ma bundlera ani kroku kompilacji - plik otwiera się bezpośrednio w przeglądarce
 albo jest opakowywany w Electron / Capacitor.
 
-Modele: `claude-sonnet-4-6` (treść), `claude-haiku-4-5` (zadania pomocnicze),
+Modele: `claude-opus-5-5` (treść, oceny i kontrola faktów, na serwerze zmienia go `CAI_MODEL_TRESCI`), `claude-sonnet-5` (zadania pomocnicze),
 `gpt-image-2.5-flare` (grafiki; do 23.10.2026 `gpt-image-1`, model zmienia `CAI_MODEL_GRAFIKI`), `gpt-4o-mini-tts` i ElevenLabs (audio), `gpt-4o-transcribe`
 (transkrypcja). Biblioteki do plików (mammoth, pdf.js, pdfmake, xlsx, html-docx-js) oraz kroje
 Schibsted Grotesk, Literata i JetBrains Mono (licencja OFL) leżą **w repozytorium**, w `app/pwa/lib/` i `app/pwa/fonty/` - aplikacja nie pobiera
@@ -247,6 +247,16 @@ usługi, więc cache oznaczałby użytkowników pracujących na starej wersji.
 
 Ścieżki do bibliotek są względne (`pwa/lib/…`), więc działają tak samo przy otwarciu pliku
 z dysku, z serwera i w paczce natywnej. `zbuduj_web.py` kopiuje oba katalogi do payloadu.
+
+**Kroje w PDF.** pdfmake ma własne kroje w `app/pwa/lib/vfs_fonts-2026-10.js`: Literata 400 i 600
+(prosta i kursywa) oraz Schibsted Grotesk 600. Plik generuje `narzedzia/pdf_fonty.py` z krojów
+Google Fonts przypiętych sumą SHA-256 (`pip install fonttools`, potem `python3 narzedzia/pdf_fonty.py`).
+Od 12.10.2026 podzbiór ma też grekę i symbole nauki (σ, μ, ≥, →, ‰), bo „3σ” w artykule
+o astrobiologii wychodziło w PDF jako pusty znak. Plik podaje też, jakie znaki ma każdy krój
+(`pdfMake.znakiKrojow`). Eksport usuwa znak, którego krój nie narysuje (np. cyrylicę), zamiast
+zostawiać pustą kratkę. Znak, którego nie ma w Schibsted, ale jest w Literacie (σ w nagłówku
+tabeli), dostaje Literatę. Sprawdza to `node narzedzia/test_eksport.js` (tekst PDF przez pymupdf).
+Nowa treść pliku krojów to nowa nazwa z datą, bo serwer wysyła `pwa/lib` z `immutable` na rok.
 
 ---
 

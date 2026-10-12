@@ -739,8 +739,8 @@ KONTROLE = [
      "  biezacyHist = null;\n  magazyn.removeItem('cai_biezacy');\n  art.innerHTML = '';", None, None),
     ("R6/ustawienia-domyslne", "Przywroc ustawienia domyslne (z Cofnij), jezyk tekstu znow za jezykiem interfejsu",
      "function przywrocUstawieniaDomyslne() {", None, None),
-    ("R6/luki-wnioski", "uzupelnianie luk: wnioski nie puchna ponad 8 punktow",
-     "ileLi(updatedKw) <= 8 || !originalKw", None, None),
+    ("R6/luki-wnioski", "uzupelnianie luk: wnioski nie puchna ponad 7 punktow (Runda A: wczesniej 8, lista 3-7 w AEO)",
+     "ileLi(updatedKw) <= AEO_LISTA_MAX || !originalKw", None, None),
     ("R6/luki-bez-zrodla", "Luki: komunikat o tematach bez zrodla zalezy od trybu (baza / siec)",
      "gapBezPokrycia = bezPokrycia; gapBezPokryciaSiec = zSiecia;", None, None),
     ("R6/inspektor-od-gory", "nowa zakladka inspektora otwiera sie od gory",
@@ -983,8 +983,8 @@ KONTROLE = [
      "const content = oczyscHtmlModelu(artClone.innerHTML);", "const content = artClone.innerHTML;", None),
     ("G/oczysc-historia", "artykul z historii oczyszczany przy odczycie",
      "art.innerHTML = h.html ? oczyscHtmlModelu(h.html)", None, None),
-    ("G/oceny-esc", "uwagi z oceny SEO/AIO escapowane",
-     '<span class="seo-item-text">${escapeHtml(item.text)}</span>', '<span class="seo-item-text">${item.text}</span>', None),
+    ("G/oceny-esc", "uwagi z oceny SEO/AIO escapowane (Runda A: i bez srednika)",
+     '<span class="seo-item-text">${escapeHtml(bezSrednikowTekst(String(item.text || \'\')))}</span>', '<span class="seo-item-text">${item.text}</span>', None),
     ("G/magazyn", "uszkodzone ustawienia w magazynie nie zatrzymuja skryptu",
      "let wpSettings = czytajJson('cai-wp', {}) || {};", "JSON.parse(localStorage.getItem('cai-wp')", None),
     ("G/magazyn-jeden", "aplikacja nie siega do localStorage poza magazynem",
@@ -1569,7 +1569,7 @@ KONTROLE += [
     ('R9-D/motyw-po-wyborze', 'PR8-26: ciasteczko cai_motyw dopiero po wyborze motywu',
      'if (wybrany !== null) zapiszMotyw(); else usunMotyw();', '    zapiszMotyw();\n    if (!wdrozone) return;', ('proxy',)),
     ('R9-D/pdf-stopka-emoji', 'KOD8-35 (prosba F): tytul w stopce i marka w naglowku PDF bez emoji (EMOJI_PDF)',
-     "{ text: skrotTekstu(String(tytul || '').replace(EMOJI_PDF, '').trim(), 70), style: 'meta2' },",
+     "{ text: tekstWKrojuPdf(skrotTekstu(String(tytul || '').replace(EMOJI_PDF, '').trim(), 70), 'Schibsted'), style: 'meta2' },",
      "{ text: skrotTekstu(tytul, 70), style: 'meta2' },", None),
     ('R9-D/klucz-przycisk', 'przycisk kluczy przy bledzie: dostawca tylko dla konta na wlasnych kluczach, reszta jak dzis (test_stan)',
      "const dk = kontoNaWlasnychKluczach() && e && e.dostawcaKod ? '\\'' + escapeHtml(e.dostawcaKod) + '\\'' : '';", None, None),
@@ -1761,6 +1761,81 @@ KONTROLE += [
      'data-i18n="settings-voice-title" data-i18n-bez-dyktowania="settings-voice-title-czytanie"', None, None),
 ]
 
+# Runda A (2026-10-12): poprawki po artykule o astrobiologii, ktory Opus 5.5 napisal na produkcji.
+# Fakty: kategoria "brak" (nazwany fakt bez zrodla), powod bez srednika, stopka przy Bazie bez pasujacych
+# materialow, przycisk "Popraw zdania bez zrodla". Oceny SEO i AIO: pelne zdanie do 100 znakow bez srednika.
+# Luki: limit naglowkow-pytan, 5-7 punktow wnioskow, akapity do 80 slow (wspolne limity z AEO). Linki bez
+# stron spoza tematu. Jedna liczba slow w SERP i pasku. Reguly faktow i tonu. PDF: znaki w kroju.
+KONTROLE += [
+    ("R9-A/fakty-brak", "kontrola faktow: kategoria \"brak\" dla nazwanego faktu bez zadnego zrodla (wczesniej jako \"zakres\")",
+     "+ '  \"brak\"      - a named fact that NO source supports at all: an event, discovery, study or its '", None, None),
+    ("R9-A/fakty-brak-pl", "etykieta kategorii \"Brak w źródłach\" (PL)",
+     "'fakty-rodzaj-brak':'Brak w źródłach'", None, None),
+    ("R9-A/fakty-brak-en", "etykieta kategorii \"Not in the sources\" (EN)",
+     "'fakty-rodzaj-brak':'Not in the sources'", None, None),
+    ("R9-A/fakty-interpunkcja", "kontrola faktow z zasada bez srednika w wyjasnieniach",
+     "+ 'Max 12 findings, most serious first.'\n    + blokInterpunkcji();", None, None),
+    ("R9-A/fakty-powod", "wyjasnienie uwagi bez srednika przy wyswietlaniu (siatka za zasada)",
+     "escapeHtml(bezSrednikowTekst(String(u.powod || ''))", "escapeHtml(String(u.powod || '') || _t('fakty-powod-' + rodzaj)", None),
+    ("R9-A/fakty-stopka", "stopka: Baza z dokumentami bez pasujacych materialow to nie \"Baza wiedzy jest pusta\"",
+     "_t(liczbaDokumentow() ? 'fakty-wzgledem-sieci-baza' : 'fakty-wzgledem-sieci')", "escapeHtml(_t('fakty-wzgledem-sieci')) + '</div>'", None),
+    ("R9-A/fakty-popraw", "przycisk \"Popraw zdania bez zrodla\" pod lista uwag",
+     'onclick="poprawZdaniaBezZrodla()"', None, None),
+    ("R9-A/fakty-popraw-model", "poprawa zdan: redaktor usuwa albo lagodzi tylko zdania z listy uwag",
+     "const system = 'You are a fact-checking editor. A fact check compared the article with its sources and found the '", None, None),
+    ("R9-A/fakty-popraw-bez-faktow", "poprawa zdan bez nowych faktow (blokPrzepisywania)",
+     "+ 'Return ONLY the complete corrected article HTML, no markdown fences, no comments.'\n      + blokPrzepisywania();", None, None),
+    ("R9-A/fakty-popraw-wersja", "poprawa zdan jako nowa wersja \"Poprawione fakty\"",
+     "addVersion(htmlDoZapisu(art), etykietaWersji(_t('ver-fakty')));", None, None),
+    ("R9-A/oceny-zdanie", "uwagi ocen SEO i AIO pelnym zdaniem do 100 znakow (wczesniej skrot do 60 znakow ze srednikiem)",
+     "const DLUGOSC_UWAGI_OCENY = 100;", "\"short observation in ${currentLang === 'en' ? 'English' : 'Polish'}, max 60 chars\"", None),
+    ("R9-A/oceny-generowanie", "oceny po generowaniu z ta sama regula uwag (ich uwagi tez trafiaja do panelu)",
+     "The article is COMPLETE if it has a conclusion paragraph.' + regulaJezykaUwag(),", "' max 50 chars\"]}", None),
+    ("R9-A/oceny-siatka", "uwagi SEO i AIO bez srednika przy wyswietlaniu",
+     "escapeHtml(bezSrednikowTekst(String(item.text || '')))", '<span class="seo-item-text">${escapeHtml(item.text)}</span>', None),
+    ("R9-A/luki-msg", "komunikat analizy Luk bez srednika",
+     "msgEl.textContent  = bezSrednikowTekst(parsed.msg || '');", "msgEl.textContent  = parsed.msg || '';", None),
+    ("R9-A/luki-interpunkcja", "analiza Luk z zasada bez srednika",
+     "rather than the article\\'s own subject.' + blokInterpunkcji(),", None, None),
+    ("R9-A/luki-pytania", "Luki: najwyzej 7 naglowkow-pytan razem z nowymi sekcjami",
+     "(pytajne * 2 >= h2Istniejace.length ? stylPytanLuk(pytajne, selectedNow.length) :",
+     "'Phrase each new H2 as a question, like most existing headings.' : 'Match the style", None),
+    ("R9-A/luki-wnioski", "Luki: wnioski 5-7 punktow (lista 3-7 w ocenie AEO)",
+     "with ' + WNIOSKI_MIN_PUNKTOW + ' to ' + AEO_LISTA_MAX + ' bullet points", "with 5 to 8 bullet points", None),
+    ("R9-A/luki-wnioski-prog", "Luki: wnioski z 8 punktami nie zastepuja dotychczasowych",
+     "ileLi(updatedKw) <= AEO_LISTA_MAX ||", "ileLi(updatedKw) <= 8 ||", None),
+    ("R9-A/luki-akapity", "Luki: akapit ponad 80 slow dzielony na granicy zdan",
+     "podzielDlugieAkapity(czesci.filter(", None, None),
+    ("R9-A/luki-akapity-prompt", "Luki: prosba o akapity ponizej 70 slow",
+     "' Keep every paragraph under ' + LUKI_SLOW_AKAPITU + ' words", None, None),
+    ("R9-A/aeo-wspolne", "ocena AEO na tych samych limitach co poprawa z Luk",
+     "qH2.length >= AEO_PYTANIA_MIN && qH2.length <= AEO_PYTANIA_MAX", "qH2.length >= 5 && qH2.length <= 7", None),
+    ("R9-A/linki", "Linki: tylko strony pasujace do artykulu, bez \"zawsze sugeruj URL z bazy\"",
+     "const suggestions = propozycjeLinkow(art.innerText || '', urlDocs);", "Fallback: zawsze sugeruj URL z bazy", None),
+    ("R9-A/linki-pl", "Linki: komunikat bez pasujacych stron (PL)",
+     "'links-brak-dopasowan':'Żadna strona z Bazy wiedzy nie pasuje do tego artykułu.", None, None),
+    ("R9-A/serp-slowa", "SERP: liczba slow jak w pasku statystyk",
+     "slowaArt = liczbaSlowArtykulu(art);", "slowaArt = ((k.textContent || '').trim().match(/\\S+/g) || []).length;", None),
+    ("R9-A/wedlug", "\"wedlug X\" tylko ze zrodlem, ktore popiera to zdanie",
+     "+ '- \"According to X\" (\"według X\") may name only the source that supports that very sentence. '", None, None),
+    ("R9-A/nazwy", "nazwane osoby, misje, badania i wydarzenia tylko z przypisem",
+     "+ '- A named person, mission, probe, study, experiment, discovery, award or historical event '", None, None),
+    ("R9-A/angielski", "wyszukiwanie takze po angielsku przy tematach z angielskimi zrodlami",
+     "+ 'bodies, standards). For such a topic search in English as well as in the article language, '", None, None),
+    ("R9-A/ton", "ton przyjazny bez formulek (Pamiętaj, Pewnie zastanawiasz się, Wniosek jest prosty, Masz w ręku)",
+     "+ '\"Pamiętaj\", \"Pewnie zastanawiasz się\", \"Wniosek jest prosty\", \"Masz w ręku\", \"Warto wiedzieć\", '", None, None),
+    ("R9-A/ton-formuly", "zadna formulka zwracania sie do czytelnika dwa razy w tekscie",
+     "+ 'Never use the same formula to address the reader or to open a sentence twice in one text.';", None, None),
+    ("R9-A/pdf-kroje", "PDF: kazdy tekst w kroju, ktory go narysuje (znak spoza kroju wypada, nie \\x00)",
+     "content: trescWKrojachPdf(tresc, 'Literata', stylePdf()),", None, None),
+    ("R9-A/pdf-naglowek", "PDF: marka i tytul w naglowku i stopce przez filtr znakow Schibsted",
+     "{ text: tekstWKrojuPdf(String(marka).replace(EMOJI_PDF, '').trim(), 'Schibsted'), font: 'Schibsted'", None, None),
+    ("R9-A/raport-separator", "raport widocznosci AI: lista zapytan rozdzielona kropka srodkowa, nie srednikiem",
+     "rep.trend.newlyPresent.join(' · ')", "rep.trend.newlyPresent.join('; ')", None),
+    ("R9-A/pdf-kroje-nazwa", "nowe kroje PDF pod nowa nazwa (pwa/lib idzie z immutable na rok, stara nazwa = stare kroje u klienta)",
+     "wczytaj('pwa/lib/vfs_fonts-2026-10.js'", "'pwa/lib/vfs_fonts.js'", None),
+]
+
 # Deklaracje, ktore w gotowym wariancie moga wystapic dokladnie raz. Gdy zrodlo trafi
 # do przegladarki bez przetworzenia, kazda z nich jest potrojona -> SyntaxError
 # "Identifier ... has already been declared" wywala caly blok <script> i zabija UI.
@@ -1784,6 +1859,22 @@ def sprawdz_deklaracje(html, wariant, cicho=False):
             if not cicho:
                 print(f"    BLAD  {'D/' + nazwa:20} {nazwa}: {powod}")
     return bledy
+
+
+def sprawdz_biblioteki(html, wariant, cicho=False):
+    """Kazdy plik pwa/lib/..., ktory wczytuje wariant, lezy w app/pwa/lib. Runda A: plik krojow PDF dostal
+    nowa nazwe (pwa/lib idzie z immutable na rok), a wariant ze stara nazwa wczytalby plik, ktorego nie ma."""
+    katalog = Path(__file__).resolve().parent.parent / "app" / "pwa" / "lib"
+    nazwy = sorted(set(re.findall(r"pwa/lib/([A-Za-z0-9._-]+\.js)\b", html)))
+    brak = [n for n in nazwy if not (katalog / n).is_file()]
+    if brak:
+        powod = "brak pliku: " + ", ".join(brak)
+        if not cicho:
+            print(f"    BLAD  {'L/pwa-lib':20} {powod}")
+        return [("L/pwa-lib", "pliki pwa/lib wczytywane przez wariant istnieja", powod)]
+    if not cicho:
+        print(f"    ok    {'L/pwa-lib':20} {len(nazwy)} plikow pwa/lib wczytywanych przez wariant istnieje")
+    return []
 
 
 def sprawdz_warianty_w_repo(zrodlo, cicho=False):
@@ -1863,6 +1954,8 @@ def main():
         zrobione, bledy = sprawdz(html, w, args.cicho)
         bledy += sprawdz_deklaracje(html, w, args.cicho)
         zrobione += len(DEKLARACJE)
+        bledy += sprawdz_biblioteki(html, w, args.cicho)
+        zrobione += 1
         wszystkie_bledy += [(w, *b) for b in bledy]
         if not args.cicho:
             print(f"    {zrobione} kontroli, bledow: {len(bledy)}")

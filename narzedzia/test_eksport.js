@@ -234,6 +234,16 @@ async function scenariuszPolski(b) {
   wynik('PL: historia ma zrodla z datami i jezyk artykulu', /zrodla-box/.test(hist.html || '') && /<time datetime="\d{4}-\d{2}-\d{2}">/.test(hist.html || '') && hist.jezyk === 'pl', hist.jezyk);
   sprawdzTresc('PL: wpis historii', hist.html || '');
 
+  // Runda A: greka i symbole nauki (artykul o astrobiologii: "3σ" wychodzilo w PDF jako pusty znak \x00),
+  // tez w naglowku tabeli (Schibsted). Cyrylicy kroje nie maja - wypada z PDF zamiast pustego znaku.
+  await s.evaluate(() => {
+    const art = document.getElementById('article');
+    const html = '<p>Sygnał DMS ma istotność 3σ, ziarna mają 5 μm, próg ≥ 2, zmiana → wynik, 3‰. Обозначение Ж znika.</p>'
+      + '<table><tr><th>Próg σ</th><th>Wartość</th></tr><tr><td>3σ</td><td>≈ 0,3%</td></tr></table>';
+    const zrodla = art.querySelector('.zrodla-box');
+    if (zrodla) zrodla.insertAdjacentHTML('beforebegin', html); else art.insertAdjacentHTML('beforeend', html);
+  });
+  // Pulapki po symbolach: sekcja z notatka o luce ma zostac ostatnia przed zrodlami.
   await doklejPulapki(s);
 
   // DOCX
@@ -277,6 +287,10 @@ async function scenariuszPolski(b) {
   if (fitz) {
     wynik('PL PDF (pymupdf): tekst ma "Źródła", tytul w metadanych', /Źródła/.test(fitz.tekst) && fitz.meta && fitz.meta.title === r.h1, fitz.meta && fitz.meta.title);
     sprawdzTresc('PL PDF (pymupdf)', fitz.tekst);
+    const sym = fitz.tekst.replace(/\u00a0/g, ' ');
+    wynik('PL PDF (pymupdf): greka i symbole (3σ, 5 μm, ≥ 2, →, ‰, σ w naglowku tabeli) bez pustego znaku, cyrylica wypada',
+      /istotność 3σ/.test(sym) && /5 μm/.test(sym) && /≥ 2/.test(sym) && /→ wynik/.test(sym) && /3‰/.test(sym) && /Próg σ/.test(sym)
+        && sym.indexOf('\u0000') < 0 && sym.indexOf('\ufffd') < 0 && !/[Ж-я]/.test(sym), JSON.stringify((sym.match(/Sygnał DMS[^\n]*/) || [''])[0]));
   } else {
     console.log('info  PL PDF: pymupdf niedostepny - tekst PDF sprawdzony przez definicje dokumentu');
   }

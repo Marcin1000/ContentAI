@@ -247,6 +247,12 @@ def aplikacja():
                 continue
             if zdanie_ze_srednikiem(napis, tylko_polskie=True):
                 bledy.append((wzgl, numer_linii(s, gdzie), czysty(napis).strip()))
+    # Srednik doklejany w kodzie jako separator listy (2026-10-12: raport widocznosci AI, "Nowo obecne: a; b").
+    # Lista dla modelu (klient jej nie widzi) ma na tej samej linii komentarz "srednik-dla-modelu".
+    for m in re.finditer(r"""\.join\(\s*(['"]);\s*\1\s*\)""", s):
+        linia = s[s.rfind('\n', 0, m.start()) + 1:s.find('\n', m.end())]
+        if 'srednik-dla-modelu' not in linia:
+            bledy.append((wzgl, numer_linii(s, m.start()), 'separator "; " w tekscie: ' + linia.strip()[:120]))
     return bledy
 
 
