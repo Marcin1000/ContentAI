@@ -22,7 +22,8 @@
  *   6. cele dotyku na telefonie maja co najmniej 44 px (poza linkami w zdaniu),
  *   7. pismo co najmniej 12 px i kontrast tekstu co najmniej AA (4,5:1; duzy tekst 3:1),
  *   8. elementy jednego rzedu (karty, kafle, liczby) maja naglowki na tej samej wysokosci,
- *      dolny wiersz stopki jest jednym wierszem, a w tresci nie ma pustego pasa wyzszego niz 40% okna,
+ *      dolny wiersz stopki jest jednym wierszem, linia grafu w Bezpieczenstwie biegnie od pierwszego
+ *      do ostatniego kolka bez przerw, a w tresci nie ma pustego pasa wyzszego niz 40% okna,
  *   9. interakcje: na kazdej szerokosci naglowek ma nawigacje po sekcjach (linki albo menu),
  *      menu otwiera sie bez przewijania strony i zamyka po wyborze, kazdy link menu
  *      (i nawigacji na komputerze) prowadzi do sekcji z tytulem pod naglowkiem strony, a pasek
@@ -351,6 +352,38 @@ function kontroleRzedow() {
   return problemy;
 }
 
+// 8c. Linia grafu (Bezpieczenstwo, „Jak zapytanie trafia do modelu AI"): przerywana linia zaczyna sie
+// w pierwszym kolku, konczy w ostatnim i nie ma przerw miedzy kolkami. Linia rysowana od stalego miejsca
+// listy wystawala nad pierwsze kolko, gdy opis punktu mial kilka wierszy (uwaga z telefonu, 2026-10-12).
+// Pseudo-elementy nie maja getBoundingClientRect, wiec odcinki liczymy z ich top/bottom.
+function kontroleLinii() {
+  const problemy = [];
+  for (const lista of document.querySelectorAll('.droga-lista')) {
+    const kolka = [...lista.querySelectorAll('.droga-ik')].map(k => k.getBoundingClientRect()).filter(r => r.height > 0);
+    if (kolka.length < 2) continue;
+    const odcinki = [];
+    for (const el of [lista, ...lista.children]) for (const pseudo of ['::before', '::after']) {
+      const s = getComputedStyle(el, pseudo);
+      if (s.content === 'none' || s.content === 'normal' || s.position !== 'absolute' || s.borderLeftStyle !== 'dashed') continue;
+      const r = el.getBoundingClientRect();
+      odcinki.push([r.top + parseFloat(s.top), r.bottom - parseFloat(s.bottom)]);
+    }
+    if (!odcinki.length) { problemy.push('graf bez linii laczacej kolka'); continue; }
+    odcinki.sort((x, y) => x[0] - y[0]);
+    const gora = odcinki[0][0], dol = Math.max(...odcinki.map(o => o[1]));
+    const pierwsze = kolka[0], ostatnie = kolka[kolka.length - 1];
+    if (gora < pierwsze.top - 1) problemy.push('linia grafu wystaje ' + Math.round(pierwsze.top - gora) + ' px nad pierwsze kolko');
+    if (dol > ostatnie.bottom + 1) problemy.push('linia grafu wystaje ' + Math.round(dol - ostatnie.bottom) + ' px pod ostatnie kolko');
+    // miedzy kolejnymi kolkami linia bez przerw
+    for (let i = 0; i + 1 < kolka.length; i++) {
+      let y = kolka[i].bottom;
+      for (const [od, doY] of odcinki) if (od <= y + 1 && doY > y) y = doY;
+      if (y < kolka[i + 1].top - 1) problemy.push('przerwa w linii grafu miedzy kolkiem ' + (i + 1) + ' i ' + (i + 2));
+    }
+  }
+  return problemy;
+}
+
 // 8b. Pusty pas w tresci wyzszy niz 40% okna (miedzy pierwsza a ostatnia trescia strony).
 // Element przyklejony (sticky, np. scena „Jak to dziala" albo margines) jest widoczny przez cala
 // wysokosc swojego rodzica, wiec jego tresc wypelnia caly ten przedzial, a nie tylko miejsce startu.
@@ -479,6 +512,7 @@ async function sprawdzStrone(przegladarka, baza, [w, h], motyw, sciezka, zFokuse
   await strona.waitForTimeout(150);
   problemy.push(...await strona.evaluate(kontroleUkladu, { telefon }));
   problemy.push(...await strona.evaluate(kontroleRzedow));
+  problemy.push(...await strona.evaluate(kontroleLinii));
   problemy.push(...await strona.evaluate(kontrolePustych));
   // fixed/sticky w kilku miejscach strony
   const wys = await strona.evaluate(() => document.documentElement.scrollHeight);

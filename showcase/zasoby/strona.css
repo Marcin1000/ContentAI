@@ -550,8 +550,11 @@ html.js .kafel:not(.is-in) .frag i b{transform:scaleX(0)}
 .droga{position:sticky;top:calc(var(--nav-h) + 32px);border:1px solid var(--c-linia-2);border-radius:var(--r-xl);background:var(--w-karta);padding:var(--s-24)}
 .droga-tytul{font-family:var(--f-ui);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--c-tekst-3);margin-bottom:var(--s-20)}
 .droga-lista{list-style:none;padding:0;display:grid;gap:var(--s-24);position:relative}
-.droga-lista::before{content:"";position:absolute;left:21px;top:22px;bottom:22px;border-left:1.5px dashed var(--c-ramka)}
-.droga-lista li{position:relative;display:grid;grid-template-columns:44px 1fr;column-gap:var(--s-16);align-items:center}
+/* Linia z odcinkow: od srodka kolka do srodka kolka nastepnego punktu (kolka na gorze punktow), wiec nie wystaje
+   nad pierwsze ani pod ostatnie kolko, niezaleznie od dlugosci opisu. Jedna linia na cala liste wystawala nad
+   pierwsze kolko, gdy opis mial kilka wierszy (test_uklad_strony.js, kontroleLinii). */
+.droga-lista li:not(:last-child)::after{content:"";position:absolute;left:21px;top:22px;bottom:calc(-1 * (var(--s-24) + 22px));border-left:1.5px dashed var(--c-ramka)}
+.droga-lista li{position:relative;display:grid;grid-template-columns:44px 1fr;column-gap:var(--s-16);align-items:start}
 .droga-ik{grid-row:1 / span 2;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--c-pole);border:1px solid var(--c-linia-2);color:var(--c-tekst-2);position:relative;z-index:1}
 .droga-ik .ik{width:19px;height:19px}
 .droga-lista b{font-size:var(--t-lg);font-weight:700}
