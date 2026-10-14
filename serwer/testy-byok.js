@@ -293,6 +293,28 @@ async function testyCiasteczek({ sprawdz }) {
     const en = await t.zadanie('/api/klucze', t.json(ewa3, { dostawca: 'anthropic', klucz: 'sk-proj-' + 'z'.repeat(40) }, { 'accept-language': 'en' }));
     sprawdz('komunikat o zlym formacie po angielsku przy Accept-Language: en', /not an Anthropic API key/.test(((await en.json().catch(() => ({}))).error || {}).message || ''));
 
+    // 14.10: konsola Anthropic wydaje teraz klucze sk-ant-usr-... (powiazane z kontem osoby), starsze to
+    // sk-ant-api03-... ("legacy key"). Wzor tylko na api03 odrzucal nowe klucze jako zly format.
+    wyczysc();
+    const NOWY = 'sk-ant-usr-1HC' + 'N'.repeat(80) + 'qAAA';
+    const nowy = await zapiszKlucz(t, ewa3, 'anthropic', NOWY, { sprawdz: true });
+    const nowyPara = nowy.ciasteczka.find((c) => /^(__Secure-)?cai_k_a=/.test(c)) || '';
+    const nowyUzycie = nowyPara ? await wywolaj(t, `${ewa3}; ${nowyPara}`, TRASY[0], 'nowy-format') : null;
+    if (nowyUzycie) await nowyUzycie.arrayBuffer();
+    sprawdz('klucz Anthropic w nowym formacie sk-ant-usr-...: zapis po sprawdzeniu u dostawcy (GET /v1/models), potem tekst na tym kluczu',
+      nowy.odp.status === 200 && Boolean(nowyPara) && Boolean(nowyUzycie) && nowyUzycie.status === 200
+      && ostatnie().some((w) => /\/v1\/models/.test(w.sciezka) && w.klucz === NOWY) && ostatnie().some((w) => /\/messages$/.test(w.sciezka) && w.klucz === NOWY));
+    const tokeny = [];
+    for (const k of ['sk-ant-oat01-' + 'z'.repeat(60), 'sk-ant-ort01-' + 'z'.repeat(60), 'sk-ant-sid01-' + 'z'.repeat(60)]) {
+      const o = await zapiszKlucz(t, ewa3, 'anthropic', k);
+      tokeny.push(o.odp.status === 400 && Boolean(o.json) && o.json.format === 'format' && o.ciasteczka.length === 0);
+    }
+    sprawdz('tokeny logowania (OAuth oat01 i ort01, sesja claude.ai sid01) dalej odrzucane jako zly format, bez ciasteczka',
+      tokeny.length === 3 && tokeny.every(Boolean));
+    const wzor = require('./klucze.js').WZOR_KLUCZA_ANTHROPIC;
+    sprawdz('wspolny wzor klucza Anthropic (klucze.js) to ten sam obiekt w starcie (start.js) i w formacie dostawcy',
+      wzor instanceof RegExp && require('./start.js').WZOR_KLUCZA === wzor && require('./klucze.js').DOSTAWCY_OPIS.anthropic.format.klucz === wzor);
+
     // Sprawdzenie u dostawcy bez kosztu.
     wyczysc();
     const sprawdzKlucz = async (dane, inne) => (await t.zadanie('/api/klucze/sprawdz', t.json(ewa3, dane, inne))).json().catch(() => ({}));

@@ -5769,7 +5769,7 @@ var I18N = {
     'byok-siec-opis':'Czego brakuje w bazie wiedzy, AI znajdzie w sieci i wymieni źródła pod tekstem.','byok-napisz':'Napisz artykuł','byok-pole':'Klucz API {DOSTAWCA}',
     'byok-pokaz':'Pokaż','byok-ukryj':'Ukryj','byok-sprawdz':'Sprawdź i zapisz','byok-zapamietaj':'Zapamiętaj na tym urządzeniu','byok-zapamietaj-opis':'Klucz zostaje przez 30 dni, także po wylogowaniu. Bez tego znika po zamknięciu przeglądarki.',
     'byok-sprawdzam':'Sprawdzam klucz u {DOSTAWCA}…','byok-ok':'Klucz działa i jest zapisany na tym urządzeniu.','byok-ok-sesja':'Klucz działa. Zostanie w tej przeglądarce do jej zamknięcia.',
-    'byok-ok-lokalnie':'Klucz zapisany w tej przeglądarce.','byok-pusty':'Wklej klucz API w pole powyżej.','byok-zly-format-anthropic':'To nie wygląda na klucz Anthropic. Klucz zaczyna się od „sk-ant-”. Skopiuj go w całości z konsoli Anthropic.','byok-niepelny':'Ten klucz jest niepełny: prawdziwy klucz Anthropic jest dłuższy i zaczyna się od „sk-ant-api”. Skopiuj go w całości z konsoli Anthropic (przycisk kopiowania obok klucza).',
+    'byok-ok-lokalnie':'Klucz zapisany w tej przeglądarce.','byok-pusty':'Wklej klucz API w pole powyżej.','byok-zly-format-anthropic':'To nie wygląda na klucz Anthropic. Klucz zaczyna się od „sk-ant-”. Skopiuj go w całości z konsoli Anthropic.','byok-niepelny':'Ten klucz jest niepełny: prawdziwy klucz Anthropic jest dużo dłuższy i zaczyna się od „sk-ant-usr-” albo „sk-ant-api03-”. Skopiuj go w całości z konsoli Anthropic (przycisk kopiowania obok klucza).',
     'byok-zly-format-openai':'To nie wygląda na klucz OpenAI. Klucz zaczyna się od „sk-”. Skopiuj go w całości z platform.openai.com.','byok-zly-format':'To nie wygląda na klucz {DOSTAWCA}. Skopiuj go w całości z konsoli dostawcy.',
     'byok-administracyjny':'To klucz administracyjny. Utwórz w konsoli {DOSTAWCA} zwykły klucz API i wklej go tutaj.','byok-inny-dostawca':'To klucz innego dostawcy. Wklej klucz {DOSTAWCA}.',
     'byok-odrzucony':'{DOSTAWCA} nie przyjął tego klucza. Skopiuj go jeszcze raz w całości albo utwórz nowy w konsoli dostawcy.','byok-brak-uprawnien':'Klucz działa, ale nie ma dostępu do modeli, których używa aplikacja. Sprawdź ustawienia klucza w konsoli {DOSTAWCA}.',
@@ -6637,7 +6637,7 @@ var I18N = {
     'byok-siec-opis':'Whatever is missing from the knowledge base, the AI finds on the web and lists the sources under the text.','byok-napisz':'Write the article',
     'byok-pole':'{DOSTAWCA} API key','byok-pokaz':'Show','byok-ukryj':'Hide','byok-sprawdz':'Check and save','byok-zapamietaj':'Remember on this device','byok-zapamietaj-opis':'The key stays for 30 days, also after you sign out. Without this it disappears when you close the browser.',
     'byok-sprawdzam':'Checking the key with {DOSTAWCA}…','byok-ok':'The key works and is saved on this device.','byok-ok-sesja':'The key works. It stays in this browser until you close it.',
-    'byok-ok-lokalnie':'Key saved in this browser.','byok-pusty':'Paste your API key into the field above.','byok-zly-format-anthropic':'That does not look like an Anthropic key. It starts with “sk-ant-”. Copy the whole key from the Anthropic console.','byok-niepelny':'This key is incomplete: a real Anthropic key is longer and starts with “sk-ant-api”. Copy the whole key from the Anthropic console (copy button next to the key).',
+    'byok-ok-lokalnie':'Key saved in this browser.','byok-pusty':'Paste your API key into the field above.','byok-zly-format-anthropic':'That does not look like an Anthropic key. It starts with “sk-ant-”. Copy the whole key from the Anthropic console.','byok-niepelny':'This key is incomplete: a real Anthropic key is much longer and starts with “sk-ant-usr-” or “sk-ant-api03-”. Copy the whole key from the Anthropic console (copy button next to the key).',
     'byok-zly-format-openai':'That does not look like an OpenAI key. It starts with “sk-”. Copy the whole key from platform.openai.com.','byok-zly-format':'That does not look like a {DOSTAWCA} key. Copy the whole key from the provider console.',
     'byok-administracyjny':'That is an admin key. Create a regular API key in the {DOSTAWCA} console and paste it here.','byok-inny-dostawca':'That is another provider\'s key. Paste your {DOSTAWCA} key.',
     'byok-odrzucony':'{DOSTAWCA} did not accept this key. Copy it again in full or create a new one in the provider console.','byok-brak-uprawnien':'The key works but has no access to the models the app uses. Check the key settings in the {DOSTAWCA} console.',
@@ -22171,9 +22171,10 @@ async function kbAudioTranscribeAndOpen(file) {
     if (!klucz) return Promise.resolve({ ok: false, powod: 'pusty' });
     if (PREFIKS[d] && klucz.indexOf(PREFIKS[d]) !== 0) return Promise.resolve({ ok: false, powod: 'format' });
     if (d === 'openai' && /^sk-ant-/.test(klucz)) return Promise.resolve({ ok: false, powod: 'inny-dostawca' });
-    // Poczatek sie zgadza, ale klucz jest uciety (wzor jak w serwer/klucze.js): "zaczyna sie od sk-ant-" mylilo.
-    // Klucz administracyjny (sk-ant-admin) rozpoznaje serwer i odpowiada wlasnym komunikatem.
-    if (d === 'anthropic' && !/^sk-ant-admin/i.test(klucz) && !/^sk-ant-api\d{2}-[A-Za-z0-9_-]{20,}$/.test(klucz)) return Promise.resolve({ ok: false, powod: 'niepelny' });
+    // Poczatek sie zgadza, ale klucz jest uciety (wzor jak WZOR_KLUCZA_ANTHROPIC w serwer/klucze.js): "zaczyna sie
+    // od sk-ant-" mylilo. Nowe klucze z konsoli to sk-ant-usr-..., starsze sk-ant-api03-... (14.10: wzor tylko na
+    // api03 odrzucal nowe klucze jako niepelne). Klucz administracyjny (sk-ant-admin) rozpoznaje serwer.
+    if (d === 'anthropic' && !/^sk-ant-admin/i.test(klucz) && !/^sk-ant-(?!admin|oat|ort|sid)[a-z]{2,10}\d{0,2}-[A-Za-z0-9_-]{20,}$/.test(klucz)) return Promise.resolve({ ok: false, powod: 'niepelny' });
     if (!kluczeWCiasteczkach()) return zapiszLokalnie(d, klucz);
     return postJson('/api/klucze', { dostawca: d, klucz: klucz, zapamietaj: zapamietaj !== false, sprawdz: true }).then(function(w){
       var kod = kodOdpowiedzi(w.o, w.d);

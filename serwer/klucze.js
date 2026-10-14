@@ -76,14 +76,20 @@ const NAGLOWEK = { anthropic: 'x-api-key', openai: 'x-openai-key', eleven: 'x-el
  *   wskazowka    poczatek klucza do komunikatu o zlym formacie
  *   sprawdzenie  (dane, konf) -> { url, naglowki }: darmowy odczyt u dostawcy (bez kosztu)
  */
+// Klucz API Anthropic: sk-ant-<rodzaj>-<reszta>. W pazdzierniku 2026 konsola wydaje juz klucze sk-ant-usr-...
+// (powiazane z kontem osoby), starsze to sk-ant-api03-... (14.10: wzor tylko na api03 odrzucal nowe klucze).
+// Rodzaj dowolny poza kluczem administracyjnym (admin01), tokenami OAuth (oat01, ort01) i sesja claude.ai
+// (sid01): te nie sa kluczami API. O tym, czy klucz dziala, decyduje i tak sprawdzenie u dostawcy.
+const WZOR_KLUCZA_ANTHROPIC = /^sk-ant-(?!admin|oat|ort|sid)[a-z]{2,10}\d{0,2}-[A-Za-z0-9_-]{20,300}$/;
+
 const DOSTAWCY_OPIS = {
   anthropic: {
     skrot: 'a',
     nazwa: 'Anthropic',
     pola: ['klucz'],
-    format: { klucz: /^sk-ant-api\d{2}-[A-Za-z0-9_-]{20,300}$/ },
+    format: { klucz: WZOR_KLUCZA_ANTHROPIC },
     zakazane: [{ wzor: /^sk-ant-admin/i, powod: 'administracyjny' }],
-    wskazowka: 'sk-ant-api',
+    wskazowka: 'sk-ant-',
     sprawdzenie: (dane, konf) => ({
       url: String(konf.urlAnthropic || 'https://api.anthropic.com/v1/messages').replace(/\/messages\/?$/, '') + '/models?limit=1',
       naglowki: { 'x-api-key': dane.klucz, 'anthropic-version': '2023-06-01' },
@@ -628,7 +634,7 @@ function inicjuj(kontekstSerwera) {
 }
 
 module.exports = {
-  NAGLOWEK, DOSTAWCY, DOSTAWCY_OPIS, DOSTAWCA_TRASY, MAX_AGE_ZAPAMIETAJ,
+  NAGLOWEK, DOSTAWCY, DOSTAWCY_OPIS, DOSTAWCA_TRASY, MAX_AGE_ZAPAMIETAJ, WZOR_KLUCZA_ANTHROPIC,
   kluczDla, brakKlucza, ciasteczkaUsuwajace, ciasteczkoZKluczem, nazwaCiasteczka, zlyFormat, komunikatFormatu,
   odrzucenieKlucza, sprawdzUDostawcy, stanKluczy, obsluz, stan, inicjuj,
 };
