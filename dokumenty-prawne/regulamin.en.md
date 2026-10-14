@@ -1,7 +1,7 @@
 ---
 tytul: Content AI Terms of Service
-wersja: 2026-10-v2
-data: 2026-10-11
+wersja: 2026-10-v3
+data: 2026-10-14
 ---
 <!--
 English version of regulamin.pl.md (same numbering, same version). Rendered by the app server at
@@ -39,15 +39,20 @@ concluded in that language (section 6(5)).
 
 1. The Provider provides the following services by electronic means: (a) maintaining the Account, (b) making the App available for creating, assessing, editing, exporting and publishing content (articles, SEO, AIO, AEO and GEO scores, fact and link checks, images, voice recordings, transcriptions, publishing to WordPress and Drupal), (c) the Knowledge Base, (d) information on content-ai.net.
 2. Features and limits depend on the Plan and are described in the Price List. The Free Plan includes a one-time limit of {{LIMIT_DARMOWY}} articles, requires no card details and does not turn into a Subscription automatically.
-3. Generating content on a self-created Account requires the User's API Key: Anthropic for text (required), OpenAI for images, speech and transcription, and ElevenLabs for speech (optional). The User pays AI Providers directly, under their price lists. The Subscription price does not include these fees.
-4. AI Providers apply their own terms and acceptable use policies, which the User accepts separately when creating an account with them. These terms may restrict the purpose of keys, for example to professional use. The User is responsible for complying with the terms of the AI Provider with whom they have contracted.
-5. The API Key is stored only by the User's browser, in an encrypted cookie. With each request the browser sends it to the Provider's server, which decrypts the API Key solely for the duration of that request, passes it to the AI Provider and does not store it.
-6. Accounts created by the Provider before self-service registration was available continue on individually agreed terms, including the use of the Provider's keys, unless the parties agree otherwise.
-7. Outputs are generated automatically and may contain errors or outdated or inaccurate information. Scoring and fact-check features are supporting tools only. The User checks Outputs before publishing them.
+3. Generating content on a self-created Account requires the User's API Key: Anthropic for text (required), OpenAI for images, speech and transcription, and ElevenLabs for speech (optional). The first article described in paragraph 4 is an exception. The User pays AI Providers directly, under their price lists. The Subscription price does not include these fees.
+4. First article without an API Key. After confirming their email address and accepting the current version of these Terms, the User may generate one article on a self-created Account without an Anthropic API Key. The Provider then makes the Anthropic model calls needed for that article and for its scoring and revisions on its own key and at its own cost, within these limits:
+   1. one article per email address, also after the Account is deleted and a new one is created with the same address,
+   2. a limited number of model calls and a limited time from the first call,
+   3. a daily pool shared by all Users.
+5. The article under paragraph 4 counts towards the article limit of the Plan. This option is free of charge and is not part of any Plan. The Provider may limit or switch it off, in particular when the daily pool or the budget set aside for it is used up. The User is then not entitled to a refund or compensation. Further articles require the User's API Key.
+6. AI Providers apply their own terms and acceptable use policies, which the User accepts separately when creating an account with them. These terms may restrict the purpose of keys, for example to professional use. The User is responsible for complying with the terms of the AI Provider with whom they have contracted.
+7. The API Key is stored only by the User's browser, in an encrypted cookie. With each request the browser sends it to the Provider's server, which decrypts the API Key solely for the duration of that request, passes it to the AI Provider and does not store it.
+8. Accounts created by the Provider before self-service registration was available continue on individually agreed terms, including the use of the Provider's keys, unless the parties agree otherwise.
+9. Outputs are generated automatically and may contain errors or outdated or inaccurate information. Scoring and fact-check features are supporting tools only. The User checks Outputs before publishing them.
 
 ## 4. Technical requirements
 
-1. Using the App requires a device with internet access, a current version of Chrome, Edge, Firefox or Safari with JavaScript, cookies and local storage enabled, an email address and an API Key. Dictation requires a microphone.
+1. Using the App requires a device with internet access, a current version of Chrome, Edge, Firefox or Safari with JavaScript, cookies and local storage enabled, an email address and an API Key (except for the first article, section 3(4)). Dictation requires a microphone.
 2. Output history, drafts and settings are stored in browser storage on the User's device, and API Keys in encrypted cookies of that browser. The Provider has no access to the history and drafts and makes no copies of them. Clearing browser data or changing devices means losing them, so it is worth exporting important Outputs to files.
 3. Risks of using services by electronic means include interception of login data, malware on the User's device and phishing. The User protects their password and API Keys and does not use the App on untrusted devices.
 
@@ -144,7 +149,7 @@ concluded in that language (section 6(5)).
 
 1. The [Privacy Policy]({{URL_PRYWATNOSC}}) describes how personal data is processed.
 2. If the User enters personal data for which they are the controller (for example in Knowledge Base documents), the Provider processes it on the User's behalf under the [data processing agreement]({{URL_DPA}}) (Annex 1), concluded together with acceptance of these Terms.
-3. After an Account is deleted, the Provider deletes Knowledge Base documents and Account data, except data it must keep under the law (for example sales records) or to establish or defend claims, for the periods stated in the Privacy Policy.
+3. After an Account is deleted, the Provider deletes Knowledge Base documents and Account data, except data it must keep under the law (for example sales records) or to establish or defend claims, and the hash of the email address needed for the limit in section 3(4)(1), for the periods stated in the Privacy Policy.
 
 ## 15. Final provisions
 

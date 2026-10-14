@@ -45,6 +45,8 @@ const {
   zahaszuj, ROLE, PLIK_UZYTKOWNIKOW, PLIK_WYLOGOWANYCH, zrodlaMigracji, poprawnyLogin, skrotEmaila, KONF,
 } = require('./server.js');
 const konta = require('./konta.js');
+// Kontekst (KONF, magazyn, podpis skrotu adresu) ustawia server.js przy wczytaniu.
+const startBezKlucza = require('./start.js');
 
 // Dane konta na dysku: prywatna baza wiedzy (u-<login>.json) razem z kopiami
 // uszkodzonych wersji i plikami tymczasowymi zapisu (oraz plik licznikow z R8,
@@ -183,6 +185,8 @@ Na serwerze: sudo serwer/cli.sh <polecenie> (środowisko i konto usługi).
   node serwer/uzytkownicy.js klucze <login|e-mail> [wlasne|serwera]   źródło kluczy API konta
   node serwer/uzytkownicy.js organizacja <login|e-mail|id> [nazwa <tekst|->]   organizacja konta
   node serwer/uzytkownicy.js zrodla [miesiecy]      rejestracje według źródła z odnośnika ?z= (same liczby)
+  node serwer/uzytkownicy.js start                  pierwszy artykuł bez klucza: ustawienia i dzisiejsza pula
+  node serwer/uzytkownicy.js start-usun <e-mail>    oddaje adresowi pierwszy artykuł bez klucza (np. po awarii)
 ${dodatkowe}
 
 Baza kont: ${KONF.sqlite}
@@ -436,6 +440,23 @@ function wypiszZrodla(miesiecy) {
   }
 }
 
+/**
+ * start: pierwszy artykul bez klucza (serwer/start.js). Ustawienia bez klucza, dzisiejsza pula i przydzialy
+ * z ostatniego roku. Same liczby: przydzial lezy pod skrotem adresu, bez loginu.
+ */
+function wypiszStart() {
+  const s = startBezKlucza.status();
+  if (!s.kluczUstawiony) console.log('Pierwszy artykuł bez klucza: WYŁĄCZONY (brak poprawnego CAI_START_KLUCZ).');
+  else if (s.wylaczonyAwaryjnie) console.log('Pierwszy artykuł bez klucza: WYŁĄCZONY awaryjnie (CAI_START=0).');
+  else console.log('Pierwszy artykuł bez klucza: włączony.');
+  console.log(`  dzienna pula (CAI_START_DZIENNIE):        ${s.dziennie}`);
+  console.log(`  wywołań na przydział (CAI_START_WYWOLAN): ${s.wywolanNaPrzydzial}`);
+  console.log(`  okno przydziału (CAI_START_MINUT):        ${s.oknoMinut} min`);
+  console.log(`  dziś (doba UTC):                          ${s.dzis} z ${s.dziennie}`);
+  console.log(`  przydziałów z ostatniego roku:            ${s.wRoku}`);
+  console.log('  Wstrzymanie po błędzie rozliczeń u Anthropic widać w /api/status i w dzienniku usługi ([start]).');
+}
+
 async function main() {
   const argumenty = process.argv.slice(2);
   const [polecenie, loginLubEmail, arg] = argumenty;
@@ -451,6 +472,17 @@ async function main() {
   if (polecenie === 'zrodla') {
     if (login !== undefined && !(Number(login) >= 1 && Number(login) <= 120)) return uzycie('zrodla [miesiecy 1-120]');
     return wypiszZrodla(Math.round(Number(login) || 3));
+  }
+
+  if (polecenie === 'start') return wypiszStart();
+  if (polecenie === 'start-usun') {
+    if (!login || !login.includes('@')) return uzycie('start-usun <e-mail>');
+    const skrot = startBezKlucza.skrot(login);
+    if (!skrot) return uzycie('start-usun <e-mail>');
+    console.log(magazyn.startUsun(skrot)
+      ? 'Usunięto przydział: ten adres znów może napisać pierwszy artykuł bez klucza (konto, które ma już artykuł, i tak go nie dostanie).'
+      : 'Ten adres nie ma przydziału pierwszego artykułu bez klucza.');
+    return undefined;
   }
 
   if (polecenie === 'migruj') {

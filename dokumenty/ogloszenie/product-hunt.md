@@ -24,10 +24,10 @@ Content AI
 | `AI articles from your own documents, then fact-checked` | 54 |
 | `Articles for Google and AI answers, from your own sources` | 57 |
 
-**Links**
+**Links** (Product Hunt dopisuje do linku `ref=producthunt`, strona liczy oba znaczniki jako źródło)
 
 ```text
-https://content-ai.net/en/
+https://content-ai.net/en/?z=ph
 ```
 
 **Description** (ten tekst ma 251 znaków, mieści się w limicie 260 ze starszej pomocy i 500 z obecnej)
@@ -164,7 +164,7 @@ The problem: AI drafts read well, but figures and product details come from the 
 Built by one person, launched on Product Hunt today. It runs on your own Anthropic API key (roughly $0.20-0.40 per article). Free plan: 3 articles.
 
 Blunt feedback welcome: where would you still not trust an AI draft?
-https://content-ai.net/en/
+https://content-ai.net/en/?z=reddit
 ```
 
 **Indie Hackers**, tytuł:

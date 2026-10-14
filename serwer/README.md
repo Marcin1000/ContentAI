@@ -240,6 +240,12 @@ usługodawcy) wyłącznie w `/etc/contentai/srodowisko`.
 | `CAI_SERP_SAMOOBSLUGA` | `dataforseo` przy danych DataForSEO, inaczej `model` | źródło SERP organizacji innych niż `glowna`; `openseo` odrzucane |
 | `CAI_ZADANIA_MB` | `200` | budżet pamięci wyników zadań w tle |
 | `CAI_KLUCZ_CIASTEK` | - | klucz szyfrujący ciasteczek z kluczami użytkowników (32 bajty base64: `openssl rand -base64 32`, SEC8-04); zmiana = zapamiętane klucze nieważne |
+| **Pierwszy artykuł bez klucza** (`serwer/start.js`) | | |
+| `CAI_START_KLUCZ` | - | klucz API Anthropic z osobnego obszaru roboczego (workspace) z miesięcznym limitem wydatków; bez niego start wyłączony, zły format = wyłączony z błędem w dzienniku |
+| `CAI_START` | `1` | `0` wyłącza start awaryjnie bez usuwania klucza |
+| `CAI_START_DZIENNIE` | `20` | nowych przydziałów na dobę UTC dla całego serwera (`0` = bez nowych) |
+| `CAI_START_WYWOLAN` | `25` | wywołań modelu na przydział (artykuł, oceny, poprawki) |
+| `CAI_START_MINUT` | `120` | okno przydziału od pierwszego wywołania |
 | **Poczta** (C) | | |
 | `CAI_POCZTA` | `log` | `resend` albo `log`; `resend` bez klucza albo nadawcy schodzi na `log` z błędem w dzienniku |
 | `CAI_POCZTA_KLUCZ` | - | klucz API Resend (`re_...`), tylko wysyłka dla domeny |
@@ -1453,7 +1459,7 @@ dostawcy bez zmian plus nagłówki `X-CAI-Kod: zly-klucz` i `X-CAI-Dostawca`.
 
 | Trasa | Ciało | Odpowiedź |
 |---|---|---|
-| `GET /api/klucze` | - | `{ zrodloKluczy, zapis, dostawcy, anthropic: { ustawiony, koncowka, zapamietany, wygasa?, niewazny?, kluczSerwera? }, openai, eleven }`; nigdy cały klucz, `koncowka` to 4 ostatnie znaki |
+| `GET /api/klucze` | - | `{ zrodloKluczy, zapis, dostawcy, anthropic: { ustawiony, koncowka, zapamietany, wygasa?, niewazny?, kluczSerwera? }, openai, eleven, start? }`; nigdy cały klucz, `koncowka` to 4 ostatnie znaki; `start`: pierwszy artykuł bez klucza (rozdział niżej) |
 | `POST /api/klucze` | `{ dostawca, klucz, zapamietaj?, sprawdz? }` albo `{ anthropic?, openai?, eleven?, zapamietaj? }` | `200 { ok: true, zapisano: true, ...stan }` i `Set-Cookie`; zły format: `400 zly-klucz` z `format` (`format`, `administracyjny`, `inny-dostawca`), `komunikat` PL/EN i `X-CAI-Dostawca`; z `sprawdz: true` i kluczem odrzuconym u dostawcy: `200 { ok: false, zapisano: false, powod }` |
 | `DELETE /api/klucze?dostawca=anthropic\|openai\|eleven\|wszystkie` (z `Content-Type: application/json`) albo `POST /api/klucze/usun` `{ dostawca? }` | - | `200 { ok: true, usunieto, ...stan }` i ciasteczka kasujące |
 | `POST /api/klucze/sprawdz` | `{ dostawca, klucz? }` (bez klucza: zapisany) | `200 { ok, dostawca, powod?, status? }`; `powod`: `brak-klucza`, `zly-klucz`, `brak-uprawnien`, `dostawca-niedostepny`; bez kosztu (lista modeli, dane konta), 10 na minutę (`429 za-duzo-prob`) |
@@ -1468,6 +1474,52 @@ Miejsce na czwartego dostawcę (własne konto DataForSEO klienta, para login + h
 ciasteczko `cai_k_d` z tym samym szyfrem (szyfrogram niesie obiekt pól, nie jeden napis),
 w `obsluzSerp` gałąź `dataforseo` bierze `klucze.kluczDla(req, konto, 'dataforseo', KONF).dane`
 zamiast `KONF.dataForSeo`.
+
+## Pierwszy artykuł bez klucza
+
+Konto samoobsługowe na własnych kluczach pisze pierwszy artykuł bez klucza Anthropic (decyzja
+14.10.2026, regulamin § 3 ust. 4). Wywołania modelu idą wtedy na **osobny klucz startu**
+(`CAI_START_KLUCZ`) z osobnego obszaru roboczego w konsoli Anthropic, z własnym limitem wydatków.
+To nie jest `ANTHROPIC_KEY` zespołu: wyczerpany limit startu nie zatrzymuje zespołu, a niezmiennik
+`kluczDla` (konto `wlasne` nigdy nie dostaje klucza serwera) zostaje bez zmian. Moduł
+`serwer/start.js`, magazyn: tabela `start_bez_klucza` (migracja 6), testy `serwer/testy-start.js`.
+
+**Bezpieczniki** (każdy z osobna daje górną granicę kosztu):
+- potwierdzony adres e-mail i regulamin w wersji `CAI_REGULAMIN_WERSJA` (konta sprzed zmiany
+  dostają start po akceptacji nowej wersji w Koncie),
+- jeden przydział na adres e-mail na rok, także po usunięciu konta: przydział leży pod skrótem HMAC
+  adresu kanonicznego (małe litery, bez `+dopisku`, Gmail bez kropek), bez loginu i bez adresu,
+- tylko konto bez żadnego artykułu i jeden artykuł (`X-CAI-Czynnosc: artykul`) na przydział,
+- sufit wywołań na przydział (`CAI_START_WYWOLAN`) i okno od pierwszego wywołania (`CAI_START_MINUT`),
+- dzienna pula nowych przydziałów dla całego serwera (`CAI_START_DZIENNIE`, doba UTC),
+- odrzucony klucz startu (401, 403) albo błąd rozliczeń (402, 400 o środkach lub limicie wydatków)
+  wstrzymuje start do końca doby UTC; użytkownik dostaje kreator klucza, nie komunikat o naszym rachunku,
+- `CAI_START=0` wyłącza start od razu.
+
+**Rozliczenie.** Przydział jest atomowy, tuż przed wywołaniem dostawcy (odmowa pakietu albo SERP
+z DataForSEO go nie zabiera). Błąd HTTP dostawcy oddaje wywołanie i sztukę artykułu (nic nie
+kosztował). Odmowa modelu, przerwanie i limit czasu oddają tylko sztukę artykułu: przerwane
+wywołanie mogło już kosztować, a zwrot pozwalałby je powtarzać bez końca. Artykuł liczy się
+też do limitu pakietu jak każdy inny.
+
+**Dla aplikacji.** `GET /api/klucze` konta `wlasne` bez klucza Anthropic ma pole
+`start`: `{ dostepny: true, artykul, zostalo, do }` albo `{ dostepny: false, powod }`
+(`email`, `regulamin`, `pula`, `wykorzystany`). Odmowa `403 brak-klucza` niesie ten sam `start`,
+a odpowiedź na kluczu startu nagłówek `X-CAI-Start: 1` (aplikacja odświeża wtedy stan).
+Kreator pokazuje "Dalej bez klucza", a karta "Podłącz klucz" nie zasłania przycisku Wygeneruj,
+dopóki artykuł nie powstanie. E-mail powitalny zaczyna wtedy od dokumentów i tematu.
+
+**Koszt.** Artykuł z ocenami to orientacyjnie 0,20-0,40 USD, więc limit wydatków obszaru startu
+30 USD to około 75-150 darmowych artykułów w miesiącu. Po jego wyczerpaniu start sam się wstrzymuje
+do kolejnej doby i wraca, gdy limit się odnowi albo go podniesiesz.
+
+```bash
+sudo serwer/cli.sh start                       # ustawienia, dzisiejsza pula, przydziały z ostatniego roku
+sudo serwer/cli.sh start-usun anna@firma.pl    # oddaje adresowi start (np. po awarii); konto z artykułem i tak go nie dostanie
+```
+
+`/api/status` (operator) ma sekcję `startBezKlucza`: ustawienia bez klucza, `dzis`, `wRoku`,
+`wstrzymanyDo` z powodem i liczniki od startu procesu.
 
 ## Dzierżawy
 

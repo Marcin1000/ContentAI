@@ -1,7 +1,7 @@
 ---
 tytul: Umowa powierzenia przetwarzania danych osobowych
-wersja: 2026-10-v1
-data: 2026-10-09
+wersja: 2026-10-v2
+data: 2026-10-14
 ---
 <!--
 Załącznik 1 do Regulaminu (art. 28 ust. 3 RODO). Źródło: szkic roli prawo (umowa-powierzenia-pl.md, PR8-30).
@@ -46,8 +46,9 @@ Przetwarzający:
 2. Przetwarzający informuje Administratora e-mailem o zamiarze dodania lub zmiany dalszego podmiotu co najmniej 14 dni wcześniej. Administrator może w tym czasie zgłosić uzasadniony sprzeciw; jeżeli strony nie znajdą rozwiązania, Administrator może wypowiedzieć umowę o świadczenie usług ze skutkiem natychmiastowym, a Przetwarzający zwraca część ceny za niewykorzystany okres.
 3. Przetwarzający nakłada na dalsze podmioty obowiązki ochrony danych nie mniejsze niż w tej umowie i odpowiada za ich działania jak za własne.
 4. **Klucze API Administratora.** Gdy Administrator korzysta w Serwisie z własnego klucza API dostawcy AI (Anthropic, OpenAI, ElevenLabs), dostawca przetwarza dane na podstawie umowy zawartej bezpośrednio z Administratorem (warunki i umowa powierzenia tego dostawcy). W takim przypadku dostawca nie jest dalszym podmiotem przetwarzającym Przetwarzającego, a Przetwarzający jedynie przekazuje zapytanie Administratora do tego dostawcy, nie zapisując klucza ani treści.
+5. **Pierwszy artykuł bez klucza API.** Pierwszy artykuł bez klucza API (Regulamin § 3 ust. 4) Przetwarzający generuje na własnym kluczu Anthropic. Anthropic jest wtedy dalszym podmiotem przetwarzającym Przetwarzającego, wymienionym w Załączniku A.
 
-<!-- PRAWNIK P-08: potwierdzić kwalifikację z ust. 4. -->
+<!-- PRAWNIK P-08: potwierdzić kwalifikację z ust. 4. Wersja 2026-10-v2 (14.10.2026): ust. 5, pierwszy artykuł bez klucza API. -->
 
 ## § 5. Przekazywanie danych poza EOG
 

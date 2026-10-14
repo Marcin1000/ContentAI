@@ -1,7 +1,7 @@
 ---
 tytul: Lista dalszych podmiotów przetwarzających
-wersja: 2026-10-v1
-data: 2026-10-09
+wersja: 2026-10-v2
+data: 2026-10-14
 ---
 <!--
 PR8-30: lista wersjonowana, publikowana. Każda zmiana listy = nowa wersja w nagłówku, nowy wiersz w historii zmian
@@ -25,9 +25,9 @@ Lista podmiotów, którym Content AI powierza przetwarzanie danych osobowych wpr
 | DataForSEO | wyniki wyszukiwania dla wpisanej frazy (przekazywana jest tylko fraza) | {{DO_UZUPELNIENIA: siedziba DataForSEO}} | {{DO_UZUPELNIENIA: podstawa przekazania}} |
 {{/dataforseo}}
 
-## Konta zespołu działające na kluczach Usługodawcy
+## Generowanie na kluczach Usługodawcy
 
-Konta założone przez Usługodawcę przed udostępnieniem samodzielnej rejestracji mogą generować treści na kluczach API Usługodawcy. Wtedy dalszymi podmiotami przetwarzającymi są także:
+Konta założone przez Usługodawcę przed udostępnieniem samodzielnej rejestracji mogą generować treści na kluczach API Usługodawcy. Konta zakładane samodzielnie piszą na kluczu Usługodawcy pierwszy artykuł bez Klucza API (Regulamin § 3 ust. 4). Wtedy dalszymi podmiotami przetwarzającymi są także (przy pierwszym artykule bez Klucza API tylko Anthropic):
 
 | Podmiot | Zakres | Lokalizacja | Podstawa przekazania poza EOG |
 |---|---|---|---|
@@ -42,10 +42,11 @@ Konta założone przez Usługodawcę przed udostępnieniem samodzielnej rejestra
 
 ## Własne klucze API
 
-Gdy Użytkownik korzysta z własnego Klucza API (Anthropic, OpenAI, ElevenLabs), dostawca przetwarza dane na podstawie umowy zawartej bezpośrednio z Użytkownikiem i nie jest dalszym podmiotem przetwarzającym Usługodawcy (umowa powierzenia, § 4 ust. 4). Konta zakładane samodzielnie działają wyłącznie na własnych Kluczach API.
+Gdy Użytkownik korzysta z własnego Klucza API (Anthropic, OpenAI, ElevenLabs), dostawca przetwarza dane na podstawie umowy zawartej bezpośrednio z Użytkownikiem i nie jest dalszym podmiotem przetwarzającym Usługodawcy (umowa powierzenia, § 4 ust. 4). Konta zakładane samodzielnie działają na własnych Kluczach API, z wyjątkiem pierwszego artykułu bez Klucza API (Regulamin § 3 ust. 4).
 
 ## Historia zmian
 
 | Wersja | Data | Zmiana |
 |---|---|---|
 | 2026-10-v1 | 9 października 2026 r. | pierwsza wersja listy |
+| 2026-10-v2 | 14 października 2026 r. | Anthropic także przy pierwszym artykule bez Klucza API na kontach zakładanych samodzielnie |

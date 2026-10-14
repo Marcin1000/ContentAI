@@ -70,8 +70,8 @@ Jaki błąd AI w tekście najtrudniej było Wam wyłapać?
 Pierwszy komentarz:
 
 ```text
-Przykład z filmu i opis: https://content-ai.net
-Pakiet Darmowy: 3 artykuły na Twoim kluczu API Anthropic, orientacyjnie 0,20-0,40 USD za artykuł. Przed pierwszym tekstem warto wgrać 1-3 dokumenty firmy, wtedy artykuł powstanie z nich. Klucz API krok po kroku: https://content-ai.net/klucz-api/
+Przykład z filmu i opis: https://content-ai.net/?z=li2
+Pakiet Darmowy: 3 artykuły na Twoim kluczu API Anthropic, orientacyjnie 0,20-0,40 USD za artykuł. Przed pierwszym tekstem warto wgrać 1-3 dokumenty firmy, wtedy artykuł powstanie z nich. Klucz API krok po kroku: https://content-ai.net/klucz-api/?z=li2
 ```
 
 Tekst alternatywny filmu (jeśli LinkedIn o niego poprosi):
@@ -259,8 +259,8 @@ Pierwszy komentarz (pierwszą linię uzupełnij adresem strony premiery):
 
 ```text
 Product Hunt: WKLEJ_ADRES_Z_PRODUCT_HUNT
-Website and the example from the video: https://content-ai.net/en/
-Free plan: 3 articles, on your own Anthropic API key. Upload 1-3 company documents before the first article. How to get a key: https://content-ai.net/en/api-key/
+Website and the example from the video: https://content-ai.net/en/?z=li9
+Free plan: 3 articles, on your own Anthropic API key. Upload 1-3 company documents before the first article. How to get a key: https://content-ai.net/en/api-key/?z=li9
 ```
 
 ---
@@ -352,9 +352,12 @@ Jakie liczby chcielibyście zobaczyć za kolejne 6 tygodni?
 
 ## Pierwszy komentarz (pozostałe posty PL)
 
+Zamień `N` w obu linkach na numer posta (np. `li4` pod postem #4). Wtedy `sudo serwer/cli.sh zrodla` pokaże,
+ile kont przyszło spod tego posta (znaczniki: `README.md`, sekcja „Skąd przychodzą konta”).
+
 ```text
-Przykład z filmu, opis i cennik: https://content-ai.net
-Pakiet Darmowy: 3 artykuły. Teksty powstają na Twoim kluczu API Anthropic, orientacyjnie 0,20-0,40 USD za artykuł. Przed pierwszym tekstem warto wgrać 1-3 dokumenty firmy, wtedy artykuł powstanie z nich. Jak zdobyć klucz: https://content-ai.net/klucz-api/
+Przykład z filmu, opis i cennik: https://content-ai.net/?z=liN
+Pakiet Darmowy: 3 artykuły. Teksty powstają na Twoim kluczu API Anthropic, orientacyjnie 0,20-0,40 USD za artykuł. Przed pierwszym tekstem warto wgrać 1-3 dokumenty firmy, wtedy artykuł powstanie z nich. Jak zdobyć klucz: https://content-ai.net/klucz-api/?z=liN
 ```
 
 ---
@@ -417,7 +420,7 @@ Wersja EN, gdy profil ma angielską wersję:
 Maker of Content AI: AI articles fact-checked against your own documents | AI deployment and digital transformation | I build and roll out AI tools
 ```
 
-**Sekcja „Polecane”**: link https://content-ai.net, tytuł i opis:
+**Sekcja „Polecane”**: link https://content-ai.net/?z=li-profil, tytuł i opis:
 
 ```text
 Content AI: treści pod Google i odpowiedzi AI, pisane z Twoich źródeł
@@ -427,7 +430,7 @@ Content AI: treści pod Google i odpowiedzi AI, pisane z Twoich źródeł
 Pisze artykuły z dokumentów firmy, ocenia je pod SEO, AIO, AEO i GEO i wskazuje zdania bez pokrycia w źródłach. Pakiet Darmowy: 3 artykuły na Twoim kluczu API Anthropic.
 ```
 
-**Sekcja „Projekty”** (nazwa Content AI, adres https://content-ai.net):
+**Sekcja „Projekty”** (nazwa Content AI, adres https://content-ai.net/?z=li-profil):
 
 ```text
 Narzędzie do pisania artykułów z dokumentów firmy. Pisze z Bazy wiedzy, ocenia tekst pod SEO, AIO, AEO i GEO, a kontrola faktów wskazuje zdania bez pokrycia w źródłach i poprawia je jednym kliknięciem. Treści po polsku, angielsku, niemiecku i czesku. [DO UZUPEŁNIENIA: od kiedy i w jakiej formie, np. „projekt własny”.]

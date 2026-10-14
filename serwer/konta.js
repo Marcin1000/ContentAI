@@ -469,18 +469,26 @@ const STRONA_KLUCZA = { pl: 'https://content-ai.net/klucz-api/', en: 'https://co
 /**
  * Runda P (agencja-ux D1): e-mail powitalny po pierwszym potwierdzeniu adresu, tylko konto na wlasnym kluczu
  * (krok 1 powitania to klucz Anthropic). Osoba z telefonu, ktora odpadla na kluczu, dostaje droge powrotu:
- * pakiet, orientacyjny koszt i instrukcje klucza w swoim jezyku.
+ * pakiet, orientacyjny koszt i instrukcje klucza w swoim jezyku. Gdy pierwszy artykul bez klucza jest dostepny
+ * (serwer/start.js), powitanie zaczyna od dokumentow i tematu, a klucz opisuje jako krok przed kolejnym artykulem.
  */
 function powitaj(kontekst, konto) {
   if (!konto || konto.zrodloKluczy !== 'wlasne') return;
   const jezyk = jezykKonta(konto, kontekst.jezyk);
   const plan = kontekst.plany.planKonta(konto);
   const artykulow = plan.okres === 'zawsze' && plan.limity ? plan.limity.artykul : null;
+  let bezKlucza = false;
+  try {
+    bezKlucza = Boolean(kontekst.startBezKlucza && kontekst.startBezKlucza.stan(konto).dostepny);
+  } catch (e) {
+    console.error('[konta] stan pierwszego artykulu bez klucza:', e.message);
+  }
   powiadom(kontekst, konto, 'powitanie', {
     pakiet: jezyk === 'en' ? plan.nazwaEn || plan.nazwa : plan.nazwa,
     artykulow: Number.isInteger(artykulow) && artykulow > 0 ? artykulow : undefined,
     kosztArtykulu: jezyk === 'en' ? '$0.20-0.40' : '0,20-0,40 USD',
     odnosnikKlucza: STRONA_KLUCZA[jezyk],
+    ...(bezKlucza ? { bezKlucza: true } : {}),
   });
 }
 

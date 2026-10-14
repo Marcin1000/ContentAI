@@ -17,7 +17,7 @@
 //     w sekcji wlasciwej dla obszaru (konta, tokeny i zgody, platnosci...),
 //   - nowa kolumna albo tabela = nowa migracja schematu w MIGRACJE_SCHEMATU
 //     (numery zarezerwowane: 2 = A1 konta, 3 = C dzierzawy/klucze/poczta,
-//     4 = B platnosci, 5 = zrodla rejestracji; nieuzyty numer po prostu zostaje pominiety),
+//     4 = B platnosci, 5 = zrodla rejestracji, 6 = pierwszy artykul bez klucza; nieuzyty numer po prostu zostaje pominiety),
 //   - transakcja(fn) przyjmuje wylacznie funkcje SYNCHRONICZNA: await w srodku
 //     wpuscilby do transakcji zapytania innych zadan,
 //   - bledy "danych nie da sie teraz odczytac" (blokada, uszkodzenie, brak
@@ -290,6 +290,23 @@ const MIGRACJE_SCHEMATU = [
         ile INTEGER NOT NULL DEFAULT 0,
         PRIMARY KEY (okres, zrodlo)
       ) WITHOUT ROWID;
+    `),
+  },
+  // 6 = pierwszy artykul bez klucza (14.10.2026, serwer/start.js): jeden przydzial na adres e-mail. Klucz to skrot
+  // HMAC adresu kanonicznego (bez loginu, wiec wpis zostaje po usunieciu konta), dzien przydzialu (dzienna pula),
+  // liczba wywolan modelu i artykulow w przydziale. Wpisy starsze niz rok usuwa sprzataj().
+  {
+    wersja: 6,
+    opis: 'pierwszy artykul bez klucza: przydzial na skrot adresu, dzienna pula',
+    wykonaj: (d) => d.exec(`
+      CREATE TABLE IF NOT EXISTS start_bez_klucza (
+        email_skrot TEXT PRIMARY KEY,
+        od INTEGER NOT NULL,
+        dzien TEXT NOT NULL,
+        wywolan INTEGER NOT NULL DEFAULT 0,
+        artykulow INTEGER NOT NULL DEFAULT 0
+      ) WITHOUT ROWID;
+      CREATE INDEX IF NOT EXISTS start_bez_klucza_dzien ON start_bez_klucza (dzien);
     `),
   },
 ];
@@ -741,6 +758,70 @@ function zrodlaRejestracji(odOkresu = '0000-00') {
     .all(String(odOkresu)).map((w) => ({ okres: w.okres, zrodlo: w.zrodlo, ile: w.ile }));
 }
 
+// ─── Pierwszy artykul bez klucza (serwer/start.js) ───────────────────────────
+// Przydzial na skrot adresu e-mail: od (ms), dzien 'RRRR-MM-DD' (UTC, dzienna pula), wywolan (sufit kosztu)
+// i artykulow (jeden artykul na przydzial).
+
+/** Przydzial dla skrotu adresu albo null: { od, dzien, wywolan, artykulow }. */
+function startPrzydzial(emailSkrot) {
+  const w = zap('SELECT od, dzien, wywolan, artykulow FROM start_bez_klucza WHERE email_skrot = ?').get(String(emailSkrot));
+  return w ? { od: w.od, dzien: w.dzien, wywolan: w.wywolan, artykulow: w.artykulow } : null;
+}
+
+/** Liczba przydzialow rozpoczetych w dniu 'RRRR-MM-DD' (dzienna pula) i wszystkich zapisanych. */
+function startLiczby(dzien) {
+  return {
+    dzien: zap('SELECT COUNT(*) AS n FROM start_bez_klucza WHERE dzien = ?').get(String(dzien)).n,
+    razem: zap('SELECT COUNT(*) AS n FROM start_bez_klucza').get().n,
+  };
+}
+
+/**
+ * Jedno wywolanie modelu z darmowego startu, atomowo (rownolegle zapytania nie omina puli ani sufitow):
+ *   - jest przydzial: +1 wywolanie (i +1 artykul, gdy `artykul`), gdy okno trwa, wywolan < maxWywolan
+ *     i (dla artykulu) artykulow < maxArtykulow,
+ *   - brak przydzialu: nowy z wywolan 1 (artykulow 1 albo 0), gdy nowyDozwolony i dzienna pula ma miejsce.
+ * -> { ok: true, wywolan, artykulow, od, nowy } | { ok: false, powod: 'pula'|'wykorzystany' }
+ */
+function startWywolanie(emailSkrot, {
+  teraz = Date.now(), dzien, pulaDzienna, maxWywolan, oknoMs, artykul = false, maxArtykulow = 1, nowyDozwolony = true,
+}) {
+  const a = artykul ? 1 : 0;
+  return transakcja(() => {
+    const p = startPrzydzial(emailSkrot);
+    if (p) {
+      if (teraz - p.od >= oknoMs || p.wywolan >= maxWywolan || p.artykulow + a > maxArtykulow) return { ok: false, powod: 'wykorzystany' };
+      const w = zap(`UPDATE start_bez_klucza SET wywolan = wywolan + 1, artykulow = artykulow + ?
+        WHERE email_skrot = ? AND wywolan < ? AND artykulow + ? <= ? RETURNING wywolan, artykulow, od`)
+        .get(a, String(emailSkrot), maxWywolan, a, maxArtykulow);
+      return w ? { ok: true, wywolan: w.wywolan, artykulow: w.artykulow, od: w.od, nowy: false } : { ok: false, powod: 'wykorzystany' };
+    }
+    if (!nowyDozwolony || a > maxArtykulow) return { ok: false, powod: 'wykorzystany' };
+    if (startLiczby(dzien).dzien >= pulaDzienna) return { ok: false, powod: 'pula' };
+    zap('INSERT INTO start_bez_klucza (email_skrot, od, dzien, wywolan, artykulow) VALUES (?, ?, ?, 1, ?)')
+      .run(String(emailSkrot), teraz, String(dzien), a);
+    return { ok: true, wywolan: 1, artykulow: a, od: teraz, nowy: true };
+  });
+}
+
+/** Usuwa przydzial adresu (CLI start-usun: pomoc po awarii). -> czy byl. */
+function startUsun(emailSkrot) {
+  return zap('DELETE FROM start_bez_klucza WHERE email_skrot = ?').run(String(emailSkrot)).changes > 0;
+}
+
+/**
+ * Zwrot po wywolaniu, ktore nic nie kosztowalo albo nie dalo artykulu (nigdy ponizej zera): `wywolanie` oddaje
+ * wywolanie (blad dostawcy przed praca), `artykul` sztuke artykulu. Przydzial zostaje, nawet gdy wszystko oddane:
+ * dzienna pula liczy przydzialy rozpoczete, a nie udane. -> zmieniono (boolean)
+ */
+function startZwrot(emailSkrot, { wywolanie = false, artykul = false } = {}) {
+  const w = wywolanie ? 1 : 0;
+  const a = artykul ? 1 : 0;
+  if (!w && !a) return false;
+  return zap('UPDATE start_bez_klucza SET wywolan = max(wywolan - ?, 0), artykulow = max(artykulow - ?, 0) WHERE email_skrot = ?')
+    .run(w, a, String(emailSkrot)).changes > 0;
+}
+
 // ─── Sesje odwolane (wylogowanie) ────────────────────────────────────────────
 
 function odwolajSesje(id, wygasa) {
@@ -1165,6 +1246,8 @@ function sprzataj(teraz = Date.now()) {
     tokeny: zap('DELETE FROM tokeny WHERE wygasa < ?').run(teraz - 7 * DOBA).changes,
     zdarzenia: zap('DELETE FROM platnosci_zdarzenia WHERE otrzymane < ?').run(teraz - 90 * DOBA).changes,
     liczniki: zap("DELETE FROM uzycie WHERE okres <> 'zawsze' AND okres < ?").run(miesiacWstecz(teraz, 12)).changes,
+    // Przydzialy darmowego startu po roku: ten sam adres moze znow dostac jeden artykul bez klucza.
+    start: zap('DELETE FROM start_bez_klucza WHERE od < ?').run(teraz - 365 * DOBA).changes,
   }));
 }
 
@@ -1212,6 +1295,7 @@ const API = {
   organizacja, usunOrganizacje, zmienOrganizacje,
   uzycie, uzycieKonta, policz, zarezerwuj, ustawUzycie,
   policzZrodlo, zrodlaRejestracji,
+  startPrzydzial, startLiczby, startWywolanie, startZwrot, startUsun,
   odwolajSesje, sesjaOdwolana, sesjeOdwolane, liczbaOdwolanych,
   zapiszToken, sprawdzToken, zuzyjToken, skrotTokenu,
   usunTokeny,

@@ -1,7 +1,7 @@
 ---
 tytul: List of sub-processors
-wersja: 2026-10-v1
-data: 2026-10-09
+wersja: 2026-10-v2
+data: 2026-10-14
 ---
 <!--
 English version of podprzetwarzajacy.pl.md (PR8-30, versioned, published; Schedule A to the data processing
@@ -22,9 +22,9 @@ The entities to which Content AI entrusts the processing of personal data entere
 | DataForSEO | search results for the keyword entered (only the keyword is sent) | {{DO_UZUPELNIENIA: DataForSEO location}} | {{DO_UZUPELNIENIA: transfer basis}} |
 {{/dataforseo}}
 
-## Team accounts working on the Provider's keys
+## Generation on the Provider's keys
 
-Accounts created by the Provider before self-service registration was available may generate content on the Provider's API keys. In that case the following are also sub-processors:
+Accounts created by the Provider before self-service registration was available may generate content on the Provider's API keys. Self-created Accounts write their first article without an API Key on the Provider's key (Terms of Service, section 3(4)). In that case the following are also sub-processors (for the first article without an API Key, Anthropic only):
 
 | Entity | Scope | Location | Transfer basis outside the EEA |
 |---|---|---|---|
@@ -39,10 +39,11 @@ Accounts created by the Provider before self-service registration was available 
 
 ## Own API keys
 
-When a User uses their own API Key (Anthropic, OpenAI, ElevenLabs), the provider processes the data under an agreement concluded directly with the User and is not a sub-processor of the Provider (data processing agreement, section 4(4)). Self-created Accounts work only on their own API Keys.
+When a User uses their own API Key (Anthropic, OpenAI, ElevenLabs), the provider processes the data under an agreement concluded directly with the User and is not a sub-processor of the Provider (data processing agreement, section 4(4)). Self-created Accounts work on their own API Keys, except for the first article without an API Key (Terms of Service, section 3(4)).
 
 ## Change history
 
 | Version | Date | Change |
 |---|---|---|
 | 2026-10-v1 | 9 October 2026 | first version of the list |
+| 2026-10-v2 | 14 October 2026 | Anthropic also for the first article without an API Key on self-created Accounts |

@@ -3310,11 +3310,14 @@ body.karta-konta #gen-btn { display: none; }
 .byok-wynik .ikona { flex: none; margin-top: 2px; }
 .byok-wynik-ok { color: var(--c-sukces); }
 .byok-wynik-blad { color: var(--c-blad); }
-.byok-koszt, .byok-alarm { display: flex; gap: var(--s-8); align-items: flex-start; margin: 0 0 var(--s-8); padding: var(--s-8) var(--s-12); border-radius: var(--r-md); font-size: var(--t-sm); line-height: 1.5; }
+.byok-koszt, .byok-alarm, .byok-start-info { display: flex; gap: var(--s-8); align-items: flex-start; margin: 0 0 var(--s-8); padding: var(--s-8) var(--s-12); border-radius: var(--r-md); font-size: var(--t-sm); line-height: 1.5; }
 .byok-koszt { background: var(--c-panel); border: 1px solid var(--c-linia); color: var(--c-tekst-2); }
 .byok-alarm { background: var(--c-blad-tlo); border: 1px solid var(--c-blad-ramka); color: var(--c-tekst); }
-.byok-koszt > .ikona, .byok-alarm > .ikona { flex: none; margin-top: 2px; }
+/* 14.10: pierwszy artykul bez klucza (serwer/start.js) - dlaczego teraz potrzebny klucz (e-mail, pula dnia, wykorzystany). */
+.byok-start-info { background: var(--c-akcent-tlo); border: 1px solid var(--c-akcent-ramka); color: var(--c-tekst); }
+.byok-koszt > .ikona, .byok-alarm > .ikona, .byok-start-info > .ikona { flex: none; margin-top: 2px; }
 .byok-alarm > .ikona { color: var(--c-blad); }
+.byok-start-info > .ikona { color: var(--c-akcent-mocny); }
 .byok-gdzie { margin: var(--s-8) 0; }
 .byok-kroki { margin: var(--s-8) 0; padding-left: var(--s-20); font-size: var(--t-sm); line-height: 1.55; color: var(--c-tekst-2); }
 .byok-kroki li + li { margin-top: var(--s-4); }

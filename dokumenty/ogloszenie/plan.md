@@ -146,15 +146,17 @@ przekaz albo kanał, nie wysiłek.
 **Pomiar bez analityki na stronie:**
 1. `sudo serwer/cli.sh lista` (data założenia, pakiet) i `sudo serwer/cli.sh pokaz <e-mail>` (potwierdzony adres,
    ostatnie logowanie, użycie).
-2. `sudo serwer/cli.sh przychod 2026-Q4`.
-3. Cloudflare: unikalni odwiedzający dziennie (dane zbiorcze).
-4. LinkedIn: wyświetlenia, reakcje, komentarze, wejścia na profil.
-5. Odpowiedzi na pytanie „skąd wiesz o Content AI?” z osobistego maila.
-6. Nowe konta w ciągu 48 h od działania (data w arkuszu).
+2. `sudo serwer/cli.sh zrodla`: rejestracje w miesiącu według znacznika `?z=` z linku (post, profil, grupa, Product
+   Hunt). Same liczby, bez powiązania z kontem. Znaczniki: `README.md`, punkt 4.
+3. `sudo serwer/cli.sh przychod 2026-Q4`.
+4. Cloudflare: unikalni odwiedzający dziennie (dane zbiorcze).
+5. LinkedIn: wyświetlenia, reakcje, komentarze, wejścia na profil.
+6. Odpowiedzi na pytanie „skąd wiesz o Content AI?” z osobistego maila.
+7. Nowe konta w ciągu 48 h od działania (data w arkuszu).
 
 **Arkusz tygodniowy (poniedziałek, 15 min):**
 
-| Tydzień | Posty (wyśw. / reakcje / komentarze innych / wejścia na profil) | Zaproszenia wysłane / przyjęte | Wiadomości 1:1 / rozmowy | Cloudflare (unikalni w tygodniu) | Nowe konta | Konta z ≥ 1 artykułem | Płatne (nowe / razem) | Przychód Q4 narastająco | Skąd (z odpowiedzi) |
+| Tydzień | Posty (wyśw. / reakcje / komentarze innych / wejścia na profil) | Zaproszenia wysłane / przyjęte | Wiadomości 1:1 / rozmowy | Cloudflare (unikalni w tygodniu) | Nowe konta | Konta z ≥ 1 artykułem | Płatne (nowe / razem) | Przychód Q4 narastająco | Skąd (`cli.sh zrodla` i odpowiedzi) |
 |---|---|---|---|---|---|---|---|---|---|
 | T1 | | | | | | | | | |
 
