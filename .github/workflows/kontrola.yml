@@ -91,6 +91,12 @@ jobs:
       - name: Strona produktowa - generator, teksty, obce serwery, CSP
         run: python3 narzedzia/audyt_showcase.py
 
+      # Repozytorium jest publiczne. Pierwsze testy szly na materialach jednej
+      # firmy: jej nazwa, konkurenci i szczegoly branzy nie wracaja do zadnego
+      # pliku (kod, komentarze, testy, dokumentacja). Lista slow to same skroty.
+      - name: Repozytorium - bez marki klienta i branzy z testow
+        run: python3 narzedzia/audyt_klienta.py
+
       # README to wizytówka publicznego repozytorium. Zepsuty odnośnik nie
       # wywala niczego, tylko prowadzi donikąd, a złamany obrazek zostawia
       # pustą ramkę - widać to dopiero na GitHubie.

@@ -175,7 +175,7 @@ KONTROLE = [
     ("F21/bezpunktow", "punkty podsumowania nie musza zawierac liczby",
      None, "Each bullet MUST contain at least one specific number", None),
 
-    # "Nadinterpretowanie zrodel": prawo pocztowe Niemiec w tekscie o Wloszech.
+    # "Nadinterpretowanie zrodel": przepisy jednego kraju w tekscie o innym kraju.
     ("F21/zakres", "blok o zakresie faktu ze zrodla",
      "function blokZakresu() {", None, None),
     # "Tresc jest niespojna w obrebie jednego artykulu" (akapit kontra tabela).
@@ -283,8 +283,8 @@ KONTROLE = [
 
     # Kontekst SERP to streszczenie stron konkurencji, a regula pokrycia faktow
     # mowila "w bazie wiedzy LUB w wynikach wyszukiwania" - czyli sama go
-    # autoryzowala. Stad w artykule wziete znikad "notowania PKN Orlen" i "EU
-    # weekly oil bulletin", mimo wylaczonego uzupelniania z internetu.
+    # autoryzowala. Stad w artykule wziete znikad notowania gieldowe i biuletyn
+    # cen surowcow, mimo wylaczonego uzupelniania z internetu.
     ("F34/serp", "SERP nie jest zrodlem faktow",
      "SERP CONTEXT IS NOT A SOURCE",
      "MUST appear in the knowledge base or in the search results provided", None),
@@ -300,8 +300,8 @@ KONTROLE = [
     ("F35/skala", "opis skali FOG mowi o polskiej wersji",
      "'fog-title':'Indeks mglistości (wersja dla polszczyzny)'", None, None),
 
-    # Fraza kluczowa wstawiona doslownie zlamala zdanie ("doplata paliwowa
-    # kurier dolicza"), a fraza z rokiem wymusila twierdzenie o 2026 bez
+    # Fraza kluczowa wstawiona doslownie zlamala zdanie ("oplata serwisowa
+    # firma dolicza"), a fraza z rokiem wymusila twierdzenie o 2026 bez
     # pokrycia w zrodle.
     ("F36/frazy", "frazy kluczowe odmieniane, nie wklejane",
      "function blokFraz() {", None, None),
@@ -403,18 +403,18 @@ KONTROLE = [
 
     # -- szosta runda: co pokazalo pierwsze uruchomienie z wyszukiwaniem --
 
-    # Bibliografia pierwszego artykulu z sieci miala 21 pozycji, w tym FedEx,
-    # UPS, TNT, DPD, DB Schenker i kilkanascie porownywarek. Wymienialismy
+    # Bibliografia pierwszego artykulu z sieci miala 21 pozycji, w tym strony
+    # pieciu konkurentow i kilkanascie porownywarek. Wymienialismy
     # wszystko, co model przejrzal, jakby kazda z tych stron cos potwierdzala.
     ("F43/cytowane", "w bibliografii tylko strony, na ktore model sie powolal",
      "return z.cytowan > 0;", None, None),
-    # Lista wykluczen byla najpierw zgadywana, potem branzowa (kurierska),
+    # Lista wykluczen byla najpierw zgadywana, potem branzowa (pod jednego klienta),
     # a to produkt dla dowolnej marki. Ustawia sie ja w oknie Marka, a kod
     # startuje z pusta - wdrozenie dla nowej firmy nie ma sie zaczynac od
     # wykluczania cudzych konkurentow.
     ("F43/konkurenci", "wykluczenia z okna marki, nie z kodu",
      "const wykluczone = domenyZPola(cfg.blockedDomains);",
-     "'dpd.com', 'fedex.com', 'ups.com', 'tnt.com', 'dbschenker.com'", None),
+     "re:blockedDomains:\\s*\\[\\s*'", None),
     ("F43/pole", "pole domen wykluczonych w oknie marki",
      'id="llms-blocked"', None, None),
     ("F43/czyszczenie", "adres z www i sciezka sprowadzany do samej domeny",
@@ -427,7 +427,7 @@ KONTROLE = [
     # Regula rozroznienia linii miala wpisane wprost linie jednego klienta.
     ("F43/linie", "nazwy linii biznesowych z konfiguracji, nie z kodu",
      "They are separate offers, not synonyms.",
-     "attribute it to the eCommerce line, never to Express", None),
+     "re:attribute it to the \\w+ line, never to", None),
     ("F43/bezcytowania", "zakaz cytowania konkurencji jako zrodla",
      "never let one appear in the list", None, None),
 
@@ -436,10 +436,18 @@ KONTROLE = [
     # jedna z nich jest historyczna.
     ("F44/marka", "jedna marka, jedna nazwa, jedna spolka",
      "ONE BRAND, ONE NAME, ONE COMPANY", None, None),
+    # 14.10: przyklady w poleceniach bez szczegolow branzy z pierwszych testow (repozytorium jest publiczne).
+    ("RN/grupa", "polecenie o grupie spolek z przykladem bez jednej branzy",
+     "A group can contain several companies (for example separate service lines or subsidiaries).",
+     "(parcel, express, freight, e-commerce)", None),
+    ("RN/odbiorca", "polecenie o jednym adresacie z neutralnym przykladem",
+     'addressing the end customer (e.g. "you will receive your order")', "pick up your parcel", None),
+    ("RN/audio", "polecenie skryptu audio z neutralnym przykladem odmiany",
+     'e.g. "wiadomość", never "wiadość"', None, None),
     ("F44/tabela", "tabela okresow wymaga kazdego wiersza ze zrodla",
      "you do not have a table, you have three data points", None, None),
 
-    # Przekroczony czas na stronie DHL-a byl zglaszany jako "adres nie
+    # Przekroczony czas na stronie duzej firmy byl zglaszany jako "adres nie
     # odpowiada", z angielskim komunikatem wyjatku w polskim interfejsie.
     # Kontrola, ktora sie nie odbyla, nie jest wynikiem kontroli.
     ("F45/niesprawdzony", "przekroczony czas to nie martwy adres",
@@ -455,7 +463,7 @@ KONTROLE = [
      "function kolorMarki(ktory) {", "const BRAND_COLORS = {", None),
     ("F46/widocznosc", "badanie widocznosci startuje puste, bez cudzej branzy",
      "competitors: '',",
-     "'InPost, DPD, Poczta Polska, UPS, GLS, FedEx, Orlen Paczka, Allegro'", None),
+     "re:competitors:\\s*'[^']", None),
 
     # Korekta premium, poprawa po ocenie i przerobki dostaja sam artykul,
     # bez bazy wiedzy. Uwaga "za malo konkretow" konczyla sie dopisaniem
@@ -1980,6 +1988,16 @@ KONTROLE_PLIKOW = [
     ("RF/hero-odstep", "strona: odstep pod menu zalezy od wysokosci okna (24-56 px), tekst hero na pierwszym ekranie",
      "showcase/zasoby/strona.css", ".hero{position:relative;padding:clamp(24px,4.5vh,56px) 0 0;",
      ".hero{position:relative;padding:clamp(40px,6.5vw,96px) 0 0;"),
+
+    # -- 14.10: bez marki klienta z testow i szczegolow jego branzy w publicznym repozytorium --
+
+    # Audyt czyta kazdy sledzony plik tekstowy. Lista slow to same skroty SHA-256 (cale slowa i rdzenie).
+    ("RN/audyt-klienta", "audyt repozytorium: bez marki klienta i branzy z testow, lista slow jako skroty",
+     "narzedzia/audyt_klienta.py", "def znajdz(tekst):", None),
+    ("RN/ci-audyt", "CI uruchamia audyt marki klienta przy kazdej zmianie",
+     ".github/workflows/kontrola.yml", "run: python3 narzedzia/audyt_klienta.py", None),
+    ("RN/strona-audyt", "audyt strony sprawdza marke klienta ta sama lista (bez slowa wpisanego wprost)",
+     "narzedzia/audyt_showcase.py", "for nr, slowo in audyt_klienta.znajdz(tresc):", None),
 ]
 
 

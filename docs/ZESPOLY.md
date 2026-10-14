@@ -90,7 +90,7 @@ Każda propozycja musi się z nimi zgadzać - inaczej nie przejdzie:
 - Bez długich myślników (znak U+2014) w interfejsie, na stronie i w dokumentacji (`audyt_myslniki.py`).
 - Bez średnika w tekstach dla klienta: strona, aplikacja, ekrany kont i płatności, e-maile (`audyt_sredniki.py`).
 - Bez prawdziwych kluczy API w repozytorium, wyłącznie `WSTAW_TUTAJ_*`.
-- Bez marki klienta (DHL i in.) w materiałach publicznych.
+- Bez marki klienta i szczegółów, które do niej prowadzą (branża, kraje, dane z testów), w materiałach publicznych i w repozytorium.
 - Poprawki pilnuje `narzedzia/sprawdz_zrodlo.py` (podpis kodu po poprawce i przed nią).
 
 Pełna bateria: `.github/workflows/kontrola.yml`.

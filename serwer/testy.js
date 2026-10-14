@@ -96,12 +96,12 @@ console.log('\n  rozpoznawanie zapytania SERP');
   const zadanieSerp = {
     tools: [{ type: 'web_search_20250305', name: 'web_search' }],
     system: 'Write the context, topics and phrases in Polish. Search for top Google results',
-    messages: [{ role: 'user', content: 'Keyword: kurier ecommerce\nSearch and analyze top results.' }],
+    messages: [{ role: 'user', content: 'Keyword: biuro rachunkowe\nSearch and analyze top results.' }],
   };
   sprawdz('rozpoznaje zapytanie SERP', serp.czyZapytanieSerp(zadanieSerp));
   sprawdz('zwykle zadanie nie jest SERP', !serp.czyZapytanieSerp({ messages: [] }));
   sprawdz('brak tools nie jest SERP', !serp.czyZapytanieSerp({ tools: null, messages: [] }));
-  sprawdz('wyciaga fraze', serp.frazaZZadania(zadanieSerp) === 'kurier ecommerce');
+  sprawdz('wyciaga fraze', serp.frazaZZadania(zadanieSerp) === 'biuro rachunkowe');
   sprawdz('brak frazy zwraca pusty ciag', serp.frazaZZadania({ messages: [{ role: 'user', content: 'nic' }] }) === '');
   sprawdz('wykrywa jezyk polski', serp.jezykZZadania(zadanieSerp) === 'Polski');
   sprawdz('wykrywa jezyk angielski', serp.jezykZZadania({ system: 'Write ... in English.' }) === 'English');
@@ -117,22 +117,22 @@ console.log('\n  przetwarzanie odpowiedzi DataForSEO');
   const serp = require('./serp.js');
   const odpowiedzApi = {
     tasks: [{ result: [{ items: [
-      { type: 'organic', title: 'Najlepszy kurier dla sklepu internetowego', description: 'Porownanie firm kurierskich pod katem wysylki paczek ze sklepu.' },
-      { type: 'organic', title: 'Kurier ecommerce - ranking firm kurierskich', description: 'Ranking firm kurierskich i porownanie cennikow wysylki.' },
+      { type: 'organic', title: 'Najlepsze biuro rachunkowe dla sklepu internetowego', description: 'Porownanie biur rachunkowych pod katem ksiegowosci sklepu.' },
+      { type: 'organic', title: 'Biuro rachunkowe online - ranking biur rachunkowych', description: 'Ranking biur rachunkowych i porownanie cennikow ksiegowosci.' },
       { type: 'paid', title: 'Reklama', description: 'Reklama nie powinna trafic do wynikow' },
-      { type: 'organic', title: 'Wysylka paczek dla sklepu', description: 'Cennik wysylki paczek i porownanie firm.' },
+      { type: 'organic', title: 'Ksiegowosc dla sklepu', description: 'Cennik ksiegowosci i porownanie biur.' },
     ] }] }],
   };
-  const w = serp.zbudujWynik(odpowiedzApi, 'kurier ecommerce');
+  const w = serp.zbudujWynik(odpowiedzApi, 'biuro rachunkowe');
   sprawdz('liczy tylko wyniki organiczne', w.wynikow === 3);
   sprawdz('zwraca tematy', Array.isArray(w.topics) && w.topics.length > 0);
   sprawdz('zwraca frazy', Array.isArray(w.phrases) && w.phrases.length > 0);
-  sprawdz('kontekst wspomina fraze', w.context.includes('kurier ecommerce'));
+  sprawdz('kontekst wspomina fraze', w.context.includes('biuro rachunkowe'));
   sprawdz('oznacza zrodlo', w.zrodlo === 'dataforseo');
   sprawdz('nie zmysla dlugosci tresci', w.avgWords === 0 && w.avgH2 === 0);
-  sprawdz('pomija slowa z samej frazy', !w.topics.includes('kurier') && !w.topics.includes('ecommerce'));
+  sprawdz('pomija slowa z samej frazy', !w.topics.includes('biuro') && !w.topics.includes('rachunkowe'));
   sprawdz('pomija slowa nieznaczace', !w.topics.includes('oraz') && !w.phrases.includes('oraz'));
-  sprawdz('najczestsze slowo na czele', w.phrases[0] === 'wysylki' || w.phrases.includes('wysylki'));
+  sprawdz('najczestsze slowo na czele', w.phrases[0] === 'ksiegowosci' || w.phrases.includes('ksiegowosci'));
 
   const pusta = serp.zbudujWynik({ tasks: [{ result: [{ items: [] }] }] }, 'fraza');
   sprawdz('pusta odpowiedz nie wywala', pusta.wynikow === 0 && pusta.topics.length === 0);
@@ -155,8 +155,8 @@ console.log('\n  baza wiedzy - fragmenty i podobienstwo');
   sprawdz('cosinus wektora zerowego = 0', baza.cosinus([0, 0], [1, 1]) === 0);
   sprawdz('cosinus nie-tablicy = 0', baza.cosinus(null, [1]) === 0);
 
-  sprawdz('slowa: pelne trafienie', baza.dopasowanieSlow('kurier ecommerce', 'oferta kurier dla ecommerce') === 1);
-  sprawdz('slowa: brak trafien', baza.dopasowanieSlow('kurier', 'zupelnie inny tekst') === 0);
+  sprawdz('slowa: pelne trafienie', baza.dopasowanieSlow('biuro rachunkowe', 'oferta biuro dla rachunkowe') === 1);
+  sprawdz('slowa: brak trafien', baza.dopasowanieSlow('biuro', 'zupelnie inny tekst') === 0);
   sprawdz('slowa: krotkie pomijane', baza.dopasowanieSlow('a to', 'cokolwiek') === 0);
 }
 
@@ -179,13 +179,13 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
   const path = require('node:path');
   const katalog = fs.mkdtempSync(path.join(os.tmpdir(), 'cai-baza-'));
 
-  // zaslepka wektorow: kazdy tekst dostaje wektor wg tego, czy zawiera slowo "kurier"
+  // zaslepka wektorow: kazdy tekst dostaje wektor wg tego, czy zawiera slowo "ksiegowosc"
   let ostatniRodzaj = null;
   const fakeFetch = async (url, opts) => {
     const body = JSON.parse(opts.body);
     ostatniRodzaj = body.input_type;
     return { ok: true, json: async () => ({
-      data: body.input.map((t) => ({ embedding: /kurier/i.test(t) ? [1, 0] : [0, 1] })),
+      data: body.input.map((t) => ({ embedding: /ksiegowosc/i.test(t) ? [1, 0] : [0, 1] })),
     }) };
   };
   const konf = { klucz: 'test', url: 'http://x', model: 'm' };
@@ -195,7 +195,7 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
   global.fetch = fakeFetch;
 
   (async () => {
-    const d1 = await baza.dodaj({ katalog, zakres: baza.WSPOLNA, nazwa: 'Cennik', tresc: 'Wysylka kurier dla sklepu', konfWektorow: zPodmiana });
+    const d1 = await baza.dodaj({ katalog, zakres: baza.WSPOLNA, nazwa: 'Cennik', tresc: 'Oferta: ksiegowosc dla sklepu', konfWektorow: zPodmiana });
     sprawdz('dodaje do wspolnej', d1.zakres === baza.WSPOLNA && d1.fragmentow === 1);
     sprawdz('liczy wektory dla dokumentu', d1.zWektorami === true);
     sprawdz('dokument oznaczony jako passage', ostatniRodzaj === 'passage');
@@ -210,15 +210,15 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
     const lObcy = baza.lista({ katalog, login: 'anna' });
     sprawdz('obcy nie widzi cudzej prywatnej', lObcy.length === 1 && lObcy[0].zakres === baza.WSPOLNA);
 
-    const w = await baza.szukaj({ katalog, login: 'marcin', zapytanie: 'kurier', konfWektorow: zPodmiana });
+    const w = await baza.szukaj({ katalog, login: 'marcin', zapytanie: 'ksiegowosc', konfWektorow: zPodmiana });
     sprawdz('szuka po wektorach', w.metoda === 'wektory');
     sprawdz('zapytanie oznaczone jako query', ostatniRodzaj === 'query');
-    sprawdz('najlepszy fragment to ten o kurierze', w.fragmenty[0].tekst.includes('kurier'));
+    sprawdz('najlepszy fragment to ten o ksiegowosci', w.fragmenty[0].tekst.includes('ksiegowosc'));
     sprawdz('prompt zawiera naglowek wiedzy', baza.doPromptu(w).startsWith('## WIEDZA FIRMOWA'));
     sprawdz('prompt oznacza zrodlo wspolne', baza.doPromptu(w).includes('(wspólna)'));
 
     // bez klucza - zejscie na slowa kluczowe
-    const wBez = await baza.szukaj({ katalog, login: 'marcin', zapytanie: 'kurier', konfWektorow: { klucz: '' } });
+    const wBez = await baza.szukaj({ katalog, login: 'marcin', zapytanie: 'ksiegowosc', konfWektorow: { klucz: '' } });
     sprawdz('bez klucza schodzi na slowa kluczowe', wBez.metoda === 'slowa-kluczowe');
     sprawdz('slowa kluczowe tez znajduja fragment', wBez.fragmenty.length > 0);
 
@@ -229,7 +229,7 @@ console.log('\n  baza wiedzy - dodawanie i szukanie');
     sprawdz('szukanie dziala przy samej wspolnej', Array.isArray(pusto.fragmenty));
 
     // R6-F (E-13): adres strony w liscie - z pola url albo z naglowka "Zrodlo: URL" w tresci.
-    const zNaglowka = await baza.dodaj({ katalog, zakres: 'prywatna', login: 'ewa', nazwa: 'Strona', tresc: 'Źródło: https://example.com/oferta\n\nTresc strony o kurierze', konfWektorow: { klucz: '' } });
+    const zNaglowka = await baza.dodaj({ katalog, zakres: 'prywatna', login: 'ewa', nazwa: 'Strona', tresc: 'Źródło: https://example.com/oferta\n\nTresc strony o ksiegowosci', konfWektorow: { klucz: '' } });
     const zPola = await baza.dodaj({ katalog, zakres: 'prywatna', login: 'ewa', nazwa: 'Z polem', tresc: 'Tresc bez naglowka', url: 'https://example.com/cennik', konfWektorow: { klucz: '' } });
     const zlyAdres = await baza.dodaj({ katalog, zakres: 'prywatna', login: 'ewa', nazwa: 'Zly', tresc: 'Tresc', url: 'javascript:alert(1)', konfWektorow: { klucz: '' } });
     const bezAdresu = await baza.dodaj({ katalog, zakres: 'prywatna', login: 'ewa', nazwa: 'Notatka', tresc: 'Zwykly tekst, w srodku Źródło: https://x.example/', konfWektorow: { klucz: '' } });
@@ -486,8 +486,8 @@ async function testyOpenSeoMcp() {
   {
     const w = mcp.frazyDoAplikacji({
       rows: [
-        { keyword: 'kurier dla sklepu', searchVolume: 1300, keywordDifficulty: 21, cpc: 2.4, intent: 'commercial', tags: [{ name: 'do-napisania' }] },
-        { keyword: 'paczkomat cennik', searchVolume: null, tags: ['zrobione'] },
+        { keyword: 'ksiegowosc dla sklepu', searchVolume: 1300, keywordDifficulty: 21, cpc: 2.4, intent: 'commercial', tags: [{ name: 'do-napisania' }] },
+        { keyword: 'biuro rachunkowe cennik', searchVolume: null, tags: ['zrobione'] },
         { keyword: '' },
       ],
       totalCount: 3,
@@ -508,15 +508,15 @@ async function testyOpenSeoMcp() {
   {
     const koperta = mcp.serpJakDataForSeo({
       results: [{
-        keyword: 'kurier dla sklepu', ok: true,
+        keyword: 'ksiegowosc dla sklepu', ok: true,
         items: [
-          { rank: 1, title: 'Kurier dla sklepu internetowego', description: 'Tania wysylka paczek dla sklepu', url: 'https://a.pl', domain: 'a.pl' },
-          { rank: 2, type: 'organic', title: 'Wysylka paczek ze sklepu', description: 'Kurier i paczkomat dla sklepu', url: 'https://b.pl', domain: 'b.pl' },
+          { rank: 1, title: 'Ksiegowosc dla sklepu internetowego', description: 'Tania ksiegowosc dla sklepu', url: 'https://a.pl', domain: 'a.pl' },
+          { rank: 2, type: 'organic', title: 'Rozliczenia sklepu internetowego', description: 'Ksiegowosc i podatki dla sklepu', url: 'https://b.pl', domain: 'b.pl' },
         ],
       }],
-    }, 'kurier dla sklepu');
-    const wynik = serp.zbudujWynik(koperta, 'kurier dla sklepu');
-    sprawdz('wyniki przechodza przez wspolny parser', wynik.context.includes('kurier dla sklepu'));
+    }, 'ksiegowosc dla sklepu');
+    const wynik = serp.zbudujWynik(koperta, 'ksiegowosc dla sklepu');
+    sprawdz('wyniki przechodza przez wspolny parser', wynik.context.includes('ksiegowosc dla sklepu'));
     sprawdz('type null traktowany jak organic', wynik.topics.length > 0);
     sprawdz('frazy wyciagniete z opisow', wynik.phrases.length > 0);
 
@@ -943,23 +943,23 @@ async function testyStrony() {
 
   console.log('\n  strona - HTML na tekst');
   {
-    const html = `<html><head><title>Cennik &amp; wysy&#322;ka</title>
+    const html = `<html><head><title>Cennik &amp; us&#322;ugi</title>
       <style>.x{color:red}</style><script>var a=1;</script></head>
       <body><nav>Menu Kontakt Sklep</nav>
-      <main><h1>Wysy&#322;ka do W&#322;och</h1>
-      <p>Czas dostawy to 3 dni robocze.</p>
-      <h2>Ile to kosztuje</h2><ul><li>Paczka do 5 kg</li><li>Paczka do 30 kg</li></ul>
-      <table><tr><td>Waga</td><td>Cena</td></tr></table></main>
+      <main><h1>Us&#322;ugi w &#321;odzi</h1>
+      <p>Czas realizacji to 3 dni robocze.</p>
+      <h2>Ile to kosztuje</h2><ul><li>Pakiet do 5 os&#243;b</li><li>Pakiet do 30 os&#243;b</li></ul>
+      <table><tr><td>Pakiet</td><td>Cena</td></tr></table></main>
       <footer>Stopka z prawami autorskimi</footer></body></html>`;
     const t = strona.naTekst(html);
     sprawdz('skrypt nie trafia do tekstu', !t.includes('var a=1'));
     sprawdz('styl nie trafia do tekstu', !t.includes('color:red'));
     sprawdz('menu nie trafia do tekstu', !t.includes('Menu Kontakt'));
     sprawdz('stopka nie trafia do tekstu', !t.includes('Stopka z prawami'));
-    sprawdz('tresc glowna zostaje', t.includes('Czas dostawy to 3 dni robocze.'));
-    sprawdz('naglowki zachowuja poziom', t.includes('# Wysyłka do Włoch') && t.includes('## Ile to kosztuje'));
-    sprawdz('lista zachowuje punkty', t.includes('- Paczka do 5 kg'));
-    sprawdz('encje sa odkodowane', t.includes('Włoch') && !t.includes('&#322;'));
+    sprawdz('tresc glowna zostaje', t.includes('Czas realizacji to 3 dni robocze.'));
+    sprawdz('naglowki zachowuja poziom', t.includes('# Usługi w Łodzi') && t.includes('## Ile to kosztuje'));
+    sprawdz('lista zachowuje punkty', t.includes('- Pakiet do 5 osób'));
+    sprawdz('encje sa odkodowane', t.includes('Łodzi') && !t.includes('&#322;') && !t.includes('&#243;'));
     sprawdz('bez znacznikow HTML', !/<[a-z]/i.test(t));
   }
 
@@ -1084,7 +1084,7 @@ async function testyStrony() {
 
     // Duze witryny za CDN-em potrafia nie odpowiadac na HEAD wcale: zapytanie
     // wisi az do przekroczenia czasu. Wczesniej konczylo sie to zgloszeniem
-    // "adres nie odpowiada" na dzialajacej stronie DHL-a, z angielskim
+    // "adres nie odpowiada" na dzialajacej stronie duzej firmy, z angielskim
     // komunikatem wyjatku wyswietlonym w polskim interfejsie.
     const proby = [];
     const poWyjatku = await strona.sprawdzOdnosniki(['https://example.com/cdn'],
@@ -1471,11 +1471,11 @@ async function testyPoprawek() {
     const zadanieSerp = {
       tools: narzedzia,
       system: 'Write the context, topics and phrases in Polish. Search for top Google results for the given keyword. Analyze top 5-10 results',
-      messages: [{ role: 'user', content: 'Keyword: kurier\nSearch and analyze top results. Return JSON only.' }],
+      messages: [{ role: 'user', content: 'Keyword: ksiegowosc\nSearch and analyze top results. Return JSON only.' }],
     };
     sprawdz('analiza SERP z fetchSerpContext jest rozpoznana', serp.czyZapytanieSerp(zadanieSerp));
     sprawdz('artykul z wyszukiwaniem w sieci NIE jest SERP', !serp.czyZapytanieSerp({
-      tools: narzedzia, system: 'Jestes redaktorem. Napisz artykul.', messages: [{ role: 'user', content: 'Temat: kurier' }],
+      tools: narzedzia, system: 'Jestes redaktorem. Napisz artykul.', messages: [{ role: 'user', content: 'Temat: ksiegowosc' }],
     }));
     sprawdz('monitor AI z web_search NIE jest SERP', !serp.czyZapytanieSerp({
       tools: narzedzia, messages: [{ role: 'user', content: 'Keyword: x' }],
@@ -1846,7 +1846,7 @@ async function testyPoprawek() {
       const serpDarm = await zadanie('/api', json(cDarm, {
         model: 'claude-sonnet-5', max_tokens: 1000, tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         system: 'Write the context in Polish. Search for top Google results for the given keyword.',
-        messages: [{ role: 'user', content: 'Keyword: kurier\nSearch' }],
+        messages: [{ role: 'user', content: 'Keyword: ksiegowosc\nSearch' }],
       }));
       sprawdz('plan darmowy: prawdziwa analiza SERP nadal 402', serpDarm.status === 402);
       const projekty = await zadanie('/api/seo/projekty', { headers: { cookie: cDarm } });

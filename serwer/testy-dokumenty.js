@@ -81,8 +81,8 @@ async function uruchom({ sprawdz }) {
     sprawdz('pelna konfiguracja: zadnych znacznikow szablonu, notatek dla prawnika ani znacznika "do uzupelnienia"',
       zostawione.length === 0 && dokumenty.every((d) => glowna(d.tekst).length > 1000));
 
-    const slowa = /faktur|invoice|w pełni zgodn|fully compliant|zgodn\w* z kodeksem|compliant with the code|\u2014|\u2013|\bDHL\b/i;
-    sprawdz('bez slow "faktura"/"invoice", "w pelni zgodne"/"fully compliant", zgodnosci z Kodeksem praktyk, dlugich myslnikow i marki klienta',
+    const slowa = /faktur|invoice|w pełni zgodn|fully compliant|zgodn\w* z kodeksem|compliant with the code|\u2014|\u2013/i;
+    sprawdz('bez slow "faktura"/"invoice", "w pelni zgodne"/"fully compliant", zgodnosci z Kodeksem praktyk i dlugich myslnikow (marki klienta: audyt_klienta.py)',
       dokumenty.every((d) => !slowa.test(d.tekst)));
     const reg = (j) => dokumenty.find((d) => d.nazwa === 'regulamin' && d.jezyk === j).tekst;
     sprawdz('AI Act (PR8-04): regulamin "wspiera wymogi przejrzystosci" / "supports the transparency requirements"',

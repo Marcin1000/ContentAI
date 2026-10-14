@@ -1511,12 +1511,12 @@ async function wariantR7I(b) {
     && document.getElementById('fakty-wynik').textContent.trim().length > 0, null, { timeout: 30000 }));
 
   // Dokument w Bazie (na serwerze): kontrola ma z czym zestawic tekst poza stronami z sieci.
-  await s.evaluate(() => addDoc('Automaty paczkowe - oferta R7I', 'Automaty paczkowe w sklepie internetowym: paczka do 25 kg, wymiary skrytki 64 x 38 x 41 cm, odbior w ciagu 2 dni. Automaty paczkowe dla sklepu internetowego dzialaja cala dobe.', '📄', ''));
+  await s.evaluate(() => addDoc('Kasy samoobslugowe - oferta R7I', 'Kasy samoobslugowe w sklepie stacjonarnym: do 30 produktow w jednym koszyku, ekran 15 cali, montaz w ciagu 2 dni. Kasy samoobslugowe dla sklepu stacjonarnego dzialaja cala dobe.', '📄', ''));
   await krok('R7-I dokument w Bazie na serwerze', s.waitForFunction(() => (window._bazaSerwer || []).some((d) => /oferta R7I/.test(d.nazwa || d.name || '')), null, { timeout: 10000 }));
 
   // 3: przelacznik sieci wlaczony, model nie szukal - pasek "Siec: bez wyszukiwania", notka bez "z wlaczonym wyszukiwaniem".
   await s.evaluate(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); });
-  await s.fill('#topic', 'Automaty paczkowe w sklepie internetowym [atrapa:bez-sieci@artykul]');
+  await s.fill('#topic', 'Kasy samoobslugowe w sklepie stacjonarnym [atrapa:bez-sieci@artykul]');
   await s.evaluate(() => { document.getElementById('use-web').checked = true; generate(); });
   await krok('R7-I artykul bez wyszukiwania', gotowe(60000));
   await s.evaluate(() => inspektorPokaz('fakty'));
@@ -1527,7 +1527,7 @@ async function wariantR7I(b) {
 
   // Artykul z siecia (strony z cytowanymi fragmentami) i Baza.
   await s.evaluate(() => { if (typeof ustawWidokMobilny === 'function') ustawWidokMobilny('brief'); });
-  await s.fill('#topic', 'Automaty paczkowe w sklepie internetowym');
+  await s.fill('#topic', 'Kasy samoobslugowe w sklepie stacjonarnym');
   await s.evaluate(() => { document.getElementById('use-web').checked = true; generate(); });
   await krok('R7-I artykul z siecia', gotowe(60000));
 

@@ -4749,7 +4749,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <div class="overlay" id="wp-publish-modal" onclick="if(event.target===this)closeWpPublishModal()">
   <div class="modal" style="width:420px">
     <div class="modal-head"><h3 id="pub-modal-title">Publikuj w CMS</h3><button class="modal-close" onclick="closeWpPublishModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
-    <div class="field" style="margin-bottom:14px"><label for="wp-category" class="field-label">Tagi / kategoria (opcjonalnie)</label><input type="text" id="wp-category" placeholder="e-commerce, logistyka..." /></div>
+    <div class="field" style="margin-bottom:14px"><label for="wp-category" class="field-label">Tagi / kategoria (opcjonalnie)</label><input type="text" id="wp-category" placeholder="marketing, poradniki..." /></div>
     <!-- R9-D (PR8-19, art. 50 ust. 4 AI Act): widoczna informacja o AI pod wpisem i przypomnienie o obowiazku publikujacego -->
     <label class="ozn-wiersz ozn-wiersz-ramka" for="ozn-tekst-cms"><input type="checkbox" id="ozn-tekst-cms" data-oznaczenie="tekst" onchange="ustawWyborOznaczenia('tekst', this.checked)"><span><b data-i18n="ozn-cms-przelacznik">Dodaj informację o AI na końcu wpisu</b><small id="ozn-cms-przypomnienie"><span data-i18n="ozn-cms-przypomnienie">Jeśli publikujesz tekst, który informuje o sprawach publicznych (np. zdrowie, finanse, polityka), a nikt w Twojej redakcji go nie sprawdził merytorycznie, musisz zaznaczyć, że powstał z pomocą AI.</span> <a class="link-akcent" id="ozn-cms-wiecej" href="https://content-ai.net/ai-act/" target="_blank" rel="noopener" data-i18n="ozn-wiecej">Więcej</a></small></span></label>
     <p class="tekst-pomoc" id="ozn-cms-drupal" hidden data-i18n="ozn-cms-drupal">Drupal zachowa oznaczenie AI w kodzie wpisu przy formacie full_html. Format basic_html je usuwa.</p>
@@ -7367,8 +7367,8 @@ const BRAND = {
   // koncu porownywarki konkurencji. Regula w promptcie tego zabrania, ale
   // twardsza gwarancja jest nie pokazac modelowi tych stron w ogole.
   // Wpisuj same domeny, bez https:// i bez www.
-  // Domeny wykluczone z wyszukiwania w sieci. Lista jest BRANZOWA: dla kuriera
-  // to inni przewoznicy i porownywarki, dla kancelarii inne kancelarie.
+  // Domeny wykluczone z wyszukiwania w sieci. Lista jest BRANZOWA: dla biura
+  // podrozy to inne biura i porownywarki, dla kancelarii inne kancelarie.
   // Dlatego ustawia sie ja w aplikacji (menu ustawien, Marka), a tutaj zostaje
   // pusta - wdrozenie dla nowej firmy nie ma zaczynac od wykluczania cudzych
   // konkurentow. Przyklad wpisu: 'konkurent.pl'.
@@ -8325,9 +8325,8 @@ function blokPrzepisywania() {
 // zrodlowym". Przyczyna nie byla po stronie modelu, tylko promptu: kazal on
 // umiescic liczbe w pierwszym akapicie, w kazdym akapicie i w kazdym punkcie
 // podsumowania. Gdy w bazie wiedzy liczb nie bylo, model je dopisywal, zeby
-// spelnic warunek. Stad "kilkanascie zlotych za kilogram" - jednostka, ktorej
-// firmy kurierskie nie uzywaja. Forma przestaje byc obowiazkiem, ktory
-// przebija fakty.
+// spelnic warunek. Stad ceny w jednostce, ktorej ta branza w ogole nie uzywa.
+// Forma przestaje byc obowiazkiem, ktory przebija fakty.
 // uzupelnia = stan przelacznika "uzupelnij luki wiedza ogolna". Blok MUSI byc
 // od niego zalezny: przy wlaczonym uzupelnianiu bezwarunkowe "baza wiedzy jest
 // jedynym zrodlem faktow" stalo w sprzecznosci z galezia promptu mowiaca
@@ -8404,9 +8403,9 @@ function blokFaktow(uzupelnia) {
     + 'reporting, not as the brand claiming it.';
 }
 
-// UWAGA 2: "nadinterpretowanie zrodel". Zrodlo mowilo o przesylkach DO Niemiec,
-// a artykul o Wloszech rozwinal to w sekcje o tranzycie PRZEZ Niemcy i o
-// niemieckim prawie pocztowym. Fakt byl prawdziwy, zakres zmyslony - i to
+// UWAGA 2: "nadinterpretowanie zrodel". Zrodlo mowilo o usludze w jednym kraju,
+// a artykul o innym kraju rozwinal to w sekcje o przepisach tego pierwszego,
+// jakby obowiazywaly tez tam. Fakt byl prawdziwy, zakres zmyslony - i to
 // jest grozniejsze od zwyklej halucynacji, bo wyglada na poparte zrodlem.
 function blokZakresu() {
   // Nazwa z konfiguracji marki, jesli ustawiona i nie jest placeholderem.
@@ -8421,7 +8420,7 @@ function blokZakresu() {
     + 'the article. Never use a former, shortened or alternative name you found '
     + 'elsewhere, even if pages on the web still use it. A renamed company is the same '
     + 'company under one current name.\n'
-    + '- A group can contain several companies (parcel, express, freight, e-commerce). '
+    + '- A group can contain several companies (for example separate service lines or subsidiaries). '
     + 'They have different rules, different rates and different formulas. Never attribute '
     + 'one company\'s rule to another, never place two of their figures side by side as '
     + 'if they described the same service, and never let two names for the same service '
@@ -8444,8 +8443,8 @@ function blokZakresu() {
 }
 
 // UWAGA 3: "Sama tresc jest niespojna w obrebie jednego artykulu" - akapit
-// podawal 80-150 zl za paczke do 30 kg, a tabela dwa ekrany nizej 120-160 zl
-// za przedzial 20-30 kg. Model pisze sekcje po sekcji i nie wraca do tego,
+// podawal jeden przedzial cen, a tabela dwa ekrany nizej inny dla tej samej
+// uslugi. Model pisze sekcje po sekcji i nie wraca do tego,
 // co juz napisal, wiec trzeba go o to poprosic wprost.
 function blokSpojnosci() {
   return '\n\nINTERNAL CONSISTENCY - check this before you finish:\n'
@@ -8518,10 +8517,10 @@ function blokRytmu() {
     + '- Do not begin consecutive paragraphs with the same construction.\n'
     + '- Take a position where the sources allow it. State which option suits which '
     + 'situation instead of listing options with equal weight.\n'
-    // R7: tekst dla sklepu mowil raz do wlasciciela ("Twoj klient"), raz do odbiorcy paczki ("odbierzesz").
+    // R7: tekst dla sklepu mowil raz do wlasciciela ("Twoj klient"), raz do klienta sklepu ("odbierzesz").
     + '- Keep ONE addressee for the whole text: the reader the brief targets. If that reader is a business '
     + '(e.g. a shop owner), speak to them and refer to their customers in the third person; never switch to '
-    + 'addressing the end customer (e.g. "you will pick up your parcel") in the same text.';
+    + 'addressing the end customer (e.g. "you will receive your order") in the same text.';
 }
 
 // UWAGA 7: "Zadna z wersji tekstu nie ma rozbudowanej struktury naglowkow,
@@ -8590,12 +8589,12 @@ function blokTonu(ton) {
 // FRAZY KLUCZOWE. Dwa przypadki z artykulu testowego pokazaly, ze fraza
 // potrafi zepsuc tekst dokladnie tak samo jak przymus liczby:
 //
-//   "Wynik to dopłata paliwowa kurier dolicza do zlecenia."
-// Fraza "doplata paliwowa kurier" wstawiona doslownie, zdanie przestalo byc
+//   "Wynik to opłata serwisowa firma dolicza do zlecenia."
+// Fraza "oplata serwisowa firma" wstawiona doslownie, zdanie przestalo byc
 // po polsku. Agencja chwalila wczesniej poprawnosc jezykowa, wiec to regres
 // w miejscu, ktore dzialalo.
 //
-//   naglowek "sprawdz aktualny wskaznik oplaty paliwowej 2026"
+//   naglowek "sprawdz aktualny cennik oplat serwisowych 2026"
 // Fraza zawiera rok. Model musi jej uzyc, wiec twierdzi cos o 2026, choc
 // w zrodle roku nie ma - i kontrola faktow slusznie to zglasza. Fraza kluczowa
 // z liczba sama w sobie wymusza twierdzenie bez pokrycia.
@@ -8639,7 +8638,7 @@ function blokKotwic() {
 }
 
 // UWAGA 8: "Linkowanie powtarza link z bazy wiedzy wielokrotnie" - w tekscie
-// o wysylce do Wloch ten sam adres byl podlinkowany piec razy. Prompt prosi
+// testowym ten sam adres byl podlinkowany piec razy. Prompt prosi
 // teraz o jeden link na adres, ale prosba to za malo: to samo robimy
 // maszynowo na gotowym HTML-u, zeby nie zalezalo od dobrej woli modelu.
 // Powtorzone odnosniki nie znikaja - zostaje sam tekst, wiec zdanie
@@ -10319,7 +10318,7 @@ const LIMIT_WYSZUKIWAN = 5;
 // Foundry ani na Google Cloud, a aplikacja wspiera oba.
 function narzedzieWyszukiwania() {
   const narzedzie = { type: 'web_search_20250305', name: 'web_search', max_uses: LIMIT_WYSZUKIWAN };
-  // Lista jest branzowa: dla kuriera to inni przewoznicy, dla kancelarii inne
+  // Lista jest branzowa: dla biura podrozy to inne biura, dla kancelarii inne
   // kancelarie. Dlatego ustawia sie ja w oknie marki, a nie w kodzie.
   const cfg = getLlmsConfig();
   const wykluczone = domenyZPola(cfg.blockedDomains);
@@ -11202,7 +11201,7 @@ function uwagiZeStronami(uwagi, strony) {
 }
 
 // R7-I: adres w uwadze jako link, nie caly URL kursywa w cudzyslowie. Na ekranie host i skrocona
-// sciezka ("dhl.com/pl-pl/…/dhl-ecommerce-ma-juz-9-tys…"), pelny adres w title i w href.
+// sciezka ("example.com/pl/…/firma-ma-juz-9-tys-klientow…"), pelny adres w title i w href.
 function krotkiAdres(adres) {
   try {
     const u = new URL(adres);
@@ -12992,7 +12991,7 @@ function calcFog(text) {
   // Oryginalny Gunning Fog liczy jako trudne slowa o trzech sylabach i wiecej.
   // To kryterium angielskie, gdzie trzysylabowe slowo faktycznie jest rzadsze
   // ("investigation", "particularly"). W polszczyznie trzysylabowe sa "oplata",
-  // "przesylki", "uslugi", "dzieki", "koncowy" - czyli slowa najzwyklejsze.
+  // "rozmowy", "uslugi", "dzieki", "koncowy" - czyli slowa najzwyklejsze.
   //
   // Na artykule z testow agencji: 41,7% slow mialo 3+ sylaby, co samo z siebie
   // wnosilo 16,7 punktu do wyniku. Przy zdaniach srednio 12,4-slowowych, a wiec
@@ -13494,7 +13493,7 @@ async function runGapAnalysis() {
     const present = dopasujDoSerp(odp.present, tematy);
     const parsed = { present, missing: tematy.filter((t) => !present.includes(t)), msg: odp.msg || '',
       score: Math.round(present.length / tematy.length * 100) };
-    // R7: tematy o konkurencji (np. "Porownanie z InPost i Allegro One Box" w tekscie DHL) sa oznaczone
+    // R7: tematy o konkurencji (np. "Porownanie z [konkurent A] i [konkurent B]" w tekscie marki) sa oznaczone
     // i domyslnie odznaczone - w tekscie marki to swiadoma decyzja autora, nie domyslna luka.
     gapKonkurencja = dopasujDoSerp(odp.competitors, tematy);
 
@@ -13900,11 +13899,11 @@ function pokazBrakZrodelLuk(tematy, zSiecia) {
 }
 
 // ─── FEATURE: SUGESTIE LINKÓW WEWNĘTRZNYCH ─────────────────────────────────────
-// Runda A (2026-10-12): w artykule o astrobiologii zakladka proponowala strony firmy kurierskiej
+// Runda A (2026-10-12): w artykule o astrobiologii zakladka proponowala strony firmy z innej branzy
 // z Bazy wiedzy, bo kazda strona bez dopasowania szla na liste („zawsze sugeruj URL z bazy"),
 // a dopasowanie bylo po kawalku slowa („art" w „artykuł"). Teraz slowo strony (z nazwy, adresu
 // i poczatku tresci) musi zaczynac slowo artykulu. Dluzsze slowa licza sie po rdzeniu bez dwoch
-// ostatnich liter, bo polski je odmienia (paczka: paczki, paczkę). Jedno slowo z nazwy strony
+// ostatnich liter, bo polski je odmienia (oferta: oferty, ofertę). Jedno slowo z nazwy strony
 // wystarczy, z adresu albo tresci potrzeba dwoch. Brak dopasowan to komunikat, nie cala Baza.
 const SLOWA_BEZ_ZNACZENIA_LINKOW = new Set(['dla','aby','jak','lub','oraz','czy','nie','się','jest','są','był','będzie',
   'przez','przy','pod','nad','bez','the','and','for','www','com','net','org','html','htm','php','aspx','https','http',
@@ -17359,8 +17358,8 @@ function aeoRulesBlock() {
 function lineGuardrailBlock(cfg) {
   const lines = (cfg.lines || '').split('\n').map(s => s.trim()).filter(Boolean);
   if (!lines.length) return '';
-  // Nazwy linii sa brane z konfiguracji marki. Wczesniej bylo tu wpisane
-  // wprost "eCommerce" i "Express", czyli linie jednego klienta - dla kazdej
+  // Nazwy linii sa brane z konfiguracji marki. Wczesniej byly tu wpisane
+  // wprost nazwy linii jednego klienta - dla kazdej
   // innej marki byla to instrukcja o czyms, czego u niej nie ma.
   const nazwy = lines.map(function (l) { return l.split(':')[0].trim(); }).filter(Boolean);
   return '\n\nBRAND LINE DISAMBIGUATION - mandatory, never conflate these business lines:\n'
@@ -20299,7 +20298,7 @@ function audioFileLabel(){ var i=document.getElementById('au-file'), s=document.
 
 function audioScriptSystem(t,n,L,genders){
   genders=genders||[];
-  var QUALITY=' Write flawless, natural '+L+': correct grammar and inflection, do not drop or transpose letters or syllables (in Polish keep full inflected forms, e.g. "paczkę", never "paczę"). CRITICAL for text-to-speech: write EVERYTHING in spoken form - spell out ALL numbers as words correctly inflected (e.g. "dziewięć tysięcy", not "9000"), expand abbreviations and units into words, never use digits, symbols, slashes or ranges (write "24/7" as words like "przez całą dobę, siedem dni w tygodniu"), and do NOT include any URLs, web addresses or e-mail addresses in the output. Silently proofread before returning.';
+  var QUALITY=' Write flawless, natural '+L+': correct grammar and inflection, do not drop or transpose letters or syllables (in Polish keep full inflected forms, e.g. "wiadomość", never "wiadość"). CRITICAL for text-to-speech: write EVERYTHING in spoken form - spell out ALL numbers as words correctly inflected (e.g. "dziewięć tysięcy", not "9000"), expand abbreviations and units into words, never use digits, symbols, slashes or ranges (write "24/7" as words like "przez całą dobę, siedem dni w tygodniu"), and do NOT include any URLs, web addresses or e-mail addresses in the output. Silently proofread before returning.';
   function gword(g){ return g==='K'?'female':(g==='M'?'male':'unspecified gender'); }
   if(t==='podcast'){
     var en=(L==='English');
