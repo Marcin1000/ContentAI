@@ -90,7 +90,8 @@ faktów, poprawa jednym kliknięciem, cztery oceny, eksport z informacją o AI i
 w obrazie (LinkedIn odtwarza bez dźwięku), a osobno w plikach SRT dla YouTube. Ścieżki dźwiękowej nie ma.
 Wynik poprawy w filmie jest przygotowany na przykładzie, a przycisk, powiadomienie i oceny to prawdziwy interfejs.
 
-Pliki są duże (7-10 MB), więc nie ma ich w repozytorium. Są w rozmowie, w jednej paczce:
+Pliki są duże (7-10 MB), więc nie ma ich w repozytorium. Są w rozmowie, w dwóch paczkach (PL i EN), a film PL 4:5
+także osobno:
 
 | Plik | Gdzie |
 |---|---|
