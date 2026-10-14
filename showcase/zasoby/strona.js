@@ -176,7 +176,13 @@
         } else b.removeAttribute('aria-current');
       });
     };
-    var zatrzymaj = function () { if (zegar) { clearTimeout(zegar); zegar = null; } ramka.classList.add('zatrzymana'); };
+    var zatrzymaj = function () {
+      if (zegar) { clearTimeout(zegar); zegar = null; }
+      // Przerwany zanik (ukryta karta, ramka poza ekranem, kursor) nie zostawia ramki przezroczystej
+      // do konca kolejnego kroku: reset do poczatku petli konczymy od razu.
+      if (ramka.classList.contains('zanik')) { krok = 0; ustawKlasy(0, true); }
+      ramka.classList.add('zatrzymana');
+    };
     var planuj = function () {
       if (zegar || wPauzie || wstrzymana || !widoczna || document.hidden || bezPetli()) return;
       ramka.classList.remove('zatrzymana');
@@ -219,7 +225,13 @@
       });
       document.addEventListener('visibilitychange', function () { if (document.hidden) zatrzymaj(); else planuj(); });
       var tresc = $('.ramka-tresc', ramka);
-      tresc.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') { wstrzymana = true; zatrzymaj(); } });
+      tresc.addEventListener('pointerenter', function (e) {
+        if (e.pointerType !== 'mouse') return;
+        wstrzymana = true; zatrzymaj();
+        // Kursor trafil w chwile miedzy cyklami: zatrzymana pusta ramka wygladala na zawieszona strone.
+        // Pod kursorem pokazujemy wtedy pelny przyklad, tak jak po kliknieciu pauzy.
+        if (krok === 0) { krok = 5; ustawKlasy(5); ramka.classList.add('zatrzymana'); }
+      });
       tresc.addEventListener('pointerleave', function () { if (wstrzymana) { wstrzymana = false; planuj(); } });
       if (maIO) {
         new IntersectionObserver(function (w) {

@@ -509,6 +509,88 @@ async function kontrolaRamki(przegladarka, baza) {
   return problemy;
 }
 
+/* 12. Zgloszenie z 14.10 po wdrozeniu: ramka stala pusta (bez krokow) i sie nie ruszala. Kursor nad ramka
+   zatrzymuje petle, a trafil w chwile miedzy cyklami (krok 0). Druga droga do pustej ramki: karta schowana
+   w trakcie zaniku zostawiala tresc przezroczysta do konca kolejnego kroku. */
+async function kontrolaRamkiPrzerwy(przegladarka, baza) {
+  const problemy = [];
+  const stan = (strona) => strona.evaluate(() => {
+    const r = document.getElementById('ramka');
+    const b = r.querySelector('.ramka-kroki button[aria-current="step"]');
+    return { klasy: r.className, krok: b ? b.getAttribute('data-krok') : '0' };
+  });
+  const czekajNaTemat = (strona, ms) => strona.waitForFunction(() => {
+    const b = document.querySelector('#ramka .ramka-kroki button[aria-current="step"]');
+    return b && b.getAttribute('data-krok') === '1';
+  }, null, { timeout: ms, polling: 100 }).then(() => true, () => false);
+  const nowa = async () => {
+    const ctx = await przegladarka.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, serviceWorkers: 'block', reducedMotion: 'no-preference' });
+    const strona = await ctx.newPage();
+    strona.on('pageerror', e => problemy.push('blad JS: ' + e.message));
+    await strona.mouse.move(5, 5);
+    await strona.goto(baza + '/', { waitUntil: 'load' });
+    return { ctx, strona };
+  };
+
+  // 1. Kursor wjezdza w ramke dokladnie w chwili pustego kroku 0 (po pierwszym pokazie) i zostaje.
+  {
+    const { ctx, strona } = await nowa();
+    await strona.waitForFunction(() => document.getElementById('ramka').className.trim() === 'ramka', null, { timeout: 12000, polling: 20 });
+    const srodek = await strona.evaluate(() => { const q = document.querySelector('#ramka .ramka-tresc').getBoundingClientRect(); return { x: q.x + q.width / 2, y: q.y + q.height / 2 }; });
+    await strona.mouse.move(srodek.x, srodek.y);
+    await strona.waitForTimeout(1500);
+    const pod = await stan(strona);
+    if (!/\bk5\b/.test(pod.klasy) || pod.krok !== '5' || /\bzanik\b/.test(pod.klasy)) {
+      problemy.push('kursor w chwili kroku 0: ramka pusta pod kursorem (' + pod.klasy + ', krok ' + pod.krok + '), ma byc pelny przyklad');
+    }
+    await strona.mouse.move(5, 5);
+    if (!(await czekajNaTemat(strona, 8000))) problemy.push('po zjechaniu kursorem z ramki petla nie wraca do Tematu w 8 s (' + (await stan(strona)).klasy + ')');
+    await ctx.close();
+  }
+
+  // 2. Karta schowana w trakcie zaniku i odslonieta 0,6 s pozniej: tresc ma byc widoczna od razu.
+  {
+    const { ctx, strona } = await nowa();
+    await strona.waitForFunction(() => /\bzanik\b/.test(document.getElementById('ramka').className), null, { timeout: 12000, polling: 20 });
+    const ukryj = (h) => strona.evaluate((ukryta) => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => ukryta });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }, h);
+    await ukryj(true);
+    await strona.waitForTimeout(600);
+    await ukryj(false);
+    const po = await stan(strona);
+    if (/\bzanik\b/.test(po.klasy)) problemy.push('karta odslonieta po przerwanym zaniku: tresc ramki przezroczysta (' + po.klasy + ')');
+    if (!(await czekajNaTemat(strona, 3000))) problemy.push('po odslonieciu karty petla nie rusza od Tematu w 3 s (' + (await stan(strona)).klasy + ')');
+    await ctx.close();
+  }
+  return problemy;
+}
+
+/* 13. Zgloszenie z 14.10: na laptopie (okno ok. 1425x830, skalowanie 200%) i na monitorze (1905x1065) pod menu
+   bylo 94-96 px pustego miejsca, a na laptopie dol tekstu hero wychodzil poza pierwszy ekran. Odstep pod menu
+   najwyzej 64 px, a caly tekst hero (z notka o pakiecie) widoczny bez przewijania. */
+async function kontrolaHeroPierwszyEkran(przegladarka, baza) {
+  const problemy = [];
+  for (const [w, h] of [[1425, 830], [1333, 768], [1905, 1065], [1440, 900], [1280, 720]]) {
+    const ctx = await przegladarka.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, serviceWorkers: 'block', reducedMotion: 'reduce' });
+    const strona = await ctx.newPage();
+    strona.on('pageerror', e => problemy.push(w + 'x' + h + ' blad JS: ' + e.message));
+    await strona.goto(baza + '/', { waitUntil: 'load' });
+    await strona.evaluate(() => document.fonts && document.fonts.ready);
+    const m = await strona.evaluate(() => {
+      const nav = document.querySelector('.nav').getBoundingClientRect();
+      const kolumna = document.querySelector('.hero-siatka > :first-child').getBoundingClientRect();
+      const notka = document.querySelector('.hero .mala-2').getBoundingClientRect();
+      return { odstep: Math.round(kolumna.top - nav.bottom), dol: Math.round(notka.bottom), okno: innerHeight };
+    });
+    if (m.odstep > 64) problemy.push(w + 'x' + h + ': ' + m.odstep + ' px pustego miejsca pod menu (najwyzej 64)');
+    if (m.dol > m.okno - 8) problemy.push(w + 'x' + h + ': dol tekstu hero na ' + m.dol + ' px przy oknie ' + m.okno + ' px (ma sie zmiescic na pierwszym ekranie)');
+    await ctx.close();
+  }
+  return problemy;
+}
+
 /* ======================= przebieg ======================= */
 
 async function sprawdzStrone(przegladarka, baza, [w, h], motyw, sciezka, zFokusem, skala, interakcje) {
@@ -589,6 +671,8 @@ async function sprawdzStrone(przegladarka, baza, [w, h], motyw, sciezka, zFokuse
   const ile = Math.max(1, Number(process.env.CAI_UKLAD_ROWNOLEGLE) || 3);
   await Promise.all(Array.from({ length: ile }, pracownik));
   wynik('1440x900 ramka w hero (ruch wlaczony): start od pelnego przykladu z Faktami, potem petla, PL i EN', await kontrolaRamki(przegladarka, baza));
+  wynik('1440x900 ramka w hero: kursor w chwili kroku 0 i karta schowana w trakcie zaniku nie zostawiaja pustej ramki', await kontrolaRamkiPrzerwy(przegladarka, baza));
+  wynik('hero na pierwszym ekranie (1425x830, 1333x768, 1905x1065, 1440x900, 1280x720): odstep pod menu i caly tekst', await kontrolaHeroPierwszyEkran(przegladarka, baza));
   await przegladarka.close();
   if (srv) srv.close();
   console.log('\nBLEDOW: ' + bledow + '   (' + lista.length + ' widokow, ' + Math.round((Date.now() - t0) / 1000) + ' s, tryb ' + (PELNY ? 'pelny' : 'szybki') + ')');
