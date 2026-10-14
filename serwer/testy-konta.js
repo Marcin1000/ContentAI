@@ -416,6 +416,22 @@ async function testyPotwierdzenia(sprawdz) {
     const poStrona = await t.zadanie('/api/strona', t.json(cookie, { adres: '' }));
     sprawdz('po potwierdzeniu: zasoby serwera przechodza dalej (bez bramki e-maila)', poStrona.status !== 403);
 
+    // Runda P (agencja-ux D1): szablon 'powitanie' istnial, ale nikt go nie wysylal. Osoba, ktora odpadla na kluczu
+    // (rejestracja z telefonu), nie dostawala niczego, co prowadzi ja z powrotem przy komputerze.
+    await konta.czekajNaTlo();
+    const powitania = t.poczta().filter((w) => w.do === 'ola@firma.pl' && w.szablon === 'powitanie');
+    const pw = powitania[0] || { dane: {} };
+    sprawdz('po potwierdzeniu adresu: jeden e-mail powitalny PL (pakiet Darmowy, 3 artykuly, koszt, instrukcja klucza), drugie potwierdzenie nie wysyla kolejnego',
+      powitania.length === 1 && pw.jezyk === 'pl' && pw.dane.pakiet === 'Darmowy' && pw.dane.artykulow === 3
+      && pw.dane.kosztArtykulu === '0,20-0,40 USD' && pw.dane.odnosnikKlucza === 'https://content-ai.net/klucz-api/');
+    await zarejestruj(t, { email: 'amy@firma.pl', jezyk: 'en' });
+    await t.zadanie('/potwierdz', t.formularz(null, { t: tokenZListu(ostatniList(t, 'amy@firma.pl', 'potwierdzenie')), jezyk: 'en' }));
+    await konta.czekajNaTlo();
+    const pwEn = ostatniList(t, 'amy@firma.pl', 'powitanie') || { dane: {} };
+    sprawdz('konto z angielskiej rejestracji: powitanie EN (Free, $0.20-0.40, angielska instrukcja klucza)',
+      pwEn.jezyk === 'en' && pwEn.dane.pakiet === 'Free' && pwEn.dane.artykulow === 3 && pwEn.dane.kosztArtykulu === '$0.20-0.40'
+      && pwEn.dane.odnosnikKlucza === 'https://content-ai.net/en/api-key/');
+
     const losowy = await t.zadanie('/potwierdz', t.formularz(null, { t: crypto.randomBytes(32).toString('base64url') }));
     const pusty = await tekst(await t.zadanie('/potwierdz'));
     const wygasly = t.magazyn.zapiszToken({ login, rodzaj: 'potwierdzenie', email: 'ola@firma.pl', wazneMs: 3600_000, teraz: Date.now() - 2 * 3600_000 });
@@ -580,6 +596,10 @@ async function testyKonta(sprawdz) {
       potw.status === 200 && potwHtml.includes('Adres zmieniony') && k.email === 'maja.nowa@firma.pl' && k.emailNowy === null && k.emailPotwierdzony > 0
       && Boolean(await t.zaloguj('maja.nowa@firma.pl', DOBRE_HASLO)) && !(await t.zaloguj('maja@firma.pl', DOBRE_HASLO))
       && !t.magazyn.sprawdzToken(resetPrzedZmiana, 'reset'));
+    await konta.czekajNaTlo();
+    sprawdz('powitanie tylko po pierwszym potwierdzeniu: zmiana adresu nie wysyla drugiego (ani na stary, ani na nowy adres)',
+      t.poczta().filter((w) => w.szablon === 'powitanie' && w.do === 'maja@firma.pl').length === 1
+      && !t.poczta().some((w) => w.szablon === 'powitanie' && w.do === 'maja.nowa@firma.pl'));
 
     const niepotw = await zarejestruj(t, { email: 'niepotw@firma.pl' });
     const cNiepotw = ciasteczkoSesji(niepotw);

@@ -463,6 +463,27 @@ function powiadom(kontekst, konto, szablon, dane = {}) {
   }));
 }
 
+// Instrukcja klucza na stronie produktowej (ta sama co STRONA_KLUCZA w kreatorze aplikacji).
+const STRONA_KLUCZA = { pl: 'https://content-ai.net/klucz-api/', en: 'https://content-ai.net/en/api-key/' };
+
+/**
+ * Runda P (agencja-ux D1): e-mail powitalny po pierwszym potwierdzeniu adresu, tylko konto na wlasnym kluczu
+ * (krok 1 powitania to klucz Anthropic). Osoba z telefonu, ktora odpadla na kluczu, dostaje droge powrotu:
+ * pakiet, orientacyjny koszt i instrukcje klucza w swoim jezyku.
+ */
+function powitaj(kontekst, konto) {
+  if (!konto || konto.zrodloKluczy !== 'wlasne') return;
+  const jezyk = jezykKonta(konto, kontekst.jezyk);
+  const plan = kontekst.plany.planKonta(konto);
+  const artykulow = plan.okres === 'zawsze' && plan.limity ? plan.limity.artykul : null;
+  powiadom(kontekst, konto, 'powitanie', {
+    pakiet: jezyk === 'en' ? plan.nazwaEn || plan.nazwa : plan.nazwa,
+    artykulow: Number.isInteger(artykulow) && artykulow > 0 ? artykulow : undefined,
+    kosztArtykulu: jezyk === 'en' ? '$0.20-0.40' : '0,20-0,40 USD',
+    odnosnikKlucza: STRONA_KLUCZA[jezyk],
+  });
+}
+
 // ─── Usuwanie konta z danymi ─────────────────────────────────────────────────
 
 // Plik, jego kopie po uszkodzeniu (.uszkodzony-*) i pliki tymczasowe zapisu (.<nazwa>.tmp-*):
@@ -821,6 +842,8 @@ async function potwierdz(req, res, kontekst) {
     wynik = 'zajety';
   }
   if (wynik === 'potwierdzony') console.log(`[konta] ${rec.rodzaj === 'zmiana-email' ? 'zmiana adresu' : 'adres potwierdzony'}: ${rec.login}`);
+  // 'juz' (drugie klikniecie) i zmiana adresu nie wysylaja powitania drugi raz.
+  if (wynik === 'potwierdzony' && rec.rodzaj === 'potwierdzenie') powitaj(kontekst, magazyn.konto(rec.login));
   return ekran(wynik === 'potwierdzony' || wynik === 'juz' ? 200 : (wynik === 'zajety' ? 409 : 400), jezyk, {
     stan: wynik, rodzaj: rec.rodzaj, email: rec.email,
   });

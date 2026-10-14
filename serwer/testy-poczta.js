@@ -93,6 +93,25 @@ function testySzablonow({ sprawdz }) {
     && e.tekst.includes('The link is valid for 30 minutes and works once')
     && szablony.renderuj('zmiana-email', 'pl', DANE['zmiana-email'], KONF_BAZOWY).tekst.includes('ważny 24 godziny')
     && szablony.renderuj('potwierdzenie', 'pl', { ...DANE.potwierdzenie, godzin: 1 }, KONF_BAZOWY).tekst.includes('ważny 1 godzinę'));
+
+  // Runda P (agencja-ux D1, copywriter): powitanie mowi to, na czym ludzie odpadaja: klucz API to osobne konto
+  // (nie subskrypcja czatu Claude), okolo 10 minut przy komputerze, 1-3 dokumenty przed pierwszym artykulem.
+  // Formy wobec czytelnika bezosobowe ("Jesli konto zostalo zalozone bez Twojej wiedzy", nie "zakladales").
+  const pow = szablony.renderuj('powitanie', 'pl', DANE.powitanie, KONF_BAZOWY);
+  const powEn = szablony.renderuj('powitanie', 'en', { ...DANE.powitanie, pakiet: 'Free', kosztArtykulu: '$0.20-0.40', odnosnikKlucza: 'https://content-ai.net/en/api-key/' }, KONF_BAZOWY);
+  sprawdz('powitanie PL i EN: klucz to osobne konto (nie subskrypcja czatu Claude), okolo 10 minut przy komputerze, 1-3 dokumenty przed pierwszym artykulem',
+    pow.tekst.includes('subskrypcja czatu Claude nie daje klucza API') && pow.tekst.includes('około 10 minut, najwygodniej przy komputerze')
+    && pow.tekst.includes('1-3 dokumenty firmy') && pow.tekst.includes('https://content-ai.net/klucz-api')
+    && powEn.tekst.includes('a Claude chat subscription does not include an API key') && powEn.tekst.includes('about 10 minutes, easiest on a computer')
+    && powEn.tekst.includes('1-3 company documents') && powEn.tekst.includes('roughly $0.20-0.40 per article'));
+  const rodzajowe = [];
+  for (const nazwa of szablony.SZABLONY) {
+    const w = szablony.renderuj(nazwa, 'pl', DANE[nazwa] || {}, KONF_BAZOWY);
+    const formy = `${w.temat}\n${w.tekst}`.match(/\p{L}+(?:łeś|łaś)(?!\p{L})/gu);
+    if (formy) rodzajowe.push(`${nazwa}: ${formy.join(', ')}`);
+  }
+  sprawdz(`szablony PL: formy bezosobowe wobec czytelnika, bez „zakładałeś”, „prosiłeś”, „usuwałeś” (${rodzajowe.join('; ') || 'ok'})`,
+    rodzajowe.length === 0 && p.tekst.includes('Jeśli konto zostało założone bez Twojej wiedzy, zignoruj tę wiadomość'));
   // 2026-10-12 (Marcin: "w mailach potrzebne logo"): naglowek z marka. Jedyny obrazek to znak z Content-ID
   // (bez adresu http, wiec otwarcie niczego nie pobiera), napis CONTENT AI jest tekstem, nad powitaniem.
   const zZnakiem = szablony.renderuj('potwierdzenie', 'pl', DANE.potwierdzenie, KONF_BAZOWY, { znak: true });

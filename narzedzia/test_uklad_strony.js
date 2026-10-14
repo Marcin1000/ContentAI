@@ -482,6 +482,33 @@ async function kontroleInterakcji(ctx, baza, sciezka, [w, h], telefon) {
   return problemy;
 }
 
+/* 11. Runda P (agencja-strona-projekt): zywa ramka w hero zaczyna od pelnego przykladu z Faktami. Osoba z filmu
+   o Faktach widziala je dopiero po 9 s cyklu (11,2 s), a przez pierwsze 3,5 s pusta ramke. Potem zwykla petla od
+   Tematu. Tylko komputer z wlaczonym ruchem: reszta testu ma reducedMotion 'reduce', a telefon pokazuje makiete statyczna. */
+async function kontrolaRamki(przegladarka, baza) {
+  const problemy = [];
+  for (const sciezka of ['/', '/en/']) {
+    const ctx = await przegladarka.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, serviceWorkers: 'block', reducedMotion: 'no-preference' });
+    const strona = await ctx.newPage();
+    strona.on('pageerror', e => problemy.push(sciezka + ' blad JS: ' + e.message));
+    await strona.goto(baza + sciezka, { waitUntil: 'load' });
+    const stan = () => strona.evaluate(() => {
+      const r = document.getElementById('ramka');
+      const b = r && r.querySelector('.ramka-kroki button[aria-current="step"]');
+      return r ? { fakty: r.classList.contains('k5'), krok: b ? b.getAttribute('data-krok') : null } : null;
+    });
+    await strona.waitForTimeout(1200);
+    const start = await stan();
+    if (!start) problemy.push(sciezka + ': brak #ramka');
+    else if (!start.fakty || start.krok !== '5') problemy.push(sciezka + ': po 1,2 s ramka nie pokazuje pelnego przykladu z Faktami (krok ' + start.krok + ')');
+    await strona.waitForTimeout(6000);
+    const potem = await stan();
+    if (start && potem && potem.fakty) problemy.push(sciezka + ': po pierwszym pokazie (6 s) ramka nie wraca do petli od Tematu');
+    await ctx.close();
+  }
+  return problemy;
+}
+
 /* ======================= przebieg ======================= */
 
 async function sprawdzStrone(przegladarka, baza, [w, h], motyw, sciezka, zFokusem, skala, interakcje) {
@@ -561,6 +588,7 @@ async function sprawdzStrone(przegladarka, baza, [w, h], motyw, sciezka, zFokuse
   };
   const ile = Math.max(1, Number(process.env.CAI_UKLAD_ROWNOLEGLE) || 3);
   await Promise.all(Array.from({ length: ile }, pracownik));
+  wynik('1440x900 ramka w hero (ruch wlaczony): start od pelnego przykladu z Faktami, potem petla, PL i EN', await kontrolaRamki(przegladarka, baza));
   await przegladarka.close();
   if (srv) srv.close();
   console.log('\nBLEDOW: ' + bledow + '   (' + lista.length + ' widokow, ' + Math.round((Date.now() - t0) / 1000) + ' s, tryb ' + (PELNY ? 'pelny' : 'szybki') + ')');
