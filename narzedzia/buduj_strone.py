@@ -134,14 +134,14 @@ FUNKCJE_W_TABELI = {
 DLUGIE_MYSLNIKI = ('\u2014', '\u2013')
 # Sformulowania, ktorych na stronie byc nie moze: nazwa dokumentu sprzedazy z VAT (PR8-11), AI Act tylko „wspiera wymogi
 # przejrzystosci" (PR8-04), samoobsluga zamiast formularza (STR8-03), uslugi nieuzywane na produkcji
-# (DECYZJE-R9, konfiguracja produkcji), funkcja wysylek z wdrozenia klienta (STR8-11), marki klientow,
+# (DECYZJE-R9, konfiguracja produkcji), funkcja z wdrozenia klienta (STR8-11), marki klientow (audyt_klienta.py),
 # konta zakladane przez administratora (strona jest dla samoobslugi, 2026-10-12) i „bez limitow" o pakiecie,
 # ktory ma pule serwera z limitem (limitySerwera.strony takze w Premium).
 ZAKAZANE = re.compile(
     r'faktur|invoice|w pe\u0142ni zgodn|pe\u0142n\w* zgodno\u015b\u0107|fully compliant|full compliance'
     r'|Popro\u015b o dost\u0119p|Request access|Konto zak\u0142ada administrator|administrator creates'
     r'|za\u0142o\u017cone przez administratora|created by an administrator|limit\u00f3w sztukowych|per-item limits'
-    r'|OpenSEO|DataForSEO|NVIDIA|rynk\w* eksportow|export market|\bDHL\b', re.I)
+    r'|OpenSEO|DataForSEO|NVIDIA|rynk\w* eksportow|export market', re.I)
 MAKS_TYTUL = 70
 MAKS_OPIS = 160
 

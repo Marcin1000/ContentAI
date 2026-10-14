@@ -1879,7 +1879,7 @@ async function scenariuszRundaA(b) {
 
   // 2. Artykul z siecia przy Bazie z dokumentem spoza tematu (niezaznaczonym): Fakty porownuja z sieci.
   await s.evaluate(() => {
-    docs.push({ name: 'Oferta firmy kurierskiej', content: 'Przesyłki kurierskie dla firm. Odbiór paczki w 24 godziny.', icon: '📄', words: 9, added: new Date(), selected: false, url: null });
+    docs.push({ name: 'Oferta biura rachunkowego', content: 'Księgowość dla małych firm. Odbiór dokumentów w 24 godziny.', icon: '📄', words: 9, added: new Date(), selected: false, url: null });
     document.getElementById('ctype').value = 'Artykuł SEO';
   });
   await generuj(s, 'Astrobiologia i misje kosmiczne', false);
@@ -2009,23 +2009,23 @@ async function scenariuszRundaA(b) {
     const art = document.getElementById('article');
     art.innerHTML = '<h1>Astrobiologia</h1><p>Astrobiologii poświęcono wiele badań. Łazik Perseverance pobrał próbkę na Marsie.</p>'
       + '<p>Sonda Europa Clipper agencji NASA leci do Jowisza.</p>';
-    const dhl = { name: '🔗 DHL BInzes - przesyłki kurierskie dla firm', url: 'https://www.dhl.com/pl-pl/biznes/przesylki-kurierskie', content: 'Wysyłaj paczki kurierem DHL. Przesyłki ekspresowe dla firm w całej Polsce.', icon: '🔗', words: 11, added: new Date(), selected: false };
+    const firma = { name: '🔗 Biuro rachunkowe - księgowość dla firm', url: 'https://www.example.com/pl/uslugi/ksiegowosc', content: 'Prowadzimy księgowość małych firm. Rozliczenia i deklaracje w całej Polsce.', icon: '🔗', words: 10, added: new Date(), selected: false };
     const nasa = { name: '🔗 Europa Clipper - NASA Science', url: 'https://science.nasa.gov/mission/europa-clipper/', content: 'Europa Clipper is a NASA mission to Jupiter.', icon: '🔗', words: 8, added: new Date(), selected: false };
     const astro = { name: '🔗 Astrobiologia w Polsce', url: 'https://astrobio.pl/', content: '', icon: '🔗', words: 0, added: new Date(), selected: false };
     const zapas = docs.slice();
-    docs.length = 0; docs.push(dhl, nasa, astro);
+    docs.length = 0; docs.push(firma, nasa, astro);
     buildLinkSuggestions();
     const nazwy = [...document.querySelectorAll('#links-list .link-sug-text strong')].map((x) => x.textContent);
-    docs.length = 0; docs.push(dhl);
+    docs.length = 0; docs.push(firma);
     buildLinkSuggestions();
     const sam = document.getElementById('links-list').textContent.trim();
     docs.length = 0; zapas.forEach((d) => docs.push(d));
     return { nazwy, sam, wzor: _t('links-brak-dopasowan') };
   });
-  wynik('Runda A: Linki - strona firmy kurierskiej nie pasuje do artykulu o astrobiologii, strony NASA i astrobiologii tak (odmiana)',
+  wynik('Runda A: Linki - strona biura rachunkowego nie pasuje do artykulu o astrobiologii, strony NASA i astrobiologii tak (odmiana)',
     linki.nazwy.length === 2 && linki.nazwy.indexOf('Europa Clipper - NASA Science') !== -1 && linki.nazwy.indexOf('Astrobiologia w Polsce') !== -1
-      && !linki.nazwy.some((n) => /DHL/.test(n)), JSON.stringify(linki.nazwy));
-  wynik('Runda A: Linki - bez pasujacych stron komunikat zamiast calej Bazy', linki.sam === linki.wzor && !/DHL/.test(linki.sam), linki.sam);
+      && !linki.nazwy.some((n) => /Biuro rachunkowe/.test(n)), JSON.stringify(linki.nazwy));
+  wynik('Runda A: Linki - bez pasujacych stron komunikat zamiast calej Bazy', linki.sam === linki.wzor && !/Biuro rachunkowe/.test(linki.sam), linki.sam);
 
   // 7. PDF: greka i symbole w krojach, znaki spoza krojow wypadaja, sigma w naglowku tabeli (Schibsted) z Literaty.
   await s.evaluate(() => new Promise((ok) => zaladujPdfMake(ok)));

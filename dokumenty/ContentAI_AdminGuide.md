@@ -366,7 +366,7 @@ Gotowe pliki konfiguracyjne i instrukcja krok po kroku: **`brama/README.md`**.
 
 Niezależnie od modułu admin pilnuje zasad zgłoszonych do ODO.
 
-- Zakaz danych nadawców i odbiorców przesyłek oraz pracowników dostawców i kontrahentów.
+- Zakaz danych osobowych klientów firmy oraz pracowników dostawców i kontrahentów.
   Te dane są przetwarzane w innych procesach, nie w generowaniu treści.
 - Zakaz danych osób poniżej 18 roku życia.
 - Dozwolone są dane kontaktów prasowych i marketingowych reprezentujących Content AI.

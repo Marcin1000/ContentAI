@@ -9,7 +9,7 @@ Ta kontrola pilnuje rzeczy, ktorych nie widac golym okiem, a ktore psuja strone 
   2. zadnych zasobow z obcych serwerow: src=, srcset=, url(), <link href> do arkuszy,
      fontow i ikon tylko z wlasnego hosta; linki tylko do content-ai.net i app.content-ai.net, a odnosniki
      <a> wychodzace tylko do hostow z listy LINKI_WYCHODZACE (konsole i cenniki dostawcow AI) i z rel="noopener",
-  3. bez dlugich myslnikow (U+2014, U+2013) i bez marki klienta (DHL),
+  3. bez dlugich myslnikow (U+2014, U+2013) i bez marki klienta (lista w audyt_klienta.py, same skroty),
   4. kazda strona z listy STRONY w buduj_strone.py (jedno zrodlo listy stron, STR8-17) ma lang, title,
      meta description, canonical, hreflang pl/en/x-default i dokladnie jeden naglowek h1,
   5. pod CSP: zadnych skryptow w tresci poza JSON-LD, zadnych onclick/onchange, zadnych style=,
@@ -33,6 +33,7 @@ KORZEN = Path(__file__).resolve().parent.parent
 SHOWCASE = KORZEN / 'showcase'
 sys.path.insert(0, str(KORZEN / 'narzedzia'))
 import buduj_strone  # noqa: E402 (lista stron z jednego miejsca)
+import audyt_klienta  # noqa: E402 (marka klienta: same skroty slow)
 
 DOMENA = buduj_strone.DOMENA
 
@@ -174,8 +175,8 @@ def main():
         for znak in ('\u2014', '\u2013'):
             if znak in tresc:
                 bledy.append('%s: dlugi myslnik U+%04X' % (nazwa, ord(znak)))
-        if re.search(r'\bDHL\b', tresc, re.I):
-            bledy.append('%s: marka klienta (DHL) w materiale publicznym' % nazwa)
+        for nr, slowo in audyt_klienta.znajdz(tresc):
+            bledy.append('%s:%d: marka klienta albo branza z testow (%s) w materiale publicznym' % (nazwa, nr, audyt_klienta.maska(slowo)))
     print('  %s    obce serwery, dlugie myslniki, marka klienta' % ('ok' if len(bledy) == przed else 'BLAD'))
 
     # 4-5. struktura stron i CSP

@@ -360,7 +360,7 @@ domenę, opis, usługi, rozróżnienie linii biznesowych oraz dwie listy domen.
 | Domeny marki | rozpoznawanie odnośników do własnej strony; puste = brane z adresu bazowego |
 | Domeny wykluczone z wyszukiwania | AI ich w ogóle nie zobaczy przy włączonym wyszukiwaniu w sieci |
 
-Lista wykluczeń jest **branżowa**: dla kuriera to inni przewoźnicy i porównywarki, dla
+Lista wykluczeń jest **branżowa**: dla biura podróży to inne biura i porównywarki, dla
 kancelarii inne kancelarie. Dlatego ustawia się ją w aplikacji, a nie w kodzie. Wpisy są
 czyszczone przy zapisie: `https://www.Konkurent.PL/cennik` zostaje zapisane jako
 `konkurent.pl`, duplikaty znikają, a wpis bez kropki jest odrzucany. Licznik pod polem

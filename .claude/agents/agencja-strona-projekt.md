@@ -20,7 +20,7 @@ działania (logowanie, aplikacja), dowody (zrzuty, liczby), jasny/ciemny, 1440/1
 wyglądające jak szablon. Sprawdź w kodzie aplikacji, czy każda obietnica strony jest prawdą. Następnie zaproponuj
 KONCEPCJĘ nowej strony w duchu rebrandingu premium i aktualnych trendów (struktura sekcji, nagłówek, dowody,
 ruch, mikrointerakcje, ścieżka konwersji), spójną z systemem `agencja-marka` (czytaj ich ustalenia na tablicy).
-Bez marki klienta (DHL i in.) w materiałach. Współpracuj z `agencja-strona-frontend` i `agencja-copywriter`.
+Bez marki klienta i szczegółów, które do niej prowadzą, w materiałach. Współpracuj z `agencja-strona-frontend` i `agencja-copywriter`.
 
 Ustalenia dopisuj na tablicę od razu. Na koniec: `STAN: SKOŃCZONE` w dzienniku, zabite własne procesy
 i raport końcowy wg `docs/ZESPOLY.md` jako ostatnia wiadomość. Wszystko po polsku.
