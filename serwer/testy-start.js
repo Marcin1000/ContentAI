@@ -126,6 +126,13 @@ async function testyBezpiecznikow({ sprawdz }) {
     sprawdz('blad dostawcy (HTTP 500): odpowiedz dostawcy bez zmian, wywolanie oddane do przydzialu',
       blad.status === 500 && (t.magazyn.startPrzydzial(skrotEwy) || {}).wywolan === przedBledem);
 
+    // 4a. Limit zapytan (429) naszego obszaru startu: neutralne przeciazenie (529) bez tresci dostawcy, wywolanie oddane.
+    const limit = await api(t, ewa.sesja, POMOCNICZE('[atrapa:429]'));
+    const limitTekst = await limit.text();
+    sprawdz('429 na kluczu startu: 529 overloaded_error bez tresci dostawcy (nie "limit Twojego konta"), wywolanie oddane',
+      limit.status === 529 && /"overloaded_error"/.test(limitTekst) && !/rate limit|organization/i.test(limitTekst)
+      && (t.magazyn.startPrzydzial(skrotEwy) || {}).wywolan === przedBledem);
+
     // 5. Sufit wywolan: 4 na przydzial (2 zuzyte), potem odmowa.
     const r3 = await api(t, ewa.sesja, POMOCNICZE());
     const r4 = await api(t, ewa.sesja, POMOCNICZE());

@@ -1676,6 +1676,11 @@ async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
     if (przydzial && przydzial.rozlicz(odp.status, tekst, { bezTekstu }).wstrzymany) {
       return odmowaKlucza(req, res, startBezKlucza.zPowodem({ kod: 'brak-klucza', status: 403, dostawca: 'anthropic' }, 'pula'));
     }
+    // Limit zapytan NASZEGO obszaru startu: neutralne przeciazenie bez tresci dostawcy (komunikat 429 moze nazywac
+    // nasza organizacje, a aplikacja przy 429 mowi o limicie "z Twojego konta", co przy kluczu startu nie jest prawda).
+    if (przydzial && odp.status === 429) {
+      return odpowiedzJson(res, 529, { type: 'error', error: { type: 'overloaded_error', message: 'Overloaded' } });
+    }
     if (odp.ok) for (const czynnosc of czynnosci) if (!(bezTekstu && czynnosc === 'artykul')) policzUzycie(sesja, czynnosc);
     return wyslij(res, odp.status, {
       'Content-Type': 'application/json; charset=utf-8', ...naglowkiZlegoKlucza(k, odp.status, tekst, 'anthropic'),

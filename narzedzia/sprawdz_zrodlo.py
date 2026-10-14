@@ -1942,7 +1942,8 @@ KONTROLE += [
     ("RP/limit-forma", "limit wydatkow u dostawcy: forma bezosobowa wobec czytelnika (bez 'ustawiles')",
      "'err-limit-wydatkow-wlasny':'Zapytanie zatrzymał limit wydatków ustawiony w konsoli {DOSTAWCA}.", "limit wydatków, który ustawiłeś", None),
     ("RP/kreator-instrukcja", "kreator klucza: 'Nie masz klucza? Okolo 10 minut' nad polem klucza (wczesniej na dole, pod akapitem o bezpieczenstwie)",
-     "re:class=\"rozwijka byok-przewodnik\"[\\s\\S]{0,1500}?window\\.htmlPolaKlucza\\('start', 'anthropic'\\)",
+     # 14.10: pole klucza w zmiennej poleKlucza (w trybie pierwszego artykulu bez klucza zwiniete), kolejnosc bez zmian.
+     "re:class=\"rozwijka byok-przewodnik\"[\\s\\S]{0,1500}?\\+ poleKlucza\\n",
      "re:window\\.htmlZapamietaj\\('start'\\)[\\s\\S]{0,800}?class=\"rozwijka byok-przewodnik\"", ("proxy",)),    ("RP/konto-z-emaila", "menu konta z rejestracji: nazwa i inicjaly z e-maila, nie z technicznego loginu k-... (KD, KX)",
      "if (d && d.login) odswiezKonto(d.login, d.email);", "if (d && d.login) odswiezKonto(d.login); }", ("proxy",)),
     ("RP/konto-inicjaly", "inicjaly z e-maila: pierwsza litera dwoch czlonow nazwy (ola.nowak@ -> ON)",
@@ -2076,6 +2077,8 @@ KONTROLE_PLIKOW = [
      "serwer/server.js", "startBezKlucza.stanDla(konto, czynnosciTresci(req))", None),
     ("SB/wstrzymanie", "blad rozliczen albo odrzucony klucz startu: start wstrzymany, uzytkownik dostaje kreator klucza",
      "serwer/server.js", "if (przydzial && przydzial.rozlicz(odp.status, tekst, { bezTekstu }).wstrzymany) {", None),
+    ("SB/429", "429 na kluczu startu: neutralne przeciazenie bez tresci dostawcy (nie limit konta uzytkownika)",
+     "serwer/server.js", "if (przydzial && odp.status === 429) {", None),
     ("SB/migracja", "baza: migracja 6, przydzial pod skrotem adresu (bez loginu i adresu), dzienna pula",
      "serwer/magazyn.js", "CREATE TABLE IF NOT EXISTS start_bez_klucza (", None),
     ("SB/atomowo", "baza: wywolanie startu atomowo (sufit wywolan i jeden artykul w jednym UPDATE)",
