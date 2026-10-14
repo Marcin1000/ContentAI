@@ -1057,6 +1057,16 @@ KONTROLE = [
     ("ZA/spinner", "aplikacja: spinner ze znakiem A (ramiona z otworem), bez znaku B i kola w srodku",
      '<path d="M16 1 L19.8 12.2 L18.12 13.88 A3 3 0 0 0 13.88 13.88 L12.2 12.2 Z"/><path d="M31 16 L19.8 19.8',
      "L18.82 12.33", None),
+
+    # -- 14.10: krok dokumentow firmy w kreatorze (pierwszy artykul z dokumentow, nie tylko ze stron w sieci) --
+    ("KD/kroki", "kreator konta na wlasnym kluczu: klucz, firma, dokumenty firmy, pierwszy artykul",
+     "KROKI_WLASNE = ['klucz', 'firma', 'dokumenty', 'artykul'];", "KROKI_WLASNE = ['klucz', 'firma', 'artykul'];", ("proxy",)),
+    ("KD/pliki", "kreator: wybor plikow po ostrzezeniu o danych osobowych, ta sama droga co Baza wiedzy",
+     "window.kreatorDokumenty = function(){\n    piiConfirm(function(){", None, ("proxy",)),
+    ("KD/czeka", "odczyt pliku czeka na zapis dokumentu (Baza na serwerze), zanim powie, ze gotowe",
+     "await addDoc(name, text, getIcon(name));", "    if (text.trim()) {\n      addDoc(name, text, getIcon(name));", None),
+    ("KD/obietnica", "Baza na serwerze: addDoc oddaje obietnice zapisu razem z odswiezeniem listy",
+     "return wyslijDoBazy(name, tresc, url).then(function(w){", "    wyslijDoBazy(name, tresc, url).then(function(w){", ("proxy",)),
 ]
 
 # ── runda 3, wykonawca D: komunikaty bledow dostawcow i liczby w jezyku interfejsu ──
@@ -1536,8 +1546,9 @@ KONTROLE += [
      "body.is-mobile label.ozn-wiersz { min-height: var(--h-dotyk); }", None, None),
     ('R9-D/klucze-przeniesienie', 'SEC8-04: jednorazowe przeniesienie kluczy z localStorage do ciasteczek',
      'function przeniesKluczeZMagazynu(){', None, ('proxy',)),
-    ('R9-D/kreator-byok', 'UX8-19: kreator konta BYOK w trzech krokach (klucz, firma, pierwszy artykul)',
-     "KROKI_WLASNE = ['klucz', 'firma', 'artykul']", None, ('proxy',)),
+    # 14.10: czwarty krok (dokumenty firmy) przed pierwszym artykulem, patrz KD/kroki.
+    ('R9-D/kreator-byok', 'UX8-19: kreator konta BYOK zaczyna od klucza i firmy, konczy pierwszym artykulem',
+     "KROKI_WLASNE = ['klucz', 'firma', 'dokumenty', 'artykul']", None, ('proxy',)),
     ('R9-D/kreator-klucza', 'projekt 10.2: otworzKreatorKlucza(dostawca) zamiast otworzStart() + startDalej()',
      'window.otworzKreatorKlucza = function(dostawca, powod){', None, ('proxy',)),
     ('R9-D/kreator-temat', 'KOD8-24: kreator nie wyskakuje nad zaczetym tematem ani nad innym oknem',

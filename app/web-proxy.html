@@ -3323,6 +3323,12 @@ body.karta-konta #gen-btn { display: none; }
 .byok-kroki li + li { margin-top: var(--s-4); }
 .byok-jest { display: flex; gap: var(--s-6); align-items: center; margin: 0 0 var(--s-8); }
 .byok-podpowiedzi { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-6); margin: var(--s-8) 0; }
+/* krok kreatora z dokumentami firmy (14.10): pliki dodane do bazy wiedzy */
+.byok-dok-lista { list-style: none; margin: var(--s-4) 0 var(--s-8); padding: 0; display: flex; flex-direction: column; gap: var(--s-4); }
+.byok-dok-lista li { display: flex; gap: var(--s-6); align-items: center; min-width: 0; font-size: var(--t-sm); color: var(--c-tekst); }
+.byok-dok-lista li > .ikona { flex: none; color: var(--c-sukces); }
+.byok-dok-lista span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#start-tresc .byok-dok-wybierz { display: inline-flex; align-items: center; justify-content: center; gap: var(--s-6); }
 #start-tresc input[type=text], #start-tresc textarea { width: 100%; box-sizing: border-box; }
 .platnosc-tresc { display: flex; gap: var(--s-8); align-items: flex-start; }
 /* .modal p (komponenty) wygrywal z .tekst-pomoc: drobny druk w kreatorze, Koncie i zakupie zostaje drobny */
@@ -5743,8 +5749,11 @@ var I18N = {
     'byok-krok-4':'W Settings, potem API keys, kliknij „Create key”, nazwij klucz „Content AI” i skopiuj go. Konsola pokaże go tylko raz.','byok-krok-5':'Wróć tutaj, wklej klucz i kliknij „Sprawdź i zapisz”.',
     'byok-pelna-instrukcja':'Pełna instrukcja i orientacyjny koszt artykułu','byok-opcjonalne':'Klucze opcjonalne: grafiki, lektor, transkrypcja','byok-przyklad':'Wolisz najpierw zobaczyć wynik?',
     'byok-pozniej':'Zrobię to później','byok-2-tytul':'Twoja firma (opcjonalnie)','byok-2-opis':'Te dane trafiają do każdego artykułu: AI wie, jak się nazywasz i czym się zajmujesz. Zmienisz je w Koncie.',
-    'byok-firma-nazwa':'Nazwa firmy lub marki','byok-firma-adres':'Adres strony','byok-firma-opis':'Czym się zajmujesz?','byok-2-potem':'Więcej materiałów (oferta, FAQ, cennik) dodasz w Bazie wiedzy, a styl pisania w Głosie marki. Nic z tego nie jest potrzebne do pierwszego artykułu.',
-    'byok-zapisz-dalej':'Zapisz i dalej','byok-pomin':'Pomiń','byok-3-tytul':'Napisz pierwszy artykuł','byok-3-opis':'Każdy artykuł powstaje w około minutę.','byok-3-opis-darmowe':'Darmowe artykuły na start: {n}. Każdy powstaje w około minutę.',
+    'byok-firma-nazwa':'Nazwa firmy lub marki','byok-firma-adres':'Adres strony','byok-firma-opis':'Czym się zajmujesz?','byok-2-potem':'Ofertę, FAQ albo cennik dodasz w następnym kroku, a styl pisania w Głosie marki.',
+    'byok-zapisz-dalej':'Zapisz i dalej','byok-pomin':'Pomiń',
+    'byok-dok-tytul':'Dokumenty firmy (opcjonalnie)','byok-dok-opis':'Dodaj ofertę, cennik albo opis usług. Artykuł powstanie z tych plików, a kontrola faktów porówna go z nimi. Bez dokumentów fakty przyjdą ze stron w sieci.',
+    'byok-dok-wybierz':'Wybierz pliki','byok-dok-formaty':'PDF, DOCX, TXT, CSV albo XLSX. Wystarczą jeden do trzech plików, kolejne dodasz w Bazie wiedzy.',
+    'byok-dok-wczytuje':'Wczytuję pliki…','byok-dok-dodane':'W bazie wiedzy:','byok-dok-bez':'Dalej bez dokumentów','byok-3-tytul':'Napisz pierwszy artykuł','byok-3-opis':'Każdy artykuł powstaje w około minutę.','byok-3-opis-darmowe':'Darmowe artykuły na start: {n}. Każdy powstaje w około minutę.',
     'byok-3-opis-pakiet':'Artykuły w pakiecie: zostało {n}. Każdy powstaje w około minutę.','byok-temat':'O czym ma być artykuł?','byok-podpowiedzi':'Podpowiedzi:',
     'byok-podpowiedz-1':'Jak wybrać pompę ciepła do domu jednorodzinnego','byok-podpowiedz-2':'Jak napisać dobry opis produktu w sklepie internetowym','byok-podpowiedz-3':'Ulga na start w 2026 roku: komu się należy',
     'byok-siec':'Szukaj w sieci i podaj źródła','byok-siec-pusta':'Twoja baza wiedzy jest pusta, więc fakty przyjdą ze stron w sieci. Źródła zobaczysz pod tekstem.',
@@ -6601,8 +6610,11 @@ var I18N = {
     'byok-krok-4':'In Settings, then API keys, click “Create key”, name it “Content AI” and copy it. The console shows it only once.','byok-krok-5':'Come back here, paste the key and click “Check and save”.',
     'byok-pelna-instrukcja':'Full guide and the estimated cost of an article','byok-opcjonalne':'Optional keys: images, voice-over, transcription','byok-przyklad':'Would you like to see a result first?',
     'byok-pozniej':'I\'ll do it later','byok-2-tytul':'Your company (optional)','byok-2-opis':'This goes into every article: the AI knows your name and what you do. You can change it under Account.',
-    'byok-firma-nazwa':'Company or brand name','byok-firma-adres':'Website address','byok-firma-opis':'What do you do?','byok-2-potem':'Add more material (offer, FAQ, price list) in the knowledge base, and your writing style in Brand voice. None of it is needed for a first article.',
-    'byok-zapisz-dalej':'Save and continue','byok-pomin':'Skip','byok-3-tytul':'Write your first article','byok-3-opis':'Each article takes about a minute.','byok-3-opis-darmowe':'Free articles to start with: {n}. Each takes about a minute.',
+    'byok-firma-nazwa':'Company or brand name','byok-firma-adres':'Website address','byok-firma-opis':'What do you do?','byok-2-potem':'You can add your offer, FAQ or price list in the next step, and your writing style in Brand voice.',
+    'byok-zapisz-dalej':'Save and continue','byok-pomin':'Skip',
+    'byok-dok-tytul':'Company documents (optional)','byok-dok-opis':'Add your offer, price list or a description of your services. The article will be written from these files, and the fact check will compare it against them. Without documents, the facts come from web pages.',
+    'byok-dok-wybierz':'Choose files','byok-dok-formaty':'PDF, DOCX, TXT, CSV or XLSX. One to three files are enough, you can add more in the knowledge base.',
+    'byok-dok-wczytuje':'Reading the files…','byok-dok-dodane':'In your knowledge base:','byok-dok-bez':'Continue without documents','byok-3-tytul':'Write your first article','byok-3-opis':'Each article takes about a minute.','byok-3-opis-darmowe':'Free articles to start with: {n}. Each takes about a minute.',
     'byok-3-opis-pakiet':'Articles left in your plan: {n}. Each takes about a minute.','byok-temat':'What should the article be about?','byok-podpowiedzi':'Ideas:',
     'byok-podpowiedz-1':'How to choose a heat pump for a family home','byok-podpowiedz-2':'How to write a good product description for an online shop','byok-podpowiedz-3':'What a content brief is and how to use it',
     'byok-siec':'Search the web and cite sources','byok-siec-pusta':'Your knowledge base is empty, so the facts will come from web pages. You will see the sources under the text.',
@@ -8568,7 +8580,9 @@ async function processFile(file) {
       text = await file.text().catch(() => _t('file-read-err'));
     }
     if (text.trim()) {
-      addDoc(name, text, getIcon(name));
+      // Wariant z serwerem: addDoc wysyla dokument do Bazy na serwerze i oddaje obietnice. Czekamy na nia,
+      // zeby "Wczytuje" trwalo do zapisu, a kreator (krok dokumentow) pokazal plik dopiero, gdy jest w Bazie.
+      await addDoc(name, text, getIcon(name));
     } else {
       // Skan PDF bez warstwy tekstu albo DOCX z samym osadzonym HTML: nic nie trafia do bazy,
       // ale autor musi wiedziec dlaczego.
@@ -20666,12 +20680,13 @@ async function kbAudioTranscribeAndOpen(file) {
     var limit = window._bazaLimitZnakow || LIMIT_ZNAKOW_DOKUMENTU;
     if (tresc.length > limit && !window.confirm(tekst('kb-dlugi-pytanie', '').replace('{nazwa}', name).replace('{wszystko}', formatujLiczbe(tresc.length, 0))
       .replace('{limit}', formatujLiczbe(limit, 0)).replace('{procent}', Math.max(1, Math.floor(limit / tresc.length * 100))))) return;
-    wyslijDoBazy(name, tresc, url).then(function(w){
+    return wyslijDoBazy(name, tresc, url).then(function(w){
       if (w.ok) {
         var uc = dokumentUciety(w.dane, tresc.length);
         if (uc) pokazPowiadomienie(tekst('kb-uciety', '').replace('{nazwa}', name).replace('{zapisano}', formatujLiczbe(uc.zapisano, 0)).replace('{wszystko}', formatujLiczbe(uc.wszystko, 0)), 'uwaga', 15000);
-        else pokazPowiadomienie(tekst('kb-dodano','Dodano do bazy wiedzy na serwerze') + ': ' + name, 'ok');
-        odswiezListeBazy();
+        // Kreator (krok dokumentow) pokazuje dodane pliki na liscie: dymek "Dodano" zaslanialby ja na telefonie.
+        else if (!window._kreatorDodajePliki) pokazPowiadomienie(tekst('kb-dodano','Dodano do bazy wiedzy na serwerze') + ': ' + name, 'ok');
+        return odswiezListeBazy();
       } else if (w.status === 401) {
         // R9-F (KOD8-10): wygasla sesja - dokument zostawal po cichu tylko w przegladarce (i tam po zalogowaniu).
         // Mowimy, co sie stalo; "Zaloguj sie" zapisuje szkic i przechodzi do ekranu logowania.
@@ -21551,9 +21566,10 @@ async function kbAudioTranscribeAndOpen(file) {
   var PAMIEC = 'cai_start_ukonczony';
   var krok = 0;
   var kroki = ['powitanie', 'klucze', 'marka', 'koniec'];
-  // R9-D (UX8-19, makieta A1): konto na wlasnych kluczach ma kreator w trzech krokach (klucz, firma,
-  // pierwszy artykul); konta zespolu (klucze serwera) zostaja przy czterech krokach jak dzis.
-  var KROKI_ZESPOL = kroki, KROKI_WLASNE = ['klucz', 'firma', 'artykul'];
+  // R9-D (UX8-19, makieta A1): konto na wlasnych kluczach ma kreator w czterech krokach (klucz, firma,
+  // dokumenty firmy, pierwszy artykul); konta zespolu (klucze serwera) zostaja przy czterech krokach jak dzis.
+  // 14.10: krok dokumentow, bo pierwszy artykul powstawal tylko ze stron w sieci, a film obiecuje "z Twoich dokumentow".
+  var KROKI_ZESPOL = kroki, KROKI_WLASNE = ['klucz', 'firma', 'dokumenty', 'artykul'];
   var dostawcaKreatora = '', powodKreatora = '';
   var STRONA_KLUCZA = { pl: 'https://content-ai.net/klucz-api/', en: 'https://content-ai.net/en/api-key/' };
   var STRONA_BEZPIECZENSTWA = { pl: 'https://content-ai.net/#bezpieczenstwo', en: 'https://content-ai.net/en/#bezpieczenstwo' };
@@ -21720,6 +21736,20 @@ async function kbAudioTranscribeAndOpen(file) {
       dalej.textContent = tekst('byok-zapisz-dalej', '');
       pomin.textContent = tekst('byok-pomin', '');
       pomin.onclick = function(){ krok++; rysuj(); };
+    } else if (n === 'dokumenty') {
+      // Pliki ida ta sama droga co w Bazie wiedzy: ostrzezenie o danych osobowych, odczyt w przegladarce, addDoc
+      // (w wariancie z serwerem do Bazy na serwerze, a przy odmowie serwera do tej przegladarki).
+      var lista = (window._bazaSerwer || []).map(function(d){ return d.nazwa; })
+        .concat((typeof docs !== 'undefined' ? docs : []).map(function(d){ return d.name; }));
+      cel.innerHTML = naglowek(bezpieczny(tekst('byok-dok-tytul', '')), bezpieczny(tekst('byok-dok-opis', '')))
+        + '<button type="button" class="btn-secondary btn-pelny byok-dok-wybierz" id="byok-dok-wybierz" onclick="kreatorDokumenty()">' + ikona('upload') + bezpieczny(tekst('byok-dok-wybierz', '')) + '</button>'
+        + '<p class="tekst-pomoc">' + bezpieczny(tekst('byok-dok-formaty', '')) + '</p>'
+        + '<p class="tekst-pomoc" id="byok-dok-stan" role="status" aria-live="polite"></p>'
+        + (lista.length ? '<p class="byok-etykieta">' + bezpieczny(tekst('byok-dok-dodane', '')) + '</p><ul class="byok-dok-lista">'
+          + lista.map(function(nazwa){ return '<li>' + ikona('circle-check') + '<span>' + bezpieczny(nazwa) + '</span></li>'; }).join('') + '</ul>' : '');
+      // Bez dokumentow glowny przycisk mowi wprost, ze krok zostaje pominiety, wiec osobne "Pomin" jest zbedne.
+      dalej.textContent = tekst(lista.length ? 'start-dalej' : 'byok-dok-bez', 'Dalej');
+      pomin.style.display = 'none';
     } else {
       var a = s && s.uzycie && s.uzycie.artykul;
       var ile = a && a.limit !== null ? Math.max(0, a.limit - a.zuzyte) : null;
@@ -21755,6 +21785,7 @@ async function kbAudioTranscribeAndOpen(file) {
       krok++; rysuj(); return;
     }
     if (n === 'firma') { zapiszFirme(); krok++; rysuj(); return; }
+    if (n === 'dokumenty') { krok++; rysuj(); return; }
     var temat = (el('byok-temat') || {}).value || '', siec = el('byok-siec');
     zamknij();
     var t = el('topic'), uw = el('use-web');
@@ -21763,6 +21794,33 @@ async function kbAudioTranscribeAndOpen(file) {
     if (t && temat.trim() && typeof generate === 'function') setTimeout(function(){ generate(); }, 50);
     else if (t) t.focus();
   }
+  /** Krok "dokumenty": wybor plikow (po ostrzezeniu o danych osobowych) i odczyt jak w Bazie wiedzy. */
+  window.kreatorDokumenty = function(){
+    piiConfirm(function(){
+      var inp = document.createElement('input');
+      inp.type = 'file';
+      inp.multiple = true;
+      inp.accept = '.pdf,.docx,.doc,.txt,.csv,.xlsx,.xls';
+      inp.style.cssText = 'position:fixed;top:-999px;left:-999px;opacity:0;';
+      document.body.appendChild(inp);
+      inp.addEventListener('change', async function(){
+        var pliki = inp.files ? Array.prototype.slice.call(inp.files) : [];
+        try {
+          if (!pliki.length) return;
+          var stan = el('byok-dok-stan'), przycisk = el('byok-dok-wybierz');
+          if (stan) stan.textContent = tekst('byok-dok-wczytuje', '');
+          if (przycisk) przycisk.disabled = true;
+          window._kreatorDodajePliki = true;
+          await handleFiles(pliki);
+        } finally {
+          window._kreatorDodajePliki = false;
+          setTimeout(function(){ try { inp.remove(); } catch(e){} }, 1000);
+          if (el('start-modal').style.display === 'flex' && kroki[krok] === 'dokumenty') rysuj();
+        }
+      });
+      inp.click();
+    });
+  };
   // Zapisany klucz Anthropic odblokowuje "Dalej" w pierwszym kroku.
   document.addEventListener('cai-klucz-zapisany', function(e){
     if (el('start-modal').style.display !== 'flex' || kroki[krok] !== 'klucz') return;
