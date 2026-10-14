@@ -1051,6 +1051,12 @@ KONTROLE = [
      "pokazWynikFaktow(faktyWynik, faktyStan);", "    pokazWynikFaktow(faktyWynik);\n    return;", None),
     ("R3B/docx-blad", "blad DOCX bez surowego komunikatu wyjatku",
      None, "powiadomBlad(_t('msg-docx-error') + ((e && e.message) || ''))", None),
+
+    # -- 14.10: jeden znak marki (A) wszedzie --
+    # Spinner (cztery ramiona osobno, bo animacja zapala je po kolei) mial znak B: ramiona z przerwami i kolo w srodku.
+    ("ZA/spinner", "aplikacja: spinner ze znakiem A (ramiona z otworem), bez znaku B i kola w srodku",
+     '<path d="M16 1 L19.8 12.2 L18.12 13.88 A3 3 0 0 0 13.88 13.88 L12.2 12.2 Z"/><path d="M31 16 L19.8 19.8',
+     "L18.82 12.33", None),
 ]
 
 # ── runda 3, wykonawca D: komunikaty bledow dostawcow i liczby w jezyku interfejsu ──
@@ -1998,6 +2004,29 @@ KONTROLE_PLIKOW = [
      ".github/workflows/kontrola.yml", "run: python3 narzedzia/audyt_klienta.py", None),
     ("RN/strona-audyt", "audyt strony sprawdza marke klienta ta sama lista (bez slowa wpisanego wprost)",
      "narzedzia/audyt_showcase.py", "for nr, slowo in audyt_klienta.znajdz(tresc):", None),
+
+    # -- 14.10: jeden znak marki (A) wszedzie --
+    # Strona, logowanie i dokumenty prawne mialy znak B (ramiona z przerwami, kolo w srodku), a aplikacja, e-maile i Stripe znak A.
+    ("ZA/strona", "strona: symbol i-znak (naglowek i stopka) to znak A",
+     "showcase/zrodlo/czesci/ikony.html", '<symbol id="i-znak" viewBox="0 0 32 32"><g fill="currentColor" stroke="none"><path d="M16 1 L19.8 12.2',
+     "L18.82 12.33"),
+    ("ZA/logowanie", "logowanie i rejestracja: logo i favicon ze znaku A",
+     "serwer/logowanie.js", "const ZNAK_SCIEZKA = 'M16 1 L19.8 12.2 L18.12 13.88", "L18.82 12.33"),
+    ("ZA/dokumenty", "dokumenty prawne: logo i favicon ze znaku A",
+     "serwer/dokumenty-prawne.js", "const ZNAK = 'M16 1 L19.8 12.2 L18.12 13.88", "L18.82 12.33"),
+    # Ikony aplikacji i strony, obrazki OG, grafiki README i ikony natywne z jednego generatora (mialy znak B albo stara gwiazde).
+    ("ZA/generator", "generator grafik marki: ikony, obrazki OG, README i ikony natywne ze znaku A",
+     "narzedzia/grafiki_marki.js", "{ pliki: ['showcase/obrazy/og-pl.png'], w: 1200, h: 630", None),
+    ("ZA/test", "test znaku: sciezka w kodzie i znak w kazdym obrazku (otwor w srodku, ramiona bez przerw)",
+     "narzedzia/test_znak.js", "function znakA(obraz, [x, y, s]) {", None),
+    ("ZA/ci", "CI uruchamia test znaku przy kazdej zmianie",
+     ".github/workflows/kontrola.yml", "run: node narzedzia/test_znak.js", None),
+    ("ZA/android", "Android: tlo ikony adaptacyjnej takie jak ikona aplikacji",
+     "pakowanie/capacitor/android-res/res/values/ic_launcher_background.xml", "#141413", "#07080D"),
+    # LinkedIn i Facebook trzymaja obrazek pod adresem: bez odcisku podglad linku pokazywalby stary znak.
+    ("ZA/og-odcisk", "strona: og:image z odciskiem tresci, nowy obrazek w podgladach linkow od razu",
+     "narzedzia/buduj_strone.py", "'og_obraz': DOMENA + '/obrazy/og-%s.png?v=%s' % (jezyk, odcisk('obrazy/og-%s.png' % jezyk)),",
+     "'og_obraz': DOMENA + '/obrazy/og-%s.png' % jezyk,"),
 ]
 
 

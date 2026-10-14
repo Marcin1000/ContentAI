@@ -84,6 +84,12 @@ async function uruchom({ sprawdz }) {
     const slowa = /faktur|invoice|w pełni zgodn|fully compliant|zgodn\w* z kodeksem|compliant with the code|\u2014|\u2013/i;
     sprawdz('bez slow "faktura"/"invoice", "w pelni zgodne"/"fully compliant", zgodnosci z Kodeksem praktyk i dlugich myslnikow (marki klienta: audyt_klienta.py)',
       dokumenty.every((d) => !slowa.test(d.tekst)));
+    // Zgloszenie 14.10: jeden znak (A) jak w aplikacji, e-mailach i Stripe, w logo i favikonie (zakodowanej w data:).
+    const znakA = 'M16 1 L19.8 12.2 L18.12 13.88';
+    const favikona = (h) => decodeURIComponent((/<link rel="icon" href="data:image\/svg\+xml,([^"]+)"/.exec(h) || [])[1] || '');
+    sprawdz('wszystkie dokumenty: znak A w logo i favikonie, bez dawnego znaku B z kropka w srodku',
+      dokumenty.every((d) => d.tekst.includes(znakA) && favikona(d.tekst).includes(znakA)
+        && !(d.tekst + favikona(d.tekst)).includes('L18.82 12.33') && !(d.tekst + favikona(d.tekst)).includes('r="1.6"')));
     const reg = (j) => dokumenty.find((d) => d.nazwa === 'regulamin' && d.jezyk === j).tekst;
     sprawdz('AI Act (PR8-04): regulamin "wspiera wymogi przejrzystosci" / "supports the transparency requirements"',
       reg('pl').includes('wspiera wymogi przejrzystości') && reg('en').includes('supports the transparency requirements'));

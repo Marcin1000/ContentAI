@@ -499,7 +499,8 @@ def renderuj(nazwa_szablonu, szablon, sciezki, jezyk, teksty, konf, wspolne, iko
         'biezacy_en': 'aria-current="page"' if jezyk == 'en' else '',
         'og_locale': OG_LOCALE[jezyk],
         'og_locale_alt': OG_LOCALE[alt],
-        'og_obraz': DOMENA + '/obrazy/og-%s.png' % jezyk,
+        # Odcisk w adresie obrazka: LinkedIn i Facebook trzymaja obrazek pod danym adresem (14.10: stary znak w podgladach).
+        'og_obraz': DOMENA + '/obrazy/og-%s.png?v=%s' % (jezyk, odcisk('obrazy/og-%s.png' % jezyk)),
         'ikony': ikony,
     })
     tk = Teksty(teksty[jezyk], warianty(konf), zmienne)
