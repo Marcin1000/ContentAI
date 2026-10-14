@@ -147,6 +147,10 @@ const bezMyslnikow = (s) => !DLUGIE_MYSLNIKI.test(s);
 
 function testyJednostkowe(sprawdz) {
   console.log('\n  platnosci (B) - adapter Stripe, podpis webhooka, czas polski, zwroty');
+  // Runda P (copywriter, zasada 8): wobec czytelnika formy bezosobowe ("Pakiet kupiony...", nie "Kupiles...").
+  const rodzajowe = Object.entries(ekrany.T.pl).filter(([, v]) => typeof v === 'string' && /\p{L}+(?:łeś|łaś)(?!\p{L})/u.test(v)).map(([k]) => k);
+  sprawdz(`ekrany platnosci PL: formy bezosobowe wobec czytelnika (${rodzajowe.join(', ') || 'ok'})`,
+    rodzajowe.length === 0 && ekrany.T.pl.sekcjaOdstapOpis.startsWith('Od zakupu pakietu minęło mniej niż 14 dni?'));
   sprawdz('adapter: notacja nawiasowa Stripe (obiekty, tablice, wartosci logiczne)',
     stripe.zakoduj({ a: { b: [{ c: 1 }] }, d: true, e: null }) === 'a%5Bb%5D%5B0%5D%5Bc%5D=1&d=true');
   sprawdz('adapter: STRIPE_CENA_<PLAN> jako cena wielowalutowa albo "eur:price_a,pln:price_b"',

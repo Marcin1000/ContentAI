@@ -153,6 +153,10 @@
     var pauzaBtn = $('.ramka-pauza', ramka);
     var kroki = $$('.ramka-kroki button', ramka);
     var CZAS = [1500, 1400, 2200, 1700, 3400];   // ile trwa każdy krok (ms)
+    // Runda P (agencja-strona-projekt): pierwsze wejście od pełnego przykładu z Faktami. Osoba z filmu o Faktach
+    // widziała je dopiero po 9 s cyklu, a przez pierwsze 3,5 s pustą ramkę. Potem zwykła pętla od Tematu.
+    var PIERWSZY = 6000, pierwszyPokaz = true;
+    var czasKroku = function (n) { return n === 5 && pierwszyPokaz ? PIERWSZY : CZAS[n - 1]; };
     var krok = 0, zegar = null, wPauzie = false, widoczna = true, wstrzymana = false;
     // Telefon: makieta statyczna w stanie końcowym (decyzja agencja-strona-projekt D3) - bez pętli, jak przy ograniczonym ruchu.
     var mqTelefon = window.matchMedia ? matchMedia('(max-width: 720px)') : null;
@@ -168,7 +172,7 @@
       kroki.forEach(function (b, i) {
         if (i === n - 1) {
           b.setAttribute('aria-current', 'step');
-          b.style.setProperty('--trwa', CZAS[i] + 'ms');
+          b.style.setProperty('--trwa', czasKroku(i + 1) + 'ms');
         } else b.removeAttribute('aria-current');
       });
     };
@@ -176,7 +180,7 @@
     var planuj = function () {
       if (zegar || wPauzie || wstrzymana || !widoczna || document.hidden || bezPetli()) return;
       ramka.classList.remove('zatrzymana');
-      zegar = setTimeout(nastepny, krok === 0 ? 400 : CZAS[krok - 1]);
+      zegar = setTimeout(nastepny, krok === 0 ? 400 : czasKroku(krok));
     };
     var nastepny = function () {
       zegar = null;
@@ -187,6 +191,7 @@
         planuj();
       } else {
         ramka.classList.add('zanik');
+        pierwszyPokaz = false;
         zegar = setTimeout(function () { zegar = null; krok = 0; ustawKlasy(0, true); void ramka.offsetWidth; ustawKlasy(0); planuj(); }, 420);
       }
     };
@@ -201,7 +206,8 @@
       krok = 5; ustawKlasy(5, true);
       pauzaBtn.hidden = true;
     } else {
-      if (bezPetli()) { krok = 5; ustawKlasy(5, true); } else ustawKlasy(0, true);
+      // Telefon: stan końcowy bez pętli. Komputer: ten sam stan na start (pierwszy pokaz), potem pętla.
+      krok = 5; ustawKlasy(5, true);
       if (mqTelefon && mqTelefon.addEventListener) mqTelefon.addEventListener('change', function () {
         zatrzymaj();
         if (bezPetli()) { krok = 5; ustawKlasy(5, true); }

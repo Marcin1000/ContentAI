@@ -1866,9 +1866,11 @@ span > .ikona:first-child, div.ctx-item > .ikona:first-child { margin-right: var
 .obszary .grupa-wrap > button[aria-haspopup]::after { display: none; }
 #grupa-widocznosc-menu { left: 0; right: auto; min-width: 300px; }
 .topbar-right { margin-left: auto; display: flex; align-items: center; gap: var(--s-8); }
+/* Runda P (agencja-ux D8): bez tabular-nums. W tym kroju dwukropek dostawal szerokosc cyfry i odznaka
+   wygladala jak "Darmowe : 3 z 3" (ten sam blad co koszt w Historii, .h-koszt). */
 #pakiet-badge { display: none; align-items: center; gap: var(--s-6); height: 30px; padding: 0 var(--s-10, 10px); border: 1px solid var(--c-linia-2);
   border-radius: var(--r-pelny); background: transparent; color: var(--c-tekst-2); font-family: var(--f-ui); font-size: var(--t-xs);
-  font-weight: var(--g-mocny); line-height: 1; cursor: pointer; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  font-weight: var(--g-mocny); line-height: 1; cursor: pointer; white-space: nowrap; }
 #pakiet-badge:hover { border-color: var(--c-ramka); color: var(--c-tekst); }
 .konto-btn { width: 32px; height: 32px; border-radius: 50%; padding: 0; }
 .konto-awatar { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--c-wcisk); color: var(--c-tekst);
@@ -1881,6 +1883,8 @@ span > .ikona:first-child, div.ctx-item > .ikona:first-child { margin-right: var
 .menu-konto .konto-awatar { width: 32px; height: 32px; font-size: 12px; }
 .menu-konto b { display: block; font-size: var(--t-sm); font-weight: var(--g-mocny); color: var(--c-tekst); }
 .menu-konto > div > span { display: block; font-size: var(--t-xs); color: var(--c-tekst-3); }
+/* e-mail konta z rejestracji (Runda P, D6) bywa dlugi i bez spacji: lamie sie w menu zamiast wychodzic poza nie */
+.menu-konto > div { min-width: 0; overflow-wrap: anywhere; }
 .settings-menu hr, .grupa-menu hr { border: 0; border-top: 1px solid var(--c-linia); margin: var(--s-4) 0; }
 .settings-item-tytul { font-size: var(--t-sm); font-weight: var(--g-sredni); color: var(--c-tekst); line-height: 1.3; }
 .settings-item-opis { font-size: var(--t-xs); color: var(--c-tekst-3); line-height: 1.35; margin-top: 1px; }
@@ -5654,7 +5658,7 @@ var I18N = {
     'spin-sub-model':'model przetwarza temat i bazę wiedzy','spin-sub-hybrid2':'optymalizuję jednocześnie pod SEO, AIO i czytelnika',
     'link-suggest-prefix':'Rozważ link do','link-suggest-at':'przy słowach:',
     'gap-still-missing':'Nadal brakujące tematy','gap-szukam':'Szukam źródeł i piszę sekcje…','gap-bez-zrodel':'Nowe sekcje potrzebują źródeł. Baza wiedzy jest pusta, a wyszukiwanie w sieci wyłączone, więc tych tematów nie da się opisać bez zmyślania.','gap-wlacz-siec':'Włącz wyszukiwanie w sieci i dopisz','gap-konkurencja':'konkurencja','gap-konkurencja-title':'Temat o marce lub produkcie konkurencji. Domyślnie odznaczony: w tekście marki to Twoja decyzja.','gap-po-poprawie':'Wynik z dopisanych sekcji. Odśwież, jeśli model ma ocenić cały tekst od nowa.','gap-inny-artykul':'Dopisane sekcje dotyczyły poprzedniego artykułu, więc nie zostały wstawione.','gap-pusto':'Model nie zwrócił nowych sekcji. Spróbuj ponownie.','gap-dopisane':'Dopisano sekcje: {n}. Wynik w zakładce Luki.','gap-serp-blad':'Analiza SERP nie powiodła się przy generowaniu, więc nie ma z czym porównać tekstu. Wygeneruj artykuł ponownie z włączoną analizą SERP.','serp-blad-toast':'Analiza SERP nie powiodła się. Artykuł powstaje bez niej.','gap-pkt':'pkt','gap-bez-zrodel-baza':'Tematy bez pokrycia w zaznaczonych dokumentach: {n}. Nie dodano dla nich pustych sekcji. Włącz wyszukiwanie w sieci albo dodaj materiał do bazy wiedzy.','gap-bez-zrodel-siec':'Tematy bez źródła: {n}. Nie dodano dla nich pustych sekcji, zostają na liście brakujących. Dodaj materiał do bazy wiedzy i spróbuj ponownie.',
-    'editor-done':'Gotowe','edit-etykieta':'Edycja','edit-cofnij':'Cofnij','edit-pasek':'Edycja tekstu','edit-podpowiedz':'Tryb edycji: dotknij tekstu, aby go zmienić. Gotowe zapisuje zmiany.','kb-words-suffix':'słów','kb-tag-text':'Tekst','kb-tag-file':'Plik','hist-words-suffix':'słów',
+    'editor-done':'Gotowe','edit-etykieta':'Edycja','edit-cofnij':'Cofnij','edit-pasek':'Edycja tekstu','edit-podpowiedz':'Tryb edycji: dotknij tekstu, aby go zmienić. Gotowe zapisuje zmiany.','kb-tag-text':'Tekst','kb-tag-file':'Plik',
     'url-fetch-done':'Gotowe - strona dodana do bazy!',
     'url-demo-connect':'Łączę ze stroną…','url-demo-fetch':'Pobieram treść…','url-demo-process':'Przetwarzam…','upload-processing':'Przetwarzam: {name}','url-demo-done':'Gotowe!',
     'img-style-minimal':'Minimalistyczny',
@@ -5751,7 +5755,7 @@ var I18N = {
     'err-klucz':'Dostawca AI odrzucił klucz API zapisany w pliku aplikacji. Wpisz w pliku aktualny klucz i odśwież stronę.',
     'btn-sprobuj-ponownie':'Spróbuj ponownie',
     'err-brak-klucza':'Ta funkcja potrzebuje klucza {DOSTAWCA}. Dodaj go w Kluczach API, a potem spróbuj ponownie.','err-email-niepotwierdzony':'Najpierw potwierdź adres e-mail: link jest w wiadomości od Content AI.',
-    'err-zgoda-wymagana':'Zmieniliśmy regulamin. Przeczytaj i zaakceptuj nową wersję, żeby dalej korzystać z aplikacji.','err-limit-wydatkow-wlasny':'Zapytanie zatrzymał limit wydatków, który ustawiłeś w konsoli {DOSTAWCA}. Podnieś go albo poczekaj do nowego miesiąca.',
+    'err-zgoda-wymagana':'Zmieniliśmy regulamin. Przeczytaj i zaakceptuj nową wersję, żeby dalej korzystać z aplikacji.','err-limit-wydatkow-wlasny':'Zapytanie zatrzymał limit wydatków ustawiony w konsoli {DOSTAWCA}. Podnieś go albo poczekaj do nowego miesiąca.',
     'err-limit-wydatkow-konta':'Twoje konto {DOSTAWCA} doszło do miesięcznego limitu wydatków dla swojego poziomu. Ponawianie nic nie da do początku miesiąca. Wyższy poziom zamówisz w konsoli dostawcy, w części Limits.',
     'err-weryfikacja-openai':'OpenAI wymaga weryfikacji Twojej organizacji, zanim udostępni generowanie grafik. Zrób to w ustawieniach organizacji na platform.openai.com i spróbuj ponownie.',
     'err-klucz-wlasny':'{DOSTAWCA} odrzucił Twój klucz API: jest błędny, usunięty albo wygasł. Utwórz nowy klucz w konsoli dostawcy i wklej go w Kluczach API.',
@@ -6445,7 +6449,7 @@ var I18N = {
     'ozn-grafika-blad':'Could not add the caption to the image. Please try again.',
     'img-step1-noref':'Step 1 of 2: creating image prompt',
     'img-prompt-used':'Used prompt',
-    'editor-done':'Done','edit-etykieta':'Editing','edit-cofnij':'Undo','edit-pasek':'Text editing','edit-podpowiedz':'Editing mode: tap the text to change it. Done saves your changes.','kb-words-suffix':'words','kb-tag-text':'Text','kb-tag-file':'File','hist-words-suffix':'words',
+    'editor-done':'Done','edit-etykieta':'Editing','edit-cofnij':'Undo','edit-pasek':'Text editing','edit-podpowiedz':'Editing mode: tap the text to change it. Done saves your changes.','kb-tag-text':'Text','kb-tag-file':'File',
     'url-fetch-done':'Done - page added to knowledge base!',
     'url-demo-connect':'Connecting to page…','url-demo-fetch':'Fetching content…','url-demo-process':'Processing…','upload-processing':'Processing: {name}','url-demo-done':'Done!',
     'img-style-minimal':'Minimalist',
@@ -8292,7 +8296,7 @@ function renderDocs() {
       <div class="kb-icon">${ikonaZEmoji(d.icon)}</div>
       <div class="kb-body">
         <div class="kb-name">${escapeHtml(d.name)}${typeLabel}</div>
-        <div class="kb-meta">${d.words.toLocaleString()} ${_t('kb-words-suffix')}</div>
+        <div class="kb-meta">${d.words.toLocaleString()} ${slowaLiczba(d.words)}</div>
       </div>
       <button class="kb-del" title="${_t('title-remove')}" data-i18n-title="title-remove" onclick="delDoc(event,${i})" aria-label="${_t('okno-zamknij')}">${ikona('x', 'ikona-s')}</button>`;
     list.appendChild(el);
@@ -9580,7 +9584,7 @@ function renderHistory() {
   inner.innerHTML = filtered.map((h, i) => `
     <div class="h-item${h.id === previewHistory._podglad ? ' active' : ''}" data-id="${h.id}" onclick="previewHistory('${h.id}')">
       <div class="h-item-topic">${escapeHtml(h.topic)}</div>
-      <div class="h-item-meta">${escapeHtml(nazwaTypu(h.type))} · ~${h.words} ${_t('hist-words-suffix')} · ${escapeHtml(czasWpisu(h))}${h.koszt > 0 ? ` · <span class="h-koszt" title="${escapeHtml(_t('hist-koszt-wpisu'))}">${escapeHtml(kwotaUsd(h.koszt))}</span>` : ''}</div>
+      <div class="h-item-meta">${escapeHtml(nazwaTypu(h.type))} · ~${h.words} ${slowaLiczba(h.words)} · ${escapeHtml(czasWpisu(h))}${h.koszt > 0 ? ` · <span class="h-koszt" title="${escapeHtml(_t('hist-koszt-wpisu'))}">${escapeHtml(kwotaUsd(h.koszt))}</span>` : ''}</div>
       <button type="button" class="h-usun" onclick="event.stopPropagation();usunWpisHistorii('${h.id}')" title="${_t('hist-usun')}" aria-label="${_t('hist-usun')}">${ikona('trash-2', 'ikona-s')}</button>
     </div>`).join('');
   // Nie auto-ładuj artykułu przy zmianie filtra - użytkownik klika sam
@@ -10671,7 +10675,7 @@ function pokazWynikFaktow(uwagi, stan) {
         + ikonaZEmoji(IKONY_UWAG[rodzaj] || '⚠') + ' ' + escapeHtml(_t('fakty-rodzaj-' + rodzaj) || rodzaj) + '</div>'
         + (adresWCytacie
           ? '<div class="fakty-adres" style="margin:3px 0">' + linkUwagi(cytat.trim()) + '</div>'
-          : '<div style="margin:3px 0;font-style:italic;color:var(--text2);overflow-wrap:anywhere">"' + escapeHtml(cytat) + '"</div>')
+          : '<div style="margin:3px 0;font-style:italic;color:var(--text2);overflow-wrap:anywhere">' + (currentLang === 'en' ? '“' : '„') + escapeHtml(cytat) + '”</div>')
         + '<div>' + escapeHtml(bezSrednikowTekst(String(u.powod || '')) || _t('fakty-powod-' + rodzaj) || '') + '</div>'
         + (linkStrony ? '<div class="fakty-adres" style="margin-top:4px">' + linkStrony + '</div>' : '')
         + '</div>';
@@ -10785,6 +10789,9 @@ function formaLiczebnika(n) {
   if (a === 1) return 0;
   return (j >= 2 && j <= 4 && (s < 12 || s > 14)) ? 1 : 2;
 }
+// Runda P: liczba slow przy dokumencie w Bazie i przy wpisie Historii w tej samej odmianie co pasek
+// statystyk ("23 słowa", "1022 słowa", "245 słów"). Wczesniej zawsze "słów" (widac bylo w filmie: "23 słów").
+function slowaLiczba(n) { return _t(FORMY_STATYSTYK['stat-words'][formaLiczebnika(n)]); }
 function ustawLiczbeStatystyki(id, n) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -11698,7 +11705,7 @@ function eksportujHistorie() {
     + 'header,.meta{font-family:system-ui,sans-serif}.meta{font-size:14px;opacity:.7}.wpis{border-top:1px solid;margin-top:3em;padding-top:1em}</style></head><body>'
     + '<header><h1>' + escapeHtml(tytul) + '</h1><p class="meta">' + escapeHtml(_t('hist-eksport-opis').replace('{n}', history.length)) + '</p></header>';
   history.forEach(function (h) {
-    dok += '<article class="wpis"><p class="meta">' + escapeHtml([czasWpisu(h), nazwaTypu(h.type), '~' + (h.words || 0) + ' ' + _t('hist-words-suffix')].filter(Boolean).join(' · ')) + '</p>'
+    dok += '<article class="wpis"><p class="meta">' + escapeHtml([czasWpisu(h), nazwaTypu(h.type), '~' + (h.words || 0) + ' ' + slowaLiczba(h.words || 0)].filter(Boolean).join(' · ')) + '</p>'
       + (h.html ? oczyscHtmlModelu(h.html) : '<h2>' + escapeHtml(h.topic || '') + '</h2>') + '</article>';
   });
   // Znacznik skryptu skladany z kawalkow: inaczej przegladarka (i kontrola budowania) wzielaby go za koniec skryptu aplikacji.
@@ -14078,13 +14085,20 @@ function odswiezPodsumowanie() {
   el.textContent = czesci.filter(Boolean).join(' · ');
 }
 // Menu konta: w wariancie proxy login z serwera (/auth/me), w pozostalych "To urzadzenie".
-function odswiezKonto(login) {
+// Runda P (agencja-ux D6): konto z rejestracji ma techniczny login (przedrostek k- zarezerwowany dla samoobslugi),
+// wiec nazwa w menu i inicjaly awatara ida z e-maila ("ola.nowak@" -> ON), a nie z "k-..." (KD, KX).
+function odswiezKonto(login, email) {
   var nazwa = document.getElementById('konto-nazwa'), opis = document.getElementById('konto-opis');
-  var inicjaly = login ? String(login).replace(/[^A-Za-z0-9\u00C0-\u017F]/g, '').slice(0, 2).toUpperCase() : '';
+  var zEmaila = Boolean(email) && /^k-/.test(String(login || ''));
+  var pokaz = zEmaila ? String(email) : login;
+  var podstawa = zEmaila ? String(email).split('@')[0] : String(login || '');
+  var czesci = zEmaila ? podstawa.split(/[._+-]+/).filter(function (c) { return /[A-Za-z0-9\u00C0-\u017F]/.test(c); }) : [];
+  var inicjaly = !pokaz ? '' : (czesci.length > 1 ? czesci[0].charAt(0) + czesci[1].charAt(0)
+    : podstawa.replace(/[^A-Za-z0-9\u00C0-\u017F]/g, '').slice(0, 2)).toUpperCase();
   ['konto-awatar', 'konto-awatar-menu'].forEach(function (id) {
     var a = document.getElementById(id); if (a) a.innerHTML = inicjaly ? escapeHtml(inicjaly) : ikona('user');
   });
-  if (login && nazwa) { nazwa.removeAttribute('data-i18n'); nazwa.textContent = login; }
+  if (pokaz && nazwa) { nazwa.removeAttribute('data-i18n'); nazwa.textContent = pokaz; }
   if (login && opis) { opis.setAttribute('data-i18n', 'konto-zalogowany'); opis.textContent = _t('konto-zalogowany'); }
 }
 // Podpowiedz z podpisem dla przyciskow paska, ktore na wezszym ekranie pokazuja sama ikone.
@@ -14103,7 +14117,7 @@ function rysujStartEkran() {
   lista.innerHTML = history.slice(0, 3).map(function (h, i) {
     return '<button type="button" class="start-poz" onclick="otworzWGeneratorze(\'' + h.id + '\')">' + ikona('file-text')
       + '<span class="start-poz-temat">' + escapeHtml(h.topic || '') + '</span>'
-      + '<span class="start-poz-meta">' + escapeHtml(nazwaTypu(h.type)) + ' · ~' + (h.words || 0) + ' ' + _t('hist-words-suffix') + ' · ' + escapeHtml(czasWpisu(h)) + '</span></button>';
+      + '<span class="start-poz-meta">' + escapeHtml(nazwaTypu(h.type)) + ' · ~' + (h.words || 0) + ' ' + slowaLiczba(h.words || 0) + ' · ' + escapeHtml(czasWpisu(h)) + '</span></button>';
   }).join('');
 }
 function odswiezUklad() { odswiezLiczniki(); odswiezPodsumowanie(); odswiezInspektor(); podpiszPasek(); rysujStartEkran(); }
@@ -14610,7 +14624,7 @@ function syncMobileKbList() {
       : d.icon === '✏️'
       ? '<span class="kb-tag-text">' + _t('kb-tag-text') + '</span>'
       : '<span class="kb-tag-file">' + _t('kb-tag-file') + '</span>';
-    return `<div class="kb-item${d.selected?' selected':''}" onclick="toggleSelect(${i});syncMobileKbList()"><input type="checkbox" class="kb-check" ${d.selected?'checked':''} onclick="event.stopPropagation();toggleSelect(${i});syncMobileKbList()" style="cursor:pointer;flex-shrink:0;accent-color:var(--red)" /><div class="kb-icon">${ikonaZEmoji(d.icon)}</div><div class="kb-body"><div class="kb-name">${escapeHtml(d.name)}${typeLabel}</div><div class="kb-meta">${d.words.toLocaleString()} ${_t('kb-words-suffix')}</div></div><button class="kb-del" onclick="delDoc(event,${i})" aria-label="${_t('okno-zamknij')}">${ikona('x', 'ikona-s')}</button></div>`;
+    return `<div class="kb-item${d.selected?' selected':''}" onclick="toggleSelect(${i});syncMobileKbList()"><input type="checkbox" class="kb-check" ${d.selected?'checked':''} onclick="event.stopPropagation();toggleSelect(${i});syncMobileKbList()" style="cursor:pointer;flex-shrink:0;accent-color:var(--red)" /><div class="kb-icon">${ikonaZEmoji(d.icon)}</div><div class="kb-body"><div class="kb-name">${escapeHtml(d.name)}${typeLabel}</div><div class="kb-meta">${d.words.toLocaleString()} ${slowaLiczba(d.words)}</div></div><button class="kb-del" onclick="delDoc(event,${i})" aria-label="${_t('okno-zamknij')}">${ikona('x', 'ikona-s')}</button></div>`;
   }).join('');
 
   // sync stats

@@ -103,7 +103,7 @@ const TRESCI = {
         akapity: (d) => [
           `ktoś, prawdopodobnie Ty, założył konto w Content AI na adres ${d.email}. Żeby je aktywować, potwierdź adres:`,
           { przycisk: 'Potwierdź adres', odnosnik: d.odnosnik },
-          `Link jest ważny ${waznosc(d, 'pl')} i działa raz. Jeśli to nie Ty zakładałeś konto, zignoruj tę wiadomość: bez potwierdzenia konto nie zostanie aktywowane.`,
+          `Link jest ważny ${waznosc(d, 'pl')} i działa raz. Jeśli konto zostało założone bez Twojej wiedzy, zignoruj tę wiadomość: bez potwierdzenia nie zostanie aktywowane.`,
         ],
       },
       reset: {
@@ -113,7 +113,7 @@ const TRESCI = {
           `otrzymaliśmy prośbę o ustawienie nowego hasła do konta ${d.email}. Nowe hasło ustawisz tutaj:`,
           { przycisk: 'Ustaw nowe hasło', odnosnik: d.odnosnik },
           `Link jest ważny ${waznosc(d, 'pl')} i działa raz. Po zmianie hasła wylogujemy Cię na pozostałych urządzeniach.`,
-          'Jeśli to nie Ty prosiłeś o zmianę, zignoruj tę wiadomość: dotychczasowe hasło działa dalej. Nikt z Content AI nigdy nie poprosi Cię o hasło ani o klucz API.',
+          'Jeśli prośba nie pochodzi od Ciebie, zignoruj tę wiadomość: dotychczasowe hasło działa dalej. Nikt z Content AI nigdy nie poprosi Cię o hasło ani o klucz API.',
         ],
       },
       'haslo-zmienione': {
@@ -152,7 +152,7 @@ const TRESCI = {
         powod: 'usuniete',
         akapity: (d, k) => [
           `konto ${d.email} w Content AI zostało usunięte razem z danymi zapisanymi na serwerze (baza wiedzy, marka). Jeśli konto miało płatny pakiet, subskrypcja została anulowana i kolejne opłaty nie zostaną pobrane.`,
-          `Jeśli to nie Ty usuwałeś konto, ${k.kontakt ? `napisz do nas od razu na ${k.kontakt}` : 'odpisz od razu na tę wiadomość'}.`,
+          `Jeśli konto zostało usunięte bez Twojej wiedzy, ${k.kontakt ? `napisz do nas od razu na ${k.kontakt}` : 'odpisz od razu na tę wiadomość'}.`,
         ],
       },
       'prog-przychodu': {
@@ -174,8 +174,10 @@ const TRESCI = {
         akapity: (d, k) => [
           `Twoje konto w Content AI jest aktywne.${d.pakiet ? ` Masz pakiet ${d.pakiet}${d.artykulow ? `: ${d.artykulow} ${odmiana(Number(d.artykulow), ['artykuł', 'artykuły', 'artykułów'])} na start` : ''}.` : ''}`,
           'Do pierwszego artykułu są trzy kroki:',
-          `1. Podłącz klucz API Anthropic. Na nim powstają teksty, a koszt modelu${d.kosztArtykulu ? `, orientacyjnie ${d.kosztArtykulu} za artykuł,` : ''} rozlicza Twoje konto u Anthropic.${bezpiecznyOdnosnik(d.odnosnikKlucza) ? ` Nie masz klucza? Instrukcja krok po kroku: ${d.odnosnikKlucza}` : ''}`,
-          '2. Dodaj do bazy wiedzy dokumenty firmy: ofertę, cennik, opis usług. Model pisze z nich, a nie z pamięci.',
+          `1. Podłącz klucz API Anthropic. Na nim powstają teksty, a koszt modelu${d.kosztArtykulu ? `, orientacyjnie ${d.kosztArtykulu} za artykuł,` : ''} rozlicza Twoje konto u Anthropic.`
+            + ' To osobne konto w konsoli Anthropic: subskrypcja czatu Claude nie daje klucza API. Konto, doładowanie i klucz to około 10 minut, najwygodniej przy komputerze.'
+            + (bezpiecznyOdnosnik(d.odnosnikKlucza) ? ` Instrukcja krok po kroku: ${d.odnosnikKlucza}` : ''),
+          '2. Wgraj do bazy wiedzy 1-3 dokumenty firmy: ofertę, cennik, opis usług. Wtedy artykuł powstanie z nich, a kontrola faktów porówna go z nimi. Bez dokumentów fakty przyjdą ze stron w sieci.',
           '3. Wpisz temat i kliknij „Wygeneruj treść”. Potem sprawdź oceny i kontrolę faktów.',
           { przycisk: 'Otwórz Content AI', odnosnik: k.app },
           'Pytania? Odpisz na tę wiadomość.',
@@ -321,8 +323,10 @@ const TRESCI = {
         akapity: (d, k) => [
           `your Content AI account is active.${d.pakiet ? ` You are on the ${d.pakiet} plan${d.artykulow ? `: ${d.artykulow} ${Number(d.artykulow) === 1 ? 'article' : 'articles'} to start` : ''}.` : ''}`,
           'Your first article takes three steps:',
-          `1. Connect your Anthropic API key. It powers your drafts, and model usage${d.kosztArtykulu ? `, roughly ${d.kosztArtykulu} per article,` : ''} is billed to your Anthropic account.${bezpiecznyOdnosnik(d.odnosnikKlucza) ? ` No key yet? Step-by-step guide: ${d.odnosnikKlucza}` : ''}`,
-          '2. Add your company documents to the knowledge base: your offer, pricing, service descriptions. The model writes from them, not from memory.',
+          `1. Connect your Anthropic API key. It powers your drafts, and model usage${d.kosztArtykulu ? `, roughly ${d.kosztArtykulu} per article,` : ''} is billed to your Anthropic account.`
+            + ' It is a separate account in the Anthropic console: a Claude chat subscription does not include an API key. The account, credit and key take about 10 minutes, easiest on a computer.'
+            + (bezpiecznyOdnosnik(d.odnosnikKlucza) ? ` Step-by-step guide: ${d.odnosnikKlucza}` : ''),
+          '2. Upload 1-3 company documents to the knowledge base: your offer, pricing, service descriptions. The article is then written from them, and the fact check compares it with them. Without documents, the facts come from web pages.',
           '3. Enter a topic and click “Generate content”. Then check the scores and the fact check.',
           { przycisk: 'Open Content AI', odnosnik: k.app },
           'Questions? Just reply to this message.',

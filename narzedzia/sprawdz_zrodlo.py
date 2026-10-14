@@ -1893,6 +1893,30 @@ KONTROLE += [
      "'start-2-tytul':'Własne klucze API (opcjonalnie)',", "'start-2-tytul':'Klucze API - tylko jeśli chcesz',", ("proxy",)),
     ("R9-C/kreator-teksty-en", "kreator: tytul i etykiety kluczy bez ' - ' w roli myslnika (EN)",
      "'start-2-tytul':'Your own API keys (optional)',", "'start-2-tytul':'API keys - only if you want to',", ("proxy",)),
+
+    # Runda P (promocja): poprawki z raportow agencja-ux i agencja-copywriter.
+    ("RP/fakty-cudzyslow", "panel Fakty: cytat w cudzyslowie jezyka interfejsu (PL dolny i gorny, EN angielski), nie w prostym \"...\"",
+     "overflow-wrap:anywhere\">' + (currentLang === 'en' ? '“' : '„') + escapeHtml(cytat) + '”</div>'",
+     "overflow-wrap:anywhere\">\"' + escapeHtml(cytat) + '\"</div>'", None),
+    ("RP/klucz-czas-pl", "karta 'Podlacz klucz': okolo 10 minut jak kreator i strona klucza, nie 5 (PL)",
+     "'e1-opis':'To zajmuje około 10 minut, pokażemy jak.", "'e1-opis':'To zajmuje około 5 minut", ("proxy",)),
+    ("RP/klucz-czas-en", "karta 'Podlacz klucz': okolo 10 minut jak kreator i strona klucza, nie 5 (EN)",
+     "'e1-opis':'It takes about 10 minutes, we will show you how.", "'e1-opis':'It takes about 5 minutes", ("proxy",)),
+    ("RP/limit-forma", "limit wydatkow u dostawcy: forma bezosobowa wobec czytelnika (bez 'ustawiles')",
+     "'err-limit-wydatkow-wlasny':'Zapytanie zatrzymał limit wydatków ustawiony w konsoli {DOSTAWCA}.", "limit wydatków, który ustawiłeś", None),
+    ("RP/kreator-instrukcja", "kreator klucza: 'Nie masz klucza? Okolo 10 minut' nad polem klucza (wczesniej na dole, pod akapitem o bezpieczenstwie)",
+     "re:class=\"rozwijka byok-przewodnik\"[\\s\\S]{0,1500}?window\\.htmlPolaKlucza\\('start', 'anthropic'\\)",
+     "re:window\\.htmlZapamietaj\\('start'\\)[\\s\\S]{0,800}?class=\"rozwijka byok-przewodnik\"", ("proxy",)),    ("RP/konto-z-emaila", "menu konta z rejestracji: nazwa i inicjaly z e-maila, nie z technicznego loginu k-... (KD, KX)",
+     "if (d && d.login) odswiezKonto(d.login, d.email);", "if (d && d.login) odswiezKonto(d.login); }", ("proxy",)),
+    ("RP/konto-inicjaly", "inicjaly z e-maila: pierwsza litera dwoch czlonow nazwy (ola.nowak@ -> ON)",
+     "var zEmaila = Boolean(email) && /^k-/.test(String(login || ''));", None, None),
+    ("RP/slowa-odmiana", "liczba slow w Bazie i Historii z odmiana ('23 słowa', nie '23 słów'), formy paska statystyk",
+     "function slowaLiczba(n) { return _t(FORMY_STATYSTYK['stat-words'][formaLiczebnika(n)]); }", "_t('kb-words-suffix')", None),
+    ("RP/slowa-historia", "wpis Historii: '~1022 słowa' (odmiana), nie stale 'słów'",
+     "~${h.words} ${slowaLiczba(h.words)} · ${escapeHtml(czasWpisu(h))}", "_t('hist-words-suffix')", None),
+    ("RP/odznaka-dwukropek", "odznaka pakietu bez tabular-nums: 'Darmowe: 3 z 3' bez odstepu przed dwukropkiem",
+     "font-weight: var(--g-mocny); line-height: 1; cursor: pointer; white-space: nowrap; }",
+     "font-weight: var(--g-mocny); line-height: 1; cursor: pointer; white-space: nowrap; font-variant-numeric: tabular-nums; }", None),
 ]
 
 # Tresc plikow pwa/lib, ktore aplikacja wczytuje (nie przechodza przez budowanie wariantow): (kod, opis, plik, jest, niema).
@@ -1927,6 +1951,19 @@ KONTROLE_PLIKOW = [
      "serwer/konta.js", "regulaminCzas: teraz, ostatnieLogowanie: teraz });", None),
     ("R9-C/logowanie-reset", "nowe haslo z linku zapisuje ostatnie logowanie (loguje od razu)",
      "serwer/konta.js", "emailPotwierdzony: k.emailPotwierdzony || teraz, ostatnieLogowanie: teraz });", None),
+    # Runda P (promocja): agencja-ux D1, copywriter (formy bezosobowe), agencja-strona-projekt (ramka w hero).
+    ("RP/powitanie-wysylka", "e-mail powitalny po pierwszym potwierdzeniu adresu (konto na wlasnym kluczu; wczesniej szablon byl, wysylki nie)",
+     "serwer/konta.js", "if (wynik === 'potwierdzony' && rec.rodzaj === 'potwierdzenie') powitaj(kontekst, magazyn.konto(rec.login));", None),
+    ("RP/powitanie-tresc", "powitanie: klucz to osobne konto (nie subskrypcja czatu Claude), okolo 10 minut przy komputerze, 1-3 dokumenty",
+     "serwer/poczta-szablony.js", "subskrypcja czatu Claude nie daje klucza API. Konto, doładowanie i klucz to około 10 minut, najwygodniej przy komputerze.",
+     "'2. Dodaj do bazy wiedzy dokumenty firmy: ofertę, cennik, opis usług. Model pisze z nich, a nie z pamięci.'"),
+    ("RP/poczta-formy", "e-maile: formy bezosobowe wobec czytelnika ('bez Twojej wiedzy', nie 'zakladales')",
+     "serwer/poczta-szablony.js", "Jeśli konto zostało założone bez Twojej wiedzy, zignoruj tę wiadomość", "Jeśli to nie Ty zakładałeś konto"),
+    ("RP/platnosci-formy", "ekrany platnosci: formy bezosobowe wobec czytelnika ('Od zakupu pakietu minelo', nie 'Kupiles')",
+     "serwer/ekrany-platnosci.js", "sekcjaOdstapOpis: 'Od zakupu pakietu minęło mniej niż 14 dni?", "Kupiłeś pakiet"),
+    ("RP/ramka-fakty", "strona: ramka w hero zaczyna od pelnego przykladu z Faktami (6 s), potem petla od Tematu",
+     "showcase/zasoby/strona.js", "var czasKroku = function (n) { return n === 5 && pierwszyPokaz ? PIERWSZY : CZAS[n - 1]; };",
+     "if (bezPetli()) { krok = 5; ustawKlasy(5, true); } else ustawKlasy(0, true);"),
 ]
 
 
