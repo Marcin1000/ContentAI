@@ -82,8 +82,8 @@ In the video (sample article about choosing a CRM, real app interface):
 Content AI writes articles from your own documents (PDF, DOCX, XLSX, PPTX, notes and web pages) in English, Polish, German and Czech.
 
 Free plan: 3 articles. Drafts run on your own Anthropic API key, so you pay Anthropic directly, roughly $0.20-0.40 per article.
-Website: https://content-ai.net/en/
-How to get an API key: https://content-ai.net/en/api-key/
+Website: https://content-ai.net/en/?z=yt
+How to get an API key: https://content-ai.net/en/api-key/?z=yt
 
 No sound. Captions are part of the picture.
 
@@ -111,8 +111,8 @@ Na filmie (przykładowy artykuł o wyborze CRM, prawdziwy interfejs aplikacji):
 Content AI pisze artykuły z Twoich dokumentów (PDF, DOCX, XLSX, PPTX, notatki i strony WWW) po polsku, angielsku, niemiecku i czesku.
 
 Pakiet Darmowy: 3 artykuły. Teksty powstają na Twoim kluczu API Anthropic, więc za model płacisz dostawcy bezpośrednio, orientacyjnie 0,20-0,40 USD za artykuł.
-Strona: https://content-ai.net
-Jak zdobyć klucz API: https://content-ai.net/klucz-api/
+Strona: https://content-ai.net/?z=yt
+Jak zdobyć klucz API: https://content-ai.net/klucz-api/?z=yt
 
 Film bez dźwięku, napisy są w obrazie.
 
@@ -157,8 +157,8 @@ W filmie:
 • pierwszy artykuł i kontrola faktów
 
 Koszt: orientacyjnie 0,20-0,40 USD za artykuł około 800 słów, płacisz dostawcy bezpośrednio. 10 USD wystarcza na około 25-50 artykułów.
-Instrukcja tekstowa: https://content-ai.net/klucz-api/
-Strona: https://content-ai.net
+Instrukcja tekstowa: https://content-ai.net/klucz-api/?z=yt
+Strona: https://content-ai.net/?z=yt
 ```
 
 Rozdziały (gdy film ma co najmniej 3 części po 10 s): dopisz w opisie znaczniki czasu, zaczynając od `0:00`.
@@ -167,7 +167,8 @@ Rozdziały (gdy film ma co najmniej 3 części po 10 s): dopisz w opisie znaczni
 
 ## 3. Katalogi (pt 16.10, limit 2 h)
 
-AlternativeTo, SaaSHub, Toolify (wpis darmowy). Przed wysyłką sprawdź, czy katalog działa. Logo: znak z
+AlternativeTo, SaaSHub, Toolify (wpis darmowy). Przed wysyłką sprawdź, czy katalog działa. Adres strony ze
+znacznikiem katalogu: `https://content-ai.net/en/?z=alternativeto`, `?z=saashub`, `?z=toolify`. Logo: znak z
 `dokumenty/marka/`, zrzuty: `grafiki/ph-1-przeglad.png`, `ph-2-fakty.png`, `ph-3-oceny.png`.
 
 | Długość | EN | PL |
@@ -248,7 +249,7 @@ Co dopisalibyście do tej listy?
 Gdy zasady grupy pozwalają na link, dopisz przed pytaniem:
 
 ```text
-Listę spisałem przy budowie Content AI, w którym każdy z tych błędów ma osobne zabezpieczenie: https://content-ai.net
+Listę spisałem przy budowie Content AI, w którym każdy z tych błędów ma osobne zabezpieczenie: https://content-ai.net/?z=grupy
 ```
 
 ---

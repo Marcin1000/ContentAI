@@ -80,6 +80,24 @@ Błędy w aplikacji: zrzut ekranu, godzina, przeglądarka i co było kliknięte.
 Strona nie ma analityki i tak zostaje (obiecuje to w stopce). Efekt mierzysz liczbą kont, aktywacją i zakupami,
 raz w tygodniu w arkuszu: wzór, cele i polecenia są w `plan.md`, punkt 6.
 
+**Skąd przychodzą konta.** Każdy link do strony w materiałach ma znacznik `?z=` miejsca publikacji. Strona przenosi
+go do rejestracji, a udana rejestracja dopisuje 1 do zbiorczego licznika: miesiąc, znacznik, liczba (bez powiązania
+z kontem, bez ciasteczek). Wynik: `sudo serwer/cli.sh zrodla` (ostatnie 3 miesiące) albo `zrodla 12`.
+
+| Znacznik | Gdzie |
+|---|---|
+| `?z=li2` … `?z=li13` | pierwszy komentarz pod postem o tym numerze (`linkedin.md`) |
+| `?z=li-profil` | „Polecane” i „Projekty” na profilu LinkedIn |
+| `?z=li-dm`, `?z=li-firma` | wiadomości 1:1 z linkiem, strona firmowa Content AI |
+| `?z=agencje`, `?z=grupy` | rozmowy z agencjami, wpisy w grupach |
+| `?z=yt` | opisy filmów na YouTube |
+| `?z=ph` | pole „Links” na Product Hunt (Product Hunt dopisuje też `ref=producthunt`) |
+| `?z=alternativeto`, `?z=saashub`, `?z=toolify` | katalogi |
+| `?z=reddit`, `?z=ih`, `?z=demo` | Reddit i Indie Hackers w dniu premiery, wydarzenie z demo |
+
+Nazwa znacznika: małe litery, cyfry i łączniki, do 32 znaków. Ten sam znacznik działa na każdej podstronie,
+np. `https://content-ai.net/klucz-api/?z=li4`.
+
 ---
 
 ## 5. Filmy
