@@ -14,7 +14,7 @@ Teksty są gotowe do wklejenia, a daty pochodzą z `plan.md`. Fakty zgadzają si
 3. Najwyżej jedna lista (3-4 punkty) i najwyżej 3 skróty, każdy wyjaśniony.
 4. Twój głos: pierwsza osoba i jedno zdanie osobiste w każdym poście.
 5. Na końcu pytanie, na które da się odpowiedzieć jednym zdaniem z doświadczenia.
-6. Przy „Pakiet Darmowy” zawsze „Twój klucz API”. „Bez karty” tylko o koncie w Content AI.
+6. Przy „Pakiet Darmowy” zawsze „pierwszy artykuł bez klucza API, kolejne na Twoim kluczu”. „Bez karty” tylko o koncie w Content AI.
 7. 600-1300 znaków, 0-2 hashtagi, link w pierwszym komentarzu, zaraz po publikacji.
 8. Typografia: „…” po polsku, “…” po angielsku, bez długiego myślnika i średnika, wobec czytelnika
    formy bezosobowe albo czas teraźniejszy („sprawdzasz”, „piszecie”, nie „zrobiłeś”).
@@ -71,7 +71,7 @@ Pierwszy komentarz:
 
 ```text
 Przykład z filmu i opis: https://content-ai.net/?z=li2
-Pakiet Darmowy: 3 artykuły na Twoim kluczu API Anthropic, orientacyjnie 0,20-0,40 USD za artykuł. Przed pierwszym tekstem warto wgrać 1-3 dokumenty firmy, wtedy artykuł powstanie z nich. Klucz API krok po kroku: https://content-ai.net/klucz-api/?z=li2
+Pakiet Darmowy: 3 artykuły, pierwszy bez klucza API. Kolejne na Twoim kluczu Anthropic, orientacyjnie 0,20-0,40 USD za artykuł. Przed pierwszym tekstem warto wgrać 1-3 dokumenty firmy, wtedy artykuł powstanie z nich. Klucz API krok po kroku: https://content-ai.net/klucz-api/?z=li2
 ```
 
 Tekst alternatywny filmu (jeśli LinkedIn o niego poprosi):
@@ -116,7 +116,7 @@ tak jak w filmie. Na stronach 2-7 numer i nagłówek stoją w tym samym miejscu,
 | 5 | 4. Fakt szerszy niż źródło | Źródło mówi o czymś węższym, a tekst rozciąga to dalej. | źródło: „import kontaktów z pliku CSV”, tekst: „dane można przenieść z dowolnego programu” | Porównaj zakres: kraj, produkt, rodzaj klienta. |
 | 6 | 5. Nieaktualny rok | Model sam z siebie nie wie, jaki jest dziś dzień. „W tym roku” bywa rokiem sprzed lat. | publikacja: październik 2026, tytuł: „Najlepsze systemy CRM w 2025 roku” | Przejrzyj daty i słowa „obecnie”, „w tym roku”. |
 | 7 | 6. Sprzeczność w jednym tekście | W akapicie jedna kwota, w tabeli niżej inna. | akapit: 495 zł miesięcznie, tabela: 459 zł miesięcznie | Wypisz liczby i porównaj je ze sobą. |
-| 8 | W Content AI każdy z nich ma zabezpieczenie. | Lista 1-6: porównanie liczb i dat z dokumentami firmy, wskazanie zdań, których nie podaje żadne źródło, sprawdzenie, czy linki działają, porównanie zakresu ze źródłem, dzisiejsza data w poleceniu dla modelu, wykrywanie sprzeczności w tekście. Pod listą: „Wskazane zdania poprawisz jednym kliknięciem, bez dopisywania nowych faktów.” | - | przycisk content-ai.net, „Pakiet Darmowy: 3 artykuły · Twój klucz API” |
+| 8 | W Content AI każdy z nich ma zabezpieczenie. | Lista 1-6: porównanie liczb i dat z dokumentami firmy, wskazanie zdań, których nie podaje żadne źródło, sprawdzenie, czy linki działają, porównanie zakresu ze źródłem, dzisiejsza data w poleceniu dla modelu, wykrywanie sprzeczności w tekście. Pod listą: „Wskazane zdania poprawisz jednym kliknięciem, bez dopisywania nowych faktów.” | - | przycisk content-ai.net, „Pakiet Darmowy: 3 artykuły · pierwszy bez klucza API” |
 
 Każde zabezpieczenie ze slajdu 8 jest w aplikacji: Kontrola faktów zgłasza liczby, zdania bez źródła, fakty
 szersze niż źródło, sprzeczności i odnośniki (dopisana podstrona, adres, który nie odpowiada), a polecenia
@@ -150,7 +150,7 @@ Rozbicie:
 
 Dlaczego płaci się osobno: w Content AI teksty powstają na kluczu API Anthropic użytkownika. Rachunek za model przychodzi od dostawcy, bez marży po mojej stronie, a limit wydatków ustawia się w konsoli dostawcy.
 
-Minus: na start trzeba założyć konto w konsoli Anthropic (to nie to samo co subskrypcja czatu Claude), doładować je kartą i wkleić klucz. To około 10 minut.
+Minus: przed drugim artykułem trzeba założyć konto w konsoli Anthropic (to nie to samo co subskrypcja czatu Claude), doładować je kartą i wkleić klucz. To około 10 minut. Pierwszy artykuł powstaje na moim kluczu, żeby najpierw było widać wynik.
 
 Wolicie płacić za model osobno czy w jednym abonamencie?
 ```
@@ -250,7 +250,7 @@ Catching sentences like this is what Content AI does, and it is now live on Prod
 
 It writes articles from your own documents, then checks the draft against them: figures your sources don't support, claims wider than the source, contradictions and dead links. One click fixes the flagged sentences without adding new facts. Each draft also gets four scores for Google results and AI answers (SEO, AIO, AEO, GEO).
 
-Free plan: 3 articles, on your own Anthropic API key (roughly $0.20-0.40 per article, paid to Anthropic directly). Paid plans need an EU billing address for now.
+Free plan: 3 articles, the first one without an API key. The next ones run on your own Anthropic key (roughly $0.20-0.40 per article, paid to Anthropic directly). Paid plans need an EU billing address for now.
 
 I'd value your honest take, on Product Hunt or here: where would you still not trust an AI draft? Link in the first comment.
 ```
@@ -260,7 +260,7 @@ Pierwszy komentarz (pierwszą linię uzupełnij adresem strony premiery):
 ```text
 Product Hunt: WKLEJ_ADRES_Z_PRODUCT_HUNT
 Website and the example from the video: https://content-ai.net/en/?z=li9
-Free plan: 3 articles, on your own Anthropic API key. Upload 1-3 company documents before the first article. How to get a key: https://content-ai.net/en/api-key/?z=li9
+Free plan: 3 articles, the first one without an API key. Upload 1-3 company documents before the first article. How to get a key: https://content-ai.net/en/api-key/?z=li9
 ```
 
 ---
@@ -357,7 +357,7 @@ ile kont przyszło spod tego posta (znaczniki: `README.md`, sekcja „Skąd przy
 
 ```text
 Przykład z filmu, opis i cennik: https://content-ai.net/?z=liN
-Pakiet Darmowy: 3 artykuły. Teksty powstają na Twoim kluczu API Anthropic, orientacyjnie 0,20-0,40 USD za artykuł. Przed pierwszym tekstem warto wgrać 1-3 dokumenty firmy, wtedy artykuł powstanie z nich. Jak zdobyć klucz: https://content-ai.net/klucz-api/?z=liN
+Pakiet Darmowy: 3 artykuły, pierwszy bez klucza API. Kolejne powstają na Twoim kluczu Anthropic, orientacyjnie 0,20-0,40 USD za artykuł. Przed pierwszym tekstem warto wgrać 1-3 dokumenty firmy, wtedy artykuł powstanie z nich. Jak zdobyć klucz: https://content-ai.net/klucz-api/?z=liN
 ```
 
 ---
@@ -389,7 +389,7 @@ Punkty wyjścia po polsku (po angielsku: `product-hunt.md`):
 
 - Po co własny klucz API?
   ```text
-  Żeby koszt modelu był pod Twoją kontrolą: płacisz Anthropic bezpośrednio, bez marży po naszej stronie, i ustawiasz limit wydatków w ich konsoli. Klucz jest w zaszyfrowanym ciasteczku w Twojej przeglądarce, serwer nigdzie go nie zapisuje. Konfiguracja zajmuje około 10 minut: https://content-ai.net/klucz-api/
+  Pierwszy artykuł napiszesz bez niego, na naszym kluczu. Przy kolejnych własny klucz trzyma koszt modelu pod Twoją kontrolą: płacisz Anthropic bezpośrednio, bez marży po naszej stronie, i ustawiasz limit wydatków w ich konsoli. Klucz jest w zaszyfrowanym ciasteczku w Twojej przeglądarce, serwer nigdzie go nie zapisuje. Konfiguracja zajmuje około 10 minut: https://content-ai.net/klucz-api/
   ```
 - Ile kosztuje artykuł?
   ```text
@@ -427,7 +427,7 @@ Content AI: treści pod Google i odpowiedzi AI, pisane z Twoich źródeł
 ```
 
 ```text
-Pisze artykuły z dokumentów firmy, ocenia je pod SEO, AIO, AEO i GEO i wskazuje zdania bez pokrycia w źródłach. Pakiet Darmowy: 3 artykuły na Twoim kluczu API Anthropic.
+Pisze artykuły z dokumentów firmy, ocenia je pod SEO, AIO, AEO i GEO i wskazuje zdania bez pokrycia w źródłach. Pakiet Darmowy: 3 artykuły, pierwszy bez klucza API.
 ```
 
 **Sekcja „Projekty”** (nazwa Content AI, adres https://content-ai.net/?z=li-profil):
@@ -451,7 +451,7 @@ Każdy tekst przechodzi kontrolę faktów: aplikacja wskazuje liczby bez pokryci
 
 Eksport do DOCX i PDF z informacją o AI (AI Act), od pakietu Standard publikacja w WordPressie i Drupalu. Treści po polsku, angielsku, niemiecku i czesku.
 
-Pakiet Darmowy: 3 artykuły na Twoim kluczu API Anthropic. Strona i aplikacja bez analityki i bez skryptów z cudzych serwerów.
+Pakiet Darmowy: 3 artykuły, pierwszy bez klucza API, kolejne na Twoim kluczu Anthropic. Strona i aplikacja bez analityki i bez skryptów z cudzych serwerów.
 ```
 
 Opis EN:
@@ -463,7 +463,7 @@ Every draft goes through a fact check: the app flags figures your sources don't 
 
 Export to DOCX and PDF with an AI disclosure (EU AI Act), and from the Standard plan publishing to WordPress and Drupal. Content in English, Polish, German and Czech.
 
-Free plan: 3 articles on your own Anthropic API key. The website and the app have no analytics and load no scripts from third-party servers.
+Free plan: 3 articles, the first one without an API key, the next ones on your own Anthropic key. The website and the app have no analytics and load no scripts from third-party servers.
 ```
 
 **Wydarzenie: demo na żywo cz 5.11, 17:30, 30 min** (utwórz 28.10). Nazwa:
@@ -564,7 +564,7 @@ Wyłapywanie takich zdań to główne zadanie Content AI. Dziś narzędzie start
 
 [DO UZUPEŁNIENIA: jedno zdanie od siebie.]
 
-Pakiet Darmowy: 3 artykuły. Teksty powstają na Twoim kluczu API Anthropic, orientacyjnie 0,20-0,40 USD za artykuł.
+Pakiet Darmowy: 3 artykuły, pierwszy bez klucza API. Kolejne powstają na Twoim kluczu Anthropic, orientacyjnie 0,20-0,40 USD za artykuł.
 
 Najbardziej pomoże mi szczera opinia, tam albo tutaj: w jakiej sytuacji nadal nie zaufalibyście tekstowi z AI? Link w pierwszym komentarzu.
 ```

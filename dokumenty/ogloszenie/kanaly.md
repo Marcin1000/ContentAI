@@ -8,8 +8,8 @@ Teksty do kanałów spoza LinkedIn i Product Hunt. Daty są w `plan.md`. Miejsca
 ## 1. Osobisty mail do nowego konta (w ciągu 24 h)
 
 Wysyłasz z kontakt@content-ai.net ze swojej skrzynki, nie przez Resend. Serwer wysyła sam mail powitalny
-z kluczem API i dokumentami (po potwierdzeniu adresu), więc Twój mail jest krótki i osobisty. Nowe konta
-widzisz w `sudo serwer/cli.sh lista`.
+po potwierdzeniu adresu (dokumenty, temat, klucz API przed kolejnym artykułem), więc Twój mail jest krótki
+i osobisty. Nowe konta widzisz w `sudo serwer/cli.sh lista`.
 
 PL, temat: `Twoje konto w Content AI: pomogę z pierwszym artykułem`
 
@@ -19,8 +19,8 @@ Dzień dobry,
 dziękuję za założenie konta w Content AI. Piszę osobiście, bo zależy mi, żeby pierwszy artykuł się udał.
 
 Dwie rzeczy, na których najłatwiej utknąć:
-1. Klucz API Anthropic to osobne konto w konsoli Anthropic, subskrypcja czatu Claude go nie daje. Instrukcja krok po kroku: https://content-ai.net/klucz-api/
-2. Przed pierwszym artykułem warto wgrać do Bazy wiedzy 1-3 dokumenty firmy, na przykład ofertę albo cennik. Wtedy tekst powstanie z nich, a kontrola faktów porówna go z nimi.
+1. Przed pierwszym artykułem warto wgrać do Bazy wiedzy 1-3 dokumenty firmy, na przykład ofertę albo cennik. Wtedy tekst powstanie z nich, a kontrola faktów porówna go z nimi. Ten pierwszy artykuł napiszesz bez klucza API, wystarczy potwierdzony adres e-mail.
+2. Przed kolejnym potrzebny jest klucz API Anthropic. To osobne konto w konsoli Anthropic, subskrypcja czatu Claude go nie daje. Instrukcja krok po kroku: https://content-ai.net/klucz-api/
 
 Jeśli coś nie działa albo jest niejasne, wystarczy odpisać na tego maila. Chętnie też porozmawiam 15 minut online o tym, do czego chcesz używać Content AI: [DO UZUPEŁNIENIA: link do kalendarza albo „zaproponuj termin”].
 
@@ -39,8 +39,8 @@ Hi,
 thank you for creating a Content AI account. I'm writing personally because I want your first article to work out.
 
 Two things where people most easily get stuck:
-1. The Anthropic API key is a separate account in the Anthropic console, a Claude chat subscription does not include it. Step-by-step guide: https://content-ai.net/en/api-key/
-2. Before the first article, upload 1-3 company documents to the knowledge base, for example an offer or a price list. The draft is then written from them and the fact check compares it with them.
+1. Before the first article, upload 1-3 company documents to the knowledge base, for example an offer or a price list. The draft is then written from them and the fact check compares it with them. You can write this first article without an API key, you only need a confirmed email address.
+2. Before the next one you need an Anthropic API key. It is a separate account in the Anthropic console, a Claude chat subscription does not include it. Step-by-step guide: https://content-ai.net/en/api-key/
 
 If anything doesn't work or isn't clear, just reply to this email. I'm also happy to have a 15-minute call about what you want to use Content AI for: [DO UZUPEŁNIENIA: calendar link or “suggest a time”].
 
@@ -51,7 +51,7 @@ Marcin
 Content AI
 ```
 
-Po 24.10 dopisz w punkcie 1: `Film 4 minuty: LINK_DO_TUTORIALU` (`Video, 4 minutes: …`).
+Po 24.10 dopisz w punkcie 2: `Film 5 minut: LINK_DO_TUTORIALU` (`Video, 5 minutes: …`).
 
 ---
 
@@ -81,7 +81,7 @@ In the video (sample article about choosing a CRM, real app interface):
 
 Content AI writes articles from your own documents (PDF, DOCX, XLSX, PPTX, notes and web pages) in English, Polish, German and Czech.
 
-Free plan: 3 articles. Drafts run on your own Anthropic API key, so you pay Anthropic directly, roughly $0.20-0.40 per article.
+Free plan: 3 articles, the first one without an API key. The next ones run on your own Anthropic key, so you pay Anthropic directly, roughly $0.20-0.40 per article.
 Website: https://content-ai.net/en/?z=yt
 How to get an API key: https://content-ai.net/en/api-key/?z=yt
 
@@ -110,7 +110,7 @@ Na filmie (przykładowy artykuł o wyborze CRM, prawdziwy interfejs aplikacji):
 
 Content AI pisze artykuły z Twoich dokumentów (PDF, DOCX, XLSX, PPTX, notatki i strony WWW) po polsku, angielsku, niemiecku i czesku.
 
-Pakiet Darmowy: 3 artykuły. Teksty powstają na Twoim kluczu API Anthropic, więc za model płacisz dostawcy bezpośrednio, orientacyjnie 0,20-0,40 USD za artykuł.
+Pakiet Darmowy: 3 artykuły, pierwszy bez klucza API. Kolejne powstają na Twoim kluczu Anthropic, więc za model płacisz dostawcy bezpośrednio, orientacyjnie 0,20-0,40 USD za artykuł.
 Strona: https://content-ai.net/?z=yt
 Jak zdobyć klucz API: https://content-ai.net/klucz-api/?z=yt
 
@@ -119,42 +119,44 @@ Film bez dźwięku, napisy są w obrazie.
 #AI #SEO #GEO
 ```
 
-**Tutorial PL 3-5 min „Klucz API Anthropic i pierwszy artykuł”** (sb 24.10). Nagranie ekranu przy 1440 px
+**Tutorial PL 3-5 min „Pierwszy artykuł i klucz API Anthropic”** (sb 24.10). Nagranie ekranu przy 1440 px
 z napisami, żeby było zrozumiałe bez dźwięku. Etykiety konsoli Anthropic sprawdź na żywo przed nagraniem.
-Najważniejszy materiał dla konwersji: link do niego trafia do maili, odpowiedzi i FAQ.
+Najważniejszy materiał dla konwersji: link do niego trafia do maili, odpowiedzi i FAQ. Od aktualizacji serwera
+z 14.10 pierwszy artykuł powstaje bez klucza, więc film najpierw pokazuje wynik, a klucz dopiero przed drugim.
 
 | Czas | Ekran | Napis | Gdzie ludzie utykają |
 |---|---|---|---|
-| 0:00-0:15 | plansza | „W 10-15 minut: konto, klucz API i pierwszy artykuł ze źródłami. Potrzebujesz komputera i karty płatniczej do doładowania konta u Anthropic.” | oczekiwanie „za darmo, więc bez płacenia” |
-| 0:15-0:45 | content-ai.net, „Załóż konto” | e-mail, hasło (min. 10 znaków), dwie zgody. „Od razu jesteś w aplikacji. Adres e-mail potwierdzisz później.” | - |
-| 0:45-1:00 | kreator, krok 1 z 3 | „Tu wkleisz klucz. Nie masz go? Otwórz »Nie masz klucza? Około 10 minut«.” | - |
-| 1:00-1:35 | platform.claude.com, rejestracja | „To osobne konto. Subskrypcja czatu Claude nie daje klucza API.” | mylenie czatu z API |
-| 1:35-2:15 | Settings, Billing, Buy credits | „API działa na przedpłacie. Na start wystarczy kilka dolarów. Ustaw też limit wydatków.” | karta, kwota minimalna, obawa przed kosztem |
-| 2:15-2:45 | API keys, Create key | „Nazwij go »Content AI«. Klucz zobaczysz tylko raz: skopiuj go od razu.” | zgubiony klucz |
-| 2:45-3:05 | kreator: wklej, „Sprawdź i zapisz” | „»Klucz działa i jest zapisany«. Zostaw zaznaczone »Zapamiętaj na tym urządzeniu«.” | klucz bez doładowania |
-| 3:05-3:20 | krok 2: firma | „Nazwa, strona i jedno zdanie o firmie. Trafią do każdego artykułu.” | - |
-| 3:20-3:40 | Baza wiedzy | „Wgraj 1-3 dokumenty: ofertę, cennik, FAQ. W pakiecie Darmowym zmieszczą się trzy.” | brak dokumentów, tekst ze stron w sieci |
-| 3:40-4:15 | krok 3: temat, „Napisz artykuł” | „Szukanie w sieci podaje źródła pod tekstem.” Czas generowania prawdziwy (albo z licznikiem). | czekanie bez informacji |
-| 4:15-4:40 | Oceń, Fakty, „Popraw zdania bez źródła” | „Content AI pokazuje zdania bez pokrycia w źródłach i poprawia je jednym kliknięciem, bez nowych faktów.” | - |
-| 4:40-5:00 | Eksport DOCX, Historia | „Plik z informacją o AI i listą źródeł. Koszt tego tekstu widzisz w Historii. Zostały Ci 2 artykuły w pakiecie Darmowym.” | - |
+| 0:00-0:15 | plansza | „Konto i pierwszy artykuł ze źródłami w 5 minut, bez klucza API. Potem 10 minut na klucz przed kolejnymi.” | oczekiwanie „za darmo, więc bez płacenia” |
+| 0:15-0:45 | content-ai.net, „Załóż konto” | e-mail, hasło (min. 10 znaków), dwie zgody. Potwierdzenie adresu linkiem z e-maila. „Bez potwierdzenia pierwszy artykuł bez klucza nie ruszy.” | mail w spamie |
+| 0:45-1:00 | kreator, krok 1 z 4 | „Pierwszy artykuł napiszesz bez klucza. Kliknij »Dalej bez klucza«.” | - |
+| 1:00-1:15 | krok 2: firma | „Nazwa, strona i jedno zdanie o firmie. Trafią do każdego artykułu.” | - |
+| 1:15-1:40 | krok 3: dokumenty firmy | „Wgraj 1-3 dokumenty: ofertę, cennik, FAQ. W pakiecie Darmowym zmieszczą się trzy.” | brak dokumentów, tekst ze stron w sieci |
+| 1:40-2:15 | krok 4: temat, „Napisz artykuł” | „Szukanie w sieci podaje źródła pod tekstem.” Czas generowania prawdziwy (albo z licznikiem). | czekanie bez informacji |
+| 2:15-2:40 | Oceń, Fakty, „Popraw zdania bez źródła” | „Content AI pokazuje zdania bez pokrycia w źródłach i poprawia je jednym kliknięciem, bez nowych faktów.” | - |
+| 2:40-2:55 | Eksport DOCX | „Plik z informacją o AI i listą źródeł.” | - |
+| 2:55-3:10 | karta „Darmowy artykuł jest gotowy”, „Podłącz klucz” | „Kolejne artykuły powstają na Twoim kluczu API Anthropic. Zobacz, jak go zdobyć.” | - |
+| 3:10-3:40 | platform.claude.com, rejestracja | „To osobne konto. Subskrypcja czatu Claude nie daje klucza API.” | mylenie czatu z API |
+| 3:40-4:15 | Settings, Billing, Buy credits | „API działa na przedpłacie. Na start wystarczy kilka dolarów. Ustaw też limit wydatków.” | karta, kwota minimalna, obawa przed kosztem |
+| 4:15-4:40 | API keys, Create key | „Nazwij go »Content AI«. Klucz zobaczysz tylko raz: skopiuj go od razu.” | zgubiony klucz |
+| 4:40-5:00 | kreator: wklej, „Sprawdź i zapisz”, Historia | „»Klucz działa i jest zapisany«. Koszt każdego tekstu widzisz w Historii. Zostały Ci 2 artykuły w pakiecie Darmowym.” | klucz bez doładowania |
 
 Tytuł tutorialu (67 znaków):
 
 ```text
-Klucz API Anthropic i pierwszy artykuł w Content AI (krok po kroku)
+Pierwszy artykuł i klucz API Anthropic w Content AI (krok po kroku)
 ```
 
 Opis:
 
 ```text
-Jak zacząć pisać w Content AI: konto w konsoli Anthropic, doładowanie, klucz API, dokumenty firmy i pierwszy artykuł z kontrolą faktów.
+Jak zacząć pisać w Content AI: dokumenty firmy, pierwszy artykuł z kontrolą faktów bez klucza API, a przed kolejnymi konto w konsoli Anthropic i klucz.
 
 W filmie:
+• wgranie 1-3 dokumentów firmy do Bazy wiedzy
+• pierwszy artykuł i kontrola faktów, bez klucza API
 • konto w konsoli Anthropic (subskrypcja czatu Claude nie daje klucza API)
 • doładowanie kartą i limit wydatków
 • utworzenie klucza i wklejenie go w Content AI
-• wgranie 1-3 dokumentów firmy do Bazy wiedzy
-• pierwszy artykuł i kontrola faktów
 
 Koszt: orientacyjnie 0,20-0,40 USD za artykuł około 800 słów, płacisz dostawcy bezpośrednio. 10 USD wystarcza na około 25-50 artykułów.
 Instrukcja tekstowa: https://content-ai.net/klucz-api/?z=yt
@@ -179,18 +181,18 @@ znacznikiem katalogu: `https://content-ai.net/en/?z=alternativeto`, `?z=saashub`
 Do 500 znaków, EN:
 
 ```text
-Content AI writes articles from your own documents (PDF, DOCX, XLSX, PPTX, notes and web pages), not from the model's memory. A fact check flags figures your sources don't support, claims wider than the source, contradictions and dead links, and one click fixes them without adding new facts. Every draft gets four scores: SEO, AIO, AEO and GEO. Export to DOCX or PDF with an AI label. Content in English, Polish, German and Czech. Free plan: 3 articles on your own Anthropic API key.
+Content AI writes articles from your own documents (PDF, DOCX, XLSX, PPTX, notes and web pages), not from the model's memory. A fact check flags figures your sources don't support, claims wider than the source, contradictions and dead links, and one click fixes them without adding new facts. Every draft gets four scores: SEO, AIO, AEO and GEO. Export to DOCX or PDF with an AI label. Content in English, Polish, German and Czech. Free plan: 3 articles, the first one without an API key.
 ```
 
 Do 500 znaków, PL:
 
 ```text
-Content AI pisze artykuły z dokumentów firmy (PDF, DOCX, XLSX, PPTX, notatki i strony WWW), a nie z pamięci modelu. Kontrola faktów wskazuje liczby bez pokrycia w źródłach, twierdzenia szersze niż źródło, sprzeczności i martwe linki, a jedno kliknięcie je poprawia bez dopisywania nowych faktów. Każdy tekst dostaje cztery oceny: SEO, AIO, AEO i GEO. Eksport do DOCX i PDF z informacją o AI. Treści po polsku, angielsku, niemiecku i czesku. Pakiet Darmowy: 3 artykuły na Twoim kluczu API Anthropic.
+Content AI pisze artykuły z dokumentów firmy (PDF, DOCX, XLSX, PPTX, notatki i strony WWW), a nie z pamięci modelu. Kontrola faktów wskazuje liczby bez pokrycia w źródłach, twierdzenia szersze niż źródło, sprzeczności i martwe linki, a jedno kliknięcie je poprawia bez dopisywania nowych faktów. Każdy tekst dostaje cztery oceny: SEO, AIO, AEO i GEO. Eksport do DOCX i PDF z informacją o AI. Treści po polsku, angielsku, niemiecku i czesku. Pakiet Darmowy: 3 artykuły, pierwszy bez klucza API.
 ```
 
 Kategorie (nazwy dopasuj do listy katalogu): AI Writing albo AI Content Generator, SEO Tools, Fact-checking albo
-Content Quality. Cennik: „Freemium” z dopiskiem „bring your own Anthropic API key”. Bez zdań porównujących
-z innymi narzędziami.
+Content Quality. Cennik: „Freemium” z dopiskiem „first article free, then bring your own Anthropic API key”.
+Bez zdań porównujących z innymi narzędziami.
 
 Paczka 2 po Product Hunt (T6): Uneed, Fazier, Peerlist, BetaList (sprawdź warunki).
 
@@ -273,7 +275,7 @@ Content AI pisze z Bazy wiedzy firmy (PDF, DOCX, XLSX, PPTX, notatki i strony WW
 
 „[DO UZUPEŁNIENIA: cytat, 1-2 zdania, dlaczego powstało to narzędzie.]” mówi Marcin Przybylski, twórca Content AI.
 
-Teksty powstają na kluczu API Anthropic użytkownika, więc za model płaci on dostawcy bezpośrednio, orientacyjnie 0,20-0,40 USD za artykuł. Pakiet Darmowy daje 3 artykuły, Standard kosztuje 79 zł, a Premium 199 zł miesięcznie. Dane są przechowywane na serwerze w Niemczech, a strona i aplikacja nie mają analityki.
+Teksty powstają na kluczu API Anthropic użytkownika, więc za model płaci on dostawcy bezpośrednio, orientacyjnie 0,20-0,40 USD za artykuł. Wyjątkiem jest pierwszy artykuł, który powstaje bez klucza, na koszt Content AI. Pakiet Darmowy daje 3 artykuły, Standard kosztuje 79 zł, a Premium 199 zł miesięcznie. Dane są przechowywane na serwerze w Niemczech, a strona i aplikacja nie mają analityki.
 
 Kontakt: kontakt@content-ai.net, https://content-ai.net
 ```

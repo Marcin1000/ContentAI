@@ -2101,6 +2101,18 @@ KONTROLE_PLIKOW = [
      "dokumenty-prawne/podprzetwarzajacy.pl.md", "| 2026-10-v2 | 14 października 2026 r. |", None),
     ("SB/strona", "strona: pierwszy artykul bez klucza w notce pod hero",
      "showcase/zrodlo/teksty.json", "a\u00a0pierwszy napiszesz bez klucza API", None),
+    # Materialy promocji: przy pakiecie Darmowym pierwszy artykul bez klucza (wczesniej '3 artykuly na Twoim kluczu').
+    ("SB/materialy-zasada", "plan promocji: przy '3 artykuly' zawsze pierwszy bez klucza, kolejne na kluczu uzytkownika",
+     "dokumenty/ogloszenie/plan.md", "zawsze pada \u201epierwszy bez klucza API, kolejne na Twoim kluczu\u201d", "zawsze pada \u201eTw\u00f3j klucz API\u201d"),
+    ("SB/materialy-linkedin", "posty LinkedIn: pakiet Darmowy z pierwszym artykulem bez klucza",
+     "dokumenty/ogloszenie/linkedin.md", "Pakiet Darmowy: 3 artyku\u0142y, pierwszy bez klucza API. Kolejne",
+     "Pakiet Darmowy: 3 artyku\u0142y. Teksty powstaj\u0105 na Twoim kluczu API Anthropic"),
+    ("SB/materialy-ph", "Product Hunt: opis i FAQ z pierwszym artykulem bez klucza",
+     "dokumenty/ogloszenie/product-hunt.md", "Free plan: 3 articles, the first one without an API key.",
+     "Free plan: 3 articles on your own Anthropic API key."),
+    ("SB/materialy-kanaly", "katalogi, YouTube i mail osobisty: najpierw dokumenty i artykul bez klucza, klucz przed kolejnym",
+     "dokumenty/ogloszenie/kanaly.md", "2. Before the next one you need an Anthropic API key.",
+     "Free plan: 3 articles on your own Anthropic API key."),
 ]
 
 

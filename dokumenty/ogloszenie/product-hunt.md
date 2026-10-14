@@ -30,10 +30,10 @@ Content AI
 https://content-ai.net/en/?z=ph
 ```
 
-**Description** (ten tekst ma 251 znaków, mieści się w limicie 260 ze starszej pomocy i 500 z obecnej)
+**Description** (ten tekst ma 255 znaków, mieści się w limicie 260 ze starszej pomocy i 500 z obecnej)
 
 ```text
-Content AI writes SEO articles from your own documents, not the model's memory. A fact check flags sentences your sources don't support and fixes them in one click. Scores for SEO, AIO, AEO and GEO. Free plan: 3 articles on your own Anthropic API key.
+Content AI writes SEO articles from your own documents, not the model's memory. A fact check flags sentences your sources don't support and fixes them in one click. Scores for SEO, AIO, AEO and GEO. Free plan: 3 articles, the first one without an API key.
 ```
 
 **Topics** (z listy Product Hunt, w tej kolejności): `SEO`, `Artificial Intelligence`, `Writing`. Gdy któregoś nie ma,
@@ -53,7 +53,7 @@ zamiennik: `Marketing`.
 | `grafiki/ph-2-fakty.png` | panel Fakty: liczba bez pokrycia i twierdzenie szersze niż źródło, przycisk poprawy zdań |
 | `grafiki/ph-3-oceny.png` | ocena AEO z uwagami, cztery zakładki SEO, AIO, AEO i GEO |
 | `grafiki/ph-4-eksport.png` | menu Eksport: DOCX, PDF, TXT, JSON-LD i przełącznik oznaczenia AI |
-| `grafiki/ph-5-cennik.png` | trzy pakiety (€0, €19, €49) i koszt modelu na własnym kluczu |
+| `grafiki/ph-5-cennik.png` | trzy pakiety (€0, €19, €49), pierwszy artykuł bez klucza i koszt modelu na własnym kluczu |
 
 **Makers**: tylko Ty. **Hunter**: Ty sam (publikacja własnego produktu jest na Product Hunt normalna).
 
@@ -79,7 +79,7 @@ Content AI starts from your own documents: offers, price lists, reports, notes o
 • Export to DOCX or PDF with an AI label in the file metadata, or publish to WordPress and Drupal (Standard plan). A visible note for readers is one switch away (EU AI Act).
 
 Two honest caveats:
-1. It runs on your own Anthropic API key. You pay Anthropic directly, roughly $0.20-0.40 per article, with no markup from us. A Claude chat subscription does not include API access, so this is a separate account in the Anthropic Console. Getting a key and adding credit takes about 10 minutes.
+1. Your first article is on us, no key needed. After that it runs on your own Anthropic API key: you pay Anthropic directly, roughly $0.20-0.40 per article, with no markup from us. A Claude chat subscription does not include API access, so this is a separate account in the Anthropic Console. Getting a key and adding credit takes about 10 minutes.
 2. Paid plans need an EU billing address for now. The Free plan (3 articles) works everywhere.
 
 Content can be written in English, Polish, German and Czech.
@@ -161,7 +161,7 @@ Content AI: AI articles written from your own documents, then fact-checked again
 
 The problem: AI drafts read well, but figures and product details come from the model's memory. Content AI writes from your knowledge base (PDF, DOCX, XLSX, PPTX, notes and web pages), flags sentences your sources don't support and fixes them in one click without adding new facts. It also scores each draft for SEO, AIO, AEO and GEO.
 
-Built by one person, launched on Product Hunt today. It runs on your own Anthropic API key (roughly $0.20-0.40 per article). Free plan: 3 articles.
+Built by one person, launched on Product Hunt today. The first article is on us. After that it runs on your own Anthropic API key (roughly $0.20-0.40 per article). Free plan: 3 articles.
 
 Blunt feedback welcome: where would you still not trust an AI draft?
 https://content-ai.net/en/?z=reddit
@@ -179,7 +179,7 @@ Treść:
 I launched Content AI publicly on 12 October. It writes articles from a company's own documents and then checks the draft against them: figures the sources don't support, claims wider than the source, contradictions and dead links.
 
 A few decisions that shaped it:
-1. Bring your own key. Drafts run on the user's Anthropic API key, so there is no markup on the model. It keeps my costs flat, but it adds friction: a Claude chat subscription does not include API access, and new users have to add credit in the Anthropic Console first.
+1. Bring your own key. Drafts run on the user's Anthropic API key, so there is no markup on the model. It keeps my costs flat, but it adds friction: a Claude chat subscription does not include API access, and new users have to add credit in the Anthropic Console first. To lower that, the first article runs on my key, with a daily cap and a separate spend limit.
 2. No analytics. The site and the app load nothing from third-party servers. I measure with account counts and revenue only.
 3. EU-only paid plans for now. The Free plan works everywhere.
 
@@ -187,7 +187,7 @@ First month in numbers: [DO UZUPEŁNIENIA: accounts, accounts with a first artic
 
 What I'd do differently: [DO UZUPEŁNIENIA: one honest sentence].
 
-Today it is on Product Hunt. I'd love feedback from anyone who has dealt with the “bring your own key” friction: how did you lower it?
+Today it is on Product Hunt. I'd love feedback from anyone who has dealt with the “bring your own key” friction. My answer so far is one free article on my key: what worked for you?
 ```
 
 ---
@@ -200,7 +200,7 @@ wyglądają jak automat.
 **Why do I need my own API key?**
 
 ```text
-It keeps model costs under your control: you pay Anthropic directly, with no markup from us, and you can set a spend limit in their console. Anthropic's API is prepaid, so you add credit with a card in their console. $10 covers roughly 25-50 articles. A Claude chat subscription does not include API access, it is a separate account. Your key stays in your browser in an encrypted cookie and is passed to Anthropic with each request. Our server never writes it to disk or to logs. Setup takes about 10 minutes: https://content-ai.net/en/api-key/
+Your first article does not need one: it runs on our key. After that, your own key keeps model costs under your control: you pay Anthropic directly, with no markup from us, and you can set a spend limit in their console. Anthropic's API is prepaid, so you add credit with a card in their console. $10 covers roughly 25-50 articles. A Claude chat subscription does not include API access, it is a separate account. Your key stays in your browser in an encrypted cookie and is passed to Anthropic with each request. Our server never writes it to disk or to logs. Setup takes about 10 minutes: https://content-ai.net/en/api-key/
 ```
 
 **How much does one article cost?**
@@ -218,13 +218,13 @@ Yes, the Free plan works everywhere. Paid plans are available for billing addres
 **Which AI models do you use?**
 
 ```text
-Drafts, the SEO and AIO scores and the fact check use Anthropic models, on your own key. The AEO and GEO scores are rule-based and run in your browser. Images, voice-over and transcription (Standard and Premium plans) use OpenAI, also on your own key, and ElevenLabs is an optional, better voice.
+Drafts, the SEO and AIO scores and the fact check use Anthropic models, on your own key (the first article on ours). The AEO and GEO scores are rule-based and run in your browser. Images, voice-over and transcription (Standard and Premium plans) use OpenAI, also on your own key, and ElevenLabs is an optional, better voice.
 ```
 
 **Do you train on my documents? Where is my data?**
 
 ```text
-No. Content AI does not train any models. Your documents are stored on our server at Hetzner in Germany and only your account can see them. When a draft is written, only the passages that match the topic go to Anthropic, on your own key, never whole files. Anthropic's commercial terms say they do not train models on API customer content.
+No. Content AI does not train any models. Your documents are stored on our server at Hetzner in Germany and only your account can see them. When a draft is written, only the passages that match the topic go to Anthropic, on your own key (for the first article, on ours), never whole files. Anthropic's commercial terms say they do not train models on API customer content.
 ```
 
 **How is this different from asking ChatGPT?**
