@@ -5,7 +5,7 @@ Etap 7 w `dokumenty/PREMIERA.md` (Stripe live i otwarta rejestracja) musi być z
 
 | Plik | Co zawiera |
 |---|---|
-| `linkedin.md` | posty PL i EN, pierwsze komentarze z linkami, teksty alternatywne grafik, zasady odpowiedzi |
+| `linkedin.md` | posty PL i EN, drugi post PL (historia testu), pierwsze komentarze z linkami, teksty alternatywne grafik, zasady odpowiedzi |
 | `product-hunt.md` | wszystkie pola formularza (z policzonymi limitami), kolejność galerii, komentarz twórcy, gotowe odpowiedzi na częste pytania |
 | `grafiki/` | grafiki do postów i galerii (tabela na końcu) |
 
@@ -42,11 +42,12 @@ popraw najpierw stronę, potem te teksty i grafiki.
 |---|---|
 | dziś i jutro | wdrożenie, wygląd Stripe, plan Resend, konto na Product Hunt |
 | środa 14.10, 8:30 | post PL na LinkedIn (`linkedin.md`), od razu pierwszy komentarz z linkami, przez godzinę odpowiadasz na komentarze |
-| od 14.10 do 19.10 | poprawki po pierwszych opiniach, formularz na Product Hunt wypełniony i zaplanowany |
+| od 14.10 do 19.10 | poprawki po pierwszych opiniach, film EN 16:9 na YouTube (punkt 5), formularz na Product Hunt wypełniony i zaplanowany, lista 30-50 osób do powiadomienia w dniu premiery |
 | wtorek 20.10, 9:01 | start na Product Hunt, od razu komentarz twórcy (`product-hunt.md`) |
-| wtorek 20.10, około 9:30 | post EN na LinkedIn, w pierwszym komentarzu adres strony na Product Hunt |
+| wtorek 20.10, około 9:30 | post EN na LinkedIn z filmem EN 4:5, w pierwszym komentarzu adres strony na Product Hunt |
 | wtorek 20.10, cały dzień | odpowiedzi na Product Hunt w ciągu około 30 minut, serwer co 2-3 godziny (punkt 3) |
 | środa 21.10 | podziękowanie w komentarzu na Product Hunt i pod postami, lista uwag do poprawek |
+| czwartek 22.10, 8:30 | drugi post PL z filmem PL 4:5 (`linkedin.md`, „Post 2 PL”), tylko za zgodą osoby, która testowała |
 
 **Godzina startu.** Dzień na Product Hunt zaczyna się o 00:01 czasu pacyficznego. W Polsce to 9:01
 do 24.10, 8:01 od 25.10 do 31.10 (Europa przechodzi na czas zimowy tydzień przed USA) i znowu 9:01
@@ -89,7 +90,34 @@ po każdym poście zapisz datę, kanał, liczbę nowych kont (`lista`, polecenie
 
 ---
 
-## 5. Grafiki
+## 5. Film
+
+Film ma 33 sekundy i pokazuje prawdziwą aplikację na tym samym przykładzie co strona i grafiki:
+artykuł wygląda dobrze, dwa zdania nie mają pokrycia w dokumentach, kontrola faktów je wypisuje,
+jedno kliknięcie je poprawia, potem cztery oceny i eksport z informacją o AI. Napisy są wpisane
+w obraz, bo LinkedIn odtwarza filmy bez dźwięku. Ścieżki dźwiękowej nie ma.
+
+Pliki są duże (5-11 MB), więc nie ma ich w repozytorium. Dostałeś je w rozmowie:
+
+| Plik | Gdzie |
+|---|---|
+| `content-ai-film-pl-4x5.mp4` (1080 x 1350) | drugi post PL na LinkedIn |
+| `content-ai-film-en-4x5.mp4` (1080 x 1350) | post EN na LinkedIn w dniu Product Hunt |
+| `content-ai-film-en-16x9.mp4` (1920 x 1080) | YouTube, a link do niego w galerii Product Hunt |
+| `content-ai-film-pl-16x9.mp4` (1920 x 1080) | zapas: YouTube po polsku albo prezentacja dla klienta |
+
+**LinkedIn:** film dodajesz jak zdjęcie (ikona filmu przy tworzeniu posta). Najlepiej z komputera:
+tam da się ustawić miniaturę (plik `*-miniatura.jpg` z tej samej paczki). Opublikowanego posta
+nie da się przerobić z grafiki na film, więc film idzie w nowym poście, nie w poście z 14.10.
+
+**YouTube dla Product Hunt:** Product Hunt przyjmuje film tylko jako link do YouTube. Wgraj
+`content-ai-film-en-16x9.mp4` jako „Niepubliczny” albo „Publiczny”, tytuł:
+`Content AI: articles from your own sources, fact-checked (33 s demo)`, miniatura
+`content-ai-film-en-16x9-miniatura.jpg`. Link wklej w formularzu Product Hunt w polu wideo galerii.
+
+---
+
+## 6. Grafiki
 
 Powstały ze zrzutów aplikacji z przykładowym artykułem o wyborze CRM (ten sam przykład co na stronie).
 Gdy zmieni się cennik albo wygląd aplikacji, poproś o nowe.

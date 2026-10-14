@@ -4,7 +4,8 @@ Teksty są gotowe do wklejenia. Fakty zgadzają się ze stroną content-ai.net (
 Każdy blok kopiuj w całości. Zasady pisania jak na stronie: bez długich myślników i bez średników.
 
 - **Post PL**: dzień 1 (patrz plan w `README.md`), grafika `grafiki/linkedin-pl.png`.
-- **Post EN**: dzień premiery na Product Hunt, grafika `grafiki/linkedin-en.png`.
+- **Post EN**: dzień premiery na Product Hunt, film `content-ai-film-en-4x5.mp4` (zapasowo grafika `grafiki/linkedin-en.png`).
+- **Post 2 PL**: historia testu w agencji, film `content-ai-film-pl-4x5.mp4`, tylko za zgodą osoby, która testowała.
 - Linki dajesz w **pierwszym komentarzu**, zaraz po publikacji posta. Posty z linkiem w treści LinkedIn
   pokazuje zwykle mniejszej liczbie osób.
 - Pierwsze zdanie jest najważniejsze: na telefonie LinkedIn pokazuje około 140 znaków, potem „więcej”.
@@ -54,7 +55,8 @@ Content AI: artykuł o wyborze CRM i panel Fakty z dwoma zdaniami bez pokrycia w
 
 ## Post EN (dzień premiery na Product Hunt)
 
-Grafika: `grafiki/linkedin-en.png`. Jeśli publikujesz go innego dnia niż premiera na Product Hunt,
+Film: `content-ai-film-en-4x5.mp4` z miniaturą `content-ai-film-en-4x5-miniatura.jpg` (albo grafika
+`grafiki/linkedin-en.png`). Jeśli publikujesz go innego dnia niż premiera na Product Hunt,
 usuń z pierwszego zdania „and today it launches on Product Hunt” i pierwszą linię komentarza.
 
 ```text
@@ -93,6 +95,73 @@ How to get an Anthropic API key and what an article costs: https://content-ai.ne
 ```text
 Content AI: a CRM article and the Facts panel flagging two sentences the sources do not support.
 ```
+
+---
+
+## Post 2 PL: historia testu (czwartek 22.10, film PL)
+
+Warunek: zgoda osoby, która testowała Content AI we wrześniu (cytat i lista pochodzą z jej maila).
+W poście nie ma jej nazwiska, nazwy agencji, klienta ani tematu testowego artykułu. Bez zgody
+publikujesz sam film z krótszym tekstem (wariant niżej).
+
+Film: `content-ai-film-pl-4x5.mp4`, miniatura `content-ai-film-pl-4x5-miniatura.jpg`.
+
+```text
+„Narzędzie wymyśla dane, jak czegoś nie znajdzie w materiale źródłowym.”
+
+Tak zaczynała się najbardziej przydatna opinia o Content AI, jaką dostałem. We wrześniu dałem aplikację do testów osobie z agencji marketingowej. Wróciła z listą konkretów zamiast ogólników:
+
+1. Cena, której źródło w ogóle nie podawało. Do tego w jednostce, której ta branża nie używa.
+2. Prawdziwy fakt o jednym kraju rozciągnięty na inny, żeby sekcja artykułu miała sens.
+3. W akapicie jedna kwota, w tabeli dwa ekrany niżej inna.
+4. Artykuł oparty na danych firmy polecał jej konkurencję.
+5. Tekst gęsty i konkretny, ale czytał się jak karta produktu.
+
+Najbardziej zaskoczyło mnie to, że część winy leżała po stronie aplikacji, a nie modelu. Instrukcje kazały mu podać liczbę w każdym akapicie. Gdy liczby nie było w materiałach, model ją dopisywał.
+
+Co zmieniłem:
+1. Liczby trafiają do tekstu tylko wtedy, gdy są w źródłach.
+2. Fakt nie wychodzi poza zakres źródła: jeden kraj, jeden produkt, jeden rodzaj klienta.
+3. Kontrola faktów łapie sprzeczności i wypisuje zdania bez pokrycia, z cytatem fragmentu. Jedno kliknięcie je poprawia.
+4. Domeny konkurencji wykluczasz w danych marki.
+5. Głos marki uczy model stylu z 2-5 Twoich tekstów.
+
+Na filmie widać, jak to działa na przykładowym artykule.
+
+Wniosek dla każdego, kto pisze z AI: problem rzadko siedzi w samym modelu. Częściej w tym, o co go prosimy.
+
+Jakie błędy AI najczęściej poprawiacie w tekstach?
+
+#AI #SEO #ContentMarketing
+```
+
+Wariant bez zgody (sam film):
+
+```text
+Jak Content AI łapie zdania, których nie potwierdzają Twoje dokumenty. 30 sekund, prawdziwa aplikacja, przykładowy artykuł.
+
+Kontrola faktów porównuje tekst z bazą wiedzy i wypisuje liczby bez pokrycia, twierdzenia szersze niż źródło i sprzeczności, każde z cytatem fragmentu. Jedno kliknięcie je poprawia, bez dopisywania nowych faktów.
+
+Jakie błędy AI najczęściej poprawiacie w tekstach?
+
+#AI #SEO #ContentMarketing
+```
+
+Pierwszy komentarz jak przy pierwszym poście PL.
+
+---
+
+## Prośba do znajomych o komentarz (dzień publikacji)
+
+Wysyłaj pojedynczo, 10-15 osobom, które znają temat albo Ciebie. Prośba o komentarz, nie o polubienie:
+komentarze w pierwszych godzinach najbardziej pomagają postowi.
+
+```text
+Cześć [imię]! Dziś pokazałem publicznie Content AI: narzędzie, które pisze artykuły z dokumentów firmy i sprawdza fakty. Byłbym wdzięczny za szczery komentarz pod postem, także krytyczny: [link do posta]. Pakiet Darmowy daje 3 artykuły, jeśli masz ochotę sprawdzić to samodzielnie.
+```
+
+Link do posta skopiujesz z menu „…” przy poście („Kopiuj link do posta”). `[imię]` i `[link do posta]`
+uzupełnij przed wysłaniem.
 
 ---
 

@@ -44,6 +44,9 @@ Gdy któregoś nie ma, zamiennik: `Marketing`.
 
 **Thumbnail** (240 x 240): `grafiki/ph-miniatura.png`.
 
+**Video** (pole wideo w galerii): link do filmu `content-ai-film-en-16x9.mp4` wgranego na YouTube
+(instrukcja w `README.md`, punkt 5). Product Hunt pokazuje go w galerii obok grafik.
+
 **Gallery** (1270 x 760, w tej kolejności, pierwsza grafika jest okładką):
 
 | Plik | Co pokazuje |
