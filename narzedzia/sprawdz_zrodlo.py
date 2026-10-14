@@ -2027,6 +2027,22 @@ KONTROLE_PLIKOW = [
     ("ZA/og-odcisk", "strona: og:image z odciskiem tresci, nowy obrazek w podgladach linkow od razu",
      "narzedzia/buduj_strone.py", "'og_obraz': DOMENA + '/obrazy/og-%s.png?v=%s' % (jezyk, odcisk('obrazy/og-%s.png' % jezyk)),",
      "'og_obraz': DOMENA + '/obrazy/og-%s.png' % jezyk,"),
+
+    # -- 14.10: skad przychodza konta - zbiorczy licznik ?z= bez danych osobowych --
+    ("ZR/migracja", "baza: migracja 5, licznik rejestracji na miesiac i zrodlo (bez loginu, adresu, IP i godziny)",
+     "serwer/magazyn.js", "CREATE TABLE IF NOT EXISTS zrodla_rejestracji (", None),
+    ("ZR/limit", "baza: ponad 100 roznych zrodel w miesiacu nowe ida do 'inne'",
+     "serwer/magazyn.js", "const ZRODLA_W_MIESIACU = 100;", None),
+    ("ZR/rejestracja", "rejestracja: licznik w tej samej transakcji co konto (liczy sie tylko konto, ktore powstalo)",
+     "serwer/konta.js", "magazyn.policzZrodlo(new Date(teraz).toISOString().slice(0, 7), zrodlo);", None),
+    ("ZR/formularz", "rejestracja: zrodlo w ukrytym polu formularza",
+     "serwer/ekrany-kont.js", "${o.zrodlo ? ukryte('z', o.zrodlo) : ''}", None),
+    ("ZR/logowanie", "logowanie: Zaloz konto niesie zrodlo z ?z=",
+     "serwer/logowanie.js", "'/rejestracja' + jezykLinku + (zrodlo ? `&z=${zrodlo}` : '')", None),
+    ("ZR/strona", "strona: zrodlo z ?z=, ?ref= i ?utm_source= w linkach rejestracji, logowania i podstron, bez zapisu",
+     "showcase/zasoby/strona.js", "['z', 'ref', 'utm_source'].some(function (n) {", None),
+    ("ZR/cli", "CLI: zrodla [miesiecy], same liczby",
+     "serwer/uzytkownicy.js", "function wypiszZrodla(miesiecy) {", None),
 ]
 
 

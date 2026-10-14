@@ -1187,6 +1187,25 @@ Każde polecenie przyjmuje login albo e-mail. `email` sprawdza format i unikalno
 wysłane wcześniej na stary adres przestają działać; konto samoobsługowe nie może zostać
 bez adresu. Zmiana kluczy działa od następnego zapytania, bez restartu.
 
+### Skąd przychodzą konta (`?z=`)
+
+Odnośnik w poście albo na Product Hunt niesie nazwę źródła: `https://content-ai.net/?z=li-1015`.
+Strona dopisuje ją do linków rejestracji i logowania w aplikacji oraz do podstron (bez ciasteczek
+i bez zapisu w przeglądarce). Bierze też `?ref=` (Product Hunt dopisuje `ref=producthunt`)
+i `?utm_source=`. Formularz rejestracji niesie nazwę w ukrytym polu, a udana rejestracja dopisuje 1
+do zbiorczego licznika: miesiąc, źródło, liczba (tabela `zrodla_rejestracji`, migracja 5).
+
+- Nazwa: małe litery, cyfry i łączniki, do 32 znaków. Bez źródła: `brak`. Inna nazwa w polu
+  formularza: `inne`. Ponad 100 różnych źródeł w miesiącu: kolejne nowe też idą do `inne`.
+- Licznik nie wie, które konto przyszło skąd: źródła nie ma w koncie, zgodach, eksporcie danych
+  konta ani w dzienniku. To dane statystyczne, nie osobowe, więc polityka prywatności ich nie opisuje.
+- Nie liczą się: pole-pułapka, błąd formularza, zajęty adres, limit prób.
+
+```bash
+sudo serwer/cli.sh zrodla        # ostatnie 3 miesiące: suma i liczba rejestracji z każdego źródła
+sudo serwer/cli.sh zrodla 12     # ostatnie 12 miesięcy (1-120)
+```
+
 ### Włączenie
 
 1. Dane usługodawcy (`CAI_USLUGODAWCA_*`), `CAI_ADRES_PUBLICZNY`, wersje dokumentów,

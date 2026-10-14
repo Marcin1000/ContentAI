@@ -532,7 +532,8 @@ function strona(jezyk, tytul, srodek, opcje = {}) {
 
 /**
  * ekranRejestracji({ jezyk, email, bledy: { email, haslo, regulamin, wiek }, komunikat: { kod, rodzaj, wartosc },
- *   znacznik, pakiet, nazwaPakietu, doPlatnosci, darmowe, adresy: { regulamin, polityka, logowanie },
+ *   znacznik, pakiet, zrodlo (nazwa z odnosnika ?z= do zbiorczego licznika), nazwaPakietu, doPlatnosci, darmowe,
+ *   adresy: { regulamin, polityka, logowanie },
  *   administrator, hasloMin, hasloMax, turnstile: { klucz } | null, przelacznikHref, zaznaczone: { regulamin, wiek } })
  */
 function ekranRejestracji(o = {}) {
@@ -553,6 +554,7 @@ function ekranRejestracji(o = {}) {
         ${ukryte('jezyk', jezyk)}
         ${ukryte('t', o.znacznik || '')}
         ${o.pakiet ? ukryte('pakiet', o.pakiet) : ''}
+        ${o.zrodlo ? ukryte('z', o.zrodlo) : ''}
         <div class="pulapka" aria-hidden="true"><label for="strona">${esc(tk.pulapka)}</label><input id="strona" name="strona" type="text" tabindex="-1" autocomplete="off"></div>
         ${pole({ id: 'email', etykieta: tk.email, typ: 'email', wartosc: o.email, autocomplete: 'email', maxlength: 254, blad: tekstBledu(tk, bledy.email, min, max), autofocus: !o.email || Boolean(bledy.email), dodatkowe: ' autocapitalize="none" spellcheck="false"' })}
         ${pole({ id: 'haslo', etykieta: tk.haslo, typ: 'password', autocomplete: 'new-password', maxlength: max, podpowiedz: tk.hasloPodpowiedz(min), blad: tekstBledu(tk, bledy.haslo, min, max), autofocus: Boolean(o.email) && !bledy.email })}

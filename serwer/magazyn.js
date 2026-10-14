@@ -17,7 +17,7 @@
 //     w sekcji wlasciwej dla obszaru (konta, tokeny i zgody, platnosci...),
 //   - nowa kolumna albo tabela = nowa migracja schematu w MIGRACJE_SCHEMATU
 //     (numery zarezerwowane: 2 = A1 konta, 3 = C dzierzawy/klucze/poczta,
-//     4 = B platnosci; nieuzyty numer po prostu zostaje pominiety),
+//     4 = B platnosci, 5 = zrodla rejestracji; nieuzyty numer po prostu zostaje pominiety),
 //   - transakcja(fn) przyjmuje wylacznie funkcje SYNCHRONICZNA: await w srodku
 //     wpuscilby do transakcji zapytania innych zadan,
 //   - bledy "danych nie da sie teraz odczytac" (blokada, uszkodzenie, brak
@@ -276,6 +276,20 @@ const MIGRACJE_SCHEMATU = [
         blad TEXT, zakonczone INTEGER
       );
       CREATE INDEX IF NOT EXISTS odstapienia_konta ON odstapienia (login, zlozone);
+    `),
+  },
+  // 5 = skad przychodza konta (14.10.2026): zbiorczy licznik rejestracji na miesiac i zrodlo z odnosnika ?z=.
+  // Bez loginu, adresu, IP i godziny, wiec licznika nie da sie powiazac z kontem.
+  {
+    wersja: 5,
+    opis: 'zrodla rejestracji: zbiorczy licznik na miesiac i zrodlo',
+    wykonaj: (d) => d.exec(`
+      CREATE TABLE IF NOT EXISTS zrodla_rejestracji (
+        okres TEXT NOT NULL,
+        zrodlo TEXT NOT NULL,
+        ile INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (okres, zrodlo)
+      ) WITHOUT ROWID;
     `),
   },
 ];
@@ -700,6 +714,31 @@ function zarezerwuj(login, okres, czynnosc, limit) {
 function ustawUzycie(login, okres, czynnosc, ile) {
   zap(`INSERT INTO uzycie (login, okres, czynnosc, ile) VALUES (?, ?, ?, ?)
     ON CONFLICT(login, okres, czynnosc) DO UPDATE SET ile = excluded.ile`).run(login, okres, czynnosc, Math.max(0, Number(ile) || 0));
+}
+
+// ─── Zrodla rejestracji (zbiorczo) ───────────────────────────────────────────
+// okres: 'RRRR-MM' (UTC); zrodlo: nazwa z odnosnika ?z= po oczyszczeniu w konta.js albo 'brak'/'inne'.
+// Wylacznie liczby: bez loginu, adresu, IP i godziny (dane statystyczne, nie osobowe).
+
+// Wiecej roznych zrodel w miesiacu trafia do 'inne', zeby automat z losowymi ?z= nie rozdal tabeli.
+const ZRODLA_W_MIESIACU = 100;
+
+/** +1 dla zrodla w okresie. Nowe zrodlo ponad limit miesiaca liczy sie jako 'inne'. Zwraca zapisana nazwe. */
+function policzZrodlo(okres, zrodlo) {
+  return transakcja(() => {
+    let nazwa = String(zrodlo);
+    const jest = zap('SELECT 1 FROM zrodla_rejestracji WHERE okres = ? AND zrodlo = ?').get(okres, nazwa);
+    if (!jest && zap('SELECT COUNT(*) AS n FROM zrodla_rejestracji WHERE okres = ?').get(okres).n >= ZRODLA_W_MIESIACU) nazwa = 'inne';
+    zap(`INSERT INTO zrodla_rejestracji (okres, zrodlo, ile) VALUES (?, ?, 1)
+      ON CONFLICT(okres, zrodlo) DO UPDATE SET ile = ile + 1`).run(okres, nazwa);
+    return nazwa;
+  });
+}
+
+/** [{ okres, zrodlo, ile }] od okresu 'RRRR-MM' (wlacznie): najnowsze miesiace, w miesiacu od najwiekszej liczby. */
+function zrodlaRejestracji(odOkresu = '0000-00') {
+  return zap('SELECT okres, zrodlo, ile FROM zrodla_rejestracji WHERE okres >= ? ORDER BY okres DESC, ile DESC, zrodlo')
+    .all(String(odOkresu)).map((w) => ({ okres: w.okres, zrodlo: w.zrodlo, ile: w.ile }));
 }
 
 // ─── Sesje odwolane (wylogowanie) ────────────────────────────────────────────
@@ -1172,6 +1211,7 @@ const API = {
   utworzOrganizacjeIKonto, utworzKonto, zmienKonto, usunKonto, kontoUsuniete, emailBylUsuniety,
   organizacja, usunOrganizacje, zmienOrganizacje,
   uzycie, uzycieKonta, policz, zarezerwuj, ustawUzycie,
+  policzZrodlo, zrodlaRejestracji,
   odwolajSesje, sesjaOdwolana, sesjeOdwolane, liczbaOdwolanych,
   zapiszToken, sprawdzToken, zuzyjToken, skrotTokenu,
   usunTokeny,
@@ -1188,4 +1228,4 @@ const API = {
 for (const [nazwa, fn] of Object.entries(API)) module.exports[nazwa] = chron(fn);
 // Najnowsza wersja schematu w tym kodzie (WERSJA_SCHEMATU + migracje): testy i diagnostyka.
 const WERSJA_NAJNOWSZA = Math.max(WERSJA_SCHEMATU, ...MIGRACJE_SCHEMATU.map((m) => m.wersja));
-Object.assign(module.exports, { BladMagazynu, BladKonfliktu, GLOWNA, WERSJA_SCHEMATU, WERSJA_NAJNOWSZA, POLA_KONTA });
+Object.assign(module.exports, { BladMagazynu, BladKonfliktu, GLOWNA, WERSJA_SCHEMATU, WERSJA_NAJNOWSZA, POLA_KONTA, ZRODLA_W_MIESIACU });
