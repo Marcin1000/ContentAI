@@ -1964,6 +1964,22 @@ KONTROLE_PLIKOW = [
     ("RP/ramka-fakty", "strona: ramka w hero zaczyna od pelnego przykladu z Faktami (6 s), potem petla od Tematu",
      "showcase/zasoby/strona.js", "var czasKroku = function (n) { return n === 5 && pierwszyPokaz ? PIERWSZY : CZAS[n - 1]; };",
      "if (bezPetli()) { krok = 5; ustawKlasy(5, true); } else ustawKlasy(0, true);"),
+
+    # -- zgloszenie z 14.10 po wdrozeniu PR #71: ramka w hero stala pusta i sie nie ruszala --
+
+    # Kursor nad ramka zatrzymuje petle. Trafiony w chwili miedzy cyklami (krok 0) zostawial pusta ramke
+    # tak dlugo, jak lezal na ramce. Teraz pod kursorem pelny przyklad, jak po kliknieciu pauzy.
+    ("RF/ramka-kursor", "strona: kursor w chwili kroku 0 pokazuje pelny przyklad, nie zatrzymuje pustej ramki",
+     "showcase/zasoby/strona.js", "if (krok === 0) { krok = 5; ustawKlasy(5); ramka.classList.add('zatrzymana'); }",
+     "tresc.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') { wstrzymana = true; zatrzymaj(); } });"),
+    # Karta schowana w trakcie zaniku zostawiala tresc przezroczysta do konca kolejnego kroku (3,4 s).
+    ("RF/ramka-zanik", "strona: przerwany zanik konczy reset od razu, ramka nie zostaje przezroczysta",
+     "showcase/zasoby/strona.js", "if (ramka.classList.contains('zanik')) { krok = 0; ustawKlasy(0, true); }",
+     "var zatrzymaj = function () { if (zegar) { clearTimeout(zegar); zegar = null; } ramka.classList.add('zatrzymana'); };"),
+    # Laptop (okno ok. 1425x830) i monitor: 94-96 px pustego miejsca pod menu, dol tekstu hero poza ekranem.
+    ("RF/hero-odstep", "strona: odstep pod menu zalezy od wysokosci okna (24-56 px), tekst hero na pierwszym ekranie",
+     "showcase/zasoby/strona.css", ".hero{position:relative;padding:clamp(24px,4.5vh,56px) 0 0;",
+     ".hero{position:relative;padding:clamp(40px,6.5vw,96px) 0 0;"),
 ]
 
 
