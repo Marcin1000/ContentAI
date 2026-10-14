@@ -227,6 +227,12 @@ async function testyRejestracji(sprawdz) {
     sprawdz('GET /rejestracja: formularz bez skryptow i obcych zasobow, z CSP (bez ramek) i no-store',
       form.status === 200 && czystyEkran(html) && csp.includes("frame-src 'none'") && csp.includes("form-action 'self'")
       && form.headers.get('cache-control') === 'no-store' && /<html lang="pl"/.test(html));
+    // Zgloszenie 14.10: jeden znak (A) jak w aplikacji, e-mailach i Stripe, takze w favikonie (zakodowanej w data:).
+    const znakA = 'M16 1 L19.8 12.2 L18.12 13.88';
+    const favikona = (h) => decodeURIComponent((/<link rel="icon" href="data:image\/svg\+xml,([^"]+)"/.exec(h) || [])[1] || '');
+    sprawdz('logowanie i rejestracja: znak A w logo i favikonie, bez dawnego znaku B z kropka w srodku',
+      [logowanie, html].every((h) => h.includes(znakA) && favikona(h).includes(znakA)
+        && !(h + favikona(h)).includes('L18.82 12.33') && !(h + favikona(h)).includes('r="1.6"')));
     sprawdz('GET /rejestracja: pola e-mail, haslo, dwie osobne zgody niezaznaczone, pulapka, podpisany znacznik czasu',
       /<form method="POST" action="\/rejestracja"/.test(html) && /<input id="email" name="email" type="email"/.test(html)
       && /<input id="haslo" name="haslo" type="password" autocomplete="new-password"/.test(html)

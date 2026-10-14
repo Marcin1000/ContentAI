@@ -2,6 +2,8 @@
 
 Pliki powstają z `narzedzia/grafiki_marki.js` (znak z `app/pwa/icons/favicon.svg`, kolor `--c-akcent`,
 krój Schibsted Grotesk), tak jak znak w nagłówku e-maili aplikacji (`serwer/zasoby/poczta-znak.png`).
+Ten sam generator rysuje ikony aplikacji i strony, obrazki przy linkach (og:image), grafiki README
+i ikony aplikacji natywnych. `narzedzia/test_znak.js` sprawdza, że wszędzie jest ten sam znak.
 
 | Plik | Rozmiar | Gdzie w Stripe | Gdzie widać |
 |---|---|---|---|

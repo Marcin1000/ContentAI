@@ -137,15 +137,15 @@ function akapit(s) {
   return esc(s).replace(/(^|\s)([aiouwzAIOUWZ])\s+/g, '$1$2&nbsp;');
 }
 
-// Znak marki (znak-32.svg, agencja-marka): cztery ramiona wokol rdzenia z kropka.
-const ZNAK_SCIEZKA = 'M16 1.5 L18.82 12.33 L17.94 13.21 A3.4 3.4 0 0 0 14.06 13.21 L13.18 12.33 Z '
-  + 'M30.5 16 L19.67 18.82 L18.79 17.94 A3.4 3.4 0 0 0 18.79 14.06 L19.67 13.18 Z '
-  + 'M16 30.5 L13.18 19.67 L14.06 18.79 A3.4 3.4 0 0 0 17.94 18.79 L18.82 19.67 Z '
-  + 'M1.5 16 L12.33 13.18 L13.21 14.06 A3.4 3.4 0 0 0 13.21 17.94 L12.33 18.82 Z';
+// Znak marki A (ten sam co favicon, aplikacja, e-maile i Stripe; decyzja 14.10): cztery ramiona wokol otworu.
+const ZNAK_SCIEZKA = 'M16 1 L19.8 12.2 L18.12 13.88 A3 3 0 0 0 13.88 13.88 L12.2 12.2 Z '
+  + 'M31 16 L19.8 19.8 L18.12 18.12 A3 3 0 0 0 18.12 13.88 L19.8 12.2 Z '
+  + 'M16 31 L12.2 19.8 L13.88 18.12 A3 3 0 0 0 18.12 18.12 L19.8 19.8 Z '
+  + 'M1 16 L12.2 12.2 L13.88 13.88 A3 3 0 0 0 13.88 18.12 L12.2 19.8 Z';
 
 function znak(klasa, rozmiar) {
   return `<svg class="${klasa}" viewBox="0 0 32 32" width="${rozmiar}" height="${rozmiar}" aria-hidden="true" focusable="false">`
-    + `<path d="${ZNAK_SCIEZKA}"/><circle cx="16" cy="16" r="1.6"/></svg>`;
+    + `<path d="${ZNAK_SCIEZKA}"/></svg>`;
 }
 
 function logo() {
@@ -311,7 +311,7 @@ function szkielet(t, tytul, srodek, opcje = {}) {
 <meta name="theme-color" content="#F7F6F2" media="(prefers-color-scheme: light)">
 <meta name="robots" content="noindex">
 <title>${esc(tytul)}</title>
-<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="#F6A623"><path d="${ZNAK_SCIEZKA}"/><circle cx="16" cy="16" r="1.6"/></svg>`)}">
+<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="#F6A623"><path d="${ZNAK_SCIEZKA}"/></svg>`)}">
 <style>${STYL}${opcje.styl || ''}</style>${opcje.glowa || ''}</head><body>
 <div class="uklad">
   <aside class="redakcja" aria-label="Content AI">

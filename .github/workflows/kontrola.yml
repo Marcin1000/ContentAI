@@ -103,6 +103,12 @@ jobs:
       - name: README - odnośniki i obrazki
         run: python3 narzedzia/audyt_readme.py
 
+      # Jeden znak marki (A) wszędzie: ścieżka znaku w kodzie (favicon, strona,
+      # logowanie, dokumenty prawne, aplikacja) i znak w każdej ikonie, obrazku OG
+      # i grafice README. Zgłoszenie 14.10.2026: część z nich miała jeszcze znak B.
+      - name: Marka - jeden znak w kodzie i grafikach
+        run: node narzedzia/test_znak.js
+
       # Aplikacja usuwa dlugie myslniki z generowanych artykulow po polsku.
       # Ta kontrola rozciaga te sama regule na interfejs, strone produktowa
       # i dokumentacje, zeby nie wracaly przy kolejnych zmianach.
