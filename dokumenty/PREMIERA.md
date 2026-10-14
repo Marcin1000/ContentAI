@@ -396,7 +396,8 @@ inaczej strona obieca artykuł bez klucza, a aplikacja jeszcze go nie da.
 
 1. Konsola Anthropic (https://platform.claude.com): Settings, Workspaces, "Create workspace", nazwa
    `Content AI start`. W tym obszarze: Limits, miesięczny limit wydatków (np. 30 USD, to około
-   75-150 artykułów). Potem API keys, "Create key" w obszarze `Content AI start`. Skopiuj klucz od razu.
+   75-150 artykułów). Potem API keys, "Create key" w obszarze `Content AI start`. Skopiuj klucz od razu:
+   pełny klucz widać tylko w tym oknie, a lista kluczy pokazuje go skróconego (z "..." w środku).
 2. Kopia danych i klucz startu w pliku środowiska (klucz tylko tutaj, nigdzie indziej):
 
 ```bash
@@ -412,21 +413,27 @@ CAI_REGULAMIN_WERSJA=2026-10-v3
 CAI_POLITYKA_WERSJA=2026-10-v2
 ```
 
-   Zamiast `WSTAW_TUTAJ_KLUCZ_STARTU` wklej klucz z kroku 1 (zaczyna się od `sk-ant-api03-`).
+   Zamiast `WSTAW_TUTAJ_KLUCZ_STARTU` wklej klucz z kroku 1. Nowe klucze z konsoli zaczynają się od
+   `sk-ant-usr-`, starsze od `sk-ant-api03-`. Jedna linia, bez cudzysłowu, spacji i komentarza.
    Opcjonalnie: `CAI_START_DZIENNIE` (20 nowych osób na dobę), `CAI_START_WYWOLAN` (25),
    `CAI_START_MINUT` (120). Te same wersje dokumentów wpisz w `/etc/contentai/srodowisko-test`.
 3. Aktualizacja i restart (migracja 6 tworzy tabelę przydziałów):
 
 ```bash
-git -C /srv/contentai rev-parse HEAD | sudo tee /root/contentai-poprzedni-commit
+git -C /srv/contentai rev-parse HEAD | sudo tee /root/contentai-commit-przed-$(date +%F-%H%M)
 cd /srv/contentai && sudo git pull
 sudo systemctl restart contentai
-sleep 5; sudo journalctl -u contentai --no-pager -n 40 | grep -E 'magazyn|migracja|start|blad|error'
+sleep 5; sudo journalctl -u contentai --no-pager -n 40 | grep -E 'magazyn|migracja|start|bez klucza|blad|error'
 sudo serwer/cli.sh start
 ```
 
-   W dzienniku: `migracja 6` i `pierwszy artykul bez klucza: do 20 nowych dziennie`. `start` pokazuje
-   "włączony". Gdy pisze "WYŁĄCZONY", sprawdź format klucza (zaczyna się od `sk-ant-api03-`).
+   Plik `contentai-commit-przed-...` ma w nazwie datę, więc ponowne uruchomienie bloku nie nadpisze
+   commita sprzed aktualizacji. Do wycofania (etap 3) weź commit z pierwszego pliku z tego dnia
+   (`ls /root/contentai-commit-przed-*`). W dzienniku: `migracja 6` i `pierwszy artykul bez klucza: do 20 nowych
+   dziennie`, bez linii `start WYLACZONE`. Pierwsza linia `start` to "włączony", a pod nią
+   "Klucz startu w Anthropic: działa" (sprawdzenie bez kosztu). Gdy pisze "WYŁĄCZONY", linia "Powód:"
+   mówi, co jest nie tak z wartością (bez pokazywania klucza). Popraw ją i zrób restart. Ustawienia
+   pod spodem działają dopiero przy włączonym starcie.
 4. Próba: okno prywatne, rejestracja na nowy adres, potwierdzenie, artykuł bez klucza. Potem
    `sudo serwer/cli.sh start` pokazuje `dziś 1 z 20`.
 5. Cloudflare: Caching, Configuration, "Purge Everything" (nowe teksty strony).

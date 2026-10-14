@@ -13,7 +13,7 @@
 
 const crypto = require('node:crypto');
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
+const { spawnSync, execFile } = require('node:child_process');
 const { uruchomSerwer } = require('./testy-wspolne.js');
 const konta = require('./konta.js');
 const startBezKlucza = require('./start.js');
@@ -348,6 +348,22 @@ async function testyKonfiguracji({ sprawdz }) {
       sprawdz('CAI_START_KLUCZ w zlym formacie (WSTAW_TUTAJ_...): funkcja wylaczona z bledem bez wartosci klucza, odmowa brak-klucza',
         f.zadana === true && f.wlaczona === false && f.bledy.length === 1 && !f.bledy[0].includes('WSTAW') && t.KONF.start.klucz === ''
         && odp.status === 403);
+      // 14.10, pierwsze wdrozenie: dziennik mowil tylko "musi byc kluczem", a CLI "WYLACZONY" z liniami puli
+      // pod spodem, co wygladalo jak dzialajacy start. Teraz powod wprost i ustawienia oznaczone jako nieaktywne.
+      sprawdz('dziennik: blad zlego klucza startu podaje powod (wzor z instrukcji), dalej bez wartosci klucza',
+        /Teraz: zostal wzor z instrukcji zamiast klucza/.test(f.bledy[0] || '') && !f.bledy[0].includes('WSTAW'));
+      const cli = (dod = {}) => spawnSync(process.execPath, [path.join(__dirname, 'uzytkownicy.js'), 'start'], { env: { ...process.env, ...dod }, encoding: 'utf8' });
+      const c = cli();
+      sprawdz('CLI start przy zlym kluczu: WYLACZONY z powodem, poprawka w pliku srodowiska i restart, ustawienia jako nieaktywne, bez wartosci klucza',
+        c.status === 0 && /^Pierwszy artykuł bez klucza: WYŁĄCZONY\.$/m.test(c.stdout) && /Powód: zamiast klucza został wzór z instrukcji/.test(c.stdout)
+        && c.stdout.includes('Popraw CAI_START_KLUCZ w /etc/contentai/srodowisko') && /sudo systemctl restart contentai$/m.test(c.stdout)
+        && c.stdout.includes('Ustawienia (zaczną działać po włączeniu):') && !c.stdout.includes('WSTAW_TUTAJ_KLUCZ_STARTU') && !/włączony\./.test(c.stdout));
+      const cTest = cli({ CAI_PLIK_SRODOWISKA: '/etc/contentai/srodowisko-test' });
+      sprawdz('CLI start dla srodowiska testowego (cli.sh --srodowisko ...-test): ten plik i restart contentai-test',
+        cTest.status === 0 && cTest.stdout.includes('Popraw CAI_START_KLUCZ w /etc/contentai/srodowisko-test') && /sudo systemctl restart contentai-test$/m.test(cTest.stdout));
+      const cBrak = cli({ CAI_START_KLUCZ: '' });
+      sprawdz('CLI start bez CAI_START_KLUCZ w procesie CLI: powod "nie ma CAI_START_KLUCZ"',
+        cBrak.status === 0 && /Powód: w pliku \/etc\/contentai\/srodowisko nie ma CAI_START_KLUCZ\./.test(cBrak.stdout));
     } finally {
       await t.zamknij();
     }
@@ -363,18 +379,57 @@ async function testyKonfiguracji({ sprawdz }) {
       const ewa = await noweKonto(t, 'ewa@start.example');
       await api(t, ewa.sesja, ARTYKUL(), { artykul: true });
       const env = { ...process.env, CAI_START_KLUCZ: START };
-      const cli = (...arg) => spawnSync(process.execPath, [path.join(__dirname, 'uzytkownicy.js'), ...arg], { env, encoding: 'utf8' });
-      const s = cli('start');
+      // Asynchronicznie: `start` sprawdza klucz w atrapie, ktora dziala w tym procesie (spawnSync by ja zablokowal).
+      const cli = (arg, dod = {}) => new Promise((gotowe) => {
+        execFile(process.execPath, [path.join(__dirname, 'uzytkownicy.js'), ...arg], { env: { ...env, ...dod }, encoding: 'utf8' },
+          (blad, stdout, stderr) => gotowe({ status: blad ? (blad.code || 1) : 0, stdout, stderr }));
+      });
+      const s = await cli(['start']);
       sprawdz('CLI start: wlaczony, pula 20 dziennie, dzis 1 przydzial, bez wartosci klucza',
         s.status === 0 && /włączony/.test(s.stdout) && /dziś \(doba UTC\):\s+1 z 20/.test(s.stdout) && !s.stdout.includes(START));
-      const u = cli('start-usun', 'Ewa+cokolwiek@start.example');
-      const u2 = cli('start-usun', 'ewa@start.example');
+      // Sprawdzenie klucza startu w Anthropic (GET /v1/models, bez kosztu): dziala, odrzucony, brak odpowiedzi.
+      sprawdz('CLI start przy dobrym kluczu: "Klucz startu w Anthropic: dziala", ustawienia bez dopisku o wlaczeniu',
+        /Klucz startu w Anthropic: działa/.test(s.stdout) && /^Ustawienia:$/m.test(s.stdout) && !s.stdout.includes('zaczną działać'));
+      const nowyFormat = await cli(['start'], { CAI_START_KLUCZ: 'sk-ant-usr-1HC' + 'u'.repeat(80) + 'qAAA' });
+      sprawdz('CLI start z kluczem startu w nowym formacie (sk-ant-usr-...): wlaczony i "dziala" w Anthropic',
+        nowyFormat.status === 0 && /^Pierwszy artykuł bez klucza: włączony\.$/m.test(nowyFormat.stdout) && /Klucz startu w Anthropic: działa/.test(nowyFormat.stdout));
+      const ZLY = 'sk-ant-api03-zly-' + 'd'.repeat(40);
+      const z = await cli(['start'], { CAI_START_KLUCZ: ZLY });
+      sprawdz('CLI start przy kluczu odrzuconym przez Anthropic (401): naglowek NIE DZIALA (nie "wlaczony"), ODRZUCONY, nowy klucz i restart, bez wartosci klucza',
+        z.status === 0 && /^Pierwszy artykuł bez klucza: NIE DZIAŁA/m.test(z.stdout) && !/^Pierwszy artykuł bez klucza: włączony/m.test(z.stdout)
+        && /Klucz startu w Anthropic: ODRZUCONY \(HTTP 401\)/.test(z.stdout) && /sudo systemctl restart contentai$/m.test(z.stdout) && !z.stdout.includes(ZLY));
+      const n = await cli(['start'], { CAI_URL_ANTHROPIC: 'http://127.0.0.1:9/v1/messages' });
+      sprawdz('CLI start bez odpowiedzi Anthropic: "nie udalo sie sprawdzic", bez bledu polecenia',
+        n.status === 0 && /Klucz startu w Anthropic: nie udało się sprawdzić/.test(n.stdout));
+      const u = await cli(['start-usun', 'Ewa+cokolwiek@start.example']);
+      const u2 = await cli(['start-usun', 'ewa@start.example']);
       sprawdz('CLI start-usun: usuwa przydzial adresu (adres kanoniczny), drugi raz mowi, ze go nie ma',
         u.status === 0 && /Usunięto przydział/.test(u.stdout) && u2.status === 0 && /nie ma przydziału/.test(u2.stdout)
         && t.magazyn.startPrzydzial(startBezKlucza.skrot('ewa@start.example')) === null);
     } finally {
       await t.zamknij();
     }
+  }
+}
+
+// ─── Klucz startu w nowym formacie konsoli (sk-ant-usr-...) ─────────────────
+
+async function testyNowegoFormatu({ sprawdz }) {
+  console.log('\n  pierwszy artykul bez klucza: klucz startu sk-ant-usr-... (nowy format konsoli Anthropic, 14.10)');
+  const NOWY = 'sk-ant-usr-1HC' + 's'.repeat(80) + 'qAAA';
+  const t = await uruchomSerwer({ srodowisko: { ...SERWER, CAI_KLUCZ_CIASTEK: KLUCZ_CIASTEK, CAI_START_KLUCZ: NOWY }, atrapaDostawcow: true });
+  const a = atrapaZKluczami(t);
+  try {
+    const f = t.KONF.funkcje.start || { bledy: [] };
+    const ewa = await noweKonto(t, 'ewa@start.example');
+    const art = await api(t, ewa.sesja, ARTYKUL(), { artykul: true });
+    await art.arrayBuffer();
+    const w = a.wywolania();
+    sprawdz('klucz startu sk-ant-usr-...: start wlaczony bez bledu, pierwszy artykul na tym kluczu (nie ANTHROPIC_KEY)',
+      f.wlaczona === true && f.bledy.length === 0 && art.status === 200 && w.length === 1 && w[0].klucz === NOWY);
+  } finally {
+    a.przywroc();
+    await t.zamknij();
   }
 }
 
@@ -436,12 +491,53 @@ function testyAdresu({ sprawdz }) {
     && k('A.B+x@Firma.pl') === 'a.b@firma.pl' && k('bez-malpy') === '' && k('@firma.pl') === '' && k('+tylko@firma.pl') === '+tylko@firma.pl');
 }
 
+// ─── Diagnoza zlego klucza startu (dziennik i CLI) ───────────────────────────
+
+function testyDiagnozy({ sprawdz }) {
+  console.log('\n  pierwszy artykul bez klucza: diagnoza zlego klucza startu (dziennik i CLI, bez wartosci klucza)');
+  const diag = startBezKlucza.diagnozaKlucza || (() => undefined);
+  const opis = startBezKlucza.opisDiagnozy || (() => undefined);
+  // Reszta klucza z rozpoznawalnymi kawalkami: zaden nie moze trafic do opisu.
+  const RESZTA = 'R2d2' + 'x'.repeat(86) + 'AA';
+  const przypadki = [
+    ['wzor', 'WSTAW_TUTAJ_KLUCZ_STARTU'],
+    ['skrocony', 'sk-ant-api03-R2d2...hQAA'],
+    ['admin', 'sk-ant-admin01-' + RESZTA],
+    ['oauth', 'sk-ant-oat01-' + RESZTA],
+    ['spacja', 'sk-ant-api03-' + RESZTA + ' # komentarz-QZX'],
+    ['cudzyslow', '"sk-ant-api03-' + RESZTA],
+    ['inny', 'sk-proj-' + RESZTA],
+    ['podwojny', START + START],
+    ['znaki', 'sk-ant-api03-' + RESZTA.slice(0, 40) + '+/' + RESZTA.slice(40)],
+    ['nieznany', 'abc123'],
+  ];
+  const kody = przypadki.map(([, w]) => (diag(w) || {}).kod);
+  sprawdz('diagnoza klucza startu: wzor z instrukcji, skrocony z listy, Admin key, token OAuth, spacja, cudzyslow, inny dostawca, dwa klucze, zle znaki, nieznany',
+    JSON.stringify(kody) === JSON.stringify(przypadki.map(([k]) => k)));
+  sprawdz('diagnoza: poprawny klucz, pusta wartosc i same spacje bez diagnozy',
+    diag(START) === null && diag('') === null && diag('   ') === null);
+  const tajne = ['R2d2', 'xxxxxxxx', 'hQAA', 'START-dd', 'QZX'];
+  const opisy = przypadki.flatMap(([, w]) => [opis(diag(w)), opis(diag(w), { cli: true })]);
+  sprawdz('opisy diagnozy (dziennik i CLI): dla kazdego przypadku, bez kawalkow wartosci klucza',
+    opisy.length === 20 && opisy.every((o) => typeof o === 'string' && o.length > 15 && !tajne.some((k) => o.includes(k))));
+  // 14.10: konsola wydaje nowe klucze sk-ant-usr-... (powiazane z kontem); wzor tylko na api03 je odrzucal.
+  const NOWY = 'sk-ant-usr-1HC' + RESZTA;
+  const nowyKonf = startBezKlucza.sprawdzKonfiguracje({ start: { klucz: NOWY, wlaczony: true, dziennie: 20 }, klucze: {} });
+  sprawdz('klucz startu w nowym formacie z konsoli (sk-ant-usr-...): bez diagnozy i bez bledu konfiguracji',
+    diag(NOWY) === null && nowyKonf.bledy.length === 0 && nowyKonf.zadana === true);
+  const dwa = startBezKlucza.sprawdzKonfiguracje({ start: { klucz: START + START, wlaczony: true, dziennie: 20 }, klucze: {} });
+  sprawdz('konfiguracja: dwa wklejone klucze (wzor znakow ich nie lapal, Anthropic odrzuca) to blad z powodem, bez wartosci',
+    dwa.bledy.length === 1 && /klucz wklejony dwa razy/.test(dwa.bledy[0]) && !dwa.bledy[0].includes('START-'));
+}
+
 async function uruchom({ sprawdz }) {
   testyAdresu({ sprawdz });
+  testyDiagnozy({ sprawdz });
   await testyBezpiecznikow({ sprawdz });
   await testyRownoleglosci({ sprawdz });
   await testyWstrzymania({ sprawdz });
   await testyKonfiguracji({ sprawdz });
+  await testyNowegoFormatu({ sprawdz });
   await testyPowitania({ sprawdz });
 }
 

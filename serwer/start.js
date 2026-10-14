@@ -27,9 +27,12 @@
 // modelu (artykulu nie ma). Wywolanie przerwane w trakcie zostaje policzone: dostawca mogl juz naliczyc koszt,
 // a zwrot pozwalalby powtarzac przerwane wywolania bez konca.
 
+const { WZOR_KLUCZA_ANTHROPIC } = require('./klucze.js');
+
 const DOBA = 24 * 3600_000;
-// Format jak klucz Anthropic uzytkownika (klucze.js): sk-ant-api03-..., nigdy klucz administracyjny.
-const WZOR_KLUCZA = /^sk-ant-api\d{2}-[A-Za-z0-9_-]{20,300}$/;
+// Ten sam wzor co klucz Anthropic uzytkownika (klucze.js): sk-ant-usr-... albo sk-ant-api03-..., nigdy klucz
+// administracyjny ani token logowania. 14.10: klucz startu z nowego obszaru roboczego (sk-ant-usr-) byl odrzucany.
+const WZOR_KLUCZA = WZOR_KLUCZA_ANTHROPIC;
 // Odpowiedz dostawcy o rozliczeniach naszego obszaru roboczego (limit wydatkow, brak srodkow, platnosc).
 const BLAD_ROZLICZEN = /credit balance|usage limit|spend(?:ing)? limit|billing|payment/i;
 // Powody, ktore aplikacja pokazuje w kreatorze klucza; 'wylaczony' i 'konto' = start tego konta nie dotyczy.
@@ -59,12 +62,69 @@ function wlaczony(konf = STAN.konf) {
   return Boolean(s.wlaczony && s.klucz && STAN.magazyn);
 }
 
+/**
+ * Co jest nie tak z wartoscia CAI_START_KLUCZ (14.10: pierwsze wdrozenie mialo zly klucz, a dziennik mowil
+ * tylko "musi byc kluczem"). -> null (pusta albo poprawna) | { kod, dlugosc }. Bez fragmentow wartosci:
+ * opis trafia do dziennika i do CLI.
+ */
+function diagnozaKlucza(wartosc) {
+  const k = String(wartosc || '').trim();
+  if (!k) return null;
+  const d = (kod) => ({ kod, dlugosc: k.length });
+  // Dwa wklejone klucze przechodza przez sam wzor (znaki i dlugosc sie zgadzaja), a Anthropic je odrzuca.
+  if ((k.match(/sk-ant-/g) || []).length > 1) return d('podwojny');
+  if (WZOR_KLUCZA.test(k)) return null;
+  if (/^WSTAW_TUTAJ/i.test(k)) return d('wzor');
+  if (/\.\.\.|…/.test(k)) return d('skrocony');
+  if (/^sk-ant-admin/i.test(k)) return d('admin');
+  if (/^sk-ant-(?:oat|ort|sid)/i.test(k)) return d('oauth');
+  if (/\s/.test(k)) return d('spacja');
+  if (/["'`]/.test(k)) return d('cudzyslow');
+  if (/^sk-/i.test(k) && !/^sk-ant-/i.test(k)) return d('inny');
+  if (/^sk-ant-[a-z]{2,10}\d{0,2}-/.test(k)) return d('znaki');
+  return d('nieznany');
+}
+
+// Opisy diagnozy: dziennik uslugi (bez polskich znakow, jak reszta dziennika) i CLI (cli.sh start).
+const OPIS_DZIENNIK = {
+  podwojny: () => 'klucz wklejony dwa razy',
+  wzor: () => 'zostal wzor z instrukcji zamiast klucza',
+  skrocony: () => 'klucz skrocony z "..." (kopia z listy kluczy w konsoli), pelny klucz widac tylko przy tworzeniu',
+  admin: () => 'klucz administracyjny (Admin key), potrzebny zwykly klucz z API keys',
+  oauth: () => 'token logowania (OAuth albo sesja claude.ai), potrzebny klucz z API keys w konsoli Anthropic',
+  spacja: () => 'spacja w wartosci (komentarz albo drugi tekst w tej samej linii)',
+  cudzyslow: () => 'cudzyslow w wartosci',
+  inny: () => 'klucz innego dostawcy (sk-, ale nie sk-ant-)',
+  znaki: (d) => `znaki spoza klucza albo klucz uciety (${d.dlugosc} znakow)`,
+  nieznany: (d) => `nieznany format (${d.dlugosc} znakow)`,
+};
+const OPIS_CLI = {
+  podwojny: () => 'klucz jest wklejony dwa razy.',
+  wzor: () => 'zamiast klucza został wzór z instrukcji (WSTAW_TUTAJ_…). Wklej w to miejsce klucz z konsoli Anthropic.',
+  skrocony: () => 'klucz jest skrócony (z „...” w środku), jak na liście kluczy w konsoli. Pełny klucz widać tylko raz, przy tworzeniu: utwórz nowy w obszarze Content AI start i skopiuj go od razu.',
+  admin: () => 'to klucz administracyjny (Admin key). Potrzebny jest zwykły klucz z API keys.',
+  oauth: () => 'to token logowania (OAuth z Claude Code albo sesja claude.ai), a nie klucz API. Utwórz klucz w API keys w konsoli Anthropic.',
+  spacja: () => 'w wartości jest spacja, np. komentarz albo drugi tekst w tej samej linii.',
+  cudzyslow: () => 'w wartości jest cudzysłów (np. niedomknięty).',
+  inny: () => 'to klucz innego dostawcy (zaczyna się od sk-, ale nie od sk-ant-).',
+  znaki: (d) => `po początku sk-ant-...- są znaki spoza klucza albo klucz jest ucięty (${d.dlugosc} znaków).`,
+  nieznany: (d) => `to nie jest klucz API Anthropic (${d.dlugosc} znaków, klucz zaczyna się od sk-ant-usr- albo sk-ant-api03-).`,
+};
+
+/** Opis diagnozy dla dziennika (`cli: false`) albo CLI (`cli: true`); null bez diagnozy. */
+function opisDiagnozy(d, { cli = false } = {}) {
+  if (!d) return null;
+  const opisy = cli ? OPIS_CLI : OPIS_DZIENNIK;
+  return (opisy[d.kod] || opisy.nieznany)(d);
+}
+
 /** Bledy i ostrzezenia konfiguracji startu (sprawdzKonfiguracje w server.js), bez wartosci klucza. */
 function sprawdzKonfiguracje(konf) {
   const s = ustawienia(konf);
   const bledy = [];
   const ostrzezenia = [];
-  if (s.klucz && !WZOR_KLUCZA.test(s.klucz)) bledy.push('CAI_START_KLUCZ musi byc kluczem API Anthropic (sk-ant-api03-...) z osobnego obszaru roboczego');
+  const diagnoza = diagnozaKlucza(s.klucz);
+  if (diagnoza) bledy.push(`CAI_START_KLUCZ musi byc kluczem API Anthropic (sk-ant-usr-... albo sk-ant-api03-...) z osobnego obszaru roboczego. Teraz: ${opisDiagnozy(diagnoza)}`);
   if (s.klucz && !bledy.length) {
     if (konf.klucze && s.klucz === konf.klucze.anthropic) {
       ostrzezenia.push('CAI_START_KLUCZ to ten sam klucz co ANTHROPIC_KEY: limit wydatkow startu obejmie tez zespol (zalecany osobny obszar roboczy w konsoli Anthropic)');
@@ -305,6 +365,6 @@ function opisKonfiguracji() {
 
 module.exports = {
   WZOR_KLUCZA, POWODY_DLA_APLIKACJI,
-  sprawdzKonfiguracje, emailKanoniczny, skrot, wlaczony, stan, stanDla, stanDlaAplikacji, zPowodem,
+  sprawdzKonfiguracje, diagnozaKlucza, opisDiagnozy, emailKanoniczny, skrot, wlaczony, stan, stanDla, stanDlaAplikacji, zPowodem,
   przydziel, wstrzymaj, status, inicjuj, opisKonfiguracji,
 };

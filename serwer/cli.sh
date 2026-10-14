@@ -45,6 +45,8 @@ set -a
 # shellcheck disable=SC1090
 . "$SRODOWISKO"
 set +a
+# Sciezka pliku do komunikatow CLI (np. "popraw CAI_START_KLUCZ w ..."), bez jego tresci.
+export CAI_PLIK_SRODOWISKA="$SRODOWISKO"
 
 cd "$KATALOG/.."
 # runuser zmienia konto i zostawia zmienne procesu (poza HOME, SHELL, USER, LOGNAME).

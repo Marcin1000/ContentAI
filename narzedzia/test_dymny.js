@@ -2553,6 +2553,15 @@ async function wariantUwagiTestuPremiery(b) {
   const admin = await sprawdzKlucz('sk-ant-admin01-' + 'a'.repeat(40));
   wynik('komputer: R9-T klucz administracyjny dalej idzie do serwera i dostaje komunikat o kluczu administracyjnym',
     /klucz administracyjny/.test(admin) && !/niepełny/.test(admin) && postyKluczy.some((x) => /^sk-ant-admin01-/.test(x)), JSON.stringify({ admin, postyKluczy }));
+  // 14.10: konsola Anthropic wydaje nowe klucze sk-ant-usr-... (starsze sk-ant-api03-...). Wzor w kreatorze
+  // przepuszczal tylko api03, wiec nowy klucz konczyl sie na "klucz jest niepelny" bez zapytania do serwera.
+  const uciety2 = await sprawdzKlucz('sk-ant-usr-1HC').catch(() => '');
+  wynik('komputer: uciety klucz sk-ant-usr-...: "niepelny" z obydwoma poczatkami (sk-ant-usr- i sk-ant-api03-), bez zapytania',
+    /niepełny/.test(uciety2) && /sk-ant-usr-/.test(uciety2) && /sk-ant-api03-/.test(uciety2) && !postyKluczy.includes('sk-ant-usr-1HC'), uciety2);
+  const nowyKlucz = 'sk-ant-usr-1HC' + 'u'.repeat(80) + 'qAAA';
+  const nowyWynik = await sprawdzKlucz(nowyKlucz).catch(() => '');
+  wynik('komputer: klucz w nowym formacie konsoli (sk-ant-usr-...) idzie do serwera, a nie konczy sie na "klucz jest niepelny"',
+    postyKluczy.includes(nowyKlucz) && !/niepełny|To nie wygląda/.test(nowyWynik), JSON.stringify({ nowyWynik, posty: postyKluczy.length }));
   await s.evaluate(() => { if (typeof startPomin === 'function') startPomin(); });
 
   // 5. Pakiet zakonczony odstapieniem 11 pazdziernika, oplacony do 11 listopada: pasek mowi o odstapieniu, bez daty konca okresu.

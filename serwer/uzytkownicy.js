@@ -47,6 +47,7 @@ const {
 const konta = require('./konta.js');
 // Kontekst (KONF, magazyn, podpis skrotu adresu) ustawia server.js przy wczytaniu.
 const startBezKlucza = require('./start.js');
+const klucze = require('./klucze.js');
 
 // Dane konta na dysku: prywatna baza wiedzy (u-<login>.json) razem z kopiami
 // uszkodzonych wersji i plikami tymczasowymi zapisu (oraz plik licznikow z R8,
@@ -444,11 +445,41 @@ function wypiszZrodla(miesiecy) {
  * start: pierwszy artykul bez klucza (serwer/start.js). Ustawienia bez klucza, dzisiejsza pula i przydzialy
  * z ostatniego roku. Same liczby: przydzial lezy pod skrotem adresu, bez loginu.
  */
-function wypiszStart() {
+async function wypiszStart() {
   const s = startBezKlucza.status();
-  if (!s.kluczUstawiony) console.log('Pierwszy artykuł bez klucza: WYŁĄCZONY (brak poprawnego CAI_START_KLUCZ).');
-  else if (s.wylaczonyAwaryjnie) console.log('Pierwszy artykuł bez klucza: WYŁĄCZONY awaryjnie (CAI_START=0).');
-  else console.log('Pierwszy artykuł bez klucza: włączony.');
+  // 14.10: po pierwszym wdrozeniu "WYLACZONY" z liniami puli pod spodem wygladalo jak dzialajacy start.
+  // Teraz: powod wylaczenia wprost (bez wartosci klucza), a przy wlaczonym sprawdzenie klucza w Anthropic.
+  const plik = process.env.CAI_PLIK_SRODOWISKA || '/etc/contentai/srodowisko';
+  const usluga = /-test$/.test(plik) ? 'contentai-test' : 'contentai';
+  const dziala = s.kluczUstawiony && !s.wylaczonyAwaryjnie;
+  if (!s.kluczUstawiony) {
+    const surowy = String(process.env.CAI_START_KLUCZ || '').trim();
+    const powod = surowy
+      ? startBezKlucza.opisDiagnozy(startBezKlucza.diagnozaKlucza(surowy), { cli: true }) || 'klucz startu nie przeszedł kontroli formatu.'
+      : `w pliku ${plik} nie ma CAI_START_KLUCZ.`;
+    console.log('Pierwszy artykuł bez klucza: WYŁĄCZONY.');
+    console.log(`  Powód: ${powod}`);
+    console.log(`  Popraw CAI_START_KLUCZ w ${plik} (jedna linia: CAI_START_KLUCZ=sk-ant-..., bez cudzysłowu i spacji),`);
+    console.log(`  potem: sudo systemctl restart ${usluga}`);
+  } else if (s.wylaczonyAwaryjnie) {
+    console.log('Pierwszy artykuł bez klucza: WYŁĄCZONY awaryjnie (CAI_START=0).');
+  } else {
+    // GET /v1/models: bez kosztu, nie widzi salda ani limitu wydatkow obszaru roboczego.
+    const w = await klucze.sprawdzUDostawcy('anthropic', { klucz: KONF.start.klucz }, KONF);
+    if (w.ok) {
+      console.log('Pierwszy artykuł bez klucza: włączony.');
+      console.log('  Klucz startu w Anthropic: działa (sprawdzenie bez kosztu, saldo i limit wydatków widać w konsoli).');
+    } else if (w.powod === 'dostawca-niedostepny') {
+      console.log('Pierwszy artykuł bez klucza: włączony.');
+      console.log(`  Klucz startu w Anthropic: nie udało się sprawdzić${w.status ? ` (HTTP ${w.status})` : ''}. Spróbuj za chwilę.`);
+    } else {
+      // Wlaczony w ustawieniach, ale pierwsza proba artykulu wstrzyma go na dobe: naglowek mowi to wprost.
+      console.log('Pierwszy artykuł bez klucza: NIE DZIAŁA (Anthropic odrzuca klucz startu).');
+      console.log(`  Klucz startu w Anthropic: ODRZUCONY (HTTP ${w.status}). Pierwsza próba artykułu wstrzyma start do końca doby.`);
+      console.log(`  Utwórz nowy klucz w obszarze Content AI start, wpisz go w ${plik} i zrób: sudo systemctl restart ${usluga}`);
+    }
+  }
+  console.log(dziala ? 'Ustawienia:' : 'Ustawienia (zaczną działać po włączeniu):');
   console.log(`  dzienna pula (CAI_START_DZIENNIE):        ${s.dziennie}`);
   console.log(`  wywołań na przydział (CAI_START_WYWOLAN): ${s.wywolanNaPrzydzial}`);
   console.log(`  okno przydziału (CAI_START_MINUT):        ${s.oknoMinut} min`);

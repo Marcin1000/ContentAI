@@ -1645,7 +1645,7 @@ KONTROLE += [
     ("R9-T/zgody-zdanie", "zgoda przy zakupie jednym zdaniem z dwoma linkami (bez kolumny tytul nad opisem)",
      ".zakup label.ozn-wiersz > span { display: block; }", None, None),
     ("R9-T/klucz-niepelny", "uciety klucz sk-ant-...: komunikat o niepelnym kluczu zamiast 'zaczyna sie od sk-ant-'",
-     "if (d === 'anthropic' && !/^sk-ant-admin/i.test(klucz) && !/^sk-ant-api\\d{2}-[A-Za-z0-9_-]{20,}$/.test(klucz)) return Promise.resolve({ ok: false, powod: 'niepelny' });",
+     "if (d === 'anthropic' && !/^sk-ant-admin/i.test(klucz) && !/^sk-ant-(?!admin|oat|ort|sid)[a-z]{2,10}\\d{0,2}-[A-Za-z0-9_-]{20,}$/.test(klucz)) return Promise.resolve({ ok: false, powod: 'niepelny' });",
      None, ("proxy",)),
     ("R9-T/pasek-srodek", "pasek wyniku bez plakietki i wersji: przyciski na srodku kolumny artykulu, nie przy prawej krawedzi",
      "body:not(.is-mobile) .output-bar:not(:has(#versions-bar.show)):has(#out-badge:is(.ready, [data-i18n=\"badge-done\"], [data-i18n=\"badge-ready\"])) .pasek-akcje { margin-inline: auto; }",
@@ -2113,6 +2113,32 @@ KONTROLE_PLIKOW = [
     ("SB/materialy-kanaly", "katalogi, YouTube i mail osobisty: najpierw dokumenty i artykul bez klucza, klucz przed kolejnym",
      "dokumenty/ogloszenie/kanaly.md", "2. Before the next one you need an Anthropic API key.",
      "Free plan: 3 articles on your own Anthropic API key."),
+    # 14.10 po wdrozeniu: zly CAI_START_KLUCZ, a "WYLACZONY" z liniami puli pod spodem wygladalo jak dzialajacy start.
+    ("SB/klucz-diagnoza", "zly klucz startu: dziennik podaje powod (wzor z instrukcji, skrocony z listy, Admin key, OAuth...) bez wartosci",
+     "serwer/start.js", "function diagnozaKlucza(wartosc) {", "if (s.klucz && !WZOR_KLUCZA.test(s.klucz)) bledy.push("),
+    ("SB/klucz-podwojny", "dwa wklejone klucze startu to blad konfiguracji (sam wzor znakow ich nie lapal)",
+     "serwer/start.js", "if ((k.match(/sk-ant-/g) || []).length > 1) return d('podwojny');", None),
+    ("SB/cli-powod", "cli.sh start: WYLACZONY z linia Powod, plikiem srodowiska i restartem, ustawienia jako nieaktywne",
+     "serwer/uzytkownicy.js", "console.log(`  Pow\u00f3d: ${powod}`);", "WY\u0141\u0104CZONY (brak poprawnego CAI_START_KLUCZ)"),
+    ("SB/cli-anthropic", "cli.sh start: przy poprawnym formacie sprawdza klucz startu w Anthropic (GET /v1/models, bez kosztu)",
+     "serwer/uzytkownicy.js", "await klucze.sprawdzUDostawcy('anthropic', { klucz: KONF.start.klucz }, KONF);", None),
+    ("SB/cli-plik", "cli.sh przekazuje sciezke pliku srodowiska do komunikatow (srodowisko testowe: contentai-test)",
+     "serwer/cli.sh", 'export CAI_PLIK_SRODOWISKA="$SRODOWISKO"', None),
+    ("SB/premiera-start", "PREMIERA etap 10: grep lapie linie startu, commit sprzed aktualizacji w pliku z data",
+     "dokumenty/PREMIERA.md", "grep -E 'magazyn|migracja|start|bez klucza|blad|error'",
+     "grep -E 'magazyn|migracja|start|blad|error'\nsudo serwer/cli.sh start"),
+    # 14.10: konsola Anthropic wydaje nowe klucze sk-ant-usr-... ("Linked account"), stare sk-ant-api03-... to
+    # "legacy key". Wzor tylko na api03 odrzucal nowe klucze w kreatorze, na serwerze i w starcie.
+    ("SB/klucz-usr", "serwer: klucz Anthropic sk-ant-<rodzaj>- (usr, api03...), bez admin, tokenow OAuth i sesji claude.ai",
+     "serwer/klucze.js", "const WZOR_KLUCZA_ANTHROPIC = /^sk-ant-(?!admin|oat|ort|sid)[a-z]{2,10}\\d{0,2}-[A-Za-z0-9_-]{20,300}$/;",
+     "format: { klucz: /^sk-ant-api\\d{2}-[A-Za-z0-9_-]{20,300}$/ },"),
+    ("SB/klucz-usr-aplikacja", "kreator: klucz sk-ant-usr-... idzie do serwera, a nie konczy sie na 'klucz jest niepelny'",
+     "app/contentai.src.html", "!/^sk-ant-(?!admin|oat|ort|sid)[a-z]{2,10}\\d{0,2}-[A-Za-z0-9_-]{20,}$/.test(klucz)) return Promise.resolve({ ok: false, powod: 'niepelny' });",
+     "!/^sk-ant-api\\d{2}-[A-Za-z0-9_-]{20,}$/.test(klucz)"),
+    ("SB/klucz-usr-start", "start: ten sam wzor klucza co klucz uzytkownika (klucz startu sk-ant-usr- z nowego obszaru roboczego)",
+     "serwer/start.js", "const WZOR_KLUCZA = WZOR_KLUCZA_ANTHROPIC;", "const WZOR_KLUCZA = /^sk-ant-api"),
+    ("SB/cli-nie-dziala", "cli.sh start: klucz odrzucony przez Anthropic to naglowek NIE DZIALA, nie 'wlaczony'",
+     "serwer/uzytkownicy.js", "console.log('Pierwszy artykuł bez klucza: NIE DZIAŁA (Anthropic odrzuca klucz startu).');", None),
 ]
 
 

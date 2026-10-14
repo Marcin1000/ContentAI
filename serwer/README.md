@@ -241,11 +241,12 @@ usługodawcy) wyłącznie w `/etc/contentai/srodowisko`.
 | `CAI_ZADANIA_MB` | `200` | budżet pamięci wyników zadań w tle |
 | `CAI_KLUCZ_CIASTEK` | - | klucz szyfrujący ciasteczek z kluczami użytkowników (32 bajty base64: `openssl rand -base64 32`, SEC8-04); zmiana = zapamiętane klucze nieważne |
 | **Pierwszy artykuł bez klucza** (`serwer/start.js`) | | |
-| `CAI_START_KLUCZ` | - | klucz API Anthropic z osobnego obszaru roboczego (workspace) z miesięcznym limitem wydatków; bez niego start wyłączony, zły format = wyłączony z błędem w dzienniku |
+| `CAI_START_KLUCZ` | - | klucz API Anthropic (`sk-ant-usr-...` albo starszy `sk-ant-api03-...`) z osobnego obszaru roboczego (workspace) z miesięcznym limitem wydatków; bez niego start wyłączony, zły format = wyłączony z błędem i powodem w dzienniku |
 | `CAI_START` | `1` | `0` wyłącza start awaryjnie bez usuwania klucza |
 | `CAI_START_DZIENNIE` | `20` | nowych przydziałów na dobę UTC dla całego serwera (`0` = bez nowych) |
 | `CAI_START_WYWOLAN` | `25` | wywołań modelu na przydział (artykuł, oceny, poprawki) |
 | `CAI_START_MINUT` | `120` | okno przydziału od pierwszego wywołania |
+| `CAI_PLIK_SRODOWISKA` | - | ustawia `cli.sh`: ścieżka pliku środowiska do komunikatów CLI (np. „popraw CAI_START_KLUCZ w ...”), bez treści pliku |
 | **Poczta** (C) | | |
 | `CAI_POCZTA` | `log` | `resend` albo `log`; `resend` bez klucza albo nadawcy schodzi na `log` z błędem w dzienniku |
 | `CAI_POCZTA_KLUCZ` | - | klucz API Resend (`re_...`), tylko wysyłka dla domeny |
@@ -1514,9 +1515,19 @@ dopóki artykuł nie powstanie. E-mail powitalny zaczyna wtedy od dokumentów i 
 do kolejnej doby i wraca, gdy limit się odnowi albo go podniesiesz.
 
 ```bash
-sudo serwer/cli.sh start                       # ustawienia, dzisiejsza pula, przydziały z ostatniego roku
+sudo serwer/cli.sh start                       # stan, klucz w Anthropic, ustawienia, dzisiejsza pula, przydziały z roku
 sudo serwer/cli.sh start-usun anna@firma.pl    # oddaje adresowi start (np. po awarii); konto z artykułem i tak go nie dostanie
 ```
+
+**Zły klucz startu.** Wartość `CAI_START_KLUCZ` spoza wzoru klucza API Anthropic (`sk-ant-usr-...`, starsze
+`sk-ant-api03-...`, ten sam wzór co klucz użytkownika w `klucze.js`) wyłącza start z błędem
+w dzienniku (`start WYLACZONE: ... Teraz: <powód>`). `cli.sh start` pisze wtedy "WYŁĄCZONY" z linią
+"Powód:", wskazuje plik środowiska i restart, a ustawienia oznacza jako nieaktywne. Rozpoznawane
+pomyłki: wzór `WSTAW_TUTAJ_...`, klucz skrócony z listy w konsoli (z "..."), klucz administracyjny,
+token OAuth, spacja albo cudzysłów w wartości, klucz innego dostawcy, dwa wklejone klucze. Opis nigdy
+nie zawiera fragmentu wartości. Przy poprawnym formacie `start` sprawdza klucz w Anthropic
+(`GET /v1/models`, bez kosztu): "działa", "ODRZUCONY (HTTP 401)" albo "nie udało się sprawdzić".
+To sprawdzenie nie widzi salda ani limitu wydatków obszaru roboczego.
 
 `/api/status` (operator) ma sekcję `startBezKlucza`: ustawienia bez klucza, `dzis`, `wRoku`,
 `wstrzymanyDo` z powodem i liczniki od startu procesu.
