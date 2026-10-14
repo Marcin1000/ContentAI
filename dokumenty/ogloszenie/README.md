@@ -1,74 +1,67 @@
-# Ogłoszenie premiery Content AI
+# Promocja Content AI
 
-Pakiet na premierę: posty na LinkedIn (PL i EN), Product Hunt, grafiki i plan dnia.
-Etap 7 w `dokumenty/PREMIERA.md` (Stripe live i otwarta rejestracja) musi być zakończony.
+Pakiet promocji po premierze 12.10: plan na 6 tygodni, teksty do wszystkich kanałów, filmy i grafiki.
+Etap 7 w `dokumenty/PREMIERA.md` (Stripe live i otwarta rejestracja) jest zakończony.
 
 | Plik | Co zawiera |
 |---|---|
-| `linkedin.md` | posty PL i EN, drugi post PL (historia testu), pierwsze komentarze z linkami, teksty alternatywne grafik, zasady odpowiedzi |
-| `product-hunt.md` | wszystkie pola formularza (z policzonymi limitami), kolejność galerii, komentarz twórcy, gotowe odpowiedzi na częste pytania |
-| `grafiki/` | grafiki do postów i galerii (tabela na końcu) |
+| `plan.md` | plan 14.10-30.11: zasady, kalendarz dzień po dniu, Product Hunt 14.11, cele, pomiar, ryzyka, płatne kanały |
+| `linkedin.md` | posty #2-#13 z datami, pierwsze komentarze, wiadomości, odpowiedzi, profil, strona firmowa, wydarzenie |
+| `product-hunt.md` | formularz (limity policzone), komentarz twórcy, plan dnia premiery, wiadomości do wspierających, Reddit, odpowiedzi |
+| `kanaly.md` | osobisty mail do nowego konta, YouTube (filmy i tutorial), katalogi, agencje, grupy, media |
+| `grafiki/` | karuzela PDF do posta #3, grafiki do galerii Product Hunt i dawnych postów (tabela na końcu) |
 
-Wszystkie teksty mają fakty zgodne ze stroną content-ai.net: pakiet Darmowy (3 artykuły, bez karty),
-Standard 79 zł albo 19 EUR, Premium 199 zł albo 49 EUR, własny klucz API Anthropic (orientacyjnie
-0,20-0,40 USD za artykuł), treści po polsku, angielsku, niemiecku i czesku. Gdy coś z tego się zmieni,
-popraw najpierw stronę, potem te teksty i grafiki.
-
----
-
-## 1. Zanim cokolwiek opublikujesz
-
-1. **Najnowsza wersja na serwerze**, z logo w mailach. Sprawdzenie:
-   `sudo serwer/cli.sh poczta-test twoj@adres.pl` (mail próbny ma u góry znak Content AI).
-2. **Wygląd Stripe** (logo i kolory w Checkout, w panelu subskrypcji i w mailach Stripe):
-   `dokumenty/marka/README.md`.
-3. **Resend: limit maili.** Plan darmowy wysyła 100 maili dziennie i 3000 miesięcznie. Każda
-   rejestracja to co najmniej jeden mail (link potwierdzający), ponowienie linku i reset hasła to
-   kolejne. Po przekroczeniu limitu nowe konta nie dostaną linku. Sprawdź plan w panelu Resend
-   (Settings, Billing). Na tydzień premiery przejdź na Pro (20 USD miesięcznie, 50 000 maili, bez
-   limitu dziennego), potem możesz wrócić na darmowy.
-4. **Konto na Product Hunt** załóż od razu: nowe konto może opublikować produkt dopiero po tygodniu.
-   Uzupełnij zdjęcie, imię i nazwisko, nagłówek i link do LinkedIn. Potem wypełnij formularz według
-   `product-hunt.md` i zaplanuj publikację („Schedule”).
-5. **Ścieżka nowego klienta** w oknie prywatnym przeglądarki, po polsku i po angielsku, na komputerze
-   i na telefonie: strona, „Załóż konto”, mail z linkiem, kreator klucza API, pierwszy artykuł.
-6. **Limit przychodu**: `sudo serwer/cli.sh przychod` (działalność nierejestrowana, limit kwartalny).
+Wszystkie teksty mają fakty zgodne ze stroną content-ai.net: pakiet Darmowy (3 artykuły, konto bez karty, teksty
+na własnym kluczu API Anthropic, orientacyjnie 0,20-0,40 USD za artykuł), Standard 79 zł albo 19 EUR, Premium
+199 zł albo 49 EUR, treści po polsku, angielsku, niemiecku i czesku. Gdy coś z tego się zmieni, popraw najpierw
+stronę, potem te teksty i grafiki.
 
 ---
 
-## 2. Plan
+## 1. Lista kontrolna
+
+1. **Najnowsza wersja na serwerze**: mail powitalny wychodzi po potwierdzeniu adresu (punkt 3).
+2. **Resend: limit maili.** Plan darmowy wysyła 100 maili dziennie i 3000 miesięcznie. Każda rejestracja to dwa
+   maile (link potwierdzający i powitanie po potwierdzeniu), ponowienie linku i reset hasła to kolejne. Po
+   przekroczeniu limitu nowe konta nie dostaną linku. Na 13-15.11 (Product Hunt) przejdź na Pro (20 USD
+   miesięcznie, 50 000 maili, bez limitu dziennego), potem możesz wrócić na darmowy.
+3. **Product Hunt**: formularz wypełnij i zaplanuj we wtorek 20.10 wieczorem (konto ma wtedy tydzień),
+   premiera w sobotę 14.11 o 9:01 (`product-hunt.md`).
+4. **Ścieżka nowego klienta** w oknie prywatnym przeglądarki, po polsku i po angielsku, na komputerze i na
+   telefonie: strona, „Załóż konto”, mail z linkiem, kreator klucza API, mail powitalny, pierwszy artykuł.
+5. **Limit przychodu**: `sudo serwer/cli.sh przychod 2026-Q4` co tydzień (działalność nierejestrowana, limit
+   kwartalny).
+
+---
+
+## 2. Najbliższe dni
+
+Pełny kalendarz: `plan.md`.
 
 | Kiedy | Co robisz |
 |---|---|
-| dziś i jutro | wdrożenie, wygląd Stripe, plan Resend, konto na Product Hunt |
-| środa 14.10, 8:30 | post PL na LinkedIn (`linkedin.md`), od razu pierwszy komentarz z linkami, przez godzinę odpowiadasz na komentarze |
-| od 14.10 do 19.10 | poprawki po pierwszych opiniach, film EN 16:9 na YouTube (punkt 5), formularz na Product Hunt wypełniony i zaplanowany, lista 30-50 osób do powiadomienia w dniu premiery |
-| wtorek 20.10, 9:01 | start na Product Hunt, od razu komentarz twórcy (`product-hunt.md`) |
-| wtorek 20.10, około 9:30 | post EN na LinkedIn z filmem EN 4:5, w pierwszym komentarzu adres strony na Product Hunt |
-| wtorek 20.10, cały dzień | odpowiedzi na Product Hunt w ciągu około 30 minut, serwer co 2-3 godziny (punkt 3) |
-| środa 21.10 | podziękowanie w komentarzu na Product Hunt i pod postami, lista uwag do poprawek |
-| czwartek 22.10, 8:30 | drugi post PL z filmem PL 4:5 (`linkedin.md`, „Post 2 PL”), tylko za zgodą osoby, która testowała |
-
-**Godzina startu.** Dzień na Product Hunt zaczyna się o 00:01 czasu pacyficznego. W Polsce to 9:01
-do 24.10, 8:01 od 25.10 do 31.10 (Europa przechodzi na czas zimowy tydzień przed USA) i znowu 9:01
-od 1.11.
-
-**Dzień tygodnia.** Od wtorku do czwartku Product Hunt ma najwięcej odwiedzających, ale też najwięcej
-premier. W sobotę i niedzielę jest odwrotnie. Celem są nowe konta i opinie, a nie miejsce w rankingu,
-więc wtorek jest dobry. Termin możesz przesunąć, byle tydzień po założeniu konta na Product Hunt.
+| śr 14.10 | 10-15 wiadomości do znajomych pod postem z 14.10, odpowiedzi na komentarze, nagłówek profilu |
+| cz 15.10 | 20 min komentowania, 15 zaproszeń, profil na Product Hunt, lista 30 agencji |
+| pt 16.10 | katalogi: AlternativeTo, SaaSHub, Toolify |
+| sb 17.10 | grupy SEO i content, lista 50 osób z kontem na Product Hunt |
+| pn 19.10 | 10 pierwszych wiadomości do agencji |
+| **wt 20.10, 7:45** | **post #2 z filmem PL** (`linkedin.md`), wieczorem formularz Product Hunt na 14.11 |
+| cz 22.10, 7:45 | post #3: karuzela „6 sposobów, w jakie AI psuje fakty”, kanał YouTube z filmami |
+| sb 24.10 | tutorial „klucz API i pierwszy artykuł” (`kanaly.md`, punkt 2), strona firmowa na LinkedIn |
 
 ---
 
-## 3. W dniu premiery: kontrola serwera
+## 3. Kontrola serwera
 
 ```bash
 # nowe konta dzisiaj (data założenia konta jest liczona w UTC)
 sudo serwer/cli.sh lista | grep -c "utworzony: $(date -u +%F)"
-# rejestracje i błędy od północy
+# rejestracje, potwierdzone adresy i maile powitalne od północy
 sudo journalctl -u contentai --no-pager --since today | grep -c '\[konta\] rejestracja:'
+sudo journalctl -u contentai --no-pager --since today | grep -c '\[konta\] adres potwierdzony:'
+sudo journalctl -u contentai --no-pager --since today | grep -c '\[poczta\] resend: powitanie'
+# błędy i maile, które nie wyszły (wpis wygląda tak: [poczta] resend: potwierdzenie -> a***@...: BLAD HTTP 429 ...)
 sudo journalctl -u contentai --no-pager --since today | grep -ciE 'error|blad'
-# maile, które nie wyszły (wpis wygląda tak: [poczta] resend: potwierdzenie -> a***@...: BLAD HTTP 429 ...)
-sudo journalctl -u contentai --no-pager --since today | grep -c '\[poczta\].*BLAD'
 sudo journalctl -u contentai --no-pager --since today | grep '\[poczta\].*BLAD' | tail -3
 free -h; df -h /
 ```
@@ -76,59 +69,61 @@ free -h; df -h /
 Gdyby coś poszło źle, `dokumenty/PREMIERA.md`, etap 8:
 - zalew rejestracji albo nadużycia: `CAI_REJESTRACJA=0` i restart (założone konta działają dalej),
 - problem z płatnościami: `PLATNOSCI_SPRZEDAZ=0` i restart (opłacone pakiety działają dalej),
-- maile nie dochodzą: panel Resend (Logs) i limit planu z punktu 1.3.
+- maile nie dochodzą: panel Resend (Logs) i limit planu z punktu 1.
 
-Błędy w aplikacji: zrzut ekranu, godzina, przeglądarka i co było kliknięte. Prześlij mi zbiorczo.
+Błędy w aplikacji: zrzut ekranu, godzina, przeglądarka i co było kliknięte. Przekazuj zbiorczo.
 
 ---
 
 ## 4. Jak mierzyć efekt
 
-Strona nie ma analityki i tak zostaje (obiecuje to w stopce). Efekt mierzysz liczbą kont i zakupów:
-po każdym poście zapisz datę, kanał, liczbę nowych kont (`lista`, polecenie wyżej) i przychód
-(`przychod`). Po tygodniu widać, który kanał dał konta, a który tylko polubienia.
+Strona nie ma analityki i tak zostaje (obiecuje to w stopce). Efekt mierzysz liczbą kont, aktywacją i zakupami,
+raz w tygodniu w arkuszu: wzór, cele i polecenia są w `plan.md`, punkt 6.
 
 ---
 
-## 5. Film
+## 5. Filmy
 
-Film ma 33 sekundy i pokazuje prawdziwą aplikację na tym samym przykładzie co strona i grafiki:
-artykuł wygląda dobrze, dwa zdania nie mają pokrycia w dokumentach, kontrola faktów je wypisuje,
-jedno kliknięcie je poprawia, potem cztery oceny i eksport z informacją o AI. Napisy są wpisane
-w obraz, bo LinkedIn odtwarza filmy bez dźwięku. Ścieżki dźwiękowej nie ma.
+Film pokazuje prawdziwą aplikację na tym samym przykładzie co strona (artykuł o wyborze CRM, trzy dokumenty
+w Bazie wiedzy): pytanie „Kto podał, że wdrożenie trwa 2 dni?”, trzy dokumenty, które tego nie podają, kontrola
+faktów, poprawa jednym kliknięciem, cztery oceny, eksport z informacją o AI i plansza z adresem. Napisy są
+w obrazie (LinkedIn odtwarza bez dźwięku), a osobno w plikach SRT dla YouTube. Ścieżki dźwiękowej nie ma.
+Wynik poprawy w filmie jest przygotowany na przykładzie, a przycisk, powiadomienie i oceny to prawdziwy interfejs.
 
-Pliki są duże (5-11 MB), więc nie ma ich w repozytorium. Dostałeś je w rozmowie:
+Pliki są duże (7-10 MB), więc nie ma ich w repozytorium. Są w rozmowie, w jednej paczce:
 
 | Plik | Gdzie |
 |---|---|
-| `content-ai-film-pl-4x5.mp4` (1080 x 1350) | drugi post PL na LinkedIn |
-| `content-ai-film-en-4x5.mp4` (1080 x 1350) | post EN na LinkedIn w dniu Product Hunt |
-| `content-ai-film-en-16x9.mp4` (1920 x 1080) | YouTube, a link do niego w galerii Product Hunt |
-| `content-ai-film-pl-16x9.mp4` (1920 x 1080) | zapas: YouTube po polsku albo prezentacja dla klienta |
+| `content-ai-film-pl-4x5.mp4` (1080 x 1350, 25 s) | post #2 na LinkedIn (20.10) |
+| `content-ai-film-en-4x5.mp4` (1080 x 1350, 25 s) | post #9 EN w dniu Product Hunt (14.11) |
+| `content-ai-film-pl-16x9.mp4` (1920 x 1080, 25 s) | YouTube po polsku |
+| `content-ai-film-en-16x9.mp4` (1920 x 1080, 25 s) | YouTube po angielsku, link w galerii Product Hunt |
+| `content-ai-film-pl-4x5-krotki.mp4`, `content-ai-film-en-4x5-krotki.mp4` (18 s) | odpowiedzi w komentarzach, wiadomości 1:1, drugi post bez ocen i eksportu |
+| `*-miniatura.jpg` | miniatury: 4:5 (kadr z pytaniem i zaznaczonymi zdaniami), 16:9 (duży napis dla listy YouTube) |
+| `content-ai-film-pl.srt`, `content-ai-film-en.srt` | napisy dla YouTube |
 
-**LinkedIn:** film dodajesz jak zdjęcie (ikona filmu przy tworzeniu posta). Najlepiej z komputera:
-tam da się ustawić miniaturę (plik `*-miniatura.jpg` z tej samej paczki). Opublikowanego posta
-nie da się przerobić z grafiki na film, więc film idzie w nowym poście, nie w poście z 14.10.
+**LinkedIn:** film dodajesz jak zdjęcie (ikona filmu przy tworzeniu posta). Najlepiej z komputera: tam da się
+ustawić miniaturę (`*-4x5-miniatura.jpg`). Pierwsza klatka filmu to już pytanie i zaznaczone zdania, więc
+działa także bez własnej miniatury.
 
-**YouTube dla Product Hunt:** Product Hunt przyjmuje film tylko jako link do YouTube. Wgraj
-`content-ai-film-en-16x9.mp4` jako „Niepubliczny” albo „Publiczny”, tytuł:
-`Content AI: articles from your own sources, fact-checked (33 s demo)`, miniatura
-`content-ai-film-en-16x9-miniatura.jpg`. Link wklej w formularzu Product Hunt w polu wideo galerii.
+**YouTube dla Product Hunt:** tytuły, opisy i kolejność kroków są w `kanaly.md`, punkt 2. Link do filmu EN
+wklej w formularzu Product Hunt w polu wideo galerii.
 
 ---
 
 ## 6. Grafiki
 
-Powstały ze zrzutów aplikacji z przykładowym artykułem o wyborze CRM (ten sam przykład co na stronie).
-Gdy zmieni się cennik albo wygląd aplikacji, poproś o nowe.
+Grafiki do Product Hunt powstały ze zrzutów aplikacji z przykładowym artykułem o wyborze CRM (ten sam przykład
+co na stronie i w filmie), a karuzela korzysta z tego samego przykładu. Gdy zmieni się cennik, pakiet Darmowy albo
+wygląd aplikacji, poproś o nowe.
 
 | Plik | Rozmiar | Gdzie |
 |---|---|---|
-| `grafiki/linkedin-pl.png` | 1200 x 1500 | post PL na LinkedIn |
-| `grafiki/linkedin-en.png` | 1200 x 1500 | post EN na LinkedIn |
+| `grafiki/karuzela-6-sposobow.pdf` | 8 stron 1080 x 1350 | post #3 na LinkedIn (22.10), jako dokument; później grupy i wiadomości do agencji |
 | `grafiki/ph-miniatura.png` | 240 x 240 | Product Hunt, miniatura (Thumbnail) |
-| `grafiki/ph-1-przeglad.png` | 1270 x 760 | Product Hunt, galeria 1 (okładka) |
-| `grafiki/ph-2-fakty.png` | 1270 x 760 | Product Hunt, galeria 2 |
-| `grafiki/ph-3-oceny.png` | 1270 x 760 | Product Hunt, galeria 3 |
+| `grafiki/ph-1-przeglad.png` | 1270 x 760 | Product Hunt, galeria 1 (okładka), katalogi |
+| `grafiki/ph-2-fakty.png` | 1270 x 760 | Product Hunt, galeria 2, katalogi |
+| `grafiki/ph-3-oceny.png` | 1270 x 760 | Product Hunt, galeria 3, katalogi |
 | `grafiki/ph-4-eksport.png` | 1270 x 760 | Product Hunt, galeria 4 |
 | `grafiki/ph-5-cennik.png` | 1270 x 760 | Product Hunt, galeria 5 |
+| `grafiki/linkedin-pl.png`, `grafiki/linkedin-en.png` | 1200 x 1500 | post z 14.10 (archiwum), zapas zamiast filmu |
