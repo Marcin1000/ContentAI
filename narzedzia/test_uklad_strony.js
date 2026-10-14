@@ -591,6 +591,43 @@ async function kontrolaHeroPierwszyEkran(przegladarka, baza) {
   return problemy;
 }
 
+/* 14. Skad przychodza konta (14.10): wejscie z ?z= (albo ?ref= z Product Hunt, ?utm_source=) dopisuje zrodlo do linkow
+   rejestracji i logowania w aplikacji oraz do podstron. Niepoprawna nazwa nic nie zmienia. Nic nie zostaje w przegladarce. */
+async function kontrolaZrodla(przegladarka, baza) {
+  const problemy = [];
+  const ctx = await przegladarka.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, serviceWorkers: 'block', reducedMotion: 'reduce' });
+  const strona = await ctx.newPage();
+  strona.on('pageerror', e => problemy.push('blad JS: ' + e.message));
+  const linki = () => strona.evaluate(() => [...document.querySelectorAll('a[href]')].map(a => a.getAttribute('href')));
+  const z = (h) => { try { return new URL(h, 'http://s').searchParams.get('z'); } catch (e) { return null; } };
+  for (const [wejscie, oczekiwane, sciezka] of [['?z=LinkedIn-1015', 'linkedin-1015', '/'], ['?ref=producthunt', 'producthunt', '/en/'], ['?utm_source=newsletter', 'newsletter', '/klucz-api/']]) {
+    await strona.goto(baza + sciezka + wejscie, { waitUntil: 'load' });
+    const h = await linki();
+    const rejestracja = h.filter(x => x.startsWith('https://app.content-ai.net/rejestracja'));
+    const logowanie = h.filter(x => /^https:\/\/app\.content-ai\.net\/(\?|$)/.test(x));
+    const podstrony = h.filter(x => /^\/(en\/|klucz-api\/|ai-act\/|api-key\/|$|\?)/.test(x) && new URL(x, 'http://s').pathname !== sciezka);
+    const dokumenty = h.filter(x => x.startsWith('https://app.content-ai.net/dokumenty/'));
+    if (!rejestracja.length || rejestracja.some(x => z(x) !== oczekiwane)) problemy.push(sciezka + wejscie + ': linki rejestracji bez z=' + oczekiwane + ' (' + rejestracja.slice(0, 2).join(' ') + ')');
+    if (rejestracja.some(x => x.includes('pakiet=')) && !rejestracja.some(x => /pakiet=standard/.test(x) && z(x) === oczekiwane)) problemy.push(sciezka + wejscie + ': link pakietu zgubil pakiet albo zrodlo');
+    if (!logowanie.length || logowanie.some(x => z(x) !== oczekiwane)) problemy.push(sciezka + wejscie + ': link logowania w aplikacji bez zrodla');
+    if (!podstrony.length || podstrony.some(x => z(x) !== oczekiwane)) problemy.push(sciezka + wejscie + ': podstrony bez zrodla (' + podstrony.filter(x => z(x) !== oczekiwane).slice(0, 3).join(' ') + ')');
+    if (dokumenty.some(x => z(x) !== null)) problemy.push(sciezka + wejscie + ': zrodlo dopisane do linkow dokumentow (niepotrzebne)');
+  }
+  // Przejscie na podstrone niesie zrodlo dalej.
+  await strona.goto(baza + '/?z=linkedin-1015', { waitUntil: 'load' });
+  await strona.click('a[href^="/en/"]');
+  await strona.waitForLoadState('load');
+  if (!(await linki()).filter(x => x.startsWith('https://app.content-ai.net/rejestracja')).every(x => z(x) === 'linkedin-1015')) problemy.push('po przejsciu na /en/ linki rejestracji bez zrodla');
+  for (const zle of ['?z=%3Cscript%3E', '?z=brak', '?z=' + 'a'.repeat(40)]) {
+    await strona.goto(baza + '/' + zle, { waitUntil: 'load' });
+    if ((await linki()).some(x => /[?&]z=/.test(x))) problemy.push(zle + ': niepoprawne zrodlo trafilo do linkow');
+  }
+  const slad = await strona.evaluate(() => ({ ciasteczka: document.cookie, pamiec: Object.keys(localStorage), sesja: Object.keys(sessionStorage) }));
+  if (slad.ciasteczka || slad.pamiec.length || slad.sesja.length) problemy.push('zrodlo zostawia slad w przegladarce: ' + JSON.stringify(slad));
+  await ctx.close();
+  return problemy;
+}
+
 /* ======================= przebieg ======================= */
 
 async function sprawdzStrone(przegladarka, baza, [w, h], motyw, sciezka, zFokusem, skala, interakcje) {
@@ -673,6 +710,7 @@ async function sprawdzStrone(przegladarka, baza, [w, h], motyw, sciezka, zFokuse
   wynik('1440x900 ramka w hero (ruch wlaczony): start od pelnego przykladu z Faktami, potem petla, PL i EN', await kontrolaRamki(przegladarka, baza));
   wynik('1440x900 ramka w hero: kursor w chwili kroku 0 i karta schowana w trakcie zaniku nie zostawiaja pustej ramki', await kontrolaRamkiPrzerwy(przegladarka, baza));
   wynik('hero na pierwszym ekranie (1425x830, 1333x768, 1905x1065, 1440x900, 1280x720): odstep pod menu i caly tekst', await kontrolaHeroPierwszyEkran(przegladarka, baza));
+  wynik('zrodlo wejscia (?z=, ?ref=, ?utm_source=) w linkach rejestracji, logowania i podstron, bez sladu w przegladarce', await kontrolaZrodla(przegladarka, baza));
   await przegladarka.close();
   if (srv) srv.close();
   console.log('\nBLEDOW: ' + bledow + '   (' + lista.length + ' widokow, ' + Math.round((Date.now() - t0) / 1000) + ' s, tryb ' + (PELNY ? 'pelny' : 'szybki') + ')');

@@ -12,6 +12,29 @@
   function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
   function zapisz(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* tryb prywatny: wybór tylko do końca wizyty */ } }
 
+  /* ---------- źródło wejścia (?z=) ----------
+     Odnośnik w poście albo na Product Hunt niesie ?z=nazwa (albo ?ref=, ?utm_source=). Strona dopisuje je do linków
+     rejestracji i logowania w aplikacji oraz do podstron, a aplikacja liczy udane rejestracje zbiorczo: miesiąc,
+     źródło, liczba. Nic nie zostaje w przeglądarce (bez ciasteczek i localStorage). Ten sam wzór nazwy co w serwer/konta.js. */
+  (function () {
+    var p = new URLSearchParams(location.search), z = '';
+    ['z', 'ref', 'utm_source'].some(function (n) {
+      var w = (p.get(n) || '').trim().toLowerCase();
+      if (w) z = /^[a-z0-9][a-z0-9-]{0,31}$/.test(w) && w !== 'brak' ? w : '';
+      return Boolean(w);
+    });
+    if (!z) return;
+    $$('a[href]').forEach(function (a) {
+      var u;
+      try { u = new URL(a.getAttribute('href'), location.href); } catch (e) { return; }
+      var aplikacja = u.origin === 'https://app.content-ai.net' && (u.pathname === '/rejestracja' || u.pathname === '/');
+      var podstrona = u.origin === location.origin && u.pathname !== location.pathname && !/\.[a-z0-9]+$/i.test(u.pathname);
+      if (!aplikacja && !podstrona) return;
+      u.searchParams.set('z', z);
+      a.setAttribute('href', aplikacja ? u.href : u.pathname + u.search + u.hash);
+    });
+  })();
+
   /* ---------- motyw ---------- */
   var mqJasny = window.matchMedia ? matchMedia('(prefers-color-scheme: light)') : null;
   var btnMotyw = $('.motyw');

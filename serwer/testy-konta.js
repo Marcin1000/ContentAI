@@ -886,10 +886,77 @@ function testyFunkcji(sprawdz) {
     && !konta.wymagaPotwierdzenia({ zrodloKluczy: 'serwera', emailPotwierdzony: null }));
 }
 
+// ─── Zrodlo rejestracji (?z=): zbiorczy licznik bez danych osobowych ─────────
+
+async function testyZrodel(sprawdz) {
+  console.log('\n  konta - zrodlo rejestracji (?z=): zbiorczy licznik na miesiac');
+  const { spawnSync } = require('node:child_process');
+  const t = await uruchomSerwer({ srodowisko: srodowiskoRejestracji(), atrapaDostawcow: true });
+  try {
+    const okres = new Date().toISOString().slice(0, 7);
+    const licznik = () => Object.fromEntries(t.magazyn.zrodlaRejestracji(okres).map((w) => [w.zrodlo, w.ile]));
+    const formularz = async (adres) => tekst(await t.zadanie(adres, { headers: { 'accept-language': 'pl' } }));
+    const zPostu = await formularz('/rejestracja?z=LinkedIn-1015&pakiet=standard');
+    sprawdz('GET /rejestracja?z=: zrodlo malymi literami w ukrytym polu, przelacznik jezyka i "Zaloguj sie" niosa je dalej',
+      zPostu.includes('<input type="hidden" name="z" value="linkedin-1015">')
+      && zPostu.includes('href="/rejestracja?lang=en&amp;pakiet=standard&amp;z=linkedin-1015"') && zPostu.includes('href="/?lang=pl&amp;z=linkedin-1015"'));
+    const [ph, utm, zle, brak, bez] = await Promise.all(['/rejestracja?ref=producthunt', '/rejestracja?utm_source=newsletter',
+      '/rejestracja?z=%3Cscript%3E', '/rejestracja?z=brak', '/rejestracja'].map(formularz));
+    sprawdz('GET /rejestracja: ?ref= (Product Hunt) i ?utm_source= tez sa zrodlem, nazwa spoza [a-z0-9-] i "brak" nie trafiaja do formularza',
+      ph.includes('name="z" value="producthunt"') && utm.includes('name="z" value="newsletter"')
+      && ![zle, brak, bez].some((h) => h.includes('name="z"')) && !zle.includes('script%3E') && !zle.includes('<script>'));
+
+    // Dziennik serwera (ten sam proces) przechwycony na czas rejestracji: wpis jest, zrodla w nim nie ma.
+    const dziennik = [];
+    const [log, warn] = [console.log, console.warn];
+    console.log = (...a) => { dziennik.push(a.join(' ')); };
+    console.warn = (...a) => { dziennik.push(a.join(' ')); };
+    let zLinku;
+    try { zLinku = await zarejestruj(t, { email: 'ola.zrodlo@firma.pl', z: 'linkedin-1015' }); } finally { [console.log, console.warn] = [log, warn]; }
+    const bezZrodla = await zarejestruj(t, { email: 'bez-zrodla@firma.pl' });
+    const podrobione = await zarejestruj(t, { email: 'podrobione@firma.pl', z: 'Zle zrodlo!' });
+    sprawdz('udana rejestracja dopisuje 1 do licznika miesiaca: zrodlo z formularza, bez zrodla "brak", niepoprawne "inne"',
+      [zLinku, bezZrodla, podrobione].every((o) => o.status === 303)
+      && Object.keys(licznik()).length === 3 && licznik()['linkedin-1015'] === 1 && licznik().brak === 1 && licznik().inne === 1);
+
+    const pulapka = await zarejestruj(t, { email: 'bot@firma.pl', strona: 'https://spam.example', z: 'linkedin-1015' });
+    const zly = await zarejestruj(t, { email: 'zly@firma', z: 'linkedin-1015' });
+    const zlyHtml = await tekst(zly);
+    const zajety = await zarejestruj(t, { email: 'ola.zrodlo@firma.pl', z: 'linkedin-1015' });
+    sprawdz('bez konta bez licznika: pole-pulapka, blad walidacji i zajety adres nie licza sie, formularz po bledzie zachowuje zrodlo',
+      pulapka.status === 303 && zly.status === 400 && zajety.status === 400 && zlyHtml.includes('<input type="hidden" name="z" value="linkedin-1015">')
+      && licznik()['linkedin-1015'] === 1);
+
+    // Licznik nie wie, ktore konto przyszlo skad: zrodla nie ma w koncie, zgodach ani eksporcie danych konta.
+    const konto = t.magazyn.kontoPoEmailu('ola.zrodlo@firma.pl');
+    const cookie = ciasteczkoSesji(zLinku);
+    const eksport = await tekst(await t.zadanie('/konto/eksport', { headers: { cookie } }));
+    sprawdz('zrodlo nie trafia do konta, zgod, eksportu danych konta ani dziennika serwera (zbiorczo, bez danych osobowych)',
+      Boolean(konto) && dziennik.some((l) => l.includes('[konta] rejestracja:')) && !dziennik.some((l) => l.includes('linkedin'))
+      && !JSON.stringify(t.magazyn.kontoZOrganizacja(konto.login)).includes('linkedin')
+      && !JSON.stringify(t.magazyn.zgody(konto.login)).includes('linkedin') && eksport.length > 100 && !eksport.includes('linkedin'));
+
+    const logowanie = await formularz('/?lang=pl&z=linkedin-1015');
+    const logowanieZle = await formularz('/?lang=pl&z=%22%3E%3Cb%3E');
+    sprawdz('ekran logowania z ?z=: "Zaloz konto" niesie zrodlo, niepoprawne zrodlo pomija',
+      logowanie.includes('href="/rejestracja?lang=pl&amp;z=linkedin-1015"') && logowanieZle.includes('href="/rejestracja?lang=pl"') && !logowanieZle.includes('<b>'));
+
+    const cli = (...a) => spawnSync(process.execPath, [path.join(__dirname, 'uzytkownicy.js'), ...a], { env: { ...process.env }, encoding: 'utf8' });
+    const wypis = cli('zrodla');
+    const zly0 = cli('zrodla', '0');
+    sprawdz('CLI zrodla [miesiecy]: miesiac z suma i liczbami zrodel (najwieksze najpierw), bez kont; zla liczba miesiecy kod 1',
+      wypis.status === 0 && new RegExp(`${okres}\\s+razem 3`).test(wypis.stdout) && /linkedin-1015\s+1/.test(wypis.stdout) && /brak\s+1/.test(wypis.stdout)
+      && !wypis.stdout.includes('@') && !wypis.stdout.includes(konto.login) && zly0.status === 1 && /zrodla \[miesiecy 1-120\]/.test(zly0.stderr));
+  } finally {
+    await t.zamknij();
+  }
+}
+
 async function uruchom({ sprawdz }) {
   testyFunkcji(sprawdz);
   await testyDomyslne(sprawdz);
   await testyRejestracji(sprawdz);
+  await testyZrodel(sprawdz);
   await testyTurnstileIBramy(sprawdz);
   await testyPotwierdzenia(sprawdz);
   await testyResetu(sprawdz);

@@ -638,27 +638,53 @@ function stanKonta(kontekst) {
   };
 }
 
+// ─── Zrodlo rejestracji (?z=) ────────────────────────────────────────────────
+// Skad przychodza konta (14.10.2026): odnosnik w poscie albo na stronie niesie ?z=nazwa (strona produktowa
+// przekazuje tez ?ref= z Product Hunt i ?utm_source=). Formularz niesie nazwe w ukrytym polu, a udana
+// rejestracja dopisuje 1 do zbiorczego licznika miesiaca (magazyn.policzZrodlo). Nazwa nie trafia do konta
+// ani do dziennika, wiec licznik nie wie, ktore konto przyszlo skad.
+const WZOR_ZRODLA = /^[a-z0-9][a-z0-9-]{0,31}$/;
+
+/** Nazwa zrodla z parametrow adresu (z, potem ref i utm_source) albo '' przy braku lub niepoprawnej nazwie. */
+function zrodloZOdnosnika(parametry) {
+  for (const nazwa of ['z', 'ref', 'utm_source']) {
+    const w = String(parametry.get(nazwa) || '').trim().toLowerCase();
+    if (w) return WZOR_ZRODLA.test(w) && w !== 'brak' ? w : '';
+  }
+  return '';
+}
+
+/** Zrodlo do licznika z pola formularza: puste to 'brak', niepoprawne to 'inne'. */
+function zrodloDoLicznika(wartosc) {
+  const w = String(wartosc || '').trim().toLowerCase();
+  if (!w) return 'brak';
+  return WZOR_ZRODLA.test(w) ? w : 'inne';
+}
+
 // ─── Trasy publiczne ─────────────────────────────────────────────────────────
 
 function daneRejestracji(kontekst, jezyk, o = {}) {
   const { KONF, plany } = kontekst;
   const pakiet = pakietNaSprzedaz(kontekst, o.pakiet);
+  const zrodlo = WZOR_ZRODLA.test(String(o.zrodlo || '')) && o.zrodlo !== 'brak' ? o.zrodlo : '';
+  const zZrodlem = zrodlo ? `&z=${zrodlo}` : '';
   return {
     ...o,
     jezyk,
     pakiet,
+    zrodlo,
     nazwaPakietu: pakiet ? (jezyk === 'en' ? plany.PLANY[pakiet].nazwaEn : plany.PLANY[pakiet].nazwa) : '',
     doPlatnosci: kontekst.funkcjaWlaczona('platnosci'),
     darmowe: darmoweArtykuly(kontekst),
     adresy: {
-      regulamin: dokumentyPrawne.adres('regulamin', jezyk), polityka: dokumentyPrawne.adres('prywatnosc', jezyk), logowanie: `/?lang=${jezyk}`,
+      regulamin: dokumentyPrawne.adres('regulamin', jezyk), polityka: dokumentyPrawne.adres('prywatnosc', jezyk), logowanie: `/?lang=${jezyk}${zZrodlem}`,
     },
     administrator: KONF.uslugodawca && KONF.uslugodawca.imieNazwisko,
     hasloMin: ZASADY.hasloMin,
     hasloMax: ZASADY.hasloMax,
     turnstile: turnstileWlaczony(KONF) ? { klucz: KONF.turnstile.klucz } : null,
     znacznik: znacznikFormularza(kontekst.podpisz),
-    przelacznikHref: `/rejestracja?lang=${jezyk === 'en' ? 'pl' : 'en'}${pakiet ? `&pakiet=${pakiet}` : ''}`,
+    przelacznikHref: `/rejestracja?lang=${jezyk === 'en' ? 'pl' : 'en'}${pakiet ? `&pakiet=${pakiet}` : ''}${zZrodlem}`,
   };
 }
 
@@ -677,7 +703,7 @@ async function rejestracja(req, res, kontekst) {
     }
     // Zalogowany nie zaklada drugiego konta: aplikacja albo zakup wybranego pakietu (STR8-03).
     if (kontekst.sesjaZadania(req)) return przekieruj(res, celPoRejestracji(kontekst, url.searchParams.get('pakiet'), jezyk, req));
-    return ekranRejestracji(res, kontekst, 200, jezyk, { pakiet: url.searchParams.get('pakiet') || '' });
+    return ekranRejestracji(res, kontekst, 200, jezyk, { pakiet: url.searchParams.get('pakiet') || '', zrodlo: zrodloZOdnosnika(url.searchParams) });
   }
   if (metoda !== 'POST') return metodaNiedozwolona(res, kontekst, 'GET, HEAD, POST');
 
@@ -692,7 +718,8 @@ async function rejestracja(req, res, kontekst) {
   const email = String(dane.get('email') || '').trim().slice(0, ZASADY.emailMax);
   const haslo = String(dane.get('haslo') || '');
   const zaznaczone = { regulamin: dane.get('zgoda_regulamin') === '1', wiek: dane.get('zgoda_wiek') === '1' };
-  const ponownie = (status, o, naglowki) => ekranRejestracji(res, kontekst, status, jezyk, { pakiet, email, zaznaczone, ...o }, naglowki);
+  const zrodlo = zrodloDoLicznika(dane.get('z'));
+  const ponownie = (status, o, naglowki) => ekranRejestracji(res, kontekst, status, jezyk, { pakiet, email, zaznaczone, zrodlo, ...o }, naglowki);
 
   const limit = REJESTRACJA.sprawdz({ ip });
   if (!limit.wolno) {
@@ -751,6 +778,8 @@ async function rejestracja(req, res, kontekst) {
       zgoda('regulamin', KONF.regulaminWersja);
       zgoda('polityka', KONF.politykaWersja);
       zgoda('pelnoletnosc', null);
+      // Zbiorczy licznik zrodel: w tej samej transakcji, wiec liczy sie tylko konto, ktore powstalo.
+      magazyn.policzZrodlo(new Date(teraz).toISOString().slice(0, 7), zrodlo);
       return magazyn.kontoZOrganizacja(k.login);
     });
   } catch (e) {
@@ -1441,7 +1470,7 @@ function inicjuj(srodowisko) {
 module.exports = {
   SCIEZKI_PUBLICZNE, obsluzPubliczne, obsluz, inicjuj,
   // dla server.js (sekcja Logowanie) i modulow C/B
-  probyLogowania, emailDoPola, wymagaPotwierdzenia, pocztaKontDostepna,
+  probyLogowania, emailDoPola, wymagaPotwierdzenia, pocztaKontDostepna, zrodloZOdnosnika,
   // do testow i CLI
   ZASADY, ocenHaslo, poprawnyEmail, znacznikFormularza, ocenZnacznik, usunKontoZDanymi, sprzatajNiepotwierdzone,
   eksportDanych, stanZgod, czekajNaTlo,

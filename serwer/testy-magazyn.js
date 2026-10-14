@@ -79,6 +79,29 @@ async function testyMagazynu(sprawdz) {
     magazyn.otworz({ plik });
     sprawdz('magazyn: ponowne otwarcie zachowuje dane i wersje schematu', magazyn.konto('zespol') !== null && magazyn.stan().wersjaSchematu === magazyn.WERSJA_NAJNOWSZA);
 
+    // Migracja 5 (14.10.2026): baza produkcyjna w wersji 4 dostaje tabele zbiorczego licznika zrodel rejestracji.
+    magazyn.zamknij();
+    const surowa = new (require('node:sqlite').DatabaseSync)(plik);
+    surowa.exec("DROP TABLE zrodla_rejestracji; UPDATE meta SET wartosc = '4' WHERE klucz = 'wersja_schematu'");
+    surowa.close();
+    magazyn.otworz({ plik });
+    sprawdz('migracja 5: baza w wersji 4 dostaje licznik zrodel rejestracji, dane zostaja',
+      magazyn.WERSJA_NAJNOWSZA >= 5 && magazyn.stan().wersjaSchematu === magazyn.WERSJA_NAJNOWSZA && magazyn.konto('zespol') !== null
+      && Array.isArray(magazyn.zrodlaRejestracji()) && magazyn.zrodlaRejestracji().length === 0);
+    const zapisane = ['linkedin', 'linkedin', 'brak'].map((z) => magazyn.policzZrodlo('2026-10', z));
+    magazyn.policzZrodlo('2026-09', 'producthunt');
+    sprawdz('zrodla rejestracji: liczba na miesiac i zrodlo, najnowszy miesiac i najwieksza liczba najpierw, filtr od miesiaca',
+      zapisane.join() === 'linkedin,linkedin,brak'
+      && JSON.stringify(magazyn.zrodlaRejestracji()) === JSON.stringify([
+        { okres: '2026-10', zrodlo: 'linkedin', ile: 2 }, { okres: '2026-10', zrodlo: 'brak', ile: 1 }, { okres: '2026-09', zrodlo: 'producthunt', ile: 1 }])
+      && magazyn.zrodlaRejestracji('2026-10').length === 2);
+    for (let i = 0; i < magazyn.ZRODLA_W_MIESIACU; i += 1) magazyn.policzZrodlo('2099-01', `zrodlo-${i}`);
+    const ponadLimit = magazyn.policzZrodlo('2099-01', 'jeszcze-jedno');
+    const znaneDalej = magazyn.policzZrodlo('2099-01', 'zrodlo-7');
+    sprawdz(`zrodla rejestracji: ponad ${magazyn.ZRODLA_W_MIESIACU} roznych w miesiacu nowe ida do "inne", znane licza sie dalej`,
+      ponadLimit === 'inne' && znaneDalej === 'zrodlo-7' && magazyn.zrodlaRejestracji('2099-01').length === magazyn.ZRODLA_W_MIESIACU + 1
+      && magazyn.zrodlaRejestracji('2099-01').find((w) => w.zrodlo === 'zrodlo-7').ile === 2);
+
     console.log('\n  magazyn - konta i organizacje');
     const k = magazyn.konto('zespol');
     sprawdz('konto w camelCase z polami jak w JSON (login, rola, plan, sesjeOd) i domyslnymi rundy 9',

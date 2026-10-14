@@ -1852,6 +1852,8 @@ function stronaLogowania(kod, req, jezyk, login) {
     rejestracja: funkcjaWlaczona('rejestracja'),
     reset: !KONF.zaufanyNaglowek && (kod !== 'openseo' || Boolean(KONF.adresPubliczny)),
     bazaLinkow: kod === 'openseo' ? KONF.adresPubliczny : '',
+    // Wejscie z ?z= (post, Product Hunt): "Zaloz konto" niesie zrodlo do zbiorczego licznika rejestracji.
+    zrodlo: req && req.url ? konta.zrodloZOdnosnika(new URL(req.url, 'http://x').searchParams) : '',
   });
 }
 

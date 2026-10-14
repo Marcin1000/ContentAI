@@ -182,6 +182,7 @@ Na serwerze: sudo serwer/cli.sh <polecenie> (środowisko i konto usługi).
   node serwer/uzytkownicy.js email <login|e-mail> [adres|-]   adres logowania (potwierdzony) albo usunięcie
   node serwer/uzytkownicy.js klucze <login|e-mail> [wlasne|serwera]   źródło kluczy API konta
   node serwer/uzytkownicy.js organizacja <login|e-mail|id> [nazwa <tekst|->]   organizacja konta
+  node serwer/uzytkownicy.js zrodla [miesiecy]      rejestracje według źródła z odnośnika ?z= (same liczby)
 ${dodatkowe}
 
 Baza kont: ${KONF.sqlite}
@@ -412,6 +413,29 @@ function organizacjaKonta(arg, podpolecenie, reszta) {
   }
 }
 
+/**
+ * zrodla [miesiecy]: skad przychodza konta. Zbiorczy licznik udanych rejestracji na miesiac i zrodlo
+ * z odnosnika ?z= (brak = wejscie bez zrodla, inne = zrodlo niepoprawne albo ponad 100 w miesiacu).
+ * Same liczby: licznik nie wie, ktore konto przyszlo skad.
+ */
+function wypiszZrodla(miesiecy) {
+  const od = new Date();
+  od.setUTCDate(1);
+  od.setUTCMonth(od.getUTCMonth() - (miesiecy - 1));
+  const odOkresu = od.toISOString().slice(0, 7);
+  const wiersze = magazyn.zrodlaRejestracji(odOkresu);
+  console.log(`Rejestracje według źródła (?z=) od ${odOkresu}. Same liczby, bez powiązania z kontami.`);
+  if (!wiersze.length) {
+    console.log('\n  Brak rejestracji w tym czasie.');
+    return;
+  }
+  for (const okres of [...new Set(wiersze.map((w) => w.okres))]) {
+    const miesiac = wiersze.filter((w) => w.okres === okres);
+    console.log(`\n  ${okres}   razem ${miesiac.reduce((suma, w) => suma + w.ile, 0)}`);
+    for (const w of miesiac) console.log(`    ${w.zrodlo.padEnd(34)} ${String(w.ile).padStart(5)}`);
+  }
+}
+
 async function main() {
   const argumenty = process.argv.slice(2);
   const [polecenie, loginLubEmail, arg] = argumenty;
@@ -423,6 +447,11 @@ async function main() {
   sprawdzWlasciciela(argumenty.join(' '));
   // Uszkodzona albo zablokowana baza konczy sie bledem tutaj, zanim cokolwiek zapiszemy.
   magazyn.otworz({ plik: KONF.sqlite, timeoutMs: 5000 });
+
+  if (polecenie === 'zrodla') {
+    if (login !== undefined && !(Number(login) >= 1 && Number(login) <= 120)) return uzycie('zrodla [miesiecy 1-120]');
+    return wypiszZrodla(Math.round(Number(login) || 3));
+  }
 
   if (polecenie === 'migruj') {
     const tylkoSprawdz = argumenty.includes('--sprawdz');

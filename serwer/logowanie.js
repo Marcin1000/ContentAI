@@ -344,9 +344,10 @@ ${srodek}
  *                      wstep bez zdania o administratorze, stopka o kluczu w przegladarce
  *   reset: true        odnosnik "Nie pamietasz hasla?" (/haslo) nad polem hasla
  *   bazaLinkow         przedrostek tych odnosnikow (adres aplikacji na porcie OpenSEO); domyslnie wzgledne
+ *   zrodlo             nazwa z odnosnika ?z= (juz sprawdzona), ktora "Zaloz konto" niesie dalej do licznika zrodel
  */
 function stronaLogowania({
-  kod = '', jezyk = 'pl', login = '', sciezka = '/auth/login', rejestracja = false, reset = false, bazaLinkow = '',
+  kod = '', jezyk = 'pl', login = '', sciezka = '/auth/login', rejestracja = false, reset = false, bazaLinkow = '', zrodlo = '',
 } = {}) {
   const t = teksty(jezyk);
   // Konta samoobslugowe loguja sie e-mailem: komunikat wymienia go obok loginu.
@@ -362,7 +363,7 @@ function stronaLogowania({
     ? `<div class="wiersz-r"><label for="haslo">${esc(t.haslo)}</label><a href="${esc(bazaLinkow + '/haslo' + jezykLinku)}">${esc(t.zapomniane)}</a></div>`
     : `<label for="haslo">${esc(t.haslo)}</label>`;
   const dol = rejestracja
-    ? `<p class="dostep">${esc(t.brakKonta)} <a href="${esc(bazaLinkow + '/rejestracja' + jezykLinku)}">${esc(t.zaloz)}</a></p>`
+    ? `<p class="dostep">${esc(t.brakKonta)} <a href="${esc(bazaLinkow + '/rejestracja' + jezykLinku + (zrodlo ? `&z=${zrodlo}` : ''))}">${esc(t.zaloz)}</a></p>`
     : `<p class="dostep">${esc(t.brakKonta)} <a href="${DOSTEP[t.lang]}">${esc(t.popros)}</a></p>`;
   const srodek = `      <h1>${esc(t.naglowek)}</h1>
       <p class="wstep">${akapit(rejestracja ? t.wstepSamoobsluga : t.wstep)}</p>
