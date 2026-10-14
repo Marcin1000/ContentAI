@@ -246,8 +246,8 @@ CAI_USLUGODAWCA_ADRES="ulica 1, 00-000 Miasto"
 CAI_USLUGODAWCA_TELEFON="+48 000 000 000"
 CAI_USLUGODAWCA_EMAIL="kontakt@content-ai.net"
 CAI_USLUGODAWCA_WWW=https://content-ai.net
-CAI_REGULAMIN_WERSJA=2026-10-v2
-CAI_POLITYKA_WERSJA=2026-10-v1
+CAI_REGULAMIN_WERSJA=2026-10-v3
+CAI_POLITYKA_WERSJA=2026-10-v2
 ```
 
 ```bash
@@ -344,7 +344,7 @@ Gdy etap 6 przeszedł, Stripe zweryfikował konto, a księgowa potwierdziła kas
    (README, punkt 2). Bez tego przycisk "Zmień pakiet" w aplikacji otworzy zwykły panel Stripe.
 2. `sudo nano /etc/contentai/srodowisko`: `PLATNOSCI=stripe`, `PLATNOSCI_TRYB=live`, wszystkie
    `STRIPE_*` z trybu live, `PLATNOSCI_CENY_WYSWIETLANE="standard:eur=19,pln=79;premium:eur=49,pln=199"` (w cudzysłowie: średnik bez niego przerywa wczytanie pliku w `cli.sh`),
-   `CAI_REGULAMIN_WERSJA=2026-10-v2` (wersja z nagłówka `dokumenty-prawne/regulamin.pl.md`; ta sama
+   `CAI_REGULAMIN_WERSJA=2026-10-v3` (wersja z nagłówka `dokumenty-prawne/regulamin.pl.md`; ta sama
    zmiana w `/etc/contentai/srodowisko-test`), na końcu `CAI_REJESTRACJA=1`. Konta, które zaakceptowały
    poprzednią wersję regulaminu, przy następnym wejściu zaakceptują nową.
 
@@ -368,6 +368,8 @@ Oczekiwane: kod 0 i `rejestracja: otwarta, platnosci: stripe (live)`. W dziennik
 
 - Wstrzymanie nowych zakupów (klienci z pakietem dalej działają): `PLATNOSCI_SPRZEDAZ=0` i restart.
 - Zamknięcie rejestracji (konta już założone działają): `CAI_REJESTRACJA=0` i restart.
+- Wyłączenie pierwszego artykułu bez klucza (etap 10): `CAI_START=0` i restart. Klucz startu zostaje
+  w pliku, a nowe osoby od razu dostają kreator klucza.
 - Gdyby oznaczenia AI psuły jakiś plik u klienta: `CAI_OZNACZENIA=0` i restart (wyłącza oznaczenia
   awaryjnie, dziennik startu to odnotuje); potem napisz do mnie, bo oznaczenia są wymagane od 2.08.2026.
 - Wycofanie kodu: tylko przy błędzie danych, według etapu 3 (najpierw `eksport-json`).
@@ -379,7 +381,61 @@ Codziennie rano:
 ```bash
 sudo journalctl -u contentai --no-pager --since yesterday | grep -ciE 'error|blad'
 sudo serwer/cli.sh przychod
+sudo serwer/cli.sh start
 free -h; df -h /
 ```
 
 `przychod` pokazuje sumę w kwartale i ostrzega przy 60% i 80% limitu działalności nierejestrowanej.
+
+## Etap 10. Pierwszy artykuł bez klucza (od 14.10.2026)
+
+Nowe konto pisze pierwszy artykuł bez własnego klucza API, na osobnym kluczu startu z własnym limitem
+wydatków. Szczegóły i bezpieczniki: `serwer/README.md`, sekcja "Pierwszy artykuł bez klucza".
+Strona i aplikacja zmieniają się jednym `git pull`, więc klucz startu wpisz PRZED aktualizacją kodu:
+inaczej strona obieca artykuł bez klucza, a aplikacja jeszcze go nie da.
+
+1. Konsola Anthropic (https://platform.claude.com): Settings, Workspaces, "Create workspace", nazwa
+   `Content AI start`. W tym obszarze: Limits, miesięczny limit wydatków (np. 30 USD, to około
+   75-150 artykułów). Potem API keys, "Create key" w obszarze `Content AI start`. Skopiuj klucz od razu.
+2. Kopia danych i klucz startu w pliku środowiska (klucz tylko tutaj, nigdzie indziej):
+
+```bash
+sudo tar czf /root/contentai-dane-$(date +%F-%H%M).tgz -C /srv/contentai/serwer dane
+sudo nano /etc/contentai/srodowisko
+```
+
+   Dopisz i zmień:
+
+```
+CAI_START_KLUCZ=WSTAW_TUTAJ_KLUCZ_STARTU
+CAI_REGULAMIN_WERSJA=2026-10-v3
+CAI_POLITYKA_WERSJA=2026-10-v2
+```
+
+   Zamiast `WSTAW_TUTAJ_KLUCZ_STARTU` wklej klucz z kroku 1 (zaczyna się od `sk-ant-api03-`).
+   Opcjonalnie: `CAI_START_DZIENNIE` (20 nowych osób na dobę), `CAI_START_WYWOLAN` (25),
+   `CAI_START_MINUT` (120). Te same wersje dokumentów wpisz w `/etc/contentai/srodowisko-test`.
+3. Aktualizacja i restart (migracja 6 tworzy tabelę przydziałów):
+
+```bash
+git -C /srv/contentai rev-parse HEAD | sudo tee /root/contentai-poprzedni-commit
+cd /srv/contentai && sudo git pull
+sudo systemctl restart contentai
+sleep 5; sudo journalctl -u contentai --no-pager -n 40 | grep -E 'magazyn|migracja|start|blad|error'
+sudo serwer/cli.sh start
+```
+
+   W dzienniku: `migracja 6` i `pierwszy artykul bez klucza: do 20 nowych dziennie`. `start` pokazuje
+   "włączony". Gdy pisze "WYŁĄCZONY", sprawdź format klucza (zaczyna się od `sk-ant-api03-`).
+4. Próba: okno prywatne, rejestracja na nowy adres, potwierdzenie, artykuł bez klucza. Potem
+   `sudo serwer/cli.sh start` pokazuje `dziś 1 z 20`.
+5. Cloudflare: Caching, Configuration, "Purge Everything" (nowe teksty strony).
+6. Dotychczasowe konta: e-mail o zmianie regulaminu, polityki i listy podprzetwarzających co najmniej
+   30 dni przed wejściem w życie (regulamin § 12 ust. 2). Pierwszy artykuł bez klucza dostają po
+   akceptacji nowej wersji w Koncie, nowe konta od rejestracji.
+7. Zalecane przy darmowym artykule: Cloudflare Turnstile na rejestracji (`CAI_TURNSTILE_KLUCZ`
+   i `CAI_TURNSTILE_SEKRET`, `serwer/README.md`, "Ochrona formularzy").
+
+Po wyczerpaniu limitu wydatków obszaru startu Anthropic odrzuca zapytania, a serwer sam wstrzymuje
+start do końca doby (wpis `[start] ... WSTRZYMANY` w dzienniku). Nowe osoby dostają wtedy kreator
+klucza z informacją, że darmowe artykuły na dziś się skończyły.
