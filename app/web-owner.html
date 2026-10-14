@@ -3320,6 +3320,12 @@ body.karta-konta #gen-btn { display: none; }
 .byok-kroki li + li { margin-top: var(--s-4); }
 .byok-jest { display: flex; gap: var(--s-6); align-items: center; margin: 0 0 var(--s-8); }
 .byok-podpowiedzi { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-6); margin: var(--s-8) 0; }
+/* krok kreatora z dokumentami firmy (14.10): pliki dodane do bazy wiedzy */
+.byok-dok-lista { list-style: none; margin: var(--s-4) 0 var(--s-8); padding: 0; display: flex; flex-direction: column; gap: var(--s-4); }
+.byok-dok-lista li { display: flex; gap: var(--s-6); align-items: center; min-width: 0; font-size: var(--t-sm); color: var(--c-tekst); }
+.byok-dok-lista li > .ikona { flex: none; color: var(--c-sukces); }
+.byok-dok-lista span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#start-tresc .byok-dok-wybierz { display: inline-flex; align-items: center; justify-content: center; gap: var(--s-6); }
 #start-tresc input[type=text], #start-tresc textarea { width: 100%; box-sizing: border-box; }
 .platnosc-tresc { display: flex; gap: var(--s-8); align-items: flex-start; }
 /* .modal p (komponenty) wygrywal z .tekst-pomoc: drobny druk w kreatorze, Koncie i zakupie zostaje drobny */
@@ -8188,7 +8194,9 @@ async function processFile(file) {
       text = await file.text().catch(() => _t('file-read-err'));
     }
     if (text.trim()) {
-      addDoc(name, text, getIcon(name));
+      // Wariant z serwerem: addDoc wysyla dokument do Bazy na serwerze i oddaje obietnice. Czekamy na nia,
+      // zeby "Wczytuje" trwalo do zapisu, a kreator (krok dokumentow) pokazal plik dopiero, gdy jest w Bazie.
+      await addDoc(name, text, getIcon(name));
     } else {
       // Skan PDF bez warstwy tekstu albo DOCX z samym osadzonym HTML: nic nie trafia do bazy,
       // ale autor musi wiedziec dlaczego.

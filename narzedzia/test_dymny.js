@@ -86,6 +86,8 @@ async function zamknijOkna() {
   }
 }
 async function osobno(scenariusz, b) {
+  // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane scenariusze (jak w test_stan.js), np. CAI_TEST_TYLKO=wariantSamoobsluga.
+  if (process.env.CAI_TEST_TYLKO && !process.env.CAI_TEST_TYLKO.split(',').includes(scenariusz.name)) return;
   PRZEGLADARKA = b;
   const przed = new Set(b.contexts());
   try { await scenariusz(b); }
@@ -2039,7 +2041,7 @@ async function wariantSamoobsluga(b) {
     : r.continue()));
   k.on('request', (z) => { if (z.method() === 'POST' && /\/api$/.test(z.url())) zapytania.api++; });
 
-  // 1. Pierwsze wejscie po rejestracji: kreator BYOK w trzech krokach i karta "Podlacz klucz" zamiast Wygeneruj.
+  // 1. Pierwsze wejscie po rejestracji: kreator BYOK w czterech krokach i karta "Podlacz klucz" zamiast Wygeneruj.
   const s = await k.newPage();
   await s.goto(BAZA + '/', { waitUntil: 'load' });
   if (await s.$('input[name="login"]')) {
@@ -2047,15 +2049,15 @@ async function wariantSamoobsluga(b) {
     await s.fill('input[type="password"]', HASLO);
     await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"], input[type="submit"]')]);
   }
-  await krok('R9-D kreator klucza po pierwszym wejsciu', s.waitForFunction(() => getComputedStyle(document.getElementById('start-modal')).display === 'flex' && /z 3/.test(document.getElementById('start-postep').textContent), null, { timeout: 10000 }));
+  await krok('R9-D kreator klucza po pierwszym wejsciu', s.waitForFunction(() => getComputedStyle(document.getElementById('start-modal')).display === 'flex' && /z 4/.test(document.getElementById('start-postep').textContent), null, { timeout: 10000 }));
   const start = await s.evaluate(() => ({ postep: document.getElementById('start-postep').textContent, tytul: (document.getElementById('start-tytul') || {}).textContent || '',
     dalej: document.getElementById('start-dalej').disabled, koszt: (document.querySelector('#start-tresc .byok-koszt') || {}).textContent || '',
     przewodnik: document.querySelectorAll('#start-tresc .byok-kroki li').length, zapamietaj: !!(document.getElementById('start-zapamietaj') || {}).checked,
     warunki: (document.querySelector('#start-tresc .byok-gdzie') || {}).textContent || '',
     karta: !document.getElementById('konto-karta').hidden, gen: getComputedStyle(document.getElementById('gen-btn')).display,
     pasek: document.getElementById('konto-paski').textContent }));
-  wynik('R9-D: kreator BYOK "Krok 1 z 3" z kosztem artykulu, przewodnikiem po kluczu, warunkami dostawcy (D-01) i "Zapamietaj" zaznaczonym',
-    start.postep === 'Krok 1 z 3' && /klucz Anthropic/.test(start.tytul) && start.dalej && /0,20-0,40 USD/.test(start.koszt) && start.przewodnik === 5 && start.zapamietaj
+  wynik('R9-D: kreator BYOK "Krok 1 z 4" z kosztem artykulu, przewodnikiem po kluczu, warunkami dostawcy (D-01) i "Zapamietaj" zaznaczonym',
+    start.postep === 'Krok 1 z 4' && /klucz Anthropic/.test(start.tytul) && start.dalej && /0,20-0,40 USD/.test(start.koszt) && start.przewodnik === 5 && start.zapamietaj
     && /na jego warunkach/.test(start.warunki), JSON.stringify(start));
   wynik('R9-D: bez klucza karta "Podlacz klucz" w miejscu Wygeneruj (E1), pasek trybu testowego platnosci i potwierdzenia e-maila',
     start.karta && start.gen === 'none' && /Tryb testowy płatności/.test(start.pasek) && /Potwierdź adres anna@example\.com/.test(start.pasek), JSON.stringify(start));
@@ -2073,15 +2075,40 @@ async function wariantSamoobsluga(b) {
   const poZapisie = await s.evaluate(() => ({ pole: document.getElementById('start-pole-anthropic').value, magazyn: Object.keys(localStorage).filter((x) => /klucz/.test(x) && localStorage.getItem(x)), ciastko: document.cookie }));
   wynik('R9-D: klucz idzie do /api/klucze z testem i "zapamietaj", pole czyszczone, nic w localStorage ani w document.cookie (SEC8-04)',
     /"dostawca":"anthropic"/.test(zapis) && /"sprawdz":true/.test(zapis) && /"zapamietaj":true/.test(zapis) && poZapisie.pole === '' && !poZapisie.magazyn.length && !/sk-ant/.test(poZapisie.ciastko), JSON.stringify({ zapis, poZapisie }));
-  // Krok 2: firma (marka konta), krok 3: pierwszy artykul z tematem z kreatora.
+  // Krok 2: firma (marka konta), krok 3: dokumenty firmy, krok 4: pierwszy artykul z tematem z kreatora.
   await s.click('#start-dalej');
   await s.fill('#byok-firma-nazwa', 'Pompy Ciepła Testowe');
   await s.fill('#byok-firma-opis', 'Montaż i serwis pomp ciepła w domach jednorodzinnych.');
   await s.click('#start-dalej');
-  const krok3 = await s.evaluate(() => ({ postep: document.getElementById('start-postep').textContent, siec: document.getElementById('byok-siec').checked,
-    marka: JSON.parse(magazyn.getItem('cai-llms') || '{}').name }));
-  wynik('R9-D: kreator krok 2 zapisuje firme, krok 3 "Pierwszy artykul" z wlaczonym szukaniem w sieci przy pustej bazie',
-    krok3.postep === 'Krok 3 z 3' && krok3.siec && krok3.marka === 'Pompy Ciepła Testowe', JSON.stringify(krok3));
+  // 14.10: krok dokumentow. Pierwszy artykul powstawal tylko ze stron w sieci, a film obiecuje "z Twoich dokumentow".
+  const krokDok = await s.evaluate(() => ({ postep: document.getElementById('start-postep').textContent, tytul: document.getElementById('start-tytul').textContent,
+    opis: document.getElementById('start-tresc').textContent, dalej: document.getElementById('start-dalej').textContent,
+    pomin: getComputedStyle(document.getElementById('start-pomin')).display, marka: JSON.parse(magazyn.getItem('cai-llms') || '{}').name }));
+  wynik('kreator krok 3 "Dokumenty firmy": po co sa dokumenty, "Dalej bez dokumentow" zamiast osobnego "Pomin", firma zapisana w kroku 2',
+    krokDok.postep === 'Krok 3 z 4' && /Dokumenty firmy/.test(krokDok.tytul) && /kontrola faktów porówna go z nimi/.test(krokDok.opis)
+    && krokDok.dalej === 'Dalej bez dokumentów' && krokDok.pomin === 'none' && krokDok.marka === 'Pompy Ciepła Testowe', JSON.stringify(krokDok));
+  await s.click('#byok-dok-wybierz');
+  // Ostrzezenie o danych osobowych ma byc nad kreatorem i dac sie kliknac. piiConfirm przez 450 ms wylacza klikniecia
+  // w oknie (ochrona przed podwojnym dotknieciem), wiec mierzymy po tym czasie.
+  await krok('kreator: ostrzezenie o danych osobowych gotowe do klikniecia', s.waitForFunction(() => {
+    const m = document.getElementById('pii-modal'); return getComputedStyle(m).display !== 'none' && getComputedStyle(m).pointerEvents !== 'none'; }, null, { timeout: 3000 }));
+  const pii = await s.evaluate(() => { const m = document.getElementById('pii-modal'); const r = m.getBoundingClientRect();
+    const e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return { widoczne: getComputedStyle(m).display !== 'none', naWierzchu: !!e && m.contains(e) }; });
+  wynik('kreator: ostrzezenie o danych osobowych przed wyborem plikow, nad oknem kreatora (da sie je kliknac)', pii.widoczne && pii.naWierzchu, JSON.stringify(pii));
+  const [wyborPliku] = await Promise.all([s.waitForEvent('filechooser', { timeout: 5000 }), s.click('#pii-modal .btn-generate')]);
+  await wyborPliku.setFiles({ name: 'oferta-pompy.txt', mimeType: 'text/plain',
+    buffer: Buffer.from('Oferta: montaż pompy ciepła trwa 3 dni. Gwarancja na pompę wynosi 7 lat. Serwis przyjeżdża w ciągu 48 godzin od zgłoszenia.') });
+  await krok('kreator: dokument w bazie wiedzy', s.waitForFunction(() => document.querySelectorAll('#start-tresc .byok-dok-lista li').length === 1, null, { timeout: 8000 }));
+  const poDok = await s.evaluate(() => ({ lista: document.querySelector('#start-tresc .byok-dok-lista').textContent, dalej: document.getElementById('start-dalej').textContent,
+    dymki: [...document.querySelectorAll('.powiadomienie')].filter((p) => getComputedStyle(p).display !== 'none' && /oferta-pompy/.test(p.textContent)).length,
+    baza: (window._bazaSerwer || []).map((d) => d.nazwa).concat(docs.map((d) => d.name + ':lokalnie')), wyborDalej: getComputedStyle(document.getElementById('start-modal')).display }));
+  wynik('kreator: plik trafia do Bazy wiedzy (na serwerze albo, przy odmowie, w przegladarce), lista w kroku bez zaslaniajacego ja dymka "Dodano", przycisk "Dalej", kreator dalej otwarty',
+    /oferta-pompy\.txt/.test(poDok.lista) && poDok.dymki === 0 && poDok.dalej === 'Dalej' && poDok.baza.length === 1 && /^oferta-pompy\.txt/.test(poDok.baza[0]) && poDok.wyborDalej === 'flex', JSON.stringify(poDok));
+  await s.click('#start-dalej');
+  const krok4 = await s.evaluate(() => ({ postep: document.getElementById('start-postep').textContent, siec: document.getElementById('byok-siec').checked,
+    opis: document.querySelector('label[for="byok-siec"]').textContent }));
+  wynik('kreator krok 4 "Pierwszy artykul": z dokumentem w bazie bez wymuszonego szukania w sieci (artykul z dokumentow)',
+    krok4.postep === 'Krok 4 z 4' && !krok4.siec && /Czego brakuje w bazie wiedzy/.test(krok4.opis), JSON.stringify(krok4));
   await s.fill('#byok-temat', 'Jak wybrać pompę ciepła do domu jednorodzinnego');
   await s.click('#start-dalej');
   await krok('R9-D pierwszy artykul z kreatora', s.waitForFunction(() => { const b = document.getElementById('gen-btn'); const sp = document.getElementById('spinner');
@@ -2544,7 +2571,7 @@ async function wariantR9DZakupWAplikacji(b) {
     await krok('R9-D stan konta z prawdziwego /api/konto', s.waitForFunction(() => !!(window.STAN_KONTA && window.STAN_KONTA.pochodzenie === 'samoobsluga' && !window.STAN_KONTA._zapas), null, { timeout: 10000 }));
     // Kreator klucza na prawdziwym C (ciasteczko HttpOnly, sprawdzenie u dostawcy na atrapie): zly klucz, potem dobry.
     await krok('R9-D kreator klucza (C)', s.waitForFunction(() => getComputedStyle(document.getElementById('start-modal')).display === 'flex'
-      && /z 3/.test(document.getElementById('start-postep').textContent), null, { timeout: 10000 }));
+      && /z 4/.test(document.getElementById('start-postep').textContent), null, { timeout: 10000 }));
     await s.fill('#start-pole-anthropic', 'sk-ant-api03-zly-klucz-0000000000000000000000');
     await s.click('#start-tresc .byok-pole[data-dostawca="anthropic"] .byok-zapisz');
     await krok('R9-D zly klucz odrzucony u dostawcy (C)', s.waitForFunction(() => /nie przyjął/.test(document.getElementById('start-wynik-anthropic').textContent), null, { timeout: 10000 }));
@@ -2555,10 +2582,16 @@ async function wariantR9DZakupWAplikacji(b) {
       magazyn: Object.keys(localStorage).filter((x) => /klucz/.test(x) && localStorage.getItem(x)) }));
     wynik('R9-D na serwerze A1+B+C: kreator klucza - zly klucz odrzucony u dostawcy, dobry w ciasteczku HttpOnly (koncowka), nic w localStorage',
       !!kluczC.stan && kluczC.stan.ustawiony && kluczC.stan.koncowka === 'abcd' && !kluczC.ciastko && !kluczC.magazyn.length, JSON.stringify(kluczC));
-    // Kreator: firma i pierwszy artykul na kluczu uzytkownika, potem dwa kolejne: pula 3 darmowych artykulow z serwera.
+    // Kreator: firma, dokumenty pominiete ("Dalej bez dokumentow") i pierwszy artykul na kluczu uzytkownika,
+    // potem dwa kolejne: pula 3 darmowych artykulow z serwera.
     await s.click('#start-dalej');
     await s.fill('#byok-firma-nazwa', 'Firma z rejestracji');
     await s.click('#start-dalej');
+    const bezDok = await s.evaluate(() => ({ dalej: document.getElementById('start-dalej').textContent, baza: docs.length }));
+    await s.click('#start-dalej');
+    const poBezDok = await s.evaluate(() => ({ postep: document.getElementById('start-postep').textContent, siec: document.getElementById('byok-siec').checked }));
+    wynik('kreator: "Dalej bez dokumentow" przechodzi do pierwszego artykulu, przy pustej bazie szukanie w sieci wlaczone',
+      bezDok.dalej === 'Dalej bez dokumentów' && bezDok.baza === 0 && poBezDok.postep === 'Krok 4 z 4' && poBezDok.siec, JSON.stringify({ bezDok, poBezDok }));
     await s.fill('#byok-temat', 'Pierwszy artykul na wlasnym kluczu');
     await s.click('#start-dalej');
     await krok('R9-D pierwszy artykul z kreatora (A1+C)', s.waitForFunction(() => { const g = document.getElementById('gen-btn'); const sp = document.getElementById('spinner');
