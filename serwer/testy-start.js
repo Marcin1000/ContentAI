@@ -82,7 +82,8 @@ async function testyBezpiecznikow({ sprawdz }) {
   });
   const a = atrapaZKluczami(t);
   try {
-    sprawdz('konfiguracja: start wlaczony z poprawnym kluczem, bez bledow', t.KONF.funkcje.start.wlaczona === true && t.KONF.funkcje.start.bledy.length === 0);
+    const fStart = t.KONF.funkcje.start || { bledy: [] };
+    sprawdz('konfiguracja: start wlaczony z poprawnym kluczem, bez bledow', fStart.wlaczona === true && fStart.bledy.length === 0);
 
     // 1. Niepotwierdzony e-mail: odmowa z powodem, bez wywolania dostawcy.
     const nowa = await noweKonto(t, 'nowa@start.example', { potwierdzone: false });
@@ -91,13 +92,13 @@ async function testyBezpiecznikow({ sprawdz }) {
     const stanNowej = await stanKluczy(t, nowa.sesja);
     sprawdz('niepotwierdzony adres: 403 brak-klucza z start "email", bez wywolania dostawcy; /api/klucze: start { dostepny: false, powod: email }',
       bezPotw.status === 403 && bezPotw.headers.get('x-cai-kod') === 'brak-klucza' && bezPotwJ.start === 'email' && bezPotwJ.dostawca === 'anthropic'
-      && a.wywolania().length === 0 && stanNowej.start && stanNowej.start.dostepny === false && stanNowej.start.powod === 'email');
+      && a.wywolania().length === 0 && stanNowej.start && (stanNowej.start || {}).dostepny === false && (stanNowej.start || {}).powod === 'email');
 
     // 2. Potwierdzony: pierwszy artykul na kluczu startu (nie ANTHROPIC_KEY), naglowek X-CAI-Start, licznik pakietu.
     const ewa = await noweKonto(t, 'ewa@start.example');
     const przed = await stanKluczy(t, ewa.sesja);
     sprawdz('potwierdzony adres bez klucza: /api/klucze start { dostepny, artykul, zostalo 4, do: null }',
-      przed.start && przed.start.dostepny === true && przed.start.artykul === true && przed.start.zostalo === 4 && przed.start.do === null);
+      przed.start && (przed.start || {}).dostepny === true && (przed.start || {}).artykul === true && (przed.start || {}).zostalo === 4 && (przed.start || {}).do === null);
     const art = await api(t, ewa.sesja, ARTYKUL(), { artykul: true });
     const artJ = await json(art);
     const w1 = a.wywolania();
@@ -105,7 +106,7 @@ async function testyBezpiecznikow({ sprawdz }) {
       art.status === 200 && Array.isArray(artJ.content) && w1.length === 1 && w1[0].klucz === START && art.headers.get('x-cai-start') === '1');
     const po = await stanKluczy(t, ewa.sesja);
     sprawdz('po artykule: start { dostepny, artykul: false, zostalo 3, do = koniec okna }, licznik artykulow pakietu = 1',
-      po.start.dostepny === true && po.start.artykul === false && po.start.zostalo === 3 && po.start.do > Date.now() + 100 * 60_000
+      (po.start || {}).dostepny === true && (po.start || {}).artykul === false && (po.start || {}).zostalo === 3 && (po.start || {}).do > Date.now() + 100 * 60_000
       && t.magazyn.uzycie(ewa.login, 'zawsze').artykul === 1);
 
     // 3. Drugi artykul: odmowa przed wywolaniem; wywolanie pomocnicze (ocena, Fakty) dalej na starcie.
@@ -120,10 +121,10 @@ async function testyBezpiecznikow({ sprawdz }) {
 
     // 4. Blad dostawcy (nic nie kosztowal): wywolanie wraca do przydzialu, odpowiedz bez zmian.
     const skrotEwy = startBezKlucza.skrot('ewa@start.example');
-    const przedBledem = t.magazyn.startPrzydzial(skrotEwy).wywolan;
+    const przedBledem = (t.magazyn.startPrzydzial(skrotEwy) || {}).wywolan;
     const blad = await api(t, ewa.sesja, POMOCNICZE('[atrapa:500]'));
     sprawdz('blad dostawcy (HTTP 500): odpowiedz dostawcy bez zmian, wywolanie oddane do przydzialu',
-      blad.status === 500 && t.magazyn.startPrzydzial(skrotEwy).wywolan === przedBledem);
+      blad.status === 500 && (t.magazyn.startPrzydzial(skrotEwy) || {}).wywolan === przedBledem);
 
     // 5. Sufit wywolan: 4 na przydzial (2 zuzyte), potem odmowa.
     const r3 = await api(t, ewa.sesja, POMOCNICZE());
@@ -134,7 +135,7 @@ async function testyBezpiecznikow({ sprawdz }) {
     const poSuficie = await stanKluczy(t, ewa.sesja);
     sprawdz('sufit wywolan (CAI_START_WYWOLAN=4): 3. i 4. przechodza, 5. -> 403 start "wykorzystany" bez wywolania; /api/klucze powod wykorzystany',
       r3.status === 200 && r4.status === 200 && r5.status === 403 && r5J.start === 'wykorzystany' && a.wywolania().length === 0
-      && poSuficie.start.dostepny === false && poSuficie.start.powod === 'wykorzystany');
+      && (poSuficie.start || {}).dostepny === false && (poSuficie.start || {}).powod === 'wykorzystany');
 
     // 6. Wlasny klucz: idzie klucz uzytkownika, bez przydzialu i bez pola start.
     const ola = await noweKonto(t, 'ola@start.example');
@@ -186,7 +187,7 @@ async function testyBezpiecznikow({ sprawdz }) {
     const stanZofii = await stanKluczy(t, zofia.sesja);
     sprawdz('dzienna pula (3): trzeci przydzial dnia przechodzi, czwarty -> 403 start "pula" bez wywolania; /api/klucze powod pula',
       igaArt.status === 200 && poPuli.status === 403 && poPuliJ.start === 'pula' && a.wywolania().length === 0
-      && stanZofii.start.dostepny === false && stanZofii.start.powod === 'pula' && t.magazyn.startLiczby(new Date().toISOString().slice(0, 10)).dzien === 3);
+      && (stanZofii.start || {}).dostepny === false && (stanZofii.start || {}).powod === 'pula' && t.magazyn.startLiczby(new Date().toISOString().slice(0, 10)).dzien === 3);
 
     // 12. Konto, ktore ma juz artykul (pisalo na wlasnym kluczu i go usunelo): start go nie dotyczy.
     const piotr = await noweKonto(t, 'piotr@start.example');
@@ -196,6 +197,22 @@ async function testyBezpiecznikow({ sprawdz }) {
     const stanPiotra = await stanKluczy(t, piotr.sesja);
     sprawdz('konto z artykulem: 403 brak-klucza bez pola start (zwykly kreator klucza), /api/klucze bez pola start',
       piotrOdp.status === 403 && piotrJ.start === undefined && stanPiotra.start === undefined);
+
+    // 12a. Regulamin: przy CAI_REGULAMIN_WERSJA start wymaga akceptacji tej wersji (konto sprzed zmiany: najpierw akceptacja).
+    t.KONF.regulaminWersja = '2026-10-v3';
+    const marek = await noweKonto(t, 'marek@start.example');
+    t.magazyn.zmienKonto(marek.login, { regulaminWersja: '2026-10-v2', regulaminCzas: Date.now() });
+    a.wyczysc();
+    const stary = await api(t, marek.sesja, POMOCNICZE());
+    const staryJ = await json(stary);
+    const stanMarka = await stanKluczy(t, marek.sesja);
+    t.magazyn.zmienKonto(marek.login, { regulaminWersja: '2026-10-v3', regulaminCzas: Date.now() });
+    const poAkceptacji = await stanKluczy(t, marek.sesja);
+    t.KONF.regulaminWersja = '';
+    // Pula dnia jest juz pelna (krok 11), wiec po akceptacji kolejna kontrola to pula, a nie regulamin.
+    sprawdz('regulamin starszy niz CAI_REGULAMIN_WERSJA: 403 start "regulamin" bez wywolania; po akceptacji aktualnej wersji regulamin juz nie blokuje (dalej pula dnia)',
+      stary.status === 403 && staryJ.start === 'regulamin' && a.wywolania().length === 0 && (stanMarka.start || {}).powod === 'regulamin'
+      && poAkceptacji.start && (poAkceptacji.start || {}).powod === 'pula');
 
     // 13. Prywatnosc: przydzial pod skrotem (bez adresu i loginu), innym niz skrot konta usunietego.
     const sk = startBezKlucza.skrot('ewa@start.example');
@@ -287,7 +304,7 @@ async function testyWstrzymania({ sprawdz }) {
       const admin = await t.zaloguj('admin');
       const st = (await (await t.zadanie('/api/status', { headers: { cookie: admin } })).json()).startBezKlucza;
       sprawdz(`${opis}: start wstrzymany do konca doby UTC - kolejne osoby i trwajace przydzialy dostaja "pula" bez wywolania, /api/status pokazuje powod`,
-        kolejna.status === 403 && kolejnaJ.start === 'pula' && a.wywolania().length === 0 && stanEwy.start.powod === 'pula'
+        kolejna.status === 403 && kolejnaJ.start === 'pula' && a.wywolania().length === 0 && (stanEwy.start || {}).powod === 'pula'
         && st.wstrzymanyDo === (Math.floor(Date.now() / DOBA) + 1) * DOBA && powod.test(st.powodWstrzymania));
     } finally {
       a.przywroc();
@@ -307,7 +324,7 @@ async function testyKonfiguracji({ sprawdz }) {
       const odp = await api(t, ewa.sesja, ARTYKUL(), { artykul: true });
       const j = await json(odp);
       const s = await stanKluczy(t, ewa.sesja);
-      const f = t.KONF.funkcje.start;
+      const f = t.KONF.funkcje.start || { ostrzezenia: [], bledy: [] };
       sprawdz('CAI_START=0: zwykla odmowa brak-klucza bez pola start, /api/klucze bez start, funkcja niezadana z ostrzezeniem w dzienniku',
         odp.status === 403 && j.start === undefined && s.start === undefined && f.zadana === false && f.wlaczona === false
         && f.ostrzezenia.some((o) => /CAI_START=0/.test(o)) && startBezKlucza.wlaczony() === false);
@@ -320,7 +337,7 @@ async function testyKonfiguracji({ sprawdz }) {
     try {
       const ewa = await noweKonto(t, 'ewa@start.example');
       const odp = await api(t, ewa.sesja, ARTYKUL(), { artykul: true });
-      const f = t.KONF.funkcje.start;
+      const f = t.KONF.funkcje.start || { ostrzezenia: [], bledy: [] };
       sprawdz('CAI_START_KLUCZ w zlym formacie (WSTAW_TUTAJ_...): funkcja wylaczona z bledem bez wartosci klucza, odmowa brak-klucza',
         f.zadana === true && f.wlaczona === false && f.bledy.length === 1 && !f.bledy[0].includes('WSTAW') && t.KONF.start.klucz === ''
         && odp.status === 403);
@@ -331,7 +348,7 @@ async function testyKonfiguracji({ sprawdz }) {
   {
     const t = await uruchomSerwer({ srodowisko: { ...SERWER, ANTHROPIC_KEY: START, CAI_KLUCZ_CIASTEK: KLUCZ_CIASTEK, CAI_START_KLUCZ: START }, atrapaDostawcow: true });
     try {
-      const f = t.KONF.funkcje.start;
+      const f = t.KONF.funkcje.start || { ostrzezenia: [], bledy: [] };
       sprawdz('CAI_START_KLUCZ rowny ANTHROPIC_KEY: dziala, ale z ostrzezeniem o wspolnym limicie wydatkow',
         f.wlaczona === true && f.ostrzezenia.some((o) => /ten sam klucz co ANTHROPIC_KEY/.test(o)));
       // CLI: start i start-usun na tej samej bazie i tym samym sekrecie co serwer.

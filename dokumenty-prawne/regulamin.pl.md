@@ -1,7 +1,7 @@
 ---
 tytul: Regulamin serwisu Content AI
-wersja: 2026-10-v2
-data: 2026-10-11
+wersja: 2026-10-v3
+data: 2026-10-14
 ---
 <!--
 Szablon renderuje serwer aplikacji pod /dokumenty/regulamin (serwer/dokumenty-prawne.js).
@@ -46,20 +46,30 @@ KSIĘGOWA K-13: brzmienie informacji o zwolnieniu z VAT. Po rejestracji działal
 
 1. Usługodawca świadczy drogą elektroniczną usługi: (a) prowadzenia Konta, (b) udostępniania Aplikacji do tworzenia, oceny, edycji, eksportu i publikacji treści (artykuły, oceny SEO, AIO, AEO i GEO, kontrola faktów i odnośników, grafiki, nagrania głosowe, transkrypcje, publikacja w systemach WordPress i Drupal), (c) Bazy wiedzy, (d) informacyjne na stronie content-ai.net.
 2. Zakres funkcji i limity zależą od Pakietu i są opisane w Cenniku. Pakiet Darmowy obejmuje jednorazowo limit {{LIMIT_DARMOWY}} artykułów, nie wymaga podania danych karty i nie przechodzi automatycznie w Subskrypcję.
-3. Do generowania treści na Koncie założonym samodzielnie potrzebny jest Klucz API Użytkownika: Anthropic do tekstu (wymagany), OpenAI do grafik, mowy i transkrypcji oraz ElevenLabs do mowy (opcjonalne). Opłaty za korzystanie z usług Dostawców AI Użytkownik ponosi bezpośrednio u nich, według ich cenników. Cena Subskrypcji nie obejmuje tych opłat.
-4. Dostawcy AI stosują własne warunki i zasady dopuszczalnego użycia, które Użytkownik akceptuje samodzielnie, zakładając u nich konto. Warunki te mogą ograniczać przeznaczenie kluczy, na przykład do celów zawodowych. Użytkownik odpowiada za przestrzeganie warunków Dostawcy AI, z którym zawarł umowę.
-5. Klucz API przechowuje wyłącznie przeglądarka Użytkownika, w zaszyfrowanym pliku cookie. Przy każdym zapytaniu przeglądarka przesyła go do serwera Usługodawcy, który odszyfrowuje Klucz API wyłącznie na czas wykonania zapytania, przekazuje go Dostawcy AI i nie zapisuje go.
-6. Konta założone przez Usługodawcę przed udostępnieniem samodzielnej rejestracji działają na zasadach uzgodnionych indywidualnie, w tym z użyciem kluczy Usługodawcy, chyba że strony uzgodnią inaczej.
-7. Wyniki powstają automatycznie i mogą zawierać błędy, nieaktualne lub nieścisłe informacje. Funkcje oceny i kontroli faktów mają charakter pomocniczy. Przed publikacją Użytkownik sam sprawdza Wyniki.
+3. Do generowania treści na Koncie założonym samodzielnie potrzebny jest Klucz API Użytkownika: Anthropic do tekstu (wymagany), OpenAI do grafik, mowy i transkrypcji oraz ElevenLabs do mowy (opcjonalne). Wyjątkiem jest pierwszy artykuł opisany w ust. 4. Opłaty za korzystanie z usług Dostawców AI Użytkownik ponosi bezpośrednio u nich, według ich cenników. Cena Subskrypcji nie obejmuje tych opłat.
+4. Pierwszy artykuł bez Klucza API. Po potwierdzeniu adresu e-mail i akceptacji Regulaminu w aktualnej wersji Użytkownik może wygenerować na Koncie założonym samodzielnie jeden artykuł bez Klucza API Anthropic. Wywołania modelu Anthropic potrzebne do tego artykułu oraz do jego ocen i poprawek Usługodawca wykonuje wtedy na własnym kluczu i na własny koszt, w granicach:
+   1. jeden artykuł na jeden adres e-mail, także po usunięciu Konta i założeniu nowego na ten sam adres,
+   2. ograniczona liczba wywołań modelu i ograniczony czas od pierwszego wywołania,
+   3. dzienna pula dla wszystkich Użytkowników.
+5. Artykuł z ust. 4 wlicza się do limitu artykułów Pakietu. Ta możliwość jest nieodpłatna i nie jest częścią Pakietu. Usługodawca może ją ograniczyć albo wyłączyć, w szczególności po wyczerpaniu dziennej puli albo budżetu przeznaczonego na ten cel. Użytkownikowi nie przysługuje wtedy zwrot ani rekompensata. Kolejne artykuły wymagają Klucza API Użytkownika.
+6. Dostawcy AI stosują własne warunki i zasady dopuszczalnego użycia, które Użytkownik akceptuje samodzielnie, zakładając u nich konto. Warunki te mogą ograniczać przeznaczenie kluczy, na przykład do celów zawodowych. Użytkownik odpowiada za przestrzeganie warunków Dostawcy AI, z którym zawarł umowę.
+7. Klucz API przechowuje wyłącznie przeglądarka Użytkownika, w zaszyfrowanym pliku cookie. Przy każdym zapytaniu przeglądarka przesyła go do serwera Usługodawcy, który odszyfrowuje Klucz API wyłącznie na czas wykonania zapytania, przekazuje go Dostawcy AI i nie zapisuje go.
+8. Konta założone przez Usługodawcę przed udostępnieniem samodzielnej rejestracji działają na zasadach uzgodnionych indywidualnie, w tym z użyciem kluczy Usługodawcy, chyba że strony uzgodnią inaczej.
+9. Wyniki powstają automatycznie i mogą zawierać błędy, nieaktualne lub nieścisłe informacje. Funkcje oceny i kontroli faktów mają charakter pomocniczy. Przed publikacją Użytkownik sam sprawdza Wyniki.
 
 <!--
 PRAWNIK D-01 / PR8-25: warunki komercyjne Anthropic mówią, że API nie jest przeznaczone do użytku konsumenckiego.
-Decyzja koordynatora (DECYZJE-R9 D-01): sprzedaż wszystkim, z informacją z ust. 4.
+Decyzja koordynatora (DECYZJE-R9 D-01): sprzedaż wszystkim, z informacją z ust. 6 (do wersji 2026-10-v2 ust. 4).
+Wersja 2026-10-v3 (14.10.2026): ust. 4 i 5 - pierwszy artykuł bez Klucza API (serwer/start.js), dotychczasowe ust. 4-7
+to ust. 6-9. Granice z ust. 4 są w konfiguracji serwera (dziś: 25 wywołań, 120 minut od pierwszego, 20 nowych osób
+dziennie, CAI_START_*). PRAWNIK: (1) czy granice z ust. 4 pkt 2 i 3 trzeba podać liczbami, (2) czy start wymagający
+akceptacji aktualnej wersji Regulaminu (konta sprzed zmiany akceptują ją w Koncie) wystarcza wobec § 12 ust. 2,
+(3) skrót adresu e-mail po usunięciu Konta (§ 14 ust. 3, Polityka prywatności).
 -->
 
 ## § 4. Wymagania techniczne
 
-1. Do korzystania z Aplikacji potrzebne są: urządzenie z dostępem do internetu, aktualna wersja przeglądarki Chrome, Edge, Firefox albo Safari z włączonym JavaScriptem, zapisem plików cookie i pamięci lokalnej, adres e-mail oraz Klucz API. Do dyktowania potrzebny jest mikrofon.
+1. Do korzystania z Aplikacji potrzebne są: urządzenie z dostępem do internetu, aktualna wersja przeglądarki Chrome, Edge, Firefox albo Safari z włączonym JavaScriptem, zapisem plików cookie i pamięci lokalnej, adres e-mail oraz Klucz API (z wyjątkiem pierwszego artykułu, § 3 ust. 4). Do dyktowania potrzebny jest mikrofon.
 2. Historia Wyników, szkice i ustawienia są przechowywane w pamięci przeglądarki na urządzeniu Użytkownika, a Klucze API w zaszyfrowanych plikach cookie tej przeglądarki. Usługodawca nie ma dostępu do historii i szkiców i nie tworzy ich kopii. Wyczyszczenie danych przeglądarki albo zmiana urządzenia oznacza ich utratę, dlatego ważne Wyniki warto eksportować do plików.
 3. Ryzyka związane z korzystaniem z usług drogą elektroniczną to m.in. przechwycenie danych logowania, złośliwe oprogramowanie na urządzeniu Użytkownika i phishing. Użytkownik chroni swoje hasło i Klucze API i nie korzysta z Aplikacji na niezaufanych urządzeniach.
 
@@ -178,7 +188,7 @@ na pełny zwrot ust. 4 może brzmieć: "Usługodawca zwraca całą zapłaconą k
 
 1. Zasady przetwarzania danych osobowych opisuje [Polityka prywatności]({{URL_PRYWATNOSC}}).
 2. Jeżeli Użytkownik wprowadza do Serwisu dane osobowe, za które odpowiada jako administrator (np. w dokumentach Bazy wiedzy), Usługodawca przetwarza je w jego imieniu na podstawie [umowy powierzenia przetwarzania danych osobowych]({{URL_DPA}}) (Załącznik 1), zawieranej wraz z akceptacją Regulaminu.
-3. Po usunięciu Konta Usługodawca usuwa dokumenty Bazy wiedzy i dane Konta z wyjątkiem danych, które musi przechowywać na podstawie przepisów (np. dokumenty sprzedaży) lub dla dochodzenia roszczeń, przez okres wskazany w Polityce prywatności.
+3. Po usunięciu Konta Usługodawca usuwa dokumenty Bazy wiedzy i dane Konta z wyjątkiem danych, które musi przechowywać na podstawie przepisów (np. dokumenty sprzedaży) lub dla dochodzenia roszczeń, oraz skrótu adresu e-mail potrzebnego do granicy z § 3 ust. 4 pkt 1, przez okres wskazany w Polityce prywatności.
 
 ## § 15. Postanowienia końcowe
 

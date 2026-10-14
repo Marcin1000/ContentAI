@@ -1,7 +1,7 @@
 ---
 tytul: Data processing agreement
-wersja: 2026-10-v1
-data: 2026-10-09
+wersja: 2026-10-v2
+data: 2026-10-14
 ---
 <!--
 English version of dpa.pl.md (Annex 1 to the Terms, Article 28(3) GDPR). Schedule A is inserted by the server from
@@ -45,6 +45,7 @@ The Processor:
 2. The Processor informs the Controller by email of any intended addition or replacement of a sub-processor at least 14 days in advance. During that time the Controller may raise a reasoned objection; if the parties do not find a solution, the Controller may terminate the service agreement with immediate effect and the Processor refunds the price for the unused period.
 3. The Processor imposes on sub-processors data protection obligations no less protective than in this agreement and remains liable for them as for its own acts.
 4. **The Controller's own API keys.** When the Controller uses its own API key of an AI provider (Anthropic, OpenAI, ElevenLabs) in the Service, the provider processes the data under an agreement concluded directly with the Controller (that provider's terms and data processing addendum). In that case the provider is not a sub-processor of the Processor, and the Processor only forwards the Controller's request to that provider without storing the key or the content.
+5. **First article without an API key.** The Processor generates the first article without an API key (Terms of Service, section 3(4)) on its own Anthropic key. Anthropic is then a sub-processor of the Processor, listed in Schedule A.
 
 ## 5. Transfers outside the EEA
 

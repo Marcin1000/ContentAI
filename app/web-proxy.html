@@ -5759,8 +5759,9 @@ var I18N = {
     'byok-dok-wczytuje':'Wczytuję pliki…','byok-dok-dodane':'W bazie wiedzy:','byok-dok-bez':'Dalej bez dokumentów','byok-3-tytul':'Napisz pierwszy artykuł','byok-3-opis':'Każdy artykuł powstaje w około minutę.','byok-3-opis-darmowe':'Darmowe artykuły na start: {n}. Każdy powstaje w około minutę.',
     'byok-3-opis-start':'Ten artykuł piszesz bez klucza, na nasz koszt. Powstaje w około minutę.',
     'start-bk-tytul':'Pierwszy artykuł napiszesz bez klucza','start-bk-opis':'Koszt modelu tego jednego tekstu pokrywamy my. Przed kolejnym artykułem podłączysz własny klucz API Anthropic: to około 10 minut, instrukcja jest niżej.',
-    'start-bk-dalej':'Dalej bez klucza','start-bk-email':'Potwierdź adres e-mail, a pierwszy artykuł napiszesz bez klucza. Link jest w wiadomości od Content AI.',
+    'start-bk-dalej':'Dalej bez klucza','start-bk-mam-klucz':'Masz już klucz API? Podłącz go teraz','start-bk-email':'Potwierdź adres e-mail, a pierwszy artykuł napiszesz bez klucza. Link jest w wiadomości od Content AI.',
     'start-bk-pula':'Darmowe artykuły bez klucza na dziś się skończyły. Podłącz swój klucz albo wróć jutro.',
+    'start-bk-regulamin':'Zaakceptuj nową wersję regulaminu, a pierwszy artykuł napiszesz bez klucza.',
     'start-bk-wykorzystany':'Twój darmowy artykuł bez klucza jest już napisany. Kolejne powstają na Twoim kluczu Anthropic.',
     'byok-3-opis-pakiet':'Artykuły w pakiecie: zostało {n}. Każdy powstaje w około minutę.','byok-temat':'O czym ma być artykuł?','byok-podpowiedzi':'Podpowiedzi:',
     'byok-podpowiedz-1':'Jak wybrać pompę ciepła do domu jednorodzinnego','byok-podpowiedz-2':'Jak napisać dobry opis produktu w sklepie internetowym','byok-podpowiedz-3':'Ulga na start w 2026 roku: komu się należy',
@@ -6626,8 +6627,9 @@ var I18N = {
     'byok-dok-wczytuje':'Reading the files…','byok-dok-dodane':'In your knowledge base:','byok-dok-bez':'Continue without documents','byok-3-tytul':'Write your first article','byok-3-opis':'Each article takes about a minute.','byok-3-opis-darmowe':'Free articles to start with: {n}. Each takes about a minute.',
     'byok-3-opis-start':'This article is on us, no key needed. It takes about a minute.',
     'start-bk-tytul':'Write your first article without a key','start-bk-opis':'We cover the model cost of this one text. Before your next article you will connect your own Anthropic API key: it takes about 10 minutes, the guide is below.',
-    'start-bk-dalej':'Continue without a key','start-bk-email':'Confirm your email address to write your first article without a key. The link is in the message from Content AI.',
+    'start-bk-dalej':'Continue without a key','start-bk-mam-klucz':'Already have an API key? Connect it now','start-bk-email':'Confirm your email address to write your first article without a key. The link is in the message from Content AI.',
     'start-bk-pula':'Today\'s free articles without a key are gone. Connect your own key or come back tomorrow.',
+    'start-bk-regulamin':'Accept the new version of the Terms of Service to write your first article without a key.',
     'start-bk-wykorzystany':'Your free article without a key is done. Next articles run on your own Anthropic key.',
     'byok-3-opis-pakiet':'Articles left in your plan: {n}. Each takes about a minute.','byok-temat':'What should the article be about?','byok-podpowiedzi':'Ideas:',
     'byok-podpowiedz-1':'How to choose a heat pump for a family home','byok-podpowiedz-2':'How to write a good product description for an online shop','byok-podpowiedz-3':'What a content brief is and how to use it',
@@ -21729,31 +21731,40 @@ async function kbAudioTranscribeAndOpen(file) {
       var st = window.stanStartu(), bezKluczaTeraz = !window.maKlucz('anthropic') && window.startArtykul() && !inny;
       var powodStartu = !st || window.maKlucz('anthropic') ? ''
         : (st.powod === 'wykorzystany' || (st.dostepny && !st.artykul)) ? 'start-bk-wykorzystany'
-        : st.powod === 'pula' ? 'start-bk-pula' : st.powod === 'email' ? 'start-bk-email' : '';
-      cel.innerHTML = (bezKluczaTeraz
-          ? naglowek(bezpieczny(tekst('start-bk-tytul', '')), bezpieczny(tekst('start-bk-opis', '')))
-          : naglowek(bezpieczny(tekst('byok-1-tytul', '')), bezpieczny(tekst('byok-1-opis', ''))))
+        : st.powod === 'pula' ? 'start-bk-pula' : st.powod === 'email' ? 'start-bk-email' : st.powod === 'regulamin' ? 'start-bk-regulamin' : '';
+      var poleKlucza = (k.ustawiony && !k.niewazny ? '<p class="tekst-pomoc stan-ok byok-jest" id="byok-jest">' + ikona('circle-check') + bezpieczny(tekst('byok-jest', '').replace('{KONCOWKA}', k.koncowka || '')) + '</p>' : '')
+        + window.htmlPolaKlucza('start', 'anthropic')
+        + window.htmlZapamietaj('start')
+        + '<p class="tekst-pomoc byok-gdzie">' + bezpieczny(tekst('byok-gdzie', '')) + ' <a class="link-akcent" href="' + STRONA_BEZPIECZENSTWA[jez] + '" target="_blank" rel="noopener">' + bezpieczny(tekst('byok-bezpieczenstwo', '')) + '</a></p>';
+      if (bezKluczaTeraz) {
+        // Glowna droga to "Dalej bez klucza": pole klucza zwiniete (na telefonie przycisk byl dopiero pod calym blokiem
+        // klucza), bez kosztu artykulu, kluczy opcjonalnych i przykladu. Instrukcja klucza wraca przed kolejnym artykulem.
+        cel.innerHTML = naglowek(bezpieczny(tekst('start-bk-tytul', '')), bezpieczny(tekst('start-bk-opis', '')))
+          + (alarm ? '<p class="byok-alarm" role="alert">' + ikona('triangle-alert') + '<span>' + bezpieczny(alarm) + '</span></p>' : '')
+          + '<details class="rozwijka byok-mam-klucz" id="byok-mam-klucz"><summary>' + ikona('chevron-down') + bezpieczny(tekst('start-bk-mam-klucz', '')) + '</summary>'
+          + poleKlucza + '</details>';
+      } else {
+      cel.innerHTML = naglowek(bezpieczny(tekst('byok-1-tytul', '')), bezpieczny(tekst('byok-1-opis', '')))
         + (alarm ? '<p class="byok-alarm" role="alert">' + ikona('triangle-alert') + '<span>' + bezpieczny(alarm) + '</span></p>' : '')
-        + (powodStartu && !alarm ? '<p class="byok-start-info" id="byok-start-info" role="status">' + ikona('info') + '<span>' + bezpieczny(tekst(powodStartu, '')) + '</span></p>' : '')
-        + (bezKluczaTeraz ? '' : '<p class="byok-koszt">' + ikona('info') + '<span>' + bezpieczny(tekst('byok-koszt', '')) + '</span></p>')
+        + (powodStartu && !alarm ? '<p class="byok-start-info" id="byok-start-info" role="status">' + ikona('info') + '<span>' + bezpieczny(tekst(powodStartu, ''))
+          + (powodStartu === 'start-bk-regulamin' ? ' <a class="link-akcent" href="/konto/zgody">' + bezpieczny(tekst('pasek-zgoda-akcja', '')) + '</a>' : '') + '</span></p>' : '')
+        + '<p class="byok-koszt">' + ikona('info') + '<span>' + bezpieczny(tekst('byok-koszt', '')) + '</span></p>'
         // Runda P (agencja-ux D3): wiekszosc osob z promocji klucza nie ma, wiec instrukcja stoi nad polem klucza
         // (wczesniej na dole, pod akapitem o bezpieczenstwie: na telefonie dopiero przy krawedzi ekranu).
         + '<details class="rozwijka byok-przewodnik"><summary>' + ikona('chevron-down') + bezpieczny(tekst('byok-nie-mam', '')) + '</summary><ol class="byok-kroki">'
         + [1, 2, 3, 4, 5].map(function(i){ return '<li>' + bezpieczny(tekst('byok-krok-' + i, '')) + '</li>'; }).join('')
         + '</ol><p class="tekst-pomoc"><a class="link-akcent" href="' + STRONA_KLUCZA[jez] + '" target="_blank" rel="noopener">' + bezpieczny(tekst('byok-pelna-instrukcja', '')) + '</a></p></details>'
-        + (k.ustawiony && !k.niewazny ? '<p class="tekst-pomoc stan-ok byok-jest" id="byok-jest">' + ikona('circle-check') + bezpieczny(tekst('byok-jest', '').replace('{KONCOWKA}', k.koncowka || '')) + '</p>' : '')
-        + window.htmlPolaKlucza('start', 'anthropic')
-        + window.htmlZapamietaj('start')
-        + '<p class="tekst-pomoc byok-gdzie">' + bezpieczny(tekst('byok-gdzie', '')) + ' <a class="link-akcent" href="' + STRONA_BEZPIECZENSTWA[jez] + '" target="_blank" rel="noopener">' + bezpieczny(tekst('byok-bezpieczenstwo', '')) + '</a></p>'
+        + poleKlucza
         + '<details class="rozwijka byok-opcjonalne" id="byok-opcjonalne"' + (inny ? ' open' : '') + '><summary>' + ikona('chevron-down') + bezpieczny(tekst('byok-opcjonalne', '')) + '</summary>'
         + window.htmlPolaKlucza('start', 'openai', { opis: tekst('byok-openai-opis', '') })
         + window.htmlPolaKlucza('start', 'eleven', { opis: tekst('byok-eleven-opis', '') }) + '</details>'
         + '<p class="tekst-pomoc byok-przyklad">' + bezpieczny(tekst('byok-przyklad', '')) + ' <button type="button" class="btn-link" onclick="startPomin();otworzPrzyklad()">' + bezpieczny(tekst('e1-przyklad', '')) + '</button></p>';
+      }
       dalej.disabled = !window.maKlucz('anthropic') && !window.startArtykul();
       dalej.textContent = bezKluczaTeraz ? tekst('start-bk-dalej', 'Dalej') : tekst('start-dalej', 'Dalej');
       pomin.textContent = tekst('byok-pozniej', '');
       pomin.onclick = function(){ try { sessionStorage.setItem('cai_kreator_pozniej', '1'); } catch(e){} window.startPomin(); };
-      fokus = dostawcaKreatora ? el('start-pole-' + dostawcaKreatora) : null;
+      fokus = dostawcaKreatora && !bezKluczaTeraz ? el('start-pole-' + dostawcaKreatora) : null;
     } else if (n === 'firma') {
       var c = typeof getLlmsConfig === 'function' ? getLlmsConfig() : {};
       cel.innerHTML = naglowek(bezpieczny(tekst('byok-2-tytul', '')), bezpieczny(tekst('byok-2-opis', '')))
@@ -21854,7 +21865,7 @@ async function kbAudioTranscribeAndOpen(file) {
   // Zapisany klucz Anthropic odblokowuje "Dalej" w pierwszym kroku.
   document.addEventListener('cai-klucz-zapisany', function(e){
     if (el('start-modal').style.display !== 'flex' || kroki[krok] !== 'klucz') return;
-    if (e.detail && e.detail.dostawca === 'anthropic') el('start-dalej').disabled = false;
+    if (e.detail && e.detail.dostawca === 'anthropic') { el('start-dalej').disabled = false; el('start-dalej').textContent = tekst('start-dalej', 'Dalej'); }
   });
   /** Kreator od razu na kroku klucza (blad klucza, karta "Podlacz klucz", Grafika i Audio bez klucza). */
   window.otworzKreatorKlucza = function(dostawca, powod){
@@ -22391,7 +22402,8 @@ async function kbAudioTranscribeAndOpen(file) {
       var st = window.stanStartu();
       var tytulKarty = ka.niewazny ? (ka.ustawiony ? 'e1-odrzucony' : 'e1-niewazny')
         : st && (st.powod === 'wykorzystany' || (st.dostepny && !st.artykul)) ? 'e1-start-wykorzystany'
-        : st && st.powod === 'pula' ? 'start-bk-pula' : st && st.powod === 'email' ? 'start-bk-email' : 'e1-tytul';
+        : st && st.powod === 'pula' ? 'start-bk-pula' : st && st.powod === 'email' ? 'start-bk-email'
+        : st && st.powod === 'regulamin' ? 'start-bk-regulamin' : 'e1-tytul';
       // E-mail niepotwierdzony albo pula dnia: pierwszy artykul bez klucza wroci, wiec klucz to druga droga ("albo").
       h = '<p class="konto-karta-tytul">' + esc(tekst(tytulKarty, '')) + '</p>'
         + '<p class="konto-karta-opis">' + esc(tekst(/^start-bk-/.test(tytulKarty) ? 'e1-opis-albo' : 'e1-opis', '')) + '</p>'

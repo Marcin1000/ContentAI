@@ -1,7 +1,7 @@
 ---
 tytul: Polityka prywatności Content AI
-wersja: 2026-10-v1
-data: 2026-10-09
+wersja: 2026-10-v2
+data: 2026-10-14
 ---
 <!--
 Szablon renderuje serwer aplikacji pod /dokumenty/prywatnosc. Źródło: szkic roli prawo z rundy 8
@@ -9,6 +9,8 @@ Szablon renderuje serwer aplikacji pod /dokumenty/prywatnosc. Źródło: szkic r
 konto samoobsługowe, Stripe, Resend, okresy z decyzji D-14, konfiguracja produkcji z DECYZJE-R9 (bez NVIDIA,
 DataForSEO i klucza ElevenLabs po stronie serwera). Bloki w podwójnych nawiasach z pytajnikiem pokazują się tylko,
 gdy dana usługa jest włączona w konfiguracji serwera (NVIDIA_KEY, DATAFORSEO_LOGIN, ELEVEN_KEY).
+Wersja 2026-10-v2 (14.10.2026): pierwszy artykuł bez klucza API (Regulamin § 3 ust. 4, serwer/start.js) - skrót adresu
+e-mail, cel i podstawa (art. 6 ust. 1 lit. f), okres 12 miesięcy, Anthropic na naszym kluczu przy tym artykule.
 DO PRZEGLĄDU PRZEZ PRAWNIKA. Ta sama wersja musi być w CAI_POLITYKA_WERSJA.
 -->
 
@@ -31,6 +33,8 @@ Dla kont zespołu, które założyliśmy przed udostępnieniem samodzielnej reje
 
 **Treści, nad którymi pracujesz.** Gotowych tekstów i ich historii serwer nie zapisuje na dysku: zostają w Twojej przeglądarce. Wynik każdego zadania (np. artykuł, grafika, nagranie) serwer trzyma w pamięci do 15 minut, żeby oddać go po zerwanym połączeniu, a potem go usuwa.
 
+**Pierwszy artykuł bez klucza.** Jeśli piszesz pierwszy artykuł bez własnego klucza API, zapisujemy skrót Twojego adresu e-mail, datę pierwszego wywołania modelu, liczbę wywołań i to, czy artykuł już powstał. Skrót liczymy naszym kluczem tajnym (HMAC) z adresu w postaci ujednoliconej: małe litery, bez dopisku po znaku „+”, w adresach Gmail bez kropek. Ze skrótu nie odczytamy adresu, możemy tylko sprawdzić, czy ten adres już skorzystał. Skrót nie jest powiązany z kontem, więc zostaje także po jego usunięciu.
+
 **Klucze API.** Twoje klucze do dostawców AI trzyma tylko Twoja przeglądarka, w zaszyfrowanym ciasteczku, którego nie odczyta żaden skrypt na stronie. Przy każdym zapytaniu przeglądarka wysyła je do naszego serwera, a serwer odszyfrowuje klucz tylko na czas zapytania i przekazuje go dostawcy. Klucza nie zapisujemy na dysku i nie umieszczamy w dziennikach.
 
 **Płatności.** Dane karty podajesz bezpośrednio w formularzu Stripe; nie mamy do nich dostępu. Od Stripe otrzymujemy: imię i nazwisko lub nazwę, adres e-mail, kraj i adres rozliczeniowy, kwotę, walutę, datę i stan płatności oraz informacje o zwrotach.
@@ -50,6 +54,7 @@ Dla kont zespołu, które założyliśmy przed udostępnieniem samodzielnej reje
 | Założenie i prowadzenie konta, działanie aplikacji, baza wiedzy, generowanie treści na Twoje polecenie, wiadomości e-mail związane z kontem i zamówieniem | wykonanie umowy, art. 6 ust. 1 lit. b |
 | Płatności, potwierdzenia, rachunki, ewidencja sprzedaży, obsługa odstąpienia od umowy i reklamacji | obowiązki prawne (przepisy podatkowe i konsumenckie), art. 6 ust. 1 lit. c, oraz wykonanie umowy |
 | Bezpieczeństwo serwisu, ochrona przed nadużyciami (limity logowania i rejestracji), dziennik techniczny | nasz prawnie uzasadniony interes, art. 6 ust. 1 lit. f |
+| Ograniczenie pierwszego artykułu bez klucza do jednego na adres e-mail (skrót adresu) | nasz prawnie uzasadniony interes w ochronie przed nadużyciami, art. 6 ust. 1 lit. f |
 | Ustalenie, dochodzenie i obrona roszczeń (np. zapis akceptacji regulaminu i oświadczeń przy zakupie) | nasz prawnie uzasadniony interes, art. 6 ust. 1 lit. f |
 | Rozpatrywanie zgłoszeń nielegalnych treści (akt o usługach cyfrowych) | obowiązek prawny, art. 6 ust. 1 lit. c |
 | Odpowiedź na prośbę o dostęp wysłaną dawnym formularzem | działania na Twoje żądanie przed zawarciem umowy, art. 6 ust. 1 lit. b |
@@ -66,6 +71,7 @@ Podanie adresu e-mail i hasła jest potrzebne do założenia konta, a danych pł
 | Zapis akceptacji regulaminu i oświadczeń przy zakupie | do upływu terminu przedawnienia roszczeń |
 | Dokumenty bazy wiedzy | do ich usunięcia przez Ciebie albo do usunięcia konta |
 | Liczniki użycia pakietu | okresy miesięczne starsze niż rok są usuwane automatycznie |
+| Skrót adresu e-mail przy pierwszym artykule bez klucza | 12 miesięcy od pierwszego wywołania, także po usunięciu konta, potem usuwany automatycznie |
 | Wynik zadania w pamięci serwera | do 15 minut |
 | Dane płatności i dokumenty sprzedaży | 5 lat od końca roku podatkowego, w którym nastąpiła płatność |
 | Dziennik techniczny serwera | 30 dni |
@@ -85,7 +91,7 @@ Dostęp do danych mamy my oraz firmy, które pomagają nam świadczyć usługę.
 | Cloudflare, Inc. | dostarczanie strony content-ai.net i obsługa nazw domen | USA i sieć globalna |
 | Stripe Payments Europe, Limited | obsługa płatności; w zakresie zapobiegania oszustwom i zgodności z prawem Stripe działa jako odrębny administrator | Irlandia, USA |
 | Resend, Inc. | wysyłka wiadomości e-mail związanych z kontem i zamówieniem | USA |
-| Anthropic Ireland, Limited | generowanie tekstu: na Twoim kluczu API albo, dla kont zespołu założonych przez nas, na naszym kluczu | Irlandia, USA |
+| Anthropic Ireland, Limited | generowanie tekstu: na Twoim kluczu API albo na naszym kluczu (pierwszy artykuł bez klucza i konta zespołu założone przez nas) | Irlandia, USA |
 | OpenAI Ireland Ltd | grafiki, synteza mowy, transkrypcja: na Twoim kluczu API albo, dla kont zespołu założonych przez nas, na naszym kluczu | Irlandia, USA |
 | ElevenLabs | synteza mowy, tylko na Twoim kluczu API | według warunków ElevenLabs |
 {{?nvidia}}
@@ -95,7 +101,7 @@ Dostęp do danych mamy my oraz firmy, które pomagają nam świadczyć usługę.
 | DataForSEO | wyniki wyszukiwania Google dla wpisanej frazy (przekazujemy tylko frazę) | {{DO_UZUPELNIENIA: siedziba DataForSEO}} |
 {{/dataforseo}}
 
-Treści potrzebne do danego zadania (na przykład temat, brief, pasujące fragmenty bazy wiedzy, tekst do odczytania albo nagranie do transkrypcji) serwer przekazuje dostawcy modeli AI. Gdy używasz własnego klucza API, odbywa się to na Twoim koncie u dostawcy i na warunkach Twojej umowy z nim; nasz serwer tylko przekazuje zapytanie. Dostawcy AI, z których korzystamy, zobowiązują się w warunkach dla API, że nie trenują modeli na przesłanych treściach (u OpenAI: domyślnie), i mogą je przechowywać przez krótki czas w celu wykrywania nadużyć (np. OpenAI do 30 dni).
+Treści potrzebne do danego zadania (na przykład temat, brief, pasujące fragmenty bazy wiedzy, tekst do odczytania albo nagranie do transkrypcji) serwer przekazuje dostawcy modeli AI. Gdy używasz własnego klucza API, odbywa się to na Twoim koncie u dostawcy i na warunkach Twojej umowy z nim; nasz serwer tylko przekazuje zapytanie. Przy pierwszym artykule bez klucza zapytania idą na naszym koncie u Anthropic, który przetwarza je wtedy w naszym imieniu. Dostawcy AI, z których korzystamy, zobowiązują się w warunkach dla API, że nie trenują modeli na przesłanych treściach (u OpenAI: domyślnie), i mogą je przechowywać przez krótki czas w celu wykrywania nadużyć (np. OpenAI do 30 dni).
 
 Dane możemy też przekazać organom publicznym, gdy wymagają tego przepisy.
 

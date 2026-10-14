@@ -1,7 +1,7 @@
 ---
 tytul: Content AI privacy policy
-wersja: 2026-10-v1
-data: 2026-10-09
+wersja: 2026-10-v2
+data: 2026-10-14
 ---
 <!--
 English version of prywatnosc.pl.md (same sections, same version). Rendered at /dokumenty/prywatnosc?lang=en.
@@ -28,6 +28,8 @@ For team accounts that we created before self-service registration was available
 
 **Content you work on.** The server does not store finished texts or their history on disk: they stay in your browser. The server keeps the result of each task (for example an article, image or recording) in memory for up to 15 minutes, so it can return it after a dropped connection, and then deletes it.
 
+**First article without a key.** If you write your first article without your own API key, we store a hash of your email address, the time of the first model call, the number of calls and whether the article has been written. We compute the hash with our secret key (HMAC) from a normalised form of the address: lower case, without the part after a “+” sign and, for Gmail addresses, without dots. We cannot read the address from the hash, we can only check whether that address has already used the offer. The hash is not linked to your account, so it stays after the account is deleted.
+
 **API keys.** Your keys for AI providers are kept only by your browser, in an encrypted cookie that no script on the page can read. With each request the browser sends them to our server, which decrypts the key only for the duration of the request and passes it to the provider. We do not store the key on disk or write it to logs.
 
 **Payments.** You enter card details directly in the Stripe form; we have no access to them. From Stripe we receive: your name or company name, email address, country and billing address, amount, currency, date and status of the payment, and refund information.
@@ -47,6 +49,7 @@ For team accounts that we created before self-service registration was available
 | Creating and running your account, operating the app, the knowledge base, generating content on your instruction, emails about your account and order | performance of a contract, Art. 6(1)(b) |
 | Payments, confirmations, receipts, sales records, handling withdrawals and complaints | legal obligations (tax and consumer law), Art. 6(1)(c), and performance of a contract |
 | Security of the service, abuse prevention (sign-in and registration limits), technical log | our legitimate interest, Art. 6(1)(f) |
+| Limiting the first article without a key to one per email address (address hash) | our legitimate interest in preventing abuse, Art. 6(1)(f) |
 | Establishing, exercising and defending legal claims (for example the record of acceptance of the Terms and statements at purchase) | our legitimate interest, Art. 6(1)(f) |
 | Handling notices of illegal content (Digital Services Act) | legal obligation, Art. 6(1)(c) |
 | Replying to an access request sent through the former form | steps at your request before entering into a contract, Art. 6(1)(b) |
@@ -63,6 +66,7 @@ Your email address and password are needed to create an account, and payment det
 | Record of acceptance of the Terms and statements at purchase | until the limitation period for claims expires |
 | Knowledge base documents | until you delete them or delete your account |
 | Plan usage counters | monthly periods older than a year are deleted automatically |
+| Email address hash for the first article without a key | 12 months from the first call, also after the account is deleted, then deleted automatically |
 | Task result in server memory | up to 15 minutes |
 | Payment data and sales records | 5 years from the end of the tax year in which the payment was made |
 | Server technical log | 30 days |
@@ -79,7 +83,7 @@ The data can be accessed by us and by the companies that help us provide the ser
 | Cloudflare, Inc. | delivering the content-ai.net site and domain name services | USA and global network |
 | Stripe Payments Europe, Limited | payment processing; for fraud prevention and legal compliance Stripe acts as a separate controller | Ireland, USA |
 | Resend, Inc. | sending emails about your account and order | USA |
-| Anthropic Ireland, Limited | text generation: on your API key or, for team accounts we created, on our key | Ireland, USA |
+| Anthropic Ireland, Limited | text generation: on your API key or on our key (the first article without a key and team accounts we created) | Ireland, USA |
 | OpenAI Ireland Ltd | images, speech synthesis, transcription: on your API key or, for team accounts we created, on our key | Ireland, USA |
 | ElevenLabs | speech synthesis, only on your API key | per the ElevenLabs terms |
 {{?nvidia}}
@@ -89,7 +93,7 @@ The data can be accessed by us and by the companies that help us provide the ser
 | DataForSEO | Google search results for the keyword you enter (we send only the keyword) | {{DO_UZUPELNIENIA: DataForSEO location}} |
 {{/dataforseo}}
 
-The server passes the content a task needs (for example the topic, brief, matching knowledge base passages, text to be read aloud or a recording to transcribe) to the AI model provider. When you use your own API key, this happens on your own account with the provider and under your own agreement with it; our server only forwards the request. The AI providers we use commit in their API terms not to train models on submitted content (OpenAI: by default) and may keep it for a short time to detect abuse (for example OpenAI for up to 30 days).
+The server passes the content a task needs (for example the topic, brief, matching knowledge base passages, text to be read aloud or a recording to transcribe) to the AI model provider. When you use your own API key, this happens on your own account with the provider and under your own agreement with it; our server only forwards the request. For the first article without a key, requests go through our own Anthropic account, and Anthropic processes them on our behalf. The AI providers we use commit in their API terms not to train models on submitted content (OpenAI: by default) and may keep it for a short time to detect abuse (for example OpenAI for up to 30 days).
 
 We may also disclose data to public authorities where the law requires it.
 

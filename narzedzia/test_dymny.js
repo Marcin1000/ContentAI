@@ -2379,11 +2379,12 @@ async function wariantStartBezKlucza(b) {
     && /z 4/.test(document.getElementById('start-postep').textContent), null, { timeout: 10000 }));
   const krok1 = await s.evaluate(() => ({ postep: document.getElementById('start-postep').textContent, tytul: document.getElementById('start-tytul').textContent,
     opis: document.getElementById('start-tresc').textContent, dalej: document.getElementById('start-dalej').textContent, wylaczony: document.getElementById('start-dalej').disabled,
-    koszt: !!document.querySelector('#start-tresc .byok-koszt'), pole: !!document.getElementById('start-pole-anthropic'),
+    koszt: !!document.querySelector('#start-tresc .byok-koszt'), pole: !!document.querySelector('#byok-mam-klucz:not([open]) #start-pole-anthropic'),
+    opcjonalne: !!document.getElementById('byok-opcjonalne'),
     karta: document.getElementById('konto-karta').hidden, gen: getComputedStyle(document.getElementById('gen-btn')).display }));
-  wynik('start bez klucza: krok 1 "Pierwszy artykul napiszesz bez klucza", przycisk "Dalej bez klucza" aktywny, pole klucza dalej jest, bez ramki kosztu',
-    krok1.postep === 'Krok 1 z 4' && krok1.tytul === 'Pierwszy artykuł napiszesz bez klucza' && /pokrywamy my/.test(krok1.opis)
-    && krok1.dalej === 'Dalej bez klucza' && !krok1.wylaczony && !krok1.koszt && krok1.pole, JSON.stringify(krok1));
+  wynik('start bez klucza: krok 1 "Pierwszy artykul napiszesz bez klucza", przycisk "Dalej bez klucza" aktywny, pole klucza zwiniete pod "Masz juz klucz API?", bez kosztu i kluczy opcjonalnych',
+    krok1.postep === 'Krok 1 z 4' && krok1.tytul === 'Pierwszy artykuł napiszesz bez klucza' && /pokrywamy my/.test(krok1.opis) && /Masz już klucz API\? Podłącz go teraz/.test(krok1.opis)
+    && krok1.dalej === 'Dalej bez klucza' && !krok1.wylaczony && !krok1.koszt && krok1.pole && !krok1.opcjonalne, JSON.stringify(krok1));
   wynik('start bez klucza: bez karty "Podlacz klucz" - przycisk Wygeneruj na miejscu', krok1.karta && krok1.gen !== 'none', JSON.stringify(krok1));
   await s.click('#start-dalej');
   await s.click('#start-dalej');
@@ -2425,15 +2426,18 @@ async function wariantStartBezKlucza(b) {
   await s.evaluate(() => startPomin());
   // Powody bez przydzialu: niepotwierdzony e-mail i dzienna pula. Karta mowi, ze start wroci, a klucz to druga droga.
   const powody = {};
-  for (const [powod, wzor] of [['email', /Potwierdź adres e-mail, a pierwszy artykuł napiszesz bez klucza/], ['pula', /Darmowe artykuły bez klucza na dziś się skończyły/]]) {
+  for (const [powod, wzor] of [['email', /Potwierdź adres e-mail, a pierwszy artykuł napiszesz bez klucza/], ['pula', /Darmowe artykuły bez klucza na dziś się skończyły/],
+    ['regulamin', /Zaakceptuj nową wersję regulaminu, a pierwszy artykuł napiszesz bez klucza/]]) {
     klucze.start = { dostepny: false, powod };
     powody[powod] = await s.evaluate(async () => { await window.odswiezKluczeKonta(); otworzKreatorKlucza('anthropic');
+      const zgody = document.querySelector('#byok-start-info a[href="/konto/zgody"]');
       return { karta: document.getElementById('konto-karta').textContent, info: (document.getElementById('byok-start-info') || {}).textContent || '',
-        dalej: document.getElementById('start-dalej').disabled, tytul: document.getElementById('start-tytul').textContent }; });
+        dalej: document.getElementById('start-dalej').disabled, tytul: document.getElementById('start-tytul').textContent, zgody: zgody ? zgody.textContent : '' }; });
     await s.evaluate(() => startPomin());
     wynik(`start bez klucza: powod "${powod}" - karta i ramka w kreatorze z tym powodem, "Albo podlacz wlasny klucz", Dalej zablokowane`,
       wzor.test(powody[powod].karta) && /Albo podłącz własny klucz/.test(powody[powod].karta) && wzor.test(powody[powod].info) && powody[powod].dalej
-      && /Podłącz swój klucz Anthropic/.test(powody[powod].tytul), JSON.stringify(powody[powod]));
+      && /Podłącz swój klucz Anthropic/.test(powody[powod].tytul) && (powod === 'regulamin' ? powody[powod].zgody === 'Przeczytaj i zaakceptuj' : !powody[powod].zgody),
+      JSON.stringify(powody[powod]));
   }
   wynik('start bez klucza: bez bledow JavaScript', bledy.length === 0, bledy.join(' | '));
   await k.close();

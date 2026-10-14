@@ -9,7 +9,10 @@
 // nie trafia do konta 'wlasne' (niezmiennik klucze.kluczDla zostaje bez zmian).
 //
 // Bezpieczniki (kazdy z osobna daje gorna granice kosztu):
-//   - tylko po potwierdzeniu adresu e-mail (rejestracja z Turnstile, gdy jest wlaczony),
+//   - tylko po potwierdzeniu adresu e-mail (rejestracja z Turnstile, gdy jest wlaczony) i po akceptacji aktualnego
+//     regulaminu (CAI_REGULAMIN_WERSJA): regulamin opisuje start (§ 3 ust. 4), a umowa powierzenia, ktora jest jego
+//     zalacznikiem, Anthropic jako dalszy podmiot przetwarzajacy przy tym artykule; dotychczasowe konta wchodza
+//     w start po zaakceptowaniu nowej wersji, nowe od rejestracji,
 //   - jeden przydzial na adres e-mail na rok, takze po usunieciu konta: przydzial lezy pod skrotem HMAC
 //     adresu kanonicznego (male litery, bez +dopisku, Gmail bez kropek), bez loginu i bez jawnego adresu,
 //   - tylko konto bez zadnego artykulu, jeden artykul (X-CAI-Czynnosc: artykul) na przydzial,
@@ -30,7 +33,7 @@ const WZOR_KLUCZA = /^sk-ant-api\d{2}-[A-Za-z0-9_-]{20,300}$/;
 // Odpowiedz dostawcy o rozliczeniach naszego obszaru roboczego (limit wydatkow, brak srodkow, platnosc).
 const BLAD_ROZLICZEN = /credit balance|usage limit|spend(?:ing)? limit|billing|payment/i;
 // Powody, ktore aplikacja pokazuje w kreatorze klucza; 'wylaczony' i 'konto' = start tego konta nie dotyczy.
-const POWODY_DLA_APLIKACJI = ['email', 'pula', 'wykorzystany'];
+const POWODY_DLA_APLIKACJI = ['email', 'regulamin', 'pula', 'wykorzystany'];
 
 const STAN = {
   konf: null,
@@ -124,7 +127,7 @@ function odmowa(powod) {
 /**
  * Stan startu konta.
  *   -> { dostepny: true, artykul, zostalo, do } (do = koniec okna albo null przed pierwszym wywolaniem)
- *    | { dostepny: false, powod: 'wylaczony'|'konto'|'email'|'pula'|'wykorzystany' }
+ *    | { dostepny: false, powod: 'wylaczony'|'konto'|'email'|'regulamin'|'pula'|'wykorzystany' }
  * artykulowWToku: sztuki artykulu zarezerwowane w pakiecie przez TO zapytanie (plany.zarezerwuj przed
  * wywolaniem) - licznik pakietu juz je zawiera, a to nie jest artykul napisany wczesniej.
  */
@@ -132,6 +135,8 @@ function stan(konto, teraz = Date.now(), { artykulowWToku = 0 } = {}) {
   if (!wlaczony()) return { dostepny: false, powod: 'wylaczony' };
   if (!dotyczy(konto)) return { dostepny: false, powod: 'konto' };
   if (!konto.emailPotwierdzony) return { dostepny: false, powod: 'email' };
+  // Regulamin w wersji z konfiguracji (ta sama kontrola co pasek "Zmienilismy regulamin", konta.wymagaAkceptacji).
+  if (STAN.konf.regulaminWersja && konto.regulaminWersja !== STAN.konf.regulaminWersja) return { dostepny: false, powod: 'regulamin' };
   const s = ustawienia();
   const sk = skrot(konto.email);
   if (!sk) return { dostepny: false, powod: 'konto' };
