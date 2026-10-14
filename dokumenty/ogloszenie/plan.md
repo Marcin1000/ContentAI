@@ -16,8 +16,10 @@ w `README.md` (punkt 5).
 3. **LinkedIn: 2 posty w tygodniu**, wtorek i czwartek o 7:45. Każdy zaczyna się od problemu czytelnika,
    produkt pojawia się w drugiej połowie.
 4. **Product Hunt w sobotę 14.11 o 9:01** (zapas: sobota 21.11), decyzja w sobotę 7.11 (punkt 5).
-5. **Największa przeszkoda to klucz API Anthropic** z przedpłatą. Uprzedzają ją: zdanie o kluczu przy każdym
-   „3 artykuły”, automatyczny mail powitalny (wdrożony), osobisty mail i tutorial 3-5 min (24.10).
+5. **Największa przeszkoda to klucz API Anthropic** z przedpłatą. Od aktualizacji serwera z 14.10 pierwszy
+   artykuł powstaje bez klucza (na naszym kluczu, z dzienną pulą), więc klucz pojawia się dopiero przed drugim.
+   Uprzedzają go: zdanie „pierwszy bez klucza, kolejne na Twoim kluczu” przy każdym „3 artykuły”, automatyczny
+   mail powitalny, osobisty mail i tutorial 3-5 min (24.10).
 6. **Bez płatnych kanałów do końca listopada** (punkt 8).
 
 ---
@@ -32,13 +34,14 @@ w `README.md` (punkt 5).
 - **Codziennie (pn-pt)**: 15-20 min komentowania postów osób z grupy docelowej (SEO, content, marketing),
   10-15 zaproszeń do takich osób (najwyżej 80-100 w tygodniu), odpowiedź na każdy komentarz i wiadomość.
   Bez narzędzi do automatyzacji i bez grup wzajemnych reakcji.
-- **Każde nowe konto**: system wysyła sam mail powitalny z kluczem API i dokumentami. Ty w ciągu 24 h piszesz
-  krótki mail osobisty z kontakt@content-ai.net (`kanaly.md`, punkt 1) z pytaniem „skąd wiesz o Content AI?”.
+- **Każde nowe konto**: system wysyła sam mail powitalny (dokumenty, temat, klucz API przed kolejnym artykułem).
+  Ty w ciągu 24 h piszesz krótki mail osobisty z kontakt@content-ai.net (`kanaly.md`, punkt 1) z pytaniem
+  „skąd wiesz o Content AI?”.
 - **Product Hunt od 15.10**: 10 min dziennie aktywności (komentarze pod cudzymi premierami z SEO, AI, pisania),
   żeby konto miało historię.
 - **Obietnice zgodne z produktem**:
-  - przy „Pakiet Darmowy: 3 artykuły” zawsze pada „Twój klucz API”, a „bez karty” tylko w odniesieniu
-    do konta w Content AI,
+  - przy „Pakiet Darmowy: 3 artykuły” zawsze pada „pierwszy bez klucza API, kolejne na Twoim kluczu”,
+    a „bez karty” tylko w odniesieniu do konta w Content AI,
   - WordPress, Drupal, Luki SERP, grafiki i lektor tylko z dopiskiem „od pakietu Standard”,
   - przy „z Twoich dokumentów” dodaj „wgraj 1-3 dokumenty przed pierwszym artykułem” (bez dokumentów
     pierwszy tekst powstaje ze stron w sieci).
@@ -68,7 +71,7 @@ w `README.md` (punkt 5).
 | **cz 22.10** | **7:45** | LinkedIn | **Post #3: karuzela PDF „6 sposobów, w jakie AI psuje fakty”** | `linkedin.md`, #3 | ≥ 400 wyśw. |
 | cz 22.10 | wieczór | YouTube | Kanał Content AI, filmy PL i EN 16:9 | `kanaly.md`, YouTube | kanał gotowy |
 | pt 23.10 | wieczór | agencje | Kolejne 10 wiadomości, odpowiedzi na rozmowy | `kanaly.md`, agencje | ≥ 3 rozmowy |
-| **sb 24.10** | 2-3 h | YouTube | **Tutorial 3-5 min: klucz API i pierwszy artykuł** (nagranie ekranu z napisami) | `kanaly.md`, tutorial | film, link w mailach i odpowiedziach |
+| **sb 24.10** | 2-3 h | YouTube | **Tutorial 3-5 min: pierwszy artykuł i klucz API** (nagranie ekranu z napisami) | `kanaly.md`, tutorial | film, link w mailach i odpowiedziach |
 | sb 24.10 | 30 min | LinkedIn | Strona firmowa Content AI (logo, opis, link) | `linkedin.md`, strona firmowa | strona założona |
 | nd 25.10 | 30 min | Product Hunt | Zmiana czasu. Wiadomość do 50 osób z listy: zapowiedź 14.11 bez prośby o głos | `product-hunt.md`, wiadomości | ≥ 25 odpowiedzi „zajrzę” |
 | pn 26.10 | wieczór | badanie | Start mini-badania: 20 tekstów z ogólnego czatu AI na 10 tematów, kontrola faktów w Content AI (3-4 h, 5-10 USD) | punkt 4 | dane do #6 |
@@ -168,7 +171,8 @@ przekaz albo kanał, nie wysiłek.
 |---|---|
 | Powiązanie projektu z firmami, z którymi pracujesz, albo z firmami z testów | Bez nazw i szczegółów, które do nich prowadzą (branża, kraj, jednostki z testu). Promocja z prywatnych kont. |
 | Limit przychodu działalności nierejestrowanej (kwartał) | Co tydzień `cli.sh przychod 2026-Q4`, próg ostrzegawczy 70%. Przy większej umowie z agencją najpierw policz kwartał. |
-| Klucz API Anthropic (osobne konto, karta, przedpłata, około 10 min) | Zdanie o kluczu w każdym materiale, mail powitalny, osobisty mail, tutorial. Pozytywnie: 10 USD u dostawcy to około 25-50 artykułów. |
+| Klucz API Anthropic (osobne konto, karta, przedpłata, około 10 min) | Pierwszy artykuł bez klucza (od 14.10), zdanie o kluczu w każdym materiale, mail powitalny, osobisty mail, tutorial. Pozytywnie: 10 USD u dostawcy to około 25-50 artykułów. |
+| Koszt darmowych artykułów (nasz klucz startu) | Osobny obszar roboczy w konsoli Anthropic z miesięcznym limitem wydatków, dzienna pula 20 osób, `sudo serwer/cli.sh start` codziennie rano. W dniu Product Hunt pulę można podnieść (`CAI_START_DZIENNIE`) albo start wyłączyć (`CAI_START=0`). |
 | Pierwszy artykuł bez dokumentów (tekst ze stron w sieci, a nie „z Twoich dokumentów”) | „Wgraj 1-3 dokumenty przed pierwszym artykułem” w mailach, komentarzach i tutorialu. |
 | Płatne pakiety tylko w UE | W materiałach EN wprost: „Paid plans need an EU billing address for now.” |
 | Resend: 100 maili dziennie na planie darmowym (rejestracja to dziś 2 maile: potwierdzenie i powitanie) | Resend Pro na 13-15.11, kontrola błędów poczty (`README.md`, punkt 3). |

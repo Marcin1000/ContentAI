@@ -11,10 +11,11 @@ Etap 7 w `dokumenty/PREMIERA.md` (Stripe live i otwarta rejestracja) jest zakoń
 | `kanaly.md` | osobisty mail do nowego konta, YouTube (filmy i tutorial), katalogi, agencje, grupy, media |
 | `grafiki/` | karuzela PDF do posta #3, grafiki do galerii Product Hunt i dawnych postów (tabela na końcu) |
 
-Wszystkie teksty mają fakty zgodne ze stroną content-ai.net: pakiet Darmowy (3 artykuły, konto bez karty, teksty
-na własnym kluczu API Anthropic, orientacyjnie 0,20-0,40 USD za artykuł), Standard 79 zł albo 19 EUR, Premium
-199 zł albo 49 EUR, treści po polsku, angielsku, niemiecku i czesku. Gdy coś z tego się zmieni, popraw najpierw
-stronę, potem te teksty i grafiki.
+Wszystkie teksty mają fakty zgodne ze stroną content-ai.net: pakiet Darmowy (3 artykuły, konto bez karty, pierwszy
+artykuł bez klucza API, kolejne na własnym kluczu Anthropic, orientacyjnie 0,20-0,40 USD za artykuł), Standard
+79 zł albo 19 EUR, Premium 199 zł albo 49 EUR, treści po polsku, angielsku, niemiecku i czesku. Gdy coś z tego
+się zmieni, popraw najpierw stronę, potem te teksty i grafiki. Gdy wyłączysz start (`CAI_START=0`) na dłużej,
+usuń „pierwszy bez klucza API” z materiałów przed kolejną publikacją.
 
 ---
 
@@ -47,7 +48,7 @@ Pełny kalendarz: `plan.md`.
 | pn 19.10 | 10 pierwszych wiadomości do agencji |
 | **wt 20.10, 7:45** | **post #2 z filmem PL** (`linkedin.md`), wieczorem formularz Product Hunt na 14.11 |
 | cz 22.10, 7:45 | post #3: karuzela „6 sposobów, w jakie AI psuje fakty”, kanał YouTube z filmami |
-| sb 24.10 | tutorial „klucz API i pierwszy artykuł” (`kanaly.md`, punkt 2), strona firmowa na LinkedIn |
+| sb 24.10 | tutorial „pierwszy artykuł i klucz API” (`kanaly.md`, punkt 2), strona firmowa na LinkedIn |
 
 ---
 
