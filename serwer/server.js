@@ -62,6 +62,7 @@ const poczta = require('./poczta.js');
 const platnosci = require('./platnosci.js');
 const oznaczenia = require('./oznaczenia.js');
 const dokumentyPrawne = require('./dokumenty-prawne.js');
+const startBezKlucza = require('./start.js');
 
 const KATALOG = __dirname;
 const APP = path.join(KATALOG, '..', 'app');
@@ -291,6 +292,16 @@ const KONF = {
   // Oznaczanie tresci AI (wykonawca D): '0' = awaryjne wylaczenie (slad w dzienniku i /api/status).
   oznaczenia: process.env.CAI_OZNACZENIA !== '0',
 
+  // Pierwszy artykul bez klucza (serwer/start.js, 14.10.2026): osobny klucz z obszaru roboczego Anthropic z limitem
+  // wydatkow. Bez CAI_START_KLUCZ start jest wylaczony; CAI_START=0 wylacza go awaryjnie bez usuwania klucza.
+  start: {
+    wlaczony: process.env.CAI_START !== '0',
+    klucz: String(process.env.CAI_START_KLUCZ || '').trim(),
+    dziennie: liczba(process.env.CAI_START_DZIENNIE, 20, true),
+    wywolan: liczba(process.env.CAI_START_WYWOLAN, 25),
+    minut: liczba(process.env.CAI_START_MINUT, 120),
+  },
+
   // Stan funkcji po kontroli konfiguracji: { rejestracja, platnosci, poczta, kluczeCiastek,
   // serpSamoobsluga, planNowych } -> { wlaczona, bledy[], ostrzezenia[] }. Ustawia sprawdzKonfiguracje().
   funkcje: {},
@@ -409,6 +420,13 @@ function sprawdzKonfiguracje(konf = KONF) {
     dodaj('modelTresci', Boolean(process.env.CAI_MODEL_TRESCI), bledy);
   }
 
+  // Pierwszy artykul bez klucza (start.js): klucz startu w formacie klucza Anthropic, inaczej start wylaczony.
+  {
+    const w = startBezKlucza.sprawdzKonfiguracje(konf);
+    if (w.bledy.length) konf.start.klucz = '';
+    dodaj('start', w.zadana, w.bledy, w.ostrzezenia);
+  }
+
   // Plan nowych kont (decyzja 3): musi istniec w plany.js.
   {
     const bledy = plany.PLANY[konf.planNowych] ? [] : ['CAI_PLAN_NOWYCH: nie ma takiego pakietu w serwer/plany.js - nowe konta dostaja darmowy'];
@@ -446,6 +464,8 @@ function zglosKonfiguracje(loguj = console) {
 }
 
 sprawdzKonfiguracje(KONF);
+// Pierwszy artykul bez klucza: konfiguracja, magazyn i podpis (skrot adresu) - przy kazdym wczytaniu modulu.
+startBezKlucza.inicjuj({ KONF, magazyn, podpisz });
 
 // ─── Uzytkownicy ──────────────────────────────────────────────────────────────
 // Konta leza w bazie (serwer/magazyn.js, tabela konta): magazyn.konto(login) zwraca
@@ -932,11 +952,16 @@ function odmowaKosztuGrafiki(body) {
 // naglowek x-*-key z aplikacji R8, na koncu klucz serwera jak dzis. Klucz uzytkownika
 // Anthropic idzie zawsze do Anthropic, nawet przy CAI_DOSTAWCA=nvidia (SEC8-03).
 
-/** 403 brak-klucza (kreator klucza w aplikacji) z nazwa dostawcy; cialo zapytania doczytane. */
+/**
+ * 403 brak-klucza (kreator klucza w aplikacji) z nazwa dostawcy; cialo zapytania doczytane. `start`: dlaczego
+ * pierwszy artykul bez klucza nie wchodzi w gre (email | pula | wykorzystany, serwer/start.js) - tekst w kreatorze.
+ */
 function odmowaKlucza(req, res, blad) {
   if (req && typeof req.resume === 'function') req.resume();
   if (!res.headersSent && typeof res.setHeader === 'function') res.setHeader('X-CAI-Dostawca', blad.dostawca);
-  return bledy.bladCai(res, blad.kod, blad.status, { dostawca: blad.dostawca, ...(blad.niewazny ? { niewazny: true } : {}) });
+  return bledy.bladCai(res, blad.kod, blad.status, {
+    dostawca: blad.dostawca, ...(blad.niewazny ? { niewazny: true } : {}), ...(blad.start ? { start: blad.start } : {}),
+  });
 }
 
 /**
@@ -1545,7 +1570,21 @@ async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
 
   // Klucz (BYOK): konto 'wlasne' bez wlasnego klucza konczy sie odmowa, nigdy kluczem
   // serwera; klucz uzytkownika idzie zawsze do Anthropic (cel 'anthropic', SEC8-03).
-  const k = klucze.kluczDla(req, konto, 'anthropic', KONF);
+  let k = klucze.kluczDla(req, konto, 'anthropic', KONF);
+  // Pierwszy artykul bez klucza (serwer/start.js): zamiast odmowy osobny klucz startu (nie ANTHROPIC_KEY).
+  // Przydzial atomowy dopiero tuz przed wywolaniem dostawcy, wiec odmowa pakietu albo SERP z DataForSEO
+  // nie zabiera wywolania; rozliczenie po odpowiedzi (przydzial.rozlicz), zwrot artykulu w finally.
+  let przydzial = null;
+  const kluczLubStart = () => {
+    if (!k.blad || przydzial) return k;
+    // Sztuka artykulu zarezerwowana w pakiecie przez to zapytanie jest juz w liczniku konta: to nie artykul sprzed startu.
+    const wToku = ((sesja && sesja.rezerwacja && sesja.rezerwacja.pozycje) || [])
+      .filter((p) => p.czynnosc === 'artykul' && !p.bezLimitu && !p.potwierdzona).length;
+    const p = startBezKlucza.przydziel(konto, czynnosci, { artykulowWToku: wToku });
+    if (!p.ok) return { blad: startBezKlucza.zPowodem(k.blad, p.powod) };
+    przydzial = p;
+    return p.k;
+  };
 
   // Zapytanie o kontekst SERP obslugujemy osobno - patrz serwer/serp.js.
   // Rozpoznajemy je po tresci (prompt analizy SERP), a nie po samym narzedziu
@@ -1575,15 +1614,19 @@ async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
     }
     // 'model': SERP to wywolanie modelu z web_search na kluczu konta (koszt wyszukiwania
     // po stronie klucza uzytkownika przy BYOK), bez puli serwera.
+    k = kluczLubStart();
     if (k.blad) return odmowaKlucza(req, res, k.blad);
     const wynik = await obsluzSerp(body, zrodlo, k.cel);
     if (wynik) {
+      // Klucz startu ma cel 'anthropic' (wynik null), ale gdyby odpowiedz przyszla bez dostawcy: bez kosztu.
+      if (przydzial) przydzial.rozlicz(wynik.status >= 400 ? wynik.status : 500, '');
       if (wynik.status < 400 && !res.destroyed) policzUzycie(sesja, 'wywolanie');
       return odpowiedzJson(res, wynik.status, wynik.dane);
     }
     // null = zostaw dotychczasowa sciezke (Anthropic z web_search)
   }
 
+  k = kluczLubStart();
   if (k.blad) return odmowaKlucza(req, res, k.blad);
 
   const h = hamulec(res, dlugieGenerowanie(body, czynnosci) ? KONF.czasy.dlugi : KONF.czasy.tresc);
@@ -1628,12 +1671,21 @@ async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
     // Odmowa filtra (takze po modelu zapasowym) nie daje tekstu: sztuka artykulu wraca do pakietu
     // (rezerwacja oddaje niepotwierdzone w finally), a wywolanie liczy sie jak kazde inne (sufit kosztu).
     const bezTekstu = odp.ok && odmowaModelu(tekst);
+    // Klucz startu odrzucony albo limit wydatkow obszaru startu: to sprawa operatora (start wstrzymany do konca
+    // doby UTC), a uzytkownik dostaje kreator klucza zamiast komunikatu o naszym rachunku u dostawcy.
+    if (przydzial && przydzial.rozlicz(odp.status, tekst, { bezTekstu }).wstrzymany) {
+      return odmowaKlucza(req, res, startBezKlucza.zPowodem({ kod: 'brak-klucza', status: 403, dostawca: 'anthropic' }, 'pula'));
+    }
     if (odp.ok) for (const czynnosc of czynnosci) if (!(bezTekstu && czynnosc === 'artykul')) policzUzycie(sesja, czynnosc);
     return wyslij(res, odp.status, {
       'Content-Type': 'application/json; charset=utf-8', ...naglowkiZlegoKlucza(k, odp.status, tekst, 'anthropic'),
+      // Aplikacja odswieza stan startu (/api/klucze) po wywolaniu na kluczu startu.
+      ...(przydzial ? { 'X-CAI-Start': '1' } : {}),
     }, Buffer.from(tekst, 'utf8'));
   } finally {
     h.zwolnij();
+    // Bez odpowiedzi dostawcy (przerwanie, limit czasu, blad sieci): sztuka artykulu startu wraca.
+    if (przydzial) przydzial.zakoncz();
   }
 }
 
@@ -2100,6 +2152,8 @@ async function cialoJson(req, limitBajtow) {
 const POMOCNICY = {
   // moduly
   magazyn, plany, dzierzawy, limity, bledy, poczta, platnosci, oznaczenia, klucze, logowanie,
+  // Pierwszy artykul bez klucza (start.js): pole start w /api/klucze i e-mail powitalny.
+  startBezKlucza,
   bladCai: bledy.bladCai,
   // odpowiedzi i zapytania
   odpowiedzJson, odpowiedzTekst, wyslij, czytajCialo, cialoJson, typJson, obcePochodzenie, adresIp, jezykZadania,
@@ -2304,6 +2358,8 @@ async function obsluz(req, res) {
       // C: zapis kluczy uzytkownikow (liczniki, bez wartosci) i pamiec zadan w tle.
       kluczeUzytkownikow: klucze.stan(KONF),
       zadania: zadaniaWTle.stan(),
+      // Pierwszy artykul bez klucza: ustawienia (bez klucza), dzisiejsza pula, wstrzymanie i liczniki.
+      startBezKlucza: startBezKlucza.status(),
     });
   }
 
@@ -2560,8 +2616,12 @@ async function obsluz(req, res) {
 
     // BYOK (ARCH8-10): konto na wlasnych kluczach bez klucza dostaje 403 od razu - przed
     // limitem pakietu i przed zadaniem w tle, ktore inaczej oddaloby odmowe jako wynik.
+    // Wyjatek: pierwszy artykul bez klucza (start.js), gdy jest dostepny; przydzial w proxyTresc.
     const brak = klucze.brakKlucza(sciezka, req, konto, KONF);
-    if (brak) return odmowaKlucza(req, res, brak);
+    if (brak) {
+      const st = sciezka === '/api' && brak.dostawca === 'anthropic' ? startBezKlucza.stanDla(konto, czynnosciTresci(req)) : null;
+      if (!st || !st.dostepny) return odmowaKlucza(req, res, st ? startBezKlucza.zPowodem(brak, st.powod) : brak);
+    }
 
     const CZYNNOSCI = {
       '/api/images': 'grafika',
@@ -2835,8 +2895,8 @@ function uruchomZegaryMagazynu() {
   const sprzataj = () => {
     try {
       const w = magazyn.sprzataj();
-      if (w.sesje || w.tokeny || w.zdarzenia || w.liczniki) {
-        console.log(`[magazyn] sprzatanie: sesje ${w.sesje}, tokeny ${w.tokeny}, zdarzenia ${w.zdarzenia}, liczniki ${w.liczniki}`);
+      if (w.sesje || w.tokeny || w.zdarzenia || w.liczniki || w.start) {
+        console.log(`[magazyn] sprzatanie: sesje ${w.sesje}, tokeny ${w.tokeny}, zdarzenia ${w.zdarzenia}, liczniki ${w.liczniki}, start ${w.start}`);
       }
     } catch (e) {
       console.error('[magazyn] sprzatanie:', e.message);
@@ -2902,6 +2962,7 @@ function start() {
     console.log(`  dostawca tresci: ${KONF.dostawca}${KONF.dostawca === 'nvidia' ? ' (' + KONF.modelNvidia + ')' : ''}`);
     if (KONF.modelGrafiki) console.log(`  model grafik: ${KONF.modelGrafiki} (CAI_MODEL_GRAFIKI)`);
     if (zamiennikTresci()) console.log(`  model tresci: ${zamiennikTresci()} zamiast ${DOZWOLONE.modelTresci} (CAI_MODEL_TRESCI)`);
+    if (startBezKlucza.opisKonfiguracji()) console.log(`  ${startBezKlucza.opisKonfiguracji()}`);
     console.log(`  kont: ${kont}, baza: ${KONF.sqlite}, cookie Secure: ${KONF.cookieSecure ? 'tak' : 'NIE (tylko do testow lokalnych)'}`);
     console.log(`  rejestracja: ${funkcjaWlaczona('rejestracja') ? 'otwarta' : 'zamknieta'}, platnosci: ${funkcjaWlaczona('platnosci') ? `${KONF.platnosci.dostawca} (${KONF.platnosci.tryb})` : 'wylaczone'}, poczta: ${KONF.poczta.tryb}`);
     console.log(`  modele: ${[...DOZWOLONE.modele].join(', ')}; max_tokens <= ${KONF.maxTokens}; kompresja: ${KONF.kompresja ? 'tak' : 'nie'}`);

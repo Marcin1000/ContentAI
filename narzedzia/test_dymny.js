@@ -2330,6 +2330,115 @@ async function wariantSamoobsluga(b) {
 
 // KOD8-24: kreator pierwszego uruchomienia nie wyskakuje nad tematem zaczetym, zanim serwer odpowiedzial o pakiecie
 // (wolna odpowiedz udaje trasa z opoznieniem). Kontrola: bez tematu kreator sie pokazuje.
+// 14.10: pierwszy artykul bez klucza (serwer/start.js). Serwer startu udaja route'y jak w wariantSamoobsluga: /api/klucze
+// z polem start, /api przepuszcza do prawdziwego serwera (konto 'standard', atrapa) i dokleja X-CAI-Start, a drugi
+// artykul dostaje 403 brak-klucza z powodem "wykorzystany". Kontrole: kreator "Dalej bez klucza", artykul bez klucza
+// w przegladarce, karta po artykule, kreator z powodem (wykorzystany, e-mail, pula dnia).
+async function wariantStartBezKlucza(b) {
+  const bledy = [];
+  const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, locale: 'pl-PL' });
+  await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); localStorage.setItem('cai_lang', 'pl'); } catch (e) { /* bez magazynu */ } });
+  k.on('page', (p) => p.on('pageerror', (e) => bledy.push(e.message)));
+  const BAZA = 'http://127.0.0.1:' + PORT_SERWERA;
+  const st = { emailPotwierdzony: true, aktywna: false };
+  const klucze = { zrodloKluczy: 'wlasne', zapis: true, dostawcy: ['anthropic', 'openai', 'eleven'], anthropic: { ustawiony: false }, openai: { ustawiony: false },
+    eleven: { ustawiony: false }, start: { dostepny: true, artykul: true, zostalo: 25, do: null } };
+  const z = { api: [], kluczeGet: 0 };
+  let artykulow = 0;
+  await k.route(/\/api\/konto$/, (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(stanKontaSamoobslugi(st)) }));
+  await k.route(/\/api\/marka$/, (r) => (r.request().method() === 'GET'
+    ? r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ marka: null, zakres: 'organizacja', mozeEdytowac: true }) }) : r.continue()));
+  await k.route(/\/api\/klucze(\?.*)?$/, (r) => {
+    if (r.request().method() === 'GET') z.kluczeGet++;
+    return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(klucze) });
+  });
+  await k.route(/\/api\/pakiet$/, (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ plan: 'darmowy', nazwa: 'Darmowy', nazwaEn: 'Free', okres: 'zawsze',
+    uzycie: { artykul: { limit: 3, zuzyte: artykulow, zostalo: 3 - artykulow }, wywolanie: { limit: 47, zuzyte: 0, zostalo: 47 } },
+    funkcje: { bazaWiedzy: true, serp: false, wlasnyKlucz: true }, limitDokumentow: 3, zrodloKluczy: 'wlasne' }) }));
+  await k.route(/\/api$/, async (r) => {
+    const req = r.request();
+    const artykul = (req.headers()['x-cai-czynnosc'] || '') === 'artykul';
+    z.api.push({ artykul, klucz: req.headers()['x-api-key'] || '' });
+    if (artykul && !klucze.start.artykul) {
+      return r.fulfill({ status: 403, headers: { 'X-CAI-Kod': 'brak-klucza', 'X-CAI-Dostawca': 'anthropic' }, contentType: 'application/json',
+        body: JSON.stringify({ type: 'error', error: { type: 'cai_brak_klucza', message: 'Brak klucza' }, kod: 'brak-klucza', dostawca: 'anthropic', start: 'wykorzystany' }) });
+    }
+    const odp = await r.fetch();
+    if (artykul && odp.status() === 200) { klucze.start = { dostepny: true, artykul: false, zostalo: 24, do: Date.now() + 2 * 3600e3 }; artykulow = 1; }
+    return r.fulfill({ response: odp, headers: Object.assign({}, odp.headers(), { 'x-cai-start': '1' }) });
+  });
+
+  const s = await k.newPage();
+  await s.goto(BAZA + '/', { waitUntil: 'load' });
+  if (await s.$('input[name="login"]')) {
+    await s.fill('input[name="login"]', 'standard');
+    await s.fill('input[type="password"]', HASLO);
+    await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('button[type="submit"], input[type="submit"]')]);
+  }
+  await krok('start bez klucza: kreator po pierwszym wejsciu', s.waitForFunction(() => getComputedStyle(document.getElementById('start-modal')).display === 'flex'
+    && /z 4/.test(document.getElementById('start-postep').textContent), null, { timeout: 10000 }));
+  const krok1 = await s.evaluate(() => ({ postep: document.getElementById('start-postep').textContent, tytul: document.getElementById('start-tytul').textContent,
+    opis: document.getElementById('start-tresc').textContent, dalej: document.getElementById('start-dalej').textContent, wylaczony: document.getElementById('start-dalej').disabled,
+    koszt: !!document.querySelector('#start-tresc .byok-koszt'), pole: !!document.getElementById('start-pole-anthropic'),
+    karta: document.getElementById('konto-karta').hidden, gen: getComputedStyle(document.getElementById('gen-btn')).display }));
+  wynik('start bez klucza: krok 1 "Pierwszy artykul napiszesz bez klucza", przycisk "Dalej bez klucza" aktywny, pole klucza dalej jest, bez ramki kosztu',
+    krok1.postep === 'Krok 1 z 4' && krok1.tytul === 'Pierwszy artykuł napiszesz bez klucza' && /pokrywamy my/.test(krok1.opis)
+    && krok1.dalej === 'Dalej bez klucza' && !krok1.wylaczony && !krok1.koszt && krok1.pole, JSON.stringify(krok1));
+  wynik('start bez klucza: bez karty "Podlacz klucz" - przycisk Wygeneruj na miejscu', krok1.karta && krok1.gen !== 'none', JSON.stringify(krok1));
+  await s.click('#start-dalej');
+  await s.click('#start-dalej');
+  await krok('start bez klucza: krok dokumentow', s.waitForFunction(() => /Krok 3 z 4/.test(document.getElementById('start-postep').textContent), null, { timeout: 5000 }));
+  await s.click('#start-dalej');
+  const krok4 = await s.evaluate(() => ({ postep: document.getElementById('start-postep').textContent, opis: document.getElementById('start-tresc').textContent,
+    dalej: document.getElementById('start-dalej').textContent }));
+  wynik('start bez klucza: krok 4 mowi, ze ten artykul jest bez klucza, na nasz koszt',
+    krok4.postep === 'Krok 4 z 4' && /Ten artykuł piszesz bez klucza, na nasz koszt/.test(krok4.opis) && krok4.dalej === 'Napisz artykuł', JSON.stringify(krok4));
+  const kluczeAkt = z.kluczeGet;
+  await s.fill('#byok-temat', 'Jak wybrać pompę ciepła do domu jednorodzinnego');
+  await s.click('#start-dalej');
+  await krok('start bez klucza: pierwszy artykul gotowy', s.waitForFunction(() => { const b = document.getElementById('gen-btn'); const sp = document.getElementById('spinner');
+    return sp && getComputedStyle(sp).display === 'none' && document.getElementById('article').innerHTML.trim().length > 200 && (!b || !b.disabled); }, null, { timeout: 60000 }));
+  await krok('start bez klucza: karta po artykule', s.waitForFunction(() => !document.getElementById('konto-karta').hidden, null, { timeout: 8000 }));
+  const po = await s.evaluate(() => ({ karta: document.getElementById('konto-karta').textContent, gen: getComputedStyle(document.getElementById('gen-btn')).display,
+    h2: document.getElementById('article').querySelectorAll('h2').length, start: JSON.stringify(window.STAN_KLUCZY.start) }));
+  const art = z.api.filter((w) => w.artykul);
+  wynik('start bez klucza: artykul poszedl do serwera bez klucza w przegladarce (bez naglowka x-api-key), jeden artykul',
+    art.length === 1 && art.every((w) => w.klucz === '') && po.h2 > 0, JSON.stringify({ api: z.api, h2: po.h2 }));
+  wynik('start bez klucza: X-CAI-Start odswieza stan kluczy, karta "Darmowy artykul jest gotowy" w miejscu Wygeneruj',
+    z.kluczeGet > kluczeAkt && /Darmowy artykuł jest gotowy\. Podłącz klucz Anthropic, żeby pisać kolejne\./.test(po.karta) && po.gen === 'none' && /"artykul":false/.test(po.start),
+    JSON.stringify(po));
+  await s.click('#e1-podlacz');
+  await krok('start bez klucza: kreator klucza z karty', s.waitForFunction(() => getComputedStyle(document.getElementById('start-modal')).display === 'flex', null, { timeout: 5000 }));
+  const poKarcie = await s.evaluate(() => ({ tytul: document.getElementById('start-tytul').textContent, info: (document.getElementById('byok-start-info') || {}).textContent || '',
+    dalej: document.getElementById('start-dalej').disabled, tekstDalej: document.getElementById('start-dalej').textContent }));
+  wynik('start bez klucza: po artykule kreator "Podlacz swoj klucz" z ramka "darmowy artykul juz napisany", Dalej zablokowane do zapisu klucza',
+    /Podłącz swój klucz Anthropic/.test(poKarcie.tytul) && /Twój darmowy artykuł bez klucza jest już napisany/.test(poKarcie.info) && poKarcie.dalej && poKarcie.tekstDalej === 'Dalej',
+    JSON.stringify(poKarcie));
+  await s.evaluate(() => startPomin());
+  // Drugi artykul, gdy przydzial trwa (wywolania pomocnicze dalej na starcie): serwer 403 z powodem -> kreator.
+  const drugi = await s.evaluate(async () => { const o = await fetch('/api', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-cai-czynnosc': 'artykul' }, body: '{}' });
+    return { status: o.status, kod: o.headers.get('X-CAI-Kod'), d: await o.json() }; });
+  await krok('start bez klucza: kreator po odmowie drugiego artykulu', s.waitForFunction(() => getComputedStyle(document.getElementById('start-modal')).display === 'flex'
+    && !!document.getElementById('byok-start-info'), null, { timeout: 5000 }));
+  wynik('start bez klucza: drugi artykul -> 403 brak-klucza z powodem "wykorzystany" i kreator klucza z ramka', drugi.status === 403 && drugi.d.start === 'wykorzystany'
+    && art.length === z.api.filter((w) => w.artykul).length - 1, JSON.stringify(drugi));
+  await s.evaluate(() => startPomin());
+  // Powody bez przydzialu: niepotwierdzony e-mail i dzienna pula. Karta mowi, ze start wroci, a klucz to druga droga.
+  const powody = {};
+  for (const [powod, wzor] of [['email', /Potwierdź adres e-mail, a pierwszy artykuł napiszesz bez klucza/], ['pula', /Darmowe artykuły bez klucza na dziś się skończyły/]]) {
+    klucze.start = { dostepny: false, powod };
+    powody[powod] = await s.evaluate(async () => { await window.odswiezKluczeKonta(); otworzKreatorKlucza('anthropic');
+      return { karta: document.getElementById('konto-karta').textContent, info: (document.getElementById('byok-start-info') || {}).textContent || '',
+        dalej: document.getElementById('start-dalej').disabled, tytul: document.getElementById('start-tytul').textContent }; });
+    await s.evaluate(() => startPomin());
+    wynik(`start bez klucza: powod "${powod}" - karta i ramka w kreatorze z tym powodem, "Albo podlacz wlasny klucz", Dalej zablokowane`,
+      wzor.test(powody[powod].karta) && /Albo podłącz własny klucz/.test(powody[powod].karta) && wzor.test(powody[powod].info) && powody[powod].dalej
+      && /Podłącz swój klucz Anthropic/.test(powody[powod].tytul), JSON.stringify(powody[powod]));
+  }
+  wynik('start bez klucza: bez bledow JavaScript', bledy.length === 0, bledy.join(' | '));
+  await k.close();
+}
+
 async function wariantKreatorTematR9D(b) {
   const k = await b.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, locale: 'pl-PL' });
   await k.addInitScript(() => { try { sessionStorage.setItem('cin_splash', '1'); } catch (e) { /* bez magazynu */ } });
@@ -3136,6 +3245,7 @@ async function wariantR9W(b) {
     await osobno(wariantMotywR9D, b);
     await osobno(wariantKreatorTematR9D, b);
     await osobno(wariantSamoobsluga, b);
+    await osobno(wariantStartBezKlucza, b);
     await osobno(wariantR9DZakupWAplikacji, b);
     await osobno(wariantUwagiTestuPremiery, b);
     await osobno(wariantR9W, b);

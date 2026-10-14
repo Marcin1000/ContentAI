@@ -18,7 +18,8 @@
  * Klucze (testy BYOK, runda 9): klucz zawierajacy "zly" albo "deadbeef" (szesnastkowy klucz ElevenLabs)
  * -> 401 w formacie dostawcy (kazda sciezka),
  * "bez-uprawnien" -> klucz rozpoznany, ale bez uprawnienia (Anthropic 403 permission_error, OpenAI 401
- * "Missing scopes", ElevenLabs 401 missing_permissions). ATRAPA_ZAPISUJ_KLUCZE=1 (albo KONF.zapisujKlucze
+ * "Missing scopes", ElevenLabs 401 missing_permissions), "bez-srodkow" -> Anthropic 400 o braku srodkow
+ * na koncie (jak przy wyczerpanym limicie wydatkow obszaru roboczego; testy pierwszego artykulu bez klucza). ATRAPA_ZAPISUJ_KLUCZE=1 (albo KONF.zapisujKlucze
  * = true w module) dopisuje do dziennika wywolan pole `klucz` z naglowka autoryzacji - TYLKO testy
  * (kontrola "konto na wlasnym kluczu nigdy nie dostaje klucza serwera").
  *
@@ -1744,6 +1745,10 @@ function obsluz(metoda, sciezkaPelna, naglowki, bufor) {
     if (/text-to-speech/.test(sc)) return json(401, bladEleven(401).json, 'zly-klucz');
     if (/\/messages$/.test(sc)) return json(401, bladAnthropic(401).json, 'zly-klucz');
     return json(401, bladOpenAi(401).json, 'zly-klucz');
+  }
+  // Konto bez srodkow albo z wyczerpanym limitem wydatkow (testy pierwszego artykulu bez klucza): tresc jak w API.
+  if (/bez-srodkow/i.test(kluczZapytania(naglowki)) && /\/messages$/.test(sc)) {
+    return json(400, { type: 'error', error: { type: 'invalid_request_error', message: 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits. (atrapa)' } }, 'bez-srodkow');
   }
 
   let cialo = null;

@@ -33,7 +33,8 @@
 //
 // Trasy (za logowaniem, z kontrola CSRF i Content-Type JSON routera):
 //   GET    /api/klucze               stan: { zrodloKluczy, zapis, dostawcy, anthropic: { ustawiony, koncowka,
-//                                     zapamietany, wygasa? }, openai: {...}, eleven: {...} } - nigdy caly klucz
+//                                     zapamietany, wygasa? }, openai: {...}, eleven: {...}, start? } - nigdy caly klucz;
+//                                     start (konto 'wlasne' bez klucza Anthropic): pierwszy artykul bez klucza, start.js
 //   POST   /api/klucze               { dostawca, klucz, zapamietaj?, sprawdz? } albo { anthropic?, openai?,
 //                                     eleven?, zapamietaj? }: format (SEC8-03), opcjonalnie test u dostawcy,
 //                                     Set-Cookie; odpowiedz jak GET z { ok: true }
@@ -402,6 +403,20 @@ function stanKluczy(req, konto, konf, zmiany = {}) {
   return wynik;
 }
 
+/**
+ * Stan kluczy w odpowiedziach tras: konto 'wlasne' bez uzywalnego klucza Anthropic dostaje pole `start`
+ * (pierwszy artykul bez klucza, serwer/start.js): { dostepny, artykul, zostalo, do } albo { dostepny: false, powod }.
+ */
+function stanDlaTrasy(req, kontekst, zmiany = {}) {
+  const wynik = stanKluczy(req, kontekst.konto, kontekst.KONF, zmiany);
+  const a = wynik.anthropic;
+  if (wynik.zrodloKluczy === 'wlasne' && kontekst.startBezKlucza && !(a.ustawiony && !a.niewazny)) {
+    const st = kontekst.startBezKlucza.stanDlaAplikacji(kontekst.konto);
+    if (st) wynik.start = st;
+  }
+  return wynik;
+}
+
 // ─── Trasy /api/klucze* ──────────────────────────────────────────────────────
 
 const LIMIT_SPRAWDZEN = limity.utworz('klucze-sprawdz', [
@@ -522,7 +537,7 @@ async function trasaZapisu(req, res, kontekst) {
   res.setHeader('Set-Cookie', wpisy.map((w) => ciasteczkoZKluczem(w.dostawca, w.dane, konto, KONF, zapamietaj, teraz)));
   STAN.zapisow += wpisy.length;
   const zmiany = Object.fromEntries(wpisy.map((w) => [w.dostawca, { dane: w.dane, zapamietany: zapamietaj, od: teraz }]));
-  kontekst.odpowiedzJson(res, 200, { ok: true, zapisano: true, ...stanKluczy(req, konto, KONF, zmiany) });
+  kontekst.odpowiedzJson(res, 200, { ok: true, zapisano: true, ...stanDlaTrasy(req, kontekst, zmiany) });
 }
 
 async function trasaUsuniecia(req, res, kontekst, zParametru) {
@@ -534,7 +549,7 @@ async function trasaUsuniecia(req, res, kontekst, zParametru) {
   if (lista.some((d) => !d)) { kontekst.odpowiedzJson(res, 400, { error: 'Nieznany dostawca' }); return; }
   res.setHeader('Set-Cookie', ciasteczkaUsuwajace(KONF, lista));
   STAN.usuniec += lista.length;
-  kontekst.odpowiedzJson(res, 200, { ok: true, usunieto: lista, ...stanKluczy(req, konto, KONF, Object.fromEntries(lista.map((d) => [d, null]))) });
+  kontekst.odpowiedzJson(res, 200, { ok: true, usunieto: lista, ...stanDlaTrasy(req, kontekst, Object.fromEntries(lista.map((d) => [d, null]))) });
 }
 
 async function trasaSprawdzenia(req, res, kontekst) {
@@ -570,7 +585,7 @@ async function obsluz(sciezka, req, res, kontekst) {
   }
   if (sciezka === '/api/klucze') {
     if (req.method === 'GET' || req.method === 'HEAD') {
-      kontekst.odpowiedzJson(res, 200, stanKluczy(req, kontekst.konto, kontekst.KONF));
+      kontekst.odpowiedzJson(res, 200, stanDlaTrasy(req, kontekst));
     } else if (req.method === 'POST') {
       await trasaZapisu(req, res, kontekst);
     } else if (req.method === 'DELETE') {
