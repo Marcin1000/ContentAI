@@ -1897,7 +1897,8 @@ async function scenariuszRundaA(b) {
     const w = document.getElementById('fakty-wynik');
     const brak = w.querySelector('.fakty-uwaga[data-rodzaj="brak"]');
     const btn = document.getElementById('fakty-popraw-btn');
-    const doPoprawy = (faktyWynik || []).filter((u) => ['liczba', 'brak', 'zakres', 'sprzecznosc', 'konflikt'].indexOf(u.rodzaj) !== -1);
+    // Runda B: do poprawy takze "Z wiedzy modelu" i ogolnik z fragmentem zrodla.
+    const doPoprawy = (faktyWynik || []).filter((u) => ['liczba', 'model', 'ogolnik', 'brak', 'zakres', 'sprzecznosc', 'konflikt'].indexOf(u.rodzaj) !== -1 && (u.rodzaj !== 'ogolnik' || u.zrodlo));
     return {
       stan: faktyStan, tekst: w.innerText, stopka: (w.querySelector('.fakty-wzgledem-sieci') || {}).textContent || '',
       wzorStopki: _t('fakty-wzgledem-sieci-baza'), brakEtykieta: brak ? brak.firstElementChild.textContent.trim() : '',
@@ -1914,8 +1915,9 @@ async function scenariuszRundaA(b) {
   wynik('Runda A: Fakty - wyjasnienia bez srednika (model napisal "a; b")', fk.stan === 'gotowe' && fk.tekst.indexOf(';') === -1, fk.tekst.slice(0, 300));
   wynik('Runda A: Fakty - Baza z dokumentami bez pasujacych materialow: stopka mowi to wprost, nie "Baza jest pusta"',
     fk.stopka === fk.wzorStopki && !/pusta/.test(fk.stopka), fk.stopka);
-  wynik('Runda A: Fakty - przycisk "Popraw zdania bez źródła (N)" z liczba uwag do poprawy',
-    fk.ileDoPoprawy >= 2 && fk.przycisk === 'Popraw zdania bez źródła (' + fk.ileDoPoprawy + ')', JSON.stringify({ przycisk: fk.przycisk, n: fk.ileDoPoprawy }));
+  // Runda B: "Popraw wskazane zdania" - lista obejmuje tez ogolniki, ktorych nie usuwa, tylko uzupelnia ze zrodla.
+  wynik('Runda A: Fakty - przycisk "Popraw wskazane zdania (N)" z liczba uwag do poprawy',
+    fk.ileDoPoprawy >= 2 && fk.przycisk === 'Popraw wskazane zdania (' + fk.ileDoPoprawy + ')', JSON.stringify({ przycisk: fk.przycisk, n: fk.ileDoPoprawy }));
 
   const przedPoprawa = zap.length;
   await s.evaluate(() => { const btn = document.getElementById('fakty-popraw-btn'); if (btn) btn.click(); });
@@ -2069,6 +2071,395 @@ async function scenariuszRundaA(b) {
 
   wynik('Runda A: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
   if (bledow) await zrzut(s, 'runda-a');
+  await k.close();
+}
+
+// Runda B (2026-11-06, druga runda uwag agencji): kontrola faktow pyta, skad jest zdanie, nie tylko czy jest prawda.
+// Kategoria "Z wiedzy modelu" (pola formularza, kroki, wymagania bez zrodla), ogolnik tam, gdzie zrodlo podaje konkret
+// (z fragmentem zrodla, ktory "Popraw wskazane zdania" wstawia w miejsce ogolnika), pochodzenie twierdzen (ze zrodel /
+// z wiedzy modelu) i test w druga strone: fakty z Bazy, ktorych tekst nie uzyl, z "Dopisz do tekstu". Pisanie: wartosc
+// ze zrodla zamiast ogolnika, listy pol i krokow tylko ze zrodel, ton zmienia funkcje zdan i plan sekcji, naglowki jako
+// frazy bez marki (SALIENCE w tresci sekcji), Glos marki z funkcja zdan. Luki z tymi samymi regulami, oceny licza marke
+// w tresci sekcji, AEO mowi o naglowkach z nazwa marki. Kazde sprawdzenie pada na main sprzed tej zmiany.
+async function scenariuszRundaB(b) {
+  const { k, s, bledyJs } = await nowaStrona(b, 'pl', {});
+  const zap = [];
+  s.on('request', (z) => {
+    if (z.method() !== 'POST' || !/anthropic\.com/.test(z.url())) return;
+    try { zap.push(JSON.parse(z.postData() || '{}')); } catch (e) { /* inne cialo */ }
+  });
+  const sys = (z) => String((z && z.system) || '');
+  const usr = (z) => { const m = ((z && z.messages) || [])[0]; return m ? (typeof m.content === 'string' ? m.content : JSON.stringify(m.content)) : ''; };
+  const jedna = (t) => String(t || '').replace(/\s+/g, ' ').trim();
+  const pisze = (z) => /You are an expert content strategist|You are an SEO and content writer/.test(sys(z));
+  const MARKA = 'TermoTest';
+  // Baza: warunki serwisu z konkretnymi wartosciami (zadne zdanie nie pada w artykule atrapy).
+  const BAZA = 'Przegląd pompy ciepła po sezonie trwa 90 minut i obejmuje sprawdzenie ciśnienia czynnika. '
+    + 'Zgłoszenie przeglądu wymaga numeru seryjnego urządzenia i daty montażu. '
+    + 'Jednostka zewnętrzna musi stać co najmniej 30 cm od ściany. '
+    + 'Gwarancja obejmuje 5 lat pod warunkiem corocznego przeglądu. '
+    + 'Serwis odpowiada na zgłoszenie w ciągu 2 dni roboczych.';
+  await s.evaluate((marka) => { try { magazyn.setItem('cai-llms', JSON.stringify({ name: marka })); } catch (e) { /* bez magazynu */ } }, MARKA);
+
+  // 1. Reguly pisania (funkcje promptu). Brak funkcji daje pusty tekst - sprawdzenie pada, reszta idzie dalej.
+  const f = await s.evaluate((marka) => {
+    const tony = ['Profesjonalny', 'Ekspercki', 'Przyjazny', 'Neutralny'];
+    const rz = (o) => typeof blokRzetelnosci === 'function' ? blokRzetelnosci(Object.assign({ ton: 'Przyjazny', odbiorca: '', uzupelnia: false, frazy: [] }, o)) : '';
+    return {
+      konkret: typeof blokKonkretu === 'function' ? blokKonkretu() : '',
+      fakty: typeof blokFaktow === 'function' ? blokFaktow(false) : '',
+      tony: tony.map((t) => typeof blokTonu === 'function' ? blokTonu(t) : ''),
+      plany: tony.map((t) => typeof blokPlanuTonu === 'function' ? blokPlanuTonu(t) : ''),
+      naglowki: typeof blokNaglowkow === 'function' ? blokNaglowkow(['serwis pomp ciepła']) : '',
+      naglowkiZMarka: typeof blokNaglowkow === 'function' ? blokNaglowkow(['serwis ' + marka.toLowerCase()]) : '',
+      artykul: rz({}), prasowa: rz({ prasowa: true }),
+      przepisywanie: typeof blokPrzepisywania === 'function' ? blokPrzepisywania() : '',
+    };
+  }, MARKA);
+  wynik('Runda B: regula konkretu - wartosc ze zrodla zamiast ogolnika ("limity są inne"), przeglad zrodel przed koncem, zadnej wartosci spoza zrodel',
+    /CONCRETE VALUES FROM THE SOURCES/.test(f.konkret) && /"limity są inne"/.test(f.konkret) && /scan the sources for limits, conditions and requirements/.test(f.konkret)
+      && /never licenses a value the sources do not give/.test(f.konkret) && !!f.konkret && f.artykul.indexOf(f.konkret) !== -1, f.konkret.slice(0, 160));
+  wynik('Runda B: listy pol, dokumentow i krokow tylko ze zrodel (formularz bez pol, ktore formularze "zwykle maja")',
+    /Never complete a form, a checklist or a procedure/.test(f.fakty), f.fakty.slice(-240));
+  const rozne = (a) => a.every((x, i) => !!x && a.every((y, j) => i === j || x !== y));
+  wynik('Runda B: kazdy z 4 tonow ma wlasna funkcje zdan (rady, oceny, wyjasnienia zamiast samych parametrow) i wlasny plan sekcji',
+    rozne(f.tony) && f.tony.every((t) => /TONE ALSO CHANGES WHAT THE SENTENCES DO/.test(t) && /reads like a product sheet/.test(t) && /never add a fact, a figure or a superlative/.test(t))
+      && rozne(f.plany) && f.plany.every((p) => /TONE ALSO DECIDES THE PLAN OF THE ARTICLE/.test(p) && /Do not fall back on the generic sequence/.test(p))
+      && /At least four sentences in ten speak to the reader's own situation/.test(f.tony[2]) && /decision guide/.test(f.plany[0])
+      && /from mechanism to practice/.test(f.plany[1]) && /reference/.test(f.plany[3]),
+    JSON.stringify(f.plany.map((p) => p.slice(44, 110))));
+  wynik('Runda B: naglowki jako frazy wyszukiwania, nazwa marki z konfiguracji poza H2 i H3, chyba ze frazy kluczowe ja zawieraja',
+    /HEADINGS ARE SEARCH QUERIES/.test(f.naglowki) && f.naglowki.indexOf('That includes "' + MARKA + '"') !== -1
+      && /HEADINGS ARE SEARCH QUERIES/.test(f.naglowkiZMarka) && f.naglowkiZMarka.indexOf('That includes "') === -1, f.naglowki.slice(0, 160));
+  wynik('Runda B: artykul dostaje naglowki bez marki i plan tonu, informacja prasowa nie (ma swoje: tytul wiadomosci, "O firmie")',
+    /HEADINGS ARE SEARCH QUERIES/.test(f.artykul) && /TONE ALSO DECIDES THE PLAN/.test(f.artykul)
+      && !!f.prasowa && !/HEADINGS ARE SEARCH QUERIES/.test(f.prasowa) && !/TONE ALSO DECIDES THE PLAN/.test(f.prasowa) && /TONE ALSO CHANGES WHAT THE SENTENCES DO/.test(f.prasowa),
+    JSON.stringify({ artykul: f.artykul.length, prasowa: f.prasowa.length }));
+  wynik('Runda B: poprawki (samokorekta, poprawa po ocenie) nie przenosza marki do naglowka',
+    /Never move a brand, company or product-line name into a heading unless the keywords contain it/.test(f.przepisywanie), f.przepisywanie.slice(-240));
+
+  // 2. Pochodzenie i fakty niewykorzystane z odpowiedzi modelu: liczby zgodne z lista, smieci odrzucone.
+  const d = await s.evaluate(() => {
+    if (typeof dodatkiFaktow !== 'function') return null;
+    const u = (r) => ({ rodzaj: r, cytat: 'x', powod: 'y' });
+    const pelna = Array.from({ length: 12 }, (_, i) => u(i < 3 ? 'model' : 'zakres'));
+    return {
+      krotka: dodatkiFaktow({ pochodzenie: { zrodla: 20, model: 9 } }, [u('model'), u('liczba'), u('zakres'), u('ogolnik')], true).pochodzenie,
+      pelna: dodatkiFaktow({ pochodzenie: { zrodla: 30, model: 7 } }, pelna, true).pochodzenie,
+      zaMalo: dodatkiFaktow({ pochodzenie: { zrodla: 30, model: 1 } }, pelna, true).pochodzenie,
+      smieci: dodatkiFaktow({ pochodzenie: { zrodla: '-3', model: 'abc' }, niewykorzystane: 'x' }, [], true),
+      bezDrugiej: dodatkiFaktow({ niewykorzystane: [{ fakt: 'A', zrodlo: 'B', gdzie: 'C' }] }, [], false).niewykorzystane.length,
+      zDruga: dodatkiFaktow({ niewykorzystane: [{ fakt: ' A \n b ', zrodlo: 'B', gdzie: 'C' }, { fakt: '' }, null, { fakt: 'F3' }, { fakt: 'F4' }, { fakt: 'F5' }, { fakt: 'F6' }, { fakt: 'F7' }] }, [], true).niewykorzystane,
+    };
+  });
+  wynik('Runda B: pochodzenie twierdzen - pelna lista mowi, ile jest z wiedzy modelu; tylko lista ucieta na 12 bierze wieksza liczbe modelu',
+    !!d && JSON.stringify(d.krotka) === '{"zrodla":20,"model":2}' && JSON.stringify(d.pelna) === '{"zrodla":30,"model":7}' && JSON.stringify(d.zaMalo) === '{"zrodla":30,"model":3}'
+      && d.smieci.pochodzenie === null && d.smieci.niewykorzystane.length === 0,
+    JSON.stringify(d));
+  wynik('Runda B: fakty niewykorzystane - tylko przy Bazie (test w druga strone), najwyzej 5, bez pustych, tekst w jednym wierszu',
+    !!d && d.bezDrugiej === 0 && d.zDruga.length === 5 && d.zDruga[0].fakt === 'A b' && d.zDruga[0].zrodlo === 'B' && d.zDruga[0].gdzie === 'C' && d.zDruga[4].fakt === 'F6',
+    JSON.stringify(d && d.zDruga));
+
+  const faktyOtworz = async () => {
+    await s.evaluate(() => { const p = document.getElementById('fakty-panel'); if (p.style.display === 'block') p.style.display = 'none'; przelaczPanelFaktow(); });
+    await s.waitForFunction(() => getComputedStyle(document.getElementById('fakty-loading')).display === 'none'
+      && document.getElementById('fakty-wynik').textContent.trim().length > 0, null, { timeout: 30000 }).catch(() => {});
+  };
+
+  // 3. Artykul A: hybryda, ton przyjazny, Glos marki sprzed zmiany (bez funkcji zdan), bez Bazy (strony z sieci).
+  await s.evaluate(() => {
+    brandVoiceProfile = { summary: 'Krótko i rzeczowo.', style: 'Pisz krótkimi zdaniami.' };
+    document.getElementById('ctype').value = 'Hybryda SEO + AIO';
+    document.getElementById('tone').selectedIndex = 2;
+  });
+  const przedA = zap.length;
+  await generuj(s, 'Serwis pompy ciepła po sezonie grzewczym', false);
+  await krok('Runda B artykul A', czekajNaKoniec(s));
+  const zapA = zap.slice(przedA).filter(pisze);
+  const pA = zapA.length ? sys(zapA[0]) : '';
+  wynik('Runda B: prompt artykulu (hybryda) - marka w tresci kazdej sekcji, nie w naglowku, FANOUT jako katy (nie lista sekcji), regula konkretu',
+    zapA.length === 1 && /SALIENCE: Mention the main brand\/product by exact name in the text of every H2 section/.test(pA)
+      && !/at least once in every H2 section \(not just in the headline\)/.test(pA) && pA.indexOf('That includes "' + MARKA + '"') !== -1
+      && /NOT a list of sections or their order: the plan of the article follows the TONE/.test(pA) && /CONCRETE VALUES FROM THE SOURCES/.test(pA),
+    JSON.stringify({ zapytan: zapA.length, salience: (pA.match(/SALIENCE:[^\n]{0,110}/) || [''])[0] }));
+  wynik('Runda B: prompt artykulu - ton przyjazny z funkcja zdan i planem od sytuacji czytelnika',
+    /At least four sentences in ten speak to the reader's own situation/.test(pA) && /around the reader's situation/.test(pA), pA.slice(-400));
+  wynik('Runda B: Glos marki sprzed zmiany (profil bez funkcji zdan) dziala jak dotad',
+    pA.indexOf('BRAND VOICE - apply this style: Pisz krótkimi zdaniami.') !== -1 && pA.indexOf('BRAND VOICE - what the sentences do') === -1, '');
+  const przedFA = zap.length;
+  await faktyOtworz();
+  const zFA = zap.slice(przedFA).filter((z) => /You are a fact checker/.test(sys(z)));
+  const fa = await s.evaluate(() => ({ stan: faktyStan, model: !!document.querySelector('#fakty-wynik .fakty-uwaga[data-rodzaj="model"]'),
+    poch: !!document.querySelector('#fakty-wynik .fakty-pochodzenie'), niewyk: !!document.querySelector('#fakty-wynik .fakty-niewyk') }));
+  wynik('Runda B: Fakty bez Bazy (same strony z sieci) - "Z wiedzy modelu" i pochodzenie sa, testu w druga strone nie ma (fragmenty stron to nie cale zrodlo)',
+    zFA.length === 1 && /"model"/.test(sys(zFA[0])) && /"pochodzenie"/.test(sys(zFA[0])) && !/"niewykorzystane"/.test(sys(zFA[0])) && !/ARTICLE SECTIONS/.test(usr(zFA[0]))
+      && fa.stan === 'gotowe' && fa.model && fa.poch && !fa.niewyk, JSON.stringify(Object.assign({ zapytan: zFA.length }, fa)));
+
+  // 4. Glos marki z probek: profil opisuje tez, co robia zdania.
+  const przedBv = zap.length;
+  const bv = await s.evaluate(async () => {
+    brandVoiceProfile = null;
+    openBvModal();
+    document.getElementById('bv-articles').value = 'Pompa ciepła to decyzja na lata, więc najpierw mówimy, kiedy się opłaca, a kiedy nie. '
+      + 'Przy starym domu radzimy zacząć od audytu. Montaż trwa dwa dni.';
+    document.querySelector('#bv-input-area button[onclick="analyzeBrandVoice()"]').click();
+    for (let i = 0; i < 80 && !brandVoiceProfile; i++) await new Promise((r) => setTimeout(r, 250));
+    return brandVoiceProfile ? { funkcja: brandVoiceProfile.funkcja || '', zapisany: /funkcja/.test(magazyn.getItem('cai-bv') || '') } : null;
+  });
+  const zBv = zap.slice(przedBv).filter((z) => /You are a brand strategist/.test(sys(z)));
+  wynik('Runda B: Glos marki - analiza probek opisuje tez, co robia zdania (rada, ocena, opis), profil zapisany z funkcja zdan',
+    zBv.length === 1 && /"funkcja"/.test(sys(zBv[0])) && /what the sentences in the samples DO/.test(sys(zBv[0])) && zBv[0].max_tokens >= 900
+      && !!bv && !!bv.funkcja && bv.zapisany, JSON.stringify({ zapytan: zBv.length, bv }));
+
+  // 5. Artykul B: Artykul SEO, ton ekspercki, Baza z warunkami serwisu.
+  await s.evaluate((baza) => {
+    docs.push({ name: 'Serwis pomp ciepła - warunki', content: baza, icon: '📄', words: 52, added: new Date(), selected: true, url: null });
+    document.getElementById('ctype').value = 'Artykuł SEO';
+    document.getElementById('tone').selectedIndex = 1;
+  }, BAZA);
+  const przedB = zap.length;
+  await generuj(s, 'Przegląd pompy ciepła krok po kroku', false);
+  await krok('Runda B artykul B', czekajNaKoniec(s));
+  const zapB = zap.slice(przedB).filter(pisze);
+  const pB = zapB.length ? sys(zapB[0]) : '';
+  wynik('Runda B: prompt artykulu (SEO) - marka w tresci sekcji, ton ekspercki z planem od mechanizmu, inny plan niz w tonie przyjaznym',
+    zapB.length === 1 && /SALIENCE: Mention the main brand by exact name in the text of every H2 section, not in the H2 or H3 headings themselves/.test(pB)
+      && !/at least once per H2 section\./.test(pB) && /from mechanism to practice/.test(pB) && !/around the reader's situation/.test(pB) && /around the reader's situation/.test(pA),
+    JSON.stringify({ zapytan: zapB.length, salience: (pB.match(/SALIENCE:[^\n]{0,110}/) || [''])[0] }));
+  wynik('Runda B: Glos marki z funkcja zdan trafia do promptu artykulu',
+    !!bv && !!bv.funkcja && pB.indexOf('BRAND VOICE - what the sentences do (match this, not only the wording): ' + bv.funkcja) !== -1, '');
+
+  // 6. Fakty z Baza: pochodzenie, "Z wiedzy modelu", ogolnik z fragmentem zrodla, fakty niewykorzystane.
+  const przedFB = zap.length;
+  await faktyOtworz();
+  const zFB = zap.slice(przedFB).filter((z) => /You are a fact checker/.test(sys(z)));
+  const zfs = sys(zFB[0]), zfu = usr(zFB[0]);
+  const fb = await s.evaluate(() => {
+    const w = document.getElementById('fakty-wynik');
+    const model = w.querySelector('.fakty-uwaga[data-rodzaj="model"]'), ogolnik = w.querySelector('.fakty-uwaga[data-rodzaj="ogolnik"]');
+    const poch = w.querySelector('.fakty-pochodzenie');
+    const pasek = poch && poch.querySelector('.fakty-poch-pasek');
+    const lista = Array.isArray(faktyWynik) ? faktyWynik : [];
+    const tekst = w.textContent;
+    return {
+      stan: faktyStan,
+      naglowki: [...document.querySelectorAll('#article h2, #article h3')].filter((h) => !h.closest('.zrodla-box, .meta-box')).map((h) => h.textContent.replace(/\s+/g, ' ').trim()),
+      model: model ? { etykieta: model.firstElementChild.textContent.trim(), ikona: !!model.querySelector('use[href="#i-bot"]') } : null,
+      ogolnik: ogolnik ? { etykieta: ogolnik.firstElementChild.textContent.trim(), ikona: !!ogolnik.querySelector('use[href="#i-target"]'),
+        zrodlo: ((ogolnik.querySelector('.fakty-w-zrodle') || {}).textContent || '').trim() } : null,
+      poch: poch ? { tytul: ((poch.querySelector('.fakty-poch-tytul') || {}).textContent || '').trim(), legenda: [...poch.querySelectorAll('.fakty-poch-poz')].map((x) => x.textContent.trim()),
+        czesci: [...poch.querySelectorAll('.fakty-poch-pasek > span')].map((x) => ({ klasa: x.className, grow: Number(getComputedStyle(x).flexGrow), szer: Math.round(x.getBoundingClientRect().width) })),
+        aria: pasek ? (pasek.getAttribute('role') + '|' + pasek.getAttribute('aria-label')) : '',
+        przedLista: tekst.indexOf('Pochodzenie twierdzeń') !== -1 && tekst.indexOf('Pochodzenie twierdzeń') < tekst.indexOf('Do sprawdzenia:') } : null,
+      bezPokrycia: lista.filter((u) => ['liczba', 'model', 'brak'].indexOf(u.rodzaj) !== -1).length,
+      doPoprawy: lista.filter((u) => ['liczba', 'model', 'ogolnik', 'brak', 'zakres', 'sprzecznosc', 'konflikt'].indexOf(u.rodzaj) !== -1 && String(u.cytat || '').trim() && (u.rodzaj !== 'ogolnik' || u.zrodlo)).length,
+      tytulNiewyk: ((w.querySelector('.fakty-niewyk > .panel-podtytul') || {}).textContent || '').trim(),
+      pozycje: [...w.querySelectorAll('.fakty-niewyk-item')].map((p) => ({ fakt: ((p.querySelector('.fakty-niewyk-fakt') || {}).textContent || '').trim(),
+        zrodlo: ((p.querySelector('.fakty-niewyk-zrodlo') || {}).textContent || '').trim(), gdzie: ((p.querySelector('.fakty-niewyk-gdzie') || {}).textContent || '').trim(),
+        zaznaczony: !!(p.querySelector('input[type=checkbox]') || {}).checked })),
+      dopisz: ((document.getElementById('fakty-dopisz-btn') || {}).textContent || '').trim(),
+      popraw: ((document.getElementById('fakty-popraw-btn') || {}).textContent || '').trim(),
+      cytatOgolnika: ((lista.find((u) => u.rodzaj === 'ogolnik') || {}).cytat) || '',
+      cytatModelu: ((lista.find((u) => u.rodzaj === 'model') || {}).cytat) || '',
+    };
+  });
+  wynik('Runda B: prompt kontroli - pytanie o pochodzenie, kategorie "model" (pola formularza, kroki) i "ogolnik", pochodzenie, test w druga strone, bez furtki dla zdan bez liczb',
+    zFB.length === 1 && /Check WHERE every statement comes from/.test(zfs) && /"model" {5}- a specific statement about what the article describes/.test(zfs)
+      && /a form and its fields/.test(zfs) && /"ogolnik" {3}- a vague phrase where a source states the concrete value/.test(zfs)
+      && /"pochodzenie":\{"zrodla":0,"model":0\}/.test(zfs) && /"niewykorzystane":\[\{"fakt"/.test(zfs) && /in these (seven|eight) categories/.test(zfs)
+      && !/Common-knowledge statements with no figures are not findings/.test(zfs) && zFB[0].max_tokens === 11000,
+    JSON.stringify({ zapytan: zFB.length, max: zFB.length ? zFB[0].max_tokens : 0 }));
+  const sekcjeZap = ((zfu.split('ARTICLE SECTIONS (the headings of the article, in order):\n')[1] || '').split('\n\n---\n\n')[0] || '').split('\n').map((l) => l.replace(/^- /, ''));
+  wynik('Runda B: kontrola dostaje naglowki sekcji artykulu (przed ARTICLE:), zeby fakt z Bazy wskazal, gdzie pasuje',
+    fb.naglowki.length >= 3 && JSON.stringify(sekcjeZap) === JSON.stringify(fb.naglowki) && zfu.indexOf('\n\n---\n\nARTICLE SECTIONS') !== -1
+      && zfu.indexOf('\n\n---\n\nARTICLE SECTIONS') < zfu.indexOf('\n\n---\n\nARTICLE:\n'), JSON.stringify({ zap: sekcjeZap.slice(0, 3), art: fb.naglowki.slice(0, 3) }));
+  wynik('Runda B: Fakty - kategoria "Z wiedzy modelu" z ikona modelu', fb.stan === 'gotowe' && !!fb.model && fb.model.etykieta === 'Z wiedzy modelu' && fb.model.ikona, JSON.stringify(fb.model));
+  wynik('Runda B: Fakty - "Ogólnik, a źródło podaje konkret" z fragmentem zrodla, ktory podaje wartosc',
+    !!fb.ogolnik && fb.ogolnik.etykieta === 'Ogólnik, a źródło podaje konkret' && fb.ogolnik.ikona && fb.ogolnik.zrodlo.indexOf('W źródle: „Przegląd pompy ciepła po sezonie trwa 90 minut') === 0,
+    JSON.stringify(fb.ogolnik));
+  wynik('Runda B: Fakty - pochodzenie twierdzen nad lista: pasek z dwoch czesci i legenda z ikona, liczby zgodne z lista uwag',
+    !!fb.poch && fb.poch.tytul === 'Pochodzenie twierdzeń' && fb.poch.przedLista && fb.poch.legenda.length === 2 && /^Ze źródeł: \d+$/.test(fb.poch.legenda[0])
+      && fb.poch.legenda[1] === 'Z wiedzy modelu: ' + fb.bezPokrycia && fb.bezPokrycia >= 2 && fb.poch.czesci.length === 2 && fb.poch.czesci[1].grow === fb.bezPokrycia
+      && fb.poch.czesci.every((c) => c.szer >= 6) && /^img\|Ze źródeł: \d+, Z wiedzy modelu: \d+ \(\d+\)$/.test(fb.poch.aria),
+    JSON.stringify({ poch: fb.poch, bezPokrycia: fb.bezPokrycia }));
+  wynik('Runda B: Fakty - "Ze źródeł, a nie ma w tekście (3)": fakty z Bazy z cytatem zrodla i sekcja artykulu, wszystkie zaznaczone',
+    fb.tytulNiewyk === 'Ze źródeł, a nie ma w tekście (3)' && fb.pozycje.length === 3 && fb.pozycje[0].fakt.indexOf('Zgłoszenie przeglądu wymaga numeru seryjnego') === 0
+      && fb.pozycje.every((p) => p.zaznaczony && p.fakt && /^W źródle: „/.test(p.zrodlo) && fb.naglowki.indexOf(p.gdzie.replace(/^Pasuje do sekcji: /, '')) !== -1 && /^Pasuje do sekcji: /.test(p.gdzie)),
+    JSON.stringify({ tytul: fb.tytulNiewyk, pozycje: fb.pozycje }));
+  wynik('Runda B: Fakty - przyciski "Popraw wskazane zdania (N)" (z ogolnikiem i zdaniem z wiedzy modelu) i "Dopisz do tekstu (3)"',
+    fb.doPoprawy >= 4 && fb.popraw === 'Popraw wskazane zdania (' + fb.doPoprawy + ')' && fb.dopisz === 'Dopisz do tekstu (3)', JSON.stringify({ popraw: fb.popraw, n: fb.doPoprawy, dopisz: fb.dopisz }));
+  const kl = await s.evaluate(() => {
+    const ch = [...document.querySelectorAll('#fakty-wynik .fakty-niewyk-check')];
+    const btn = document.getElementById('fakty-dopisz-btn');
+    const stan = () => ({ napis: btn ? btn.textContent.trim() : '', wyl: btn ? btn.disabled : null,
+      skreslone: [...document.querySelectorAll('#fakty-wynik .fakty-niewyk-item')].filter((p) => getComputedStyle(p.querySelector('.fakty-niewyk-fakt')).textDecorationLine.indexOf('line-through') !== -1).length });
+    const w = {};
+    if (ch[2]) ch[2].closest('label').click();
+    w.jeden = stan();
+    ch.forEach((c) => { if (c.checked) c.click(); });
+    w.zero = stan();
+    if (ch[0]) ch[0].click();
+    if (ch[1]) ch[1].click();
+    w.dwa = stan();
+    if (ch[2]) ch[2].click();
+    return w;
+  });
+  wynik('Runda B: Fakty - odznaczenie faktu (takze klik w tekst) zmienia liczbe na przycisku i skresla fakt, bez zaznaczonych przycisk nieaktywny',
+    JSON.stringify(kl) === JSON.stringify({ jeden: { napis: 'Dopisz do tekstu (2)', wyl: false, skreslone: 1 }, zero: { napis: 'Dopisz do tekstu (0)', wyl: true, skreslone: 3 },
+      dwa: { napis: 'Dopisz do tekstu (2)', wyl: false, skreslone: 1 } }), JSON.stringify(kl));
+
+  // 7. "Popraw wskazane zdania": ogolnik z linia SOURCE dostaje wartosc ze zrodla, zdanie z wiedzy modelu znika.
+  const przedP = zap.length;
+  await s.evaluate(() => { const btn = document.getElementById('fakty-popraw-btn'); if (btn) btn.click(); });
+  await krok('Runda B poprawa zdan', s.waitForFunction(() => versions.some((v) => v.label.indexOf(_t('ver-fakty')) !== -1)
+    && getComputedStyle(document.getElementById('fakty-loading')).display === 'none' && faktyStan === 'gotowe'
+    && document.getElementById('fakty-wynik').textContent.trim().length > 0, null, { timeout: 30000 }));
+  const zP = zap.slice(przedP).filter((z) => /^You are a fact-checking editor/.test(sys(z)));
+  const zPu = zP.length ? usr(zP[0]) : '';
+  const linie = zPu.split('\n');
+  const iOgolnika = fb.cytatOgolnika ? linie.findIndex((l) => l.indexOf('"' + jedna(fb.cytatOgolnika) + '" - ') !== -1) : -1;
+  const art1 = await s.evaluate(() => (document.getElementById('article').innerText || '').replace(/\s+/g, ' '));
+  wynik('Runda B: Popraw wskazane zdania - ogolnik z linia SOURCE (fragment zrodla), w tekscie wartosc ze zrodla, zdanie z wiedzy modelu znika',
+    zP.length === 1 && /A finding with a SOURCE line: the source states the concrete value/.test(sys(zP[0])) && /YOU ARE REWRITING, NOT RESEARCHING/.test(sys(zP[0]))
+      && iOgolnika >= 0 && /^ {3}SOURCE: "Przegląd pompy ciepła po sezonie trwa 90 minut/.test(linie[iOgolnika + 1] || '')
+      && art1.indexOf('Przegląd pompy ciepła po sezonie trwa 90 minut') !== -1 && art1.indexOf(jedna(fb.cytatOgolnika)) === -1
+      && !!fb.cytatModelu && art1.indexOf(jedna(fb.cytatModelu)) === -1,
+    JSON.stringify({ zapytan: zP.length, linia: linie[iOgolnika + 1] || '', usr: zPu.slice(0, 200) }));
+
+  // 8. "Dopisz do tekstu": tylko zaznaczone fakty, w sekcji wskazanej przez kontrole, nowa wersja i kontrola od nowa.
+  const przedD = zap.length;
+  const wybor = await s.evaluate(() => {
+    const ch = [...document.querySelectorAll('#fakty-wynik .fakty-niewyk-check')];
+    if (ch[1]) ch[1].click();
+    const lista = (typeof faktyDodatki !== 'undefined' && faktyDodatki && faktyDodatki.niewykorzystane) || [];
+    const w = { lista: lista.map((n) => ({ fakt: n.fakt, gdzie: n.gdzie })), napis: ((document.getElementById('fakty-dopisz-btn') || {}).textContent || '').trim() };
+    const btn = document.getElementById('fakty-dopisz-btn');
+    if (btn) btn.click();
+    return w;
+  });
+  await krok('Runda B dopisanie faktow', s.waitForFunction(() => versions.some((v) => v.label.indexOf('Dopisane fakty ze źródeł') !== -1)
+    && getComputedStyle(document.getElementById('fakty-loading')).display === 'none' && faktyStan === 'gotowe'
+    && document.getElementById('fakty-wynik').textContent.trim().length > 0, null, { timeout: 30000 }));
+  const zD = zap.slice(przedD).filter((z) => /^You are an editor adding facts from the sources/.test(sys(z)));
+  const zDu = zD.length ? usr(zD[0]) : '';
+  const zFD = zap.slice(przedD).filter((z) => /You are a fact checker/.test(sys(z)));
+  const l = wybor.lista;
+  const po = await s.evaluate((lista) => {
+    const art = document.getElementById('article');
+    const sekcja = (tekst) => {
+      const p = [...art.querySelectorAll('p')].find((x) => x.textContent.indexOf(tekst) !== -1);
+      if (!p) return null;
+      let e = p.previousElementSibling;
+      while (e && !/^H[23]$/.test(e.tagName)) e = e.previousElementSibling;
+      return e ? e.textContent.replace(/\s+/g, ' ').trim() : '';
+    };
+    return { tekst: (art.innerText || '').replace(/\s+/g, ' '), wersje: versions.map((v) => v.label), zrodla: art.querySelectorAll('.zrodla-box li').length,
+      sekcje: lista.map((n) => sekcja(n.fakt)) };
+  }, l);
+  wynik('Runda B: Dopisz do tekstu - jedno zapytanie redaktora z zaznaczonymi faktami (fakt, fragment zrodla, sekcja), bez odznaczonego i bez listy zrodel',
+    l.length === 3 && wybor.napis === 'Dopisz do tekstu (2)' && zD.length === 1 && /State each fact exactly as its SOURCE passage does/.test(sys(zD[0])) && /Add nothing else/.test(sys(zD[0]))
+      && zDu.indexOf('FACTS (from the knowledge base, missing from the article):\n1. FACT: ' + l[0].fakt + '\n   SOURCE: "') === 0
+      && zDu.indexOf('\n   SECTION: "' + l[0].gdzie + '"') !== -1 && zDu.indexOf('\n2. FACT: ' + l[2].fakt) !== -1 && zDu.indexOf(l[1].fakt) === -1
+      && /\n\nARTICLE \(HTML\):\n/.test(zDu) && !/zrodla-box/.test(zDu),
+    JSON.stringify({ zapytan: zD.length, napis: wybor.napis, usr: zDu.slice(0, 260) }));
+  wynik('Runda B: Dopisz do tekstu - fakty w tekscie we wskazanych sekcjach, odznaczonego nie ma, wersja "Dopisane fakty ze źródeł", lista zrodel zostaje, kontrola od nowa',
+    l.length === 3 && po.tekst.indexOf(l[0].fakt) !== -1 && po.tekst.indexOf(l[2].fakt) !== -1 && po.tekst.indexOf(l[1].fakt) === -1
+      && po.sekcje[0] === l[0].gdzie && po.sekcje[2] === l[2].gdzie && po.wersje.some((x) => /Dopisane fakty ze źródeł/.test(x)) && po.zrodla > 0 && zFD.length === 1,
+    JSON.stringify({ sekcje: po.sekcje, gdzie: l.map((n) => n.gdzie), wersje: po.wersje, zrodla: po.zrodla, kontroli: zFD.length }));
+
+  // 9. Wynik bez uwag z faktami niewykorzystanymi i stany bez dodatkow (blad, brak zrodel).
+  const cz = await s.evaluate(() => {
+    if (typeof pokazWynikFaktow !== 'function') return null;
+    try { faktyDodatki = { pochodzenie: { zrodla: 12, model: 0 }, niewykorzystane: [{ fakt: 'Gwarancja obejmuje 5 lat.', zrodlo: 'Gwarancja obejmuje 5 lat pod warunkiem corocznego przeglądu.', gdzie: '' }] }; } catch (e) { return null; }
+    const w = document.getElementById('fakty-wynik');
+    pokazWynikFaktow([], 'gotowe');
+    const t = w.textContent;
+    const wynikCzysty = { czesci: w.querySelectorAll('.fakty-poch-pasek > span').length, opisModelu: /Z wiedzy modelu to twierdzenia/.test(t), pozycje: w.querySelectorAll('.fakty-niewyk-item').length,
+      gdzie: w.querySelectorAll('.fakty-niewyk-gdzie').length, liczby: /Ze źródeł: 12/.test(t) && /Z wiedzy modelu: 0/.test(t),
+      kolejnosc: t.indexOf('Pochodzenie twierdzeń') !== -1 && t.indexOf('Pochodzenie twierdzeń') < t.indexOf('Bez zastrzeżeń.') && t.indexOf('Bez zastrzeżeń.') < t.indexOf('Ze źródeł, a nie ma w tekście (1)') };
+    pokazWynikFaktow([], 'blad');
+    const blad = !w.querySelector('.fakty-pochodzenie, .fakty-niewyk');
+    pokazWynikFaktow([], 'brak-zrodel');
+    const brak = !w.querySelector('.fakty-pochodzenie, .fakty-niewyk');
+    return { wynikCzysty, blad, brak };
+  });
+  wynik('Runda B: bez uwag - pochodzenie (sama czesc "ze zrodel", bez objasnienia), "Bez zastrzezen" i fakty niewykorzystane; po bledzie i bez zrodel bez dodatkow',
+    !!cz && JSON.stringify(cz) === JSON.stringify({ wynikCzysty: { czesci: 1, opisModelu: false, pozycje: 1, gdzie: 0, liczby: true, kolejnosc: true }, blad: true, brak: true }),
+    JSON.stringify(cz));
+
+  // 10. AEO: naglowki z nazwa marki (informacyjnie, poza wynikiem), tylko gdy frazy kluczowe marki nie zawieraja.
+  const aeo = await s.evaluate((marka) => {
+    if (typeof renderAeoCheck !== 'function' || !kontekstArt) return null;
+    const art = document.getElementById('article');
+    const kopia = art.innerHTML, frazy = kontekstArt.frazy;
+    art.innerHTML = '<h1>Przegląd pompy ciepła</h1><p>Przegląd pompy ciepła po sezonie trwa 90 minut i obejmuje sprawdzenie ciśnienia czynnika w instalacji, filtrów i odpływu skroplin.</p>'
+      + '<h2>Która usługa ' + marka + ' najlepiej sprawdzi się po sezonie?</h2><p>Akapit sekcji.</p><h2>Jak przygotować pompę do przeglądu?</h2><p>Akapit sekcji.</p>'
+      + '<h3>Co obejmuje pakiet ' + marka + ' Plus?</h3><p>Akapit sekcji.</p>';
+    const c = document.getElementById('aeo-content');
+    kontekstArt.frazy = ['przegląd pompy ciepła'];
+    renderAeoCheck();
+    const nota = c.querySelector('.aeo-marka');
+    const w = { nota: nota ? nota.textContent.trim() : '', zNota: c.innerHTML.replace(nota ? nota.outerHTML : '', '') };
+    ustawJezyk('en');
+    renderAeoCheck();
+    w.en = ((c.querySelector('.aeo-marka') || {}).textContent || '').trim();
+    ustawJezyk('pl');
+    kontekstArt.frazy = ['serwis ' + marka.toLowerCase()];
+    renderAeoCheck();
+    w.zFraza = !!c.querySelector('.aeo-marka');
+    w.bezNoty = c.innerHTML;
+    kontekstArt.frazy = frazy;
+    art.innerHTML = kopia;
+    return { nota: w.nota, en: w.en, zFraza: w.zFraza, tylkoNota: w.zNota === w.bezNoty };
+  }, MARKA);
+  wynik('Runda B: AEO - informacja o naglowkach z nazwa marki (z przykladem), po angielsku tez; ocena bez zmian; z marka we frazach bez informacji',
+    !!aeo && aeo.nota === 'Nagłówki z nazwą marki: 2, np. „Która usługa ' + MARKA + ' najlepiej sprawdzi się po sezonie?”. W wyszukiwarkę wpisuje się swój problem, nie nazwę firmy, więc marka pasuje do treści sekcji, a nagłówek do pytania czytelnika.'
+      && aeo.en.indexOf('Headings with the brand name: 2, e.g. “Która usługa ' + MARKA) === 0 && !aeo.zFraza && aeo.tylkoNota, JSON.stringify(aeo));
+
+  // 11. Luki: nowe sekcje z regula konkretu i naglowkami bez marki; plan calego artykulu ich nie dotyczy.
+  const przedL = zap.length;
+  await s.evaluate(() => {
+    serpData = { topics: ['koszt przeglądu pompy', 'gwarancja pompy ciepła'], phrases: [], avgWords: 900, avgH2: 6, context: '' };
+    document.getElementById('gap-missing').innerHTML = _buildMissingHtml(serpData.topics);
+    window.__rundaBWersji = versions.length;
+    improveFromGaps();
+  });
+  await krok('Runda B Luki', s.waitForFunction(() => versions.length > window.__rundaBWersji && !document.getElementById('gap-improve-btn').disabled, null, { timeout: 30000 }));
+  const zL = zap.slice(przedL).filter((z) => /Write ONLY the new HTML sections requested/.test(sys(z)));
+  wynik('Runda B: Luki - nowe sekcje z regula konkretu, naglowkami bez marki i funkcja zdan tonu, bez planu calego artykulu',
+    zL.length === 1 && /CONCRETE VALUES FROM THE SOURCES/.test(sys(zL[0])) && /HEADINGS ARE SEARCH QUERIES/.test(sys(zL[0]))
+      && /TONE ALSO CHANGES WHAT THE SENTENCES DO/.test(sys(zL[0])) && !/TONE ALSO DECIDES THE PLAN/.test(sys(zL[0])), 'zapytan: ' + zL.length);
+
+  // 12. Oceny SEO i AIO: marka liczy sie w tresci sekcji, naglowek z marka to nie "salience".
+  const przedO = zap.length;
+  await s.evaluate(() => { seoOpen = false; toggleSeoPanel(true); });
+  await krok('Runda B ocena SEO', s.waitForFunction(() => !!document.querySelector('#seo-content .seo-items'), null, { timeout: 15000 }));
+  await s.evaluate(() => { aioOpen = false; toggleAioPanel(true); });
+  await krok('Runda B ocena AIO', s.waitForFunction(() => !!document.querySelector('#aio-content .seo-items'), null, { timeout: 15000 }));
+  const zSeo = zap.slice(przedO).filter((z) => /content SEO expert evaluating/.test(sys(z)) && /"items"/.test(sys(z)));
+  const zAio = zap.slice(przedO).filter((z) => /You are an AIO \(AI Overview Optimization\) expert/.test(sys(z)));
+  wynik('Runda B: oceny SEO i AIO licza marke w tresci sekcji, nie w naglowku',
+    zSeo.length === 1 && /a brand name inside an H2 or H3 heading does not count/.test(sys(zSeo[0]))
+      && zAio.length === 1 && /mentioned in the text of every H2 section \(not in the headings, which should read as search queries\)/.test(sys(zAio[0])),
+    JSON.stringify({ seo: zSeo.length, aio: zAio.length }));
+
+  // 13. Interfejs po angielsku.
+  const en = await s.evaluate(() => {
+    if (typeof pokazWynikFaktow !== 'function') return '';
+    ustawJezyk('en');
+    try { faktyDodatki = { pochodzenie: { zrodla: 5, model: 2 }, niewykorzystane: [{ fakt: 'The warranty lasts 5 years.', zrodlo: 'Gwarancja obejmuje 5 lat.', gdzie: 'Jak przygotować pompę do przeglądu?' }] }; } catch (e) { /* bez zmiennej */ }
+    pokazWynikFaktow([{ rodzaj: 'model', cytat: 'Formularz wymaga imienia i telefonu.', powod: '' }, { rodzaj: 'ogolnik', cytat: 'Limity są inne.', zrodlo: 'Maksymalnie 30 cm.', powod: '' }], 'gotowe');
+    const t = document.getElementById('fakty-wynik').textContent;
+    ustawJezyk('pl');
+    return t;
+  });
+  wynik('Runda B: Fakty po angielsku - kategorie, pochodzenie, fakty niewykorzystane i przyciski ze slownika',
+    /From the model's knowledge/.test(en) && /No source states this\. The sentence comes from the model's knowledge/.test(en) && /Vague, the source is specific/.test(en)
+      && /Where the claims come from/.test(en) && /From the sources: 5/.test(en) && /In the sources, missing from the text \(1\)/.test(en) && /Add to the text \(1\)/.test(en)
+      && /Fix the flagged sentences \(2\)/.test(en) && /In the source: “Maksymalnie 30 cm\.”/.test(en) && /Fits the section: Jak przygotować/.test(en), en.slice(0, 400));
+
+  wynik('Runda B: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'runda-b');
   await k.close();
 }
 
@@ -2231,7 +2622,7 @@ const SCENARIUSZE = [
   ['r9f-luki-darmowy', scenariuszR9FLukiDarmowy], ['r9f-bez-sieci', scenariuszR9FBezSieci],
   ['r9f-prompt-bazy', scenariuszR9FPromptBazy], ['r9f-pomocnicy', scenariuszR9FPomocnicy],
   ['r9f-narracja', scenariuszR9FNarracja], ['r9f-sesja', scenariuszR9FSesja],
-  ['r9f-pokrycie', scenariuszR9FPokrycie], ['opus55', scenariuszOpus55], ['runda-a', scenariuszRundaA],
+  ['r9f-pokrycie', scenariuszR9FPokrycie], ['opus55', scenariuszOpus55], ['runda-a', scenariuszRundaA], ['runda-b', scenariuszRundaB],
   ['srodtytuly', scenariuszSrodtytuly], ['po-etapie-7', scenariuszPoEtapie7],
 ];
 (async () => {

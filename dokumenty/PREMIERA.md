@@ -420,15 +420,15 @@ CAI_POLITYKA_WERSJA=2026-10-v2
 3. Aktualizacja i restart (migracja 6 tworzy tabelę przydziałów):
 
 ```bash
-git -C /srv/contentai rev-parse HEAD | sudo tee /root/contentai-commit-przed-$(date +%F-%H%M)
+git -C /srv/contentai rev-parse HEAD | sudo tee /root/contentai-commit-przed-$(date +%F-%H%M%S)
 cd /srv/contentai && sudo git pull
 sudo systemctl restart contentai
 sleep 5; sudo journalctl -u contentai --no-pager -n 40 | grep -E 'magazyn|migracja|start|bez klucza|blad|error'
 sudo serwer/cli.sh start
 ```
 
-   Plik `contentai-commit-przed-...` ma w nazwie datę, więc ponowne uruchomienie bloku nie nadpisze
-   commita sprzed aktualizacji. Do wycofania (etap 3) weź commit z pierwszego pliku z tego dnia
+   Plik `contentai-commit-przed-...` ma w nazwie datę i godzinę z sekundami, więc ponowne uruchomienie bloku
+   (także w tej samej minucie) nie nadpisze commita sprzed aktualizacji. Do wycofania (etap 3) weź commit z pierwszego pliku z tego dnia
    (`ls /root/contentai-commit-przed-*`). W dzienniku: `migracja 6` i `pierwszy artykul bez klucza: do 20 nowych
    dziennie`, bez linii `start WYLACZONE`. Pierwsza linia `start` to "włączony", a pod nią
    "Klucz startu w Anthropic: działa" (sprawdzenie bez kosztu). Gdy pisze "WYŁĄCZONY", linia "Powód:"

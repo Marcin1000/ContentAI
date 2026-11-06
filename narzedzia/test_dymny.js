@@ -1556,7 +1556,8 @@ async function wariantR7I(b) {
     const pr = window.__r7iProbki || [];
     const wTrakcie = pr.filter((x) => x.ladowanie);
     return { probek: wTrakcie.length, zWynikiem: wTrakcie.filter((x) => x.wynik).map((x) => x.napis + ' | ' + x.wynik).slice(0, 3),
-      napisy: [...new Set(wTrakcie.map((x) => x.napis))], koniec: document.getElementById('fakty-wynik').textContent.slice(0, 60) };
+      // Runda B: nad licznikiem jest teraz pochodzenie twierdzen, wiec licznik dalej niz w pierwszych 60 znakach.
+      napisy: [...new Set(wTrakcie.map((x) => x.napis))], koniec: document.getElementById('fakty-wynik').textContent.slice(0, 400) };
   });
   wynik('telefon: R7-I Fakty: jeden stan ladowania do konca, bez czesciowego licznika i listy (odnosniki gotowe wczesniej)',
     przebieg.probek >= 20 && przebieg.zWynikiem.length === 0 && /Do sprawdzenia: \d+/.test(przebieg.koniec), JSON.stringify(przebieg));
@@ -1609,6 +1610,18 @@ async function wariantR7I(b) {
     artykulWZapytaniu.length > 200 && uwagi.zrodlaArt.length > 0 && zrodloWArt.length === 0 && !!uwagi.meta && artykulWZapytaniu.indexOf(uwagi.meta) < 0
     && /Aktualne lokalizacje/.test(artykulWZapytaniu),
     JSON.stringify({ dl: artykulWZapytaniu.length, zrodel: uwagi.zrodlaArt.length, zrodloWArt: zrodloWArt.slice(0, 2), meta: uwagi.meta.slice(0, 40), metaW: artykulWZapytaniu.indexOf(uwagi.meta) >= 0 }));
+  // Runda B: wariant z Baza na serwerze - pochodzenie twierdzen nad lista, fakty z Bazy, ktorych tekst nie uzyl, z polem
+  // dotyku 44 px i przyciskiem "Dopisz do tekstu"; naglowki sekcji ida do kontroli przed tekstem artykulu.
+  const rb = await s.evaluate(() => {
+    const w = document.getElementById('fakty-wynik');
+    const poz = [...w.querySelectorAll('.fakty-niewyk-item')];
+    return { poch: !!w.querySelector('.fakty-pochodzenie .fakty-poch-pasek'), pozycji: poz.length, wysokosci: poz.map((p) => Math.round(p.getBoundingClientRect().height)),
+      dopisz: ((document.getElementById('fakty-dopisz-btn') || {}).textContent || '').trim(), wBok: w.scrollWidth - w.clientWidth };
+  });
+  wynik('telefon: Runda B Fakty z Baza na serwerze - pochodzenie twierdzen, fakty niewykorzystane (pole dotyku 44 px), "Dopisz do tekstu", naglowki sekcji w zapytaniu',
+    rb.poch && rb.pozycji >= 1 && rb.wysokosci.every((h) => h >= 44) && /^Dopisz do tekstu \(\d+\)$/.test(rb.dopisz) && rb.wBok <= 0
+      && /"niewykorzystane"/.test(sys) && usr.indexOf('\n\n---\n\nARTICLE SECTIONS') !== -1 && usr.indexOf('\n\n---\n\nARTICLE SECTIONS') < usr.indexOf('\n\n---\n\nARTICLE:\n'),
+    JSON.stringify(rb));
   await s.evaluate(() => { inspektorZamknij(); const p = document.getElementById('r7i-link'); if (p) p.remove(); });
 
   wynik('telefon: R7-I bez bledow JavaScript', !bledy.length, bledy.join(' | '));

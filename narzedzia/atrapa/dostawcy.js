@@ -683,7 +683,47 @@ function odpFakty(cialo, ctx, zn) {
     const zeStrony = zdania.find((s) => s !== zLiczba && s !== inne && /\d/.test(s)) || zdania.find((s) => s !== zLiczba && s !== inne) || '';
     if (zeStrony) uwagi.unshift({ rodzaj: 'strona', cytat: zeStrony.slice(0, 120), strona: Number(nrStrony), powod: j === 'pl' ? 'Cytowany fragment strony urywa się przed tą wartością.' : 'The quoted passage of the page stops before this value.' });
   }
-  return [{ type: 'text', text: tekstJson({ uwagi }, zn) }];
+  // Runda B: pochodzenie twierdzen. "model" - zdanie o temacie bez zrodla (jak pola formularza, ktorych zrodlo nie
+  // wymienia); "ogolnik" - ogolne zdanie, a w zrodle (Bazie) zdanie z wartoscia; pochodzenie i fakty z Bazy, ktorych
+  // artykul nie uzyl (test w druga strone, sekcja z listy ARTICLE SECTIONS).
+  const uzyte = new Set(uwagi.map((u) => u.cytat));
+  const wolne = () => zdania.filter((s) => !uzyte.has(s.slice(0, 120)) && s !== zLiczba && s !== inne);
+  const zBazy = zdaniaBazy(ctx.usr).filter((s) => art.indexOf(s) < 0);
+  if (/"model"/.test(ctx.sys)) {
+    const zModelu = wolne().find((s) => !/\d/.test(s) && s.length > 30) || '';
+    if (zModelu) { uwagi.push({ rodzaj: 'model', cytat: zModelu.slice(0, 120), powod: j === 'pl' ? 'Żadne źródło nie wymienia tych danych; to typowy formularz, nie ten ze źródła.' : 'No source lists this data; it is a typical form, not the one in the source.' }); uzyte.add(zModelu.slice(0, 120)); }
+  }
+  if (/"ogolnik"/.test(ctx.sys)) {
+    const ogolne = wolne().find((s) => s.length > 30) || '';
+    const konkret = zBazy.find((s) => /\d/.test(s)) || '';
+    if (ogolne && konkret) { uwagi.push({ rodzaj: 'ogolnik', cytat: ogolne.slice(0, 120), zrodlo: konkret.slice(0, 160), powod: j === 'pl' ? 'Zdanie mówi ogólnie, a źródło podaje konkretną wartość.' : 'The sentence is vague while the source gives a concrete value.' }); uzyte.add(ogolne.slice(0, 120)); }
+  }
+  const wynik = { uwagi };
+  if (/"pochodzenie"/.test(ctx.sys)) {
+    const bezPokrycia = uwagi.filter((u) => ['liczba', 'model', 'brak'].indexOf(u.rodzaj) >= 0).length;
+    wynik.pochodzenie = { zrodla: Math.max(1, zdania.length - uwagi.length), model: bezPokrycia };
+  }
+  if (/"niewykorzystane"/.test(ctx.sys)) {
+    const sekcje = ((ctx.usr.split(/ARTICLE SECTIONS[^\n]*\n/)[1] || '').split(/\n\n---\n\n/)[0] || '').split('\n')
+      .map((l) => l.replace(/^- /, '').trim()).filter(Boolean);
+    const konkretOgolnika = (uwagi.find((u) => u.rodzaj === 'ogolnik') || {}).zrodlo || '';
+    wynik.niewykorzystane = zBazy.filter((s) => s.slice(0, 160) !== konkretOgolnika).slice(0, 3).map((s, i) => ({
+      fakt: s.slice(0, 200), zrodlo: s.slice(0, 160), gdzie: sekcje.length ? sekcje[Math.min(i, sekcje.length - 1)] : '' }));
+  }
+  return [{ type: 'text', text: tekstJson(wynik, zn) }];
+}
+
+// Zdania z dokumentow Bazy w zapytaniu kontroli faktow: SOURCES do WEB SOURCES / ARTICLE SECTIONS / ARTICLE.
+// Bez naglowkow dokumentow ("### nazwa") i bez napisu o braku dokumentow.
+function zdaniaBazy(usr) {
+  const t = String(usr || '');
+  const od = t.indexOf('SOURCES:\n');
+  if (od < 0) return [];
+  const konce = ['\n\n---\n\nWEB SOURCES', '\n\n---\n\nARTICLE SECTIONS', '\n\n---\n\nARTICLE:\n'].map((k) => t.indexOf(k, od)).filter((i) => i > od);
+  const baza = t.slice(od + 9, konce.length ? Math.min(...konce) : t.length);
+  if (/^\(no knowledge base documents/.test(baza)) return [];
+  return baza.split('\n').filter((l) => !/^#{1,6}\s|^---$/.test(l.trim())).join(' ').replace(/\s+/g, ' ')
+    .split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter((s) => s.length > 20);
 }
 
 // Runda A: „Popraw zdania bez źródła" - redaktor usuwa zdania z listy FINDINGS. Cytat z kontroli bywa
@@ -692,8 +732,9 @@ function odpFakty(cialo, ctx, zn) {
 function odpFaktyPoprawa(cialo, ctx, zn) {
   const czesci = ctx.usr.split(/\n\nARTICLE \(HTML\):\n/);
   let html = czesci[1] || '';
-  const cytaty = [...String(czesci[0] || '').matchAll(/^\d+\. "(.+)" - /gm)].map((m) => m[1]);
-  for (const c of cytaty) {
+  // Runda B: uwaga z linia SOURCE (ogolnik, liczba inna niz w zrodle) - zdanie dostaje fragment zrodla zamiast zniknac.
+  const wpisy = [...String(czesci[0] || '').matchAll(/^\d+\. "(.+)" - .*(?:\n {3}SOURCE: "(.+)")?/gm)].map((m) => ({ c: m[1], zrodlo: m[2] || '' }));
+  for (const { c, zrodlo } of wpisy) {
     const koncowka = [60, 40, 25].map((n) => c.slice(-n)).find((t) => t.trim().length >= 12 && html.indexOf(t) >= 0);
     if (!koncowka) continue;
     const k0 = html.indexOf(koncowka);
@@ -705,7 +746,36 @@ function odpFaktyPoprawa(cialo, ctx, zn) {
     const reszta = html.slice(k0 + koncowka.length);
     const k = reszta.search(/[.!?](?=\s|<|$)|<\/(?:p|li|td|th|h[1-6])>/);
     const koniec = k < 0 ? reszta.length : (/[.!?]/.test(reszta[k]) ? k + 1 : k);
-    html = html.slice(0, od) + reszta.slice(koniec).replace(/^\s+/, '');
+    html = html.slice(0, od) + (zrodlo ? esc(zrodlo) + ' ' : '') + reszta.slice(koniec).replace(/^\s+/, '');
+  }
+  return [{ type: 'text', text: html }];
+}
+
+// Runda B: "Dopisz do tekstu" - redaktor wplata fakty z listy FACTS: kazdy jako akapit za pierwszym akapitem sekcji
+// SECTION (naglowek H2/H3 o tym tekscie), bez sekcji - przed wnioskami albo przed ramka meta. Reszta bez zmian.
+function odpFaktyDopisz(cialo, ctx, zn) {
+  const czesci = ctx.usr.split(/\n\nARTICLE \(HTML\):\n/);
+  let html = czesci[1] || '';
+  const fakty = [...String(czesci[0] || '').matchAll(/^\d+\. FACT: (.+)(?:\n {3}SOURCE: "(.+)")?(?:\n {3}SECTION: "(.+)")?/gm)]
+    .map((m) => ({ fakt: m[1].trim(), sekcja: (m[3] || '').trim() }));
+  for (const { fakt, sekcja } of fakty) {
+    const akapit = '<p>' + esc(fakt) + '</p>';
+    let gdzie = -1;
+    if (sekcja) {
+      const m = new RegExp('<h([23])[^>]*>\\s*' + sekcja.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*</h\\1>').exec(html);
+      if (m) {
+        const poNaglowku = m.index + m[0].length;
+        const koniecAkapitu = html.indexOf('</p>', poNaglowku);
+        const nastepny = html.slice(poNaglowku).search(/<h[1-6][\s>]/);
+        gdzie = koniecAkapitu >= 0 && (nastepny < 0 || koniecAkapitu < poNaglowku + nastepny) ? koniecAkapitu + 4 : poNaglowku;
+      }
+    }
+    if (gdzie < 0) {
+      const wnioski = html.search(/<h2[^>]*>\s*(?:Kluczowe wnioski|Key takeaways)/);
+      const meta = html.indexOf('<div class="meta-box"');
+      gdzie = wnioski >= 0 ? wnioski : (meta >= 0 ? meta : html.length);
+    }
+    html = html.slice(0, gdzie) + akapit + html.slice(gdzie);
   }
   return [{ type: 'text', text: html }];
 }
@@ -992,6 +1062,12 @@ function odpBrandVoice(cialo, ctx, zn) {
     summary: 'Professional yet approachable tone. Sentences average 15-20 words with many concrete facts and numbers. No jargon or excessive adjectives.',
     style: 'Write factually and warmly. Lead with the answer, then explain. Use concrete numbers from the sources. Short sentences, active voice, address the reader as you. Avoid jargon, superlatives and vague statements.',
   };
+  // Runda B: profil mowi tez, co robia zdania (rada, ocena, opis), gdy prompt o to prosi.
+  if (/"funkcja"/.test(ctx.sys)) {
+    dane.funkcja = j === 'pl'
+      ? 'Co drugie zdanie doradza: mówi, co wybrać w jakiej sytuacji i dlaczego. Parametr zawsze z tym, co oznacza dla czytelnika. Sekcje od sytuacji klienta, nie od listy cech.'
+      : 'Every other sentence gives advice: what to choose in which situation and why. A parameter always comes with what it means for the reader. Sections start from the customer\'s situation, not from a list of features.';
+  }
   return [{ type: 'text', text: tekstJson(dane, zn) }];
 }
 
@@ -1324,6 +1400,7 @@ const REGULY = [
   ['narracja-ocena', (c) => /You evaluate how an AI assistant described a brand/.test(c.sys)],
   ['widocznosc-ai', (c) => /You are a helpful AI assistant answering a user question using web search/.test(c.sys)],
   ['fakty-poprawa', (c) => /^You are a fact-checking editor/.test(c.sys)],
+  ['fakty-dopisz', (c) => /^You are an editor adding facts from the sources/.test(c.sys)],
   ['fakty', (c) => /You are a fact checker/.test(c.sys)],
   ['luki', (c) => /You are a semantic SEO expert\. Compare an article to SERP topics/.test(c.sys)],
   ['luki-sekcje', (c) => /Write ONLY the new HTML sections requested/.test(c.sys)],
@@ -1353,7 +1430,8 @@ const RODZAJE_OPIS = {
   'ocena-premium': 'ocena trybu Premium - JSON score/issues',
   'poprawa': 'poprawa artykulu przez edytora SEO/AIO - HTML',
   'fakty': 'kontrola faktow - JSON uwagi[]',
-  'fakty-poprawa': 'poprawa zdan bez zrodla po kontroli faktow - HTML bez zdan z cytatow',
+  'fakty-poprawa': 'poprawa zdan bez zrodla po kontroli faktow - HTML bez zdan z cytatow (z linia SOURCE: fragment zrodla w miejscu zdania)',
+  'fakty-dopisz': 'dopisanie faktow z Bazy, ktorych tekst nie uzyl - HTML z akapitem faktu w sekcji SECTION',
   'web-fetch': 'pobranie strony do bazy wiedzy (web_fetch_tool_result)',
   'tytuly': 'warianty tytulow H1 - JSON tablica 5 napisow',
   'luki': 'analiza luk semantycznych - JSON score/missing/present/msg',
@@ -1444,6 +1522,7 @@ function odpowiedzAnthropic(cialo) {
     case 'web-fetch': { const r = odpWebFetch(cialo, ctx, zn); content = r.content; opcje = { pobran: r.pobran }; break; }
     case 'fakty': content = blokMyslenia(cialo, 'Compare figures with the sources.').concat(odpFakty(cialo, ctx, zn)); break;
     case 'fakty-poprawa': content = blokMyslenia(cialo, 'Remove only the unsupported details.').concat(odpFaktyPoprawa(cialo, ctx, zn)); break;
+    case 'fakty-dopisz': content = blokMyslenia(cialo, 'Add only the listed facts.').concat(odpFaktyDopisz(cialo, ctx, zn)); break;
     case 'ocena-premium':
     case 'ocena-seo-generowanie':
     case 'ocena-aio-generowanie': content = odpOcenaIssues(cialo, ctx, zn); break;
