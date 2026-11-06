@@ -2810,6 +2810,34 @@ body.is-mobile .narzedzie-naglowek .modul-tytul { font-size: var(--t-lg) !import
 #fakty-wynik .fakty-adres a { color: var(--c-dowod); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; overflow-wrap: anywhere; }
 /* telefon: link sam w linii, wiec pole dotyku 44 px (nie jest odnosnikiem w zdaniu) */
 body.is-mobile #fakty-wynik .fakty-adres a { display: inline-flex; align-items: center; min-height: var(--h-dotyk); min-width: var(--h-dotyk); }
+/* Runda B: pochodzenie twierdzen - cienki pasek dwoch czesci (2 px odstepu, zaokraglone konce, czesc zerowa nie rysuje
+   sie) nad legenda z ikona, nazwa i liczba. Kolory stanu (sukces, uwaga) zawsze z ikona i podpisem, nigdy same. */
+#fakty-wynik .fakty-pochodzenie { margin: 0 0 var(--s-12); padding-bottom: var(--s-12); border-bottom: 1px solid var(--c-linia); }
+#fakty-wynik .fakty-poch-tytul { margin-top: 0; }
+#fakty-wynik .fakty-poch-pasek { display: flex; gap: var(--s-2); height: 8px; margin: var(--s-6) 0 var(--s-8); }
+#fakty-wynik .fakty-poch-pasek > span { flex-basis: 0; min-width: 6px; border-radius: 4px; }
+#fakty-wynik .fakty-poch-z { background: var(--c-sukces); }
+#fakty-wynik .fakty-poch-m { background: var(--c-uwaga); }
+#fakty-wynik .fakty-poch-legenda { display: flex; flex-wrap: wrap; gap: var(--s-4) var(--s-16); color: var(--c-tekst-2); }
+#fakty-wynik .fakty-poch-poz { display: inline-flex; align-items: center; gap: var(--s-4); }
+#fakty-wynik .fakty-poch-ik-z { color: var(--c-sukces); }
+#fakty-wynik .fakty-poch-ik-m { color: var(--c-uwaga); }
+#fakty-wynik .fakty-pochodzenie .tekst-pomoc { margin-top: var(--s-6); }
+/* fragment zrodla przy ogolniku (i liczbie z inna wartoscia w zrodle) */
+#fakty-wynik .fakty-w-zrodle { margin-top: var(--s-4); color: var(--c-tekst-2); overflow-wrap: anywhere; }
+/* Ze zrodel, a nie ma w tekscie: pozycje do zaznaczenia jak brakujace tematy w Lukach (wlasne klasy - Luki licza swoje) */
+#fakty-wynik .fakty-niewyk { margin-top: var(--s-12); padding-top: var(--s-12); border-top: 1px solid var(--c-linia); }
+#fakty-wynik .fakty-niewyk > .panel-podtytul { margin-top: 0; }
+#fakty-wynik .fakty-niewyk-item { display: flex; align-items: flex-start; gap: var(--s-8); padding: var(--s-6) 0; border-bottom: 1px solid var(--c-linia); cursor: pointer; }
+#fakty-wynik .fakty-niewyk-item:last-of-type { border-bottom: 0; }
+#fakty-wynik .fakty-niewyk-check { flex-shrink: 0; width: 15px; height: 15px; margin: 2px 0 0; accent-color: var(--c-akcent); cursor: pointer; }
+#fakty-wynik .fakty-niewyk-tekst { display: flex; flex-direction: column; gap: var(--s-2); min-width: 0; line-height: 1.45; }
+#fakty-wynik .fakty-niewyk-fakt { color: var(--c-tekst); }
+#fakty-wynik .fakty-niewyk-zrodlo { color: var(--c-tekst-2); font-style: italic; overflow-wrap: anywhere; }
+#fakty-wynik .fakty-niewyk-gdzie { color: var(--c-tekst-3); font-size: var(--t-xs); overflow-wrap: anywhere; }
+#fakty-wynik .fakty-niewyk-item:has(.fakty-niewyk-check:not(:checked)) .fakty-niewyk-fakt { color: var(--c-tekst-3); text-decoration: line-through; }
+body.is-mobile #fakty-wynik .fakty-niewyk-item { min-height: var(--h-dotyk); }
+body.is-mobile #fakty-wynik .fakty-niewyk-check { width: 20px; height: 20px; margin-top: 1px; }
 }
 @layer widoki {
 /* Baza wiedzy na telefonie (pelny ekran) nad paskami wyniku i naglowkiem, pod dolna nawigacja (zakladka Baza zostaje widoczna) */
@@ -5294,8 +5322,25 @@ var I18N = {
     'fakty-rodzaj-strona':'Sprawdź na stronie',
     'fakty-rodzaj-brak':'Brak w źródłach',
     'fakty-powod-brak':'Żadne źródło nie podaje tej informacji.',
-    'fakty-popraw':'Popraw zdania bez źródła ({n})',
-    'fakty-popraw-opis':'Model usunie albo złagodzi zdania z listy, poza „Sprawdź na stronie”. Nie dopisze nowych faktów. Wynik to nowa wersja artykułu.',
+    'fakty-rodzaj-model':'Z wiedzy modelu',
+    'fakty-powod-model':'Żadne ze źródeł tego nie podaje. Zdanie pochodzi z wiedzy modelu, nie z Twoich materiałów.',
+    'fakty-rodzaj-ogolnik':'Ogólnik, a źródło podaje konkret',
+    'fakty-powod-ogolnik':'Źródło podaje tu konkretną wartość. Odpowiedź AI zacytuje konkret, ogólnika nie.',
+    'fakty-w-zrodle':'W źródle:',
+    'fakty-pochodzenie':'Pochodzenie twierdzeń',
+    'fakty-poch-zrodla':'Ze źródeł: {n}',
+    'fakty-poch-model':'Z wiedzy modelu: {n}',
+    'fakty-poch-opis':'Z wiedzy modelu to twierdzenia, których nie podaje żadne ze źródeł, nawet jeśli są prawdziwe.',
+    'fakty-niewyk-tytul':'Ze źródeł, a nie ma w tekście ({n})',
+    'fakty-niewyk-opis':'Fakty z Bazy wiedzy, których czytelnik potrzebuje, a artykuł ich nie podaje. Zaznacz te, które dopisać.',
+    'fakty-niewyk-gdzie':'Pasuje do sekcji: {h}',
+    'fakty-dopisz':'Dopisz do tekstu ({n})',
+    'fakty-dopisz-opis':'Model wplecie zaznaczone fakty w pasujące sekcje, z wartościami dokładnie jak w źródle. Nic innego nie zmieni. Wynik to nowa wersja artykułu.',
+    'fakty-dopisuje':'Dopisuję fakty…',
+    'fakty-dopisane':'Dopisane fakty: {n}. Kontrola faktów sprawdza artykuł od nowa.',
+    'fakty-dopisz-blad':'Nie udało się dopisać faktów.',
+    'fakty-popraw':'Popraw wskazane zdania ({n})',
+    'fakty-popraw-opis':'Model usunie albo złagodzi zdania z listy, poza „Sprawdź na stronie”, a ogólnik zastąpi wartością ze źródła. Innych faktów nie dopisze. Wynik to nowa wersja artykułu.',
     'fakty-poprawiam':'Poprawiam zdania…',
     'fakty-poprawione':'Poprawione zdania: {n}. Kontrola faktów sprawdza artykuł od nowa.',
     'fakty-poprawa-blad':'Nie udało się poprawić zdań.',
@@ -5440,6 +5485,7 @@ var I18N = {
     'aeo-pytania-h2':'H2 w formie pytań: {n}% (cel 50%+)',
     'aeo-dlugie-akapity':'Akapity dłuższe niż 80 słów: {n}',
     'aeo-linie':'Wzmiankowane linie','aeo-linie-brak':'brak','aeo-linie-sprawdz':'sprawdź rozróżnienie linii',
+    'aeo-marka-naglowki':'Nagłówki z nazwą marki: {n}, np. {h}. W wyszukiwarkę wpisuje się swój problem, nie nazwę firmy, więc marka pasuje do treści sekcji, a nagłówek do pytania czytelnika.',
     'geo-skladnik-aeo':'Format AEO','geo-skladnik-struktura':'Struktura: H1, sekcje H2, pytania, lista','geo-skladnik-marka':'Marka i linie biznesowe',
     'geo-waga':'waga',
     'geo-faq':'Co najmniej 3 nagłówki H2 w formie pytań','geo-linie':'Linie biznesowe nie są pomylone','geo-aeo-ok':'Wymogi formatu AEO spełnione',
@@ -5676,7 +5722,7 @@ var I18N = {
     'url-label':'Adres URL',
     'bv-modal-full-title':'Głos marki (brand voice)',
     'bv-modal-desc-full':'Wklej 2-5 istniejących artykułów firmowych (lub innych tekstów). Aplikacja wyekstrahuje profil stylu i zastosuje go do wszystkich przyszłych generowań.',
-    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','nowy-artykul':'Nowy artykuł','nowy-artykul-title':'Wyczyść temat, słowa kluczowe i wytyczne, żeby zacząć kolejny artykuł. Poprzedni zostaje w Historii.','nowy-artykul-gotowe':'Możesz pisać nowy artykuł. Poprzedni jest w Historii.','nowy-brief-wyczyszczony':'Brief wyczyszczony.','nowy-cofnij':'Cofnij','ustawienia-domyslne':'Przywróć ustawienia domyślne','ustawienia-domyslne-gotowe':'Przywrócono ustawienia domyślne: typ, długość, ton, język, źródła i opcje zaawansowane.','msg-dopracuj-bez-zmian':'Tekst ma już {n}/100, samokorekta nie znalazła nic do poprawy. Zostaje bez zmian.','ver-serp':'Dopisane tematy','ver-fakty':'Poprawione fakty','ver-wybor':'Wersja artykułu',
+    'ver-before-premium':'Przed samokorektą','ver-after-premium':'Po samokorekcie','nowy-artykul':'Nowy artykuł','nowy-artykul-title':'Wyczyść temat, słowa kluczowe i wytyczne, żeby zacząć kolejny artykuł. Poprzedni zostaje w Historii.','nowy-artykul-gotowe':'Możesz pisać nowy artykuł. Poprzedni jest w Historii.','nowy-brief-wyczyszczony':'Brief wyczyszczony.','nowy-cofnij':'Cofnij','ustawienia-domyslne':'Przywróć ustawienia domyślne','ustawienia-domyslne-gotowe':'Przywrócono ustawienia domyślne: typ, długość, ton, język, źródła i opcje zaawansowane.','msg-dopracuj-bez-zmian':'Tekst ma już {n}/100, samokorekta nie znalazła nic do poprawy. Zostaje bez zmian.','ver-serp':'Dopisane tematy','ver-fakty':'Poprawione fakty','ver-dopisane':'Dopisane fakty ze źródeł','ver-wybor':'Wersja artykułu',
     'spin-sub-model':'model przetwarza temat i bazę wiedzy','spin-sub-hybrid2':'optymalizuję jednocześnie pod SEO, AIO i czytelnika',
     'link-suggest-prefix':'Rozważ link do','link-suggest-at':'przy słowach:',
     'gap-still-missing':'Nadal brakujące tematy','gap-szukam':'Szukam źródeł i piszę sekcje…','gap-bez-zrodel':'Nowe sekcje potrzebują źródeł. Baza wiedzy jest pusta, a wyszukiwanie w sieci wyłączone, więc tych tematów nie da się opisać bez zmyślania.','gap-wlacz-siec':'Włącz wyszukiwanie w sieci i dopisz','gap-konkurencja':'konkurencja','gap-konkurencja-title':'Temat o marce lub produkcie konkurencji. Domyślnie odznaczony: w tekście marki to Twoja decyzja.','gap-po-poprawie':'Wynik z dopisanych sekcji. Odśwież, jeśli model ma ocenić cały tekst od nowa.','gap-inny-artykul':'Dopisane sekcje dotyczyły poprzedniego artykułu, więc nie zostały wstawione.','gap-pusto':'Model nie zwrócił nowych sekcji. Spróbuj ponownie.','gap-dopisane':'Dopisano sekcje: {n}. Wynik w zakładce Luki.','gap-serp-blad':'Analiza SERP nie powiodła się przy generowaniu, więc nie ma z czym porównać tekstu. Wygeneruj artykuł ponownie z włączoną analizą SERP.','serp-blad-toast':'Analiza SERP nie powiodła się. Artykuł powstaje bez niej.','gap-pkt':'pkt','gap-bez-zrodel-baza':'Tematy bez pokrycia w zaznaczonych dokumentach: {n}. Nie dodano dla nich pustych sekcji. Włącz wyszukiwanie w sieci albo dodaj materiał do bazy wiedzy.','gap-bez-zrodel-siec':'Tematy bez źródła: {n}. Nie dodano dla nich pustych sekcji, zostają na liście brakujących. Dodaj materiał do bazy wiedzy i spróbuj ponownie.',
@@ -6036,8 +6082,25 @@ var I18N = {
     'fakty-rodzaj-strona':'Check on the page',
     'fakty-rodzaj-brak':'Not in the sources',
     'fakty-powod-brak':'No source states this.',
-    'fakty-popraw':'Fix unsupported sentences ({n})',
-    'fakty-popraw-opis':'The model removes or softens the listed sentences, except “Check on the page”. It adds no new facts. The result is a new version of the article.',
+    'fakty-rodzaj-model':'From the model\'s knowledge',
+    'fakty-powod-model':'No source states this. The sentence comes from the model\'s knowledge, not from your materials.',
+    'fakty-rodzaj-ogolnik':'Vague, the source is specific',
+    'fakty-powod-ogolnik':'The source gives a concrete value here. An AI answer quotes the value, not a vague phrase.',
+    'fakty-w-zrodle':'In the source:',
+    'fakty-pochodzenie':'Where the claims come from',
+    'fakty-poch-zrodla':'From the sources: {n}',
+    'fakty-poch-model':'From the model\'s knowledge: {n}',
+    'fakty-poch-opis':'From the model\'s knowledge means that none of the sources states the claim, even if it is true.',
+    'fakty-niewyk-tytul':'In the sources, missing from the text ({n})',
+    'fakty-niewyk-opis':'Facts from the knowledge base that the reader needs and the article does not give. Select the ones to add.',
+    'fakty-niewyk-gdzie':'Fits the section: {h}',
+    'fakty-dopisz':'Add to the text ({n})',
+    'fakty-dopisz-opis':'The model works the selected facts into the matching sections, with values exactly as in the source. Nothing else changes. The result is a new version of the article.',
+    'fakty-dopisuje':'Adding facts…',
+    'fakty-dopisane':'Facts added: {n}. The fact check runs again.',
+    'fakty-dopisz-blad':'Could not add the facts.',
+    'fakty-popraw':'Fix the flagged sentences ({n})',
+    'fakty-popraw-opis':'The model removes or softens the listed sentences, except “Check on the page”, and replaces vague wording with the value from the source. It adds no other facts. The result is a new version of the article.',
     'fakty-poprawiam':'Fixing sentences…',
     'fakty-poprawione':'Sentences fixed: {n}. The fact check runs again.',
     'fakty-poprawa-blad':'Could not fix the sentences.',
@@ -6182,6 +6245,7 @@ var I18N = {
     'aeo-pytania-h2':'Question-form H2: {n}% (target 50%+)',
     'aeo-dlugie-akapity':'Paragraphs over 80 words: {n}',
     'aeo-linie':'Lines mentioned','aeo-linie-brak':'none','aeo-linie-sprawdz':'verify line disambiguation',
+    'aeo-marka-naglowki':'Headings with the brand name: {n}, e.g. {h}. People search for their problem, not for a company name, so the brand belongs in the section text and the heading to the reader\'s question.',
     'geo-skladnik-aeo':'AEO format','geo-skladnik-struktura':'Structure: H1, H2 sections, questions, list','geo-skladnik-marka':'Brand and business lines',
     'geo-waga':'weight',
     'geo-faq':'At least 3 H2 headings phrased as questions','geo-linie':'Business lines are not mixed up','geo-aeo-ok':'AEO format requirements met',
@@ -6466,7 +6530,7 @@ var I18N = {
     'url-label':'URL',
     'bv-modal-full-title':'Brand voice',
     'bv-modal-desc-full':'Paste 2-5 existing company articles (or other texts). The app will extract the style profile and apply it to all future generations.',
-    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','nowy-artykul':'New article','nowy-artykul-title':'Clear the topic, keywords and guidelines to start the next article. The previous one stays in History.','nowy-artykul-gotowe':'Ready for a new article. The previous one is in History.','nowy-brief-wyczyszczony':'Brief cleared.','nowy-cofnij':'Undo','ustawienia-domyslne':'Restore default settings','ustawienia-domyslne-gotowe':'Default settings restored: type, length, tone, language, sources and advanced options.','msg-dopracuj-bez-zmian':'The text already scores {n}/100, self-review found nothing to improve. It stays as it is.','ver-serp':'Added topics','ver-fakty':'Fact fixes','ver-wybor':'Article version',
+    'ver-before-premium':'Before self-review','ver-after-premium':'After self-review','nowy-artykul':'New article','nowy-artykul-title':'Clear the topic, keywords and guidelines to start the next article. The previous one stays in History.','nowy-artykul-gotowe':'Ready for a new article. The previous one is in History.','nowy-brief-wyczyszczony':'Brief cleared.','nowy-cofnij':'Undo','ustawienia-domyslne':'Restore default settings','ustawienia-domyslne-gotowe':'Default settings restored: type, length, tone, language, sources and advanced options.','msg-dopracuj-bez-zmian':'The text already scores {n}/100, self-review found nothing to improve. It stays as it is.','ver-serp':'Added topics','ver-fakty':'Fact fixes','ver-dopisane':'Added source facts','ver-wybor':'Article version',
     'spin-sub-model':'model processes topic and knowledge base','spin-sub-hybrid2':'optimizing for SEO, AIO and readability simultaneously',
     'link-suggest-prefix':'Consider linking','link-suggest-at':'at words:',
     'gap-still-missing':'Still missing topics','gap-szukam':'Finding sources and writing sections…','gap-bez-zrodel':'New sections need sources. The knowledge base is empty and web search is off, so these topics cannot be covered without inventing facts.','gap-wlacz-siec':'Turn on web search and add','gap-konkurencja':'competitor','gap-konkurencja-title':'A topic about a competing brand or product. Unchecked by default: in brand content this is your call.','gap-po-poprawie':'Score from the added sections. Refresh if the model should rate the whole text again.','gap-inny-artykul':'The added sections were for the previous article, so they were not inserted.','gap-pusto':'The model returned no new sections. Please try again.','gap-dopisane':'Sections added: {n}. See the Gaps tab for the result.','gap-serp-blad':'The SERP analysis failed during generation, so there is nothing to compare the text with. Generate the article again with SERP analysis on.','serp-blad-toast':'The SERP analysis failed. The article is being written without it.','gap-pkt':'pts','gap-bez-zrodel-baza':'Topics not covered by the selected documents: {n}. No empty sections were added. Turn on web search or add material to the knowledge base.','gap-bez-zrodel-siec':'Topics without a source: {n}. No empty sections were added. They stay on the missing list. Add material to the knowledge base and try again.',
@@ -7775,7 +7839,10 @@ function blokPrzepisywania() {
     + '- You may reorder, shorten, split, retitle and rephrase. You may not enrich.\n'
     + '- If an instruction asks for something the text cannot support, apply the part '
     + 'you can and leave the rest. An unfixed remark is better than an invented fact.\n'
-    + '- Keep every figure exactly as it stands, including its units and its wording.'
+    + '- Keep every figure exactly as it stands, including its units and its wording.\n'
+    // Runda B: poprawka "marka w kazdej sekcji" nie moze wstawic marki do naglowka (naglowek to fraza czytelnika).
+    + '- Never move a brand, company or product-line name into a heading unless the keywords contain it. '
+    + 'Headings stay the reader\'s search queries; the brand belongs in the section text.'
     + blokInterpunkcji();
 }
 
@@ -7828,7 +7895,12 @@ function blokFaktow(uzupelnia) {
     + 'wording, never paste a phrase from the source (in a Polish article "6,445 confirmed exoplanets" is a defect). '
     + 'Write numbers the way the article language writes them: Polish uses a comma only for decimals and a space '
     + 'or nothing between thousands (6445 or 6 445, never 6,445, which reads as six point four). '
-    + 'Give each figure once, in one form.';
+    + 'Give each figure once, in one form.'
+    // Runda B (agencja, 2026-11-06): wszystkie trzy wersje tekstu wymienily pola formularza (imie, e-mail, numer
+    // podatkowy, telefon), ktorych zrodlo nie podawalo - model uzupelnil formularz tym, co formularze zwykle maja.
+    + '\n- A list of fields, documents, steps, options or requirements is a set of facts like any figure: write '
+    + 'only the items the sources list. Never complete a form, a checklist or a procedure with what such things '
+    + 'usually contain.';
 
   if (!uzupelnia) {
     return wspolne
@@ -7865,6 +7937,22 @@ function blokFaktow(uzupelnia) {
     + 'result mentions the brand. A third-party page is not the brand speaking.\n'
     + '- Say when a fact is external and current: "wedlug X (data)" reads as honest '
     + 'reporting, not as the brand claiming it.';
+}
+
+// Runda B (agencja, 2026-11-06): "teksty pisza 'limity wymiarow tez sa inne', a zrodlo podaje wprost wymiary - szkoda,
+// bo ogolnik sie nie zacytuje w AI Overviews". Model wiedzial, ze warunek jest inny, ale nie przeniosl wartosci.
+// Kontrola faktow lapie to jako "ogolnik", a ta regula ma sprawic, zeby nie bylo czego lapac.
+function blokKonkretu() {
+  return '\n\nCONCRETE VALUES FROM THE SOURCES:\n'
+    + '- When a source states a concrete value for something the article mentions (a dimension, a weight or size '
+    + 'limit, a deadline, a time window, a fee rule, a condition, a list of required documents or data), write that '
+    + 'value in the sentence. Never replace it with a vague placeholder: "the limits are different", "other rules '
+    + 'apply", "within the set time", "the required data" ("limity są inne", "obowiązują inne zasady", "w określonym '
+    + 'terminie", "wymagane dane"). A vague sentence cannot be quoted by an AI answer; the value can.\n'
+    + '- Before you finish, scan the sources for limits, conditions and requirements that answer the reader\'s '
+    + 'question. Each one the article touches is stated with its value, exactly as the source gives it.\n'
+    + '- This never licenses a value the sources do not give. With no value in the sources, say only what the '
+    + 'sources say, or leave the point out.';
 }
 
 // UWAGA 2: "nadinterpretowanie zrodel". Zrodlo mowilo o usludze w jednym kraju,
@@ -8041,13 +8129,66 @@ function odbiorcaTekstu() {
   return (sel && sel.value) || '';
 }
 
+// Runda B (agencja, 2026-11-06): "w przyjaznej wersji 73% specyfikacji, w pro 74%, w eksperckiej 80% (...) Glos marki
+// zmienia forme zwracania sie i dlugosc zdania, ale nie to, co zdania robia. Wszystkie trzy maja tez szesc H2
+// w identycznej kolejnosci - to jeden szkielet w trzech powlokach". Ton zmienial slowa, a nie funkcje zdan i plan
+// tekstu. Kazdy ton dostaje wiec dwie rzeczy wiecej: co maja robic zdania (doradzac, oceniac, wyjasniac, opisywac)
+// i wlasny plan sekcji. Rada i ocena tylko lacza fakty ze zrodel - nigdy nie dodaja nowych.
+var FUNKCJA_TONU = {
+  'Profesjonalny': {
+    zdania: 'At least a third of the sentences help the reader decide: they compare options, say which option suits '
+      + 'which situation, or name what a choice costs or saves. Parameters go inside those sentences instead of '
+      + 'standing alone as specs.',
+    plan: 'Build the article as a decision guide: what the reader is choosing between, the criteria that decide it, '
+      + 'the options set against those criteria, which option fits which situation, and how to start.',
+  },
+  'Ekspercki': {
+    zdania: 'At least four sentences in ten explain why or when: the mechanism behind a rule, a trade-off, an '
+      + 'exception, a typical mistake and what it costs. Each parameter is followed by what it means in practice.',
+    plan: 'Build the article from mechanism to practice: how it works and why the rules are what they are, then '
+      + 'the trade-offs, then the exceptions, limits and common mistakes, and finish with a short checklist.',
+  },
+  'Przyjazny': {
+    zdania: 'At least four sentences in ten speak to the reader\'s own situation: what to do, what to pick, what to '
+      + 'watch out for, what happens if. Parameters come inside that advice ("if it is longer than X, choose Y"), '
+      + 'not as a list.',
+    plan: 'Build the article around the reader\'s situation: open with the most common case and walk through it '
+      + 'step by step, then give each "what if" case its own section (something larger, a tight deadline, a change '
+      + 'of plan).',
+  },
+  'Neutralny': {
+    zdania: 'Mostly statements of fact, as in reference documentation, but never a bare list of specs: state each '
+      + 'condition together with the case it applies to ("applies to items up to X"), so the reader finds their own '
+      + 'case. No advice and no recommendations: in this tone that overrides the rule about taking a position.',
+    plan: 'Build the article as a reference: definition and scope first, then parameters, conditions and '
+      + 'exceptions grouped by subject, in the order a reader would look them up.',
+  },
+};
+
 function blokTonu(ton) {
   var opis = OPISY_TONU[ton];
   if (!opis) return '';
+  var f = FUNKCJA_TONU[ton];
   return '\n\nTONE - this changes the actual wording, not just the label:\n' + opis
     + '\nThe tone must be recognisable from any single paragraph read on its own. '
     + 'If the same paragraph would fit another tone unchanged, rewrite it. '
-    + 'Never use the same formula to address the reader or to open a sentence twice in one text.';
+    + 'Never use the same formula to address the reader or to open a sentence twice in one text.'
+    + (f ? '\n\nTONE ALSO CHANGES WHAT THE SENTENCES DO, NOT ONLY HOW THEY SOUND:\n- ' + f.zdania + '\n'
+      + '- A section made only of parameters reads like a product sheet. Every section also makes clear what its '
+      + 'facts mean for the reader: a decision, a consequence, a step, a mistake to avoid or the case a condition '
+      + 'applies to.\n'
+      + '- Advice and evaluation only combine facts from the sources. They never add a fact, a figure or a '
+      + 'superlative ("the cheapest", "the fastest") that the sources do not support.' : '');
+}
+
+// Plan sekcji wedlug tonu - tylko do pisania calego artykulu (Luki dopisuja pojedyncze sekcje, plan ich nie dotyczy).
+function blokPlanuTonu(ton) {
+  var f = FUNKCJA_TONU[ton];
+  if (!f) return '';
+  return '\n\nTONE ALSO DECIDES THE PLAN OF THE ARTICLE:\n- ' + f.plan + '\n'
+    + '- The headings, their wording and their number come from the topic and the sources. Do not fall back on the '
+    + 'generic sequence "what it is, how it works, who it is for, parameters, how to start": the same topic written '
+    + 'in another tone must not get the same sections in the same order.';
 }
 
 // FRAZY KLUCZOWE. Dwa przypadki z artykulu testowego pokazaly, ze fraza
@@ -8124,12 +8265,41 @@ function usunPowtorzoneLinki(html) {
   return pojemnik.innerHTML;
 }
 
+// Runda B (agencja, 2026-11-06): naglowek z nazwa marki i jej uslugi ("Ktora usluga [marki] najlepiej sprawdzi sie
+// w [sytuacji]?") to pytanie, ktorego nikt nie wpisuje w wyszukiwarke. Wersja bez marki ("Jaka usluge wybrac, zeby
+// [cel czytelnika]?") robila to lepiej, a dopasowanie naglowka do realnej frazy decyduje o cytowaniu w odpowiedziach
+// AI. Marka trafiala do naglowkow przez regule SALIENCE (marka w kazdej sekcji H2) - teraz marka w tresci sekcji.
+// Informacja prasowa ma wlasne naglowki (tytul wiadomosci, "O firmie"), wiec jej ta regula nie dotyczy.
+function nazwaMarkiDoRegul() {
+  var cfg = (typeof getLlmsConfig === 'function') ? getLlmsConfig() : null;
+  var nazwa = (cfg && cfg.name || '').trim();
+  return (nazwa === 'Twoja Firma' || nazwa === 'Your Company') ? '' : nazwa;
+}
+function markaWFrazach(nazwa, frazy) {
+  var n = String(nazwa || '').toLowerCase();
+  return !!n && (frazy || []).some(function (f) { return String(f || '').toLowerCase().indexOf(n) !== -1; });
+}
+function blokNaglowkow(frazy) {
+  var nazwa = nazwaMarkiDoRegul();
+  return '\n\nHEADINGS ARE SEARCH QUERIES:\n'
+    + '- Phrase every H2 and H3 the way a person types the question into a search engine or asks an AI assistant: '
+    + 'the reader\'s own words, situation and goal ("Jak dobrać pompę ciepła do starego domu?", not "Pompy ciepła '
+    + 'marki X dla Twojego domu").\n'
+    + '- Never put a brand, company, service or product-line name into an H2 or H3 unless the keywords of the brief '
+    + 'contain that name. People search for their problem, not for the provider\'s catalogue. The brand belongs in '
+    + 'the section text, in the sentences that answer the heading.\n'
+    + (nazwa && !markaWFrazach(nazwa, frazy) ? '- That includes "' + nazwa + '": name it in the section text, never in an H2 or H3.\n' : '')
+    + '- A heading that only makes sense to someone who already knows the offer ("Which service of [brand] is best '
+    + 'for X?") is not a query. Write the question the reader starts from ("Which service is best for X?").';
+}
+
 // Jeden punkt wejscia - zeby nie dalo sie doloczyc czesci regul i zapomniec
 // o reszcie przy nastepnej zmianie w generate().
 function blokRzetelnosci(opcje) {
-  return blokFaktow(opcje.uzupelnia) + blokZakresu() + blokSpojnosci()
+  return blokFaktow(opcje.uzupelnia) + blokKonkretu() + blokZakresu() + blokSpojnosci()
     + blokOdbiorcy(opcje.odbiorca) + blokKonfliktu()
-    + blokRytmu() + blokStruktury() + blokKotwic() + blokFraz() + blokTonu(opcje.ton);
+    + blokRytmu() + blokStruktury() + (opcje.prasowa ? '' : blokNaglowkow(opcje.frazy)) + blokKotwic() + blokFraz()
+    + blokTonu(opcje.ton) + (opcje.prasowa ? '' : blokPlanuTonu(opcje.ton));
 }
 
 function parsujJsonModelu(tekst) {
@@ -9089,7 +9259,10 @@ async function generate(skipPremiumModal = false, opcje = null) {
       { day: 'numeric', month: 'long', year: 'numeric' });
     const dirCode = (document.getElementById('dir-country')?.value) || 'DE';
     const dirCountry = DIR_COUNTRY_NAMES[dirCode] || 'Germany';
-    const bvInstruction = brandVoiceProfile ? `\nBRAND VOICE - apply this style: ${brandVoiceProfile.style}` : '';
+    // Runda B (agencja): "Glos marki zmienia forme zwracania sie i dlugosc zdania, ale nie to, co zdania robia". Profil
+    // ma teraz tez funkcje zdan z probek (rada, ocena, opis, przyklady); profile sprzed zmiany dzialaja jak dotad.
+    const bvInstruction = brandVoiceProfile ? `\nBRAND VOICE - apply this style: ${brandVoiceProfile.style}`
+      + (brandVoiceProfile.funkcja ? `\nBRAND VOICE - what the sentences do (match this, not only the wording): ${brandVoiceProfile.funkcja}` : '') : '';
     const userWatermark = (USER_LABEL && USER_LABEL !== 'WSTAW_TUTAJ_IMIE_LUB_ID')
       ? `\n[File licensed to: ${USER_LABEL}]`
       : '';
@@ -9139,9 +9312,9 @@ CONTENT QUALITY RULES (applied to every paragraph):
 ✗ ANTI-FLUFF: Cut any sentence that only restates the previous one or praises without saying anything ("rosnaca popularnosc", "dynamiczny rozwoj", "nowoczesne rozwiazanie"). Replace it with something the sources actually say, or delete it. Do NOT rescue such a sentence by attaching a number to it.
 ✗ ${REGULA_FRAZY_PODMIOTU}
 ✗ ANTI-GENERIC: Never write a vague category label (e.g. "the industry", "providers") when you mean a specific company. Use the exact brand name every time.
-✓ SALIENCE: Mention the main brand/product by exact name at least once in every H2 section (not just in the headline).
+✓ SALIENCE: Mention the main brand/product by exact name in the text of every H2 section, in the sentences that answer the heading. The H2 and H3 headings themselves stay free of the brand name (see HEADINGS ARE SEARCH QUERIES).
 ✓ BLUF: The first paragraph answers the question asked in the title, in two or three sentences. Open with a figure ONLY if the sources contain one that answers it; otherwise open with the substantive answer in words. Never open with a vague introduction.
-✓ FANOUT: For each main topic, cover the query space the sources let you cover: what it is, how it works, who it is for, parameters, how to start. Skip an angle the sources do not support instead of filling it in.
+✓ FANOUT: Cover the questions a reader may have where the sources allow (what it is, how it works, who it is for, parameters, how to start, what if). These are angles to weave in, NOT a list of sections or their order: the plan of the article follows the TONE. Skip an angle the sources do not support instead of filling it in.
 ✓ TABLES: Each table must contain ONE homogeneous dataset. Never mix different categories in one table. Every cell must come from the sources. Leave a column out rather than inventing its values, and do not add rows to make the table look full. A table of periods, tiers or rates needs EVERY row in the sources: if you can document January, August and September but not the months between, you do not have a table, you have three data points - write them as sentences and say which periods they cover.
 ✓ LINKS: Link a given address AT MOST ONCE in the whole article, at its first meaningful mention. Never link the same URL a second time, and never link a brand name just because it appears again.${bvInstruction}${userWatermark}`
       : `You are an SEO and content writer. Write content based on the knowledge base provided by the user.
@@ -9161,7 +9334,7 @@ ${(ctype !== 'FAQ page' && !isPress) ? `- MANDATORY: End the article, immediatel
 - ANTI-FLUFF: Cut sentences that only restate the previous one or praise without content ("rosnąca popularność", "dynamiczny rozwój"). Delete them; do not repair them by adding a number.
 - ${REGULA_FRAZY_PODMIOTU}
 - ANTI-GENERIC: Use exact brand/product names, never generic "branża" when referring to a specific company.
-- SALIENCE: Mention the main brand by exact name at least once per H2 section.
+- SALIENCE: Mention the main brand by exact name in the text of every H2 section, not in the H2 or H3 headings themselves.
 - TABLES: One dataset per table. Every cell comes from the sources. Omit a column rather than inventing its values. A table of periods or rates needs every row documented; a gap-toothed series of months means you are assembling data, not reporting it.
 - LINKS: Link a given address at most once in the whole article, at its first meaningful mention.
 - FORMATTING: Do NOT use the "-" character as a separator or dash within sentences (e.g. "produkt - dla klientów"). Use full sentences and conjunctions instead (np. "oraz", "który", "gdzie"). Hyphens in compound words are allowed (e.g. "e-commerce").${bvInstruction}${userWatermark}`;
@@ -9174,7 +9347,7 @@ ${(ctype !== 'FAQ page' && !isPress) ? `- MANDATORY: End the article, immediatel
     systemPrompt += blokDaty() + blokInterpunkcji();
     // Reguly z audytu agencji. Doklejane na koncu, zeby przebijaly wczesniejsze
     // wymagania formy: gdy zrodlo nie ma liczby, brak liczby wygrywa z szablonem.
-    systemPrompt += blokRzetelnosci({ ton: tonKanoniczny(), odbiorca: odbiorcaTekstu(), uzupelnia: useWeb });
+    systemPrompt += blokRzetelnosci({ ton: tonKanoniczny(), odbiorca: odbiorcaTekstu(), uzupelnia: useWeb, frazy: frazy, prasowa: isPress });
     // Kontrola faktow musi wiedziec, w jakim trybie powstal tekst: przy
     // wlaczonym uzupelnianiu czesc twierdzen spoza bazy jest dozwolona
     // i nazywa sie inaczej niz zwykle naciagniecie zrodla.
@@ -9677,6 +9850,7 @@ function previewHistory(i) {
     pokazStanSieci(null, 0);
     // Wynik kontroli faktow tez dotyczyl poprzedniego artykulu.
     faktyWynik = null;
+    faktyDodatki = null;
     faktySygnatura = '';
     gapOpen = false;
     const gp = document.getElementById('gap-panel');
@@ -10280,6 +10454,9 @@ let zrodlaSieciowe = [];        // adresy, z ktorych model skorzystal
 let stanSieci = null;           // ile zapytan i przypisow; null = bez sieci
 let faktyWynik = null;          // ostatni wynik, zeby nie liczyc dwa razy
 let faktySygnatura = '';        // dla jakiego artykulu (i jakich zrodel) policzony
+// Runda B: to, co kontrola mowi poza lista uwag - pochodzenie twierdzen { zrodla, model } i fakty z Bazy,
+// ktorych tekst nie uzyl [{ fakt, zrodlo, gdzie }]. Zerowane razem z faktyWynik.
+let faktyDodatki = null;
 // Do czego odnosi sie faktyWynik: 'gotowe' (tresc zestawiona ze zrodlami),
 // 'brak-zrodel' (sprawdzone tylko odnosniki) albo 'blad' (model nie odpowiedzial).
 // Stan idzie razem z wynikiem do kazdego rysowania - wczesniej ponowne otwarcie
@@ -10435,6 +10612,7 @@ async function uruchomKontroleFaktow(wymus) {
     koniecWToku();
     if (moj !== faktyPrzebieg) return;
     faktyWynik = uwagiLinkow;
+    faktyDodatki = null;
     faktySygnatura = sygnatura;
     faktyStan = 'brak-zrodel';
     faktyWzgledemSieci = false;
@@ -10457,11 +10635,32 @@ async function uruchomKontroleFaktow(wymus) {
   // R7-I: tryb "z siecia" tylko wtedy, gdy byly strony z sieci. Przelacznik wlaczony, a model
   // nie szukal (pasek "Siec: bez wyszukiwania") = porownanie z samymi dokumentami.
   const zSiecia = trybUzupelniania && sieciowe.length > 0;
+  // Runda B (agencja, 2026-11-06): kontrola pytala, czy zdanie jest nieprawda, a nie, skad jest. Pola formularza
+  // (imie, e-mail, numer podatkowy, telefon), ktorych zrodlo nie wymienialo, przeszly, bo nie byly falszem i nie mialy
+  // liczb ("Common-knowledge statements with no figures are not findings"). Teraz kazde twierdzenie o temacie ma
+  // pochodzenie: zrodlo albo wiedza modelu ("model"). Do tego ogolnik tam, gdzie zrodlo podaje konkret ("limity
+  // wymiarow sa inne", a zrodlo podaje wymiary), i test w druga strone: fakty z Bazy, ktorych tekst nie uzyl. Druga
+  // strona tylko wzgledem dokumentow z Bazy - strony z sieci sa tu krotkimi fragmentami, nie calym zrodlem.
+  const wDrugaStrone = !tylkoSiec;
+  const sekcjeArtykulu = wDrugaStrone
+    ? Array.from(kopiaDoStatystyk(art).querySelectorAll('h2, h3')).map(function (h) { return (h.textContent || '').replace(/\s+/g, ' ').trim(); }).filter(Boolean)
+    : [];
   const system = 'You are a fact checker reviewing an article against the sources it was '
     + 'written from. You are not an editor: do not rewrite anything, do not praise anything.\n'
-    + 'Report ONLY problems, in these ' + (sieciowe.length ? 'six' : 'five') + ' categories:\n'
+    + 'Check WHERE every statement comes from, not only whether it is true. A statement that is plausible '
+    + 'or even correct, but that no source states, comes from the model\'s own knowledge, and the reader '
+    + 'cannot tell it apart from what the sources say.\n'
+    + 'Report ONLY problems, in these ' + (sieciowe.length ? 'eight' : 'seven') + ' categories:\n'
     + '  "liczba"    - a number, price, rate, date, deadline, weight or dimension that '
-    + 'does not appear in the sources, or appears there with a different value.\n'
+    + 'does not appear in the sources, or appears there with a different value (then give '
+    + '"zrodlo": the passage with the value the source states).\n'
+    + '  "model"     - a specific statement about what the article describes (the product or service, '
+    + 'a procedure and its steps, a form and its fields, a required document or piece of data, a condition, '
+    + 'an option, a channel, a limit) that no source states, even when it sounds plausible or is generally '
+    + 'true. A figure goes under "liczba", a named event, person or study under "brak".\n'
+    + '  "ogolnik"   - a vague phrase where a source states the concrete value ("the limits are different", '
+    + '"other rules apply", "within the set time" while a source gives the dimensions, the rule or the '
+    + 'deadline). Give "zrodlo": the exact passage of the SOURCES with that value, max 160 characters.\n'
     + '  "zakres"    - a claim that stretches a source fact beyond what it says: a '
     + 'different country, a different product, a different kind of customer, a legal or '
     + 'tax rule the sources never state.\n'
@@ -10498,13 +10697,29 @@ async function uruchomKontroleFaktow(wymus) {
         : 'MODE: the article was written from the knowledge base ONLY, so anything not '
           + 'traceable to the sources is a finding.\n')
     + 'Judge ONLY against the supplied sources. General knowledge is not evidence. '
-    + 'Common-knowledge statements with no figures are not findings. If everything checks '
-    + 'out, return an empty list - an empty list is a valid and expected answer.\n'
+    + 'Background that says nothing specific about the subject (what an invoice or a parcel is, that prices '
+    + 'change over time) is not a finding. Every specific statement about the subject is checked, with or '
+    + 'without figures. If everything checks out, return an empty list - an empty list is a valid and expected answer.\n'
+    + 'Count where the claims come from: in "pochodzenie" give "zrodla", the number of factual claims in the '
+    + 'article that the sources support, and "model", the number that no source supports (all of them, also '
+    + 'those beyond the findings you list). Count each claim once.\n'
+    + (wDrugaStrone
+        ? 'Then check the other direction. In "niewykorzystane" list up to 5 concrete facts from the KNOWLEDGE '
+          + 'BASE that the article does not use at all and that its reader needs: a value, a limit, a condition, '
+          + 'a deadline, a requirement or an option on the article\'s own topic. Skip what the article already '
+          + 'says in other words and facts on other topics. For each give "fakt": the fact in one sentence in '
+          + jezykUwag + ', "zrodlo": the exact passage of the knowledge base, max 160 characters, and "gdzie": '
+          + 'the heading from ARTICLE SECTIONS where it belongs, copied exactly, or "" when none fits. '
+          + 'An empty list is a valid answer.\n'
+        : '')
     + 'Respond ONLY with valid JSON, no markdown, no preamble:\n'
-    + '{"uwagi":[{"rodzaj":"liczba|brak|zakres|sprzecznosc|konflikt' + (sieciowe.length ? '|strona' : '')
+    + '{"uwagi":[{"rodzaj":"liczba|model|ogolnik|brak|zakres|sprzecznosc|konflikt' + (sieciowe.length ? '|strona' : '')
     + '","cytat":"the exact fragment from the article, max 120 characters","powod":"one sentence in '
-    + jezykUwag + ', max 140 characters"' + (sieciowe.length ? ',"strona":1' : '') + '}]}\n'
-    + (sieciowe.length ? 'The "strona" field only for rodzaj "strona".\n' : '')
+    + jezykUwag + ', max 140 characters","zrodlo":"the passage of the sources"' + (sieciowe.length ? ',"strona":1' : '') + '}]'
+    + ',"pochodzenie":{"zrodla":0,"model":0}'
+    + (wDrugaStrone ? ',"niewykorzystane":[{"fakt":"...","zrodlo":"...","gdzie":"..."}]' : '') + '}\n'
+    + 'The "zrodlo" field only for rodzaj "ogolnik" and for "liczba" when a source states a different value.'
+    + (sieciowe.length ? ' The "strona" field only for rodzaj "strona".' : '') + '\n'
     + 'Max 12 findings, most serious first.'
     + blokInterpunkcji();
 
@@ -10522,7 +10737,8 @@ async function uruchomKontroleFaktow(wymus) {
         model: MODEL_TRESCI,
         // Tu myslenie zostaje wlaczone: zestawienie liczby z artykulu
         // z tabela w zrodle to dokladnie ta praca, ktora na nim zyskuje.
-        max_tokens: zRezerwa(2000),
+        // Runda B: 3000 zamiast 2000 - doszly cytaty ze zrodel, pochodzenie i fakty niewykorzystane.
+        max_tokens: zRezerwa(3000),
         system: system,
         messages: [{ role: 'user', content:
           'SOURCES:\n' + (tylkoSiec
@@ -10536,6 +10752,9 @@ async function uruchomKontroleFaktow(wymus) {
                       + (z.fragmenty || []).map(function (f) { return '\n  > "' + f + '"'; }).join('');
                   }).join('\n').slice(0, 40000)
               : '')
+          // Runda B: naglowki sekcji, zeby fakt niewykorzystany wskazal, gdzie pasuje (przed ARTICLE:, bo po nim jest tylko tekst).
+          + (sekcjeArtykulu.length ? '\n\n---\n\nARTICLE SECTIONS (the headings of the article, in order):\n'
+              + sekcjeArtykulu.map(function (h) { return '- ' + h; }).join('\n').slice(0, 4000) : '')
           + '\n\n---\n\nARTICLE:\n' + tekstArtykulu.slice(0, 40000) }]
       })
     });
@@ -10549,7 +10768,10 @@ async function uruchomKontroleFaktow(wymus) {
     const odczyt = parsujJsonModelu((dane.content || []).map(function (b) { return b.text || ''; }).join(''));
     // Uwagi policzone maszynowo ida na poczet listy: sa pewne, a uwagi
     // modelu sa oceną. R7-I: "strona" dostaje adres z listy stron (albo wraca do twardej kategorii).
-    faktyWynik = uwagiLinkow.concat(uwagiZeStronami(Array.isArray(odczyt.uwagi) ? odczyt.uwagi : [], sieciowe));
+    // Runda B: pochodzenie liczone z tej samej listy, ktora widac ("strona" bez strony z listy wraca jako liczba albo brak).
+    const uwagiModelu = uwagiZeStronami(Array.isArray(odczyt.uwagi) ? odczyt.uwagi : [], sieciowe);
+    faktyWynik = uwagiLinkow.concat(uwagiModelu);
+    faktyDodatki = dodatkiFaktow(odczyt, uwagiModelu, wDrugaStrone);
     faktySygnatura = sygnatura;
     faktyStan = 'gotowe';
     faktyWzgledemSieci = tylkoSiec;
@@ -10561,6 +10783,7 @@ async function uruchomKontroleFaktow(wymus) {
     const uwagiLinkow = await obietnicaLinkow.catch(function () { return badanie.uwagi; });
     if (moj !== faktyPrzebieg) return;
     faktyWynik = uwagiLinkow;
+    faktyDodatki = null;
     faktySygnatura = sygnatura;
     faktyStan = 'blad';
     faktyWzgledemSieci = false;
@@ -10572,7 +10795,7 @@ async function uruchomKontroleFaktow(wymus) {
 }
 
 const IKONY_UWAG = {
-  liczba: '🔢', brak: '🔎', zakres: '↔️', sprzecznosc: '⚠️', konflikt: '🏳️', strona: '🌐',
+  liczba: '🔢', model: '🤖', ogolnik: '🎯', brak: '🔎', zakres: '↔️', sprzecznosc: '⚠️', konflikt: '🏳️', strona: '🌐',
   'link-obcy': '🔗', 'link-sciezka': '🔗', 'link-martwy': '💀', 'link-niesprawdzony': '❔',
   'link-kotwica': '✍️', 'link-powtorka': '✍️', 'link-pusty': '✍️',
 };
@@ -10584,6 +10807,93 @@ function uwagiWedlugWagi(uwagi) {
   return uwagi.map(function (u, i) { return { u: u, i: i, w: WAGA_UWAG[String((u && u.rodzaj) || '').toLowerCase()] || 0 }; })
     .sort(function (a, b) { return (a.w - b.w) || (a.i - b.i); })
     .map(function (x) { return x.u; });
+}
+
+// Runda B: pochodzenie twierdzen i fakty z Bazy, ktorych tekst nie uzyl. Liczby od modelu zgadzamy z jego lista:
+// pelna lista (mniej niz 12 uwag) wymienia kazde zdanie bez pokrycia, wiec "z wiedzy modelu" to tyle, ile ich na
+// niej jest. Dopiero lista ucieta na 12 moze miec ich wiecej niz widac - wtedy liczba modelu, nie mniejsza niz lista.
+// Bez pokrycia sa tez twierdzenia szersze niz zrodlo ("zakres"): rozszerzenia (inny kraj, produkt, klient) zrodlo nie
+// podaje. Ogolnik jest ze zrodla (tylko niedokladnie), sprzecznosc, konflikt i "strona" nie mowia o pochodzeniu.
+const RODZAJE_BEZ_POKRYCIA = ['liczba', 'model', 'brak', 'zakres'];
+const MAKS_UWAG_FAKTOW = 12;
+function dodatkiFaktow(odczyt, uwagi, wDrugaStrone) {
+  const ile = function (x) { const n = parseInt(x, 10); return n > 0 ? Math.min(n, 9999) : 0; };
+  const lista = Array.isArray(uwagi) ? uwagi.filter(Boolean) : [];
+  const naLiscie = lista.filter(function (u) { return RODZAJE_BEZ_POKRYCIA.indexOf(String(u.rodzaj || '').toLowerCase()) !== -1; }).length;
+  const p = odczyt && odczyt.pochodzenie;
+  let pochodzenie = null;
+  if (p && typeof p === 'object') {
+    const zrodla = ile(p.zrodla);
+    const model = lista.length < MAKS_UWAG_FAKTOW ? naLiscie : Math.max(ile(p.model), naLiscie);
+    if (zrodla + model > 0) pochodzenie = { zrodla: zrodla, model: model };
+  }
+  const tekst = function (x) { return String(x == null ? '' : x).replace(/\s+/g, ' ').trim(); };
+  const niewykorzystane = wDrugaStrone && odczyt && Array.isArray(odczyt.niewykorzystane)
+    ? odczyt.niewykorzystane.filter(function (n) { return n && tekst(n.fakt); }).slice(0, 5)
+      .map(function (n) { return { fakt: tekst(n.fakt), zrodlo: tekst(n.zrodlo), gdzie: tekst(n.gdzie) }; })
+    : [];
+  return { pochodzenie: pochodzenie, niewykorzystane: niewykorzystane };
+}
+
+// Cytat w cudzyslowie jezyka interfejsu (jak cytat z artykulu w uwadze).
+function cytatFaktow(t) {
+  return (currentLang === 'en' ? '“' : '„') + escapeHtml(String(t || '')) + '”';
+}
+
+// Runda B: "Pochodzenie twierdzen" nad lista uwag - cienki pasek dwoch czesci (zielona: ze zrodel, pomaranczowa:
+// z wiedzy modelu) i legenda z liczbami. Kolor nigdy sam: kazda czesc ma w legendzie ikone, nazwe i liczbe.
+function htmlPochodzenia(p) {
+  if (!p || !(p.zrodla + p.model > 0)) return '';
+  const razem = p.zrodla + p.model;
+  const zr = _t('fakty-poch-zrodla').replace('{n}', String(p.zrodla));
+  const md = _t('fakty-poch-model').replace('{n}', String(p.model));
+  const czesc = function (klasa, n, opis) {
+    return n > 0 ? '<span class="' + klasa + '" style="flex-grow:' + n + '" title="' + escapeHtml(opis) + '"></span>' : '';
+  };
+  return '<div class="fakty-pochodzenie">'
+    + '<div class="panel-podtytul fakty-poch-tytul">' + escapeHtml(_t('fakty-pochodzenie')) + '</div>'
+    + '<div class="fakty-poch-pasek" role="img" aria-label="' + escapeHtml(zr + ', ' + md + ' (' + razem + ')') + '">'
+    + czesc('fakty-poch-z', p.zrodla, zr) + czesc('fakty-poch-m', p.model, md) + '</div>'
+    + '<div class="fakty-poch-legenda">'
+    + '<span class="fakty-poch-poz">' + ikona('circle-check', 'fakty-poch-ik-z') + escapeHtml(zr) + '</span>'
+    + '<span class="fakty-poch-poz">' + ikona('bot', 'fakty-poch-ik-m') + escapeHtml(md) + '</span>'
+    + '</div>'
+    + (p.model ? '<div class="tekst-pomoc">' + escapeHtml(_t('fakty-poch-opis')) + '</div>' : '')
+    + '</div>';
+}
+
+// Runda B: fakty z Bazy, ktorych tekst nie uzyl - do zaznaczenia i dopisania jednym przyciskiem.
+function htmlNiewykorzystanych(lista) {
+  if (!lista || !lista.length) return '';
+  return '<div class="fakty-niewyk" id="fakty-niewyk">'
+    + '<div class="panel-podtytul akcent">' + escapeHtml(_t('fakty-niewyk-tytul').replace('{n}', String(lista.length))) + '</div>'
+    + '<div class="tekst-pomoc" style="margin-bottom:6px">' + escapeHtml(_t('fakty-niewyk-opis')) + '</div>'
+    + lista.map(function (n, i) {
+      return '<label class="fakty-niewyk-item">'
+        + '<input type="checkbox" class="fakty-niewyk-check" data-i="' + i + '" checked onchange="odswiezPrzyciskDopisz()">'
+        + '<span class="fakty-niewyk-tekst"><span class="fakty-niewyk-fakt">' + escapeHtml(bezSrednikowTekst(n.fakt)) + '</span>'
+        + (n.zrodlo ? '<span class="fakty-niewyk-zrodlo">' + escapeHtml(_t('fakty-w-zrodle')) + ' ' + cytatFaktow(n.zrodlo) + '</span>' : '')
+        + (n.gdzie ? '<span class="fakty-niewyk-gdzie">' + escapeHtml(_t('fakty-niewyk-gdzie').replace('{h}', n.gdzie)) + '</span>' : '')
+        + '</span></label>';
+    }).join('')
+    + '<button type="button" id="fakty-dopisz-btn" class="btn-secondary btn-pelny" style="margin-top:8px" onclick="dopiszNiewykorzystane()">'
+    + ikona('plus') + '<span class="fakty-dopisz-napis">' + escapeHtml(_t('fakty-dopisz').replace('{n}', String(lista.length))) + '</span></button>'
+    + '<div class="tekst-pomoc" style="margin-top:4px">' + escapeHtml(_t('fakty-dopisz-opis')) + '</div>'
+    + '</div>';
+}
+function zaznaczoneNiewykorzystane() {
+  const lista = (faktyDodatki && faktyDodatki.niewykorzystane) || [];
+  return Array.from(document.querySelectorAll('#fakty-wynik .fakty-niewyk-check'))
+    .filter(function (c) { return c.checked; })
+    .map(function (c) { return lista[Number(c.dataset.i)]; }).filter(Boolean);
+}
+function odswiezPrzyciskDopisz() {
+  const btn = document.getElementById('fakty-dopisz-btn');
+  if (!btn || redaktorPoFaktach.trwa) return;
+  const n = zaznaczoneNiewykorzystane().length;
+  btn.disabled = n === 0;
+  const napis = btn.querySelector('.fakty-dopisz-napis');
+  if (napis) napis.textContent = _t('fakty-dopisz').replace('{n}', String(n));
 }
 
 // R7-I: uwaga "strona" (model: twierdzenie pochodzi ze strony z sieci, ale cytowany fragment jest
@@ -10677,10 +10987,16 @@ function pokazWynikFaktow(uwagi, stan) {
       + escapeHtml(_t(stanSieci && stanSieci.szukan > 0 ? 'fakty-siec-bez-stron' : 'fakty-siec-bez-szukania')) + '</div>';
   }
 
+  // Runda B: pochodzenie twierdzen nad lista i fakty z Bazy, ktorych tekst nie uzyl, pod nia - tylko przy wyniku
+  // zestawionym ze zrodlami (bez zrodel i po bledzie model niczego nie liczyl).
+  const dodatki = stan === 'gotowe' && faktyDodatki ? faktyDodatki : null;
+  const pochodzenie = dodatki ? htmlPochodzenia(dodatki.pochodzenie) : '';
+  const niewykorzystane = dodatki ? htmlNiewykorzystanych(dodatki.niewykorzystane) : '';
+
   if (!uwagi.length) {
     wynikEl.innerHTML = stan === 'gotowe'
-      ? '<div style="color:var(--c-sukces);font-weight:600">' + escapeHtml(_t('fakty-czysto')) + '</div>'
-        + '<div style="color:var(--text3);margin-top:6px">' + escapeHtml(_t('fakty-czysto-opis')) + '</div>' + stopka
+      ? pochodzenie + '<div style="color:var(--c-sukces);font-weight:600">' + escapeHtml(_t('fakty-czysto')) + '</div>'
+        + '<div style="color:var(--text3);margin-top:6px">' + escapeHtml(_t('fakty-czysto-opis')) + '</div>' + niewykorzystane + stopka
       : pusty + stopka;
     return;
   }
@@ -10692,7 +11008,7 @@ function pokazWynikFaktow(uwagi, stan) {
       + ikona('pen-line') + escapeHtml(_t('fakty-popraw').replace('{n}', String(doPoprawy))) + '</button>'
       + '<div class="tekst-pomoc" style="margin-bottom:12px">' + escapeHtml(_t('fakty-popraw-opis')) + '</div>'
     : '';
-  wynikEl.innerHTML = pusty +
+  wynikEl.innerHTML = pusty + pochodzenie +
     '<div style="margin-bottom:8px;color:var(--text2)">'
     + escapeHtml(_t('fakty-znaleziono').replace('{n}', String(uwagi.length))) + '</div>'
     + poprawa
@@ -10710,62 +11026,62 @@ function pokazWynikFaktow(uwagi, stan) {
           ? '<div class="fakty-adres" style="margin:3px 0">' + linkUwagi(cytat.trim()) + '</div>'
           : '<div style="margin:3px 0;font-style:italic;color:var(--text2);overflow-wrap:anywhere">' + (currentLang === 'en' ? '“' : '„') + escapeHtml(cytat) + '”</div>')
         + '<div>' + escapeHtml(bezSrednikowTekst(String(u.powod || '')) || _t('fakty-powod-' + rodzaj) || '') + '</div>'
+        // Runda B: ogolnik (i liczba z inna wartoscia w zrodle) z fragmentem zrodla, ktory podaje konkret.
+        + (String(u.zrodlo || '').trim() && (rodzaj === 'ogolnik' || rodzaj === 'liczba')
+          ? '<div class="fakty-w-zrodle">' + escapeHtml(_t('fakty-w-zrodle')) + ' ' + cytatFaktow(String(u.zrodlo).trim()) + '</div>' : '')
         + (linkStrony ? '<div class="fakty-adres" style="margin-top:4px">' + linkStrony + '</div>' : '')
         + '</div>';
-    }).join('') + stopka;
+    }).join('') + niewykorzystane + stopka;
 }
 
 // Runda A (2026-10-12): "Popraw zdania bez zrodla". Artykul o astrobiologii mial 11 uwag, z czego 8 to zdania,
 // ktorych nie podawalo zadne ze zrodel. Model usuwa albo lagodzi wskazany szczegol (reguly przepisywania: zadnego
 // nowego faktu), wynik to nowa wersja artykulu, a kontrola faktow liczy sie od nowa. "Sprawdz na stronie"
 // i uwagi o odnosnikach zostaja dla czlowieka: tam zrodlo jest, tylko trzeba je obejrzec.
-const RODZAJE_DO_POPRAWY = ['liczba', 'brak', 'zakres', 'sprzecznosc', 'konflikt'];
+// Runda B (2026-11-06): do poprawy ida tez zdania "z wiedzy modelu" (pola formularza, kroki, wymagania bez zrodla),
+// a ogolnik i liczba z inna wartoscia w zrodle niosa fragment zrodla - redaktor wstawia z niego konkret, nie usuwa.
+const RODZAJE_DO_POPRAWY = ['liczba', 'model', 'ogolnik', 'brak', 'zakres', 'sprzecznosc', 'konflikt'];
 function uwagiDoPoprawy(uwagi) {
   return (Array.isArray(uwagi) ? uwagi : []).filter(function (u) {
-    return u && RODZAJE_DO_POPRAWY.indexOf(String(u.rodzaj || '').toLowerCase()) !== -1 && String(u.cytat || '').trim();
+    const rodzaj = u ? String(u.rodzaj || '').toLowerCase() : '';
+    return u && RODZAJE_DO_POPRAWY.indexOf(rodzaj) !== -1 && String(u.cytat || '').trim()
+      // ogolnik bez fragmentu zrodla nie ma czym zastapic ogolnego slowa - zostaje do przeczytania
+      && (rodzaj !== 'ogolnik' || String(u.zrodlo || '').trim());
   });
 }
-async function poprawZdaniaBezZrodla() {
+
+// Wspolna droga redaktora po kontroli faktow ("Popraw wskazane zdania", "Dopisz do tekstu"): artykul bez listy
+// zrodel idzie do modelu z lista zadan, wynik wraca jako nowa wersja (artykul z Historii dostaje najpierw wersje
+// oryginalu do porownania), a kontrola faktow liczy sie od nowa. Jeden redaktor naraz: oba przyciski czekaja.
+// o: { btn, ikona, napis() (HTML napisu przycisku), pracuje, system, zadania, wersja, gotowe, blad, ile }
+async function redaktorPoFaktach(o) {
   const art = document.getElementById('article');
-  const uwagi = uwagiDoPoprawy(faktyWynik);
-  if (!art || !art.innerHTML.trim() || !uwagi.length || poprawZdaniaBezZrodla.trwa) return;
-  poprawZdaniaBezZrodla.trwa = true;
-  const btn = document.getElementById('fakty-popraw-btn');
-  if (btn) { btn.disabled = true; btn.classList.add('btn-working'); btn.textContent = _t('fakty-poprawiam'); }
+  if (!art || !art.innerHTML.trim() || redaktorPoFaktach.trwa) return false;
+  redaktorPoFaktach.trwa = true;
+  const btn = document.getElementById(o.btn);
+  const przyciski = ['fakty-popraw-btn', 'fakty-dopisz-btn'].map(function (id) { return document.getElementById(id); }).filter(Boolean);
+  przyciski.forEach(function (b) { b.disabled = true; });
+  if (btn) { btn.classList.add('btn-working'); btn.textContent = _t(o.pracuje); }
   try {
     const przedHtml = htmlDoZapisu(art);
     const kopia = art.cloneNode(true);
     const box = kopia.querySelector('.zrodla-box');
     const boxHtml = box ? box.outerHTML : '';
     if (box) box.remove();
-    const lista = uwagi.map(function (u, i) {
-      return (i + 1) + '. "' + String(u.cytat).replace(/\s+/g, ' ').trim() + '" - ' + String(u.powod || '').replace(/\s+/g, ' ').trim();
-    }).join('\n');
     const slowa = liczbaSlowArtykulu(art);
-    const system = 'You are a fact-checking editor. A fact check compared the article with its sources and found the '
-      + 'fragments listed under FINDINGS without support. Fix ONLY those places:\n'
-      + '- Remove the unsupported detail (name, figure, date, event, study, attribution). If nothing verifiable is '
-      + 'left of the sentence, remove the whole sentence. Smooth the neighbouring sentence only as much as the cut needs.\n'
-      + '- Remove the same detail wherever the article repeats it (summary list, table, meta description).\n'
-      + '- A contradiction inside the article: keep the statement the rest of the text supports, or drop both.\n'
-      + '- A recommendation of a competitor: remove the recommendation.\n'
-      + '- Do not rewrite anything else. Keep every heading, link, list, table, the meta description block '
-      + '(class="meta-box") and the order of sections exactly as they are.\n'
-      + 'Return ONLY the complete corrected article HTML, no markdown fences, no comments.'
-      + blokPrzepisywania();
     const res = await apiFetch({
       doArtykulu: true, // koszt tego tekstu w Historii
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, max_tokens: zRezerwa(Math.min(16000, Math.max(getMaxTokens(), Math.ceil(slowa * 3.5) + 800))),
-        system: system,
-        messages: [{ role: 'user', content: 'FINDINGS (fragments quoted from the article):\n' + lista + '\n\nARTICLE (HTML):\n' + kopia.innerHTML }] }),
+        system: o.system,
+        messages: [{ role: 'user', content: o.zadania + '\n\nARTICLE (HTML):\n' + kopia.innerHTML }] }),
     });
     const data = await res.json();
     if (!res.ok || data.error) throw bladOdpowiedzi(data, res.status);
     let html = (data.content || []).map(function (b) { return b.text || ''; }).join('')
       .replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
-    if (!html) throw new Error(_t('fakty-poprawa-blad'));
+    if (!html) throw new Error(_t(o.blad));
     html = bezSrednikow(oczyscHtmlModelu(html));
     if (kodJezykaArtykulu() === 'pl') html = html.replace(/[—–]/g, '-');
     html = wstawBlokZrodel(html, boxHtml);
@@ -10775,18 +11091,85 @@ async function poprawZdaniaBezZrodla() {
     uporzadkujArtykul(art);
     currentText = tekstBlokami(art);
     showArticleStats(art.innerHTML);
-    addVersion(htmlDoZapisu(art), etykietaWersji(_t('ver-fakty')));
+    addVersion(htmlDoZapisu(art), etykietaWersji(_t(o.wersja)));
     if (typeof zapiszRecznePoprawki === 'function') zapiszRecznePoprawki();
-    pokazPowiadomienie(_t('fakty-poprawione').replace('{n}', String(uwagi.length)), 'ok');
+    pokazPowiadomienie(_t(o.gotowe).replace('{n}', String(o.ile)), 'ok');
     faktyWynik = null;
+    faktyDodatki = null;
     faktySygnatura = '';
     uruchomKontroleFaktow(true);
+    return true;
   } catch (e) {
-    if (!(e && e.name === 'AbortError')) powiadomBladApi(e, null, null, _t('fakty-poprawa-blad'));
-    if (btn && btn.isConnected) { btn.disabled = false; btn.classList.remove('btn-working'); btn.innerHTML = ikona('pen-line') + escapeHtml(_t('fakty-popraw').replace('{n}', String(uwagi.length))); }
+    if (!(e && e.name === 'AbortError')) powiadomBladApi(e, null, null, _t(o.blad));
+    if (btn && btn.isConnected) { btn.classList.remove('btn-working'); btn.innerHTML = ikona(o.ikona) + o.napis(); }
+    przyciski.forEach(function (b) { if (b.isConnected) b.disabled = false; });
+    return false;
   } finally {
-    poprawZdaniaBezZrodla.trwa = false;
+    redaktorPoFaktach.trwa = false;
+    // Dopisz liczy zaznaczone fakty (po bledzie wraca stan zaznaczenia, nie pierwotna liczba).
+    odswiezPrzyciskDopisz();
   }
+}
+
+async function poprawZdaniaBezZrodla() {
+  const uwagi = uwagiDoPoprawy(faktyWynik);
+  if (!uwagi.length) return;
+  const jedna = function (t) { return String(t || '').replace(/\s+/g, ' ').trim(); };
+  const lista = uwagi.map(function (u, i) {
+    const zrodlo = /^(ogolnik|liczba)$/.test(String(u.rodzaj || '').toLowerCase()) ? jedna(u.zrodlo) : '';
+    return (i + 1) + '. "' + jedna(u.cytat) + '" - ' + jedna(u.powod) + (zrodlo ? '\n   SOURCE: "' + zrodlo + '"' : '');
+  }).join('\n');
+  const system = 'You are a fact-checking editor. A fact check compared the article with its sources and found the '
+    + 'fragments listed under FINDINGS without support. Fix ONLY those places:\n'
+    + '- Remove the unsupported detail (name, figure, date, event, study, attribution, or a step, form field, '
+    + 'requirement, document or option that no source lists). If nothing verifiable is '
+    + 'left of the sentence, remove the whole sentence. Smooth the neighbouring sentence only as much as the cut needs.\n'
+    // Runda B: ogolnik ("limity sa inne") i liczba inna niz w zrodle - fragment zrodla podaje wartosc.
+    + '- A finding with a SOURCE line: the source states the concrete value. Replace the vague or wrong wording with '
+    + 'that value, copied exactly from the SOURCE passage (the same figures and units), and keep the rest of the '
+    + 'sentence. This is the one exception to the rule against adding facts: the value comes from the sources, not from you.\n'
+    + '- Remove the same detail wherever the article repeats it (summary list, table, meta description).\n'
+    + '- A contradiction inside the article: keep the statement the rest of the text supports, or drop both.\n'
+    + '- A recommendation of a competitor: remove the recommendation.\n'
+    + '- Do not rewrite anything else. Keep every heading, link, list, table, the meta description block '
+    + '(class="meta-box") and the order of sections exactly as they are.\n'
+    + 'Return ONLY the complete corrected article HTML, no markdown fences, no comments.'
+    + blokPrzepisywania();
+  await redaktorPoFaktach({ btn: 'fakty-popraw-btn', ikona: 'pen-line', pracuje: 'fakty-poprawiam',
+    napis: function () { return escapeHtml(_t('fakty-popraw').replace('{n}', String(uwagi.length))); },
+    system: system, zadania: 'FINDINGS (fragments quoted from the article):\n' + lista,
+    wersja: 'ver-fakty', gotowe: 'fakty-poprawione', blad: 'fakty-poprawa-blad', ile: uwagi.length });
+}
+
+// Runda B: "Dopisz do tekstu" - fakty z Bazy, ktorych tekst nie uzyl (test w druga strone). Redaktor wplata tylko
+// zaznaczone, doslownie jak w zrodle i w sekcji, ktora wskazala kontrola. Nic innego nie dopisuje.
+async function dopiszNiewykorzystane() {
+  const wybrane = zaznaczoneNiewykorzystane();
+  if (!wybrane.length) return;
+  const jedna = function (t) { return String(t || '').replace(/\s+/g, ' ').trim(); };
+  const lista = wybrane.map(function (n, i) {
+    return (i + 1) + '. FACT: ' + jedna(n.fakt)
+      + (n.zrodlo ? '\n   SOURCE: "' + jedna(n.zrodlo) + '"' : '')
+      + (n.gdzie ? '\n   SECTION: "' + jedna(n.gdzie) + '"' : '');
+  }).join('\n');
+  const system = 'You are an editor adding facts from the sources to an article. A fact check found facts in the '
+    + 'knowledge base that the reader needs and the article does not use. Add ONLY the facts listed under FACTS:\n'
+    + '- Put each fact into its SECTION, next to the sentences on the same matter, as one or two sentences in the '
+    + 'language and tone of the article. With no SECTION, or one the article does not have, put it where a reader '
+    + 'would look for it.\n'
+    + '- State each fact exactly as its SOURCE passage does: the same figures, units and conditions. Do not round, '
+    + 'generalise or extend it.\n'
+    + '- If the article already says the same thing vaguely ("the limits are different"), replace that wording with '
+    + 'the fact instead of adding a second sentence.\n'
+    + '- Add nothing else: no other fact, figure, name or claim, and no new section unless a fact fits nowhere else.\n'
+    + '- Do not rewrite anything else. Keep every heading, link, list, table, the meta description block '
+    + '(class="meta-box") and the order of sections exactly as they are.\n'
+    + 'Return ONLY the complete article HTML, no markdown fences, no comments.'
+    + blokInterpunkcji();
+  await redaktorPoFaktach({ btn: 'fakty-dopisz-btn', ikona: 'plus', pracuje: 'fakty-dopisuje',
+    napis: function () { return '<span class="fakty-dopisz-napis">' + escapeHtml(_t('fakty-dopisz').replace('{n}', String(wybrane.length))) + '</span>'; },
+    system: system, zadania: 'FACTS (from the knowledge base, missing from the article):\n' + lista,
+    wersja: 'ver-dopisane', gotowe: 'fakty-dopisane', blad: 'fakty-dopisz-blad', ile: wybrane.length });
 }
 
 // ─── ARTICLE STATS ────────────────────────────────────────────────────────────
@@ -10902,6 +11285,7 @@ function wyczyscStanArtykulu() {
   const przerobka = document.getElementById('repurpose-out');
   if (przerobka) przerobka.value = '';
   faktyWynik = null;
+  faktyDodatki = null;
   faktySygnatura = '';
   faktyStan = '';
   const fakty = document.getElementById('fakty-wynik');
@@ -13074,7 +13458,8 @@ async function improveFromGaps() {
     // Te same zrodla i reguly co glowne generowanie. Luka z SERP-a to temat, ktorego
     // w artykule nie ma; bez zrodla model by go zmyslil, wiec temat bez pokrycia pomija.
     system: `You are an SEO editor. Write ALL new content in ${outLang} (regardless of the language of the topic or keywords). Write ONLY the new HTML sections requested, then (if instructed) an updated summary section. No markdown fences, no preamble, no repetition of existing content.`
-      + blokFaktow(zSiecia) + blokZakresu() + blokKonfliktu() + blokRytmu() + blokTonu(tonKanoniczny())
+      + blokFaktow(zSiecia) + blokKonkretu() + blokZakresu() + blokKonfliktu() + blokRytmu() + blokTonu(tonKanoniczny())
+      + blokNaglowkow(kontekstArtykulu().frazy)
       + '\n\nA GAP IS NOT A LICENCE TO INVENT. These topics come from search results, not from the sources. '
       + (zSiecia
         ? 'Use the knowledge base first; where it is silent, SEARCH the web for the topic and write the section from what you find, so every fact can be traced to a page. '
@@ -13746,7 +14131,7 @@ async function toggleSeoPanel(forceRefresh = false) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({ model: MODEL_TRESCI, output_config: WYSILEK_OCENY, max_tokens: zRezerwaOceny(600),
-        system: 'You are a content SEO expert evaluating AI-generated content from a company knowledge base. Evaluate ONLY content-level SEO. Respond ONLY with valid JSON, no markdown fences: {"score": 0-100, "items": [{"ok": true/false, "text": "short observation in ' + (currentLang === 'en' ? 'English' : 'Polish') + ', max ' + DLUGOSC_UWAGI_OCENY + ' chars"}]}. Give exactly 5 items covering: 1) keyword usage in H1/H2/body text, 2) heading structure quality, 3) article completeness - has BLUF (number in first paragraph), body sections AND Kluczowe wnioski with metrics, 4) meta description quality, 5) brand SALIENCE - is the main brand/product named specifically (not generic "branża") at least once per H2 section. CRITICAL: Do NOT penalize for: missing prices/case studies/competitor data, internal links, technical SEO, backlinks, page title.' + regulaJezykaUwag(),
+        system: 'You are a content SEO expert evaluating AI-generated content from a company knowledge base. Evaluate ONLY content-level SEO. Respond ONLY with valid JSON, no markdown fences: {"score": 0-100, "items": [{"ok": true/false, "text": "short observation in ' + (currentLang === 'en' ? 'English' : 'Polish') + ', max ' + DLUGOSC_UWAGI_OCENY + ' chars"}]}. Give exactly 5 items covering: 1) keyword usage in H1/H2/body text, 2) heading structure quality, 3) article completeness - has BLUF (number in first paragraph), body sections AND Kluczowe wnioski with metrics, 4) meta description quality, 5) brand SALIENCE - is the main brand/product named specifically (not generic "branża") at least once per H2 section, in the section text (a brand name inside an H2 or H3 heading does not count: headings should read as the reader\'s search queries). CRITICAL: Do NOT penalize for: missing prices/case studies/competitor data, internal links, technical SEO, backlinks, page title.' + regulaJezykaUwag(),
         messages: [{ role: 'user', content: `Temat: ${topic}\nSłowa kluczowe: ${kwText}\n\nArtykuł:\n${articleText}` }]
       })
     });
@@ -13869,7 +14254,7 @@ async function toggleAioPanel(forceRefresh = false) {
 The 6 criteria to evaluate (give one item per criterion):
 1. BLUF: Does the first paragraph contain a key metric/number with source and date context?
 2. Extractable passages: Are there short, self-contained sentences with specific facts/numbers that AI can cite?
-3. Entity definitions + SALIENCE: Are key products/brands named precisely (not generic "branża")? Is the main brand mentioned in every H2 section?
+3. Entity definitions + SALIENCE: Are key products/brands named precisely (not generic "branża")? Is the main brand mentioned in the text of every H2 section (not in the headings, which should read as search queries)?
 4. FANOUT coverage: Does the article cover all user query angles - what it is, how it works, who it is for, specs/params, how to start?
 5. Anti-fluff: Does every paragraph contain at least one specific fact or number? Are emotional/vague sentences ("rosnąca popularność" without data) absent?
 6. Kluczowe wnioski: Does the article end with a numbered bullet summary where each point contains a specific metric or comparison?` + regulaJezykaUwag(),
@@ -15778,7 +16163,7 @@ async function analyzeBrandVoice() {
 
   const isDemo = API_KEY === 'WSTAW_TUTAJ_KLUCZ_API' || API_KEY === 'WSTAW_TUTAJ_NOWY_KLUCZ_API';
   if (isDemo) {
-    setTimeout(() => saveBrandVoice({ summary: 'Ton profesjonalny-przyjazny. Zdania średnio 18-22 słów. Unika żargonu. Używa liczb i konkretnych danych. Styl: informacyjny z elementami perswazji. Bez nadmiernych przymiotników.', style: 'Pisz profesjonalnie ale przystępnie. Używaj konkretnych liczb. Zdania zwięzłe. Unikaj branżowego żargonu.' }), 1500);
+    setTimeout(() => saveBrandVoice({ summary: 'Ton profesjonalny-przyjazny. Zdania średnio 18-22 słów. Unika żargonu. Używa liczb i konkretnych danych. Styl: informacyjny z elementami perswazji. Bez nadmiernych przymiotników.', style: 'Pisz profesjonalnie ale przystępnie. Używaj konkretnych liczb. Zdania zwięzłe. Unikaj branżowego żargonu.', funkcja: 'Co drugie zdanie doradza albo ocenia: mówi, co wybrać i dlaczego. Każdy parametr idzie z tym, co oznacza dla klienta.' }), 1500);
     return;
   }
 
@@ -15786,8 +16171,8 @@ async function analyzeBrandVoice() {
     const res = await apiFetch({
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 500,
-        system: 'You are a brand strategist. Analyze writing samples and respond ONLY in valid JSON no markdown: {"summary":"2-3 sentence style description in ' + (currentLang === 'en' ? 'English' : 'Polish') + '","style":"writing instructions in ' + (currentLang === 'en' ? 'English' : 'Polish') + ' for AI model, max 80 words"}',
+      body: JSON.stringify({ model: MODEL_POMOCNICZY, thinking: BEZ_MYSLENIA, max_tokens: 900, // Runda B: trzy pola (opis, styl, funkcja zdan)
+        system: 'You are a brand strategist. Analyze writing samples and respond ONLY in valid JSON no markdown: {"summary":"2-3 sentence description in ' + (currentLang === 'en' ? 'English' : 'Polish') + ' of the style and of what the sentences do","style":"writing instructions in ' + (currentLang === 'en' ? 'English' : 'Polish') + ' for AI model, max 80 words","funkcja":"instructions in ' + (currentLang === 'en' ? 'English' : 'Polish') + ' for AI model, max 60 words, on what the sentences in the samples DO: the share of advice, evaluation and plain description, whether they give examples, take a stance or speak to the reader\'s situation, how sections are organised"}',
         messages: [{ role: 'user', content: `Analyze the writing style of these articles:\n\n${articles.substring(0,5000)}` }]
       })
     });
@@ -17541,6 +17926,17 @@ function toggleAeoPanel() {
 
 function _aeoWords(s) { return (s || '').trim().split(/\s+/).filter(Boolean).length; }
 
+// Runda B (agencja): H2 i H3 z nazwa marki z konfiguracji, gdy frazy kluczowe artykulu jej nie zawieraja. Nikt nie
+// wpisuje w wyszukiwarke nazwy firmy przy swoim pytaniu, wiec taki naglowek rzadko trafia w realna fraze.
+function naglowkiZMarka(art) {
+  const nazwa = nazwaMarkiDoRegul();
+  if (!art || !nazwa || markaWFrazach(nazwa, kontekstArtykulu().frazy)) return [];
+  const n = nazwa.toLowerCase();
+  return Array.from(art.querySelectorAll('h2, h3')).filter(function (h) { return !h.closest('.zrodla-box, .meta-box'); })
+    .map(function (h) { return (h.textContent || '').replace(/\s+/g, ' ').trim(); })
+    .filter(function (t) { return t.toLowerCase().indexOf(n) !== -1; });
+}
+
 function renderAeoCheck() {
   const art = document.getElementById('article');
   const paras = Array.from(art.querySelectorAll('p')).filter(p => !p.closest('.meta-box'));
@@ -17579,6 +17975,12 @@ function renderAeoCheck() {
     const warn = others.length > 0;
     const tail = warn ? ' (' + _t('aeo-linie-sprawdz') + ')' : '';
     lineNote = `<div class="seo-item" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px"><span class="seo-item-icon">${warn ? ikona('triangle-alert','uwaga') : ikona('info')}</span><span class="seo-item-text">${escapeHtml(_t('aeo-linie') + ': ' + labels + tail)}</span></div>`;
+  }
+  // Runda B: naglowki z nazwa marki (informacyjnie, poza wynikiem, jak linie).
+  const zMarka = naglowkiZMarka(art);
+  if (zMarka.length) {
+    const przyklad = (currentLang === 'en' ? '“' : '„') + zMarka[0] + '”';
+    lineNote += `<div class="seo-item aeo-marka" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px"><span class="seo-item-icon">${ikona('triangle-alert','uwaga')}</span><span class="seo-item-text">${escapeHtml(_t('aeo-marka-naglowki').replace('{n}', zMarka.length).replace('{h}', przyklad))}</span></div>`;
   }
 
   document.getElementById('aeo-content').innerHTML =
