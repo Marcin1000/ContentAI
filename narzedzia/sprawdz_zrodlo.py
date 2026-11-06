@@ -1984,6 +1984,8 @@ KONTROLE += [
      "// Runda B: 3000 zamiast 2000 - doszly cytaty ze zrodel, pochodzenie i fakty niewykorzystane.\n        max_tokens: zRezerwa(3000),", None, None),
     ("RB/fakty-zgodnosc", "liczba 'z wiedzy modelu' zgodna z lista uwag (pelna lista: tyle, ile na niej)",
      "const model = lista.length < MAKS_UWAG_FAKTOW ? naLiscie : Math.max(ile(p.model), naLiscie);", None, None),
+    ("RB/fakty-bez-pokrycia", "pochodzenie: twierdzenie szersze niz zrodlo tez liczy sie jako bez pokrycia (rozszerzenia zrodlo nie podaje)",
+     "const RODZAJE_BEZ_POKRYCIA = ['liczba', 'model', 'brak', 'zakres'];", "const RODZAJE_BEZ_POKRYCIA = ['liczba', 'model', 'brak'];", None),
     ("RB/fakty-panel-pochodzenie", "panel Faktow: pochodzenie twierdzen nad lista uwag",
      "wynikEl.innerHTML = pusty + pochodzenie +", None, None),
     ("RB/fakty-panel-zrodlo", "panel Faktow: fragment zrodla przy ogolniku (i liczbie z inna wartoscia w zrodle)",

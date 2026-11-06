@@ -2142,7 +2142,8 @@ async function scenariuszRundaB(b) {
   const d = await s.evaluate(() => {
     if (typeof dodatkiFaktow !== 'function') return null;
     const u = (r) => ({ rodzaj: r, cytat: 'x', powod: 'y' });
-    const pelna = Array.from({ length: 12 }, (_, i) => u(i < 3 ? 'model' : 'zakres'));
+    // lista ucieta na 12: 3 uwagi bez pokrycia, reszta sprzecznosci (nie mowia o pochodzeniu)
+    const pelna = Array.from({ length: 12 }, (_, i) => u(i < 3 ? 'model' : 'sprzecznosc'));
     return {
       krotka: dodatkiFaktow({ pochodzenie: { zrodla: 20, model: 9 } }, [u('model'), u('liczba'), u('zakres'), u('ogolnik')], true).pochodzenie,
       pelna: dodatkiFaktow({ pochodzenie: { zrodla: 30, model: 7 } }, pelna, true).pochodzenie,
@@ -2152,8 +2153,9 @@ async function scenariuszRundaB(b) {
       zDruga: dodatkiFaktow({ niewykorzystane: [{ fakt: ' A \n b ', zrodlo: 'B', gdzie: 'C' }, { fakt: '' }, null, { fakt: 'F3' }, { fakt: 'F4' }, { fakt: 'F5' }, { fakt: 'F6' }, { fakt: 'F7' }] }, [], true).niewykorzystane,
     };
   });
-  wynik('Runda B: pochodzenie twierdzen - pelna lista mowi, ile jest z wiedzy modelu; tylko lista ucieta na 12 bierze wieksza liczbe modelu',
-    !!d && JSON.stringify(d.krotka) === '{"zrodla":20,"model":2}' && JSON.stringify(d.pelna) === '{"zrodla":30,"model":7}' && JSON.stringify(d.zaMalo) === '{"zrodla":30,"model":3}'
+  // "zakres" (twierdzenie szersze niz zrodlo) tez bez pokrycia: rozszerzenia zrodlo nie podaje. Ogolnik jest ze zrodla.
+  wynik('Runda B: pochodzenie twierdzen - pelna lista mowi, ile jest z wiedzy modelu (liczba, model, brak, zakres); tylko lista ucieta na 12 bierze wieksza liczbe modelu',
+    !!d && JSON.stringify(d.krotka) === '{"zrodla":20,"model":3}' && JSON.stringify(d.pelna) === '{"zrodla":30,"model":7}' && JSON.stringify(d.zaMalo) === '{"zrodla":30,"model":3}'
       && d.smieci.pochodzenie === null && d.smieci.niewykorzystane.length === 0,
     JSON.stringify(d));
   wynik('Runda B: fakty niewykorzystane - tylko przy Bazie (test w druga strone), najwyzej 5, bez pustych, tekst w jednym wierszu',
@@ -2251,7 +2253,7 @@ async function scenariuszRundaB(b) {
         czesci: [...poch.querySelectorAll('.fakty-poch-pasek > span')].map((x) => ({ klasa: x.className, grow: Number(getComputedStyle(x).flexGrow), szer: Math.round(x.getBoundingClientRect().width) })),
         aria: pasek ? (pasek.getAttribute('role') + '|' + pasek.getAttribute('aria-label')) : '',
         przedLista: tekst.indexOf('Pochodzenie twierdzeń') !== -1 && tekst.indexOf('Pochodzenie twierdzeń') < tekst.indexOf('Do sprawdzenia:') } : null,
-      bezPokrycia: lista.filter((u) => ['liczba', 'model', 'brak'].indexOf(u.rodzaj) !== -1).length,
+      bezPokrycia: lista.filter((u) => ['liczba', 'model', 'brak', 'zakres'].indexOf(u.rodzaj) !== -1).length,
       doPoprawy: lista.filter((u) => ['liczba', 'model', 'ogolnik', 'brak', 'zakres', 'sprzecznosc', 'konflikt'].indexOf(u.rodzaj) !== -1 && String(u.cytat || '').trim() && (u.rodzaj !== 'ogolnik' || u.zrodlo)).length,
       tytulNiewyk: ((w.querySelector('.fakty-niewyk > .panel-podtytul') || {}).textContent || '').trim(),
       pozycje: [...w.querySelectorAll('.fakty-niewyk-item')].map((p) => ({ fakt: ((p.querySelector('.fakty-niewyk-fakt') || {}).textContent || '').trim(),

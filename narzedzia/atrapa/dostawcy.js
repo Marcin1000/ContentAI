@@ -700,7 +700,7 @@ function odpFakty(cialo, ctx, zn) {
   }
   const wynik = { uwagi };
   if (/"pochodzenie"/.test(ctx.sys)) {
-    const bezPokrycia = uwagi.filter((u) => ['liczba', 'model', 'brak'].indexOf(u.rodzaj) >= 0).length;
+    const bezPokrycia = uwagi.filter((u) => ['liczba', 'model', 'brak', 'zakres'].indexOf(u.rodzaj) >= 0).length;
     wynik.pochodzenie = { zrodla: Math.max(1, zdania.length - uwagi.length), model: bezPokrycia };
   }
   if (/"niewykorzystane"/.test(ctx.sys)) {

@@ -10812,7 +10812,9 @@ function uwagiWedlugWagi(uwagi) {
 // Runda B: pochodzenie twierdzen i fakty z Bazy, ktorych tekst nie uzyl. Liczby od modelu zgadzamy z jego lista:
 // pelna lista (mniej niz 12 uwag) wymienia kazde zdanie bez pokrycia, wiec "z wiedzy modelu" to tyle, ile ich na
 // niej jest. Dopiero lista ucieta na 12 moze miec ich wiecej niz widac - wtedy liczba modelu, nie mniejsza niz lista.
-const RODZAJE_BEZ_POKRYCIA = ['liczba', 'model', 'brak'];
+// Bez pokrycia sa tez twierdzenia szersze niz zrodlo ("zakres"): rozszerzenia (inny kraj, produkt, klient) zrodlo nie
+// podaje. Ogolnik jest ze zrodla (tylko niedokladnie), sprzecznosc, konflikt i "strona" nie mowia o pochodzeniu.
+const RODZAJE_BEZ_POKRYCIA = ['liczba', 'model', 'brak', 'zakres'];
 const MAKS_UWAG_FAKTOW = 12;
 function dodatkiFaktow(odczyt, uwagi, wDrugaStrone) {
   const ile = function (x) { const n = parseInt(x, 10); return n > 0 ? Math.min(n, 9999) : 0; };
