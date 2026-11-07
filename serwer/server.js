@@ -1595,7 +1595,7 @@ async function proxyTresc(req, res, sesja, czynnosci = ['wywolanie']) {
     if (sesja && !plany.maFunkcje(konto, 'serp')) {
       return bledy.bladCai(res, 'funkcja-poza-pakietem', 402, {
         content: [],
-        error: { komunikat: 'Analiza SERP jest dostępna od pakietu Standard.' },
+        error: { komunikat: 'Analiza wyników Google jest dostępna od pakietu Standard.' },
         funkcja: 'serp',
       });
     }

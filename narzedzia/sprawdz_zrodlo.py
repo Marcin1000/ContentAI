@@ -43,9 +43,9 @@ KONTROLE = [
      "${history.length ? 'Brak wyników dla wybranego filtra.'", None),
 
     ("F2/PL", "klucz i18n history-no-filter (PL)",
-     "'history-no-filter':'Brak wyników dla wybranego filtra.',", None, None),
+     "'history-no-filter':'Brak pasujących artykułów. Zmień filtr albo wyszukiwanie.',", None, None),
     ("F2/EN", "klucz i18n history-no-filter (EN)",
-     "'history-no-filter':'No results for the selected filter.',", None, None),
+     "'history-no-filter':'No matching articles. Change the filter or search.',", None, None),
 
     ("F3", "wykrywanie jezyka przegladarki przy pierwszym starcie",
      "(navigator.language||'pl').toLowerCase().indexOf('pl')===0 ? 'pl' : 'en'",
@@ -297,8 +297,8 @@ KONTROLE = [
     ("F35/fogpl", "slowo trudne liczone od czterech sylab",
      "(w.match(/[aąeęioóuy]/gi) || []).length >= 4).length",
      "(w.match(/[aąeęioóuy]/gi) || []).length >= 3).length", None),
-    ("F35/skala", "opis skali FOG mowi o polskiej wersji",
-     "'fog-title':'Indeks mglistości (wersja dla polszczyzny)'", None, None),
+    ("F35/skala", "opis skali FOG mowi o polskiej wersji (porzadki tekstow: pod 'Jak to dziala?' przy celu indeksu)",
+     "'fog-goal-jak':'Indeks rośnie z długością zdań i liczbą trudnych słów. W wersji dla polszczyzny trudne są słowa od czterech sylab", None, None),
 
     # Fraza kluczowa wstawiona doslownie zlamala zdanie ("oplata serwisowa
     # firma dolicza"), a fraza z rokiem wymusila twierdzenie o 2026 bez
@@ -336,10 +336,10 @@ KONTROLE = [
     ("F38/etykieta", "przelacznik nazwany skutkiem, nie mechanizmem",
      "'toggle-web':'Szukaj w sieci",
      "'toggle-web':'Uzupełnij luki wiedzą z internetu'", None),
-    ("F38/podpowiedz", "podpowiedz mowi o zrodlach i o danych firmy",
-     "Dane o Twojej firmie zawsze tylko z bazy.", None, None),
+    ("F38/podpowiedz", "podpowiedz mowi o zrodlach i o danych firmy (porzadki tekstow: pod 'Jak to dziala?' przy przelaczniku)",
+     "'toggle-web-hint-jak':'Informacje o Twojej firmie AI bierze tylko z bazy wiedzy, nigdy ze stron z sieci. Strony, z których korzysta, wymieni pod artykułem jako źródła.", None, None),
     ("F38/czas", "podpowiedz uprzedza o dluzszym generowaniu",
-     "Wydłuża generowanie o ok. 30 s.'", None, None),
+     "'toggle-web-hint':'AI poszuka brakujących faktów w sieci. Potrwa to około 30 s dłużej.',", None, None),
 
     # Bezwarunkowe "baza wiedzy jest jedynym zrodlem faktow" stalo w
     # sprzecznosci z galezia promptu mowiaca "mozesz uzupelnic wiedza ogolna".
@@ -1112,6 +1112,10 @@ KONTROLE += [
 
 # ── runda 5, wykonawca D: ekrany Grafika i Audio (dwie kolumny, stopka akcji zawsze w oknie) ──
 # Osobna lista doklejana do KONTROLE, zeby nie zderzala sie z poprawkami koordynatora przy scalaniu.
+# Porzadki tekstow interfejsu (2026-11-07), grupa A: rozwijki „Jak to dziala?”, uklad tekstow pomocy, style i telefon.
+KONTROLE += [
+]
+
 KONTROLE += [
     ("R5/grafika-uklad", "Generator grafik: panel modulu bez stylu w atrybucie (dwie kolumny z CSS)",
      '<div id="img-panel" class="modul-panel" style="display:none">', '<div id="img-panel" style="display:none;position:fixed;', None),
@@ -1321,14 +1325,14 @@ KONTROLE += [
     ("R9-F/koszt-transkrypcji", "KOD8-31: koszt transkrypcji z dlugosci nagrania",
      "dlugoscNagrania(file).then(function (s) { if (s) dodajKoszt('openai', s / 60 * CENA_TRANSKRYPCJI_MIN); });", None, None),
     ("R9-F/koszt-szacunek", "KOD8-31: etykieta kosztu na wlasnych kluczach mowi, ze to szacunek",
-     "'hist-cost-wlasne':'Szacunkowy koszt na Twoich kluczach'", "'hist-cost-wlasne':'Koszt na Twoich kluczach'", None),
+     "'hist-cost-wlasne':'Twój szac. koszt'", "'hist-cost-wlasne':'Koszt na Twoich kluczach'", None),
     ("R9-F/pdf-bez-emoji", "KOD8-35: emoji wypadaja z tekstu PDF (kroje nie maja tych znakow, zostawal pusty znak)",
      "const t = n.nodeValue.replace(EMOJI_PDF, '').replace(/[ \\t\\n\\r\\f]+/g, ' ');",
      "const t = n.nodeValue.replace(/[ \\t\\n\\r\\f]+/g, ' ');", None),
     ("R9-F/glos-marki-podpis", "KOD8-28: podpis Glosu marki w menu ze slownika (nie polski na sztywno, po zmianie jezyka dalej 'aktywny')",
      "ustawTekst(sub, 'settings-bv-active');", "sub.textContent = 'Aktywny - profil stylu ustawiony';", None),
     ("R9-F/glos-marki-podpis-en", "KOD8-28: klucz settings-bv-active w slowniku EN",
-     "'settings-bv-active':'Active - style profile set',", None, None),
+     "'settings-bv-active':'active, articles in your company\\'s style',", None, None),
 ]
 
 # R7-I: runda 7, wykonawca I - panel Faktow (jeden stan ladowania, adres jako link, notka zgodna
@@ -1354,7 +1358,7 @@ KONTROLE += [
     ("R7-I/fakty-waga", "Fakty: kolejnosc wagi - 'Sprawdz na stronie' i niesprawdzony adres na koncu listy",
      "const WAGA_UWAG = { strona: 1, 'link-niesprawdzony': 2 };", None, None),
     ("R7-I/fakty-slownik", "Fakty: nowa kategoria i warianty notki w slowniku PL",
-     "'fakty-rodzaj-strona':'Sprawdź na stronie',", None, None),
+     "'fakty-rodzaj-strona':'Prawdopodobnie ze strony z sieci',", "'fakty-rodzaj-strona':'Sprawdź na stronie'", None),
     ("R7-I/fakty-bez-listy-zrodel", "Fakty: lista zrodel aplikacji, ramka meta i notatki o lukach poza kontrola",
      "const tekstArtykulu = tekstBlokami(kopiaDoStatystyk(art));", "const tekstArtykulu = art.innerText || art.textContent || '';", None),
     # Poprawka pilna: OpenAI wylacza gpt-image-1 23.10.2026
@@ -1388,7 +1392,7 @@ KONTROLE += [
     ("R9-G/opis-oceny", "UX8-11: pod przelacznikiem SEO/AIO/AEO/GEO jedno zdanie, co mierzy wybrana ocena",
      "if (opisOceny) opisOceny.textContent = gr === 'ocena' ? _t('ocena-opis-' + otwarty) : '';", None, None),
     ("R9-G/opisy-ocen", "UX8-11: przyciski ocen z podpowiedzia (jedno zdanie, PL i EN)",
-     "'ocena-opis-geo':'GEO: whether AI chats such as ChatGPT or Perplexity will cite the text and your brand as a source (nothing to do with geolocation).',",
+     "'ocena-opis-geo':'Assesses whether AI chats will cite the article and your brand (not about geolocation).',",
      None, None),
     ("R9-G/opis-typu", "UX8-11: jedno zdanie pod Typem tresci dla typow SEO, AIO i Hybrydy",
      "const kluczOpisu = { 'Hybryda SEO + AIO': 'ctype-opis-hybryda', 'Artykuł SEO': 'ctype-opis-seo', 'Treść AIO': 'ctype-opis-aio' }[sel.value];", None, None),
@@ -1411,8 +1415,8 @@ KONTROLE += [
      'data-i18n-title="title-brief-tooltip" data-i18n="btn-brief">', None, None),
     ("R9-G/nazwa-popraw-wklejony", "UX8-12: wklejony tekst poprawia 'Popraw wklejony tekst' (menu, karta startu, okno)",
      "'btn-improve':'Popraw wklejony tekst',", "'improve-title':'Popraw istniejący artykuł'", None),
-    ("R9-G/nazwa-popraw-ten-tekst", "UX8-12: samokorekta gotowego tekstu to 'Popraw ten tekst' (wczesniej Dopracuj tekst)",
-     "'btn-premium-fix':'Popraw ten tekst',", "'btn-premium-fix':'Dopracuj tekst'", None),
+    ("R9-G/nazwa-popraw-ten-tekst", "UX8-12: samokorekta gotowego tekstu ma nazwe zgodna z przelacznikiem Samokorekta (porzadki tekstow: 'Uruchom samokorekte', wczesniej 'Popraw ten tekst' i 'Dopracuj tekst')",
+     "'btn-premium-fix':'Uruchom samokorektę',", "re:'btn-premium-fix':'(Dopracuj tekst|Popraw ten tekst)'", None),
     ("R9-G/nazwa-dopisz-tematy", "UX8-12: Luki dopisuja brakujace tematy (przycisk i nazwa wersji)",
      "'improve-by-gaps':'Dopisz brakujące tematy',", "'ver-serp':'Poprawa SERP'", None),
     ("R9-G/nazwa-grafika-audio", "UX8-12: panele Grafika i Audio nazwane jak pozycje menu",
@@ -1420,7 +1424,7 @@ KONTROLE += [
     ("R9-G/nazwa-baza", "UX8-12: Baza wiedzy jedna nazwa (panel, dolny pasek, menu konta, okno)",
      "'nav-base':'Baza wiedzy',", "'sidebar-title':'Baza wiedzy - źródła'", None),
     ("R9-G/nazwa-baza-opis", "UX8-12: okno bazy na serwerze nie mowi juz, ze pliki z panelu to inna baza",
-     "'bazas-desc':'To ta sama baza wiedzy, którą widzisz w panelu", "Pliki wgrywane w panelu bocznym to co innego", ("proxy",)),
+     "'bazas-desc':'Dokumenty z bazy wiedzy są na serwerze, więc masz je na każdym urządzeniu.", "Pliki wgrywane w panelu bocznym to co innego", ("proxy",)),
     ("R9-G/nazwa-czytanie", "UX8-12: czytanie artykulu na glos to 'Czytaj na glos', ustawienia 'Czytanie na glos i dyktowanie'",
      "'tts-read':'Czytaj na głos',", "'settings-voice-title':'Asystent głosowy'", None),
     ("R9-G/grafika-bez-ponawiania", "UX8-07: grafika nie ponawia bledu, ktorego ponowienie nie naprawi (brak klucza na serwerze)",
@@ -1618,6 +1622,10 @@ KONTROLE += [
 ]
 
 # Uwagi Marcina z telefonu (runda 9, koordynator). Scenariusz wariantUwagiTelefonu w test_dymny.js.
+# Porzadki tekstow interfejsu (2026-11-07), grupa B: komunikaty, przyciski w komunikatach, bledy w kodzie, dostepnosc przyciskow usuwania.
+KONTROLE += [
+]
+
 KONTROLE += [
     ("R9-UT/konto-x", "telefon: arkusz Konto ma X w prawym gornym rogu, naglowek zostaje u gory przy przewijaniu",
      '<button type="button" class="przycisk-ikona arkusz-zamknij menu-konto-zamknij" onclick="closeSettingsMenu()"', None, None),
@@ -1755,7 +1763,7 @@ KONTROLE += [
     ("R9-O/cennik-zapas", "cennik modelu zapasowego po odmowie filtra (claude-opus-4-8, 5/25), wczesniej stawka Sonneta",
      "'claude-opus-4-8':   [5, 25],", None, None),
     ("R9-O/koszt-kreator", "kreator klucza: koszt artykulu po nowej stawce, jak na stronie (koszt_artykulu w konfiguracja.json)",
-     "kontrolą faktów to orientacyjnie 0,20-0,40 USD.", "orientacyjnie 0,25-0,50 USD", ("proxy",)),
+     "'byok-koszt':'Artykuł (800 słów, oceny i kontrola faktów) to około 0,20-0,40 USD.", "0,25-0,50 USD", ("proxy",)),
     ("R9-O/bez-disabled", "krotkie oceny JSON na MODEL_TRESCI z effort low i zapasem tokenow, bez thinking disabled (400 na Opus 5.5)",
      "model: MODEL_TRESCI, output_config: WYSILEK_OCENY, max_tokens: zRezerwaOceny(",
      "re:model: MODEL_TRESCI,\\s*thinking: BEZ_MYSLENIA", None),
@@ -1776,9 +1784,9 @@ KONTROLE += [
     ("R9-O/odmowa-rodzaj", "rodzaj bledu odmowa-modelu (bez przycisku ponowienia z tym samym tematem)",
      "if (/\\brefusal\\b/.test(typ)) return 'odmowa-modelu';", None, None),
     ("R9-O/odmowa-pl", "komunikat odmowy filtra (PL)",
-     "'err-odmowa-modelu':'Model AI odmówił odpowiedzi, bo zadziałał filtr bezpieczeństwa dostawcy.", None, None),
+     "'err-odmowa-modelu':'Filtr bezpieczeństwa dostawcy AI zablokował odpowiedź.", None, None),
     ("R9-O/odmowa-en", "komunikat odmowy filtra (EN)",
-     "'err-odmowa-modelu':'The AI model declined to answer because a safety filter at the provider was triggered.", None, None),
+     "'err-odmowa-modelu':'The AI provider\\'s safety filter blocked the response.", None, None),
     ("R9-O/sredniki-artykul", "zakaz srednika w zasadach pisania artykulu",
      "systemPrompt += blokDaty() + blokInterpunkcji();", None, None),
     ("R9-O/sredniki-przepisywanie", "zakaz srednika przy przepisywaniu (korekta premium, poprawa po ocenie, przerobki)",
@@ -1853,7 +1861,7 @@ KONTROLE += [
     ("R9-A/linki", "Linki: tylko strony pasujace do artykulu, bez \"zawsze sugeruj URL z bazy\"",
      "const suggestions = propozycjeLinkow(art.innerText || '', urlDocs);", "Fallback: zawsze sugeruj URL z bazy", None),
     ("R9-A/linki-pl", "Linki: komunikat bez pasujacych stron (PL)",
-     "'links-brak-dopasowan':'Żadna strona z Bazy wiedzy nie pasuje do tego artykułu.", None, None),
+     "'links-brak-dopasowan':'Żadna strona z bazy wiedzy nie pasuje do tego artykułu.", None, None),
     ("R9-A/serp-slowa", "SERP: liczba slow jak w pasku statystyk",
      "slowaArt = liczbaSlowArtykulu(art);", "slowaArt = ((k.textContent || '').trim().match(/\\S+/g) || []).length;", None),
     ("R9-A/wedlug", "\"wedlug X\" tylko ze zrodlem, ktore popiera to zdanie",
@@ -1941,9 +1949,9 @@ KONTROLE += [
      "'<div class=\"cytat\">' + (currentLang === 'en' ? '“' : '„') + escapeHtml(cytat) + '”</div>'",
      "re:\">\"' \\+ escapeHtml\\(cytat\\) \\+ '\"</div>'|font-style:italic;color:var\\(--text2\\);overflow-wrap:anywhere", None),
     ("RP/klucz-czas-pl", "karta 'Podlacz klucz': okolo 10 minut jak kreator i strona klucza, nie 5 (PL)",
-     "'e1-opis':'To zajmuje około 10 minut, pokażemy jak.", "'e1-opis':'To zajmuje około 5 minut", ("proxy",)),
+     "'e1-opis':'Instrukcja krok po kroku, około 10 minut.", "re:'e1-opis':'[^']*5 minut", ("proxy",)),
     ("RP/klucz-czas-en", "karta 'Podlacz klucz': okolo 10 minut jak kreator i strona klucza, nie 5 (EN)",
-     "'e1-opis':'It takes about 10 minutes, we will show you how.", "'e1-opis':'It takes about 5 minutes", ("proxy",)),
+     "'e1-opis':'Step-by-step guide, about 10 minutes.", "re:'e1-opis':'[^']*5 minutes", ("proxy",)),
     ("RP/limit-forma", "limit wydatkow u dostawcy: forma bezosobowa wobec czytelnika (bez 'ustawiles')",
      "'err-limit-wydatkow-wlasny':'Zapytanie zatrzymał limit wydatków ustawiony w konsoli {DOSTAWCA}.", "limit wydatków, który ustawiłeś", None),
     ("RP/kreator-instrukcja", "kreator klucza: 'Nie masz klucza? Okolo 10 minut' nad polem klucza (wczesniej na dole, pod akapitem o bezpieczenstwie)",
@@ -2005,8 +2013,8 @@ KONTROLE += [
      "wersja: 'ver-dopisane', gotowe: 'fakty-dopisane', blad: 'fakty-dopisz-blad', ile: wybrane.length });", None, None),
     ("RB/redaktor-wersja", "wspolny redaktor po kontroli faktow: nowa wersja artykulu i kontrola od nowa",
      "addVersion(htmlDoZapisu(art), etykietaWersji(_t(o.wersja)));", None, None),
-    ("RB/fakty-pl", "etykieta 'Z wiedzy modelu' (PL)", "'fakty-rodzaj-model':'Z wiedzy modelu',", None, None),
-    ("RB/fakty-en", "etykieta 'From the model's knowledge' (EN)", "'fakty-rodzaj-model':'From the model\\'s knowledge',", None, None),
+    ("RB/fakty-pl", "etykieta 'Z wiedzy AI' (PL, porzadki tekstow: wczesniej 'Z wiedzy modelu')", "'fakty-rodzaj-model':'Z wiedzy AI',", "'fakty-rodzaj-model':'Z wiedzy modelu'", None),
+    ("RB/fakty-en", "etykieta 'From the AI's knowledge' (EN)", "'fakty-rodzaj-model':'From the AI\\'s knowledge',", "'fakty-rodzaj-model':'From the model", None),
     ("RB/fakty-przycisk", "przycisk 'Popraw wskazane zdania' (ogolniki uzupelnia ze zrodla, nie tylko usuwa zdania bez zrodla)",
      "'fakty-popraw':'Popraw wskazane zdania ({n})',", "'fakty-popraw':'Popraw zdania bez źródła ({n})',", None),
     ("RB/fakty-css", "pasek pochodzenia: dwie czesci z odstepem 2 px, kolory stanu z ikona i podpisem",
@@ -2048,11 +2056,15 @@ KONTROLE += [
      "+ blokFaktow(zSiecia) + blokKonkretu() + blokZakresu() + blokKonfliktu() + blokRytmu() + blokTonu(tonKanoniczny())\n      + blokNaglowkow(kontekstArtykulu().frazy)", None, None),
     ("RB/aeo-marka", "AEO: informacja o naglowkach z nazwa marki (poza wynikiem)", "const zMarka = naglowkiZMarka(art);", None, None),
     ("RB/aeo-marka-pl", "AEO: tekst informacji o naglowkach z nazwa marki (PL)",
-     "'aeo-marka-naglowki':'Nagłówki z nazwą marki: {n}, np. {h}.", None, None),
+     "'aeo-marka-naglowki':'Marka w śródtytułach: {n}, np. {h}',", None, None),
 ]
 
 # Plan UX "ujednolicenie wygladu tekstow" (zespoly/ux/plan_css.md): role tekstu klasami zamiast stylow w linii,
 # jeden wzor pustego stanu i naglowka okna. Teksty w slowniku I18N zmienia osobno zespol jezykowy (tu ich nie ma).
+# Porzadki tekstow interfejsu (2026-11-07), grupa C: teksty wpisane na sztywno przeniesione do slownika, slownik wariantow, szablony, raport.
+KONTROLE += [
+]
+
 KONTROLE += [
     ("UX/lead-startu", "ekran startowy: lead pod 'Co dzis piszemy?' bez pogrubienia (bez starej reguly .placeholder p:first-of-type)",
      ".start-opis { font-size: var(--t-md);", ".placeholder p:first-of-type {", None),

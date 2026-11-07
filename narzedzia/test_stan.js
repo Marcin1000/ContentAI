@@ -1831,6 +1831,11 @@ async function scenariuszOpus55(b) {
 // uwagi pelnym zdaniem bez srednika. Luki: limit naglowkow-pytan, 5-7 punktow wnioskow, akapity do 80 slow.
 // Linki: bez stron spoza tematu. Jedna liczba slow w pasku i w SERP. Reguly faktow i tonu w prompcie.
 // PDF: greka i symbole w krojach, znaki spoza kroju wypadaja, sigma w naglowku tabeli z Literaty.
+// Porzadki tekstow interfejsu (2026-11-07), grupa C: teksty wpisane na sztywno w slowniku (PL i EN), slownik wariantow, szablony, raport.
+async function scenariuszTekstyC(b) {
+  void b;
+}
+
 async function scenariuszRundaA(b) {
   const { k, s, bledyJs } = await nowaStrona(b, 'pl', {});
   const zap = [];
@@ -1897,7 +1902,7 @@ async function scenariuszRundaA(b) {
     const w = document.getElementById('fakty-wynik');
     const brak = w.querySelector('.fakty-uwaga[data-rodzaj="brak"]');
     const btn = document.getElementById('fakty-popraw-btn');
-    // Runda B: do poprawy takze "Z wiedzy modelu" i ogolnik z fragmentem zrodla.
+    // Runda B: do poprawy takze "Z wiedzy AI" i ogolnik z fragmentem zrodla.
     const doPoprawy = (faktyWynik || []).filter((u) => ['liczba', 'model', 'ogolnik', 'brak', 'zakres', 'sprzecznosc', 'konflikt'].indexOf(u.rodzaj) !== -1 && (u.rodzaj !== 'ogolnik' || u.zrodlo));
     return {
       stan: faktyStan, tekst: w.innerText, stopka: (w.querySelector('.fakty-wzgledem-sieci') || {}).textContent || '',
@@ -1935,8 +1940,8 @@ async function scenariuszRundaA(b) {
   wynik('Runda A: Popraw zdania - jedno zapytanie redaktora z lista uwag, bez nowych faktow (blokPrzepisywania), bez listy zrodel w tresci',
     zapPop.length === 1 && /YOU ARE REWRITING, NOT RESEARCHING/.test(sys(zapPop[0])) && /^FINDINGS \(fragments quoted from the article\):\n1\. "/.test(usr(zapPop[0]))
       && /ARTICLE \(HTML\):/.test(usr(zapPop[0])) && !/zrodla-box/.test(usr(zapPop[0])), JSON.stringify({ zapytan: zapPop.length, usr: zapPop.length ? usr(zapPop[0]).slice(0, 160) : '' }));
-  wynik('Runda A: Popraw zdania - nowa wersja "Poprawione fakty", zdania z uwag znikaja, lista zrodel zostaje, wpis Historii zapisany, kontrola od nowa',
-    po.wersje.some((l) => /Poprawione fakty/.test(l)) && usuniete.length >= 1 && po.zrodla > 0 && po.historia && zapFaktyPo.length === 1,
+  wynik('Runda A: Popraw zdania - nowa wersja "Poprawione zdania", zdania z uwag znikaja, lista zrodel zostaje, wpis Historii zapisany, kontrola od nowa',
+    po.wersje.some((l) => /Poprawione zdania/.test(l)) && usuniete.length >= 1 && po.zrodla > 0 && po.historia && zapFaktyPo.length === 1,
     JSON.stringify({ wersje: po.wersje, usuniete: usuniete.length, cytatow: fk.cytaty.length, zrodla: po.zrodla, historia: po.historia, kontroli: zapFaktyPo.length }));
 
   // 3. Oceny SEO i AIO: prompt panelu i siatka bezpieczenstwa na srednik przy wyswietlaniu.
@@ -2075,12 +2080,17 @@ async function scenariuszRundaA(b) {
 }
 
 // Runda B (2026-11-06, druga runda uwag agencji): kontrola faktow pyta, skad jest zdanie, nie tylko czy jest prawda.
-// Kategoria "Z wiedzy modelu" (pola formularza, kroki, wymagania bez zrodla), ogolnik tam, gdzie zrodlo podaje konkret
+// Kategoria "Z wiedzy AI" (pola formularza, kroki, wymagania bez zrodla), ogolnik tam, gdzie zrodlo podaje konkret
 // (z fragmentem zrodla, ktory "Popraw wskazane zdania" wstawia w miejsce ogolnika), pochodzenie twierdzen (ze zrodel /
 // z wiedzy modelu) i test w druga strone: fakty z Bazy, ktorych tekst nie uzyl, z "Dopisz do tekstu". Pisanie: wartosc
 // ze zrodla zamiast ogolnika, listy pol i krokow tylko ze zrodel, ton zmienia funkcje zdan i plan sekcji, naglowki jako
 // frazy bez marki (SALIENCE w tresci sekcji), Glos marki z funkcja zdan. Luki z tymi samymi regulami, oceny licza marke
 // w tresci sekcji, AEO mowi o naglowkach z nazwa marki. Kazde sprawdzenie pada na main sprzed tej zmiany.
+// Porzadki tekstow interfejsu (2026-11-07), grupa B: komunikaty z przyciskami, bledy w kodzie, przyciski usuwania.
+async function scenariuszTekstyB(b) {
+  void b;
+}
+
 async function scenariuszRundaB(b) {
   const { k, s, bledyJs } = await nowaStrona(b, 'pl', {});
   const zap = [];
@@ -2193,7 +2203,7 @@ async function scenariuszRundaB(b) {
   const zFA = zap.slice(przedFA).filter((z) => /You are a fact checker/.test(sys(z)));
   const fa = await s.evaluate(() => ({ stan: faktyStan, model: !!document.querySelector('#fakty-wynik .fakty-uwaga[data-rodzaj="model"]'),
     poch: !!document.querySelector('#fakty-wynik .fakty-pochodzenie'), niewyk: !!document.querySelector('#fakty-wynik .fakty-niewyk') }));
-  wynik('Runda B: Fakty bez Bazy (same strony z sieci) - "Z wiedzy modelu" i pochodzenie sa, testu w druga strone nie ma (fragmenty stron to nie cale zrodlo)',
+  wynik('Runda B: Fakty bez Bazy (same strony z sieci) - "Z wiedzy AI" i pochodzenie sa, testu w druga strone nie ma (fragmenty stron to nie cale zrodlo)',
     zFA.length === 1 && /"model"/.test(sys(zFA[0])) && /"pochodzenie"/.test(sys(zFA[0])) && !/"niewykorzystane"/.test(sys(zFA[0])) && !/ARTICLE SECTIONS/.test(usr(zFA[0]))
       && fa.stan === 'gotowe' && fa.model && fa.poch && !fa.niewyk, JSON.stringify(Object.assign({ zapytan: zFA.length }, fa)));
 
@@ -2231,7 +2241,7 @@ async function scenariuszRundaB(b) {
   wynik('Runda B: Glos marki z funkcja zdan trafia do promptu artykulu',
     !!bv && !!bv.funkcja && pB.indexOf('BRAND VOICE - what the sentences do (match this, not only the wording): ' + bv.funkcja) !== -1, '');
 
-  // 6. Fakty z Baza: pochodzenie, "Z wiedzy modelu", ogolnik z fragmentem zrodla, fakty niewykorzystane.
+  // 6. Fakty z Baza: pochodzenie, "Z wiedzy AI", ogolnik z fragmentem zrodla, fakty niewykorzystane.
   const przedFB = zap.length;
   await faktyOtworz();
   const zFB = zap.slice(przedFB).filter((z) => /You are a fact checker/.test(sys(z)));
@@ -2252,7 +2262,7 @@ async function scenariuszRundaB(b) {
       poch: poch ? { tytul: ((poch.querySelector('.fakty-poch-tytul') || {}).textContent || '').trim(), legenda: [...poch.querySelectorAll('.fakty-poch-poz')].map((x) => x.textContent.trim()),
         czesci: [...poch.querySelectorAll('.fakty-poch-pasek > span')].map((x) => ({ klasa: x.className, grow: Number(getComputedStyle(x).flexGrow), szer: Math.round(x.getBoundingClientRect().width) })),
         aria: pasek ? (pasek.getAttribute('role') + '|' + pasek.getAttribute('aria-label')) : '',
-        przedLista: tekst.indexOf('Pochodzenie twierdzeń') !== -1 && tekst.indexOf('Pochodzenie twierdzeń') < tekst.indexOf('Do sprawdzenia:') } : null,
+        przedLista: tekst.indexOf('Skąd pochodzą informacje') !== -1 && tekst.indexOf('Skąd pochodzą informacje') < tekst.indexOf('Do sprawdzenia:') } : null,
       bezPokrycia: lista.filter((u) => ['liczba', 'model', 'brak', 'zakres'].indexOf(u.rodzaj) !== -1).length,
       doPoprawy: lista.filter((u) => ['liczba', 'model', 'ogolnik', 'brak', 'zakres', 'sprzecznosc', 'konflikt'].indexOf(u.rodzaj) !== -1 && String(u.cytat || '').trim() && (u.rodzaj !== 'ogolnik' || u.zrodlo)).length,
       tytulNiewyk: ((w.querySelector('.fakty-niewyk > .panel-podtytul') || {}).textContent || '').trim(),
@@ -2275,17 +2285,17 @@ async function scenariuszRundaB(b) {
   wynik('Runda B: kontrola dostaje naglowki sekcji artykulu (przed ARTICLE:), zeby fakt z Bazy wskazal, gdzie pasuje',
     fb.naglowki.length >= 3 && JSON.stringify(sekcjeZap) === JSON.stringify(fb.naglowki) && zfu.indexOf('\n\n---\n\nARTICLE SECTIONS') !== -1
       && zfu.indexOf('\n\n---\n\nARTICLE SECTIONS') < zfu.indexOf('\n\n---\n\nARTICLE:\n'), JSON.stringify({ zap: sekcjeZap.slice(0, 3), art: fb.naglowki.slice(0, 3) }));
-  wynik('Runda B: Fakty - kategoria "Z wiedzy modelu" z ikona modelu', fb.stan === 'gotowe' && !!fb.model && fb.model.etykieta === 'Z wiedzy modelu' && fb.model.ikona, JSON.stringify(fb.model));
-  wynik('Runda B: Fakty - "Ogólnik, a źródło podaje konkret" z fragmentem zrodla, ktory podaje wartosc',
-    !!fb.ogolnik && fb.ogolnik.etykieta === 'Ogólnik, a źródło podaje konkret' && fb.ogolnik.ikona && fb.ogolnik.zrodlo.indexOf('W źródle: „Przegląd pompy ciepła po sezonie trwa 90 minut') === 0,
+  wynik('Runda B: Fakty - kategoria "Z wiedzy AI" z ikona modelu', fb.stan === 'gotowe' && !!fb.model && fb.model.etykieta === 'Z wiedzy AI' && fb.model.ikona, JSON.stringify(fb.model));
+  wynik('Runda B: Fakty - "Ogólnik zamiast konkretu ze źródła" z fragmentem zrodla, ktory podaje wartosc',
+    !!fb.ogolnik && fb.ogolnik.etykieta === 'Ogólnik zamiast konkretu ze źródła' && fb.ogolnik.ikona && fb.ogolnik.zrodlo.indexOf('W źródle: „Przegląd pompy ciepła po sezonie trwa 90 minut') === 0,
     JSON.stringify(fb.ogolnik));
   wynik('Runda B: Fakty - pochodzenie twierdzen nad lista: pasek z dwoch czesci i legenda z ikona, liczby zgodne z lista uwag',
-    !!fb.poch && fb.poch.tytul === 'Pochodzenie twierdzeń' && fb.poch.przedLista && fb.poch.legenda.length === 2 && /^Ze źródeł: \d+$/.test(fb.poch.legenda[0])
-      && fb.poch.legenda[1] === 'Z wiedzy modelu: ' + fb.bezPokrycia && fb.bezPokrycia >= 2 && fb.poch.czesci.length === 2 && fb.poch.czesci[1].grow === fb.bezPokrycia
-      && fb.poch.czesci.every((c) => c.szer >= 6) && /^img\|Ze źródeł: \d+, Z wiedzy modelu: \d+ \(\d+\)$/.test(fb.poch.aria),
+    !!fb.poch && fb.poch.tytul === 'Skąd pochodzą informacje' && fb.poch.przedLista && fb.poch.legenda.length === 2 && /^Ze źródeł: \d+$/.test(fb.poch.legenda[0])
+      && fb.poch.legenda[1] === 'Z wiedzy AI: ' + fb.bezPokrycia && fb.bezPokrycia >= 2 && fb.poch.czesci.length === 2 && fb.poch.czesci[1].grow === fb.bezPokrycia
+      && fb.poch.czesci.every((c) => c.szer >= 6) && /^img\|Ze źródeł: \d+, Z wiedzy AI: \d+ \(\d+\)$/.test(fb.poch.aria),
     JSON.stringify({ poch: fb.poch, bezPokrycia: fb.bezPokrycia }));
-  wynik('Runda B: Fakty - "Ze źródeł, a nie ma w tekście (3)": fakty z Bazy z cytatem zrodla i sekcja artykulu, wszystkie zaznaczone',
-    fb.tytulNiewyk === 'Ze źródeł, a nie ma w tekście (3)' && fb.pozycje.length === 3 && fb.pozycje[0].fakt.indexOf('Zgłoszenie przeglądu wymaga numeru seryjnego') === 0
+  wynik('Runda B: Fakty - "Do dopisania ze źródeł (3)": fakty z Bazy z cytatem zrodla i sekcja artykulu, wszystkie zaznaczone',
+    fb.tytulNiewyk === 'Do dopisania ze źródeł (3)' && fb.pozycje.length === 3 && fb.pozycje[0].fakt.indexOf('Zgłoszenie przeglądu wymaga numeru seryjnego') === 0
       && fb.pozycje.every((p) => p.zaznaczony && p.fakt && /^W źródle: „/.test(p.zrodlo) && fb.naglowki.indexOf(p.gdzie.replace(/^Pasuje do sekcji: /, '')) !== -1 && /^Pasuje do sekcji: /.test(p.gdzie)),
     JSON.stringify({ tytul: fb.tytulNiewyk, pozycje: fb.pozycje }));
   wynik('Runda B: Fakty - przyciski "Popraw wskazane zdania (N)" (z ogolnikiem i zdaniem z wiedzy modelu) i "Dopisz do tekstu (3)"',
@@ -2339,7 +2349,7 @@ async function scenariuszRundaB(b) {
     if (btn) btn.click();
     return w;
   });
-  await krok('Runda B dopisanie faktow', s.waitForFunction(() => versions.some((v) => v.label.indexOf('Dopisane fakty ze źródeł') !== -1)
+  await krok('Runda B dopisanie faktow', s.waitForFunction(() => versions.some((v) => v.label.indexOf('Dopisane fakty') !== -1)
     && getComputedStyle(document.getElementById('fakty-loading')).display === 'none' && faktyStan === 'gotowe'
     && document.getElementById('fakty-wynik').textContent.trim().length > 0, null, { timeout: 30000 }));
   const zD = zap.slice(przedD).filter((z) => /^You are an editor adding facts from the sources/.test(sys(z)));
@@ -2364,9 +2374,9 @@ async function scenariuszRundaB(b) {
       && zDu.indexOf('\n   SECTION: "' + l[0].gdzie + '"') !== -1 && zDu.indexOf('\n2. FACT: ' + l[2].fakt) !== -1 && zDu.indexOf(l[1].fakt) === -1
       && /\n\nARTICLE \(HTML\):\n/.test(zDu) && !/zrodla-box/.test(zDu),
     JSON.stringify({ zapytan: zD.length, napis: wybor.napis, usr: zDu.slice(0, 260) }));
-  wynik('Runda B: Dopisz do tekstu - fakty w tekscie we wskazanych sekcjach, odznaczonego nie ma, wersja "Dopisane fakty ze źródeł", lista zrodel zostaje, kontrola od nowa',
+  wynik('Runda B: Dopisz do tekstu - fakty w tekscie we wskazanych sekcjach, odznaczonego nie ma, wersja "Dopisane fakty", lista zrodel zostaje, kontrola od nowa',
     l.length === 3 && po.tekst.indexOf(l[0].fakt) !== -1 && po.tekst.indexOf(l[2].fakt) !== -1 && po.tekst.indexOf(l[1].fakt) === -1
-      && po.sekcje[0] === l[0].gdzie && po.sekcje[2] === l[2].gdzie && po.wersje.some((x) => /Dopisane fakty ze źródeł/.test(x)) && po.zrodla > 0 && zFD.length === 1,
+      && po.sekcje[0] === l[0].gdzie && po.sekcje[2] === l[2].gdzie && po.wersje.some((x) => /Dopisane fakty/.test(x)) && po.zrodla > 0 && zFD.length === 1,
     JSON.stringify({ sekcje: po.sekcje, gdzie: l.map((n) => n.gdzie), wersje: po.wersje, zrodla: po.zrodla, kontroli: zFD.length }));
 
   // 9. Wynik bez uwag z faktami niewykorzystanymi i stany bez dodatkow (blad, brak zrodel).
@@ -2376,9 +2386,9 @@ async function scenariuszRundaB(b) {
     const w = document.getElementById('fakty-wynik');
     pokazWynikFaktow([], 'gotowe');
     const t = w.textContent;
-    const wynikCzysty = { czesci: w.querySelectorAll('.fakty-poch-pasek > span').length, opisModelu: /Z wiedzy modelu to twierdzenia/.test(t), pozycje: w.querySelectorAll('.fakty-niewyk-item').length,
-      gdzie: w.querySelectorAll('.fakty-niewyk-gdzie').length, liczby: /Ze źródeł: 12/.test(t) && /Z wiedzy modelu: 0/.test(t),
-      kolejnosc: t.indexOf('Pochodzenie twierdzeń') !== -1 && t.indexOf('Pochodzenie twierdzeń') < t.indexOf('Bez zastrzeżeń.') && t.indexOf('Bez zastrzeżeń.') < t.indexOf('Ze źródeł, a nie ma w tekście (1)') };
+    const wynikCzysty = { czesci: w.querySelectorAll('.fakty-poch-pasek > span').length, opisModelu: /Informacji z wiedzy AI nie potwierdza/.test(t), pozycje: w.querySelectorAll('.fakty-niewyk-item').length,
+      gdzie: w.querySelectorAll('.fakty-niewyk-gdzie').length, liczby: /Ze źródeł: 12/.test(t) && /Z wiedzy AI: 0/.test(t),
+      kolejnosc: t.indexOf('Skąd pochodzą informacje') !== -1 && t.indexOf('Skąd pochodzą informacje') < t.indexOf('Bez zastrzeżeń') && t.indexOf('Bez zastrzeżeń') < t.indexOf('Do dopisania ze źródeł (1)') };
     pokazWynikFaktow([], 'blad');
     const blad = !w.querySelector('.fakty-pochodzenie, .fakty-niewyk');
     pokazWynikFaktow([], 'brak-zrodel');
@@ -2456,8 +2466,8 @@ async function scenariuszRundaB(b) {
     return t;
   });
   wynik('Runda B: Fakty po angielsku - kategorie, pochodzenie, fakty niewykorzystane i przyciski ze slownika',
-    /From the model's knowledge/.test(en) && /No source states this\. The sentence comes from the model's knowledge/.test(en) && /Vague, the source is specific/.test(en)
-      && /Where the claims come from/.test(en) && /From the sources: 5/.test(en) && /In the sources, missing from the text \(1\)/.test(en) && /Add to the text \(1\)/.test(en)
+    /From the AI's knowledge/.test(en) && /No source states this\. The sentence comes from the AI's knowledge/.test(en) && /Vague where the source is specific/.test(en)
+      && /Where the information comes from/.test(en) && /From your sources: 5/.test(en) && /To add from your sources \(1\)/.test(en) && /Add to the article \(1\)/.test(en)
       && /Fix the flagged sentences \(2\)/.test(en) && /In the source: “Maksymalnie 30 cm\.”/.test(en) && /Fits the section: Jak przygotować/.test(en), en.slice(0, 400));
 
   wynik('Runda B: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
@@ -2469,6 +2479,11 @@ async function scenariuszRundaB(b) {
 // kolumny ("Czym zajmuje się astrobiologia i / czym różni się od egzobiologii?", 360 z 669 px), co wygladalo jak blad.
 // Teraz pierwszy wiersz dwuwierszowego srodtytulu siega dalej (srednio co najmniej 78% szerokosci), na komputerze
 // i na telefonie. PDF: po H2 i H3 wiecej miejsca niz miedzy akapitami, nad naglowkiem wiecej niz pod nim.
+// Porzadki tekstow interfejsu (2026-11-07), grupa A: rozwijki „Jak to dziala?”, uklad tekstow pomocy, telefon.
+async function scenariuszTekstyA(b) {
+  void b;
+}
+
 async function scenariuszSrodtytuly(b) {
   const H2 = ['Czym zajmuje się astrobiologia i czym różni się od egzobiologii?', 'Czym są biosygnatury i jak pomagają szukać życia pozaziemskiego?',
     'Gdzie szukać? Misje kosmiczne na Marsa, Europę i Enceladusa', 'Eksploracja kosmosu 2026: na co czekać w tym roku i później?'];
@@ -2626,6 +2641,7 @@ const SCENARIUSZE = [
   ['r9f-narracja', scenariuszR9FNarracja], ['r9f-sesja', scenariuszR9FSesja],
   ['r9f-pokrycie', scenariuszR9FPokrycie], ['opus55', scenariuszOpus55], ['runda-a', scenariuszRundaA], ['runda-b', scenariuszRundaB],
   ['srodtytuly', scenariuszSrodtytuly], ['po-etapie-7', scenariuszPoEtapie7],
+  ['teksty-a', scenariuszTekstyA], ['teksty-b', scenariuszTekstyB], ['teksty-c', scenariuszTekstyC],
 ];
 (async () => {
   let b;
