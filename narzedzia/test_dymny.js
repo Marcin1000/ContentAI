@@ -1750,7 +1750,7 @@ async function wariantR9Zrozumialosc(b) {
   // Bez poprawki okno zostaje otwarte: zamykamy je, zeby reszta kontroli dala wlasny wynik.
   if (okno1) await s.evaluate(() => { closeNoSourceModal(); document.getElementById('use-web').checked = true; generate(true); }).then(() => czekajNaKoniec(s, 60000)).catch(() => {});
 
-  // UX8-11: pod przelacznikiem ocen jedno zdanie, co mierzy wybrana ocena; przyciski z podpowiedzia.
+  // UX8-11: pod przelacznikiem ocen jedno zdanie, co mierzy wybrana ocena; przyciski bez title (grupa A 2026-11-07: opis jest tylko pod przelacznikiem).
   await s.evaluate(() => inspektorPokaz('seo'));
   await s.waitForTimeout(600);
   const oSeo = await s.evaluate(() => ({ opis: (document.getElementById('ins-ocena-opis') || {}).textContent || '',
@@ -1759,8 +1759,8 @@ async function wariantR9Zrozumialosc(b) {
   await s.evaluate(() => inspektorPokaz('geo'));
   await s.waitForTimeout(600);
   const oGeo = await s.evaluate(() => (document.getElementById('ins-ocena-opis') || {}).textContent || '');
-  wynik('telefon: R9-G UX8-11 pod SEO/AIO/AEO/GEO zdanie, co mierzy wybrana ocena (GEO to nie geolokalizacja), przyciski z podpowiedzia',
-    oSeo.widac && /^Ocenia, czy .*Google/.test(oSeo.opis) && /^Ocenia, czy czaty AI .*geolokalizac/.test(oGeo) && oSeo.podpowiedzi === 4, JSON.stringify({ oSeo, oGeo }));
+  wynik('telefon: R9-G UX8-11 pod SEO/AIO/AEO/GEO zdanie, co mierzy wybrana ocena (GEO to nie geolokalizacja), przyciski bez title',
+    oSeo.widac && /^Ocenia, czy .*Google/.test(oSeo.opis) && /^Ocenia, czy czaty AI .*geolokalizac/.test(oGeo) && oSeo.podpowiedzi === 0, JSON.stringify({ oSeo, oGeo }));
   await s.evaluate(() => inspektorZamknij());
   await s.evaluate(() => ustawWidokMobilny('brief'));
   // UX8-11: Typ tresci SEO / AIO z jednym zdaniem pod polem; dla innych typow bez dopisku.

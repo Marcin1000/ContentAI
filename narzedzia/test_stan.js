@@ -2911,11 +2911,12 @@ async function scenariuszRundaB(b) {
     const c = document.getElementById('aeo-content');
     kontekstArt.frazy = ['przegląd pompy ciepła'];
     renderAeoCheck();
-    const nota = c.querySelector('.aeo-marka');
-    const w = { nota: nota ? nota.textContent.trim() : '', zNota: c.innerHTML.replace(nota ? nota.outerHTML : '', '') };
+    // Grupa A (2026-11-07): objasnienie w rozwijce pod informacja, wiec tekst informacji to sam .aeo-marka-tekst.
+    const nota = c.querySelector('.aeo-marka'), tekstNoty = c.querySelector('.aeo-marka-tekst');
+    const w = { nota: tekstNoty ? tekstNoty.textContent.trim() : '', zNota: c.innerHTML.replace(nota ? nota.outerHTML : '', '') };
     ustawJezyk('en');
     renderAeoCheck();
-    w.en = ((c.querySelector('.aeo-marka') || {}).textContent || '').trim();
+    w.en = ((c.querySelector('.aeo-marka-tekst') || {}).textContent || '').trim();
     ustawJezyk('pl');
     kontekstArt.frazy = ['serwis ' + marka.toLowerCase()];
     renderAeoCheck();
@@ -2926,7 +2927,7 @@ async function scenariuszRundaB(b) {
     return { nota: w.nota, en: w.en, zFraza: w.zFraza, tylkoNota: w.zNota === w.bezNoty };
   }, MARKA);
   wynik('Runda B: AEO - informacja o naglowkach z nazwa marki (z przykladem), po angielsku tez; ocena bez zmian; z marka we frazach bez informacji',
-    !!aeo && aeo.nota.indexOf('Marka w śródtytułach: 2, np. „Która usługa ' + MARKA + ' najlepiej sprawdzi się po sezonie?”') === 0
+    !!aeo && aeo.nota === 'Marka w śródtytułach: 2, np. „Która usługa ' + MARKA + ' najlepiej sprawdzi się po sezonie?”'
       && aeo.en.indexOf('Brand in headings: 2, e.g. “Która usługa ' + MARKA) === 0 && !aeo.zFraza && aeo.tylkoNota, JSON.stringify(aeo));
 
   // 11. Luki: nowe sekcje z regula konkretu i naglowkami bez marki; plan calego artykulu ich nie dotyczy.
@@ -2982,7 +2983,374 @@ async function scenariuszRundaB(b) {
 // i na telefonie. PDF: po H2 i H3 wiecej miejsca niz miedzy akapitami, nad naglowkiem wiecej niz pod nim.
 // Porzadki tekstow interfejsu (2026-11-07), grupa A: rozwijki „Jak to dziala?”, uklad tekstow pomocy, telefon.
 async function scenariuszTekstyA(b) {
-  void b;
+  // ── 1. Wariant keys na komputerze (PL, potem EN) ──
+  const st = {};
+  const { k, s, bledyJs } = await nowaStrona(b, 'pl', st);
+  // Rozwijki w HTML: [klucz tresci, etykieta]. Tekst bazowy (klucz bez -jak) stoi tuz nad rozwijka.
+  const STATYCZNE = [
+    ['toggle-web-hint-jak', 'pomoc-jak-to-dziala'], ['fog-goal-jak', 'pomoc-jak-to-dziala'], ['trk-ga4-note-jak', 'pomoc-jak-to-zrobic'],
+    ['wp-hint-jak', 'pomoc-jak-to-zrobic'], ['cms-drupal-hint-short-jak', 'pomoc-jak-to-zrobic'], ['llms-desc-jak', 'pomoc-jak-to-zrobic'],
+    ['aiv-modal-desc-jak', 'pomoc-jak-to-dziala'], ['vis-desc-jak', 'pomoc-jak-to-dziala'], ['ozn-grafika-pytanie-opis-jak', 'pomoc-jak-to-dziala'],
+  ];
+  // Zwraca liste usterek (pusta = wszystko na miejscu).
+  const rozwijki = (strona, lista) => strona.evaluate((lista) => {
+    const tekstKlucza = (kl) => { const t = document.createElement('div'); t.innerHTML = _t(kl); return t.textContent; };
+    return lista.map(([kl, et]) => {
+      const p = document.querySelector('details.rozwijka.rozwijka-jak > p.tekst-pomoc[data-i18n="' + kl + '"]');
+      if (!p) return kl + ': brak';
+      const d = p.parentElement, sm = d.querySelector(':scope > summary'), przed = d.previousElementSibling, baza = kl.replace(/-jak$/, '');
+      const zle = [];
+      if (d.open) zle.push('otwarta');
+      if (!sm || sm.textContent.trim() !== _t(et) || !sm.querySelector('svg.ikona')) zle.push('etykieta');
+      if (p.textContent !== tekstKlucza(kl)) zle.push('tresc');
+      // toggle-web-hint bywa podmieniony na toggle-web-hint-pusta (pusta Baza), stad dopasowanie poczatku klucza
+      if (!przed || ((przed.getAttribute('data-i18n') || '').indexOf(baza) !== 0 && !przed.querySelector('[data-i18n^="' + baza + '"]'))) zle.push('miejsce');
+      if (d.querySelectorAll('p').length !== 1) zle.push('akapity');
+      return zle.length ? kl + ': ' + zle.join(',') : '';
+    }).filter(Boolean);
+  }, lista);
+  const rPl = await rozwijki(s, STATYCZNE);
+  wynik('Teksty A: rozwijki „Jak to dziala?” i „Jak to zrobic?” pod tekstami w HTML (zamkniete, etykieta z ikona, tresc <klucz>-jak)', !rPl.length, rPl.join(' | '));
+
+  // Klawiatura: rozwijka w karcie Zrodla (widoczna na starcie) otwiera sie Enterem i zamyka spacja.
+  const SUM = '.field.zrodla > details.rozwijka-jak > summary';
+  const klaw = {};
+  if (await s.$(SUM)) {
+    await s.focus(SUM);
+    klaw.fokus = await s.evaluate((sel) => document.activeElement === document.querySelector(sel), SUM);
+    await s.keyboard.press('Enter');
+    klaw.enter = await s.$eval(SUM, (x) => x.parentElement.open && x.nextElementSibling.getBoundingClientRect().height > 0);
+    await s.keyboard.press('Space');
+    klaw.spacja = await s.$eval(SUM, (x) => !x.parentElement.open);
+  }
+  wynik('Teksty A: rozwijka w karcie Zrodla otwiera sie i zamyka z klawiatury (Enter, spacja)', !!(klaw.fokus && klaw.enter && klaw.spacja), JSON.stringify(klaw));
+
+  // Konto na wlasnych kluczach: pomoc przelacznika i druga linia o koszcie jak dotad, pod nimi jedna rozwijka.
+  const zr = await s.evaluate(() => {
+    const widac = (x) => !!x && getComputedStyle(x).display !== 'none' && x.getClientRects().length > 0;
+    document.body.classList.add('konto-wlasne');
+    const pole = document.querySelector('.field.zrodla');
+    const roz = pole ? [...pole.querySelectorAll('details.rozwijka')] : [];
+    const pomoc = pole && pole.querySelector('label[for="use-web"] .toggle-hint:not(.koszt-wlasny)');
+    const koszt = pole && pole.querySelector('label[for="use-web"] .koszt-wlasny');
+    const w = { rozwijek: roz.length, pomoc: widac(pomoc) ? pomoc.getAttribute('data-i18n') : '', koszt: widac(koszt) ? koszt.getAttribute('data-i18n') : '',
+      podSpodem: roz.length === 1 && widac(koszt) && roz[0].getBoundingClientRect().top >= koszt.getBoundingClientRect().bottom - 1 };
+    document.body.classList.remove('konto-wlasne');
+    return w;
+  });
+  wynik('Teksty A: karta Zrodla na koncie na wlasnych kluczach - pomoc przelacznika i linia o koszcie zostaja, pod nimi jedna rozwijka',
+    zr.rozwijek === 1 && /^toggle-web-hint(-pusta)?$/.test(zr.pomoc) && zr.koszt === 'toggle-web-koszt-wlasne' && zr.podSpodem, JSON.stringify(zr));
+
+  // Przelaczniki oznaczen AI: opis miejsca w <small> pod etykieta (okno publikacji: przed przypomnieniem).
+  const oznaczenia = () => s.evaluate(() => ['rp', 'cms', 'grafika', 'audio'].map((n) => {
+    const sm = document.querySelector('label.ozn-wiersz small[data-i18n="ozn-' + n + '-opis"]');
+    if (!sm) return n + ': brak';
+    const lab = sm.closest('label.ozn-wiersz'), et = lab.querySelector('b[data-i18n="ozn-' + n + '-przelacznik"]'), zle = [];
+    if (sm.textContent !== _t('ozn-' + n + '-opis')) zle.push('tresc');
+    if (!lab.querySelector('input[type="checkbox"][data-oznaczenie]')) zle.push('przelacznik');
+    if (!et || et.nextElementSibling !== sm || et.textContent !== _t('ozn-' + n + '-przelacznik')) zle.push('pod-etykieta');
+    if (n === 'cms' && sm.nextElementSibling !== document.getElementById('ozn-cms-przypomnienie')) zle.push('przed-przypomnieniem');
+    return zle.length ? n + ': ' + zle.join(',') : '';
+  }).filter(Boolean));
+  // Segmenty ocen i filtry Historii bez title (opis jest pod przelacznikiem i pod polem Typ tresci).
+  const tytuly = () => s.evaluate(() => {
+    const el = [...document.querySelectorAll('[data-ins-ocena], .htag-filter')];
+    return { zTytulem: el.filter((x) => x.title || x.hasAttribute('data-i18n-title')).map((x) => x.textContent.trim() + ': ' + x.title),
+      oceny: document.querySelectorAll('[data-ins-ocena]').length, filtry: document.querySelectorAll('.htag-filter').length };
+  });
+  const oPl = await oznaczenia(), tPl = await tytuly();
+  await s.evaluate(() => ustawJezyk('en'));
+  const rEn = await rozwijki(s, STATYCZNE), oEn = await oznaczenia(), tEn = await tytuly();
+  const etEn = await s.evaluate(() => [_t('pomoc-jak-to-dziala'), _t('pomoc-jak-to-zrobic')]);
+  await s.evaluate(() => ustawJezyk('pl'));
+  wynik('Teksty A: po ustawJezyk("en") rozwijki po angielsku (How does it work? / Show me how, tresc ze slownika EN)',
+    !rEn.length && etEn[0] === 'How does it work?' && etEn[1] === 'Show me how', rEn.join(' | ') + ' ' + JSON.stringify(etEn));
+  wynik('Teksty A: przelaczniki oznaczen AI (przerobki, publikacja, Grafika, Audio) z opisem w <small> pod etykieta, PL i EN',
+    !oPl.length && !oEn.length, JSON.stringify({ oPl, oEn }));
+  wynik('Teksty A: segmenty SEO/AIO/AEO/GEO i filtry Historii bez title (PL i EN)',
+    !tPl.zTytulem.length && !tEn.zTytulem.length && tPl.oceny === 4 && tPl.filtry >= 4, JSON.stringify({ tPl, tEn }));
+
+  // Kontrola faktow: najwyzej dwie rozwijki - pod opisem poprawy i pod notka o sieci (wspolna dla obu brzmien).
+  const fakty = () => s.evaluate(() => {
+    if (typeof pokazWynikFaktow !== 'function') return null;
+    const w = document.getElementById('fakty-wynik');
+    const kopia = { s: faktyWzgledemSieci, t: trybUzupelniania, z: zrodlaSieciowe.slice() };
+    const uwagi = [{ rodzaj: 'ogolnik', cytat: 'Limity są inne.', zrodlo: 'Maksymalnie 30 cm.', powod: '' }];
+    const opis = () => [...w.querySelectorAll('details.rozwijka')].map((d) => {
+      const p = d.querySelector(':scope > p.tekst-pomoc'), sm = d.querySelector(':scope > summary'), przed = d.previousElementSibling;
+      return { jak: d.classList.contains('rozwijka-jak'), otwarta: d.open, et: sm ? sm.textContent.trim() : '', ikona: !!(sm && sm.querySelector('svg.ikona')),
+        tresc: p ? p.textContent : '', przed: przed ? przed.textContent : '' };
+    });
+    const f = {};
+    try {
+      faktyWzgledemSieci = true; trybUzupelniania = false;
+      pokazWynikFaktow(uwagi, 'gotowe');
+      f.wzgledemSieci = opis();
+      faktyWzgledemSieci = false; trybUzupelniania = true;
+      zrodlaSieciowe.length = 0; zrodlaSieciowe.push({ url: 'https://example.com/pompy', title: 'Pompy' });
+      pokazWynikFaktow(uwagi, 'gotowe');
+      f.trybSieci = opis();
+    } finally {
+      faktyWzgledemSieci = kopia.s; trybUzupelniania = kopia.t;
+      zrodlaSieciowe.length = 0; kopia.z.forEach((z) => zrodlaSieciowe.push(z));
+      w.innerHTML = '';
+    }
+    f.oczekiwane = { et: _t('pomoc-jak-to-dziala'), popraw: [_t('fakty-popraw-opis'), _t('fakty-popraw-jak')],
+      siec: [_t(liczbaDokumentow() ? 'fakty-wzgledem-sieci-baza' : 'fakty-wzgledem-sieci'), _t('fakty-wzgledem-sieci-jak')],
+      tryb: [_t('fakty-tryb-uzupelniania'), _t('fakty-tryb-uzupelniania-jak')] };
+    return f;
+  });
+  const faktyOk = (f) => !!f && [['wzgledemSieci', 'siec'], ['trybSieci', 'tryb']].every(([n, o]) => {
+    const r = f[n], e = f.oczekiwane;
+    return r.length === 2 && r.every((x) => x.jak && !x.otwarta && x.ikona && x.et === e.et)
+      && r[0].przed === e.popraw[0] && r[0].tresc === e.popraw[1] && r[1].przed === e[o][0] && r[1].tresc === e[o][1];
+  });
+  const fPl = await fakty();
+  await s.evaluate(() => ustawJezyk('en'));
+  const fEn = await fakty();
+  await s.evaluate(() => ustawJezyk('pl'));
+  wynik('Teksty A: Kontrola faktow - rozwijki pod opisem poprawy i pod notka o sieci (dwie w panelu), PL i EN',
+    faktyOk(fPl) && faktyOk(fEn) && fEn.oczekiwane.et === 'How does it work?', JSON.stringify({ fPl, fEn }).slice(0, 900));
+
+  // Artykul z marka w srodtytule: ocena AEO z rozwijka pod informacja o marce.
+  await s.evaluate(() => { try { magazyn.setItem('cai-llms', JSON.stringify({ name: 'TermoTest' })); } catch (e) { /* bez magazynu */ } });
+  await generuj(s, 'Przegląd pompy ciepła po sezonie', false);
+  await krok('Teksty A: artykul', czekajNaKoniec(s));
+  const aeo = await s.evaluate(() => {
+    if (typeof renderAeoCheck !== 'function' || !kontekstArt) return null;
+    const art = document.getElementById('article'), c = document.getElementById('aeo-content');
+    const kopia = art.innerHTML, frazy = kontekstArt.frazy;
+    art.innerHTML = '<h1>Przegląd pompy ciepła</h1><p>Przegląd pompy ciepła po sezonie trwa 90 minut i obejmuje sprawdzenie ciśnienia czynnika.</p>'
+      + '<h2>Która usługa TermoTest sprawdzi się po sezonie?</h2><p>Akapit sekcji.</p>';
+    kontekstArt.frazy = ['przegląd pompy ciepła'];
+    const opis = () => {
+      const n = c.querySelector('.aeo-marka'), d = n && n.querySelector('details.rozwijka-jak'), t = n && n.querySelector('.aeo-marka-tekst');
+      const sm = d && d.querySelector(':scope > summary'), p = d && d.querySelector(':scope > p.tekst-pomoc');
+      return { tekst: t ? t.textContent : '', et: sm ? sm.textContent.trim() : '', jak: p ? p.textContent : '',
+        ok: !!d && !d.open && d.previousElementSibling === t && !!sm && sm.textContent.trim() === _t('pomoc-jak-to-dziala') && !!p && p.textContent === _t('aeo-marka-naglowki-jak') };
+    };
+    renderAeoCheck();
+    const pl = opis();
+    ustawJezyk('en');
+    renderAeoCheck();
+    const en = opis();
+    ustawJezyk('pl');
+    kontekstArt.frazy = frazy; art.innerHTML = kopia; renderAeoCheck();
+    return { pl, en };
+  });
+  wynik('Teksty A: ocena AEO - pod informacja o marce w srodtytulach rozwijka „Jak to dziala?” (PL i EN)',
+    !!aeo && aeo.pl.ok && aeo.en.ok && /TermoTest/.test(aeo.pl.tekst) && aeo.en.et === 'How does it work?', JSON.stringify(aeo));
+
+  // Wersje po poprawce: na komputerze pelna nazwa (krotka tylko na telefonie). Etykieta: klucz albo [klucz, dopisek].
+  const wersje = (strona, etykiety) => strona.evaluate(async (etykiety) => {
+    if (document.body.classList.contains('is-mobile')) ustawWidokMobilny('wynik');
+    const art = document.getElementById('article');
+    const nazwa = (e) => Array.isArray(e) ? _t(e[0]) + e[1] : _t(e);
+    versions = []; activeVersion = 0;
+    etykiety.forEach((e) => addVersion(art.innerHTML, nazwa(e)));
+    await new Promise((r) => setTimeout(r, 150));
+    const bt = [...document.querySelectorAll('#versions-bar .ver-btn')], b2 = bt[1];
+    const pe = b2 && b2.querySelector('.ver-pelna'), kr = b2 && b2.querySelector('.ver-krotka');
+    const w = { widac: b2 ? b2.innerText.trim() : '', title: b2 ? b2.title : '', aria: b2 ? b2.getAttribute('aria-label') : '', pelna: nazwa(etykiety[1]),
+      pierwszy: bt[0] ? bt[0].innerText.trim() : '', pierwszyTitle: bt[0] ? bt[0].title : '', pierwszyPelna: nazwa(etykiety[0]), oryginal: _t('ver-original'),
+      pelnaWidac: !!pe && getComputedStyle(pe).display !== 'none', krotkaWidac: !!kr && getComputedStyle(kr).display !== 'none',
+      samokorekta: document.getElementById('versions-bar').classList.contains('wersje-samokorekty'),
+      uciete: bt.filter((x) => x.scrollWidth > x.clientWidth + 1).map((x) => x.innerText.trim()) };
+    versions = []; activeVersion = 0; renderVersionsBar();
+    return w;
+  }, etykiety);
+  const wKomp = await wersje(s, ['ver-original', 'ver-fakty']);
+  wynik('Teksty A: komputer - wersja po poprawce z pelna nazwa (krotka nazwa schowana), bez podpisu „Samokorekta”',
+    wKomp.widac === wKomp.pelna && wKomp.pelnaWidac && !wKomp.krotkaWidac && wKomp.title === wKomp.pelna && !wKomp.samokorekta, JSON.stringify(wKomp));
+
+  // Siec: na komputerze opis stanu zostaje w title, pomoc pod wartoscia schowana.
+  const siecKomp = await s.evaluate(() => {
+    pokazStanSieci({ szukan: 2, cytowan: 0 }, 0);
+    const o = document.getElementById('stat-siec-opis'), w = document.getElementById('stat-siec-wrap');
+    return { jest: !!o, tekst: o ? o.textContent : '', title: w ? w.title : '', schowany: !!o && getComputedStyle(o).display === 'none' };
+  });
+
+  // Blad serwera: w panelu SEO (poza miejscem artykulu) bez rady, w miejscu artykulu rada w drugim akapicie.
+  st.blad = '500'; st.gdzie = 'anthropic';
+  await s.evaluate(() => { seoOpen = false; toggleSeoPanel(true); });
+  await krok('Teksty A: blad w panelu SEO', s.waitForFunction(() => !!document.querySelector('#seo-content .komunikat-bledu'), null, { timeout: 30000 }));
+  const radaPanel = await s.evaluate(() => {
+    const kb = document.querySelector('#seo-content .komunikat-bledu');
+    return kb ? { rada: kb.textContent.indexOf(_t('err-server-500-jak')) !== -1, akapity: kb.querySelectorAll(':scope > p').length } : null;
+  });
+  await generuj(s, 'Test rady przy błędzie serwera', false);
+  await krok('Teksty A: blad 500 w artykule', czekajNaKoniec(s));
+  st.blad = null;
+  const radaArt = await s.evaluate(() => {
+    const kb = document.querySelector('#article .komunikat-bledu');
+    if (!kb) return null;
+    const ps = [...kb.querySelectorAll(':scope > p')], rada = _t('err-server-500-jak');
+    return { akapity: ps.length, pierwszy: ps[0] ? ps[0].textContent : '', drugi: ps[1] ? ps[1].textContent : '', drugiPomoc: !!ps[1] && ps[1].classList.contains('tekst-pomoc'),
+      wSzczegolach: [...kb.querySelectorAll('details')].some((d) => d.textContent.indexOf(rada) !== -1), rada, zdanie: _t('err-server-500') };
+  });
+  wynik('Teksty A: blad 500 w miejscu artykulu - pod zdaniem rada err-server-500-jak (p.tekst-pomoc, poza Szczegolami), w panelu SEO bez rady',
+    !!radaArt && radaArt.akapity === 2 && radaArt.drugiPomoc && radaArt.drugi === radaArt.rada && radaArt.pierwszy.indexOf(radaArt.zdanie) !== -1 && !radaArt.wSzczegolach
+      && !!radaPanel && !radaPanel.rada && radaPanel.akapity === 1, JSON.stringify({ radaArt, radaPanel }));
+
+  // Audio, transkrypcja: za duzy plik widac od razu pod nazwa pliku, rada w drugiej linii (bez rozwijki).
+  const trans = await s.evaluate(() => {
+    if (typeof audioFileLabel !== 'function' || typeof LIMIT_PLIKU_TRANSKRYPCJI === 'undefined') return null;
+    if (typeof openAudioPanel === 'function') openAudioPanel();
+    const typ = document.getElementById('au-type');
+    if (typ) { typ.value = 'transcription'; audioSetType(); }
+    const i = document.getElementById('au-file');
+    const f = new File([new Uint8Array(LIMIT_PLIKU_TRANSKRYPCJI + 4096)], 'nagranie.mp3', { type: 'audio/mpeg' });
+    const dt = new DataTransfer(); dt.items.add(f); i.files = dt.files;
+    audioFileLabel();
+    const widac = (x) => !!x && !x.hidden && getComputedStyle(x).display !== 'none' && x.getClientRects().length > 0;
+    const stan = () => {
+      const bl = document.getElementById('au-plik-blad'), r = document.getElementById('au-plik-rada');
+      return { blad: widac(bl) ? bl.textContent : '', rada: widac(r) ? r.textContent : '', nazwa: (document.getElementById('au-fname') || {}).textContent || '',
+        oczekiwane: [_t('err-transkrypcja-za-duzy').replace('{mb}', formatujLiczbe(f.size / 1048576, 1)), _t('err-transkrypcja-za-duzy-jak')] };
+    };
+    const pl = stan();
+    ustawJezyk('en');
+    const en = stan();
+    ustawJezyk('pl');
+    i.value = ''; audioFileLabel();
+    const pusty = stan();
+    const u = document.querySelector('.au-plik [data-i18n="au-upusc"]');
+    const upusc = !!u && getComputedStyle(u).display !== 'none';
+    if (typeof closeAudioPanel === 'function') closeAudioPanel();
+    return { pl, en, pusty, upusc };
+  });
+  const transOk = (x) => !!x.blad && x.blad === x.oczekiwane[0] && x.rada === x.oczekiwane[1] && x.nazwa === 'nagranie.mp3';
+  wynik('Teksty A: Audio, za duzy plik do transkrypcji - pod nazwa pliku zdanie o limicie i rada err-transkrypcja-za-duzy-jak (PL i po zmianie na EN), bez nich po usunieciu pliku',
+    !!trans && transOk(trans.pl) && transOk(trans.en) && trans.en.rada !== trans.pl.rada && !trans.pusty.blad && !trans.pusty.rada, JSON.stringify(trans));
+  wynik('Teksty A: komputer - bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+  if (bledow) await zrzut(s, 'teksty-a-komputer');
+  await k.close();
+
+  // ── 2. Telefon 320 px (wariant keys) ──
+  const tel = {};
+  const m = await nowaStrona(b, 'pl', tel, { viewport: { width: 320, height: 720 }, isMobile: true, hasTouch: true });
+  const dotyk = await m.s.evaluate(() => {
+    const x = document.querySelector('.field.zrodla > details.rozwijka-jak > summary');
+    if (!x) return null;
+    const r = x.getBoundingClientRect();
+    return { h: Math.round(r.height), prawa: Math.round(r.right), szer: document.documentElement.clientWidth };
+  });
+  wynik('Teksty A: telefon 320 px - rozwijka w karcie Zrodla ma pole dotyku co najmniej 44 px i miesci sie w ekranie',
+    !!dotyk && dotyk.h >= 44 && dotyk.prawa <= dotyk.szer, JSON.stringify(dotyk));
+  const upuscTel = await m.s.evaluate(() => {
+    const u = document.querySelector('.au-plik [data-i18n="au-upusc"]'), n = document.getElementById('au-fname');
+    return { schowany: !!u && getComputedStyle(u).display === 'none', nazwa: !!n && getComputedStyle(n).display !== 'none' };
+  });
+  wynik('Teksty A: Audio - napis „albo upusc nagranie tutaj” tylko na komputerze, na telefonie zostaje nazwa pliku',
+    !!trans && trans.upusc && upuscTel.schowany && upuscTel.nazwa, JSON.stringify({ komputer: trans && trans.upusc, upuscTel }));
+  await m.s.evaluate(() => { document.getElementById('topic').value = 'Przegląd pompy ciepła po sezonie'; document.getElementById('use-web').checked = true; generate(); });
+  await krok('Teksty A: artykul na telefonie', czekajNaKoniec(m.s));
+  const wTel = await wersje(m.s, [['ver-original', ' (72/65)'], 'ver-poprawiony-hybryda']);
+  wynik('Teksty A: telefon 320 px - wersje po poprawce: pierwsze slowo („Oryginał” | „Poprawione”), pelna nazwa w title i aria-label, bez podpisu „Samokorekta”, nic nie uciete',
+    wTel.widac === wTel.pelna.split(' ')[0] && wTel.widac !== wTel.pelna && wTel.title === wTel.pelna && wTel.aria === wTel.pelna && !wTel.samokorekta && !wTel.uciete.length
+      && wTel.pierwszy === wTel.oryginal && wTel.pierwszyTitle === wTel.pierwszyPelna, JSON.stringify(wTel));
+  const siecTel = await m.s.evaluate(async () => {
+    pokazStanSieci({ szukan: 2, cytowan: 0 }, 0);
+    przelaczStatystyki(true);
+    await new Promise((r) => setTimeout(r, 400));
+    const o = document.getElementById('stat-siec-opis'), w = document.getElementById('stat-siec-wrap'), v = document.getElementById('stat-siec');
+    const r = o ? o.getBoundingClientRect() : null, rv = v.getBoundingClientRect();
+    const wynikTel = { tekst: o ? o.innerText.trim() : '', title: w.title, widac: !!r && r.height > 0, pod: !!r && r.top >= rv.bottom - 1,
+      miesci: !!r && r.right <= document.documentElement.clientWidth, oczekiwane: _t('siec-bez-zrodel-opis').replace('{q}', '2') };
+    przelaczStatystyki(false);
+    return wynikTel;
+  });
+  wynik('Teksty A: telefon - w arkuszu statystyk opis stanu „Siec:” jako pomoc pod wartoscia, na komputerze zostaje title',
+    siecTel.widac && siecTel.pod && siecTel.miesci && siecTel.tekst === siecTel.oczekiwane && siecTel.title === siecTel.oczekiwane
+      && siecKomp.jest && siecKomp.schowany && siecKomp.tekst === siecKomp.title && !!siecKomp.title, JSON.stringify({ siecTel, siecKomp }));
+  wynik('Teksty A: telefon - bez bledow JavaScript', !m.bledyJs.length, m.bledyJs.join(' | '));
+  if (bledow) await zrzut(m.s, 'teksty-a-telefon');
+  await m.k.close();
+
+  // ── 3. Wariant proxy (konto na serwerze), telefon 320 px ──
+  const srv = await serwer();
+  const { k: kp, bledyJs: bledyP } = await kontekstProxy(b, { viewport: { width: 320, height: 720 }, isMobile: true, hasTouch: true });
+  const p = await zalogujProxy(kp, srv.port, 'premium');
+  const rBaza = await rozwijki(p, [['bazas-desc-jak', 'pomoc-jak-to-dziala']]);
+  wynik('Teksty A: proxy - okno bazy wiedzy na serwerze z rozwijka pod bazas-desc', !rBaza.length, rBaza.join(' | '));
+  // Konto: rysujKonto rysuje od razu, a stan z serwera przychodzi pozniej - odczyt w tym samym wywolaniu.
+  const konto = await p.evaluate(() => {
+    if (typeof window.otworzKonto !== 'function') return null;
+    const opisz = () => {
+      const t = document.getElementById('konto-tresc');
+      return [['konto-klucze-opis-jak', 'konto-klucze-opis'], ['konto-oznaczenia-opis-jak', 'konto-oznaczenia-opis']].map(([kl, baza]) => {
+        const d = [...t.querySelectorAll('details.rozwijka-jak')].find((x) => (x.querySelector(':scope > p.tekst-pomoc') || {}).textContent === _t(kl));
+        if (!d) return kl + ': brak';
+        const przed = d.previousElementSibling, zle = [];
+        if (d.open) zle.push('otwarta');
+        if (d.querySelector(':scope > summary').textContent.trim() !== _t('pomoc-jak-to-dziala')) zle.push('etykieta');
+        if (!przed || przed.textContent !== _t(baza)) zle.push('miejsce');
+        return zle.length ? kl + ': ' + zle.join(',') : '';
+      }).filter(Boolean);
+    };
+    const s0 = window.STAN_KONTA;
+    const wynikKonta = {};
+    try {
+      window.STAN_KONTA = Object.assign({}, s0 || {}, { zrodloKluczy: 'wlasne' });
+      window.otworzKonto();
+      wynikKonta.pl = opisz();
+      window.zamknijKonto();
+      ustawJezyk('en');
+      window.STAN_KONTA = Object.assign({}, s0 || {}, { zrodloKluczy: 'wlasne' });
+      window.otworzKonto();
+      wynikKonta.en = opisz();
+      wynikKonta.etEn = _t('pomoc-jak-to-dziala');
+      window.zamknijKonto();
+    } finally {
+      ustawJezyk('pl');
+      window.STAN_KONTA = s0;
+    }
+    return wynikKonta;
+  });
+  wynik('Teksty A: proxy - okno Konto z rozwijkami pod opisem kluczy w ciasteczku i pod opisem oznaczen AI (PL i EN)',
+    !!konto && !konto.pl.length && !konto.en.length && konto.etEn === 'How does it work?', JSON.stringify(konto));
+  const karta = await p.evaluate(() => {
+    if (typeof window.rysujKartyKluczyModulow !== 'function') return null;
+    const f = window.kontoBezKlucza;
+    window.kontoBezKlucza = () => true;
+    let w = null;
+    try {
+      window.rysujKartyKluczyModulow();
+      const c = document.getElementById('img-klucz');
+      if (c) {
+        const d = [...c.querySelectorAll('details')], ost = d[0] && d[0].lastElementChild;
+        w = { rozwijek: d.length, ostatni: ost ? ost.tagName + '.' + ost.className : '', tekst: ost ? ost.textContent : '', oczekiwany: _t('a8-grafika-opis-jak'),
+          poKrokach: !!ost && !!ost.previousElementSibling && ost.previousElementSibling.matches('ol.byok-kroki') };
+      }
+    } finally {
+      window.kontoBezKlucza = f;
+      window.rysujKartyKluczyModulow();
+    }
+    return w;
+  });
+  wynik('Teksty A: proxy - karta klucza Grafiki: cena i weryfikacja organizacji jako ostatni akapit rozwijki z krokami, bez drugiej rozwijki',
+    !!karta && karta.rozwijek === 1 && karta.ostatni === 'P.tekst-pomoc' && karta.tekst === karta.oczekiwany && karta.poKrokach, JSON.stringify(karta));
+  // Kreator: podpowiedzi tematu (te same klasy co w kroku pierwszego artykulu) w kolumnie 288 px (320 px bez marginesow).
+  const podp = await p.evaluate(() => {
+    const d = document.createElement('div');
+    d.className = 'byok-podpowiedzi';
+    d.style.cssText = 'position:absolute;left:16px;top:0;width:288px';
+    d.innerHTML = '<span class="tekst-pomoc">' + escapeHtml(_t('byok-podpowiedzi')) + '</span>'
+      + [1, 2, 3].map((i) => '<button type="button" class="btn-secondary btn-maly">' + escapeHtml(_t('byok-podpowiedz-' + i)) + '</button>').join('');
+    document.body.appendChild(d);
+    const r = d.getBoundingClientRect();
+    const w = [...d.querySelectorAll('button')].map((x) => {
+      const q = x.getBoundingClientRect();
+      return { tekst: x.textContent.slice(0, 24), ws: getComputedStyle(x).whiteSpace, szer: Math.round(q.width), miesci: q.right <= r.right + 0.5 && x.scrollWidth <= x.clientWidth + 1 };
+    });
+    d.remove();
+    return w;
+  });
+  wynik('Teksty A: proxy, telefon 320 px - podpowiedzi tematu w kreatorze zawijaja sie i mieszcza w oknie',
+    podp.length === 3 && podp.every((x) => x.ws === 'normal' && x.miesci), JSON.stringify(podp));
+  wynik('Teksty A: proxy - bez bledow JavaScript', !bledyP.length, bledyP.join(' | '));
+  if (bledow) await zrzut(p, 'teksty-a-proxy');
+  await kp.close();
 }
 
 async function scenariuszSrodtytuly(b) {

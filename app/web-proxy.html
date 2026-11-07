@@ -1851,6 +1851,15 @@ span > .ikona:first-child, div.ctx-item > .ikona:first-child { margin-right: var
 .rozwijka > textarea { width: 100%; margin-top: var(--s-8); }
 }
 @layer komponenty {
+/* Grupa A (2026-11-07): "Jak to dziala?" / "Jak to zrobic?" (ux/zasady.md §4) jednym wzorem w calej aplikacji.
+   Rozwijka stoi tuz pod tekstem, ktory rozwija, jest zamknieta i ma tresc jako pomoc. Tekst nad nia traci dolny
+   odstep, a odstep pod para daje rozwijka (ostatnia w swoim pojemniku nie potrzebuje go wcale). */
+:is(p, div):has(+ .rozwijka-jak) { margin-bottom: 0; }
+.rozwijka-jak { margin: 0 0 var(--s-12); }
+.rozwijka-jak:last-child { margin-bottom: 0; }
+.rozwijka-jak > .tekst-pomoc { margin: var(--s-2) 0 var(--s-6); max-width: 72ch; }
+}
+@layer komponenty {
 /* warianty tytulu: dwa przyciski zamiast klikalnego wiersza */
 .title-opt { cursor: default; padding: var(--s-8) var(--s-8) var(--s-8) var(--s-12); gap: var(--s-8); }
 .title-opt:hover { border-color: var(--c-linia-2); }
@@ -3425,6 +3434,25 @@ body.karta-konta #gen-btn { display: none; }
 /* konto jednoosobowe: jedna lista "Twoja baza wiedzy", bez wyboru prywatna/wspolna (UX8-23, A10) */
 body.konto-samoobslugowe #bazas-zakres { display: none; }
 }
+@layer widoki {
+/* ══ Porzadki tekstow interfejsu (2026-11-07), grupa A: pomoc pod tekstami, telefon ══ */
+/* blad w miejscu artykulu: rada "co zrobic, gdy sie powtarza" drugim akapitem jako pomoc, tuz pod zdaniem bledu
+   (.komunikat-bledu p ma krok tekstu --t-md, a odstep siatki 12 px zmniejszony do 4 px) */
+.komunikat-bledu p.tekst-pomoc { margin-top: calc(var(--s-8) * -1); font-size: var(--t-xs); line-height: 1.45; }
+/* krotkie nazwy wersji spoza samokorekty ("Poprawione", "Dopisane") tylko na telefonie; komputer pokazuje pelne */
+body:not(.is-mobile) .versions-bar .ver-btn:has(> .ver-krotka-tel) .ver-pelna { display: inline; }
+body:not(.is-mobile) .versions-bar .ver-btn .ver-krotka-tel { display: none; }
+/* podpowiedzi tematu w kreatorze zawijaja sie (przy 320 px druga wychodzila poza okno) */
+.byok-podpowiedzi .btn-maly { white-space: normal; text-align: left; }
+/* "Siec:" w arkuszu statystyk na telefonie: objasnienie stanu wyszukiwania pod wartoscia (na komputerze zostaje title) */
+.stat-siec-opis { display: none; }
+body.is-mobile.statystyki-otwarte .article-stats #stat-siec-wrap { grid-column: 1 / -1; flex-wrap: wrap; row-gap: 0; padding-block: var(--s-8); }
+body.is-mobile.statystyki-otwarte .article-stats .stat-siec-opis { display: block; flex: 1 1 100%; font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); white-space: normal; }
+/* plik do transkrypcji: "albo upusc nagranie tutaj" tylko tam, gdzie da sie upuscic plik (nie na telefonie) */
+body.is-mobile .au-plik [data-i18n="au-upusc"] { display: none; }
+/* plik za duzy do transkrypcji: komunikat i rada pod nazwa pliku (bez rozwijki) */
+.au-plik-blad[hidden], .au-plik-rada[hidden] { display: none; }
+}
 </style>
 </head>
 <body>
@@ -3793,6 +3821,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
             </div>
           </label>
             </div>
+            <details class="rozwijka rozwijka-jak"><summary data-i18n="pomoc-jak-to-dziala" data-ikona="chevron-down"><svg class="ikona" aria-hidden="true"><use href="#i-chevron-down"/></svg>Jak to działa?</summary><p class="tekst-pomoc" data-i18n="toggle-web-hint-jak">Informacje o Twojej firmie AI bierze tylko z bazy wiedzy, nigdy ze stron z sieci. Strony, z których korzysta, wymieni pod artykułem jako źródła. Bez dokumentów firmy artykuł nie powie nic konkretnego o Twojej ofercie.</p></details>
           </div>
 
           <details class="zaawansowane" id="brief-zaawansowane">
@@ -3974,7 +4003,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
               <div id="repurpose-loading" class="seo-loading" data-i18n="rp-loading">Tworzę przeróbkę…</div>
               <textarea class="repurpose-out" id="repurpose-out" aria-label="Gotowa przeróbka" data-i18n-label="lbl-repurpose-out" style="display:none"></textarea>
               <!-- R9-D (PR8-19): krotka etykieta "Przygotowano z pomoca AI." przy kopiowaniu przerobki -->
-              <label class="ozn-wiersz" for="ozn-tekst-rp"><input type="checkbox" id="ozn-tekst-rp" data-oznaczenie="tekst" onchange="ustawWyborOznaczenia('tekst', this.checked)"><span data-i18n="ozn-rp-przelacznik">Dodaj informację o AI</span></label>
+              <label class="ozn-wiersz" for="ozn-tekst-rp"><input type="checkbox" id="ozn-tekst-rp" data-oznaczenie="tekst" onchange="ustawWyborOznaczenia('tekst', this.checked)"><span><b data-i18n="ozn-rp-przelacznik">Dodaj informację o AI</b><small data-i18n="ozn-rp-opis">Zdanie o AI na końcu kopiowanego tekstu.</small></span></label>
             </div>
           </div>
 
@@ -4030,7 +4059,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
                  jak wylaczony przelacznik: po prostu brak zrodel pod tekstem.
                  Trzy rozne przebiegi, jeden obraz. Teraz widac ktory. -->
             <div class="astat-sep" id="stat-siec-sep" style="display:none">·</div>
-            <div class="astat" id="stat-siec-wrap" style="display:none"><span data-i18n="astat-siec">Sieć:</span><span class="astat-val" id="stat-siec">-</span></div>
+            <div class="astat" id="stat-siec-wrap" style="display:none"><span data-i18n="astat-siec">Sieć:</span><span class="astat-val" id="stat-siec">-</span><span class="stat-siec-opis" id="stat-siec-opis"></span></div>
           </div>
             <div class="statystyki-zaslona" onclick="przelaczStatystyki(false)"></div>
             <div class="placeholder" id="placeholder">
@@ -4083,7 +4112,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
               </div>
               <button type="button" class="przycisk-ikona" onclick="inspektorZamknij()" title="Zamknij panel" aria-label="Zamknij panel" data-i18n-title="ins-zamknij" data-i18n-label="ins-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
             </div>
-            <div class="ins-oceny"><div class="segmenty" role="group" aria-describedby="ins-ocena-opis"><button type="button" data-ins-ocena="seo" onclick="inspektorPokaz('seo')" data-i18n-title="ocena-opis-seo" title="Ocenia, czy artykuł ma szansę na wysoką pozycję w klasycznych wynikach Google.">SEO</button><button type="button" data-ins-ocena="aio" onclick="inspektorPokaz('aio')" data-i18n-title="ocena-opis-aio" title="Ocenia, czy Google przytoczy artykuł w podsumowaniu AI nad wynikami (AI Overviews).">AIO</button><button type="button" data-ins-ocena="aeo" onclick="inspektorPokaz('aeo')" data-i18n-title="ocena-opis-aeo" title="Ocenia, czy asystenci AI wezmą z artykułu gotową odpowiedź na pytanie.">AEO</button><button type="button" data-ins-ocena="geo" onclick="inspektorPokaz('geo')" data-i18n-title="ocena-opis-geo" title="Ocenia, czy czaty AI zacytują artykuł i Twoją markę (nie chodzi o geolokalizację).">GEO</button></div><p class="ins-ocena-opis" id="ins-ocena-opis"></p></div>
+            <div class="ins-oceny"><div class="segmenty" role="group" aria-describedby="ins-ocena-opis"><button type="button" data-ins-ocena="seo" onclick="inspektorPokaz('seo')">SEO</button><button type="button" data-ins-ocena="aio" onclick="inspektorPokaz('aio')">AIO</button><button type="button" data-ins-ocena="aeo" onclick="inspektorPokaz('aeo')">AEO</button><button type="button" data-ins-ocena="geo" onclick="inspektorPokaz('geo')">GEO</button></div><p class="ins-ocena-opis" id="ins-ocena-opis"></p></div>
             <div class="ins-tresc">
           <!-- Panel FOG -->
           <div id="fog-panel" class="ins-panel" style="display:none">
@@ -4092,6 +4121,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
             <div class="stan-uwaga" data-i18n="fog-medium">12-15: tekst złożony, wymaga skupienia.</div>
             <div class="stan-blad" data-i18n="fog-hard">Powyżej 15: tekst specjalistyczny, bardzo trudny.</div>
             <div class="panel-tekst" data-i18n="fog-goal">Cel dla artykułów SEO: poniżej 12. Krótsze zdania i prostsze słowa obniżają indeks.</div>
+            <details class="rozwijka rozwijka-jak"><summary data-i18n="pomoc-jak-to-dziala" data-ikona="chevron-down"><svg class="ikona" aria-hidden="true"><use href="#i-chevron-down"/></svg>Jak to działa?</summary><p class="tekst-pomoc" data-i18n="fog-goal-jak">Indeks rośnie z długością zdań i liczbą trudnych słów. W wersji dla polszczyzny trudne są słowa od czterech sylab, bo trzysylabowe to po polsku zwykłe słowa („opłata”, „usługi”).</p></details>
           </div>
           <!-- Panel gęstości słów kluczowych -->
           <div id="kd-panel" class="ins-panel" style="display:none">
@@ -4270,9 +4300,9 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
             <input type="text" id="hist-filter" aria-label="Szukaj w historii…" data-i18n-label="ph-history-search" placeholder="Szukaj w historii…" data-i18n="ph-history-search" oninput="filterHistory()" style="width:100%;box-sizing:border-box"/>
             <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap" id="hist-tag-filters">
               <button type="button" class="htag-filter active" aria-pressed="true" onclick="setHistFilter(this,'all')" data-i18n="hist-filter-all">Wszystkie</button>
-              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Artykuł SEO')" data-i18n-title="ctype-opis-seo" title="Pod klasyczne wyniki Google, ze słowem kluczowym w śródtytułach i opisem meta.">SEO</button>
-              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Treść AIO')" data-i18n-title="ctype-opis-aio" title="Krótkie odpowiedzi łatwe do zacytowania w podsumowaniach AI w Google (AI Overviews).">AIO</button>
-              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Hybryda SEO + AIO')" data-i18n="hist-filter-hybrid" data-i18n-title="ctype-opis-hybryda" title="Zalecany: jeden artykuł pod klasyczne wyniki Google i podsumowania AI (AI Overviews).">Hybryda</button>
+              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Artykuł SEO')">SEO</button>
+              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Treść AIO')">AIO</button>
+              <button type="button" class="htag-filter" aria-pressed="false" onclick="setHistFilter(this,'Hybryda SEO + AIO')" data-i18n="hist-filter-hybrid">Hybryda</button>
             </div>
           </div>
           <div id="h-list-inner" style="padding:8px">
@@ -4386,6 +4416,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
       <button class="modal-close" onclick="closeLlmsModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
     </div>
     <p data-i18n="llms-desc">Generuje llms.txt i llms-full.txt na podstawie konfiguracji encji i URL-i z bazy wiedzy. Wgraj pliki w katalogu głównym domeny (np. /llms.txt).</p>
+    <details class="rozwijka rozwijka-jak"><summary data-i18n="pomoc-jak-to-zrobic" data-ikona="chevron-down"><svg class="ikona" aria-hidden="true"><use href="#i-chevron-down"/></svg>Jak to zrobić?</summary><p class="tekst-pomoc" data-i18n="llms-desc-jak">Pobierz oba pliki i wgraj je do katalogu głównego strony, tak żeby otwierały się pod adresami twojafirma.pl/llms.txt i twojafirma.pl/llms-full.txt. Zrobi to osoba, która zarządza stroną.</p></details>
     <div class="field" style="margin-bottom:10px">
       <label for="llms-name" class="field-label" data-i18n="llms-f-name">Nazwa encji</label>
       <input type="text" id="llms-name" placeholder="np. Twoja Firma" data-i18n-ph="ph-llms-name" />
@@ -4460,6 +4491,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
       <button class="modal-close" onclick="closeVisModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
     </div>
     <p data-i18n="vis-desc">Sprawdź, czy AI poleca Twoją markę przy pytaniach o zakup. Każde zapytanie zużywa płatne wyszukiwanie w sieci.</p>
+    <details class="rozwijka rozwijka-jak"><summary data-i18n="pomoc-jak-to-dziala" data-ikona="chevron-down"><svg class="ikona" aria-hidden="true"><use href="#i-chevron-down"/></svg>Jak to działa?</summary><p class="tekst-pomoc" data-i18n="vis-desc-jak">Każde zapytanie trafia do jednego AI z wyszukiwaniem w sieci. Zobaczysz, czy marka się pojawia i na której pozycji, kogo AI poleca i na jakie źródła się powołuje. To pojedynczy pomiar, a nie stałe sprawdzanie wszystkich czatów AI.</p></details>
     <div class="row2">
       <div class="field" style="margin-bottom:10px">
         <label for="vis-brand" class="field-label" data-i18n="vis-f-brand">Marka do wykrycia</label>
@@ -4556,6 +4588,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
 
     <div class="tekst-zwykly" style="margin:14px 0 6px" data-i18n="trk-ga4-h">3. Wskazówka GA4</div>
     <p class="tekst-maly" data-i18n="trk-ga4-note">Ustaw w GA4 grupę kanałów dla wizyt z czatów AI. Linki z UTM oznaczą je, nawet gdy czat nie poda źródła.</p>
+    <details class="rozwijka rozwijka-jak"><summary data-i18n="pomoc-jak-to-zrobic" data-ikona="chevron-down"><svg class="ikona" aria-hidden="true"><use href="#i-chevron-down"/></svg>Jak to zrobić?</summary><p class="tekst-pomoc" data-i18n="trk-ga4-note-jak">W GA4 utwórz grupę kanałów albo segment dla ruchu z AI. Jako warunek ustaw wymiar Źródło albo Host odsyłający pasujący do wyrażenia regularnego chatgpt|openai|perplexity|gemini|copilot|claude.</p></details>
   </div>
 </div>
 
@@ -4572,7 +4605,8 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
 
     <!-- WordPress fields -->
     <div id="cms-wp-fields">
-      <p class="tekst-pomoc" style="margin-bottom:14px" data-i18n="wp-hint">Użyj Application Password (WP 5.6+): Użytkownicy  Twój profil  Hasła aplikacji</p>
+      <p class="tekst-pomoc" data-i18n="wp-hint">Użyj Application Password (WP 5.6+): Użytkownicy  Twój profil  Hasła aplikacji</p>
+      <details class="rozwijka rozwijka-jak"><summary data-i18n="pomoc-jak-to-zrobic" data-ikona="chevron-down"><svg class="ikona" aria-hidden="true"><use href="#i-chevron-down"/></svg>Jak to zrobić?</summary><p class="tekst-pomoc" data-i18n="wp-hint-jak">Hasła aplikacji są w WordPressie od wersji 5.6. Otwórz Użytkownicy → Twój profil → Hasła aplikacji, utwórz nowe hasło i wklej je tutaj.</p></details>
       <div class="field" style="margin-bottom:10px"><label for="wp-url" class="field-label" data-i18n="cms-url-label">Adres strony</label><input type="text" id="wp-url" placeholder="np. https://twojafirma.pl" data-i18n-ph="cms-url-ph" /></div>
       <div class="field" style="margin-bottom:10px"><label for="wp-user" class="field-label" data-i18n="wp-login">Login (nazwa użytkownika)</label><input type="text" id="wp-user" placeholder="admin" /></div>
       <div class="field" style="margin-bottom:14px"><label for="wp-pass" class="field-label" data-i18n="wp-pass-label">Hasło aplikacji</label><input type="password" autocomplete="new-password" id="wp-pass" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx" /></div>
@@ -4580,7 +4614,8 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
 
     <!-- Drupal fields -->
     <div id="cms-drupal-fields" style="display:none">
-      <p class="tekst-pomoc" style="margin-bottom:14px" data-i18n="cms-drupal-hint-short">Wymagany moduł Basic Auth (wbudowany w Drupal 8/9/10). Włącz w: Extend  Basic Authentication.</p>
+      <p class="tekst-pomoc" data-i18n="cms-drupal-hint-short">Wymagany moduł Basic Auth (wbudowany w Drupal 8/9/10). Włącz w: Extend  Basic Authentication.</p>
+      <details class="rozwijka rozwijka-jak"><summary data-i18n="pomoc-jak-to-zrobic" data-ikona="chevron-down"><svg class="ikona" aria-hidden="true"><use href="#i-chevron-down"/></svg>Jak to zrobić?</summary><p class="tekst-pomoc" data-i18n="cms-drupal-hint-short-jak">Moduł jest wbudowany w Drupal 8, 9 i 10. Włączysz go w Extend → Basic Authentication.</p></details>
       <div class="field" style="margin-bottom:10px"><label for="drupal-url" class="field-label" data-i18n="cms-drupal-url-label">Adres strony</label><input type="text" id="drupal-url" placeholder="np. https://twojafirma.pl" data-i18n-ph="cms-url-ph" /></div>
       <div class="field" style="margin-bottom:10px"><label for="drupal-user" class="field-label" data-i18n="wp-login">Login (nazwa użytkownika)</label><input type="text" id="drupal-user" placeholder="admin" /></div>
       <div class="field" style="margin-bottom:10px"><label for="drupal-pass" class="field-label" data-i18n="wp-password">Hasło</label><input type="password" autocomplete="new-password" id="drupal-pass" placeholder="hasło do konta Drupal" data-i18n-ph="wp-pass-ph" /></div>
@@ -4609,6 +4644,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
   <div class="modal" style="width:560px;max-width:94vw">
     <div class="modal-head"><h3 data-i18n="aiv-modal-title">Cytowania w AI</h3><button class="modal-close" onclick="aivClose()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
     <p class="okno-opis" data-i18n="aiv-modal-desc">Sprawdź, czy odpowiedzi AI wspominają Twoją markę albo cytują jej strony. Wyniki zapisują się w tej przeglądarce.</p>
+    <details class="rozwijka rozwijka-jak"><summary data-i18n="pomoc-jak-to-dziala" data-ikona="chevron-down"><svg class="ikona" aria-hidden="true"><use href="#i-chevron-down"/></svg>Jak to działa?</summary><p class="tekst-pomoc" data-i18n="aiv-modal-desc-jak">Odpowiedzi daje jedno AI z wyszukiwaniem w sieci, więc to przybliżenie, a nie pomiar wszystkich czatów AI. Sprawdzaj zapytania regularnie, żeby widzieć zmiany w czasie.</p></details>
     <div style="display:flex;align-items:center;gap:10px;margin:8px 0 12px;padding:8px 12px;background:var(--surface2);border-radius:8px">
       <span class="tekst-pomoc" data-i18n="aiv-score-label">Wskaźnik widoczności:</span>
       <span class="tekst-tytul" id="aiv-score">-</span>
@@ -4763,7 +4799,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
     <div class="modal-head"><h3 id="pub-modal-title">Publikuj w CMS</h3><button class="modal-close" onclick="closeWpPublishModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
     <div class="field" style="margin-bottom:14px"><label for="wp-category" class="field-label">Tagi / kategoria (opcjonalnie)</label><input type="text" id="wp-category" placeholder="marketing, poradniki..." /></div>
     <!-- R9-D (PR8-19, art. 50 ust. 4 AI Act): widoczna informacja o AI pod wpisem i przypomnienie o obowiazku publikujacego -->
-    <label class="ozn-wiersz ozn-wiersz-ramka" for="ozn-tekst-cms"><input type="checkbox" id="ozn-tekst-cms" data-oznaczenie="tekst" onchange="ustawWyborOznaczenia('tekst', this.checked)"><span><b data-i18n="ozn-cms-przelacznik">Dodaj informację o AI</b><small id="ozn-cms-przypomnienie"><span data-i18n="ozn-cms-przypomnienie">Jeśli publikujesz tekst, który informuje o sprawach publicznych (np. zdrowie, finanse, polityka), a nikt w Twojej redakcji go nie sprawdził merytorycznie, musisz zaznaczyć, że powstał z pomocą AI.</span> <a class="link-akcent" id="ozn-cms-wiecej" href="https://content-ai.net/ai-act/" target="_blank" rel="noopener" data-i18n="ozn-wiecej">Więcej</a></small></span></label>
+    <label class="ozn-wiersz ozn-wiersz-ramka" for="ozn-tekst-cms"><input type="checkbox" id="ozn-tekst-cms" data-oznaczenie="tekst" onchange="ustawWyborOznaczenia('tekst', this.checked)"><span><b data-i18n="ozn-cms-przelacznik">Dodaj informację o AI</b><small data-i18n="ozn-cms-opis">Zdanie o AI na końcu wpisu.</small><small id="ozn-cms-przypomnienie"><span data-i18n="ozn-cms-przypomnienie">Jeśli publikujesz tekst, który informuje o sprawach publicznych (np. zdrowie, finanse, polityka), a nikt w Twojej redakcji go nie sprawdził merytorycznie, musisz zaznaczyć, że powstał z pomocą AI.</span> <a class="link-akcent" id="ozn-cms-wiecej" href="https://content-ai.net/ai-act/" target="_blank" rel="noopener" data-i18n="ozn-wiecej">Więcej</a></small></span></label>
     <p class="tekst-pomoc" id="ozn-cms-drupal" hidden data-i18n="ozn-cms-drupal">Drupal zachowa oznaczenie AI w kodzie wpisu przy formacie full_html, ale nie basic_html.</p>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn-secondary" onclick="publishToCms('draft')" data-i18n="btn-save-draft" data-ikona="save"><svg class="ikona" aria-hidden="true"><use href="#i-save"/></svg>Zapisz jako szkic</button>
@@ -4777,7 +4813,8 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
 <div class="overlay" id="ozn-grafika-modal" onclick="if(event.target===this)odpowiedzOGrafice(null)">
   <div class="modal" style="width:460px">
     <div class="modal-head"><h3 id="ozn-grafika-tytul" data-i18n="ozn-grafika-pytanie">Czy pokazuje coś prawdziwego?</h3><button class="modal-close" onclick="odpowiedzOGrafice(null)"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
-    <p class="okno-opis" style="margin:0 0 10px" data-i18n="ozn-grafika-pytanie-opis">Np. osoby, miejsca albo zdarzenia. Jeśli tak i grafika może uchodzić za prawdziwą, przed publikacją trzeba zaznaczyć, że powstała z pomocą AI (AI Act, art. 50 ust. 4).</p>
+    <p class="okno-opis" data-i18n="ozn-grafika-pytanie-opis">Np. osoby, miejsca albo zdarzenia. Jeśli tak i grafika może uchodzić za prawdziwą, przed publikacją trzeba zaznaczyć, że powstała z pomocą AI (AI Act, art. 50 ust. 4).</p>
+    <details class="rozwijka rozwijka-jak"><summary data-i18n="pomoc-jak-to-dziala" data-ikona="chevron-down"><svg class="ikona" aria-hidden="true"><use href="#i-chevron-down"/></svg>Jak to działa?</summary><p class="tekst-pomoc" data-i18n="ozn-grafika-pytanie-opis-jak">Możemy dodać w rogu napis „Grafika wygenerowana przez AI”. Informacja o AI w metadanych pliku jest zawsze.</p></details>
     <p class="tekst-pomoc" style="margin:0 0 16px"><a class="link-akcent" id="ozn-grafika-wiecej" href="https://content-ai.net/ai-act/" target="_blank" rel="noopener" data-i18n="ozn-wiecej-ai-act">Oznaczanie treści AI</a></p>
     <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
       <button type="button" class="btn-secondary" onclick="odpowiedzOGrafice(false)" data-i18n="ozn-grafika-bez">Nie, pobierz bez napisu</button>
@@ -5035,7 +5072,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
                   <div class="tekst-pomoc" id="img-result-hint"></div>
                   <!-- R9-D (art. 50 AI Act): informacja przy wyniku i przelacznik napisu na pobranym pliku -->
                   <div class="tekst-pomoc ai-info" id="img-ai-info"><svg class="ikona" aria-hidden="true"><use href="#i-info"/></svg><span><span data-i18n="ozn-grafika-info">Grafika wygenerowana przez AI (OpenAI).</span> <span data-ozn-meta="grafika" data-i18n="ozn-grafika-info-meta">Pobrany plik ma oznaczenie AI w metadanych.</span></span></div>
-                  <label class="ozn-wiersz" for="ozn-grafika"><input type="checkbox" id="ozn-grafika" data-oznaczenie="grafika" onchange="ustawWyborOznaczenia('grafika', this.checked)"><span data-i18n="ozn-grafika-przelacznik">Dodaj napis o AI</span></label>
+                  <label class="ozn-wiersz" for="ozn-grafika"><input type="checkbox" id="ozn-grafika" data-oznaczenie="grafika" onchange="ustawWyborOznaczenia('grafika', this.checked)"><span><b data-i18n="ozn-grafika-przelacznik">Dodaj napis o AI</b><small data-i18n="ozn-grafika-opis">Napis „Grafika wygenerowana przez AI” w rogu pobranej grafiki.</small></span></label>
                 </div>
                 <div class="img-wynik-akcje">
                   <a class="btn-generate" id="img-download-link" href="#" download onclick="return pobierzGrafikeAI(event, this)"><span data-i18n="img-download-btn" data-ikona="download"><svg class="ikona" aria-hidden="true"><use href="#i-download"/></svg>Pobierz PNG</span></a>
@@ -5081,6 +5118,13 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
 // Ikony Lucide ze sprite'a (wstawiony raz na poczatku <body>). Emoji zostaja tylko jako
 // dane (rodzaj dokumentu w bazie wiedzy, zapisany w historii) - na ekran ida ikony.
 function ikona(n, kl) { return '<svg class="ikona' + (kl ? ' ' + kl : '') + '" aria-hidden="true"><use href="#i-' + n + '"/></svg>'; }
+// Grupa A (2026-11-07): rozwijka "Jak to dziala?" (albo "Jak to zrobic?" przy instrukcji) pod tekstem, ktory objasnia
+// (ux/zasady.md §4). Jeden wzor w calej aplikacji: zamknieta domyslnie, tresc z klucza <klucz>-jak jako pomoc.
+// Rozwijki w HTML maja to samo: summary z data-i18n i data-ikona, tresc p.tekst-pomoc z data-i18n.
+function htmlRozwijki(kluczTresci, kluczEtykiety) {
+  return '<details class="rozwijka rozwijka-jak"><summary>' + ikona('chevron-down') + escapeHtml(_t(kluczEtykiety || 'pomoc-jak-to-dziala')) + '</summary>'
+    + '<p class="tekst-pomoc">' + escapeHtml(_t(kluczTresci)) + '</p></details>';
+}
 var EMOJI_IKONA = {'✓': 'check', '🔗': 'link', '⚠': 'triangle-alert', '🎙': 'mic', '📊': 'chart-column', '🎨': 'palette', '⚡': 'zap', '✍': 'pen-line', '✏': 'pencil', '📋': 'clipboard-list', '🌐': 'globe', '📁': 'folder', '💡': 'lightbulb', '🔍': 'search', '📄': 'file-text', '🔄': 'refresh-cw', '✕': 'x', '✅': 'circle-check', '✗': 'x', '🤖': 'bot', '🎯': 'target', '🎧': 'headphones', '🔊': 'volume-2', '🧩': 'puzzle', '⚙': 'settings', '📚': 'library', '📈': 'trending-up', '📎': 'paperclip', '🔎': 'scan-search', '📡': 'radio-tower', '☁': 'cloud', '⛓': 'unlink', '💥': 'octagon-alert', '📝': 'notebook-pen', '🔑': 'key-round', '💼': 'briefcase', '👥': 'users', '📧': 'mail', '❓': 'circle-question-mark', '🏷': 'tag', '📣': 'megaphone', '🗑': 'trash-2', '💾': 'save', '📷': 'camera', '🎟': 'ticket', '❌': 'circle-x', '🌙': 'moon', '📂': 'folder-open', '☑': 'square-check', '☀': 'sun', '🧭': 'compass', '🕐': 'clock', '🚀': 'rocket', '🖼': 'image', '📃': 'file', '🔢': 'list-ordered', '🏳': 'flag', '💀': 'circle-x', '❔': 'circle-question-mark', '😊': 'smile', '📦': 'package', '🔒': 'lock', '⏳': 'loader', '⭐': 'list-checks', '⬇': 'download', '⬆': 'upload', '⋯': 'ellipsis', '⏹': 'square', '▶': 'play', '⏸': 'pause', 'ℹ': 'info', '↔': 'scale', '✦': 'zap', '🟢': 'circle-dot', '🟡': 'circle-dot', '←': 'arrow-left', '👈': 'arrow-left', '↩': 'log-out'};
 function ikonaZEmoji(e, kl) {
   var s = String(e || '');
@@ -7392,6 +7436,8 @@ function applyLang(lang) {
   try { if (typeof imgRenderHistory === 'function') imgRenderHistory(); } catch(e) {}
   // R5: stopka grafiki, historia audio i skrot "Model i glosy" tez skladane w JS
   try { imgPodsumowanie(); audioRenderHistory(); audioPodsumujGlosy(); } catch(e) {}
+  // Grupa A: nazwa wybranego pliku (data-i18n cofal ja do "Nie wybrano pliku") i komunikat o za duzym pliku w nowym jezyku.
+  try { audioFileLabel(); } catch(e) {}
   // Stan wyszukiwania w sieci tez jest ustawiany programowo. Etykieta ma
   // data-i18n i tlumaczyla sie sama, a wartosc obok zostawala w poprzednim
   // jezyku - w angielskim interfejsie stalo "Web: nie szukal".
@@ -8258,6 +8304,15 @@ const BLEDY_KONTEKSTU = {
 function czyPonowic(e) {
   return ['przerwano', 'siec', 'odpowiedz', 'czas', 'limit-zapytan', 'przeciazenie', 'serwer', 'wlasny'].indexOf(rodzajBledu(e)) !== -1;
 }
+// Grupa A (2026-11-07): przy limicie zapytan i bledzie serwera rada "co zrobic, gdy sie powtarza" (<klucz>-jak).
+// Tylko drugim akapitem bloku bledu w miejscu artykulu: bez niej w powiadomieniu i w panelach.
+const RADY_BLEDOW = { 'err-rate-limit': 'err-rate-limit-jak', 'err-rate-limit-wlasny': 'err-rate-limit-wlasny-jak', 'err-server-500': 'err-server-500-jak' };
+function radaBleduApi(e, kontekst) {
+  const r = rodzajBledu(e);
+  if (!BLEDY_KLUCZE[r]) return '';
+  const klucz = RADY_BLEDOW[kluczBleduKonta(r, (BLEDY_KONTEKSTU[kontekst] || {})[r] || BLEDY_KLUCZE[r], e)];
+  return klucz ? _t(klucz) : '';
+}
 function komunikatBleduApi(e, zapas, kontekst) {
   const r = rodzajBledu(e);
   if (r === 'cichy') return '';
@@ -8319,10 +8374,13 @@ function moznaWybracPakiet() {
 // Blok bledu w artykule i panelach: zdanie ze slownika, szczegoly zwiniete,
 // przy zlym kluczu przejscie do miejsca, gdzie sie go wpisuje, a "Sprobuj
 // ponownie" tylko wtedy, gdy ponowienie moze pomoc.
-function blokBledu(e, ponow, zapas, kontekst) {
+// wArtykule: blok w miejscu artykulu - wtedy pod zdaniem rada z radaBleduApi (p.tekst-pomoc, bez rozwijki).
+function blokBledu(e, ponow, zapas, kontekst, wArtykule) {
   const r = rodzajBledu(e);
   let h = '<div class="komunikat-bledu" role="alert"><p><strong>' + escapeHtml(_t('msg-blad-prefiks')) + '</strong> '
     + escapeHtml(komunikatBleduApi(e, zapas, kontekst)) + '</p>';
+  const rada = wArtykule ? radaBleduApi(e, kontekst) : '';
+  if (rada) h += '<p class="tekst-pomoc">' + escapeHtml(rada) + '</p>';
   const szczegol = szczegolBledu(e);
   if (szczegol) {
     h += '<details class="rozwijka"><summary>' + ikona('chevron-down') + escapeHtml(_t('err-szczegoly')) + '</summary>'
@@ -10392,7 +10450,7 @@ ${html}`;
       przerwano = true;
       html = '<p class="komunikat-przerwania">' + escapeHtml(_t('msg-przerwano')) + '</p>';
     } else {
-      html = blokBledu(e, 'generate()');
+      html = blokBledu(e, 'generate()', null, null, true);
     }
   }
 
@@ -10859,6 +10917,10 @@ function pokazStanSieci(stan, zrodel) {
     val.style.color = 'var(--c-uwaga)';
     wrap.title = _t('siec-bez-wyszukiwania-opis');
   }
+  // Grupa A (2026-11-07): na telefonie nie ma podpowiedzi myszy, wiec ten sam opis stoi
+  // jako pomoc pod wartoscia w arkuszu statystyk (CSS pokazuje go tylko tam).
+  const opis = document.getElementById('stat-siec-opis');
+  if (opis) opis.textContent = wrap.title;
 }
 
 // ─── DATY ZRODEL ──────────────────────────────────────────────────────────────
@@ -11776,11 +11838,13 @@ function pokazWynikFaktow(uwagi, stan) {
   if (stan === 'gotowe' && faktyWzgledemSieci) {
     // Runda A: "Baza wiedzy jest pusta" tylko przy pustej Bazie. Gdy dokumenty sa, ale zaden fragment nie pasowal
     // do tematu (artykul o astrobiologii, w Bazie strona firmy), notka mowi to wprost.
+    // Grupa A: "Jak to dziala?" wspolne dla obu brzmien notki (pusta Baza albo Baza bez materialow do tematu).
     stopka += '<div class="fakty-wzgledem-sieci tekst-pomoc fakty-notka">'
-      + escapeHtml(_t(liczbaDokumentow() ? 'fakty-wzgledem-sieci-baza' : 'fakty-wzgledem-sieci')) + '</div>';
+      + escapeHtml(_t(liczbaDokumentow() ? 'fakty-wzgledem-sieci-baza' : 'fakty-wzgledem-sieci')) + '</div>'
+      + htmlRozwijki('fakty-wzgledem-sieci-jak');
   } else if (stan === 'gotowe' && trybUzupelniania && stronZSieci > 0) {
     stopka += '<div class="fakty-tryb-sieci tekst-pomoc fakty-notka">'
-      + escapeHtml(_t('fakty-tryb-uzupelniania')) + '</div>';
+      + escapeHtml(_t('fakty-tryb-uzupelniania')) + '</div>' + htmlRozwijki('fakty-tryb-uzupelniania-jak');
   } else if (stan === 'gotowe' && trybUzupelniania) {
     stopka += '<div class="fakty-siec-bez-stron tekst-pomoc fakty-notka">'
       + escapeHtml(_t(stanSieci && stanSieci.szukan > 0 ? 'fakty-siec-bez-stron' : 'fakty-siec-bez-szukania')) + '</div>';
@@ -11805,7 +11869,7 @@ function pokazWynikFaktow(uwagi, stan) {
   const poprawa = doPoprawy
     ? '<button type="button" id="fakty-popraw-btn" class="btn-secondary btn-pelny" style="margin:4px 0 6px" onclick="poprawZdaniaBezZrodla()">'
       + ikona('pen-line') + escapeHtml(_t('fakty-popraw').replace('{n}', String(doPoprawy))) + '</button>'
-      + '<div class="tekst-pomoc" style="margin-bottom:12px">' + escapeHtml(_t('fakty-popraw-opis')) + '</div>'
+      + '<div class="tekst-pomoc">' + escapeHtml(_t('fakty-popraw-opis')) + '</div>' + htmlRozwijki('fakty-popraw-jak')
     : '';
   wynikEl.innerHTML = pusty + pochodzenie +
     '<div class="panel-tekst" style="margin-bottom:8px">'
@@ -15544,6 +15608,19 @@ document.addEventListener('keydown', function (e) {
     // "Przed samokorekta" / "Po samokorekcie" -> "Przed" | "Po" (pierwsze slowo etykiety).
     const krotkie = {};
     [_t('ver-before-premium'), _t('ver-after-premium')].forEach(function (n) { krotkie[n] = String(n).split(' ')[0]; });
+    // Grupa A (2026-11-07): nazwy wersji po poprawkach ucinaly sie na telefonie w srodku slowa.
+    // Tam stoi pierwsze slowo ("Poprawione", "Dopisane", z numerem kolejnej wersji), na komputerze
+    // pelna nazwa (klasa ver-krotka-tel). To nie sa wersje samokorekty, wiec bez podpisu "Samokorekta".
+    // "Oryginał (72/65)" stoi w parze z "Poprawione ..." i tez sie ucinal: na telefonie sam "Oryginał".
+    const krotkieTel = {};
+    [_t('ver-fakty'), _t('ver-dopisane'), _t('ver-serp'), _t('ver-poprawiony-seo'), _t('ver-poprawiony-aio'), _t('ver-poprawiony-hybryda')]
+      .forEach(function (n) { krotkieTel[n] = String(n).split(' ')[0]; });
+    const oryginal = _t('ver-original');
+    const krotkaTel = function (pelna) {
+      if (pelna.indexOf(oryginal + ' (') === 0) return oryginal;
+      const n = Object.keys(krotkieTel).find(function (x) { return pelna === x || (pelna.indexOf(x + ' ') === 0 && /^ \d+$/.test(pelna.slice(x.length))); });
+      return n ? krotkieTel[n] + pelna.slice(n.length) : '';
+    };
     const pasek = document.getElementById('versions-bar');
     let samokorekta = false;
     document.querySelectorAll('#versions-bar .ver-btn').forEach(function (b) {
@@ -15559,6 +15636,10 @@ document.addEventListener('keydown', function (e) {
           const kr = document.createElement('span'); kr.className = 'ver-krotka'; kr.textContent = krotkie[pelna];
           b.textContent = ''; b.append(pe, kr);
         }
+      } else if (krotkaTel(pelna) && !b.querySelector('.ver-krotka')) {
+        const pe = document.createElement('span'); pe.className = 'ver-pelna'; pe.textContent = pelna;
+        const kr = document.createElement('span'); kr.className = 'ver-krotka ver-krotka-tel'; kr.textContent = krotkaTel(pelna);
+        b.textContent = ''; b.append(pe, kr);
       }
       b.setAttribute('aria-pressed', String(b.classList.contains('active')));
     });
@@ -16500,7 +16581,7 @@ function rysujPrzyklad() {
   if (art) art.innerHTML = _t('przyklad-tresc');
   if (siatka) siatka.innerHTML = PRZYKLAD_OCENY.map(function (o) {
     return '<div class="przyklad-ocena"><b style="color:' + kolorOceny(o[1]) + '">' + o[1] + '</b><span>' + escapeHtml(_t('przyklad-nazwa-' + o[0])) + '</span>'
-      + '<small>' + escapeHtml(_t('ocena-opis-' + o[0]).replace(/^[A-Z]{3}: /, '')) + '</small></div>';
+      + '<small>' + escapeHtml(_t('ocena-opis-' + o[0])) + '</small></div>';
   }).join('');
   if (fakty) fakty.innerHTML = ikona('triangle-alert', 'uwaga') + '<span>' + escapeHtml(_t('przyklad-fakty')) + '</span>';
 }
@@ -18970,7 +19051,8 @@ function renderAeoCheck() {
   const zMarka = naglowkiZMarka(art);
   if (zMarka.length) {
     const przyklad = (currentLang === 'en' ? '“' : '„') + zMarka[0] + '”';
-    lineNote += `<div class="seo-item aeo-marka" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px"><span class="seo-item-icon">${ikona('triangle-alert','uwaga')}</span><span class="seo-item-text">${escapeHtml(_t('aeo-marka-naglowki').replace('{n}', zMarka.length).replace('{h}', przyklad))}</span></div>`;
+    // Grupa A: dlaczego marka nie pasuje do srodtytulu - w rozwijce pod informacja (tekst w <span>, rozwijka obok w tej samej kolumnie).
+    lineNote += `<div class="seo-item aeo-marka" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px"><span class="seo-item-icon">${ikona('triangle-alert','uwaga')}</span><div class="seo-item-text"><span class="aeo-marka-tekst">${escapeHtml(_t('aeo-marka-naglowki').replace('{n}', zMarka.length).replace('{h}', przyklad))}</span>${htmlRozwijki('aeo-marka-naglowki-jak')}</div></div>`;
   }
 
   document.getElementById('aeo-content').innerHTML =
@@ -20980,7 +21062,14 @@ function audioZArtykulu(){ var a=document.getElementById('article'), s=document.
 audioZArtykulu.auto='';
 // R5: pole pliku do transkrypcji przyjmuje tez upuszczony plik
 function audioPlikUpusc(ev){ ev.preventDefault(); var i=document.getElementById('au-file'), dt=ev.dataTransfer; if(i && dt && dt.files && dt.files.length){ try{ i.files=dt.files; }catch(e){ return; } audioFileLabel(); } }
-function audioFileLabel(){ var i=document.getElementById('au-file'), s=document.getElementById('au-fname'); if(i&&s) s.textContent=(i.files&&i.files[0])?i.files[0].name:_t('audio-no-file'); }
+function audioFileLabel(){
+  var i=document.getElementById('au-file'), s=document.getElementById('au-fname'), f=(i&&i.files&&i.files[0])||null;
+  if(i&&s) s.textContent=f?f.name:_t('audio-no-file');
+  // Grupa A: za duzy plik widac od razu pod nazwa: zdanie z err-transkrypcja-za-duzy i rada w drugiej linii (bez rozwijki).
+  var za=!!f && f.size > LIMIT_PLIKU_TRANSKRYPCJI, b=document.getElementById('au-plik-blad'), r=document.getElementById('au-plik-rada');
+  if(b){ b.hidden=!za; b.textContent=za ? _t('err-transkrypcja-za-duzy').replace('{mb}', formatujLiczbe(f.size / 1048576, 1)) : ''; }
+  if(r) r.hidden=!za;
+}
 
 function audioScriptSystem(t,n,L,genders){
   genders=genders||[];
@@ -21313,6 +21402,8 @@ async function kbAudioTranscribeAndOpen(file) {
               <button type="button" class="btn-secondary" onclick="document.getElementById('au-file').click()" aria-describedby="au-file-etykieta" data-i18n="audio-pick-file-btn" data-ikona="upload"><svg class="ikona" aria-hidden="true"><use href="#i-upload"/></svg>Wybierz plik</button>
               <span class="tekst-pomoc" data-i18n="au-upusc">albo upuść nagranie tutaj</span>
               <span class="tekst-zwykly" id="au-fname" data-i18n="audio-no-file">Nie wybrano pliku</span>
+              <span class="tekst-pomoc stan-blad au-plik-blad" id="au-plik-blad" role="alert" hidden></span>
+              <span class="tekst-pomoc au-plik-rada" id="au-plik-rada" data-i18n="err-transkrypcja-za-duzy-jak" hidden>Mniejszy plik dostaniesz, zapisując nagranie jako mono w jakości 64 kb/s.</span>
             </div>
           </div>
 
@@ -21378,7 +21469,7 @@ async function kbAudioTranscribeAndOpen(file) {
           <!-- R9-D (PR8-17, art. 50 ust. 1 i 2 AI Act): syntetyczny glos i zapowiedz na poczatku nagrania -->
           <div class="au-ozn au-tylko-skrypt">
             <p class="tekst-pomoc ai-info"><svg class="ikona" aria-hidden="true"><use href="#i-info"/></svg><span><span data-i18n="ozn-audio-info">Nagranie czyta syntetyczny głos wygenerowany przez AI.</span> <span data-ozn-meta="audio" data-i18n="ozn-audio-info-meta">Pobrany plik MP3 ma oznaczenie AI w metadanych.</span></span></p>
-            <label class="ozn-wiersz" for="ozn-audio"><input type="checkbox" id="ozn-audio" data-oznaczenie="audio" onchange="ustawWyborOznaczenia('audio', this.checked)"><span data-i18n="ozn-audio-przelacznik">Dodaj zapowiedź o AI</span></label>
+            <label class="ozn-wiersz" for="ozn-audio"><input type="checkbox" id="ozn-audio" data-oznaczenie="audio" onchange="ustawWyborOznaczenia('audio', this.checked)"><span><b data-i18n="ozn-audio-przelacznik">Dodaj zapowiedź o AI</b><small data-i18n="ozn-audio-opis">Zapowiedź na początku nagrania, że czyta je syntetyczny głos.</small></span></label>
           </div>
           <div id="au-odtwarzacz">
             <div id="au-script-actions">
@@ -21421,6 +21512,7 @@ async function kbAudioTranscribeAndOpen(file) {
   <div class="modal okno-panel" style="width:640px">
     <div class="modal-head"><h3 class="okno-tytul" data-i18n="bazas-title">Baza wiedzy</h3><span class="tekst-pomoc" id="bazas-stan"></span></div>
     <p class="okno-opis" data-i18n="bazas-desc">Dokumenty z bazy wiedzy są na serwerze, więc masz je na każdym urządzeniu. Tu wkleisz tekst albo usuniesz dokument.</p>
+    <details class="rozwijka rozwijka-jak"><summary data-i18n="pomoc-jak-to-dziala" data-ikona="chevron-down"><svg class="ikona" aria-hidden="true"><use href="#i-chevron-down"/></svg>Jak to działa?</summary><p class="tekst-pomoc" data-i18n="bazas-desc-jak">Każdy dokument jest dzielony na fragmenty. Przy pisaniu artykułu AI dostaje tylko fragmenty pasujące do tematu.</p></details>
 
     <div id="bazas-lista" style="margin-bottom:18px"></div>
 
@@ -23687,14 +23779,16 @@ async function kbAudioTranscribeAndOpen(file) {
     else if (pl.wlaczone && ZYWE.indexOf(sub.stan) >= 0) pakietH += '<p class="tekst-pomoc">' + esc(tekst('konto-odstapienie-14', '')) + ' <a class="link-akcent" href="/konto#platnosci">' + esc(tekst('konto-ustawienia-serwera', '')) + '</a></p>';
     h += sekcja('pakiet', tekst('plat-ustawienia-tytul', ''), pakietH);
     // Klucze API (konto na wlasnych kluczach).
+    // Grupa A: "Jak to dziala?" tylko pod opisem kluczy w ciasteczku (konto-klucze-opis-jak mowi o ciasteczku).
     if (wlasne()) h += sekcja('klucze', tekst('konto-klucze', ''), '<p class="tekst-pomoc">' + esc(tekst(kluczeWCiasteczkach() ? 'konto-klucze-opis' : 'konto-klucze-opis-lokalnie', '')) + '</p>'
+      + (kluczeWCiasteczkach() ? htmlRozwijki('konto-klucze-opis-jak') : '')
       + DOSTAWCY.map(wierszKlucza).join('') + window.htmlZapamietaj('konto'));
     // Firma i marka.
     h += sekcja('firma', tekst('konto-firma', ''), '<p class="tekst-pomoc">' + esc(tekst('konto-firma-opis', '')) + '</p><div class="konto-akcje">'
       + '<button type="button" class="btn-secondary" onclick="zamknijKonto();openLlmsModal()">' + esc(tekst('settings-llms-title', '')) + '</button>'
       + '<button type="button" class="btn-secondary" onclick="zamknijKonto();openBvModal()">' + esc(tekst('settings-bv-title', '')) + '</button></div>');
     // Oznaczenia AI: te same przelaczniki co przy eksporcie, publikacji, grafice i audio.
-    h += sekcja('oznaczenia', tekst('konto-oznaczenia', ''), '<p class="tekst-pomoc">' + esc(tekst('konto-oznaczenia-opis', '')) + '</p>'
+    h += sekcja('oznaczenia', tekst('konto-oznaczenia', ''), '<p class="tekst-pomoc">' + esc(tekst('konto-oznaczenia-opis', '')) + '</p>' + htmlRozwijki('konto-oznaczenia-opis-jak')
       + ['tekst', 'grafika', 'audio'].map(function(r){ return '<label class="ozn-wiersz" for="konto-ozn-' + r + '"><input type="checkbox" id="konto-ozn-' + r + '" data-oznaczenie="' + r + '" onchange="ustawWyborOznaczenia(\'' + r + '\', this.checked)"><span>' + esc(tekst('konto-ozn-' + r, '')) + '</span></label>'; }).join(''));
     // Twoje dane.
     var dane = [];
@@ -23738,13 +23832,15 @@ async function kbAudioTranscribeAndOpen(file) {
   };
 
   // ── Grafika i Audio bez klucza OpenAI/ElevenLabs: karta podlaczenia zamiast bledu (UX8-25, makieta A8, E9) ──
-  function kartaKlucza(id, d, tytul, opis, kroki, dodatki){
+  // jak: ostatni akapit rozwijki z krokami (grupa A: w karcie Grafiki cena i weryfikacja organizacji, bez drugiej rozwijki).
+  function kartaKlucza(id, d, tytul, opis, kroki, dodatki, jak){
     return '<div class="modul-klucz" id="' + id + '" role="region" aria-labelledby="' + id + '-t">'
       + '<p class="konto-karta-tytul" id="' + id + '-t">' + ikona('key-round') + '<span>' + esc(tytul) + '</span></p>'
       + '<p class="tekst-pomoc">' + esc(opis) + '</p>'
       + window.htmlPolaKlucza(id, d) + window.htmlZapamietaj(id)
       + (kroki ? '<details class="rozwijka"><summary>' + ikona('chevron-down') + esc(tekst('a8-jak', '').replace('{DOSTAWCA}', NAZWA[d])) + '</summary><ol class="byok-kroki">'
-          + kroki.map(function(k){ return '<li>' + esc(tekst(k, '')) + '</li>'; }).join('') + '</ol></details>' : '')
+          + kroki.map(function(k){ return '<li>' + esc(tekst(k, '')) + '</li>'; }).join('') + '</ol>'
+          + (jak ? '<p class="tekst-pomoc">' + esc(jak) + '</p>' : '') + '</details>' : '')
       + (dodatki || '') + '</div>';
   }
   function wstawKarte(panel, id, html){
@@ -23764,7 +23860,7 @@ async function kbAudioTranscribeAndOpen(file) {
     var bezOpenai = window.kontoBezKlucza('openai');
     if (img) {
       img.classList.toggle('bez-klucza', bezOpenai);
-      wstawKarte(img, 'img-klucz', bezOpenai ? kartaKlucza('img-klucz', 'openai', tekst('a8-grafika-tytul', ''), tekst('a8-grafika-opis', ''), KROKI_OPENAI) : '');
+      wstawKarte(img, 'img-klucz', bezOpenai ? kartaKlucza('img-klucz', 'openai', tekst('a8-grafika-tytul', ''), tekst('a8-grafika-opis', ''), KROKI_OPENAI, '', tekst('a8-grafika-opis-jak', '')) : '');
     }
     if (au) {
       var typ = typeof audioType === 'function' ? audioType() : '', eng = typeof audioEng === 'function' ? audioEng() : 'web';
