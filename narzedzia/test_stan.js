@@ -271,7 +271,7 @@ async function scenariuszStanu(b) {
       const ponow = document.getElementById('fakty-refresh-btn');
       return {
         tekst: (fw.innerText || '').replace(/\s+/g, ' ').trim(),
-        zielone: !!fw.querySelector('[style*="c-sukces"]'),
+        zielone: !!fw.querySelector('.stan-ok, [style*="c-sukces"]'),
         akcja: [...fw.querySelectorAll('button')].some((x) => x.textContent.indexOf(_t('fakty-wybierz-zrodla')) !== -1),
         ponow: !!ponow && getComputedStyle(ponow).display !== 'none',
       };

@@ -696,7 +696,7 @@ input::-webkit-input-placeholder, textarea::-webkit-input-placeholder { color: v
 .link-sug:last-child { border-bottom: none; }
 .link-sug-icon { font-size: 14px; margin-top: 1px; flex-shrink: 0; }
 .link-sug-text { flex: 1; color: var(--text); line-height: 1.45; }
-.link-sug-url  { font-size: 10px; color: var(--text3); word-break: break-all; }
+.link-sug-url  { font-size: var(--t-xs); color: var(--text3); word-break: break-all; }
 
 /* Warianty tytułu */
 .title-opt { display: flex; align-items: center; gap: 10px; padding: 9px 12px;
@@ -1518,7 +1518,8 @@ body:not(.kb-collapsed) .kb-tab { --b-tlo: var(--c-akcent-tlo); --b-kol: var(--c
 .modal-head h3, .okno-tytul { font-family: var(--f-ui); font-size: var(--t-xl); font-weight: var(--g-mocny); line-height: var(--l-naglowek);
   letter-spacing: var(--k-naglowek); color: var(--c-tekst); }
 .modal-head .modal-close { margin: -6px -10px 0 0; }
-.modal p, .okno-opis { font-size: var(--t-md); line-height: 1.55; color: var(--c-tekst-2); margin: 0 0 var(--s-16); }
+/* :where - akapit bez klasy w oknie to opis okna, ale klasa tekstu na <p> (np. .tekst-pomoc) wygrywa */
+:where(.modal p), .okno-opis { font-size: var(--t-md); line-height: 1.55; color: var(--c-tekst-2); margin: 0 0 var(--s-16); }
 .modal .field + .field { margin-top: var(--s-12); }
 /* R5: pola obok siebie w jednym rzedzie (Drupal: Typ tresci | Format tekstu) bez odstepu z gory - drugie lezalo 12 px nizej */
 .modal .row2 > .field + .field { margin-top: 0; }
@@ -1609,7 +1610,9 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 .kb-select-bar { background: var(--c-akcent-tlo); border-bottom: 1px solid var(--c-akcent-ramka); color: var(--c-akcent-mocny); font-size: var(--t-xs); }
 .kb-select-bar button { color: var(--c-akcent-mocny); font-size: var(--t-xs); font-weight: var(--g-mocny); text-decoration: underline; text-underline-offset: 2px; }
 .kb-sekcja { font-size: var(--t-xs); font-weight: var(--g-mocny); letter-spacing: normal; color: var(--c-tekst-3); }
-.kb-empty { color: var(--c-tekst-3); font-size: var(--t-sm); }
+/* pusty stan Bazy wzorem .pusty-stan (ikona, tytul, opis); stara regula centrowala tekst, odstep daje gap */
+.kb-empty { text-align: left; }
+.kb-empty .kb-empty-icon { margin-bottom: 0; }
 .upload-zone { border: 1px dashed var(--c-ramka); border-radius: var(--r-md); background: transparent; padding: var(--s-16) var(--s-12);
   transition: border-color var(--m-1) var(--e-std), background-color var(--m-1) var(--e-std); }
 .upload-zone:hover, .upload-zone.dragover { border-color: var(--c-akcent-mocny); background: var(--c-akcent-tlo); }
@@ -1640,7 +1643,7 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 .ver-label { font-size: var(--t-xs); color: var(--c-tekst-3); font-family: var(--f-ui); }
 .brief-kw { background: var(--c-wcisk); border: 1px solid transparent; border-radius: var(--r-xs); color: var(--c-tekst); font-size: var(--t-xs); font-weight: var(--g-sredni); }
 .brief-kw:hover { background: var(--c-najazd); border-color: var(--c-linia-2); }
-.brief-num { background: var(--c-wcisk); color: var(--c-tekst-2); font-size: 11px; }
+.brief-num { background: var(--c-wcisk); color: var(--c-tekst-2); font-size: var(--t-xs); }
 .brief-section h4 { font-size: var(--t-xs); font-weight: var(--g-mocny); letter-spacing: normal; text-transform: none; color: var(--c-tekst-3); }
 .jsonld-code { background: var(--c-tlo); color: var(--c-tekst); border: 1px solid var(--c-linia-2); font-family: var(--f-mono); font-size: var(--t-xs); }
 .repurpose-out { background: var(--c-pole); color: var(--c-tekst); border-color: var(--c-ramka); font-size: var(--t-md); }
@@ -1666,7 +1669,7 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 .seo-panel-head h4, .aio-panel-head h4 { font-family: var(--f-ui); font-size: var(--t-md); font-weight: var(--g-mocny); letter-spacing: normal; }
 .seo-score-num { font-family: var(--f-ui); font-size: 44px; font-weight: var(--g-gruby); letter-spacing: var(--k-display); line-height: 1.1; }
 .seo-score-lbl { font-family: var(--f-ui); font-size: var(--t-xs); color: var(--c-tekst-3); }
-.seo-item-text { font-size: var(--t-sm); color: var(--c-tekst-2); }
+.seo-item-text { font-size: var(--t-sm); color: var(--c-tekst); }
 
 /* ── tresc artykulu: kartka i Literata ────────────────────────────────── */
 .article { background: var(--c-strona); border: 1px solid var(--c-linia); border-radius: var(--r-lg); box-shadow: none;
@@ -1710,8 +1713,6 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 /* ── pusty stan ───────────────────────────────────────────────────────── */
 .placeholder { gap: var(--s-8); color: var(--c-tekst-2); text-align: center; }
 .placeholder-box { width: 48px; height: 48px; margin-bottom: var(--s-4); border-radius: var(--r-lg); background: var(--c-pole); border: 1px solid var(--c-linia-2); color: var(--c-akcent); }
-.placeholder p { font-size: var(--t-sm); color: var(--c-tekst-2); max-width: 44ch; }
-.placeholder p:first-of-type { font-size: var(--t-lg); font-weight: var(--g-mocny); color: var(--c-tekst); }
 
 /* ── telefon i dotyk: cele >= 44 px ───────────────────────────────────── */
 @media (pointer: coarse) {
@@ -1752,6 +1753,8 @@ body.is-mobile #powiadomienia { left: var(--s-12); right: var(--s-12); max-width
 .gap-info.uwaga { border-color: var(--c-akcent-ramka); background: var(--c-akcent-tlo); color: var(--c-tekst); }
 .gap-info.blad { border-color: var(--c-blad); color: var(--c-blad); }
 .gap-info[hidden] { display: none; }
+/* pozycje Luk tej samej wielkosci co tresc pozostalych paneli kontroli (warstwa stare: 12 px) */
+.gap-miss-item, .gap-topic-row { font-size: var(--t-sm); }
 /* R7: temat o konkurencji w Lukach */
 .gap-konk { display: inline-block; margin-left: var(--s-6); padding: 0 var(--s-6); border-radius: var(--r-sm); background: var(--c-wcisk); color: var(--c-tekst-2); font-size: var(--t-xs); font-weight: var(--g-mocny); vertical-align: 1px; }
 /* R6: SERP - czolowka Google obok artykulu */
@@ -1817,6 +1820,21 @@ span > .ikona:first-child, div.ctx-item > .ikona:first-child { margin-right: var
 .tekst-2 { font-size: var(--t-sm); line-height: 1.5; color: var(--c-tekst-2); }
 .tekst-zwykly { font-size: var(--t-sm); line-height: 1.5; }
 .tekst-tytul { font-size: var(--t-lg); font-weight: var(--g-mocny); line-height: 1.3; letter-spacing: var(--k-naglowek); color: var(--c-tekst); }
+/* role tekstu z ux/zasady.md (plan_css §1): zamiast stylow w linii */
+.cytat { font-style: italic; color: var(--c-tekst-2); overflow-wrap: anywhere; }      /* rola cytat: jedyna kursywa */
+.dopisek { font-weight: var(--g-normal); color: var(--c-tekst-3); }                   /* doklejony fragment w tej samej linii */
+.stan-uwaga { color: var(--c-uwaga); }   /* panel FOG; obok .stan-ok i .stan-blad */
+/* blad-pola i stan przy kontrolce: kolor stanu wygrywa z kolorem .tekst-pomoc (ta sama warstwa, .tekst-pomoc stoi nizej) */
+.tekst-pomoc.stan-ok { color: var(--c-sukces); } .tekst-pomoc.stan-blad { color: var(--c-blad); } .tekst-pomoc.stan-uwaga { color: var(--c-uwaga); }
+.seo-item-liczba { font-size: var(--t-xs); font-weight: var(--g-gruby); }              /* liczba zamiast ikony w Ocenie GEO; kolor zostaje w linii */
+.pakiet-wiersz { display: flex; justify-content: space-between; gap: var(--s-8); margin-bottom: var(--s-4); font-size: var(--t-sm); color: var(--c-tekst); }
+.pakiet-wiersz > span:last-child { color: var(--c-tekst-3); font-variant-numeric: tabular-nums; }
+.pakiet-wiersz.kreska { padding-top: var(--s-8); border-top: 1px solid var(--c-linia); }
+.tabela-mala { width: 100%; border-collapse: collapse; margin-bottom: var(--s-12); }
+.tabela-mala th { text-align: left; padding: var(--s-4) var(--s-8); font-size: var(--t-xs); font-weight: var(--g-mocny); color: var(--c-tekst-3); border-bottom: 1px solid var(--c-linia-2); }
+.tabela-mala td { padding: var(--s-4) var(--s-8); font-size: var(--t-sm); color: var(--c-tekst-2); border-bottom: 1px solid var(--c-linia); }
+/* komunikat interfejsu w kartce artykulu (wpis Historii bez tresci): pomoc, nie akapit artykulu (.article p ma Literate 17 px) */
+.article p.tekst-pomoc { font-family: var(--f-ui); font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
 .btn-maly, .btn-secondary.btn-maly { min-height: var(--h-sm); padding: 0 var(--s-8); font-size: var(--t-xs); }
 .pole-mono, textarea.pole-mono { font-family: var(--f-mono); font-size: var(--t-xs); line-height: 1.55; }
 .btn-pelny { width: 100%; }
@@ -1890,7 +1908,9 @@ span > .ikona:first-child, div.ctx-item > .ikona:first-child { margin-right: var
 .menu-konto > div { min-width: 0; overflow-wrap: anywhere; }
 .settings-menu hr, .grupa-menu hr { border: 0; border-top: 1px solid var(--c-linia); margin: var(--s-4) 0; }
 .settings-item-tytul { font-size: var(--t-sm); font-weight: var(--g-sredni); color: var(--c-tekst); line-height: 1.3; }
-.settings-item-opis { font-size: var(--t-xs); color: var(--c-tekst-3); line-height: 1.35; margin-top: 1px; }
+/* opis pozycji menu (rola opis-pozycji): jedna lista selektorow, wyglad .tekst-pomoc z ciasniejsza interlinia */
+.settings-item-opis, .poz-menu small, .menu-przelacznik-tekst small { font-size: var(--t-xs); font-weight: var(--g-normal); line-height: 1.35; color: var(--c-tekst-3); }
+.settings-item-opis, .poz-menu small { margin-top: 1px; }
 .settings-item.niszcz, .settings-item.niszcz > span:first-child { color: var(--c-blad); }
 .menu-wiersz { display: flex; align-items: center; justify-content: space-between; gap: var(--s-8); min-height: 40px; padding: var(--s-4) var(--s-8); font-size: var(--t-sm); color: var(--c-tekst); }
 .menu-wiersz > span { display: inline-flex; align-items: center; gap: var(--s-10, 10px); }
@@ -1907,13 +1927,13 @@ span > .ikona:first-child, div.ctx-item > .ikona:first-child { margin-right: var
 .grupa-menu .poz-menu:hover, .grupa-menu .poz-menu:focus-visible { background: var(--c-najazd); }
 .grupa-menu .poz-menu > .ikona { margin-top: 1px; color: var(--c-tekst-3); }
 .poz-menu b { display: block; font-size: var(--t-sm); font-weight: var(--g-sredni); line-height: 1.3; }
-.poz-menu small { display: block; font-size: var(--t-xs); color: var(--c-tekst-3); line-height: 1.35; margin-top: 1px; }
+.poz-menu small { display: block; }
 
 /* ── uklad glowny ─────────────────────────────────────────────────────── */
 .layout { grid-template-columns: 300px minmax(0, 1fr); transition: grid-template-columns var(--m-4) var(--e-std); }
 .sidebar { background: var(--c-panel); border-right: 1px solid var(--c-linia); }
 .sidebar-head { padding: var(--s-12) var(--s-12) var(--s-12) var(--s-16); border-bottom: 1px solid var(--c-linia); }
-.sidebar-head h2 { font-size: var(--t-md); font-weight: var(--g-mocny); letter-spacing: normal; text-transform: none; color: var(--c-tekst); }
+.sidebar-head h2 { font-size: var(--t-lg); font-weight: var(--g-mocny); letter-spacing: var(--k-naglowek); text-transform: none; color: var(--c-tekst); }
 .add-section { border-top: 1px solid var(--c-linia); padding: var(--s-12); gap: var(--s-6); }
 .sidebar-stats { border-top: 1px solid var(--c-linia); padding: var(--s-12); }
 .main { background: var(--c-tlo); }
@@ -2016,11 +2036,14 @@ body:has(#article-stats.show) .pasek-sep { display: block; }
 .wynik-kolumna { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
 .output-scroll { padding: var(--s-32) var(--s-32) var(--s-64); scroll-padding-top: var(--s-24); }
 .article { max-width: calc(var(--tresc-max) + 2 * var(--s-56, 56px) + 2px); margin: 0 auto; }
+/* statystyki krojem interfejsu, mono tylko liczby (.astat-val) - tak jak w arkuszu na telefonie (UX4-08) */
 .article-stats { display: none; max-width: calc(var(--tresc-max) + 2 * var(--s-56, 56px) + 2px); margin: 0 auto var(--s-12); padding: 0 var(--s-4);
-  background: none; border: 0; gap: var(--s-6) var(--s-16); flex-wrap: wrap; font-family: var(--f-mono); }
+  background: none; border: 0; gap: var(--s-6) var(--s-16); flex-wrap: wrap; }
 .article-stats.show { display: flex; }
-.astat { font-family: var(--f-mono); font-size: var(--t-xs); color: var(--c-tekst-3); gap: 4px; }
+.astat { font-size: var(--t-xs); color: var(--c-tekst-3); gap: 4px; }
 .astat-val { font-family: var(--f-mono); font-weight: var(--g-sredni); color: var(--c-tekst); }
+/* "3 zrodla" to liczba ze slowem: krojem interfejsu, jak w arkuszu na telefonie (UX4-08) */
+.article-stats #stat-siec { font-family: var(--f-ui); }
 .astat-sep { display: none; }
 .jsonld-box { max-width: calc(var(--tresc-max) + 2 * var(--s-56, 56px)); margin: var(--s-16) auto 0; width: calc(100% - 2 * var(--s-32));
   border: 1px solid var(--c-linia-2); border-radius: var(--r-md); background: var(--c-panel); padding: var(--s-16); }
@@ -2042,7 +2065,7 @@ body:has(#article-stats.show) .pasek-sep { display: block; }
 .inspektor.ocena .ins-oceny { display: flex; }
 .ins-oceny .segmenty { width: 100%; }
 .ins-oceny .segmenty button { flex: 1; justify-content: center; height: 30px; font-size: var(--t-sm); }
-.ins-tresc { flex: 1; min-height: 0; overflow-y: auto; padding: var(--s-12); }
+.ins-tresc { flex: 1; min-height: 0; overflow-y: auto; padding: var(--s-12); font-size: var(--t-sm); line-height: 1.5; }
 .ins-tresc > div { position: static; width: auto; max-height: none; margin: 0; padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; z-index: auto; overflow: visible; }
 .ins-tresc .seo-panel, .ins-tresc .aio-panel { background: transparent; border: 0; box-shadow: none; }
 .ins-tresc .seo-panel-head, .ins-tresc .aio-panel-head { display: none; }
@@ -2052,11 +2075,13 @@ body:has(#article-stats.show) .pasek-sep { display: block; }
 .ins-tresc .panel-zamknij { display: none; }
 .panel-naglowek { display: flex; align-items: center; justify-content: space-between; gap: var(--s-8); margin-bottom: var(--s-12); }
 .panel-tytul { font-size: var(--t-md); font-weight: var(--g-mocny); color: var(--c-tekst); }
+.panel-tytul.stan-ok { color: var(--c-sukces); }
 .panel-akcja { display: inline-flex; align-items: center; gap: 4px; height: var(--h-sm); padding: 0 var(--s-8); border: 1px solid var(--c-linia-2); border-radius: var(--r-sm);
   background: transparent; color: var(--c-tekst-2); font-family: var(--f-ui); font-size: var(--t-xs); font-weight: var(--g-mocny); cursor: pointer; }
 .panel-akcja:hover { border-color: var(--c-ramka); color: var(--c-tekst); }
 .panel-podtytul { font-size: var(--t-xs); font-weight: var(--g-mocny); color: var(--c-tekst-3); margin: var(--s-12) 0 var(--s-6); }
 .panel-podtytul.akcent { color: var(--c-akcent-mocny); } .panel-podtytul.ok { color: var(--c-sukces); }
+.panel-podtytul.uwaga { color: var(--c-uwaga); } .panel-podtytul.blad { color: var(--c-blad); }
 .panel-tekst { font-size: var(--t-sm); line-height: 1.55; color: var(--c-tekst-2); }
 .ins-tresc .seo-loading { padding: var(--s-24) 0; text-align: left; }
 .ins-zaslona { display: none; }
@@ -2313,7 +2338,7 @@ body:not(.is-mobile) .mobile-sidebar-panel { display: none; }
 body.is-mobile .grupa-menu .btn-secondary, body.is-mobile .grupa-menu .repurpose-item, body.is-mobile .grupa-menu .poz-menu,
 body.is-mobile .settings-item, body.is-mobile .img-fmt-btn, body.is-mobile .btn-maly, body.is-mobile .panel-akcja,
 body.is-mobile .btn-link, body.is-mobile #start-pomin, body.is-mobile .btn-premium, body.is-mobile .segmenty button,
-body.is-mobile .htag-filter, body.is-mobile .ver-btn, body.is-mobile .ins-zakl { min-height: var(--h-dotyk); }
+body.is-mobile .htag-filter, body.is-mobile .ver-btn, body.is-mobile .ins-zakl, body.is-mobile .rozwijka > summary { min-height: var(--h-dotyk); }
 body.is-mobile .btn-link { padding: 0 var(--s-4); }
 body.is-mobile .pomoce { gap: 0 var(--s-8); margin-top: 0; }
 body.is-mobile .mobilny-widok button { height: var(--h-dotyk); min-height: var(--h-dotyk); }
@@ -2359,7 +2384,6 @@ body:not(.is-mobile) .output-bar { padding-inline: max(var(--s-16), calc((100% -
    przyciskiem zajmowal za duzo miejsca). Stan: przelacznik w menu i dopisek "+ samokorekta" na przycisku. */
 .grupa-menu .menu-przelacznik { align-items: center; gap: var(--s-8); text-align: left; white-space: normal; }
 .menu-przelacznik-tekst { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-.menu-przelacznik-tekst small { font-size: var(--t-xs); line-height: 1.35; color: var(--c-tekst-3); font-weight: var(--g-normal); }
 .menu-przelacznik-tor { flex: none; width: 34px; height: 20px; box-sizing: border-box; border: 1px solid var(--c-ramka); border-radius: var(--r-pelny);
   background-color: var(--c-wcisk); background-image: radial-gradient(circle at center, var(--c-tekst-2) 0 6.5px, transparent 7px);
   background-size: 18px 18px; background-repeat: no-repeat; background-position: 0 50%;
@@ -2380,18 +2404,19 @@ body.is-mobile .form-actions-sticky::before { content: ""; position: absolute; l
 body.is-mobile .form-actions-sticky { border-top-color: transparent; }
 /* Konto: grupy jako kategorie (naglowek z kreska nad soba, ikony w kafelkach), nie jak zwykly tekst. */
 .settings-menu .menu-naglowek { margin: var(--s-8) var(--s-8) var(--s-4); padding: var(--s-12) 0 0; border-top: 1px solid var(--c-linia);
-  font-size: 12px; font-weight: var(--g-mocny); letter-spacing: .08em; text-transform: uppercase; color: var(--c-tekst-3); }
+  font-size: var(--t-xs); font-weight: var(--g-mocny); color: var(--c-tekst-3); }
 .settings-menu hr + .menu-naglowek { margin-top: var(--s-4); padding-top: var(--s-8); border-top: 0; }
 .settings-menu .settings-item > span:first-child { width: 36px; height: 36px; border-radius: var(--r-md); background: var(--c-wcisk);
   align-items: center; justify-content: center; color: var(--c-tekst-2); }
 .settings-menu .settings-item { gap: var(--s-12); }
-/* Frazy z OpenSEO bez projektu albo bez polaczenia */
-.seo-pusty { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-8); padding: var(--s-16); margin-bottom: var(--s-8);
+/* Frazy z OpenSEO bez projektu albo bez polaczenia; .pusty-stan: ten sam wzor pustego stanu w panelach
+   (b - tytul, p - opis, jeden przycisk) */
+.seo-pusty, .pusty-stan { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-8); padding: var(--s-16); margin-bottom: var(--s-8);
   border: 1px dashed var(--c-linia-2); border-radius: var(--r-md); }
-.seo-pusty[hidden], #seo-narzedzia[hidden] { display: none; }
-.seo-pusty > .ikona { color: var(--c-tekst-3); }
-.seo-pusty b { font-size: var(--t-md, 15px); color: var(--c-tekst); }
-.seo-pusty p { margin: 0; font-size: var(--t-sm); line-height: 1.5; color: var(--c-tekst-2); }
+.seo-pusty[hidden], .pusty-stan[hidden], #seo-narzedzia[hidden] { display: none; }
+.seo-pusty > .ikona, .pusty-stan > .ikona { color: var(--c-tekst-3); }
+.seo-pusty b, .pusty-stan b { font-size: var(--t-md, 15px); font-weight: var(--g-mocny); color: var(--c-tekst); }
+.seo-pusty p, .pusty-stan p { margin: 0; font-size: var(--t-sm); line-height: 1.5; color: var(--c-tekst-2); }
 .seo-pusty-akcje { display: flex; flex-wrap: wrap; gap: var(--s-8); margin-top: var(--s-4); }
 /* Wyjasnienie FOG / KD w arkuszu statystyk na telefonie (zamiast panelu pod zaslona) */
 .stat-opis { display: none; }
@@ -2441,8 +2466,6 @@ body.is-mobile .article td { background-color: transparent; }
 :is(button, a, .poz-menu, .panel-akcja, .repurpose-item)[style*="display: block"] > svg.ikona:first-child,
 :is(button, a, .poz-menu, .panel-akcja, .repurpose-item)[style*="display: inline-block"] > svg.ikona:first-child,
 :is(button, a, .poz-menu, .panel-akcja, .repurpose-item)[style*="display:block"] > svg.ikona:first-child { margin-inline-end: var(--s-6); vertical-align: -3px; }
-/* etykiety rodzaju uwagi w Faktach (styl wpisany w skrypcie) - pismo min. 12 px */
-#fakty-wynik [style*="font-size:11px"] { font-size: 12px !important; }
 /* przelaczniki w menu konta (PL | EN, Ciemny | Jasny): pole dotyku 44 px */
 body.is-mobile .settings-menu .segmenty button { min-width: var(--h-dotyk); justify-content: center; }
 
@@ -2505,7 +2528,7 @@ body.is-mobile .versions-bar.show { margin-left: auto; align-items: center; heig
 body.is-mobile .versions-bar .ver-label { display: none; }
 /* podpis "Samokorekta" przed segmentem Przed | Po (od 390 px) */
 .versions-bar .ver-podpis { display: none; }
-@media (min-width: 390px) { body.is-mobile .versions-bar.show.wersje-samokorekty .ver-podpis { display: inline; margin: 0 var(--s-6) 0 var(--s-4); font-size: 12px; color: var(--c-tekst-3); white-space: nowrap; } }
+@media (min-width: 390px) { body.is-mobile .versions-bar.show.wersje-samokorekty .ver-podpis { display: inline; margin: 0 var(--s-6) 0 var(--s-4); font-size: var(--t-xs); color: var(--c-tekst-3); white-space: nowrap; } }
 body.is-mobile .versions-bar .ver-btn { position: relative; height: 28px; min-height: 0; padding: 0 var(--s-10, 10px); font-size: 13px; }
 body.is-mobile .versions-bar .ver-btn::before { content: ""; position: absolute; inset: -8px 0; }
 /* krotkie nazwy wersji na telefonie (pelne w title i aria-label) */
@@ -2559,6 +2582,16 @@ body:not(.is-mobile) .versions-bar.show { flex: none; align-items: center; }
 body:not(.is-mobile) .versions-bar .ver-btn .ver-pelna { display: none; }
 body:not(.is-mobile) .versions-bar .ver-btn .ver-krotka { display: inline; }
 body:not(.is-mobile) .versions-bar .ver-btn { white-space: nowrap; }
+/* podpis "Samokorekta" przed "Przed | Po" takze na komputerze (do tej pory tylko telefon); od trzech wersji
+   chowa go regula .wiele-wersji nizej (:not, bo ta regula ma wyzsza specyficznosc) */
+body:not(.is-mobile) .versions-bar.show.wersje-samokorekty:not(.wiele-wersji) .ver-podpis { display: inline; margin: 0 var(--s-6) 0 var(--s-4); font-size: var(--t-xs); color: var(--c-tekst-3); white-space: nowrap; }
+/* podpis stoi przed segmentem, nie w nim (jak na telefonie): tlo segmentu maja same przyciski, inaczej
+   "Samokorekta" wygladala jak trzecia wersja do wyboru */
+body:not(.is-mobile) .versions-bar.show.wersje-samokorekty:not(.wiele-wersji) { padding: 0; gap: 0; background: transparent; }
+body:not(.is-mobile) .versions-bar.wersje-samokorekty:not(.wiele-wersji) .ver-btn { height: 30px; background: var(--c-wcisk); border-radius: 0; }
+body:not(.is-mobile) .versions-bar.wersje-samokorekty:not(.wiele-wersji) .ver-btn:first-of-type { border-radius: var(--r-md) 0 0 var(--r-md); }
+body:not(.is-mobile) .versions-bar.wersje-samokorekty:not(.wiele-wersji) .ver-btn:last-of-type { border-radius: 0 var(--r-md) var(--r-md) 0; }
+body:not(.is-mobile) .versions-bar.wersje-samokorekty:not(.wiele-wersji) .ver-btn.active { background: var(--c-nad); box-shadow: inset 0 0 0 2px var(--c-wcisk), var(--cien-1); border-radius: var(--r-md); }
 /* od trzech wersji: przycisk z nazwa biezacej wersji, wybor w systemowej liscie (ten sam #ver-select co na telefonie) */
 body:not(.is-mobile) .versions-bar.show.wiele-wersji { padding: 0; background: transparent; }
 body:not(.is-mobile) .versions-bar.show.wiele-wersji .ver-btn, body:not(.is-mobile) .versions-bar.wiele-wersji .ver-podpis { display: none; }
@@ -2806,13 +2839,15 @@ body.is-mobile .narzedzie-naglowek { justify-content: flex-start !important; gap
 body.is-mobile .narzedzie-naglowek .modul-tytul { font-size: var(--t-lg) !important; font-weight: var(--g-mocny); }
 .repurpose-head .narzedzie-wroc { display: inline-flex; }
 
-/* ux 19: drobne podpisy 11 px (glosy w audio, rodzaj uwagi w Faktach) - 12 px, bez wersalikow */
-#au-voices-wrap [style*="font-size:11px"] { font-size: 12px !important; }
-#fakty-wynik [style*="text-transform:uppercase"] { text-transform: none !important; letter-spacing: normal !important; }
 /* R7-I: adres w uwadze Faktow jako link (host i skrocona sciezka), jak odnosniki w artykule */
 #fakty-wynik .fakty-adres a { color: var(--c-dowod); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; overflow-wrap: anywhere; }
 /* telefon: link sam w linii, wiec pole dotyku 44 px (nie jest odnosnikiem w zdaniu) */
 body.is-mobile #fakty-wynik .fakty-adres a { display: inline-flex; align-items: center; min-height: var(--h-dotyk); min-width: var(--h-dotyk); }
+/* uwaga Faktow: nazwa kategorii (.panel-podtytul, pierwszy element), cytat, uzasadnienie; notki pod lista (plan_css §1) */
+#fakty-wynik .fakty-uwaga { margin-bottom: var(--s-8); padding: var(--s-6) 0 var(--s-6) var(--s-10, 10px); border-left: 3px solid var(--c-linia-2); }
+#fakty-wynik .fakty-uwaga > .panel-podtytul { display: flex; align-items: center; gap: var(--s-4); margin: 0 0 var(--s-2); }
+#fakty-wynik .fakty-uwaga > .cytat { margin: var(--s-2) 0; }
+#fakty-wynik .fakty-notka { margin-top: var(--s-8); padding-top: var(--s-8); border-top: 1px solid var(--c-linia); }
 /* Runda B: pochodzenie twierdzen - cienki pasek dwoch czesci (2 px odstepu, zaokraglone konce, czesc zerowa nie rysuje
    sie) nad legenda z ikona, nazwa i liczba. Kolory stanu (sukces, uwaga) zawsze z ikona i podpisem, nigdy same. */
 #fakty-wynik .fakty-pochodzenie { margin: 0 0 var(--s-12); padding-bottom: var(--s-12); border-bottom: 1px solid var(--c-linia); }
@@ -2858,7 +2893,7 @@ body.is-mobile #img-prompt-wrap > summary { min-height: var(--h-dotyk); }
    (.arkusz-tytul) oraz Brief artykulu wygladaja tak samo. */
 body.is-mobile .modal-head { align-items: center; min-height: 48px; margin: calc(var(--s-16) * -1) calc(var(--s-16) * -1) var(--s-16);
   padding: 0 var(--s-8) 0 var(--s-16); border-bottom: 1px solid var(--c-linia); }
-body.is-mobile .modal-head h3 { font-size: var(--t-lg); font-weight: var(--g-mocny); line-height: 1.3; }
+body.is-mobile :is(.modal-head h3, .okno-tytul) { font-size: var(--t-lg); font-weight: var(--g-mocny); line-height: 1.3; }
 body.is-mobile .modal-head .modal-close { flex: none; margin: 0; }
 body.is-mobile .brief-panel-glowa { min-height: 48px; padding: 0 var(--s-8) 0 var(--s-16) !important; border-bottom-color: var(--c-linia) !important; }
 body.is-mobile .brief-panel-glowa > strong { font-size: var(--t-lg); font-weight: var(--g-mocny); color: var(--c-tekst); }
@@ -2973,6 +3008,8 @@ body.is-mobile .title-opt > button { flex: 1 1 0; justify-content: center; min-h
 .modul-naglowek { flex: none; display: flex; align-items: center; gap: var(--s-12); min-height: var(--h-lg); margin: 0; }
 .modul-tytul { flex: 1; min-width: 0; margin: 0; font-family: var(--f-ui); font-size: var(--t-xl); font-weight: var(--g-mocny);
   line-height: var(--l-naglowek); letter-spacing: var(--k-naglowek); color: var(--c-tekst); }
+/* tytul narzedzia w panelu przerobek: ta sama klasa, mniejszy, bo w naglowku stoja dwa przyciski (Wroc, Kopiuj) */
+.repurpose-head .modul-tytul { font-size: var(--t-md); }
 .modul-siatka { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: var(--s-24); }
 #audio-panel .modul-siatka { grid-template-columns: minmax(320px, 400px) minmax(0, 1fr); }
 .modul-siatka > * { min-width: 0; min-height: 0; }
@@ -3094,6 +3131,9 @@ body:not(.is-mobile) .modul-pola { background:
   padding: var(--s-32) var(--s-24); border: 2px dashed var(--c-linia-2); border-radius: var(--r-lg); text-align: center; color: var(--c-tekst-2); }
 .modul-pusty .pusty-kafel { margin: 0 0 var(--s-4); }
 .modul-pusty .tekst-zwykly { max-width: 40ch; color: var(--c-tekst-2); }
+/* ekran "Brak klucza API" w miejscu artykulu: krojem interfejsu (kartka ma Literate), nazwa klucza w <code> */
+.article .modul-pusty { font-family: var(--f-ui); }
+.modul-pusty code { padding: var(--s-2) var(--s-8); border-radius: var(--r-xs); background: var(--c-pole); font-size: var(--t-xs); overflow-wrap: anywhere; }
 .au-tylko-transkrypcja, .modul-pusty-trwa { display: none; }
 #audio-panel:has(#au-type option[value="transcription"]:checked) .au-tylko-skrypt { display: none; }
 #audio-panel:has(#au-type option[value="transcription"]:checked) .au-tylko-transkrypcja { display: block; }
@@ -3178,7 +3218,7 @@ body.is-mobile #au-trans-actions > .btn-secondary { flex: 1 1 100%; justify-cont
 #no-source-modal .no-source-bez-uwaga { margin: calc(var(--s-4) * -1) 0 0; text-align: center; font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
 /* UX8-11: jedno zdanie, co mierzy wybrana ocena (pod przelacznikiem) i co znaczy typ SEO / AIO (pod polem) */
 .inspektor.ocena .ins-oceny { flex-wrap: wrap; }
-.ins-oceny .ins-ocena-opis { flex: 1 1 100%; margin: var(--s-8) 0 0; font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-2); }
+.ins-oceny .ins-ocena-opis { flex: 1 1 100%; margin: var(--s-8) 0 0; font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
 .ins-oceny .ins-ocena-opis:empty { display: none; }
 .form-col .row2 > .ctype-opis { grid-column: 1 / -1; margin: calc(var(--s-10, 10px) * -1) 0 0; }
 .form-col .row2 > .ctype-opis[hidden] { display: none; }
@@ -3247,7 +3287,8 @@ label.ozn-wiersz > span { display: flex; flex-direction: column; gap: var(--s-4)
 label.ozn-wiersz b { font-weight: var(--g-sredni); color: var(--c-tekst); }
 label.ozn-wiersz small { font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
 .ozn-wiersz-ramka { margin: 0 0 var(--s-12); padding: var(--s-8) var(--s-12); border: 1px solid var(--c-linia); border-radius: var(--r-md); background: var(--c-panel); }
-.ai-info { display: flex; align-items: flex-start; gap: var(--s-6); margin: var(--s-8) 0 0; }
+/* notka z ikona jednym kolorem z .hist-lokalnie: skutek do przeczytania (oznaczenie AI), nie drobny druk */
+.ai-info { display: flex; align-items: flex-start; gap: var(--s-6); margin: var(--s-8) 0 0; color: var(--c-tekst-2); }
 .ai-info > .ikona { flex: none; margin-top: 2px; color: var(--c-tekst-3); }
 #ai-info-artykul { max-width: calc(var(--tresc-max) + 2 * var(--s-56, 56px) + 2px); margin: var(--s-12) auto 0; padding: 0 var(--s-4); box-sizing: border-box; }
 /* telefon i tablet: informacja o AI jest ostatnim wierszem tresci, wiec to ona (nie artykul) ma odstep od paskow na dole */
@@ -3286,6 +3327,8 @@ body.karta-konta #gen-btn { display: none; }
 /* okno pakietu: pula spoza pakietu (KOD8-04) i zakup (UX8-20) */
 .pakiet-niedostepna { display: flex; justify-content: space-between; align-items: center; gap: var(--s-8); margin-bottom: 10px; font-size: var(--t-xs); color: var(--c-tekst-3); }
 .pakiet-zakup { margin-top: var(--s-16); padding-top: var(--s-16); border-top: 1px solid var(--c-linia); }
+/* "Funkcje w tym pakiecie" jako podtytul: odstep nad nim daje #pakiet-funkcje (16 px) */
+#pakiet-funkcje > .panel-podtytul { margin-top: 0; }
 .zakup { display: flex; flex-direction: column; gap: var(--s-8); }
 .zakup-naglowek { display: flex; align-items: center; justify-content: space-between; gap: var(--s-8); flex-wrap: wrap; }
 .zakup-naglowek b { font-size: var(--t-md); color: var(--c-tekst); }
@@ -3362,8 +3405,6 @@ body.karta-konta #gen-btn { display: none; }
 #start-tresc .byok-dok-wybierz { display: inline-flex; align-items: center; justify-content: center; gap: var(--s-6); }
 #start-tresc input[type=text], #start-tresc textarea { width: 100%; box-sizing: border-box; }
 .platnosc-tresc { display: flex; gap: var(--s-8); align-items: flex-start; }
-/* .modal p (komponenty) wygrywal z .tekst-pomoc: drobny druk w kreatorze, Koncie i zakupie zostaje drobny */
-#start-tresc p.tekst-pomoc, .konto-tresc p.tekst-pomoc, .zakup p.tekst-pomoc, .zakup-stan p.tekst-pomoc { font-size: var(--t-xs); line-height: 1.45; color: var(--c-tekst-3); }
 #start-tresc p.byok-wynik-ok, .konto-tresc p.byok-wynik-ok { color: var(--c-sukces); }
 #start-tresc p.byok-wynik-blad, .konto-tresc p.byok-wynik-blad, .zakup p.stan-blad { color: var(--c-blad); }
 /* Grafika i Audio bez klucza: karta podlaczenia (A8); w Grafice zamiast formularza */
@@ -3567,9 +3608,10 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
     </div>
     <div class="kb-serwer" id="kb-serwer" hidden></div>
     <div class="kb-list" id="kb-list">
-      <div class="kb-empty" id="kb-empty">
+      <div class="kb-empty pusty-stan" id="kb-empty">
         <span class="kb-empty-icon"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-folder-open"/></svg></span>
-        <span data-i18n="sidebar-empty-title">Brak źródeł wiedzy.</span><br><span data-i18n="sidebar-empty-sub">Wgraj pliki, dodaj link lub wpisz tekst poniżej.</span>
+        <b data-i18n="sidebar-empty-title">Brak źródeł wiedzy.</b>
+        <p data-i18n="sidebar-empty-sub">Wgraj pliki, dodaj link lub wpisz tekst poniżej.</p>
       </div>
     </div>
 
@@ -3917,7 +3959,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
           <div class="repurpose-panel" id="repurpose-panel">
             <div class="repurpose-head">
               <button type="button" class="btn-secondary narzedzie-wroc" onclick="closeRepurposePanel()" data-i18n="img-back" data-ikona="arrow-left"><svg class="ikona" aria-hidden="true"><use href="#i-arrow-left"/></svg>Wróć</button>
-              <strong class="tekst-zwykly" id="repurpose-title" data-i18n="rp-strong">Przeróbki artykułu</strong>
+              <strong class="modul-tytul" id="repurpose-title" data-i18n="rp-strong">Przeróbki artykułu</strong>
               <button class="btn-secondary btn-maly" onclick="copyRepurpose()" style="margin-left:auto" data-i18n="btn-copy">Kopiuj</button>
             </div>
             <div class="repurpose-body">
@@ -4136,7 +4178,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
               <div class="panel-podtytul" data-i18n="gap-covered">Pokryte tematy</div>
               <div id="gap-present"></div>
             </div>
-            <div id="gap-no-serp" style="display:none;color:var(--text3)" data-i18n="gap-no-serp">Włącz Analizę SERP przed generowaniem, aby korzystać z analizy luk semantycznych.</div>
+            <div id="gap-no-serp" class="pusty-stan panel-tekst" style="display:none" data-i18n="gap-no-serp">Włącz Analizę SERP przed generowaniem, aby korzystać z analizy luk semantycznych.</div>
           </div>
 
           <!-- Panel sugestii linków -->
@@ -4226,11 +4268,11 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
             </div>
           </div>
           <div id="h-list-inner" style="padding:8px">
-            <div class="tekst-2" style="padding:16px" data-i18n="history-empty">Brak historii - wygeneruj pierwszą treść.</div>
+            <div style="padding:16px"><div class="pusty-stan"><p class="panel-tekst" data-i18n="history-empty">Brak historii - wygeneruj pierwszą treść.</p></div></div>
           </div>
         </div>
         <div class="h-preview-col" id="h-preview-col">
-          <div id="h-preview-placeholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--text3)">
+          <div id="h-preview-placeholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px">
             <div class="tekst-zwykly" data-i18n="history-select">Wybierz artykuł z listy</div>
           </div>
           <div class="h-preview-akcje"><button type="button" class="btn-secondary" id="h-preview-otworz" hidden onclick="otworzWGeneratorze(this.dataset.id)" data-i18n="hist-otworz">Otwórz w generatorze</button></div>
@@ -4555,7 +4597,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
 <div class="overlay" id="aiv-modal" onclick="if(event.target===this)aivClose()">
   <div class="modal" style="width:560px;max-width:94vw">
     <div class="modal-head"><h3 data-i18n="aiv-modal-title">Cytowania w AI</h3><button class="modal-close" onclick="aivClose()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
-    <p class="tekst-2" style="margin-top:0" data-i18n="aiv-modal-desc">Sprawdza, czy odpowiedzi AI (Claude z web search) na Twoje zapytania przywołują markę - w treści lub w cytowanych źródłach. Wynik i historia zapisują się lokalnie, więc widać trend w czasie. To przybliżenie jednym silnikiem, nie pomiar wszystkich wyszukiwarek AI.</p>
+    <p class="okno-opis" data-i18n="aiv-modal-desc">Sprawdza, czy odpowiedzi AI (Claude z web search) na Twoje zapytania przywołują markę - w treści lub w cytowanych źródłach. Wynik i historia zapisują się lokalnie, więc widać trend w czasie. To przybliżenie jednym silnikiem, nie pomiar wszystkich wyszukiwarek AI.</p>
     <div style="display:flex;align-items:center;gap:10px;margin:8px 0 12px;padding:8px 12px;background:var(--surface2);border-radius:8px">
       <span class="tekst-pomoc" data-i18n="aiv-score-label">Wynik widoczności:</span>
       <span class="tekst-tytul" id="aiv-score">-</span>
@@ -4579,10 +4621,10 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
 <div class="overlay" id="voice-modal" onclick="if(event.target===this)closeVoiceSettings()">
   <div class="modal" style="width:480px">
     <div class="modal-head"><h3 data-i18n="voice-modal-title" data-i18n-bez-dyktowania="voice-modal-title-czytanie">Czytanie na głos i dyktowanie</h3><button class="modal-close" onclick="closeVoiceSettings()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
-    <p class="tekst-2" style="margin-top:0" data-i18n="voice-modal-desc" data-i18n-bez-dyktowania="voice-modal-desc-czytanie">Czytanie wygenerowanych treści na głos oraz dyktowanie do pól. Silnik przeglądarki działa lokalnie i za darmo. ElevenLabs i OpenAI dają wyższą jakość, ale wysyłają tekst lub audio do API.</p>
+    <p class="okno-opis" data-i18n="voice-modal-desc" data-i18n-bez-dyktowania="voice-modal-desc-czytanie">Czytanie wygenerowanych treści na głos oraz dyktowanie do pól. Silnik przeglądarki działa lokalnie i za darmo. ElevenLabs i OpenAI dają wyższą jakość, ale wysyłają tekst lub audio do API.</p>
     <div style="display:flex;flex-direction:column;gap:14px;margin-top:6px">
       <label class="field-label" style="display:block">
-        <span class="tekst-maly" data-i18n="voice-engine">Silnik mowy (czytanie)</span>
+        <span class="field-label" data-i18n="voice-engine">Silnik mowy (czytanie)</span>
         <select id="vc-engine" onchange="voiceToggleEngineRows()" style="width:100%;margin-top:5px">
           <option value="web" data-i18n="voice-engine-web">Przeglądarka (za darmo, lokalnie)</option>
           <option value="openai" data-i18n="voice-engine-openai">OpenAI (wysoka jakość)</option>
@@ -4590,14 +4632,14 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
         </select>
       </label>
       <label class="field-label" id="vc-oavoice-row" style="display:block">
-        <span class="tekst-maly" data-i18n="voice-oa-voice">Głos OpenAI</span>
+        <span class="field-label" data-i18n="voice-oa-voice">Głos OpenAI</span>
         <select id="vc-oavoice" style="width:100%;margin-top:5px">
           <option value="alloy">Alloy</option><option value="ash">Ash</option><option value="ballad">Ballad</option><option value="coral">Coral</option><option value="echo">Echo</option><option value="fable">Fable</option><option value="nova">Nova</option><option value="onyx">Onyx</option><option value="sage">Sage</option><option value="shimmer">Shimmer</option>
         </select>
       </label>
       <div id="vc-eleven-row" style="display:none;flex-direction:column;gap:14px">
         <label class="field-label" style="display:block">
-          <span class="tekst-maly" data-i18n="voice-eleven-voice">Głos ElevenLabs</span>
+          <span class="field-label" data-i18n="voice-eleven-voice">Głos ElevenLabs</span>
           <select id="vc-elevenvoice" style="width:100%;margin-top:5px">
             <option value="21m00Tcm4TlvDq8ikWAM">Rachel (kobiecy)</option>
             <option value="EXAVITQu4vr4xnSDxMaL">Bella (kobiecy)</option>
@@ -4609,7 +4651,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
           <input type="text" id="vc-elevenvoice-custom" aria-label="Własny voice_id ElevenLabs" data-i18n-label="voice-eleven-custom-opt" placeholder="lub wklej własny voice_id" data-i18n="voice-eleven-custom" style="width:100%;margin-top:6px" />
         </label>
         <label class="field-label" style="display:block">
-          <span class="tekst-maly" data-i18n="voice-eleven-model">Model ElevenLabs</span>
+          <span class="field-label" data-i18n="voice-eleven-model">Model ElevenLabs</span>
           <select id="vc-elevenmodel" style="width:100%;margin-top:5px">
             <option value="eleven_multilingual_v2" data-i18n="voice-eleven-m-quality">Multilingual v2 (jakość)</option>
             <option value="eleven_flash_v2_5" data-i18n="voice-eleven-m-fast">Flash v2.5 (szybki, tańszy)</option>
@@ -4618,11 +4660,11 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
         </label>
       </div>
       <label class="field-label" style="display:block">
-        <span class="tekst-maly"><span data-i18n="voice-rate">Tempo</span>: <span id="vc-rate-val">1,00×</span></span>
+        <span class="field-label"><span data-i18n="voice-rate">Tempo</span>: <span id="vc-rate-val">1,00×</span></span>
         <input type="range" id="vc-rate" min="0.5" max="1.5" step="0.05" value="1" oninput="document.getElementById('vc-rate-val').textContent=tempoUI(this.value)" style="width:100%;margin-top:6px" />
       </label>
       <label class="field-label tylko-dyktowanie" style="display:block">
-        <span class="tekst-maly" data-i18n="voice-stt">Dyktowanie (mowa na tekst)</span>
+        <span class="field-label" data-i18n="voice-stt">Dyktowanie (mowa na tekst)</span>
         <select id="vc-stt" style="width:100%;margin-top:5px">
           <option value="web" data-i18n="voice-stt-web">Przeglądarka</option>
           <option value="openai" data-i18n="voice-stt-openai">OpenAI (transkrypcja)</option>
@@ -4653,7 +4695,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
         </button>
       </div>
     </div>
-    <div id="bv-loading" style="display:none;text-align:center;padding:20px;color:var(--text3)">Analizuję styl pisania...</div>
+    <div id="bv-loading" class="seo-loading" style="display:none;text-align:center;padding:20px" data-i18n="bv-loading">Analizuję styl pisania…</div>
   </div>
 </div>
 
@@ -4724,7 +4766,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
 <div class="overlay" id="ozn-grafika-modal" onclick="if(event.target===this)odpowiedzOGrafice(null)">
   <div class="modal" style="width:460px">
     <div class="modal-head"><h3 id="ozn-grafika-tytul" data-i18n="ozn-grafika-pytanie">Czy grafika przedstawia prawdziwe osoby, miejsca albo zdarzenia?</h3><button class="modal-close" onclick="odpowiedzOGrafice(null)"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
-    <p class="tekst-zwykly" style="margin:0 0 10px" data-i18n="ozn-grafika-pytanie-opis">Jeśli tak i ktoś mógłby uznać ją za prawdziwą, przed publikacją trzeba zaznaczyć, że powstała z pomocą AI (AI Act, art. 50 ust. 4). Możemy dodać w rogu napis „Grafika wygenerowana przez AI”. Informacja o AI w metadanych pliku jest zawsze.</p>
+    <p class="okno-opis" style="margin:0 0 10px" data-i18n="ozn-grafika-pytanie-opis">Jeśli tak i ktoś mógłby uznać ją za prawdziwą, przed publikacją trzeba zaznaczyć, że powstała z pomocą AI (AI Act, art. 50 ust. 4). Możemy dodać w rogu napis „Grafika wygenerowana przez AI”. Informacja o AI w metadanych pliku jest zawsze.</p>
     <p class="tekst-pomoc" style="margin:0 0 16px"><a class="link-akcent" id="ozn-grafika-wiecej" href="https://content-ai.net/ai-act/" target="_blank" rel="noopener" data-i18n="ozn-wiecej-ai-act">Więcej o oznaczaniu treści AI</a></p>
     <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
       <button type="button" class="btn-secondary" onclick="odpowiedzOGrafice(false)" data-i18n="ozn-grafika-bez">Nie, pobierz bez napisu</button>
@@ -4758,7 +4800,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
       <h3 data-i18n="titles-title">Warianty tytułu (H1)</h3>
       <button class="modal-close" onclick="closeTitlesModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
     </div>
-    <p class="tekst-2" style="margin-bottom:14px" data-i18n="titles-desc">5 alternatywnych tytułów pod różne intencje wyszukiwania. Skopiuj tytuł albo wstaw go od razu jako H1 artykułu.</p>
+    <p class="okno-opis" style="margin-bottom:14px" data-i18n="titles-desc">5 alternatywnych tytułów pod różne intencje wyszukiwania. Skopiuj tytuł albo wstaw go od razu jako H1 artykułu.</p>
     <div id="titles-loading" class="seo-loading" data-i18n="titles-loading">Generuję warianty…</div>
     <div id="titles-list" style="display:none;display:flex;flex-direction:column;gap:8px"></div>
   </div>
@@ -4772,7 +4814,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
       <button class="modal-close" onclick="closePremiumModal()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
     </div>
     <p style="margin-bottom:10px" data-i18n="premium-desc">Samokorekta: tekst powstaje, potem model go ocenia i poprawia na podstawie oceny.</p>
-    <p class="tekst-2" style="margin-bottom:16px"><span data-i18n="premium-continue-1">Generowanie może zająć </span><strong data-i18n="premium-more-time">2 do 3 razy więcej czasu</strong><span data-i18n="premium-continue-2"> niż zwykle.</span></p>
+    <p class="okno-opis"><span data-i18n="premium-continue-1">Generowanie może zająć </span><strong data-i18n="premium-more-time">2 do 3 razy więcej czasu</strong><span data-i18n="premium-continue-2"> niż zwykle.</span></p>
     <div class="modal-footer" style="flex-direction:column;gap:10px;margin-top:16px">
       <button class="btn-generate" style="width:100%;justify-content:center" onclick="premiumProceed()" data-i18n="btn-continue-premium" data-ikona="list-checks"><svg class="ikona" aria-hidden="true"><use href="#i-list-checks"/></svg>Kontynuuj z samokorektą</button>
       <button class="btn-secondary" style="width:100%;justify-content:center" onclick="premiumSkip()" data-i18n="btn-generate-normal" data-ikona="zap"><svg class="ikona" aria-hidden="true"><use href="#i-zap"/></svg>Wygeneruj bez samokorekty</button>
@@ -8849,7 +8891,8 @@ function liczbaDokumentow() { return docs.length + (window._bazaSerwerLiczba || 
 function renderDocs() {
   const list = document.getElementById('kb-list');
   const empty = document.getElementById('kb-empty');
-  empty.style.display = liczbaDokumentow() ? 'none' : 'block';
+  // '' zamiast 'block': wyglad pustego stanu (.pusty-stan, flex) zostaje w CSS
+  empty.style.display = liczbaDokumentow() ? 'none' : '';
   const items = list.querySelectorAll('.kb-item');
   items.forEach(el => el.remove());
 
@@ -9610,12 +9653,12 @@ async function generate(skipPremiumModal = false, opcje = null) {
     przerwanieGenerowania = null;
     document.getElementById('spinner').style.display = 'none';
     const art = document.getElementById('article');
-    art.innerHTML = `<div style="padding:32px;text-align:center;color:var(--text2)">
+    art.innerHTML = `<div class="modul-pusty">
       <div class="pusty-kafel">${ikona('key-round', 'ikona-l')}</div>
-      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px">${_t('nokey-title')}</div>
-      <div style="font-size:13px;line-height:1.7">${_t('nokey-line1')}<br>
-      <code style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:12px">const API_KEY = 'WSTAW_TUTAJ_NOWY_KLUCZ_API'</code><br><br>
-      ${_t('nokey-line2')}</div>
+      <div class="tekst-tytul">${_t('nokey-title')}</div>
+      <div class="tekst-2">${_t('nokey-line1')}</div>
+      <code>const API_KEY = 'WSTAW_TUTAJ_NOWY_KLUCZ_API'</code>
+      <div class="tekst-2">${_t('nokey-line2')}</div>
     </div>`;
     art.style.display = 'block';
     ustawTekst(document.getElementById('out-badge'), 'badge-nokey');
@@ -10192,7 +10235,8 @@ function renderHistory() {
   if (histFilterText) filtered = filtered.filter(h => (h.topic||'').toLowerCase().includes(histFilterText));
 
   if (!filtered.length) {
-    inner.innerHTML = `<div style="color:var(--text3);font-size:13px;padding:16px">${history.length ? _t('history-no-filter') : _t('history-empty')}</div>`;
+    const akapit = `<p class="panel-tekst">${history.length ? _t('history-no-filter') : _t('history-empty')}</p>`;
+    inner.innerHTML = '<div style="padding:16px">' + (history.length ? akapit : '<div class="pusty-stan">' + akapit + '</div>') + '</div>';
     return;
   }
   inner.innerHTML = filtered.map((h, i) => `
@@ -10228,7 +10272,7 @@ function previewHistory(i) {
     if (!art) return;
     // Panele, przerobki, JSON-LD i statystyki opisywaly poprzedni artykul.
     wyczyscStanArtykulu();
-    art.innerHTML = h.html ? oczyscHtmlModelu(h.html) : '<p style="color:var(--text3)">' + _t('msg-no-content') + '</p>';
+    art.innerHTML = h.html ? oczyscHtmlModelu(h.html) : '<p class="tekst-pomoc">' + _t('msg-no-content') + '</p>';
     // Wpisy sprzed zapisu jezyka: jezyk rozpoznany z tresci.
     jezykArtykulu = h.jezyk || wykryjJezykTekstu(art.textContent);
     // Kontekst tego artykulu dla Tytulow, ocen i przerobek (kod-08); brief zostaje nietkniety.
@@ -10299,7 +10343,7 @@ function previewHistory(i) {
   if (!ph || !artEl) return;
   ph.style.display = 'none';
   artEl.style.display = 'block';
-  artEl.innerHTML = h.html ? oczyscHtmlModelu(h.html) : '<p style="color:var(--text3)">' + _t('msg-no-content') + '</p>';
+  artEl.innerHTML = h.html ? oczyscHtmlModelu(h.html) : '<p class="tekst-pomoc">' + _t('msg-no-content') + '</p>';
   uporzadkujArtykul(artEl);
   const otw = document.getElementById('h-preview-otworz');
   if (otw) { otw.hidden = false; otw.dataset.id = i; }
@@ -10964,8 +11008,8 @@ async function uruchomKontroleFaktow(wymus) {
   if (!art || !art.innerHTML.trim()) {
     ladowanie.style.display = 'none';
     odswiez.style.display = 'none';
-    wynikEl.innerHTML = '<div style="color:var(--text3)">'
-      + escapeHtml(_t('fakty-brak-tekstu')) + '</div>';
+    wynikEl.innerHTML = '<p class="panel-tekst">'
+      + escapeHtml(_t('fakty-brak-tekstu')) + '</p>';
     return;
   }
 
@@ -11375,15 +11419,15 @@ function pokazWynikFaktow(uwagi, stan) {
 
   // Stan pusty: tytul, co robi kontrola i jedna akcja - bez zielonego OK.
   const pusty = brakZrodel
-    ? '<div class="fakty-pusty" style="margin-bottom:12px">'
-      + '<div class="fakty-pusty-tytul" style="font-weight:600;color:var(--text)">' + escapeHtml(_t('fakty-brak-zrodel-tytul')) + '</div>'
-      + '<div class="fakty-pusty-opis" style="color:var(--text3);margin-top:6px">' + escapeHtml(_t('fakty-brak-zrodel')) + '</div>'
-      + '<button type="button" class="panel-akcja fakty-pusty-akcja" style="margin-top:10px" onclick="faktyWybierzZrodla()">'
+    ? '<div class="fakty-pusty pusty-stan">'
+      + '<b class="fakty-pusty-tytul">' + escapeHtml(_t('fakty-brak-zrodel-tytul')) + '</b>'
+      + '<p class="fakty-pusty-opis">' + escapeHtml(_t('fakty-brak-zrodel')) + '</p>'
+      + '<button type="button" class="panel-akcja fakty-pusty-akcja" onclick="faktyWybierzZrodla()">'
       + ikona('folder') + escapeHtml(_t('fakty-wybierz-zrodla')) + '</button>'
       + '</div>'
     : '';
   let stopka = stan === 'blad'
-    ? '<div style="color:var(--red);margin-top:8px">' + escapeHtml(_t('fakty-blad')) + '</div>'
+    ? '<div class="gap-info blad" role="alert">' + escapeHtml(_t('fakty-blad')) + '</div>'
     : '';
   // Przy wlaczonym uzupelnianiu lista bywa dluzsza i to nie znaczy, ze tekst
   // jest gorszy - znaczy, ze czesc zdan pochodzi z pamieci modelu, a nie
@@ -11395,13 +11439,13 @@ function pokazWynikFaktow(uwagi, stan) {
   if (stan === 'gotowe' && faktyWzgledemSieci) {
     // Runda A: "Baza wiedzy jest pusta" tylko przy pustej Bazie. Gdy dokumenty sa, ale zaden fragment nie pasowal
     // do tematu (artykul o astrobiologii, w Bazie strona firmy), notka mowi to wprost.
-    stopka += '<div class="fakty-wzgledem-sieci" style="color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
+    stopka += '<div class="fakty-wzgledem-sieci tekst-pomoc fakty-notka">'
       + escapeHtml(_t(liczbaDokumentow() ? 'fakty-wzgledem-sieci-baza' : 'fakty-wzgledem-sieci')) + '</div>';
   } else if (stan === 'gotowe' && trybUzupelniania && stronZSieci > 0) {
-    stopka += '<div class="fakty-tryb-sieci" style="color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
+    stopka += '<div class="fakty-tryb-sieci tekst-pomoc fakty-notka">'
       + escapeHtml(_t('fakty-tryb-uzupelniania')) + '</div>';
   } else if (stan === 'gotowe' && trybUzupelniania) {
-    stopka += '<div class="fakty-siec-bez-stron" style="color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
+    stopka += '<div class="fakty-siec-bez-stron tekst-pomoc fakty-notka">'
       + escapeHtml(_t(stanSieci && stanSieci.szukan > 0 ? 'fakty-siec-bez-stron' : 'fakty-siec-bez-szukania')) + '</div>';
   }
 
@@ -11413,8 +11457,8 @@ function pokazWynikFaktow(uwagi, stan) {
 
   if (!uwagi.length) {
     wynikEl.innerHTML = stan === 'gotowe'
-      ? pochodzenie + '<div style="color:var(--c-sukces);font-weight:600">' + escapeHtml(_t('fakty-czysto')) + '</div>'
-        + '<div style="color:var(--text3);margin-top:6px">' + escapeHtml(_t('fakty-czysto-opis')) + '</div>' + niewykorzystane + stopka
+      ? pochodzenie + '<div class="panel-tytul stan-ok">' + escapeHtml(_t('fakty-czysto')) + '</div>'
+        + '<div class="tekst-pomoc" style="margin-top:6px">' + escapeHtml(_t('fakty-czysto-opis')) + '</div>' + niewykorzystane + stopka
       : pusty + stopka;
     return;
   }
@@ -11427,7 +11471,7 @@ function pokazWynikFaktow(uwagi, stan) {
       + '<div class="tekst-pomoc" style="margin-bottom:12px">' + escapeHtml(_t('fakty-popraw-opis')) + '</div>'
     : '';
   wynikEl.innerHTML = pusty + pochodzenie +
-    '<div style="margin-bottom:8px;color:var(--text2)">'
+    '<div class="panel-tekst" style="margin-bottom:8px">'
     + escapeHtml(_t('fakty-znaleziono').replace('{n}', String(uwagi.length))) + '</div>'
     + poprawa
     + uwagi.map(function (u) {
@@ -11437,13 +11481,13 @@ function pokazWynikFaktow(uwagi, stan) {
       // i link do strony z listy zrodel.
       const adresWCytacie = /^link-/.test(rodzaj) && /^https?:\/\/\S+$/i.test(cytat.trim());
       const linkStrony = rodzaj === 'strona' ? linkUwagi(u.adres, u.tytulStrony) : '';
-      return '<div class="fakty-uwaga" data-rodzaj="' + escapeHtml(rodzaj) + '" style="border-left:3px solid var(--border);padding:6px 0 6px 10px;margin-bottom:8px">'
-        + '<div style="font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text3)">'
+      return '<div class="fakty-uwaga" data-rodzaj="' + escapeHtml(rodzaj) + '">'
+        + '<div class="panel-podtytul">'
         + ikonaZEmoji(IKONY_UWAG[rodzaj] || '⚠') + ' ' + escapeHtml(_t('fakty-rodzaj-' + rodzaj) || rodzaj) + '</div>'
         + (adresWCytacie
           ? '<div class="fakty-adres" style="margin:3px 0">' + linkUwagi(cytat.trim()) + '</div>'
-          : '<div style="margin:3px 0;font-style:italic;color:var(--text2);overflow-wrap:anywhere">' + (currentLang === 'en' ? '“' : '„') + escapeHtml(cytat) + '”</div>')
-        + '<div>' + escapeHtml(bezSrednikowTekst(String(u.powod || '')) || _t('fakty-powod-' + rodzaj) || '') + '</div>'
+          : '<div class="cytat">' + (currentLang === 'en' ? '“' : '„') + escapeHtml(cytat) + '”</div>')
+        + '<div class="tekst-zwykly">' + escapeHtml(bezSrednikowTekst(String(u.powod || '')) || _t('fakty-powod-' + rodzaj) || '') + '</div>'
         // Runda B: ogolnik (i liczba z inna wartoscia w zrodle) z fragmentem zrodla, ktory podaje konkret.
         + (String(u.zrodlo || '').trim() && (rodzaj === 'ogolnik' || rodzaj === 'liczba')
           ? '<div class="fakty-w-zrodle">' + escapeHtml(_t('fakty-w-zrodle')) + ' ' + cytatFaktow(String(u.zrodlo).trim()) + '</div>' : '')
@@ -11658,7 +11702,7 @@ function rysujTabeleKd() {
     const cls = k.pct >= 0.5 && k.pct <= 2.5 ? 'kd-ok' : k.pct > 2.5 ? 'kd-hi' : 'kd-low';
     const barW = Math.min(100, k.pct / 3 * 100);
     return `<div class="kd-row"><span class="kd-kw">${escapeHtml(k.kw)}</span><span class="kd-pct ${cls}">${liczbaUI(k.pct)}%</span><div class="kd-bar-wrap"><div class="kd-bar ${cls}" style="width:${barW}%"></div></div></div>`;
-  }).join('') + '<div style="margin-top:8px;font-size:10px;color:var(--text3)">' + escapeHtml(_t('kd-optymalna')) + '</div>';
+  }).join('') + '<div class="tekst-pomoc" style="margin-top:8px">' + escapeHtml(_t('kd-optymalna')) + '</div>';
 }
 function przeformatujStatystyki() {
   ['stat-fog', 'stat-kd'].forEach(function (id) {
@@ -13362,7 +13406,7 @@ function renderSerpPanel(pokaz) {
   document.getElementById('serp-topics').innerHTML =
     serpData.topics.map(t => `<span class="serp-tag">${escapeHtml(t)}</span>`).join('');
   document.getElementById('serp-phrases').innerHTML =
-    serpData.phrases.map(p => `<span class="serp-tag" style="font-style:italic">${escapeHtml(p)}</span>`).join('');
+    serpData.phrases.map(p => `<span class="serp-tag">${escapeHtml(p)}</span>`).join('');
 
   if (pokaz) {
     closeAllInlinePanels({ exceptSerp: true });
@@ -13467,7 +13511,7 @@ function _buildMissingHtml(topics) {
   return topics.map((t, i) => {
     const isPrev = prevLC.includes(t.toLowerCase().trim());
     const prevBadge = isPrev
-      ? '<span style="font-size:10px;color:var(--c-uwaga);background:var(--c-akcent-tlo);border-radius:4px;padding:1px 5px;margin-left:5px">' + _t('ver-previously-improved') + '</span>'
+      ? ' <span class="badge uwaga">' + _t('ver-previously-improved') + '</span>'
       : '';
     const konk = gapKonkurencja.includes(t);
     const konkBadge = konk ? '<span class="gap-konk" title="' + escapeHtml(_t('gap-konkurencja-title')) + '">' + escapeHtml(_t('gap-konkurencja')) + '</span>' : '';
@@ -13491,8 +13535,6 @@ function renderGapResult(parsed) {
   sEl.textContent = score;
   sEl.style.color = score >= 75 ? 'var(--c-sukces)' : score >= 50 ? 'var(--c-uwaga)' : 'var(--red)';
   msgEl.textContent  = bezSrednikowTekst(parsed.msg || '');
-  msgEl.style.color  = 'var(--text3)'; // zawsze reset do domyślnego
-  msgEl.style.fontSize = '';
   document.getElementById('gap-score-row').style.display = 'flex';
 
   const missWrap = document.getElementById('gap-missing-wrap');
@@ -14161,7 +14203,7 @@ function buildLinkSuggestions() {
   const listEl = document.getElementById('links-list');
   const art = document.getElementById('article');
   if (!art || !art.innerHTML.trim()) {
-    listEl.innerHTML = '<span style="color:var(--text3)">' + _t('msg-no-art-analyze') + '</span>';
+    listEl.innerHTML = '<div class="pusty-stan"><p>' + _t('msg-no-art-analyze') + '</p></div>';
     return;
   }
 
@@ -14183,13 +14225,14 @@ function buildLinkSuggestions() {
     }
   });
   if (!urlDocs.length) {
-    listEl.innerHTML = '<span style="color:var(--text3)">' + _t('msg-no-urls') + '</span>';
+    listEl.innerHTML = '<div class="pusty-stan"><p>' + _t('msg-no-urls') + '</p>'
+      + '<button type="button" class="panel-akcja" onclick="piiConfirm(openUrlModal)">' + ikona('link') + escapeHtml(_t('sidebar-link')) + '</button></div>';
     return;
   }
 
   const suggestions = propozycjeLinkow(art.innerText || '', urlDocs);
   if (!suggestions.length) {
-    listEl.innerHTML = '<span style="color:var(--text3)">' + escapeHtml(_t('links-brak-dopasowan')) + '</span>';
+    listEl.innerHTML = '<div class="pusty-stan"><p>' + escapeHtml(_t('links-brak-dopasowan')) + '</p></div>';
     return;
   }
 
@@ -14584,7 +14627,7 @@ async function toggleSeoPanel(forceRefresh = false) {
 function updateSeoHeader(fromCache) {
   const head = document.querySelector('#seo-panel .seo-panel-head h4');
   if (head) head.innerHTML = fromCache
-    ? '' + _t('seo-panel-title') + ' <span style="font-size:11px;color:var(--text3);font-weight:400">(cache) <button onclick="seoOpen=true;toggleSeoPanel(true)" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:11px;padding:0">↻ ' + _t('msg-refresh') + '</button></span>'
+    ? '' + _t('seo-panel-title') + ' <span class="dopisek">(cache) <button type="button" class="btn-link" onclick="seoOpen=true;toggleSeoPanel(true)">↻ ' + _t('msg-refresh') + '</button></span>'
     : _t('seo-panel-title');
 }
 
@@ -14710,7 +14753,7 @@ The 6 criteria to evaluate (give one item per criterion):
 function updateAioHeader(fromCache) {
   const head = document.querySelector('#aio-panel .aio-panel-head h4');
   if (head) head.innerHTML = fromCache
-    ? '' + _t('aio-panel-title') + ' <span style="font-size:11px;color:var(--text3);font-weight:400">(cache) <button onclick="aioOpen=true;toggleAioPanel(true)" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:11px;padding:0">↻ ' + _t('msg-refresh') + '</button></span>'
+    ? '' + _t('aio-panel-title') + ' <span class="dopisek">(cache) <button type="button" class="btn-link" onclick="aioOpen=true;toggleAioPanel(true)">↻ ' + _t('msg-refresh') + '</button></span>'
     : _t('aio-panel-title');
 }
 
@@ -14738,7 +14781,7 @@ function openTemplates() {
   const grid = document.getElementById('tpl-grid');
   grid.innerHTML = templates.map((t, i) => `
     <div class="tpl-card" onclick="applyTemplate(${i})">
-      <div class="tpl-card-title">${t.nameKey ? _t(t.nameKey) : t.name}${i>=DEFAULT_TEMPLATES.length?' <span style="font-size:10px;color:var(--text3)">' + _t('tpl-own-label') + '</span>':''}</div>
+      <div class="tpl-card-title">${t.nameKey ? _t(t.nameKey) : t.name}${i>=DEFAULT_TEMPLATES.length?' <span class="znacznik-pakietu">' + _t('tpl-own-label') + '</span>':''}</div>
       <div class="tpl-card-desc">${t.descKey ? _t(t.descKey) : t.desc}</div>
     </div>`).join('');
   document.getElementById('tpl-modal').classList.add('open');
@@ -15463,7 +15506,7 @@ function syncMobileKbList() {
   const mList = document.getElementById('kb-list-mobile');
   if (!mList) return;
   const empty = liczbaDokumentow() === 0
-    ? `<div class="kb-empty"><span class="kb-empty-icon"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-folder-open"/></svg></span>${_t('sidebar-empty-title')}<br>${_t('sidebar-empty-sub')}</div>`
+    ? `<div class="kb-empty pusty-stan"><span class="kb-empty-icon"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-folder-open"/></svg></span><b>${_t('sidebar-empty-title')}</b><p>${_t('sidebar-empty-sub')}</p></div>`
     : '';
   mList.innerHTML = empty + docs.map((d, i) => {
     const typeLabel = d.icon === '🔗'
@@ -16024,7 +16067,7 @@ async function testCmsConnection() {
       const url = normalizujAdresCms(document.getElementById('drupal-url').value);
       const creds = base64Utf8(`${document.getElementById('drupal-user').value.trim()}:${document.getElementById('drupal-pass').value.trim()}`);
       const r = await fetch(`${url}/jsonapi`, { headers: { 'Authorization': `Basic ${creds}`, 'Accept': 'application/vnd.api+json' } });
-      if (r.ok) res.innerHTML = `<span style="color:var(--c-sukces)">${_t('drupal-ok')}</span>`;
+      if (r.ok) res.innerHTML = `<span class="stan-ok">${_t('drupal-ok')}</span>`;
       else res.innerHTML = htmlBleduCms(r.status, await szczegolOdpowiedziCms(r), 'drupal');
     }
   } catch(e) {
@@ -16274,18 +16317,18 @@ function rysujPropozycje() {
   var cel = document.getElementById('tematy-wynik');
   if (!propozycjeTematow.length) { cel.innerHTML = ''; return; }
   cel.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px">'
-    + '<span style="font-size:12px;color:var(--text3)">' + _t('tematy-kliknij') + '</span>'
-    + '<button class="btn-secondary" style="padding:4px 10px;font-size:11px;flex-shrink:0" onclick="kopiujTematy(this)">'
+    + '<span class="tekst-pomoc">' + _t('tematy-kliknij') + '</span>'
+    + '<button class="btn-secondary btn-maly" style="flex-shrink:0" onclick="kopiujTematy(this)">'
     + _t('tematy-kopiuj') + '</button></div>'
     + propozycjeTematow.map(function(t, i) {
         return '<div style="display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border)">'
-          + '<span style="font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums;padding-top:2px;min-width:18px">'
+          + '<span class="tekst-pomoc num" style="padding-top:2px;min-width:18px">'
           + (i + 1) + '.</span>'
           + '<div style="flex:1;min-width:0">'
-          + '<div style="font-size:13.5px;font-weight:600;color:var(--text);line-height:1.4">' + escapeHtml(t.temat || '') + '</div>'
-          + (t.dlaczego ? '<div style="font-size:12px;color:var(--text2);margin-top:3px;line-height:1.5">' + escapeHtml(t.dlaczego) + '</div>' : '')
+          + '<div class="panel-tytul">' + escapeHtml(t.temat || '') + '</div>'
+          + (t.dlaczego ? '<div class="tekst-2" style="margin-top:3px">' + escapeHtml(t.dlaczego) + '</div>' : '')
           + '</div>'
-          + '<button class="btn-secondary" style="padding:5px 12px;font-size:11px;flex-shrink:0" onclick="uzyjTematu(' + i + ')">'
+          + '<button class="btn-secondary btn-maly" style="flex-shrink:0" onclick="uzyjTematu(' + i + ')">'
           + _t('tematy-uzyj') + '</button>'
           + '</div>';
       }).join('');
@@ -16492,7 +16535,7 @@ function refreshBriefKwList() {
     var wolumen = (typeof window.briefZSeo === 'object' && window.briefZSeo) ? window.briefZSeo[k] : undefined;
     var zweryfikowana = wolumen !== undefined;
     var etykieta = zweryfikowana && wolumen !== null
-      ? ' <span style="opacity:.75;font-size:10px">' + escapeHtml(String(wolumen)) + '/mc</span>'
+      ? ' <span class="dopisek">' + escapeHtml(String(wolumen)) + '/mc</span>'
       : '';
     return '<span class="brief-kw"' +
       (added ? ' style="opacity:.45;cursor:default;text-decoration:line-through" onclick=""'
@@ -16521,9 +16564,9 @@ function showBrief(b, zapamietanyCzas) {
     '<div class="brief-section"><h4>' + _t('brief-h2-section') + '</h4>' +
     (b.h2||[]).map(function(h,i){ return '<div class="brief-h2-item"><span class="brief-num">'+(i+1)+'</span>'+escapeHtml(h)+'</div>'; }).join('') +
     '</div><div class="brief-section"><h4>' + _t('brief-gap-section') + '</h4>' +
-    '<p style="font-size:12px;color:var(--text2);margin:0">'+escapeHtml(b.gap || (currentLang === 'en' ? 'No data' : 'Brak danych'))+'</p></div>' +
+    '<p class="tekst-2">'+escapeHtml(b.gap || (currentLang === 'en' ? 'No data' : 'Brak danych'))+'</p></div>' +
     '<div class="brief-section"><h4>' + _t('brief-words-section') + '</h4>' +
-    '<p style="font-size:12px;color:var(--text2);margin:0">'+escapeHtml(slowa)+' ' + _t('brief-words-suffix') + '</p></div>';
+    '<p class="tekst-2">'+escapeHtml(slowa)+' ' + _t('brief-words-suffix') + '</p></div>';
   refreshBriefKwList();
 }
 
@@ -17823,11 +17866,11 @@ async function runVisibility() {
   const en = currentLang === 'en';
   const gptMode = (typeof USE_AZURE_GPT !== 'undefined' && USE_AZURE_GPT && typeof AZURE_OPENAI_CHAT_URL !== 'undefined' && AZURE_OPENAI_CHAT_URL && !AZURE_OPENAI_CHAT_URL.startsWith('WSTAW'));
   if (gptMode) {
-    document.getElementById('vis-results').innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'Web search is not available in the GPT-only mode. Use direct Anthropic or Azure Foundry (Claude) mode.' : 'Wyszukiwanie w sieci nie działa w trybie GPT-only. Użyj trybu bezpośredniego Anthropic lub Azure Foundry (Claude).') + '</div>';
+    document.getElementById('vis-results').innerHTML = '<div class="gap-info blad">' + (en ? 'Web search is not available in the GPT-only mode. Use direct Anthropic or Azure Foundry (Claude) mode.' : 'Wyszukiwanie w sieci nie działa w trybie GPT-only. Użyj trybu bezpośredniego Anthropic lub Azure Foundry (Claude).') + '</div>';
     return;
   }
   if (!maDostepDoApi()) {
-    document.getElementById('vis-results').innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'Anthropic API key is missing.' : 'Brak klucza API Anthropic.') + '</div>';
+    document.getElementById('vis-results').innerHTML = '<div class="gap-info blad">' + (en ? 'Anthropic API key is missing.' : 'Brak klucza API Anthropic.') + '</div>';
     return;
   }
   const c = saveVisConfig();
@@ -17942,18 +17985,18 @@ function renderVisResults(run) {
 
   let html = '';
   html += '<div style="display:flex;gap:14px;align-items:center;background:var(--surface2);border-radius:var(--radius);padding:12px 14px;margin-bottom:6px">';
-  html += '<div style="font-size:30px;font-weight:700;color:' + color + '">' + score + '</div>';
-  html += '<div style="font-size:12px;color:var(--text2)">' + (en ? 'Visibility score (position-weighted)' : 'Wskaźnik widoczności (ważony pozycją)') + '<br>' + (en ? 'present in' : 'obecność w') + ' <strong>' + present + '/' + n + '</strong> ' + (en ? 'queries, avg position' : 'zapytań, śr. pozycja') + ' <strong>' + (avgPos == null ? (en ? 'n/a' : 'b.d.') : '#' + formatujLiczbe(avgPos)) + '</strong><br>' + _visEsc(run.brand) + '</div></div>';
-  html += '<div style="font-size:11px;color:var(--text3);margin:0 0 12px">' + escapeHtml(_t('vis-obecnosc-opis').replace('{pct}', pct)) + '</div>';
+  html += '<div class="hstat-val" style="color:' + color + '">' + score + '</div>';
+  html += '<div class="tekst-2">' + (en ? 'Visibility score (position-weighted)' : 'Wskaźnik widoczności (ważony pozycją)') + '<br>' + (en ? 'present in' : 'obecność w') + ' <strong>' + present + '/' + n + '</strong> ' + (en ? 'queries, avg position' : 'zapytań, śr. pozycja') + ' <strong>' + (avgPos == null ? (en ? 'n/a' : 'b.d.') : '#' + formatujLiczbe(avgPos)) + '</strong><br>' + _visEsc(run.brand) + '</div></div>';
+  html += '<div class="tekst-pomoc" style="margin:0 0 12px">' + escapeHtml(_t('vis-obecnosc-opis').replace('{pct}', pct)) + '</div>';
   // R9-F (KOD8-22): czesc zapytan sie nie udala - ile i dlaczego (wynik liczony z udanych).
   const nieudane = results.length - n;
   if (nieudane > 0) {
-    html += '<div class="vis-czesc-bledow" role="status" style="font-size:12px;color:var(--c-uwaga);margin:0 0 12px">' + ikona('triangle-alert', 'uwaga') + ' '
+    html += '<div class="vis-czesc-bledow tekst-pomoc" role="status" style="margin:0 0 12px">' + ikona('triangle-alert', 'uwaga') + ' '
       + escapeHtml(_t('vis-czesc-bledow').replace('{n}', n).replace('{m}', results.length).replace('{k}', nieudane).replace('{powod}', run.bladOpis || _t('vis-blad-wszystkie'))) + '</div>';
   }
 
   if (topComp.length) {
-    html += '<div style="font-size:12px;color:var(--text2);margin-bottom:6px"><strong>' + (en ? 'Competitors most cited' : 'Najczęściej cytowani konkurenci') + ':</strong> ';
+    html += '<div class="tekst-2" style="margin-bottom:6px"><strong>' + (en ? 'Competitors most cited' : 'Najczęściej cytowani konkurenci') + ':</strong> ';
     html += topComp.map(([name, cnt]) => _visEsc(name) + ' (' + cnt + ')').join(', ') + '</div>';
   }
 
@@ -17964,15 +18007,15 @@ function renderVisResults(run) {
     let stab = '';
     if (r.iterations > 1) {
       const sp = Math.round(r.presentCount / r.iterations * 100);
-      stab = ' <span style="font-size:11px;color:var(--text3)">[' + r.presentCount + '/' + r.iterations + ' ' + (en ? 'iter' : 'iter') + ', ' + sp + '%]</span>';
+      stab = ' <span class="tekst-pomoc">[' + r.presentCount + '/' + r.iterations + ' ' + (en ? 'iter' : 'iter') + ', ' + sp + '%]</span>';
     }
     const comps = (r.competitors || []).slice(0, 6).map(_visEsc).join(', ');
     const srcs = (r.sources || []).slice(0, 4).map(_visEsc).join(', ');
     html += '<div style="border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px">';
-    html += '<div style="font-size:13px;font-weight:600">' + icon + ' ' + _visEsc(r.prompt) + pos + stab + '</div>';
-    if (r.error) html += '<div style="font-size:11px;color:var(--c-uwaga);margin-top:3px">' + escapeHtml(_t('vis-zapytanie-blad')) + '</div>'; // R9-F (KOD8-22)
-    if (comps) html += '<div style="font-size:11px;color:var(--text3);margin-top:3px">' + (en ? 'Recommended' : 'Polecani') + ': ' + comps + '</div>';
-    if (srcs) html += '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + (en ? 'Sources' : 'Źródła') + ': ' + srcs + '</div>';
+    html += '<div class="panel-tytul">' + icon + ' ' + _visEsc(r.prompt) + pos + stab + '</div>';
+    if (r.error) html += '<div class="tekst-pomoc" style="margin-top:3px">' + ikona('triangle-alert', 'uwaga') + ' ' + escapeHtml(_t('vis-zapytanie-blad')) + '</div>'; // R9-F (KOD8-22)
+    if (comps) html += '<div class="tekst-pomoc" style="margin-top:3px">' + (en ? 'Recommended' : 'Polecani') + ': ' + comps + '</div>';
+    if (srcs) html += '<div class="tekst-pomoc" style="margin-top:2px">' + (en ? 'Sources' : 'Źródła') + ': ' + srcs + '</div>';
     html += '</div>';
   });
   html += '</div>';
@@ -17984,8 +18027,8 @@ async function runNarrative() {
   const en = currentLang === 'en';
   const gptMode = (typeof USE_AZURE_GPT !== 'undefined' && USE_AZURE_GPT && typeof AZURE_OPENAI_CHAT_URL !== 'undefined' && AZURE_OPENAI_CHAT_URL && !AZURE_OPENAI_CHAT_URL.startsWith('WSTAW'));
   const out = document.getElementById('vis-results');
-  if (gptMode) { out.innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'Web search is not available in the GPT-only mode.' : 'Wyszukiwanie w sieci nie działa w trybie GPT-only.') + '</div>'; return; }
-  if (!maDostepDoApi()) { out.innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'Anthropic API key is missing.' : 'Brak klucza API Anthropic.') + '</div>'; return; }
+  if (gptMode) { out.innerHTML = '<div class="gap-info blad">' + (en ? 'Web search is not available in the GPT-only mode.' : 'Wyszukiwanie w sieci nie działa w trybie GPT-only.') + '</div>'; return; }
+  if (!maDostepDoApi()) { out.innerHTML = '<div class="gap-info blad">' + (en ? 'Anthropic API key is missing.' : 'Brak klucza API Anthropic.') + '</div>'; return; }
   const brand = document.getElementById('vis-brand').value.trim() || nazwaMarki();
   const btn = document.getElementById('vis-narr-btn');
   const prog = document.getElementById('vis-progress');
@@ -18005,7 +18048,7 @@ async function runNarrative() {
     // R9-F (KOD8-23): blad API (zly klucz, 529) z powodem, nie "Brak odpowiedzi z narracja".
     if (!r1.ok || (d1 && d1.error)) throw bladOdpowiedzi(d1, r1.status);
     const narrative = (d1 && d1.content ? d1.content.filter(b => b.type === 'text').map(b => b.text).join('') : '').trim();
-    if (!narrative) { out.innerHTML = '<div style="color:var(--red);font-size:13px">' + (en ? 'No narrative returned.' : 'Brak odpowiedzi z narracją.') + '</div>'; prog.textContent = ''; btn.disabled = false; btn.style.opacity = '1'; return; }
+    if (!narrative) { out.innerHTML = '<div class="gap-info blad">' + (en ? 'No narrative returned.' : 'Brak odpowiedzi z narracją.') + '</div>'; prog.textContent = ''; btn.disabled = false; btn.style.opacity = '1'; return; }
     prog.textContent = en ? 'Step 2/2: comparing with knowledge base...' : 'Krok 2/2: porównanie z bazą wiedzy...';
     // R9-F (KOD8-23): prawda o firmie takze z Bazy na serwerze (w wariancie z serwerem tam sa dokumenty).
     let kb = _visKb();
@@ -18054,19 +18097,19 @@ function renderNarrative(brand, narrative, ev, noKb) {
   const missing = Array.isArray(ev.missing_strengths) ? ev.missing_strengths : [];
   let html = '';
   html += '<div style="display:flex;gap:14px;align-items:center;background:var(--surface2);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px">';
-  html += '<div style="font-size:30px;font-weight:700;color:' + color + '">' + (a == null ? '?' : a) + '</div>';
-  html += '<div style="font-size:12px;color:var(--text2)">' + (en ? 'Message alignment with company truth' : 'Zgodność przekazu z prawdą o firmie') + '<br>' + _visEsc(brand) + '</div></div>';
-  if (noKb) html += '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">' + (en ? 'No knowledge base documents: alignment is limited.' : 'Brak dokumentów w bazie wiedzy: ocena zgodności ograniczona.') + '</div>';
+  html += '<div class="hstat-val" style="color:' + color + '">' + (a == null ? '?' : a) + '</div>';
+  html += '<div class="tekst-2">' + (en ? 'Message alignment with company truth' : 'Zgodność przekazu z prawdą o firmie') + '<br>' + _visEsc(brand) + '</div></div>';
+  if (noKb) html += '<div class="tekst-pomoc" style="margin-bottom:8px">' + (en ? 'No knowledge base documents: alignment is limited.' : 'Brak dokumentów w bazie wiedzy: ocena zgodności ograniczona.') + '</div>';
   if (issues.length) {
-    html += '<div style="font-size:12px;font-weight:600;color:var(--red);margin-bottom:4px">' + (en ? 'Factual issues' : 'Błędy faktograficzne') + ':</div>';
-    html += '<ul style="margin:0 0 10px;padding-left:18px;font-size:12px;color:var(--text2)">' + issues.map(x => '<li>' + _visEsc(x) + '</li>').join('') + '</ul>';
+    html += '<div class="panel-podtytul blad">' + (en ? 'Factual issues' : 'Błędy faktograficzne') + ':</div>';
+    html += '<ul class="tekst-2" style="margin:0 0 10px;padding-left:18px">' + issues.map(x => '<li>' + _visEsc(x) + '</li>').join('') + '</ul>';
   }
   if (missing.length) {
-    html += '<div style="font-size:12px;font-weight:600;color:' + 'var(--c-uwaga)' + ';margin-bottom:4px">' + (en ? 'Missing strengths' : 'Pominięte przewagi') + ':</div>';
-    html += '<ul style="margin:0 0 10px;padding-left:18px;font-size:12px;color:var(--text2)">' + missing.map(x => '<li>' + _visEsc(x) + '</li>').join('') + '</ul>';
+    html += '<div class="panel-podtytul uwaga">' + (en ? 'Missing strengths' : 'Pominięte przewagi') + ':</div>';
+    html += '<ul class="tekst-2" style="margin:0 0 10px;padding-left:18px">' + missing.map(x => '<li>' + _visEsc(x) + '</li>').join('') + '</ul>';
   }
-  html += '<div style="font-size:11px;color:var(--text3);margin-bottom:4px">' + (en ? 'How AI describes the brand' : 'Jak AI opisuje markę') + ':</div>';
-  html += '<div style="font-size:12px;color:var(--text2);background:var(--surface2);border-radius:var(--radius);padding:10px 12px;line-height:1.5">' + _visEsc(narrative) + '</div>';
+  html += '<div class="tekst-pomoc" style="margin-bottom:4px">' + (en ? 'How AI describes the brand' : 'Jak AI opisuje markę') + ':</div>';
+  html += '<div class="gap-info"><p class="tekst-2">' + _visEsc(narrative) + '</p></div>';
   document.getElementById('vis-results').innerHTML = html;
 }
 
@@ -18172,7 +18215,7 @@ function openRepModal() {
   const rep = buildReport();
   const out = document.getElementById('rep-results');
   const en = currentLang === 'en';
-  if (!rep) out.innerHTML = '<div style="font-size:13px;color:var(--text3)">' + (en ? 'No visibility snapshots yet. Run a visibility check first.' : 'Brak snapshotów widoczności. Najpierw uruchom sprawdzenie widoczności.') + '</div>';
+  if (!rep) out.innerHTML = '<div class="pusty-stan"><p>' + (en ? 'No visibility snapshots yet. Run a visibility check first.' : 'Brak snapshotów widoczności. Najpierw uruchom sprawdzenie widoczności.') + '</p></div>';
   else renderRepModal(rep);
   document.getElementById('rep-modal').classList.add('open');
 }
@@ -18183,45 +18226,43 @@ function renderRepModal(rep) {
   const color = rep.score >= 60 ? 'var(--c-sukces)' : rep.score >= 30 ? 'var(--c-uwaga)' : 'var(--red)';
   const yes = en ? 'Tak' : 'Tak', no = en ? 'Nie' : 'Nie';
   const yesL = en ? 'Yes' : 'Tak', noL = en ? 'No' : 'Nie';
-  const th = 'text-align:left;padding:5px 8px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border)';
-  const td = 'padding:5px 8px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border)';
   let h = '';
-  h += '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">' + (en ? 'Latest snapshot' : 'Ostatni snapshot') + ': ' + _repDate(rep.last.ts) + '</div>';
+  h += '<div class="tekst-pomoc" style="margin-bottom:8px">' + (en ? 'Latest snapshot' : 'Ostatni snapshot') + ': ' + _repDate(rep.last.ts) + '</div>';
   h += '<div style="display:flex;gap:14px;align-items:center;background:var(--surface2);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">';
-  h += '<div style="font-size:30px;font-weight:700;color:' + color + '">' + rep.score + '</div>';
-  h += '<div style="font-size:12px;color:var(--text2)">' + (en ? 'Visibility score (position-weighted)' : 'Wskaźnik widoczności (ważony pozycją)') + '<br>' + (en ? 'presence' : 'obecność') + ' <strong>' + rep.pct + '%</strong> (' + rep.present + '/' + rep.n + ') &middot; ' + (en ? 'avg position' : 'śr. pozycja') + ' <strong>' + (rep.avgPosition == null ? (en ? 'n/a' : 'b.d.') : '#' + formatujLiczbe(rep.avgPosition)) + '</strong></div></div>';
-  h += '<p style="font-size:12px;color:var(--text2);line-height:1.5;margin:0 0 12px">' + _visEsc(rep.summaryText) + '</p>';
+  h += '<div class="hstat-val" style="color:' + color + '">' + rep.score + '</div>';
+  h += '<div class="tekst-2">' + (en ? 'Visibility score (position-weighted)' : 'Wskaźnik widoczności (ważony pozycją)') + '<br>' + (en ? 'presence' : 'obecność') + ' <strong>' + rep.pct + '%</strong> (' + rep.present + '/' + rep.n + ') &middot; ' + (en ? 'avg position' : 'śr. pozycja') + ' <strong>' + (rep.avgPosition == null ? (en ? 'n/a' : 'b.d.') : '#' + formatujLiczbe(rep.avgPosition)) + '</strong></div></div>';
+  h += '<p class="tekst-2" style="margin:0 0 12px">' + _visEsc(rep.summaryText) + '</p>';
   if (rep.findings && rep.findings.length) {
-    h += '<div style="font-size:12px;font-weight:600;margin:4px 0 4px">' + (en ? 'Key findings' : 'Kluczowe ustalenia') + '</div>';
-    h += '<ul style="margin:0 0 12px;padding-left:18px;font-size:12px;color:var(--text2);line-height:1.55">' + rep.findings.map(f => '<li>' + _visEsc(f) + '</li>').join('') + '</ul>';
+    h += '<div class="panel-podtytul">' + (en ? 'Key findings' : 'Kluczowe ustalenia') + '</div>';
+    h += '<ul class="tekst-2" style="margin:0 0 12px;padding-left:18px">' + rep.findings.map(f => '<li>' + _visEsc(f) + '</li>').join('') + '</ul>';
   }
   if (rep.trend) {
     const t = rep.trend; const sign = t.scoreDelta > 0 ? '+' : '';
     const dc = t.scoreDelta > 0 ? 'var(--c-sukces)' : t.scoreDelta < 0 ? 'var(--red)' : 'var(--text3)';
-    h += '<div style="font-size:12px;color:var(--text2);margin-bottom:4px"><strong>' + (en ? 'Trend vs previous' : 'Trend vs poprzedni') + '</strong> (' + _repDate(t.prevTs) + '): <span style="color:' + dc + '">' + sign + t.scoreDelta + ' pkt</span></div>';
-    if (t.newlyPresent.length) h += '<div style="font-size:12px;color:' + 'var(--c-sukces)' + '">+ ' + (en ? 'newly present' : 'nowo obecne') + ': ' + t.newlyPresent.map(_visEsc).join(' · ') + '</div>';
-    if (t.newlyAbsent.length) h += '<div style="font-size:12px;color:var(--red)">- ' + (en ? 'newly absent' : 'nowo nieobecne') + ': ' + t.newlyAbsent.map(_visEsc).join(' · ') + '</div>';
+    h += '<div class="tekst-2" style="margin-bottom:4px"><strong>' + (en ? 'Trend vs previous' : 'Trend vs poprzedni') + '</strong> (' + _repDate(t.prevTs) + '): <span style="color:' + dc + '">' + sign + t.scoreDelta + ' pkt</span></div>';
+    if (t.newlyPresent.length) h += '<div class="tekst-2"><span class="stan-ok">+ ' + (en ? 'newly present' : 'nowo obecne') + ': ' + t.newlyPresent.map(_visEsc).join(' · ') + '</span></div>';
+    if (t.newlyAbsent.length) h += '<div class="tekst-2"><span class="stan-blad">- ' + (en ? 'newly absent' : 'nowo nieobecne') + ': ' + t.newlyAbsent.map(_visEsc).join(' · ') + '</span></div>';
     h += '<div style="height:10px"></div>';
   }
   if (rep.topComp.length) {
-    h += '<div style="font-size:12px;font-weight:600;margin:4px 0 4px">' + (en ? 'Competitors cited by AI' : 'Konkurenci cytowani przez AI') + '</div>';
-    h += '<table style="width:100%;border-collapse:collapse;margin-bottom:12px"><thead><tr><th style="' + th + '">' + (en ? 'Competitor' : 'Konkurent') + '</th><th style="' + th + '">' + (en ? 'Mentions' : 'Wzmianki') + '</th><th style="' + th + '">% ' + (en ? 'of queries' : 'zapytań') + '</th></tr></thead><tbody>';
-    h += rep.topComp.map(x => '<tr><td style="' + td + '">' + _visEsc(x[0]) + '</td><td style="' + td + '">' + x[1] + '</td><td style="' + td + '">' + x[2] + '%</td></tr>').join('');
+    h += '<div class="panel-podtytul">' + (en ? 'Competitors cited by AI' : 'Konkurenci cytowani przez AI') + '</div>';
+    h += '<table class="tabela-mala"><thead><tr><th>' + (en ? 'Competitor' : 'Konkurent') + '</th><th>' + (en ? 'Mentions' : 'Wzmianki') + '</th><th>% ' + (en ? 'of queries' : 'zapytań') + '</th></tr></thead><tbody>';
+    h += rep.topComp.map(x => '<tr><td>' + _visEsc(x[0]) + '</td><td>' + x[1] + '</td><td>' + x[2] + '%</td></tr>').join('');
     h += '</tbody></table>';
   }
-  h += '<div style="font-size:12px;font-weight:600;margin:4px 0 4px">' + (en ? 'Per query' : 'Per zapytanie') + '</div>';
-  h += '<table style="width:100%;border-collapse:collapse;margin-bottom:12px"><thead><tr><th style="' + th + '">' + (en ? 'Query' : 'Zapytanie') + '</th><th style="' + th + '">' + (en ? 'Present' : 'Obecność') + '</th><th style="' + th + '">' + (en ? 'Pos.' : 'Poz.') + '</th><th style="' + th + '">' + (en ? 'Top competitor' : 'Gł. konkurent') + '</th></tr></thead><tbody>';
-  h += rep.rows.map(r => '<tr><td style="' + td + '">' + _visEsc(r.prompt) + '</td><td style="' + td + ';color:' + (r.present ? 'var(--c-sukces)' : 'var(--red)') + '">' + (r.present ? yesL : noL) + '</td><td style="' + td + '">' + (r.avgPosition ? formatujLiczbe(r.avgPosition) : '-') + '</td><td style="' + td + '">' + _visEsc(r.topCompetitor) + '</td></tr>').join('');
+  h += '<div class="panel-podtytul">' + (en ? 'Per query' : 'Per zapytanie') + '</div>';
+  h += '<table class="tabela-mala"><thead><tr><th>' + (en ? 'Query' : 'Zapytanie') + '</th><th>' + (en ? 'Present' : 'Obecność') + '</th><th>' + (en ? 'Pos.' : 'Poz.') + '</th><th>' + (en ? 'Top competitor' : 'Gł. konkurent') + '</th></tr></thead><tbody>';
+  h += rep.rows.map(r => '<tr><td>' + _visEsc(r.prompt) + '</td><td><span class="' + (r.present ? 'stan-ok' : 'stan-blad') + '">' + (r.present ? yesL : noL) + '</span></td><td>' + (r.avgPosition ? formatujLiczbe(r.avgPosition) : '-') + '</td><td>' + _visEsc(r.topCompetitor) + '</td></tr>').join('');
   h += '</tbody></table>';
   if (rep.pri.length) {
-    h += '<div style="font-size:12px;font-weight:600;margin-bottom:4px">' + (en ? 'Priorities' : 'Priorytety') + '</div>';
-    h += '<ol style="margin:0 0 10px;padding-left:18px;font-size:12px;color:var(--text2)">' + rep.pri.map(p => '<li>' + _visEsc(p.prompt) + ' <span style="color:var(--text3)">(' + _visEsc(p.reason) + ')</span></li>').join('') + '</ol>';
+    h += '<div class="panel-podtytul">' + (en ? 'Priorities' : 'Priorytety') + '</div>';
+    h += '<ol class="tekst-2" style="margin:0 0 10px;padding-left:18px">' + rep.pri.map(p => '<li>' + _visEsc(p.prompt) + ' <span class="dopisek">(' + _visEsc(p.reason) + ')</span></li>').join('') + '</ol>';
   }
   if (rep.recommendations && rep.recommendations.length) {
-    h += '<div style="font-size:12px;font-weight:600;margin:4px 0 4px">' + (en ? 'Recommended actions' : 'Rekomendowane działania') + '</div>';
-    h += '<ol style="margin:0 0 12px;padding-left:18px;font-size:12px;color:var(--text2);line-height:1.55">' + rep.recommendations.map(x => '<li>' + _visEsc(x) + '</li>').join('') + '</ol>';
+    h += '<div class="panel-podtytul">' + (en ? 'Recommended actions' : 'Rekomendowane działania') + '</div>';
+    h += '<ol class="tekst-2" style="margin:0 0 12px;padding-left:18px">' + rep.recommendations.map(x => '<li>' + _visEsc(x) + '</li>').join('') + '</ol>';
   }
-  h += '<div style="font-size:10px;color:var(--text3);border-top:1px solid var(--border);padding-top:8px;line-height:1.5">' + (en ? 'Method: on-demand measurement, Claude with web search, ' : 'Metodyka: pomiar na żądanie, Claude z wyszukiwaniem w sieci, ') + rep.iterations + (en ? ' iteration(s) per query. Model self-assessment, not a multi-model or traffic measurement.' : ' iteracji na zapytanie. Samoocena modelu, nie pomiar wielomodelowy ani pomiar ruchu.') + '</div>';
+  h += '<div class="tekst-pomoc" style="border-top:1px solid var(--border);padding-top:8px">' + (en ? 'Method: on-demand measurement, Claude with web search, ' : 'Metodyka: pomiar na żądanie, Claude z wyszukiwaniem w sieci, ') + rep.iterations + (en ? ' iteration(s) per query. Model self-assessment, not a multi-model or traffic measurement.' : ' iteracji na zapytanie. Samoocena modelu, nie pomiar wielomodelowy ani pomiar ruchu.') + '</div>';
   document.getElementById('rep-results').innerHTML = h;
 }
 
@@ -18599,7 +18640,7 @@ function renderGeoCheck() {
   let h = naglowekOceny(g.geo, 'GEO');
   h += '<div class="seo-items">';
   comp.forEach(c => {
-    h += `<div class="seo-item"><span class="seo-item-icon" style="color:${kolorOceny(c.s)};font-weight:700;font-size:12px">${c.s}</span><span class="seo-item-text">${escapeHtml(c.label)} <span style="color:var(--text3)">(${escapeHtml(wlabel)} ${c.w})</span></span></div>`;
+    h += `<div class="seo-item"><span class="seo-item-icon seo-item-liczba" style="color:${kolorOceny(c.s)}">${c.s}</span><span class="seo-item-text">${escapeHtml(c.label)} <span class="dopisek">(${escapeHtml(wlabel)} ${c.w})</span></span></div>`;
   });
   det.forEach(d => {
     h += `<div class="seo-item"><span class="seo-item-icon">${d.ok ? ikona('circle-check','ok') : ikona('triangle-alert','uwaga')}</span><span class="seo-item-text">${escapeHtml(d.t)}</span></div>`;
@@ -19761,29 +19802,31 @@ function aivClose() { var m = document.getElementById('aiv-modal'); if (m) m.sty
 
 function aivStatusLabel(st) { return st === 'cited' ? _t('aiv-status-cited') : st === 'mentioned' ? _t('aiv-status-mentioned') : _t('aiv-status-none'); }
 function aivStatusColor(st) { return st === 'cited' ? 'var(--c-sukces)' : st === 'mentioned' ? 'var(--c-uwaga)' : 'var(--c-blad)'; }
+// status zapytania jako odznaka (.badge): cytowana - gotowe, wspomniana - uwaga, brak - blad
+function aivStatusKlasa(st) { return st === 'cited' ? 'ready' : st === 'mentioned' ? 'uwaga' : 'blad'; }
 
 function aivRender() {
   var c = aivCfg();
   var list = document.getElementById('aiv-list'); if (!list) return;
-  if (!c.queries.length) { list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:14px;text-align:center">' + _t('aiv-empty') + '</div>'; var sc0 = document.getElementById('aiv-score'); if (sc0) sc0.textContent = '-'; return; }
+  if (!c.queries.length) { list.innerHTML = '<div class="pusty-stan"><p>' + _t('aiv-empty') + '</p></div>'; var sc0 = document.getElementById('aiv-score'); if (sc0) sc0.textContent = '-'; return; }
   var scored = c.queries.filter(function(q){ return q.hist && q.hist.length; });
   var avg = scored.length ? Math.round(scored.reduce(function(a,q){ return a + q.hist[q.hist.length-1].score; }, 0) / scored.length) : null;
   var sc = document.getElementById('aiv-score'); if (sc) sc.textContent = (avg === null ? '-' : avg + '/100');
   list.innerHTML = c.queries.map(function(q, i) {
     var last = q.hist && q.hist.length ? q.hist[q.hist.length-1] : null;
     var badge = last
-      ? '<span style="font-size:11px;font-weight:700;color:' + aivStatusColor(last.status) + '">' + aivStatusLabel(last.status) + '</span>'
-      : '<span style="font-size:11px;color:var(--text3)">' + _t('aiv-never') + '</span>';
+      ? '<span class="badge ' + aivStatusKlasa(last.status) + '">' + aivStatusLabel(last.status) + '</span>'
+      : '<span class="tekst-pomoc">' + _t('aiv-never') + '</span>';
     var trend = (q.hist || []).slice(-6).map(function(h){ return '<span title="' + new Date(h.ts).toLocaleString() + '" style="display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:2px;background:' + aivStatusColor(h.status) + '"></span>'; }).join('');
     var when = last ? (_t('aiv-last') + ' ' + new Date(last.ts).toLocaleDateString() + (last.hits ? ', ' + last.hits + ' ' + (_t('aiv-srcword') || 'zr.') : '')) : '';
     return '<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">' +
       '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">' +
-        '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;color:var(--text);word-break:break-word">' + q.q.replace(/</g,'&lt;') + '</div>' +
+        '<div style="flex:1;min-width:0"><div class="tekst-zwykly" style="word-break:break-word">' + q.q.replace(/</g,'&lt;') + '</div>' +
         '<div style="margin-top:4px">' + badge + ' &nbsp; ' + trend + '</div>' +
-        '<div style="font-size:11px;color:var(--text3);margin-top:3px">' + when + '</div></div>' +
+        '<div class="tekst-pomoc" style="margin-top:3px">' + when + '</div></div>' +
         '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">' +
-          '<button class="btn-secondary" style="padding:4px 10px;font-size:11px" onclick="aivCheckOne(' + i + ', this)">' + _t('aiv-check-one') + '</button>' +
-          '<button class="btn-secondary" style="padding:4px 10px;font-size:11px" onclick="aivDel(' + i + ')" data-i18n-title="aiv-del-title" title="Usuń">' + ikona('x') + '</button>' +
+          '<button class="btn-secondary btn-maly" onclick="aivCheckOne(' + i + ', this)">' + _t('aiv-check-one') + '</button>' +
+          '<button class="btn-secondary btn-maly" onclick="aivDel(' + i + ')" data-i18n-title="aiv-del-title" title="Usuń">' + ikona('x') + '</button>' +
         '</div>' +
       '</div></div>';
   }).join('');
@@ -20938,11 +20981,8 @@ async function kbAudioTranscribeAndOpen(file) {
 <!-- BAZA WIEDZY NA SERWERZE (wariant proxy - tylko tam istnieje /api/baza) -->
 <div id="bazas-modal" class="okno-tlo" style="display:none">
   <div class="modal okno-panel" style="width:640px">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
-      <div class="tekst-tytul" data-i18n="bazas-title">Baza wiedzy</div>
-      <span class="tekst-pomoc" id="bazas-stan"></span>
-    </div>
-    <div class="tekst-maly" style="margin-bottom:16px" data-i18n="bazas-desc">To ta sama baza wiedzy, którą widzisz w panelu: dokumenty leżą na serwerze, więc masz je na każdym urządzeniu, a przy generowaniu dobierane są tylko fragmenty pasujące do tematu. Tu wkleisz nowy tekst albo usuniesz dokument.</div>
+    <div class="modal-head"><h3 class="okno-tytul" data-i18n="bazas-title">Baza wiedzy</h3><span class="tekst-pomoc" id="bazas-stan"></span></div>
+    <p class="okno-opis" data-i18n="bazas-desc">To ta sama baza wiedzy, którą widzisz w panelu: dokumenty leżą na serwerze, więc masz je na każdym urządzeniu, a przy generowaniu dobierane są tylko fragmenty pasujące do tematu. Tu wkleisz nowy tekst albo usuniesz dokument.</p>
 
     <div id="bazas-lista" style="margin-bottom:18px"></div>
 
@@ -20998,7 +21038,7 @@ async function kbAudioTranscribeAndOpen(file) {
       var odpBazy = await fetch('/api/baza');
       // R9-F (KOD8-10): wygasla sesja (401) to nie pusta Baza - wczesniej "Brak dokumentow" i licznik 0.
       if (odpBazy.status === 401) {
-        cel.innerHTML = '<div style="font-size:12px;color:var(--c-blad);padding:10px 0" role="alert">' + escapeHtml(tekst('bazas-sesja', '')) + '</div>';
+        cel.innerHTML = '<div class="tekst-pomoc stan-blad" style="padding:10px 0" role="alert">' + escapeHtml(tekst('bazas-sesja', '')) + '</div>';
         return;
       }
       var dane = await odpBazy.json();
@@ -21008,7 +21048,7 @@ async function kbAudioTranscribeAndOpen(file) {
       if (dane.limitZnakow > 0) window._bazaLimitZnakow = dane.limitZnakow; // R9-F (KOD8-11), gdy serwer go poda
       rysujBazeWPanelu();
       if (!dokumenty.length){
-        cel.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:10px 0">'
+        cel.innerHTML = '<div class="tekst-pomoc" style="padding:10px 0">'
           + tekst('bazas-pusto','Brak dokumentów. Dodaj pierwszy poniżej.') + '</div>';
         return;
       }
@@ -21018,18 +21058,18 @@ async function kbAudioTranscribeAndOpen(file) {
         return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'
           + '<span class="kb-zakres">' + ikona(wspolna ? 'users' : 'lock') + '</span>'
           + '<div style="flex:1;min-width:0">'
-          + '<div style="font-size:13px;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+          + '<div class="kb-name">'
           + escapeHtml(d.nazwa) + '</div>'
-          + '<div style="font-size:11px;color:var(--text3)">' + d.fragmentow + ' fragm. · '
+          + '<div class="kb-meta">' + d.fragmentow + ' fragm. · '
           + (d.zWektorami ? 'wektory' : 'słowa kluczowe') + '</div></div>'
           + (mozeUsunac
-              ? '<button onclick="usunZBazySerwera(\'' + d.id + '\',\'' + d.zakres + '\')" style="padding:5px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text2);font-size:11px;cursor:pointer">'
+              ? '<button type="button" class="btn-secondary btn-maly" onclick="usunZBazySerwera(\'' + d.id + '\',\'' + d.zakres + '\')">'
                 + tekst('bazas-usun','Usuń') + '</button>'
               : '')
           + '</div>';
       }).join('');
     } catch(e){
-      cel.innerHTML = '<div style="font-size:12px;color:var(--c-blad);padding:10px 0">'
+      cel.innerHTML = '<div class="tekst-pomoc stan-blad" style="padding:10px 0" role="alert">'
         + tekst('bazas-blad','Nie udało się połączyć z serwerem.') + '</div>';
     }
   }
@@ -21315,11 +21355,8 @@ async function kbAudioTranscribeAndOpen(file) {
 <!-- ============ Frazy z OpenSEO ============ -->
 <div id="seo-modal" class="okno-tlo" style="display:none">
   <div class="modal okno-panel" style="width:660px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <div class="tekst-tytul" data-i18n="seo-title">Frazy z OpenSEO</div>
-      <button type="button" class="modal-close" onclick="zamknijFrazySeo()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button>
-    </div>
-    <div class="tekst-maly" style="margin-bottom:16px" data-i18n="seo-desc">Frazy zapisane i otagowane w OpenSEO. Odczyt nie kosztuje kredytów - dane pochodzą z bazy OpenSEO, nie z nowego zapytania.</div>
+    <div class="modal-head"><h3 class="okno-tytul" data-i18n="seo-title">Frazy z OpenSEO</h3><button type="button" class="modal-close" onclick="zamknijFrazySeo()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+    <p class="okno-opis" data-i18n="seo-desc">Frazy zapisane i otagowane w OpenSEO. Odczyt nie kosztuje kredytów - dane pochodzą z bazy OpenSEO, nie z nowego zapytania.</p>
 
     <!-- Bez projektu w OpenSEO (albo bez polaczenia) zamiast pustych list jest wyjasnienie i jedna akcja. -->
     <div id="seo-pusty" class="seo-pusty" hidden>
@@ -21453,7 +21490,7 @@ async function kbAudioTranscribeAndOpen(file) {
   function rysujFrazy(){
     var lista = el('seo-lista');
     if (!frazy.length){
-      lista.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px 0">'
+      lista.innerHTML = '<div class="tekst-pomoc" style="padding:12px 0">'
         + bezpieczny(tekst('seo-pusto', 'Brak zapisanych fraz w tym projekcie.')) + '</div>';
       return;
     }
@@ -21469,8 +21506,8 @@ async function kbAudioTranscribeAndOpen(file) {
         : '';
       return '<label style="display:flex;gap:10px;align-items:flex-start;padding:8px;border-bottom:1px solid var(--border);cursor:pointer">'
         + '<input type="checkbox" data-seo-i="' + i + '" style="margin-top:3px">'
-        + '<div style="min-width:0"><div style="font-size:13px;color:var(--text);word-break:break-word">' + bezpieczny(f.fraza) + '</div>'
-        + '<div style="font-size:11px;color:var(--text3)">' + metryki + tagi + '</div></div></label>';
+        + '<div style="min-width:0"><div class="tekst-zwykly" style="word-break:break-word">' + bezpieczny(f.fraza) + '</div>'
+        + '<div class="kb-meta">' + metryki + tagi + '</div></div></label>';
     }).join('');
   }
 
@@ -21566,12 +21603,9 @@ async function kbAudioTranscribeAndOpen(file) {
 <!-- PAKIET: ile zostalo i co zrobic, gdy sie skonczy (wariant proxy - tylko tam istnieje /api/pakiet) -->
 <div id="pakiet-modal" class="okno-tlo" style="display:none">
   <div class="modal okno-panel" style="width:480px">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
-      <div class="tekst-tytul" data-i18n="pakiet-title">Twój pakiet</div>
-      <span class="tekst-maly" id="pakiet-nazwa"></span>
-    </div>
-    <div class="tekst-maly" id="pakiet-alarm" style="display:none;margin:12px 0;padding:10px 12px;border-radius:var(--radius);border:1px solid rgba(226,50,68,.35);background:rgba(226,50,68,.08)"></div>
-    <div class="tekst-maly" id="pakiet-opis" style="margin-bottom:14px"></div>
+    <div class="modal-head"><h3 class="okno-tytul" data-i18n="pakiet-title">Twój pakiet</h3><span class="tekst-pomoc" id="pakiet-nazwa"></span></div>
+    <div class="komunikat-bledu" id="pakiet-alarm" role="alert" style="display:none;margin:0 0 var(--s-16)"></div>
+    <p class="okno-opis" id="pakiet-opis"></p>
     <div id="pakiet-pule"></div>
     <div id="pakiet-funkcje" style="margin-top:16px"></div>
     <!-- R9-D (UX8-20): wybor pakietu i przejscie do platnosci (konto jednoosobowe) albo stan subskrypcji -->
@@ -21607,9 +21641,9 @@ async function kbAudioTranscribeAndOpen(file) {
   function pasek(etykieta, wartosc, procent, bezLimitu){
     var kolor = procent >= 100 ? 'var(--c-blad)' : 'var(--c-akcent)';
     return '<div style="margin-bottom:10px">'
-      + '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--text);margin-bottom:4px">'
+      + '<div class="pakiet-wiersz">'
       + '<span>' + bezpieczny(etykieta) + '</span>'
-      + '<span style="color:var(--text3)">' + bezpieczny(wartosc) + '</span></div>'
+      + '<span>' + bezpieczny(wartosc) + '</span></div>'
       + '<div style="height:5px;border-radius:3px;background:var(--surface2);overflow:hidden">'
       + (bezLimitu ? '' : '<div style="height:100%;width:' + procent + '%;background:' + kolor + '"></div>')
       + '</div></div>';
@@ -21711,7 +21745,7 @@ async function kbAudioTranscribeAndOpen(file) {
 
   function rysujTresc(){
     if (!stan){
-      el('pakiet-pule').innerHTML = '<div style="font-size:12px;color:var(--c-blad)">'
+      el('pakiet-pule').innerHTML = '<div class="gap-info blad" role="alert">'
         + tekst('pakiet-blad','Nie udało się odczytać stanu pakietu.') + '</div>';
       return;
     }
@@ -21728,22 +21762,22 @@ async function kbAudioTranscribeAndOpen(file) {
     }).join('');
 
     // Dokumenty to limit, ale nie licznik uzycia - pokazujemy sam pulap.
-    html += '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--text2);padding-top:8px;border-top:1px solid var(--border)">'
-      + '<span>' + bezpieczny(tekst('pakiet-dokumenty','Dokumenty w bazie wiedzy')) + '</span><span style="color:var(--text3)">'
+    html += '<div class="pakiet-wiersz kreska">'
+      + '<span>' + bezpieczny(tekst('pakiet-dokumenty','Dokumenty w bazie wiedzy')) + '</span><span>'
       + (stan.limitDokumentow === null ? bezpieczny(tekst('pakiet-bez-limitu','bez limitu')) : (typeof window._bazaSerwerLiczba === 'number' ? window._bazaSerwerLiczba + ' / ' : '') + Number(stan.limitDokumentow))
       + '</span></div>';
 
     var w = stan.uzycie && stan.uzycie.wywolanie;
     if (w && w.limit !== null){
-      html += '<div style="display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--text3);margin-top:8px">'
+      html += '<div class="pakiet-wiersz" style="margin-top:8px">'
         + '<span>' + bezpieczny(tekst('pakiet-wywolania','Wywołania modelu')) + '</span><span>' + w.zuzyte + ' / ' + w.limit + '</span></div>'
-        + '<div style="font-size:11px;color:var(--text3);margin-top:3px;line-height:1.45">'
+        + '<div class="tekst-pomoc">'
         + bezpieczny(tekst('pakiet-wywolania-opis','Jeden artykuł to kilka wywołań: brief, treść, korekta, przeróbki.')) + '</div>';
     }
 
     el('pakiet-pule').innerHTML = html;
     el('pakiet-funkcje').innerHTML =
-      '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">'
+      '<div class="panel-podtytul">'
       + bezpieczny(tekst('pakiet-funkcje','Funkcje w tym pakiecie')) + '</div>'
       // R9-W: OpenSEO dla klientow bedzie po premierze; konto samoobslugowe bez niego nie widzi wiersza "niedostepne"
       // (w zadnym pakiecie, takze w Premium, go dzis nie ma).
@@ -21814,26 +21848,26 @@ async function kbAudioTranscribeAndOpen(file) {
     var alarm = el('pakiet-alarm');
     if (dane && dane.funkcja){
       // Bramka funkcji, nie wyczerpany licznik - to dwie rozne rozmowy.
-      alarm.innerHTML = '<div style="font-weight:600;margin-bottom:4px">'
-        + bezpieczny(tekst('pakiet-funkcja-title','Ta funkcja nie wchodzi w Twój pakiet')) + '</div>'
-        + '<div style="color:var(--text2)">' + bezpieczny((dane.error && dane.error.komunikat) || '') + '</div>';
+      var komunikat = (dane.error && dane.error.komunikat) || '';
+      alarm.innerHTML = '<strong>'
+        + bezpieczny(tekst('pakiet-funkcja-title','Ta funkcja nie wchodzi w Twój pakiet')) + '</strong>'
+        + (komunikat ? '<p>' + bezpieczny(komunikat) + '</p>' : '');
     } else if (dane && dane.czynnosc && Number(dane.limit) === 0) {
       // Limit 0 to nie wyczerpanie, tylko funkcja spoza pakietu.
-      alarm.innerHTML = '<div style="font-weight:600;margin-bottom:4px">'
-        + bezpieczny(tekst('pakiet-poza-tytul','{f} nie wchodzą w pakiet {p}').replace('{f}', tekst('pakiet-' + dane.czynnosc, dane.czynnosc)).replace('{p}', stan ? poJezyku('nazwa') : '')) + '</div>'
-        + '<div style="color:var(--text2)">' + bezpieczny(tekst('pakiet-od-standard','Dostępne od pakietu Standard')) + '</div>';
+      alarm.innerHTML = '<strong>'
+        + bezpieczny(tekst('pakiet-poza-tytul','{f} nie wchodzą w pakiet {p}').replace('{f}', tekst('pakiet-' + dane.czynnosc, dane.czynnosc)).replace('{p}', stan ? poJezyku('nazwa') : '')) + '</strong>'
+        + '<p>' + bezpieczny(tekst('pakiet-od-standard','Dostępne od pakietu Standard')) + '</p>';
     } else {
       var czynnosc = dane && dane.czynnosc ? tekst('pakiet-' + dane.czynnosc, dane.czynnosc) : '';
-      alarm.innerHTML = '<div style="font-weight:600;margin-bottom:4px">'
-        + bezpieczny(tekst('pakiet-limit-title','Limit pakietu wyczerpany')) + '</div>'
+      alarm.innerHTML = '<strong>'
+        + bezpieczny(tekst('pakiet-limit-title','Limit pakietu wyczerpany')) + '</strong>'
         + (czynnosc
-            ? '<div>' + bezpieczny(czynnosc) + ': ' + bezpieczny(tekst('pakiet-limit-zuzyto','Zużyto'))
-              + ' ' + Number(dane.zuzyte) + ' / ' + Number(dane.limit) + '</div>'
+            ? '<p>' + bezpieczny(czynnosc) + ': ' + bezpieczny(tekst('pakiet-limit-zuzyto','Zużyto'))
+              + ' ' + Number(dane.zuzyte) + ' / ' + Number(dane.limit) + '</p>'
             : '')
-        + '<div style="margin-top:4px;color:var(--text2)">'
-        + bezpieczny(tekstLimitu(dane)) + '</div>';
+        + '<p>' + bezpieczny(tekstLimitu(dane)) + '</p>';
     }
-    alarm.style.display = 'block';
+    alarm.style.display = ''; // uklad .komunikat-bledu (siatka) z CSS
     el('pakiet-modal').style.display = 'flex';
     odswiez();
   };
@@ -22013,17 +22047,17 @@ async function kbAudioTranscribeAndOpen(file) {
   }
 
   function polePola(id, etykieta, podpowiedz, wartosc){
-    return '<label style="display:block;font-size:12px;font-weight:600;color:var(--text);margin:0 0 4px">'
+    return '<label class="field-label" style="margin:0 0 4px">'
       + etykieta + '</label>'
       + '<input id="' + id + '" type="password" autocomplete="new-password" spellcheck="false" placeholder="' + bezpieczny(podpowiedz) + '"'
       + ' value="' + bezpieczny(wartosc || '') + '"'
-      + ' style="width:100%;padding:9px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:14px">';
+      + ' style="width:100%;margin-bottom:14px">';
   }
 
   function naglowek(tytul, opis){
     // R9-G (UX8-15): tytul kroku to naglowek okna (aria-labelledby) i miejsce fokusu po otwarciu i po kazdym kroku.
-    return '<h2 id="start-tytul" tabindex="-1" aria-describedby="start-postep" style="font-weight:700;font-size:18px;line-height:1.3;color:var(--text);margin:0 0 6px">' + tytul + '</h2>'
-      + '<div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px">' + opis + '</div>';
+    return '<h2 id="start-tytul" class="okno-tytul" tabindex="-1" aria-describedby="start-postep" style="margin:0 0 6px">' + tytul + '</h2>'
+      + '<p class="okno-opis">' + opis + '</p>';
   }
 
   function rysujKropki(){
@@ -22056,9 +22090,9 @@ async function kbAudioTranscribeAndOpen(file) {
           tekst('start-1-opis','Zanim napiszesz pierwszy artykuł, przejdźmy przez cztery krótkie kroki. Zajmie to minutę, a wszystko można zmienić później w ustawieniach.'))
         + (s
             ? '<div style="border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;background:var(--surface2)">'
-              + '<div style="font-size:12px;color:var(--text3);margin-bottom:4px">' + tekst('start-twoj-pakiet','Twój pakiet') + '</div>'
-              + '<div style="font-size:15px;font-weight:700;color:var(--text)">' + bezpieczny(nazwaPlanu) + '</div>'
-              + (ile ? '<div style="font-size:12px;color:var(--text2);margin-top:6px">'
+              + '<div class="tekst-pomoc" style="margin-bottom:4px">' + tekst('start-twoj-pakiet','Twój pakiet') + '</div>'
+              + '<div class="panel-tytul">' + bezpieczny(nazwaPlanu) + '</div>'
+              + (ile ? '<div class="tekst-2" style="margin-top:6px">'
                   + tekst('pakiet-artykul','Artykuły') + ': ' + bezpieczny(ile) + '</div>' : '')
               + '</div>'
             : '');
@@ -22071,13 +22105,13 @@ async function kbAudioTranscribeAndOpen(file) {
           wolno
             ? tekst('start-2-opis','Domyślnie generowanie korzysta z kluczy serwera, więc nic tu nie trzeba wpisywać. Jeśli masz własne konta u dostawców, wpisz klucze poniżej: koszt modelu przejdzie wtedy na Twój rachunek u dostawcy. Limity pakietu obowiązują tak samo.')
             : tekst('start-2-opis-pakiet','W Twoim pakiecie generowanie korzysta z kluczy serwera, więc nic tu nie trzeba wpisywać. Własne klucze są dostępne od pakietu Standard.'))
-        + '<div style="font-size:12px;color:var(--text2);background:var(--surface2);border-left:3px solid var(--c-akcent);padding:10px 12px;border-radius:0 var(--radius) var(--radius) 0;margin-bottom:18px;line-height:1.55">'
+        + '<div class="byok-start-info">'
           + tekst('start-2-gdzie','Klucze zostają tylko w tej przeglądarce. Serwer przekazuje je dostawcy z każdym zapytaniem i niczego nie zapisuje. Na innym urządzeniu trzeba je wpisać ponownie.')
           + '</div>'
         + (wolno ? polePola('start-k-anthropic', tekst('start-2-anthropic','Anthropic: pisanie tekstów'), 'sk-ant-...', magazyn.getItem('cai_klucz_anthropic')) : '')
         + (wolno ? polePola('start-k-openai', tekst('start-2-openai','OpenAI: grafiki, lektor, transkrypcja'), 'sk-proj-...', magazyn.getItem('cai_klucz_openai')) : '')
         + (wolno ? polePola('start-k-eleven', tekst('start-2-eleven','ElevenLabs: lepszy lektor (opcjonalnie)'), '...', magazyn.getItem('cai_klucz_eleven')) : '')
-        + '<div id="start-k-blad" style="display:none;font-size:12px;color:var(--c-blad);margin-top:-6px"></div>';
+        + '<div id="start-k-blad" class="tekst-pomoc stan-blad" style="display:none;margin-top:-6px"></div>';
     }
 
     else if (kroki[krok] === 'marka'){
@@ -22086,7 +22120,7 @@ async function kbAudioTranscribeAndOpen(file) {
           tekst('start-3-opis','Głos marki to opis tego, jak ma brzmieć Twoja treść: ton, słownictwo, czego unikać. Bez niego artykuły będą poprawne, ale bezosobowe. Możesz to ustawić teraz albo wrócić do tego później.'))
         + '<button type="button" class="btn-secondary btn-pelny" onclick="openBvModal()" style="margin-bottom:10px">'
           + tekst('start-3-otworz','Otwórz ustawienia głosu marki') + '</button>'
-        + '<div style="font-size:12px;color:var(--text3);line-height:1.55">'
+        + '<div class="tekst-pomoc">'
           + tekst('start-3-potem','Kreator zostaje otwarty. Po zapisaniu głosu marki wróć tutaj i kliknij „Dalej”.') + '</div>';
     }
 
@@ -22094,7 +22128,7 @@ async function kbAudioTranscribeAndOpen(file) {
       cel.innerHTML = naglowek(
           tekst('start-4-tytul','Wszystko gotowe'),
           tekst('start-4-opis','Wpisz temat, dodaj słowa kluczowe i kliknij „Wygeneruj treść”. Licznik pakietu jest zawsze w prawym górnym rogu: kliknięcie pokazuje, ile zostało.'))
-        + '<div style="font-size:12px;color:var(--text2);line-height:1.7">'
+        + '<div class="tekst-2">'
           + tekst('start-4-lista','Gdzie szukać reszty: menu konta w prawym górnym rogu to baza wiedzy, integracja z CMS, głos marki i widoczność w AI. Nic z tego nie jest potrzebne do pierwszego artykułu.')
           + '</div>';
     }
@@ -22385,7 +22419,7 @@ async function kbAudioTranscribeAndOpen(file) {
 <div class="overlay" id="wyloguj-modal" onclick="if(event.target===this)zamknijWyloguj()">
   <div class="modal" style="width:460px" aria-labelledby="wyloguj-tytul">
     <div class="modal-head"><h3 id="wyloguj-tytul" data-i18n="wyl-tytul">Wylogować się?</h3><button type="button" class="modal-close" onclick="zamknijWyloguj()"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
-    <p class="tekst-zwykly" data-i18n="wyl-opis">Zapamiętane klucze API zostają na tym urządzeniu także po wylogowaniu (najwyżej 30 dni) i inne konto ich nie odczyta. Jeśli to wspólny komputer, usuń je przy wylogowaniu.</p>
+    <p class="okno-opis" data-i18n="wyl-opis">Zapamiętane klucze API zostają na tym urządzeniu także po wylogowaniu (najwyżej 30 dni) i inne konto ich nie odczyta. Jeśli to wspólny komputer, usuń je przy wylogowaniu.</p>
     <div class="modal-footer">
       <button type="button" class="btn-secondary" id="wyloguj-usun" onclick="wylogujIUsunKlucze()" data-i18n="wyl-usun">Wyloguj i usuń klucze</button>
       <button type="button" class="btn-generate" id="wyloguj-zostaw" onclick="wylogujZostawKlucze()" data-i18n="wyl-zostaw">Wyloguj się</button>

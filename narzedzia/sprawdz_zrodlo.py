@@ -589,7 +589,7 @@ KONTROLE = [
      "document.getElementById('topic').value = nowyTemat ? temat : '';", None, None),
     ("R3/seo-bez-projektu", "frazy OpenSEO bez projektu lub polaczenia: wyjasnienie zamiast pustych list",
      '<div id="seo-pusty" class="seo-pusty" hidden>', None, ("proxy",)),
-    ("R3/konto-kategorie", "Konto: grupy jako kategorie (naglowek wersalikami z kreska)",
+    ("R3/konto-kategorie", "Konto: grupy jako kategorie (naglowek z kreska nad soba; od planu UX bez wersalikow, patrz UX/menu-naglowek)",
      ".settings-menu .menu-naglowek { margin: var(--s-8) var(--s-8) var(--s-4); padding: var(--s-12) 0 0; border-top: 1px solid var(--c-linia);", None, None),
     ("R3/pasek-zanikanie", "pasek Wygeneruj na telefonie: tresc zanika zamiast byc przecieta",
      "body.is-mobile .form-actions-sticky::before {", None, None),
@@ -1935,9 +1935,11 @@ KONTROLE += [
      "'start-2-tytul':'Your own API keys (optional)',", "'start-2-tytul':'API keys - only if you want to',", ("proxy",)),
 
     # Runda P (promocja): poprawki z raportow agencja-ux i agencja-copywriter.
-    ("RP/fakty-cudzyslow", "panel Fakty: cytat w cudzyslowie jezyka interfejsu (PL dolny i gorny, EN angielski), nie w prostym \"...\"",
-     "overflow-wrap:anywhere\">' + (currentLang === 'en' ? '“' : '„') + escapeHtml(cytat) + '”</div>'",
-     "overflow-wrap:anywhere\">\"' + escapeHtml(cytat) + '\"</div>'", None),
+    # Plan UX (ujednolicenie tekstow): cytat klasa .cytat zamiast stylu w linii. "niema": prosty cudzyslow
+    # albo dawny styl w linii (kursywa, kolor i lamanie wpisane w znacznik).
+    ("RP/fakty-cudzyslow", "panel Fakty: cytat w cudzyslowie jezyka interfejsu (PL dolny i gorny, EN angielski), nie w prostym \"...\"; wyglad z klasy .cytat",
+     "'<div class=\"cytat\">' + (currentLang === 'en' ? '“' : '„') + escapeHtml(cytat) + '”</div>'",
+     "re:\">\"' \\+ escapeHtml\\(cytat\\) \\+ '\"</div>'|font-style:italic;color:var\\(--text2\\);overflow-wrap:anywhere", None),
     ("RP/klucz-czas-pl", "karta 'Podlacz klucz': okolo 10 minut jak kreator i strona klucza, nie 5 (PL)",
      "'e1-opis':'To zajmuje około 10 minut, pokażemy jak.", "'e1-opis':'To zajmuje około 5 minut", ("proxy",)),
     ("RP/klucz-czas-en", "karta 'Podlacz klucz': okolo 10 minut jak kreator i strona klucza, nie 5 (EN)",
@@ -2047,6 +2049,47 @@ KONTROLE += [
     ("RB/aeo-marka", "AEO: informacja o naglowkach z nazwa marki (poza wynikiem)", "const zMarka = naglowkiZMarka(art);", None, None),
     ("RB/aeo-marka-pl", "AEO: tekst informacji o naglowkach z nazwa marki (PL)",
      "'aeo-marka-naglowki':'Nagłówki z nazwą marki: {n}, np. {h}.", None, None),
+]
+
+# Plan UX "ujednolicenie wygladu tekstow" (zespoly/ux/plan_css.md): role tekstu klasami zamiast stylow w linii,
+# jeden wzor pustego stanu i naglowka okna. Teksty w slowniku I18N zmienia osobno zespol jezykowy (tu ich nie ma).
+KONTROLE += [
+    ("UX/lead-startu", "ekran startowy: lead pod 'Co dzis piszemy?' bez pogrubienia (bez starej reguly .placeholder p:first-of-type)",
+     ".start-opis { font-size: var(--t-md);", ".placeholder p:first-of-type {", None),
+    ("UX/okno-opis", "akapit bez klasy w oknie to opis okna, ale klasa tekstu na <p> wygrywa (.tekst-pomoc w oknie ma 12 px)",
+     ":where(.modal p), .okno-opis {", ".modal p, .okno-opis {", None),
+    ("UX/menu-naglowek", "Konto: naglowki grup bez wersalikow i rozstrzelenia, jak inne podtytuly",
+     "border-top: 1px solid var(--c-linia);\n  font-size: var(--t-xs); font-weight: var(--g-mocny); color: var(--c-tekst-3); }",
+     "letter-spacing: .08em; text-transform: uppercase; color: var(--c-tekst-3); }", None),
+    ("UX/kontrola-13px", "Kontrola tekstu: jedna wielkosc tresci w panelach (13 px), takze pozycje Luk",
+     ".ins-tresc { flex: 1; min-height: 0; overflow-y: auto; padding: var(--s-12); font-size: var(--t-sm); line-height: 1.5; }", None, None),
+    ("UX/luki-13px", "Luki: pozycje 13 px jak w pozostalych panelach (warstwa stare miala 12 px)",
+     ".gap-miss-item, .gap-topic-row { font-size: var(--t-sm); }", None, None),
+    ("UX/fakty-bez-hakow", "Fakty: wyglad z klas, bez hakow [style*=...] z !important",
+     "#fakty-wynik .fakty-uwaga > .panel-podtytul {", "#fakty-wynik [style*=", None),
+    ("UX/fakty-kategoria", "Fakty: nazwa kategorii jako podtytul (pierwszy element uwagi), bez 11 px i wersalikow w linii",
+     "'<div class=\"fakty-uwaga\" data-rodzaj=\"' + escapeHtml(rodzaj) + '\">'\n        + '<div class=\"panel-podtytul\">'",
+     "text-transform:uppercase;letter-spacing:.04em", None),
+    ("UX/fakty-czysto", "Fakty: 'Bez zastrzezen' jako tytul panelu w stanie OK (klasa stanu, nie kolor w linii)",
+     "'<div class=\"panel-tytul stan-ok\">' + escapeHtml(_t('fakty-czysto'))", "'<div style=\"color:var(--c-sukces);font-weight:600\">'", None),
+    ("UX/pusty-stan", "jeden wzor pustego stanu w panelach (.pusty-stan: tytul, opis, jeden przycisk)",
+     ".seo-pusty, .pusty-stan {", None, None),
+    ("UX/linki-pusty", "Linki bez stron w Bazie: pusty stan z przyciskiem dodania strony, nie samo zdanie",
+     "'<button type=\"button\" class=\"panel-akcja\" onclick=\"piiConfirm(openUrlModal)\">'", None, None),
+    ("UX/ver-podpis", "komputer: podpis 'Samokorekta' przed 'Przed | Po' (od trzech wersji schowany)",
+     "body:not(.is-mobile) .versions-bar.show.wersje-samokorekty:not(.wiele-wersji) .ver-podpis {", None, None),
+    ("UX/statystyki-kroj", "statystyki pod paskiem krojem interfejsu, mono tylko liczby (.astat-val)",
+     ".astat { font-size: var(--t-xs); color: var(--c-tekst-3); gap: 4px; }", ".astat { font-family: var(--f-mono);", None),
+    ("UX/okno-pakietu", "okno pakietu wzorem naglowka okien (.okno-tytul, .okno-opis)",
+     '<h3 class="okno-tytul" data-i18n="pakiet-title">', '<div class="tekst-tytul" data-i18n="pakiet-title">', ("proxy",)),
+    ("UX/pakiet-alarm", "alarm pakietu jako .komunikat-bledu (tokeny), nie kolory rgba w linii",
+     '<div class="komunikat-bledu" id="pakiet-alarm"', "border:1px solid rgba(226,50,68,.35);background:rgba(226,50,68,.08)", ("proxy",)),
+    ("UX/okno-bazy-fraz", "okna Bazy na serwerze i fraz OpenSEO wzorem naglowka okien",
+     '<h3 class="okno-tytul" data-i18n="bazas-title">', '<div class="tekst-tytul" data-i18n="seo-title">', ("proxy",)),
+    ("UX/okno-kluczy", "okno kluczy API wzorem naglowka okien",
+     '<h3 class="okno-tytul" data-i18n="keys-modal-title">', '<div class="tekst-tytul" data-i18n="keys-modal-title">', ("keys",)),
+    ("UX/kreator-naglowek", "kreator startowy: tytul i opis kroku klasami okna, nie 18 px/700 w linii",
+     "<h2 id=\"start-tytul\" class=\"okno-tytul\"", "font-weight:700;font-size:18px;line-height:1.3", ("proxy",)),
 ]
 
 # Tresc plikow pwa/lib, ktore aplikacja wczytuje (nie przechodza przez budowanie wariantow): (kod, opis, plik, jest, niema).

@@ -1008,7 +1008,7 @@ async function wariantPilneKreator(b) {
   }, null, { timeout: 15000 }));
   const przebieg = await s.evaluate(() => {
     const kroki = [];
-    const tytul = () => (document.querySelector('#start-tresc h2, #start-tresc h3, #start-tresc [style*="font-weight:700"]') || {}).textContent || '';
+    const tytul = () => (document.querySelector('#start-tresc h2, #start-tresc h3, #start-tresc .okno-tytul') || {}).textContent || '';
     for (let i = 0; i < 2; i++) {
       try { window.startDalej(); kroki.push(tytul()); } catch (e) { kroki.push('BLAD: ' + e.message); }
     }
@@ -1855,7 +1855,7 @@ async function wariantR9Zrozumialosc(b) {
       popraw: [t('#grupa-brief-menu button[onclick="openImproveModal()"]'), t('[data-i18n="start-karta-popraw"]'), t('#improve-modal h3')],
       grafika: [t('#grupa-brief-menu button[onclick="openImgPanelSmart()"]'), t('#img-btn'), t('#img-panel .modul-tytul')],
       audio: [t('#grupa-brief-menu button[onclick="openAudioPanel()"]'), t('#audio-panel .modul-tytul')],
-      baza: [t('#kb-tab [data-i18n="kb-reopen"]'), t('#mnav-kb [data-i18n="nav-base"]'), t('.layout > .sidebar h2'), t('#mobile-sidebar h2'), t('[data-i18n="bazas-menu-title"]'), t('#bazas-modal .tekst-tytul')],
+      baza: [t('#kb-tab [data-i18n="kb-reopen"]'), t('#mnav-kb [data-i18n="nav-base"]'), t('.layout > .sidebar h2'), t('#mobile-sidebar h2'), t('[data-i18n="bazas-menu-title"]'), t('#bazas-modal .okno-tytul')],
       // przy wylaczonym dyktowaniu pozycja menu dostaje klucz settings-voice-title-czytanie (2026-10-12)
       glos: [t('.settings-item-tytul[data-i18n^="settings-voice-title"]'), t('#voice-modal h3')],
       poprawianie: [t('#premium-btn [data-i18n="btn-premium"]'), t('#premium-fix-btn'), t('#grupa-brief-menu button[onclick="openImproveModal()"]'), t('#gap-improve-btn')],
