@@ -307,7 +307,7 @@ async function scenariuszPolski(b) {
   wynik('PL DOCX: pusta sekcja z notatka o luce pominieta', tekstD.indexOf('Sekcja bez pokrycia') < 0);
   wynik('PL DOCX: tytul w metadanych = H1', core.indexOf('<dc:title>') >= 0 && tekstDocx('<w:p><w:t>' + (core.match(/<dc:title>([^<]*)<\/dc:title>/) || [])[1] + '</w:t></w:p>').trim() === r.h1);
   const powiadomienia = await s.evaluate(() => [...document.querySelectorAll('.powiadomienie')].map((p) => p.textContent).join(' | '));
-  wynik('PL: komunikat o pominietych sekcjach bez pokrycia', /pominięte w eksporcie: 1/.test(powiadomienia), powiadomienia);
+  wynik('PL: komunikat o pominietych sekcjach bez pokrycia, z przyciskiem Edytuj', /Pominięto sekcje bez potwierdzenia w źródłach: 1\. Dopisz w nich tekst/.test(powiadomienia) && /Edytuj/.test(powiadomienia), powiadomienia);
 
   // PDF: definicja dokumentu i plik
   await s.evaluate(() => new Promise((ok) => zaladujPdfMake(ok)));
