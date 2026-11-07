@@ -269,7 +269,7 @@ async function wariantKeys(b) {
   await krok('generowanie z samokorekta', s.waitForFunction(() => !document.getElementById('gen-btn').disabled && getComputedStyle(document.getElementById('spinner')).display === 'none', null, { timeout: 60000 }));
   const pr = await s.evaluate(() => { premiumMode = false; const a = document.getElementById('article');
     return { h2: a.querySelectorAll('h2').length, meta: !!a.querySelector('.meta-box'), info: [...document.querySelectorAll('.powiadomienie')].map(p => p.textContent).join(' ') }; });
-  wynik('keys: ucieta samokorekta zostawia oryginal i informuje', pr.h2 >= 3 && pr.meta && /limicie|length limit/.test(pr.info), JSON.stringify(pr));
+  wynik('keys: ucieta samokorekta zostawia oryginal i informuje', pr.h2 >= 3 && pr.meta && /za długa|too long/.test(pr.info), JSON.stringify(pr));
 
   // Escape na swiezej stronie nie otwiera Generatora grafik; okna maja role i fokus.
   await s.keyboard.press('Escape');
@@ -881,7 +881,7 @@ async function wariantTelefonR6Luki(b) {
   await s.evaluate(() => { inspektorZamknij(); toggleGapPanel(); });
   await s.waitForTimeout(300);
   const brakSerp = await s.evaluate(() => document.getElementById('gap-no-serp').textContent);
-  wynik('telefon: R6L blad SERP przy generowaniu - komunikat i tekst w Lukach', /SERP/.test(serpBladT) && /nie powiodła|failed/.test(brakSerp), JSON.stringify({ serpBladT, brakSerp }));
+  wynik('telefon: R6L blad SERP przy generowaniu - komunikat i tekst w Lukach', /wyników Google|Google results/.test(serpBladT) && /nie powiodła|nie udała|failed/.test(brakSerp), JSON.stringify({ serpBladT, brakSerp }));
   wynik('telefon: R6L bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow) await zrzut(s, 'telefon-r6-luki');
   await k.close();
@@ -1008,7 +1008,7 @@ async function wariantPilneKreator(b) {
   }, null, { timeout: 15000 }));
   const przebieg = await s.evaluate(() => {
     const kroki = [];
-    const tytul = () => (document.querySelector('#start-tresc h2, #start-tresc h3, #start-tresc [style*="font-weight:700"]') || {}).textContent || '';
+    const tytul = () => (document.querySelector('#start-tresc h2, #start-tresc h3, #start-tresc .okno-tytul') || {}).textContent || '';
     for (let i = 0; i < 2; i++) {
       try { window.startDalej(); kroki.push(tytul()); } catch (e) { kroki.push('BLAD: ' + e.message); }
     }
@@ -1188,7 +1188,7 @@ async function wariantR9Klucze(b) {
       JSON.stringify(zapis));
     // UX8-14 (G) przy wlasnym kluczu: "Szukaj w sieci" wlacza sie samo przy pustej bazie, a wyszukiwanie placi uzytkownik.
     const kosztSieci = await s.evaluate(() => { const e = document.querySelector('label[for="use-web"] .koszt-wlasny'); return { widoczny: !!e && e.offsetParent !== null, tekst: e ? e.textContent : '' }; });
-    wynik('R9-C klucze: pod "Szukaj w sieci" zdanie, ze wyszukiwanie zwieksza koszt na kluczu uzytkownika', kosztSieci.widoczny && /Twoim kluczu API/.test(kosztSieci.tekst), JSON.stringify(kosztSieci));
+    wynik('R9-C klucze: pod "Szukaj w sieci" zdanie, ze wyszukiwanie zwieksza koszt na kluczu uzytkownika', kosztSieci.widoczny && /płatne u dostawcy AI, na Twoim kluczu/.test(kosztSieci.tekst), JSON.stringify(kosztSieci));
     const odWywolania = atrapa.ostatnie.length;
     const r = await generuj(s, 'Artykul na wlasnym kluczu z ciasteczka');
     const wywolania = atrapa.ostatnie.slice(odWywolania).filter((w) => /\/v1\/messages/.test(w.sciezka || ''));
@@ -1318,8 +1318,8 @@ async function wariantR6F(b) {
   wynik('telefon: R6-F E-02 tekst autora i naglowki sekcji w pliku, sama notatka pominieta',
     /Tekst autora wpisany w sekcji jeden/.test(txtZw) && /Akapit autora pod notatka w sekcji dwa/.test(txtZw) && /Sekcja R6F jeden/.test(txtZw) && /Sekcja R6F dwa/.test(txtZw)
     && txtZw.indexOf(NOTATKA.slice(0, 30)) < 0, txtZw.slice(0, 200));
-  wynik('telefon: R6-F E-02/E-17 komunikat eksportu jako ostrzezenie z instrukcja (usun notatke albo wpisz tresc)',
-    /powiadomienie-uwaga\|[^|]*pominięte w eksporcie: 1[^|]*Usuń notatkę albo wpisz w jej miejsce treść/.test(toast), toast);
+  wynik('telefon: R6-F E-02/E-17 komunikat eksportu jako ostrzezenie z instrukcja (dopisz tekst w pominietej sekcji)',
+    /powiadomienie-uwaga\|[^|]*Pominięto sekcje bez potwierdzenia w źródłach: 1\. Dopisz w nich tekst/.test(toast), toast);
   const JEDNA = /(^|[\s(„"])[aiouwzAIOUWZ] /m, TWARDA = /(^|[\s(„" ])[aiouwzAIOUWZ] /;
   await s.evaluate(async () => {
     await wczytajSkrypt('pwa/lib/docx-natywny-4.js');
@@ -1586,9 +1586,9 @@ async function wariantR7I(b) {
     && uwagi.linkAdresu.kursywa !== 'italic' && uwagi.cytatyZAdresem === 0, JSON.stringify({ linkAdresu: uwagi.linkAdresu, cytatyZAdresem: uwagi.cytatyZAdresem }));
   // 3: notka zgodna z paskiem sieci - "bez wyszukiwania": porownanie tylko z dokumentami (bez "z wlaczonym
   // wyszukiwaniem"); "N zrodel": notka o tekscie z wyszukiwaniem.
-  const zSiecia = { stron: uwagi.adresyStron.length, pasek: uwagi.pasek, zWyszukiwaniem: /z włączonym wyszukiwaniem/.test(uwagi.wynikTekst), nieSzukal: /nie szukał w sieci/.test(uwagi.wynikTekst) };
+  const zSiecia = { stron: uwagi.adresyStron.length, pasek: uwagi.pasek, zWyszukiwaniem: /Część zdań pochodzi ze stron z sieci/.test(uwagi.wynikTekst), nieSzukal: /nie użyto go przy pisaniu/.test(uwagi.wynikTekst) };
   wynik('telefon: R7-I notka Faktow zgodna z paskiem sieci ("bez wyszukiwania" = tylko Twoje dokumenty, "N zrodel" = z wyszukiwaniem)',
-    /bez wyszukiwania/.test(bezSieci.pasek) && bezSieci.wiedza && /nie szukał w sieci/.test(bezSieci.notka) && !/z włączonym wyszukiwaniem/.test(bezSieci.wynik)
+    /bez wyszukiwania/.test(bezSieci.pasek) && bezSieci.wiedza && /nie użyto go przy pisaniu/.test(bezSieci.notka) && !/Część zdań pochodzi ze stron z sieci/.test(bezSieci.wynik)
     && zSiecia.stron > 0 && new RegExp('^' + zSiecia.stron + ' ').test(zSiecia.pasek) && zSiecia.zWyszukiwaniem && !zSiecia.nieSzukal,
     JSON.stringify({ bezSieci: Object.assign({}, bezSieci, { wynik: bezSieci.wynik.slice(-120) }), zSiecia }));
 
@@ -1599,7 +1599,7 @@ async function wariantR7I(b) {
   const usr = ((zap.messages || [])[0] || {}).content || '';
   const iStrona = uwagi.rodzaje.indexOf('strona'), iLiczba = uwagi.rodzaje.indexOf('liczba'), iNiespr = uwagi.rodzaje.indexOf('link-niesprawdzony');
   wynik('telefon: R7-I kategoria "Sprawdz na stronie" z linkiem do strony z listy zrodel, po twardych uwagach',
-    /SHORT EXCERPTS/.test(sys) && /"strona"/.test(sys) && /\n\[1\] https?:\/\//.test(usr) && !!uwagi.strona && uwagi.strona.etykieta === 'Sprawdź na stronie'
+    /SHORT EXCERPTS/.test(sys) && /"strona"/.test(sys) && /\n\[1\] https?:\/\//.test(usr) && !!uwagi.strona && uwagi.strona.etykieta === 'Prawdopodobnie ze strony z sieci'
     && uwagi.adresyStron.indexOf(uwagi.strona.href) >= 0 && uwagi.strona.target === '_blank' && iLiczba >= 0 && iStrona > iLiczba && (iNiespr < 0 || iNiespr > iStrona),
     JSON.stringify({ strona: uwagi.strona, rodzaje: uwagi.rodzaje, excerpts: /SHORT EXCERPTS/.test(sys) }));
 
@@ -1750,7 +1750,7 @@ async function wariantR9Zrozumialosc(b) {
   // Bez poprawki okno zostaje otwarte: zamykamy je, zeby reszta kontroli dala wlasny wynik.
   if (okno1) await s.evaluate(() => { closeNoSourceModal(); document.getElementById('use-web').checked = true; generate(true); }).then(() => czekajNaKoniec(s, 60000)).catch(() => {});
 
-  // UX8-11: pod przelacznikiem ocen jedno zdanie, co mierzy wybrana ocena; przyciski z podpowiedzia.
+  // UX8-11: pod przelacznikiem ocen jedno zdanie, co mierzy wybrana ocena; przyciski bez title (grupa A 2026-11-07: opis jest tylko pod przelacznikiem).
   await s.evaluate(() => inspektorPokaz('seo'));
   await s.waitForTimeout(600);
   const oSeo = await s.evaluate(() => ({ opis: (document.getElementById('ins-ocena-opis') || {}).textContent || '',
@@ -1759,8 +1759,8 @@ async function wariantR9Zrozumialosc(b) {
   await s.evaluate(() => inspektorPokaz('geo'));
   await s.waitForTimeout(600);
   const oGeo = await s.evaluate(() => (document.getElementById('ins-ocena-opis') || {}).textContent || '');
-  wynik('telefon: R9-G UX8-11 pod SEO/AIO/AEO/GEO zdanie, co mierzy wybrana ocena (GEO to nie geolokalizacja), przyciski z podpowiedzia',
-    oSeo.widac && /^SEO: .*Google/.test(oSeo.opis) && /^GEO: .*geolokalizac/.test(oGeo) && oSeo.podpowiedzi === 4, JSON.stringify({ oSeo, oGeo }));
+  wynik('telefon: R9-G UX8-11 pod SEO/AIO/AEO/GEO zdanie, co mierzy wybrana ocena (GEO to nie geolokalizacja), przyciski bez title',
+    oSeo.widac && /^Ocenia, czy .*Google/.test(oSeo.opis) && /^Ocenia, czy czaty AI .*geolokalizac/.test(oGeo) && oSeo.podpowiedzi === 0, JSON.stringify({ oSeo, oGeo }));
   await s.evaluate(() => inspektorZamknij());
   await s.evaluate(() => ustawWidokMobilny('brief'));
   // UX8-11: Typ tresci SEO / AIO z jednym zdaniem pod polem; dla innych typow bez dopisku.
@@ -1768,7 +1768,7 @@ async function wariantR9Zrozumialosc(b) {
   const tH = await typ('Hybryda SEO + AIO'), tB = await typ('Wpis blogowy'), tA = await typ('Treść AIO');
   await s.selectOption('#ctype', 'Hybryda SEO + AIO');
   wynik('telefon: R9-G UX8-11 Typ tresci: zdanie pod polem dla Hybrydy i AIO, bez dopisku dla wpisu blogowego',
-    /zalecana/.test(tH) && /Google/.test(tH) && !tB && /AI Overviews/.test(tA), JSON.stringify({ tH, tB, tA }));
+    /^Zalecany/.test(tH) && /Google/.test(tH) && !tB && /AI Overviews/.test(tA), JSON.stringify({ tH, tB, tA }));
 
   // UX8-14: autor sam wylaczyl siec - okno ma trzy wyjscia, "bez zrodel" z ostrzezeniem pisze tekst bez sieci.
   if (await s.evaluate(() => document.getElementById('use-web').checked)) await krok('R9-G wylacz siec', s.click('#use-web', { timeout: 3000 }));
@@ -1831,7 +1831,7 @@ async function wariantR9Zrozumialosc(b) {
   };
   const tVis = await oknoZMenu('openVisModal'), tAiv = await oknoZMenu('aivOpen');
   wynik('telefon: R9-G UX8-13 Widocznosc AI w arkuszu Konto: 4 narzedzia z podpisem "po co", okna nazwane jak w menu',
-    wid.poz === 4 && /^czy AI poleca/.test(wid.podpisy[0]) && /^czy AI cytuje/.test(wid.podpisy[1]) && /^wejścia z czatów AI/.test(wid.podpisy[3]) && tVis === 'Obecność marki w AI' && tAiv === 'Cytowania w AI', JSON.stringify({ wid, tVis, tAiv }));
+    wid.poz === 4 && /^czy AI poleca/.test(wid.podpisy[0]) && /^cytowania Twoich stron/.test(wid.podpisy[1]) && /^wejścia z czatów AI/.test(wid.podpisy[3]) && tVis === 'Obecność marki w AI' && tAiv === 'Cytowania w AI', JSON.stringify({ wid, tVis, tAiv }));
   // UX8-16: Historia mowi, ze jest tylko w tej przegladarce, i daje kopie do pobrania (HTML z artykulami i danymi wpisow).
   await krok('R9-G Historia', s.click('#mnav-hist', { timeout: 3000 }));
   await s.waitForTimeout(400);
@@ -1847,7 +1847,7 @@ async function wariantR9Zrozumialosc(b) {
     hist.widac && /tylko w tej przeglądarce/.test(hist.tekst) && hist.wpisow >= 2 && /^content-ai-historia-\d{4}-\d{2}-\d{2}\.html$/.test(kopia.plik) && kopia.wpisy === hist.wpisow && kopia.artykuly === hist.wpisow,
     JSON.stringify({ hist, kopia }));
   // UX8-12: jedna nazwa na jedna rzecz - wejscie do narzedzia nazywa sie tak jak ekran, ktory otwiera, a cztery
-  // sposoby poprawiania maja cztery rozne nazwy (Samokorekta, Popraw ten tekst, Popraw wklejony tekst, Dopisz brakujace tematy).
+  // sposoby poprawiania maja cztery rozne nazwy (Samokorekta, Uruchom samokorekte, Popraw wklejony tekst, Dopisz brakujace tematy).
   const nazwy = await s.evaluate(() => {
     const t = (sel) => { const e = document.querySelector(sel); return e ? e.textContent.replace(/\s+/g, ' ').trim() : '?'; };
     return {
@@ -1855,7 +1855,7 @@ async function wariantR9Zrozumialosc(b) {
       popraw: [t('#grupa-brief-menu button[onclick="openImproveModal()"]'), t('[data-i18n="start-karta-popraw"]'), t('#improve-modal h3')],
       grafika: [t('#grupa-brief-menu button[onclick="openImgPanelSmart()"]'), t('#img-btn'), t('#img-panel .modul-tytul')],
       audio: [t('#grupa-brief-menu button[onclick="openAudioPanel()"]'), t('#audio-panel .modul-tytul')],
-      baza: [t('#kb-tab [data-i18n="kb-reopen"]'), t('#mnav-kb [data-i18n="nav-base"]'), t('.layout > .sidebar h2'), t('#mobile-sidebar h2'), t('[data-i18n="bazas-menu-title"]'), t('#bazas-modal .tekst-tytul')],
+      baza: [t('#kb-tab [data-i18n="kb-reopen"]'), t('#mnav-kb [data-i18n="nav-base"]'), t('.layout > .sidebar h2'), t('#mobile-sidebar h2'), t('[data-i18n="bazas-menu-title"]'), t('#bazas-modal .okno-tytul')],
       // przy wylaczonym dyktowaniu pozycja menu dostaje klucz settings-voice-title-czytanie (2026-10-12)
       glos: [t('.settings-item-tytul[data-i18n^="settings-voice-title"]'), t('#voice-modal h3')],
       poprawianie: [t('#premium-btn [data-i18n="btn-premium"]'), t('#premium-fix-btn'), t('#grupa-brief-menu button[onclick="openImproveModal()"]'), t('#gap-improve-btn')],
@@ -1864,7 +1864,7 @@ async function wariantR9Zrozumialosc(b) {
   const jednaNazwa = ['plan', 'popraw', 'grafika', 'audio', 'baza', 'glos'].every((n) => new Set(nazwy[n]).size === 1 && nazwy[n][0] !== '?');
   wynik('telefon: R9-G UX8-12 jedna nazwa na jedna rzecz: Plan artykulu, Popraw wklejony tekst, Grafika, Audio, Baza wiedzy, czytanie na glos; cztery rozne nazwy poprawiania',
     jednaNazwa && nazwy.plan[0] === 'Plan artykułu' && nazwy.baza[0] === 'Baza wiedzy' && new Set(nazwy.poprawianie).size === 4
-      && nazwy.poprawianie.join('|') === 'Samokorekta|Popraw ten tekst|Popraw wklejony tekst|Dopisz brakujące tematy', JSON.stringify(nazwy));
+      && nazwy.poprawianie.join('|') === 'Samokorekta|Uruchom samokorektę|Popraw wklejony tekst|Dopisz brakujące tematy', JSON.stringify(nazwy));
   wynik('telefon: R9-G bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow) await zrzut(s, 'telefon-r9g');
   await k.close();
@@ -1878,7 +1878,7 @@ async function wariantR9Zrozumialosc(b) {
   const en = await s.evaluate(() => ({ web: document.getElementById('use-web').checked, opis: document.querySelector('label[for="use-web"] .toggle-hint').textContent,
     typ: (document.getElementById('ctype-opis') || {}).textContent || '' }));
   wynik('komputer EN: R9-G UX8-14 i UX8-11 dopisek o pustej bazie i opis typu tresci po angielsku',
-    en.web && /empty/.test(en.opis) && /recommended/.test(en.typ), JSON.stringify(en));
+    en.web && /empty/.test(en.opis) && /^Recommended/.test(en.typ), JSON.stringify(en));
   // UX8-14: dokument w bazie wylacza siec wlaczona dla pustej bazy (wraca zwykly dopisek), pusta baza znow ja wlacza.
   // W trakcie generowania (spinner) przelacznik stoi: zmiana dopiero po nim.
   const przelacznik = () => s.evaluate(() => ({ web: document.getElementById('use-web').checked,
@@ -2098,7 +2098,7 @@ async function wariantSamoobsluga(b) {
     opis: document.getElementById('start-tresc').textContent, dalej: document.getElementById('start-dalej').textContent,
     pomin: getComputedStyle(document.getElementById('start-pomin')).display, marka: JSON.parse(magazyn.getItem('cai-llms') || '{}').name }));
   wynik('kreator krok 3 "Dokumenty firmy": po co sa dokumenty, "Dalej bez dokumentow" zamiast osobnego "Pomin", firma zapisana w kroku 2',
-    krokDok.postep === 'Krok 3 z 4' && /Dokumenty firmy/.test(krokDok.tytul) && /kontrola faktów porówna go z nimi/.test(krokDok.opis)
+    krokDok.postep === 'Krok 3 z 4' && /Dokumenty firmy/.test(krokDok.tytul) && /Na nich oprą się artykuły i kontrola faktów/.test(krokDok.opis)
     && krokDok.dalej === 'Dalej bez dokumentów' && krokDok.pomin === 'none' && krokDok.marka === 'Pompy Ciepła Testowe', JSON.stringify(krokDok));
   await s.click('#byok-dok-wybierz');
   // Ostrzezenie o danych osobowych ma byc nad kreatorem i dac sie kliknac. piiConfirm przez 450 ms wylacza klikniecia
@@ -2121,7 +2121,7 @@ async function wariantSamoobsluga(b) {
   const krok4 = await s.evaluate(() => ({ postep: document.getElementById('start-postep').textContent, siec: document.getElementById('byok-siec').checked,
     opis: document.querySelector('label[for="byok-siec"]').textContent }));
   wynik('kreator krok 4 "Pierwszy artykul": z dokumentem w bazie bez wymuszonego szukania w sieci (artykul z dokumentow)',
-    krok4.postep === 'Krok 4 z 4' && !krok4.siec && /Czego brakuje w bazie wiedzy/.test(krok4.opis), JSON.stringify(krok4));
+    krok4.postep === 'Krok 4 z 4' && !krok4.siec && /Czego nie ma w bazie wiedzy/.test(krok4.opis), JSON.stringify(krok4));
   await s.fill('#byok-temat', 'Jak wybrać pompę ciepła do domu jednorodzinnego');
   await s.click('#start-dalej');
   await krok('R9-D pierwszy artykul z kreatora', s.waitForFunction(() => { const b = document.getElementById('gen-btn'); const sp = document.getElementById('spinner');
@@ -2144,11 +2144,11 @@ async function wariantSamoobsluga(b) {
   // 2. Artykuly 2 i 3, potem stan "Wybierz pakiet" przed kliknieciem (A4, UX8-06).
   await generuj(s, 'Pompa ciepła czy kocioł gazowy: porównanie kosztów');
   await generuj(s, 'Jak przygotować dom do montażu pompy ciepła');
-  await krok('R9-D licznik po trzech artykulach', s.waitForFunction(() => /Darmowe wykorzystane/.test(document.getElementById('pakiet-badge').textContent), null, { timeout: 8000 }));
+  await krok('R9-D licznik po trzech artykulach', s.waitForFunction(() => /Brak darmowych/.test(document.getElementById('pakiet-badge').textContent), null, { timeout: 8000 }));
   const a4 = await s.evaluate(() => ({ karta: !document.getElementById('konto-karta').hidden, tekst: document.getElementById('konto-karta').textContent,
     gen: getComputedStyle(document.getElementById('gen-btn')).display, odznaka: document.getElementById('pakiet-badge').textContent, historia: history.length }));
-  wynik('R9-D: po 3 darmowych artykulach karta "Wybierz pakiet, zeby pisac dalej" przed kliknieciem i odznaka "Darmowe wykorzystane"',
-    a4.karta && /Wykorzystano 3 z 3 darmowych artykułów/.test(a4.tekst) && /Wybierz pakiet, żeby pisać dalej/.test(a4.tekst) && a4.gen === 'none' && a4.historia >= 3, JSON.stringify(a4));
+  wynik('R9-D: po 3 darmowych artykulach karta "Wybierz pakiet" przed kliknieciem i odznaka "Brak darmowych"',
+    a4.karta && /Wykorzystano 3 z 3 darmowych artykułów/.test(a4.tekst) && /Wybierz pakiet/.test(a4.tekst) && a4.gen === 'none' && a4.historia >= 3, JSON.stringify(a4));
   // 402 od dostawcy (brak srodkow na koncie Anthropic) nie otwiera okna pakietu (UX8-03).
   await s.route(/\/api$/, (r) => r.fulfill({ status: 402, contentType: 'application/json', body: JSON.stringify({ type: 'error', error: { type: 'billing_error', message: 'Your credit balance is too low to access the Anthropic API.' } }) }));
   const e402 = await s.evaluate(async () => { const o = await fetch('/api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); const d = await o.json();
@@ -2156,14 +2156,14 @@ async function wariantSamoobsluga(b) {
       blok: blokBledu(bladOdpowiedzi(d, o.status), 'generate()') }; });
   await s.unroute(/\/api$/);
   wynik('R9-D: 402 billing_error dostawcy bez okna pakietu, komunikat o srodkach u Anthropic (nie limit pakietu)',
-    e402.okno !== 'flex' && /Na Twoim koncie Anthropic zabrakło środków/.test(e402.tekst) && /To nie jest limit pakietu/.test(e402.tekst), JSON.stringify(e402));
-  wynik('R9-D: E3 - przy braku srodkow przycisk "Rozliczenia Anthropic" i "Sprobuj ponownie" (po doladowaniu)',
-    /href="https:\/\/platform\.claude\.com\/settings\/billing"/.test(e402.blok) && /Rozliczenia Anthropic/.test(e402.blok) && /ponow-generowanie/.test(e402.blok), e402.blok);
+    e402.okno !== 'flex' && /Na Twoim koncie Anthropic \(nie Content AI\) zabrakło środków/.test(e402.tekst) && /\(nie Content AI\)/.test(e402.tekst), JSON.stringify(e402));
+  wynik('R9-D: E3 - przy braku srodkow przycisk "Doładuj konto Anthropic" i "Sprobuj ponownie" (po doladowaniu)',
+    /href="https:\/\/platform\.claude\.com\/settings\/billing"/.test(e402.blok) && /Doładuj konto Anthropic/.test(e402.blok) && /ponow-generowanie/.test(e402.blok), e402.blok);
   const e4 = await s.evaluate(() => [
     blokBledu(bladOdpowiedzi({ type: 'error', error: { type: 'rate_limit_error', message: 'enforced_spend_limit_reached' } }, 429, 'Anthropic'), 'generate()'),
     blokBledu(bladOdpowiedzi({ type: 'error', error: { type: 'invalid_request_error', message: 'You have reached your specified API usage limits. You will regain access on 2026-11-01 at 00:00 UTC.' } }, 400, 'Anthropic'), 'generate()')]);
-  wynik('R9-D: E4 - limit wydatkow u dostawcy: przycisk "Limity Anthropic" (strona limitow w konsoli), bez "Sprobuj ponownie"',
-    e4.every((h) => /href="https:\/\/platform\.claude\.com\/settings\/limits"/.test(h) && /Limity Anthropic/.test(h) && !/ponow-generowanie/.test(h)), e4.join(' || '));
+  wynik('R9-D: E4 - limit wydatkow u dostawcy: przycisk "Podnieś limit Anthropic" (strona limitow w konsoli), bez "Sprobuj ponownie"',
+    e4.every((h) => /href="https:\/\/platform\.claude\.com\/settings\/limits"/.test(h) && /Podnieś limit Anthropic/.test(h) && !/ponow-generowanie/.test(h)), e4.join(' || '));
   // 3. Zakup w dwoch kliknieciach: "Wybierz pakiet" -> karty z waluta i zgodami -> "Przejdz do platnosci".
   await s.click('#a4-wybierz');
   await krok('R9-D okno pakietow', s.waitForSelector('#zakup .zakup-karta', { timeout: 5000 }));
@@ -2235,7 +2235,7 @@ async function wariantSamoobsluga(b) {
     odstapienie: !!document.querySelector('#konto-tresc a[href="/konto/odstapienie?z=app&lang=pl"]') }));
   wynik('R9-D: Konto - Pakiet i platnosci (Zarzadzaj subskrypcja, rachunek na prosbe), Klucze API z koncowka, Oznaczenia AI, Twoje dane (eksport Historii)',
     konto.sekcje.indexOf('Pakiet i płatności') >= 0 && konto.sekcje.indexOf('Klucze API') >= 0 && konto.sekcje.indexOf('Oznaczenia AI') >= 0 && konto.sekcje.indexOf('Twoje dane') >= 0
-    && /Zarządzaj subskrypcją/.test(konto.tresc) && /Rachunek wystawiamy na prośbę/.test(konto.tresc) && /kończy się na wxyz/.test(konto.tresc) && /Eksportuj historię/.test(konto.tresc), JSON.stringify(konto.sekcje));
+    && /Zarządzaj subskrypcją/.test(konto.tresc) && /Rachunek wystawiamy na prośbę/.test(konto.tresc) && /kończy się na wxyz/.test(konto.tresc) && /Pobierz kopię historii/.test(konto.tresc), JSON.stringify(konto.sekcje));
   wynik('R9-D: Konto - odstapienie w 14 dni z adresem z kontraktu B i powrotem do aplikacji (z=app)', konto.odstapienie && /Możesz odstąpić od umowy do/.test(konto.tresc), konto.tresc.slice(0, 400));
   await s.evaluate(() => zamknijKonto());
   st.anulowana = true;
@@ -2253,8 +2253,8 @@ async function wariantSamoobsluga(b) {
   await s.waitForTimeout(300);
   const a8 = await s.evaluate(() => ({ karta: !!document.getElementById('img-klucz'), tekst: (document.getElementById('img-klucz') || {}).textContent || '',
     formularz: document.getElementById('img-gen-btn').getClientRects().length }));
-  wynik('R9-D: Grafika bez klucza OpenAI - karta "Grafiki tworzy OpenAI" z polem klucza, formularz schowany (A8, UX8-25)',
-    a8.karta && /Grafiki tworzy OpenAI/.test(a8.tekst) && /weryfikację organizacji/.test(a8.tekst) && a8.formularz === 0, JSON.stringify(a8));
+  wynik('R9-D: Grafika bez klucza OpenAI - karta "Grafiki wymagają klucza API OpenAI" z polem klucza, formularz schowany (A8, UX8-25)',
+    a8.karta && /Grafiki wymagają klucza API OpenAI/.test(a8.tekst) && /weryfikację organizacji/.test(a8.tekst) && a8.formularz === 0, JSON.stringify(a8));
   await s.evaluate(() => closeImgPanelSmart());
   // 7. Wygasla sesja w dowolnym wywolaniu API: pasek z logowaniem i zapisanym szkicem.
   await s.route(/\/api\/baza$/, (r) => r.fulfill({ status: 401, headers: { 'X-CAI-Kod': 'sesja' }, contentType: 'application/json', body: JSON.stringify({ error: 'Niezalogowany' }) }));
@@ -2305,7 +2305,7 @@ async function wariantSamoobsluga(b) {
     return t;
   });
   wynik('R9-D: nieczytelne ciasteczko klucza (C: niewazny bez klucza) - karta "nie dziala juz na tym urzadzeniu", nie "odrzucil"',
-    /nie działa już na tym urządzeniu/.test(niewazny) && !/odrzucił/.test(niewazny), niewazny);
+    /nie działa już w tej przeglądarce/.test(niewazny) && !/odrzucił/.test(niewazny), niewazny);
   // Odrzucenie klucza u dostawcy (zly-klucz) zna tylko ta karta: zostaje po odswiezeniu stanu z serwera (ta sama
   // koncowka klucza), a znika po udanym "Sprawdz" (klucz znow dziala u dostawcy).
   const odrzucenie = await s.evaluate(async () => {
@@ -2332,7 +2332,7 @@ async function wariantSamoobsluga(b) {
   // 8. Wylogowanie konta z kluczem: wybor, czy klucze zostaja na urzadzeniu (UX8-09, M-10).
   await s.evaluate(() => wyloguj());
   const wyl = await s.evaluate(() => ({ okno: document.getElementById('wyloguj-modal').classList.contains('open'), opis: document.querySelector('#wyloguj-modal p').textContent }));
-  wynik('R9-D: wylogowanie konta z kluczem pyta, czy zostawic klucze (domyslnie zostaja, M-10)', wyl.okno && /zostają na tym urządzeniu/.test(wyl.opis), JSON.stringify(wyl));
+  wynik('R9-D: wylogowanie konta z kluczem pyta, czy zostawic klucze (domyslnie zostaja, M-10)', wyl.okno && /zostają w tej przeglądarce/.test(wyl.opis), JSON.stringify(wyl));
   await Promise.all([s.waitForNavigation({ waitUntil: 'load' }), s.click('#wyloguj-usun')]);
   wynik('R9-D: "Wyloguj i usun klucze" usuwa klucze (DELETE /api/klucze?dostawca=wszystkie) i wylogowuje',
     zapytania.klucze.some((z) => /^DELETE \/api\/klucze\?dostawca=wszystkie/.test(z)) && !!(await s.$('input[name="login"]')), JSON.stringify(zapytania.klucze.slice(-2)));
@@ -2396,7 +2396,7 @@ async function wariantStartBezKlucza(b) {
     opcjonalne: !!document.getElementById('byok-opcjonalne'),
     karta: document.getElementById('konto-karta').hidden, gen: getComputedStyle(document.getElementById('gen-btn')).display }));
   wynik('start bez klucza: krok 1 "Pierwszy artykul napiszesz bez klucza", przycisk "Dalej bez klucza" aktywny, pole klucza zwiniete pod "Masz juz klucz API?", bez kosztu i kluczy opcjonalnych',
-    krok1.postep === 'Krok 1 z 4' && krok1.tytul === 'Pierwszy artykuł napiszesz bez klucza' && /pokrywamy my/.test(krok1.opis) && /Masz już klucz API\? Podłącz go teraz/.test(krok1.opis)
+    krok1.postep === 'Krok 1 z 4' && krok1.tytul === 'Pierwszy artykuł bez klucza' && /pokrywamy my/.test(krok1.opis) && /Masz już klucz API\? Podłącz go teraz/.test(krok1.opis)
     && krok1.dalej === 'Dalej bez klucza' && !krok1.wylaczony && !krok1.koszt && krok1.pole && !krok1.opcjonalne, JSON.stringify(krok1));
   wynik('start bez klucza: bez karty "Podlacz klucz" - przycisk Wygeneruj na miejscu', krok1.karta && krok1.gen !== 'none', JSON.stringify(krok1));
   await s.click('#start-dalej');
@@ -2406,7 +2406,7 @@ async function wariantStartBezKlucza(b) {
   const krok4 = await s.evaluate(() => ({ postep: document.getElementById('start-postep').textContent, opis: document.getElementById('start-tresc').textContent,
     dalej: document.getElementById('start-dalej').textContent }));
   wynik('start bez klucza: krok 4 mowi, ze ten artykul jest bez klucza, na nasz koszt',
-    krok4.postep === 'Krok 4 z 4' && /Ten artykuł piszesz bez klucza, na nasz koszt/.test(krok4.opis) && krok4.dalej === 'Napisz artykuł', JSON.stringify(krok4));
+    krok4.postep === 'Krok 4 z 4' && /Ten artykuł piszesz bez klucza, na nasz koszt/.test(krok4.opis) && krok4.dalej === 'Wygeneruj artykuł', JSON.stringify(krok4));
   const kluczeAkt = z.kluczeGet;
   await s.fill('#byok-temat', 'Jak wybrać pompę ciepła do domu jednorodzinnego');
   await s.click('#start-dalej');
@@ -2738,7 +2738,7 @@ async function wariantR9DZakupWAplikacji(b) {
     const pula = await s.evaluate(async () => ({ karta: document.getElementById('konto-karta').textContent, odznaka: document.getElementById('pakiet-badge').textContent,
       artykul: ((await (await fetch('/api/pakiet')).json()).uzycie || {}).artykul, historia: history.length }));
     wynik('R9-D na serwerze A1+B+C: 3 artykuly na wlasnym kluczu z kreatora i Wygeneruj, potem karta "Wybierz pakiet" i odznaka (licznik serwera)',
-      /Wykorzystano 3 z 3/.test(pula.karta) && /Darmowe wykorzystane/.test(pula.odznaka) && !!pula.artykul && pula.artykul.zuzyte === 3 && pula.historia >= 3, JSON.stringify(pula));
+      /Wykorzystano 3 z 3/.test(pula.karta) && /Brak darmowych/.test(pula.odznaka) && !!pula.artykul && pula.artykul.zuzyte === 3 && pula.historia >= 3, JSON.stringify(pula));
     await s.click('#a4-wybierz');
     await krok('R9-D okno pakietow z cenami z serwera', s.waitForSelector('#zakup .zakup-karta', { timeout: 8000 }));
     const okno = await s.evaluate(() => ({ karty: [...document.querySelectorAll('#zakup .zakup-karta')].map((x) => x.textContent), test: !!document.querySelector('#pakiet-zakup .zakup-test'),
@@ -3098,9 +3098,9 @@ async function wariantR9W(b) {
       return { tekst: document.getElementById('konto-tresc').textContent.replace(/\s+/g, ' '), pierwszy,
         odnowienie: new Date(sub.okresDo).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' }) };
     });
-    wynik('R9-W Konto: "licznik wraca" 1. dnia nastepnego miesiaca, nie w dniu odnowienia subskrypcji',
-      konto.tekst.indexOf('licznik wraca ' + konto.pierwszy) >= 0 && (konto.pierwszy === konto.odnowienie || konto.tekst.indexOf('licznik wraca ' + konto.odnowienie) < 0),
-      JSON.stringify({ pierwszy: konto.pierwszy, odnowienie: konto.odnowienie, fragment: (konto.tekst.match(/licznik wraca [^·]{0,20}/) || [''])[0] }));
+    wynik('R9-W Konto: "limit odnowi sie" 1. dnia nastepnego miesiaca, nie w dniu odnowienia subskrypcji',
+      konto.tekst.indexOf('limit odnowi się ' + konto.pierwszy) >= 0 && (konto.pierwszy === konto.odnowienie || konto.tekst.indexOf('limit odnowi się ' + konto.odnowienie) < 0),
+      JSON.stringify({ pierwszy: konto.pierwszy, odnowienie: konto.odnowienie, fragment: (konto.tekst.match(/limit odnowi się [^·]{0,20}/) || [''])[0] }));
     await s.click('#konto-zmien-pakiet');
     await krok('R9-W okno pakietu z kartami zmiany', s.waitForSelector('#zmiana-pakietu #zmiana-przycisk', { timeout: 8000 }));
     const zmiana = await s.evaluate(() => ({
