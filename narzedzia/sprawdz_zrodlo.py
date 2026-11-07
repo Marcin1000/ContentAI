@@ -1376,7 +1376,7 @@ KONTROLE += [
     ("R9-G/siec-dla-pustej-bazy", "UX8-14: przy pustej bazie wiedzy Szukaj w sieci wlaczone od wejscia (do recznej zmiany), z dopiskiem",
      "if (pusta && !w.checked) { w.checked = true; siecWlaczonaDlaPustej = true; }", None, None),
     ("R9-G/siec-dopisek", "UX8-14: dopisek o pustej bazie przy przelaczniku sieci (PL)",
-     "'toggle-web-hint-pusta':'Twoja baza wiedzy jest pusta, więc AI oprze tekst na stronach z sieci", None, None),
+     "'toggle-web-hint-pusta':'Baza wiedzy jest pusta, więc AI oprze artykuł na stronach z sieci", None, None),
     ("R9-G/siec-po-dokumencie", "UX8-14: siec wlaczona dla pustej bazy wylacza sie po dodaniu dokumentu (defaultChecked dopiero po stanie)",
      "else if (!pusta && siecWlaczonaDlaPustej) { w.checked = false; siecWlaczonaDlaPustej = false; }\n  }\n"
      "  // Po ustawieniu stanu (inaczej sama zmiana defaultChecked przestawia jeszcze nieruszony przelacznik).\n  w.defaultChecked = pusta;",
@@ -1669,7 +1669,7 @@ KONTROLE += [
      "return currentLang === 'en' ? '$' + liczba : liczba + '\\u00a0USD';",
      "el.textContent = '$' + formatujLiczbe(", None),
     ("R9-T/koszt-kreator", "kreator klucza: koszt kazdego tekstu w Historii (R9-K), nie obietnica bez pokrycia",
-     "Szacunkowy koszt każdego tekstu zobaczysz w Historii.", "Koszt każdego tekstu zobaczysz w Historii.", ("proxy",)),
+     "Szacunkowy koszt każdego artykułu zobaczysz w Historii.", "re:Koszt każdego (tekstu|artykułu) zobaczysz w Historii", ("proxy",)),
 ]
 
 # Koszt kazdego tekstu w Historii (runda 9, po tescie premiery). Scenariusz w wariantProxy (test_dymny.js).
@@ -2105,6 +2105,35 @@ KONTROLE += [
 ]
 
 # Tresc plikow pwa/lib, ktore aplikacja wczytuje (nie przechodza przez budowanie wariantow): (kod, opis, plik, jest, niema).
+# Porzadki tekstow interfejsu (2026-11-07), koordynator: nazwy po zmianie i informacje,
+# ktore przy upraszczaniu zniknely, a kontrola lidera jezykowego je przywrocila.
+KONTROLE += [
+    ("UI/serp-nazwa", "SERP w interfejsie to analiza wynikow Google (przelacznik i funkcja pakietu)",
+     "'toggle-serp':'Analiza wyników Google',", "re:'(toggle-serp|pakiet-fn-serp)':'Analiza SERP", None),
+    ("UI/serp-nazwa-en", "SERP w interfejsie EN to Google results analysis",
+     "'toggle-serp':'Google results analysis',", "re:'(toggle-serp|pakiet-fn-serp)':'SERP analysis", None),
+    ("UI/fakty-pochodzenie", "Kontrola faktow: naglowek pochodzenia mowi o informacjach, nie o twierdzeniach",
+     "'fakty-pochodzenie':'Skąd pochodzą informacje',", "'fakty-pochodzenie':'Pochodzenie twierdzeń'", None),
+    ("UI/fakty-ogolnik", "Kontrola faktow: kategoria ogolnika nazwana wprost",
+     "'fakty-rodzaj-ogolnik':'Ogólnik zamiast konkretu ze źródła',", "'fakty-rodzaj-ogolnik':'Ogólnik, a źródło podaje konkret'", None),
+    ("UI/fakty-niewyk", "Kontrola faktow: fakty do dopisania nazwane od tego, co z nimi zrobic",
+     "'fakty-niewyk-tytul':'Do dopisania ze źródeł ({n})',", "'fakty-niewyk-tytul':'Ze źródeł, a nie ma w tekście", None),
+    ("UI/fakty-popraw-opis", "Kontrola faktow: opis poprawy nie odsyla do nazwy kategorii ('poza Sprawdz na stronie')",
+     "'fakty-popraw-opis':'Zdania bez potwierdzenia w źródłach zostaną usunięte albo złagodzone w nowej wersji.',", "poza „Sprawdź na stronie”", None),
+    ("UI/siec-koszt-wlasny", "konto na wlasnych kluczach: kto placi za wyszukiwanie w sieci (przywrocone po kontroli)",
+     "'toggle-web-koszt-wlasne':'Wyszukiwanie w sieci jest płatne u dostawcy AI, na Twoim kluczu.',", None, None),
+    ("UI/przyklad-historia", "przyklad artykulu: nie trafia do Historii i nie zuzywa pakietu (przywrocone po kontroli)",
+     "'przyklad-stopka':'Przykład nie trafia do Historii i nie zużywa pakietu.", None, None),
+    ("UI/llms-limit-domen", "Dane marki: limit 64 domen wykluczonych widoczny w pomocy pola (przywrocone po kontroli)",
+     "'llms-h-blocked':'Wpisz najwyżej 64 domeny", None, None),
+    ("UI/klucz-prefiksy", "niepelny klucz: komunikat mowi, od czego zaczyna sie pelny klucz Anthropic (sk-ant-usr- i sk-ant-api03-, poprawka #79)",
+     "'byok-niepelny':'Ten klucz jest niepełny. Pełny klucz Anthropic jest dużo dłuższy i zaczyna się od „sk-ant-usr-” albo „sk-ant-api03-”.", None, ("proxy",)),
+    ("UI/znaczniki-calosc", "nanoszenie tekstow do znacznikow nie skleja tagow (przycisk w przycisku, atrybut bez wartosci)",
+     None, "re:<button [^>]*<button|<[a-z]+ [a-z-]+=<", None),
+    ("UI/start-gdzie", "ostatni krok konfiguracji mowi, gdzie sa Baza wiedzy, Historia i Widocznosc AI (przywrocone po kontroli)",
+     "Baza wiedzy, Historia i Widoczność AI są w górnym pasku (na telefonie w dolnym i w Koncie).", None, ("proxy",)),
+]
+
 KONTROLE_BIBLIOTEK = [
     ("R9-B/docx-h2", "DOCX: Heading2 20 pt nad i 12 pt pod (wczesniej 18 i 6 pt)", "docx-natywny-4.js",
      '<w:spacing w:before="400" w:after="240" w:line="264" w:lineRule="auto"/><w:outlineLvl w:val="1"/>', None),
@@ -2122,6 +2151,8 @@ KONTROLE_BIBLIOTEK = [
 
 # Pliki serwera i narzedzi (sciezka od katalogu repozytorium): (kod, opis, plik, jest, niema).
 KONTROLE_PLIKOW = [
+    ("UI/serwer-serp", "komunikat serwera o pakiecie nazywa funkcje jak interfejs (analiza wynikow Google)",
+     "serwer/server.js", "error: { komunikat: 'Analiza wyników Google jest dostępna od pakietu Standard.' },", "Analiza SERP jest dostępna od pakietu Standard."),
     # Runda B: test w przegladarce i atrapa redaktora "Dopisz do tekstu".
     ("RB/test", "test Rundy B w przegladarce (pochodzenie, ogolnik, Dopisz do tekstu, ton, naglowki)",
      "narzedzia/test_stan.js", "['runda-b', scenariuszRundaB]", None),

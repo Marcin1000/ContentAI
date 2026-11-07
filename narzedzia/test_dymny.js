@@ -269,7 +269,7 @@ async function wariantKeys(b) {
   await krok('generowanie z samokorekta', s.waitForFunction(() => !document.getElementById('gen-btn').disabled && getComputedStyle(document.getElementById('spinner')).display === 'none', null, { timeout: 60000 }));
   const pr = await s.evaluate(() => { premiumMode = false; const a = document.getElementById('article');
     return { h2: a.querySelectorAll('h2').length, meta: !!a.querySelector('.meta-box'), info: [...document.querySelectorAll('.powiadomienie')].map(p => p.textContent).join(' ') }; });
-  wynik('keys: ucieta samokorekta zostawia oryginal i informuje', pr.h2 >= 3 && pr.meta && /limicie|length limit/.test(pr.info), JSON.stringify(pr));
+  wynik('keys: ucieta samokorekta zostawia oryginal i informuje', pr.h2 >= 3 && pr.meta && /za długa|too long/.test(pr.info), JSON.stringify(pr));
 
   // Escape na swiezej stronie nie otwiera Generatora grafik; okna maja role i fokus.
   await s.keyboard.press('Escape');
@@ -881,7 +881,7 @@ async function wariantTelefonR6Luki(b) {
   await s.evaluate(() => { inspektorZamknij(); toggleGapPanel(); });
   await s.waitForTimeout(300);
   const brakSerp = await s.evaluate(() => document.getElementById('gap-no-serp').textContent);
-  wynik('telefon: R6L blad SERP przy generowaniu - komunikat i tekst w Lukach', /SERP/.test(serpBladT) && /nie powiodła|failed/.test(brakSerp), JSON.stringify({ serpBladT, brakSerp }));
+  wynik('telefon: R6L blad SERP przy generowaniu - komunikat i tekst w Lukach', /wyników Google|Google results/.test(serpBladT) && /nie powiodła|nie udała|failed/.test(brakSerp), JSON.stringify({ serpBladT, brakSerp }));
   wynik('telefon: R6L bez bledow JavaScript', !bledy.length, bledy.join(' | '));
   if (bledow) await zrzut(s, 'telefon-r6-luki');
   await k.close();
@@ -1188,7 +1188,7 @@ async function wariantR9Klucze(b) {
       JSON.stringify(zapis));
     // UX8-14 (G) przy wlasnym kluczu: "Szukaj w sieci" wlacza sie samo przy pustej bazie, a wyszukiwanie placi uzytkownik.
     const kosztSieci = await s.evaluate(() => { const e = document.querySelector('label[for="use-web"] .koszt-wlasny'); return { widoczny: !!e && e.offsetParent !== null, tekst: e ? e.textContent : '' }; });
-    wynik('R9-C klucze: pod "Szukaj w sieci" zdanie, ze wyszukiwanie zwieksza koszt na kluczu uzytkownika', kosztSieci.widoczny && /Twoim kluczu API/.test(kosztSieci.tekst), JSON.stringify(kosztSieci));
+    wynik('R9-C klucze: pod "Szukaj w sieci" zdanie, ze wyszukiwanie zwieksza koszt na kluczu uzytkownika', kosztSieci.widoczny && /płatne u dostawcy AI, na Twoim kluczu/.test(kosztSieci.tekst), JSON.stringify(kosztSieci));
     const odWywolania = atrapa.ostatnie.length;
     const r = await generuj(s, 'Artykul na wlasnym kluczu z ciasteczka');
     const wywolania = atrapa.ostatnie.slice(odWywolania).filter((w) => /\/v1\/messages/.test(w.sciezka || ''));
@@ -1318,8 +1318,8 @@ async function wariantR6F(b) {
   wynik('telefon: R6-F E-02 tekst autora i naglowki sekcji w pliku, sama notatka pominieta',
     /Tekst autora wpisany w sekcji jeden/.test(txtZw) && /Akapit autora pod notatka w sekcji dwa/.test(txtZw) && /Sekcja R6F jeden/.test(txtZw) && /Sekcja R6F dwa/.test(txtZw)
     && txtZw.indexOf(NOTATKA.slice(0, 30)) < 0, txtZw.slice(0, 200));
-  wynik('telefon: R6-F E-02/E-17 komunikat eksportu jako ostrzezenie z instrukcja (usun notatke albo wpisz tresc)',
-    /powiadomienie-uwaga\|[^|]*pominięte w eksporcie: 1[^|]*Usuń notatkę albo wpisz w jej miejsce treść/.test(toast), toast);
+  wynik('telefon: R6-F E-02/E-17 komunikat eksportu jako ostrzezenie z instrukcja (dopisz tekst w pominietej sekcji)',
+    /powiadomienie-uwaga\|[^|]*Pominięto sekcje bez potwierdzenia w źródłach: 1\. Dopisz w nich tekst/.test(toast), toast);
   const JEDNA = /(^|[\s(„"])[aiouwzAIOUWZ] /m, TWARDA = /(^|[\s(„" ])[aiouwzAIOUWZ] /;
   await s.evaluate(async () => {
     await wczytajSkrypt('pwa/lib/docx-natywny-4.js');
@@ -1760,7 +1760,7 @@ async function wariantR9Zrozumialosc(b) {
   await s.waitForTimeout(600);
   const oGeo = await s.evaluate(() => (document.getElementById('ins-ocena-opis') || {}).textContent || '');
   wynik('telefon: R9-G UX8-11 pod SEO/AIO/AEO/GEO zdanie, co mierzy wybrana ocena (GEO to nie geolokalizacja), przyciski z podpowiedzia',
-    oSeo.widac && /^SEO: .*Google/.test(oSeo.opis) && /^GEO: .*geolokalizac/.test(oGeo) && oSeo.podpowiedzi === 4, JSON.stringify({ oSeo, oGeo }));
+    oSeo.widac && /^Ocenia, czy .*Google/.test(oSeo.opis) && /^Ocenia, czy czaty AI .*geolokalizac/.test(oGeo) && oSeo.podpowiedzi === 4, JSON.stringify({ oSeo, oGeo }));
   await s.evaluate(() => inspektorZamknij());
   await s.evaluate(() => ustawWidokMobilny('brief'));
   // UX8-11: Typ tresci SEO / AIO z jednym zdaniem pod polem; dla innych typow bez dopisku.
@@ -1768,7 +1768,7 @@ async function wariantR9Zrozumialosc(b) {
   const tH = await typ('Hybryda SEO + AIO'), tB = await typ('Wpis blogowy'), tA = await typ('Treść AIO');
   await s.selectOption('#ctype', 'Hybryda SEO + AIO');
   wynik('telefon: R9-G UX8-11 Typ tresci: zdanie pod polem dla Hybrydy i AIO, bez dopisku dla wpisu blogowego',
-    /zalecana/.test(tH) && /Google/.test(tH) && !tB && /AI Overviews/.test(tA), JSON.stringify({ tH, tB, tA }));
+    /^Zalecany/.test(tH) && /Google/.test(tH) && !tB && /AI Overviews/.test(tA), JSON.stringify({ tH, tB, tA }));
 
   // UX8-14: autor sam wylaczyl siec - okno ma trzy wyjscia, "bez zrodel" z ostrzezeniem pisze tekst bez sieci.
   if (await s.evaluate(() => document.getElementById('use-web').checked)) await krok('R9-G wylacz siec', s.click('#use-web', { timeout: 3000 }));
@@ -1831,7 +1831,7 @@ async function wariantR9Zrozumialosc(b) {
   };
   const tVis = await oknoZMenu('openVisModal'), tAiv = await oknoZMenu('aivOpen');
   wynik('telefon: R9-G UX8-13 Widocznosc AI w arkuszu Konto: 4 narzedzia z podpisem "po co", okna nazwane jak w menu',
-    wid.poz === 4 && /^czy AI poleca/.test(wid.podpisy[0]) && /^czy AI cytuje/.test(wid.podpisy[1]) && /^wejścia z czatów AI/.test(wid.podpisy[3]) && tVis === 'Obecność marki w AI' && tAiv === 'Cytowania w AI', JSON.stringify({ wid, tVis, tAiv }));
+    wid.poz === 4 && /^czy AI poleca/.test(wid.podpisy[0]) && /^cytowania Twoich stron/.test(wid.podpisy[1]) && /^wejścia z czatów AI/.test(wid.podpisy[3]) && tVis === 'Obecność marki w AI' && tAiv === 'Cytowania w AI', JSON.stringify({ wid, tVis, tAiv }));
   // UX8-16: Historia mowi, ze jest tylko w tej przegladarce, i daje kopie do pobrania (HTML z artykulami i danymi wpisow).
   await krok('R9-G Historia', s.click('#mnav-hist', { timeout: 3000 }));
   await s.waitForTimeout(400);
@@ -1878,7 +1878,7 @@ async function wariantR9Zrozumialosc(b) {
   const en = await s.evaluate(() => ({ web: document.getElementById('use-web').checked, opis: document.querySelector('label[for="use-web"] .toggle-hint').textContent,
     typ: (document.getElementById('ctype-opis') || {}).textContent || '' }));
   wynik('komputer EN: R9-G UX8-14 i UX8-11 dopisek o pustej bazie i opis typu tresci po angielsku',
-    en.web && /empty/.test(en.opis) && /recommended/.test(en.typ), JSON.stringify(en));
+    en.web && /empty/.test(en.opis) && /^Recommended/.test(en.typ), JSON.stringify(en));
   // UX8-14: dokument w bazie wylacza siec wlaczona dla pustej bazy (wraca zwykly dopisek), pusta baza znow ja wlacza.
   // W trakcie generowania (spinner) przelacznik stoi: zmiana dopiero po nim.
   const przelacznik = () => s.evaluate(() => ({ web: document.getElementById('use-web').checked,
@@ -2156,14 +2156,14 @@ async function wariantSamoobsluga(b) {
       blok: blokBledu(bladOdpowiedzi(d, o.status), 'generate()') }; });
   await s.unroute(/\/api$/);
   wynik('R9-D: 402 billing_error dostawcy bez okna pakietu, komunikat o srodkach u Anthropic (nie limit pakietu)',
-    e402.okno !== 'flex' && /Na Twoim koncie Anthropic zabrakło środków/.test(e402.tekst) && /\(nie Content AI\)/.test(e402.tekst), JSON.stringify(e402));
-  wynik('R9-D: E3 - przy braku srodkow przycisk "Rozliczenia Anthropic" i "Sprobuj ponownie" (po doladowaniu)',
-    /href="https:\/\/platform\.claude\.com\/settings\/billing"/.test(e402.blok) && /Rozliczenia Anthropic/.test(e402.blok) && /ponow-generowanie/.test(e402.blok), e402.blok);
+    e402.okno !== 'flex' && /Na Twoim koncie Anthropic \(nie Content AI\) zabrakło środków/.test(e402.tekst) && /\(nie Content AI\)/.test(e402.tekst), JSON.stringify(e402));
+  wynik('R9-D: E3 - przy braku srodkow przycisk "Doładuj konto Anthropic" i "Sprobuj ponownie" (po doladowaniu)',
+    /href="https:\/\/platform\.claude\.com\/settings\/billing"/.test(e402.blok) && /Doładuj konto Anthropic/.test(e402.blok) && /ponow-generowanie/.test(e402.blok), e402.blok);
   const e4 = await s.evaluate(() => [
     blokBledu(bladOdpowiedzi({ type: 'error', error: { type: 'rate_limit_error', message: 'enforced_spend_limit_reached' } }, 429, 'Anthropic'), 'generate()'),
     blokBledu(bladOdpowiedzi({ type: 'error', error: { type: 'invalid_request_error', message: 'You have reached your specified API usage limits. You will regain access on 2026-11-01 at 00:00 UTC.' } }, 400, 'Anthropic'), 'generate()')]);
-  wynik('R9-D: E4 - limit wydatkow u dostawcy: przycisk "Limity Anthropic" (strona limitow w konsoli), bez "Sprobuj ponownie"',
-    e4.every((h) => /href="https:\/\/platform\.claude\.com\/settings\/limits"/.test(h) && /Limity Anthropic/.test(h) && !/ponow-generowanie/.test(h)), e4.join(' || '));
+  wynik('R9-D: E4 - limit wydatkow u dostawcy: przycisk "Podnieś limit Anthropic" (strona limitow w konsoli), bez "Sprobuj ponownie"',
+    e4.every((h) => /href="https:\/\/platform\.claude\.com\/settings\/limits"/.test(h) && /Podnieś limit Anthropic/.test(h) && !/ponow-generowanie/.test(h)), e4.join(' || '));
   // 3. Zakup w dwoch kliknieciach: "Wybierz pakiet" -> karty z waluta i zgodami -> "Przejdz do platnosci".
   await s.click('#a4-wybierz');
   await krok('R9-D okno pakietow', s.waitForSelector('#zakup .zakup-karta', { timeout: 5000 }));
@@ -3098,9 +3098,9 @@ async function wariantR9W(b) {
       return { tekst: document.getElementById('konto-tresc').textContent.replace(/\s+/g, ' '), pierwszy,
         odnowienie: new Date(sub.okresDo).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' }) };
     });
-    wynik('R9-W Konto: "licznik wraca" 1. dnia nastepnego miesiaca, nie w dniu odnowienia subskrypcji',
-      konto.tekst.indexOf('licznik wraca ' + konto.pierwszy) >= 0 && (konto.pierwszy === konto.odnowienie || konto.tekst.indexOf('licznik wraca ' + konto.odnowienie) < 0),
-      JSON.stringify({ pierwszy: konto.pierwszy, odnowienie: konto.odnowienie, fragment: (konto.tekst.match(/licznik wraca [^·]{0,20}/) || [''])[0] }));
+    wynik('R9-W Konto: "limit odnowi sie" 1. dnia nastepnego miesiaca, nie w dniu odnowienia subskrypcji',
+      konto.tekst.indexOf('limit odnowi się ' + konto.pierwszy) >= 0 && (konto.pierwszy === konto.odnowienie || konto.tekst.indexOf('limit odnowi się ' + konto.odnowienie) < 0),
+      JSON.stringify({ pierwszy: konto.pierwszy, odnowienie: konto.odnowienie, fragment: (konto.tekst.match(/limit odnowi się [^·]{0,20}/) || [''])[0] }));
     await s.click('#konto-zmien-pakiet');
     await krok('R9-W okno pakietu z kartami zmiany', s.waitForSelector('#zmiana-pakietu #zmiana-przycisk', { timeout: 8000 }));
     const zmiana = await s.evaluate(() => ({

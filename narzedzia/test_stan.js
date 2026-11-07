@@ -931,7 +931,7 @@ async function scenariuszR9FKoszt(b) {
   }));
   wynik('R9-F KOD8-31: cennik po nazwie modelu z data wersji (jak alias), nie stawka modelu pomocniczego', ceny.wersja === ceny.alias && ceny.alias > 0, JSON.stringify(ceny));
   wynik('R9-F KOD8-31: wyszukiwania w sieci wliczone do kosztu (5 wyszukan = 0,05 USD)', Math.abs(ceny.siec - 0.05) < 1e-9, JSON.stringify(ceny));
-  wynik('R9-F KOD8-31: etykieta mowi, ze koszt na wlasnych kluczach to szacunek', /Szacunkowy/.test(ceny.etykieta), ceny.etykieta);
+  wynik('R9-F KOD8-31: etykieta mowi, ze koszt na wlasnych kluczach to szacunek (porzadki tekstow: skrot "szac." w naglowku kolumny)', /\b[Ss]zac(\.|unkowy)/.test(ceny.etykieta), ceny.etykieta);
   // Transkrypcja nagrania (2 s WAV) dolicza koszt OpenAI.
   const transkrypcja = await s.evaluate(async () => {
     const przed = (kosztyApi.wszystkie || {}).openai || 0;
@@ -2425,8 +2425,8 @@ async function scenariuszRundaB(b) {
     return { nota: w.nota, en: w.en, zFraza: w.zFraza, tylkoNota: w.zNota === w.bezNoty };
   }, MARKA);
   wynik('Runda B: AEO - informacja o naglowkach z nazwa marki (z przykladem), po angielsku tez; ocena bez zmian; z marka we frazach bez informacji',
-    !!aeo && aeo.nota === 'Nagłówki z nazwą marki: 2, np. „Która usługa ' + MARKA + ' najlepiej sprawdzi się po sezonie?”. W wyszukiwarkę wpisuje się swój problem, nie nazwę firmy, więc marka pasuje do treści sekcji, a nagłówek do pytania czytelnika.'
-      && aeo.en.indexOf('Headings with the brand name: 2, e.g. “Która usługa ' + MARKA) === 0 && !aeo.zFraza && aeo.tylkoNota, JSON.stringify(aeo));
+    !!aeo && aeo.nota.indexOf('Marka w śródtytułach: 2, np. „Która usługa ' + MARKA + ' najlepiej sprawdzi się po sezonie?”') === 0
+      && aeo.en.indexOf('Brand in headings: 2, e.g. “Która usługa ' + MARKA) === 0 && !aeo.zFraza && aeo.tylkoNota, JSON.stringify(aeo));
 
   // 11. Luki: nowe sekcje z regula konkretu i naglowkami bez marki; plan calego artykulu ich nie dotyczy.
   const przedL = zap.length;

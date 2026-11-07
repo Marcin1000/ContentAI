@@ -3894,7 +3894,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
                 <div class="arkusz-tytul"><span data-i18n="grupa-wiecej">Więcej</span><button type="button" class="przycisk-ikona arkusz-zamknij" onclick="zamknijGrupyPaska()" aria-label="Zamknij" data-i18n-label="okno-zamknij"><svg class="ikona ikona-l" aria-hidden="true"><use href="#i-x"/></svg></button></div>
                 <button class="btn-secondary" id="premium-fix-btn" style="display:none" onclick="runPostGenerationPremium()" title="Artykuł zostanie oceniony i poprawiony w nowej wersji." data-i18n-title="title-premium-fix-tooltip" data-i18n="btn-premium-fix" data-ikona="list-checks"><svg class="ikona" aria-hidden="true"><use href="#i-list-checks"/></svg>Uruchom samokorektę</button>
                 <button class="btn-secondary" id="tts-btn" style="display:none" onclick="speakArticle(this)" data-i18n-title="tts-read" title="Czytaj na głos"><svg class="ikona" aria-hidden="true"><use href="#i-volume-2"/></svg><span data-i18n="tts-read">Czytaj na głos</span></button>
-                <button class="btn-sec<button class="btn-secondary" id="nowy-art-btn" style="display:none" onclick="nowyArtykul()" title="Czyści temat, słowa kluczowe i wytyczne. Poprzedni artykuł zostaje w Historii." data-i18n-title="nowy-artykul-title" data-i18n="nowy-artykul" data-ikona="square-pen">a-hidden="true"><use href="#i-square-pen"/></svg>Nowy artykuł</button>
+                <button class="btn-secondary" id="nowy-art-btn" style="display:none" onclick="nowyArtykul()" title="Czyści temat, słowa kluczowe i wytyczne. Poprzedni artykuł zostaje w Historii." data-i18n-title="nowy-artykul-title" data-i18n="nowy-artykul" data-ikona="square-pen"><svg class="ikona" aria-hidden="true"><use href="#i-square-pen"/></svg>Nowy artykuł</button>
               </div>
             </div>
             <span class="pasek-sep"></span>
@@ -5210,7 +5210,7 @@ var I18N = {
     'przyklad-oceny-tytul':'Oceny artykułu','przyklad-nazwa-seo':'SEO · Google','przyklad-nazwa-aio':'AIO · podsumowania AI w Google',
     'przyklad-nazwa-aeo':'AEO · odpowiedzi asystentów','przyklad-nazwa-geo':'GEO · cytowania w czatach AI',
     'przyklad-fakty':'Kontrola faktów: 1 zdanie do sprawdzenia. „Da się uruchomić w kilka dni”: źródło mówi o 2 do 10 dniach roboczych.',
-    'przyklad-stopka':'Przykład nie zużywa pakietu. Swoje artykuły możesz edytować, pobierać i publikować.',
+    'przyklad-stopka':'Przykład nie trafia do Historii i nie zużywa pakietu. Swoje artykuły możesz edytować, pobierać i publikować.',
     'przyklad-tresc':'<h1>Jak wybrać system CRM dla małej firmy: od czego zacząć</h1><p>System CRM to program, który zbiera w jednym miejscu kontakty z klientami, historię rozmów i etap każdej sprzedaży. Małej firmie zwykle wystarczy prosty system dla 3 do 5 osób, który da się uruchomić w kilka dni.</p><h2>Czym jest CRM i komu się opłaca?</h2><p>CRM (Customer Relationship Management) porządkuje pracę z klientami tam, gdzie kilka osób rozmawia z tymi samymi firmami, a ustalenia giną w skrzynkach pocztowych i arkuszach. Jeśli oferta wysłana w poniedziałek w piątek nie ma już właściciela, to znak, że czas na CRM.</p><h2>Jak wybrać system w czterech krokach?</h2><ol><li>Wypisz trzy czynności, które dziś zabierają zespołowi najwięcej czasu.</li><li>Sprawdź, czy system zaimportuje kontakty z pliku CSV.</li><li>Porównaj cenę za użytkownika i koszt dodatkowych modułów.</li><li>Przetestuj wersję próbną na jednym prawdziwym kliencie.</li></ol><h2>Ile kosztuje CRM dla małej firmy?</h2><p>Proste systemy kosztują zwykle od kilkudziesięciu do około 100 zł miesięcznie za użytkownika. Do ceny trzeba doliczyć czas wdrożenia: import kontaktów i ustawienie etapów sprzedaży zajmuje od 2 do 10 dni roboczych.</p><h2>Kluczowe wnioski</h2><ul><li>CRM opłaca się, gdy z tymi samymi klientami rozmawia więcej niż jedna osoba.</li><li>Wybór zacznij od trzech najbardziej czasochłonnych czynności, nie od listy funkcji.</li><li>Policz cały koszt: licencje za użytkownika i od 2 do 10 dni wdrożenia.</li></ul><div class="zrodla-box"><div class="zrodla-label">Źródła</div><ul><li>Oferta firmy (dokument z bazy wiedzy)</li><li>Poradnik o wdrażaniu CRM w małych firmach (strona z sieci)</li></ul></div><div class="meta-box"><p>Jak wybrać CRM dla małej firmy: komu się opłaca, ile kosztuje i jak wybrać system w czterech krokach, zanim zapłacisz za licencje.</p></div>',
     // nowy uklad (E4)
     'nav-pisz':'Pisz','widok-wynik':'Wynik','widok-etykieta':'Widok',
@@ -5318,8 +5318,8 @@ var I18N = {
     'toggle-web':'Szukaj w sieci i podaj źródła',
     'toggle-web-hint':'AI poszuka brakujących faktów w sieci. Potrwa to około 30 s dłużej.',
     'toggle-web-hint-jak':'Informacje o Twojej firmie AI bierze tylko z bazy wiedzy, nigdy ze stron z sieci. Strony, z których korzysta, wymieni pod artykułem jako źródła. Bez dokumentów firmy artykuł nie powie nic konkretnego o Twojej ofercie.',
-    'toggle-web-hint-pusta':'AI oprze artykuł na stronach z sieci. Potrwa to około 30 s dłużej.',
-    'toggle-web-koszt-wlasne':'AI poszuka brakujących faktów w sieci. Zwiększa to koszt artykułu.',
+    'toggle-web-hint-pusta':'Baza wiedzy jest pusta, więc AI oprze artykuł na stronach z sieci. Potrwa to około 30 s dłużej.',
+    'toggle-web-koszt-wlasne':'Wyszukiwanie w sieci jest płatne u dostawcy AI, na Twoim kluczu.',
     'toggle-serp':'Analiza wyników Google',
     'toggle-serp-hint':'Artykuł uwzględni czołowe wyniki Google. Potrwa to około 15 s dłużej.',
     'toggle-aeo':'Tryb AEO (odpowiedzi dla AI)','toggle-aeo-hint':'Definicja na początku, śródtytuły jako pytania i sekcja FAQ.',
@@ -5431,7 +5431,7 @@ var I18N = {
     'llms-h-domains':'Pozwalają rozpoznać linki do Twoich stron. Adres strony wyżej jest zawsze uwzględniany.',
     'ph-llms-domains':'np. twojafirma.pl',
     'llms-f-blocked':'Wykluczone domeny',
-    'llms-h-blocked':'AI pominie te strony przy wyszukiwaniu w sieci. Wpisz np. konkurentów i porównywarki.',
+    'llms-h-blocked':'Wpisz najwyżej 64 domeny, np. konkurentów i porównywarki. AI pominie je przy wyszukiwaniu w sieci.',
     'ph-llms-blocked':'np. konkurent.pl\nporownywarka.pl',
     'llms-blocked-count':'Przyjęte ({n}):',
     'llms-zapis-serwer':'Zapisano na serwerze. Dane marki obowiązują cały zespół.',
@@ -6090,7 +6090,7 @@ var I18N = {
     'przyklad-oceny-tytul':'Article scores','przyklad-nazwa-seo':'SEO · Google','przyklad-nazwa-aio':'AIO · AI summaries in Google',
     'przyklad-nazwa-aeo':'AEO · assistant answers','przyklad-nazwa-geo':'GEO · citations in AI chats',
     'przyklad-fakty':'Fact check: 1 flagged sentence. “Up and running in a few days”: the source says 2 to 10 working days.',
-    'przyklad-stopka':'This sample does not use your plan. You can edit, download and publish your own articles.',
+    'przyklad-stopka':'This sample is not saved in History and does not use your plan. You can edit, download and publish your own articles.',
     'przyklad-tresc':'<h1>How to choose a CRM for a small business: where to start</h1><p>A CRM is software that keeps customer contacts, conversation history and the stage of every sale in one place. A small business usually needs a simple system for 3 to 5 people that can be up and running in a few days.</p><h2>What is a CRM and who is it for?</h2><p>A CRM (Customer Relationship Management) system organizes work with customers where several people talk to the same companies and agreements get lost in inboxes and spreadsheets. If an offer sent on Monday has no owner by Friday, it is time for a CRM.</p><h2>How do you choose a system in four steps?</h2><ol><li>List the three tasks that take your team the most time today.</li><li>Check that the system can import contacts from a CSV file.</li><li>Compare the price per user and the cost of add-on modules.</li><li>Try the trial version with one real customer.</li></ol><h2>How much does a CRM for a small business cost?</h2><p>Simple systems usually cost from a few euros to around 25 euros per user per month. Add the time it takes to set up: importing contacts and defining sales stages takes 2 to 10 working days.</p><h2>Key takeaways</h2><ul><li>A CRM pays off when more than one person talks to the same customers.</li><li>Start from your three most time-consuming tasks, not from a list of features.</li><li>Count the full cost: licenses per user and 2 to 10 days of setup.</li></ul><div class="zrodla-box"><div class="zrodla-label">Sources</div><ul><li>Company offer (knowledge base document)</li><li>Guide to rolling out a CRM in small businesses (web page)</li></ul></div><div class="meta-box"><p>How to choose a CRM for a small business: who it is for, what it costs and how to pick a system in four steps before you pay for licenses.</p></div>',
     // nowy uklad (E4)
     'nav-pisz':'Write','widok-wynik':'Result','widok-etykieta':'View',
@@ -6198,8 +6198,8 @@ var I18N = {
     'toggle-web':'Search the web and cite sources',
     'toggle-web-hint':'The AI looks up missing facts on the web. Takes about 30 s longer.',
     'toggle-web-hint-jak':'The AI takes information about your company only from your knowledge base, never from web pages. It lists the web pages it uses under the article as sources. Without company documents, the article will say nothing specific about your offer.',
-    'toggle-web-hint-pusta':'The AI bases the article on web pages. Takes about 30 s longer.',
-    'toggle-web-koszt-wlasne':'The AI looks up missing facts on the web. It adds to the article cost.',
+    'toggle-web-hint-pusta':'Your knowledge base is empty, so the AI bases the article on web pages. Takes about 30 s longer.',
+    'toggle-web-koszt-wlasne':'Web search is billed by your AI provider to your own key.',
     'toggle-serp':'Google results analysis',
     'toggle-serp-hint':'The article builds on the top Google results. Takes about 15 s longer.',
     'toggle-aeo':'AEO mode (answers for AI)','toggle-aeo-hint':'A definition up front, question subheadings and an FAQ section.',
@@ -6311,7 +6311,7 @@ var I18N = {
     'llms-h-domains':'They identify links to your own sites. The website address above is always included.',
     'ph-llms-domains':'e.g. yourcompany.com',
     'llms-f-blocked':'Excluded domains',
-    'llms-h-blocked':'The AI skips these sites when searching the web. Add competitors or comparison sites.',
+    'llms-h-blocked':'Up to 64 domains, e.g. competitors and comparison sites. The AI skips them when searching the web.',
     'ph-llms-blocked':'e.g. competitor.com\ncomparison-site.com',
     'llms-blocked-count':'Accepted ({n}):',
     'llms-zapis-serwer':'Saved on the server. The brand details apply to the whole team.',
@@ -20572,7 +20572,7 @@ async function kbAudioTranscribeAndOpen(file) {
           <div id="au-source-wrap" class="modul-pole modul-pole-glowne">
             <div class="modul-pole-glowa">
               <label for="au-source" class="field-label" data-i18n="audio-source">Temat lub treść</label>
-              <button type=<button type="button" class="btn-link" onclick="audioLoadArticle()" title="Wczytaj bieżący artykuł" data-i18n-title="img-load-art-title" data-i18n="audio-from-article" data-ikona="file-text">kona" aria-hidden="true"><use href="#i-file-text"/></svg>Wczytaj artykuł</button>
+              <button type="button" class="btn-link" onclick="audioLoadArticle()" title="Wczytaj bieżący artykuł" data-i18n-title="img-load-art-title" data-i18n="audio-from-article" data-ikona="file-text"><svg class="ikona" aria-hidden="true"><use href="#i-file-text"/></svg>Wczytaj artykuł</button>
             </div>
             <textarea id="au-source" rows="5" data-i18n-ph="audio-source-ph" placeholder="np. Jak obniżyć rachunki za ogrzewanie"></textarea>
           </div>
