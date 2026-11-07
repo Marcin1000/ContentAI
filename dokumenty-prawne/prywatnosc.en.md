@@ -1,12 +1,14 @@
 ---
 tytul: Content AI privacy policy
-wersja: 2026-10-v2
-data: 2026-10-14
+wersja: 2026-11-v1
+data: 2026-11-07
 ---
 <!--
 English version of prywatnosc.pl.md (same sections, same version). Rendered at /dokumenty/prywatnosc?lang=en.
 Conditional blocks appear only when the service is enabled in the server configuration (NVIDIA_KEY,
 DATAFORSEO_LOGIN, ELEVEN_KEY). DRAFT FOR LEGAL REVIEW.
+Version 2026-11-v1 (7 Nov 2026): app names only, after the interface text cleanup (the "Remember in this browser"
+option, "Google results analysis (SERP)", "brand details"). Data, purposes, legal bases and retention periods unchanged.
 -->
 
 Short and to the point: what we collect, why, how long we keep it and who we share it with. This policy covers the content-ai.net site, the app at app.content-ai.net, payments and emails.
@@ -19,7 +21,7 @@ The data controller is WSTAW_TUTAJ_IMIE_I_NAZWISKO, address: WSTAW_TUTAJ_ADRES, 
 
 **The content-ai.net site.** The site loads no scripts, fonts or analytics from third-party servers and sets no cookies. It only remembers your light or dark theme choice, in your browser. The site is delivered by the Cloudflare network, which processes technical connection data such as IP addresses in doing so.
 
-**Account.** Your email address and whether it has been confirmed, a hash of your password (we never store the password itself; the hash is computed with scrypt and a random salt), the account creation date, the interface language, your plan and its status, plan usage counters, a record of your acceptance of the Terms and the privacy policy and of statements made at purchase (with date and document version), and your customer and subscription identifiers in the Stripe payment system. If you enter company details (name, description, domains, brand voice), we store them too.
+**Account.** Your email address and whether it has been confirmed, a hash of your password (we never store the password itself; the hash is computed with scrypt and a random salt), the account creation date, the interface language, your plan and its status, plan usage counters, a record of your acceptance of the Terms and the privacy policy and of statements made at purchase (with date and document version), and your customer and subscription identifiers in the Stripe payment system. If you enter brand details (name, description, domains, brand voice), we store them too.
 
 **Knowledge base.** Documents you add to the server knowledge base, their names and text fragments. We search them by keywords.
 {{?nvidia}}
@@ -38,7 +40,7 @@ For team accounts that we created before self-service registration was available
 
 **Correspondence and notices.** Messages you send us, complaints, notices of withdrawal, notices of illegal content.
 
-**Technical data.** The server technical log does not contain the IP addresses of regular requests or API keys, but it may contain, for example, SERP analysis keywords and error messages. In exceptional situations related to abuse prevention it may contain part of a network address. To protect sign-in and registration, the server counts attempts per IP address and blocks them temporarily once a limit is exceeded.
+**Technical data.** The server technical log does not contain the IP addresses of regular requests or API keys, but it may contain, for example, keywords from the Google results analysis (SERP) and error messages. In exceptional situations related to abuse prevention it may contain part of a network address. To protect sign-in and registration, the server counts attempts per IP address and blocks them temporarily once a limit is exceeded.
 
 **Access requests sent through the former form.** If you sent an access request through the form on the site before self-service registration was available, we keep: your first name, email address, optionally a company or team name, the chosen plan, an optional message, the page language, the fact that you agreed to be contacted, and the date, your IP address and the domain of the site the request came from.
 
@@ -113,7 +115,7 @@ The app at app.content-ai.net sets:
 |---|---|---|
 | cai_auth | sign-in session | until you sign out, at most 14 days |
 | cai_motyw | your light or dark theme, set when you change the theme | one year |
-| __Secure-cai_k_a, __Secure-cai_k_o, __Secure-cai_k_e | your encrypted Anthropic, OpenAI and ElevenLabs API keys, bound to your account | with "Remember on this device" 30 days, without it until the browser is closed |
+| __Secure-cai_k_a, __Secure-cai_k_o, __Secure-cai_k_e | your encrypted Anthropic, OpenAI and ElevenLabs API keys, bound to your account | with "Remember in this browser" 30 days, without it until the browser is closed |
 
 No script on the page and no other account can read the key cookies. A remembered key stays in the browser after a normal sign-out; it is removed by the "Remove key" button, signing out on all devices, changing or resetting your password and deleting your account.
 

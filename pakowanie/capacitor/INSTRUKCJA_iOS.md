@@ -81,9 +81,9 @@ W Xcode kliknij projekt na górze drzewa po lewej, zakładka "Signing & Capabili
    poprosi o zaufanie profilu: na telefonie wejdź w Ustawienia > Ogólne >
    Zarządzanie VPN i urządzeniami > Twój profil > Zaufaj.
 4. Po uruchomieniu otworzy się panel Klucze API. Wpisz:
-   - Anthropic (wymagany, z console.anthropic.com),
+   - Anthropic (artykuły, wymagany, z console.anthropic.com),
    - OpenAI (grafiki, audio, transkrypcja),
-   - ElevenLabs (głos premium, opcjonalny).
+   - ElevenLabs (lepszy lektor, opcjonalny).
 
 ## Krok 7. Dystrybucja (opcjonalnie, wymaga konta płatnego)
 W Xcode: Product > Archive, potem Distribute App:

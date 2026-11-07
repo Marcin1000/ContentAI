@@ -134,7 +134,7 @@
      "name": "Gdzie trafia mój klucz API?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Trzyma go tylko Twoja przeglądarka, w zaszyfrowanym ciasteczku przypisanym do Twojego konta. Inne konto go nie odczyta. Z opcją „Zapamiętaj na tym urządzeniu” klucz zostaje przez 30 dni, także po wylogowaniu, a bez niej do zamknięcia przeglądarki. Usuwa go przycisk „Usuń klucz”, wylogowanie na wszystkich urządzeniach, zmiana albo reset hasła i usunięcie konta. Przy każdym zapytaniu serwer Content AI przekazuje klucz dostawcy AI i nie zapisuje go ani na dysku, ani w dziennikach."
+      "text": "Trzyma go tylko Twoja przeglądarka, w zaszyfrowanym ciasteczku przypisanym do Twojego konta. Inne konto go nie odczyta. Z opcją „Zapamiętaj w tej przeglądarce” klucz zostaje przez 30 dni, także po wylogowaniu, a bez niej do zamknięcia przeglądarki. Usuwa go przycisk „Usuń klucz”, wylogowanie na wszystkich urządzeniach, zmiana albo reset hasła i usunięcie konta. Przy każdym zapytaniu serwer Content AI przekazuje klucz dostawcy AI i nie zapisuje go ani na dysku, ani w dziennikach."
      }
     },
     {
@@ -203,10 +203,10 @@
     },
     {
      "@type": "Question",
-     "name": "Skąd pochodzą dane SERP?",
+     "name": "Skąd pochodzą dane analizy wyników Google?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Analizę wyników Google robi model z wyszukiwaniem w sieci, na Twoim kluczu API. To szacunek wyników, a nie pomiar pozycji. Analiza SERP jest dostępna od pakietu Standard."
+      "text": "Analizę wyników Google robi AI z wyszukiwaniem w sieci, na Twoim kluczu API. To szacunek wyników, a nie pomiar pozycji. Analiza wyników Google jest dostępna od pakietu Standard."
      }
     },
     {
@@ -370,8 +370,8 @@
               <div class="wynik"><span class="w-et">GEO</span><span class="w-liczba" data-cel="80">80</span><span class="w-pasek"><i class="w80"></i></span></div>
             </div>
             <p class="odczyt">FOG-PL <b>10,4</b> · gęstość <b>1,6%</b></p>
-            <div class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><div><b>Liczba bez pokrycia w źródle</b><span>„2 dni”: żaden z 3 dokumentów tego nie podaje</span></div></div>
-            <div class="notka notka-uw"><svg class="znacznik ik"><use href="#i-triangle-alert"/></svg><div><b>Twierdzenie szersze niż źródło</b><span>źródło mówi tylko o pliku CSV</span></div></div>
+            <div class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><div><b>Liczba bez potwierdzenia w źródłach</b><span>„2 dni”: żaden z 3 dokumentów tego nie podaje</span></div></div>
+            <div class="notka notka-uw"><svg class="znacznik ik"><use href="#i-triangle-alert"/></svg><div><b>Artykuł mówi więcej niż źródło</b><span>źródło mówi tylko o pliku CSV</span></div></div>
           </div>
         </div>
         <ol class="ramka-kroki" aria-label="Kroki przykładu">
@@ -421,7 +421,7 @@
         <article class="problem wej">
           <div class="ilu ilu-3" aria-hidden="true">
             <span class="ilu-adres"><svg class="ik"><use href="#i-link"/></svg><s>example.com/raport-2024</s></span>
-            <span class="ilu-nota"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg>Adres nie odpowiada</span>
+            <span class="ilu-nota"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg>Niedziałający link</span>
           </div>
           <h3>Wymyślone liczby i linki</h3>
           <p>Model zapytany o coś, czego nie ma w źródłach, chętnie to dopowie. Tutaj liczby i adresy pochodzą ze źródeł, a kontrola faktów wskazuje zdania bez pokrycia.</p>
@@ -493,7 +493,7 @@
           <div class="krok-tekst">
             <span class="krok-nr">3</span>
             <h3>Tekst</h3>
-            <p>Typ treści, długość, ton, odbiorca i język. Do tego opcjonalnie analiza SERP przed pisaniem i wyszukiwanie w sieci ze źródłami pod artykułem.</p>
+            <p>Typ treści, długość, ton, odbiorca i język. Do tego opcjonalnie analiza wyników Google przed pisaniem i wyszukiwanie w sieci ze źródłami pod artykułem.</p>
             <p class="krok-cap">Typ, długość, ton, odbiorca, język, źródła z sieci</p>
           </div>
         </li>
@@ -511,7 +511,7 @@
                 <li class="ok"><svg class="ik"><use href="#i-circle-check"/></svg><span>Fraza w H1 i w pierwszym akapicie</span></li>
                 <li class="uw"><svg class="ik"><use href="#i-info"/></svg><span>Dodaj sekcję FAQ: 5-7 pytań</span></li>
               </ul>
-              <div class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><div><b>Liczba bez pokrycia w źródle</b><span>„2 dni”: żaden z 3 dokumentów tego nie podaje</span></div></div>
+              <div class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><div><b>Liczba bez potwierdzenia w źródłach</b><span>„2 dni”: żaden z 3 dokumentów tego nie podaje</span></div></div>
             </div>
           </div>
           <div class="krok-tekst">
@@ -626,8 +626,8 @@
         <article class="kartka kartka-duza fk-tekst">
           <p class="k-meta">System CRM dla małej firmy: od czego zacząć</p>
           <p class="fk-akapit">
-            <span class="tw-w"><mark class="tw" tabindex="0" data-stan="ok" aria-describedby="dz-0">System CRM zbiera w jednym miejscu kontakty i historię rozmów.</mark><span class="dymek" id="dz-0" role="tooltip"><b><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>Pokrycie w źródle</b>oferta-crm.pdf, s. 1: „kontakty, historia rozmów i etapy sprzedaży w jednym widoku”</span></span>
-            <span class="tw-w"><mark class="tw" tabindex="0" data-stan="ok" aria-describedby="dz-1">Pakiet Start obejmuje do 5 użytkowników.</mark><span class="dymek" id="dz-1" role="tooltip"><b><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>Pokrycie w źródle</b>Źródło: „Pakiet Start: do 5 użytkowników, import kontaktów z pliku CSV.”</span></span>
+            <span class="tw-w"><mark class="tw" tabindex="0" data-stan="ok" aria-describedby="dz-0">System CRM zbiera w jednym miejscu kontakty i historię rozmów.</mark><span class="dymek" id="dz-0" role="tooltip"><b><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>Potwierdzone w źródle</b>oferta-crm.pdf, s. 1: „kontakty, historia rozmów i etapy sprzedaży w jednym widoku”</span></span>
+            <span class="tw-w"><mark class="tw" tabindex="0" data-stan="ok" aria-describedby="dz-1">Pakiet Start obejmuje do 5 użytkowników.</mark><span class="dymek" id="dz-1" role="tooltip"><b><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>Potwierdzone w źródle</b>Źródło: „Pakiet Start: do 5 użytkowników, import kontaktów z pliku CSV.”</span></span>
             <mark class="tw" tabindex="0" data-stan="bl" data-nota="n-liczba" aria-describedby="n-liczba">Wdrożenie trwa zwykle 2 dni.</mark>
             <mark class="tw" tabindex="0" data-stan="uw" data-nota="n-zakres" aria-describedby="n-zakres">Dane można przenieść z dowolnego programu.</mark>
             <mark class="tw" tabindex="0" data-stan="bl" data-nota="n-link" aria-describedby="n-link">Pełny cennik: example.com/cennik-2024</mark>
@@ -637,17 +637,17 @@
         <aside class="fk-margines" aria-label="Wynik kontroli faktów">
           <p class="fk-licznik">Do sprawdzenia: 3. Kolejność od najpoważniejszych.</p>
           <div class="nota nota-bl" id="n-liczba">
-            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-octagon-alert"/></svg>Liczba bez pokrycia w źródle</b>
+            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-octagon-alert"/></svg>Liczba bez potwierdzenia w źródłach</b>
             <q>Wdrożenie trwa zwykle 2 dni.</q>
             <span>Źródło mówi tylko: „Wdrożenie obejmuje import kontaktów i szkolenie zespołu.”</span>
           </div>
           <div class="nota nota-bl" id="n-link">
-            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-octagon-alert"/></svg>Adres nie odpowiada</b>
+            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-octagon-alert"/></svg>Niedziałający link</b>
             <q>Pełny cennik: example.com/cennik-2024</q>
             <span>Serwer sprawdził adres na żywo: strona nie odpowiada.</span>
           </div>
           <div class="nota nota-uw" id="n-zakres">
-            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-triangle-alert"/></svg>Twierdzenie szersze niż źródło</b>
+            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-triangle-alert"/></svg>Artykuł mówi więcej niż źródło</b>
             <q>Dane można przenieść z dowolnego programu.</q>
             <span>Źródło podaje tylko: „import kontaktów z pliku CSV”.</span>
           </div>
@@ -655,9 +655,9 @@
         </aside>
       </div>
       <ul class="fk-dodatki wej">
-        <li><b>Adresy</b>spoza źródeł, z dopisaną ścieżką i martwe, sprawdzane na żywo przez serwer</li>
+        <li><b>Adresy</b>spoza źródeł, z dopisaną ścieżką i niedziałające, sprawdzane na żywo przez serwer</li>
         <li><b>Sprzeczności</b>dwie różne wartości tej samej rzeczy w jednym tekście</li>
-        <li><b>Konkurencja</b>polecenie firmy z listy wykluczonych domen</li>
+        <li><b>Konkurencja</b>polecanie firmy z listy wykluczonych domen</li>
         <li><b>Teksty linków</b>powtórzone albo puste, w rodzaju „kliknij tutaj”</li>
       </ul>
     </div>
@@ -673,10 +673,10 @@
         <article class="kafel kb7 wej">
           <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-file-search"/></svg></span>
           <h3>Kontrola faktów</h3>
-          <p>Zestawia tekst z zaznaczonymi źródłami i wypisuje, czego nie potwierdzają: liczby bez pokrycia, twierdzenia szersze niż źródło, sprzeczności i polecenia konkurencji. W linkach wyłapuje adresy spoza źródeł, martwe strony i kotwice, które nic nie mówią.</p>
+          <p>Zestawia artykuł z zaznaczonymi źródłami i wypisuje, czego nie potwierdzają: liczby bez potwierdzenia w źródłach, zdania mówiące więcej niż źródło, sprzeczności i polecanie konkurencji. W linkach wyłapuje adresy spoza źródeł, niedziałające linki i teksty linków, które nic nie mówią.</p>
           <div class="podglad podglad-fakty" aria-hidden="true">
             <span class="pf-linia"><span class="pf-zdanie">Wdrożenie trwa zwykle 2 dni.</span></span>
-            <span class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><span><b>Liczba bez pokrycia w źródle</b></span></span>
+            <span class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><span><b>Liczba bez potwierdzenia w źródłach</b></span></span>
           </div>
           <a class="link kafel-link" href="#fakty">Zobacz przykład kontroli<svg class="ik" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
         </article>
@@ -703,7 +703,7 @@
         </article>
         <article class="kafel kb4 wej">
           <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-chart-column"/></svg></span>
-          <h3>SERP i luki</h3>
+          <h3>Analiza wyników Google i luki</h3>
           <p>Wyniki Google na Twoją frazę i tematy, które tekst pomija. Brakujące dopisze na żądanie.</p>
           <span class="plan-tag">od pakietu Standard</span>
         </article>
@@ -852,7 +852,7 @@
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>50 artykułów miesięcznie</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>50 grafik, 20 transkrypcji i 20 fragmentów audio miesięcznie (fragment to do 2400 znaków czytanego tekstu albo jedna wypowiedź podcastu)</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>do 50 dokumentów w bazie wiedzy</li>
-            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>analiza SERP i luki</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>analiza wyników Google i luki</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>publikacja w WordPressie i Drupalu</li>
           </ul>
           <a class="btn btn-glowny" href="https://app.content-ai.net/rejestracja?pakiet=standard">Wybierz Standard</a>
@@ -893,7 +893,7 @@
             <tr><th scope="row">Oceny SEO, AIO, AEO i GEO, kontrola faktów</th><td data-et="Darmowy">tak</td><td data-et="Standard">tak</td><td data-et="Premium">tak</td></tr>
             <tr><th scope="row">Przeróbki i eksport: DOCX, PDF, TXT, JSON-LD</th><td data-et="Darmowy">tak</td><td data-et="Standard">tak</td><td data-et="Premium">tak</td></tr>
 
-            <tr><th scope="row">Analiza SERP i luki</th><td data-et="Darmowy">nie</td><td data-et="Standard">tak</td><td data-et="Premium">tak</td></tr>
+            <tr><th scope="row">Analiza wyników Google i luki</th><td data-et="Darmowy">nie</td><td data-et="Standard">tak</td><td data-et="Premium">tak</td></tr>
             <tr><th scope="row">Publikacja w WordPressie i Drupalu</th><td data-et="Darmowy">nie</td><td data-et="Standard">tak</td><td data-et="Premium">tak</td></tr>
             <tr><th scope="row">Klucz API Anthropic (tekst)</th><td data-et="Darmowy">wymagany</td><td data-et="Standard">wymagany</td><td data-et="Premium">wymagany</td></tr>
             <tr><th scope="row">Klucz API OpenAI (grafiki, lektor, transkrypcja)</th><td data-et="Darmowy">nie dotyczy</td><td data-et="Standard">opcjonalnie</td><td data-et="Premium">opcjonalnie</td></tr>
@@ -914,7 +914,7 @@
         <details><summary>Czym Content AI różni się od czatu z AI?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Czat odpowiada z pamięci modelu. Content AI pisze z Twojej bazy wiedzy, sięga do sieci tylko po brakujące informacje i podaje źródła, a potem ocenia tekst pod SEO, AIO, AEO i GEO i sprawdza fakty. Wszystko w jednym oknie, od tematu do publikacji.</p></details>
         <details><summary>Czego potrzebuję, żeby zacząć?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Konta w Content AI (e-mail i hasło) i klucza API Anthropic, na którym powstają teksty. Pierwszy artykuł napiszesz bez klucza, po potwierdzeniu adresu e-mail. Kolejne wymagają klucza w każdym pakiecie, także w Darmowym. Klucze OpenAI (grafiki, lektor, transkrypcja) i ElevenLabs (lepszy lektor) są opcjonalne. Pakiet Darmowy daje 3 artykuły na start, bez karty.</p></details>
         <details><summary>Jak zdobyć klucz API i ile kosztuje model?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>W konsoli Anthropic zakładasz konto, doładowujesz je i tworzysz klucz. Zajmuje to około 10 minut. Za model płacisz dostawcy na swoim koncie, orientacyjnie <span class="nw">0,20-0,40 USD</span> za artykuł o długości około 800 słów z oceną i kontrolą faktów. Instrukcja krok po kroku i wyliczenie są na stronie <a class="link" href="/klucz-api/">„Jak zdobyć klucz API”</a>.</p></details>
-        <details><summary>Gdzie trafia mój klucz API?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Trzyma go tylko Twoja przeglądarka, w zaszyfrowanym ciasteczku przypisanym do Twojego konta. Inne konto go nie odczyta. Z opcją „Zapamiętaj na tym urządzeniu” klucz zostaje przez 30 dni, także po wylogowaniu, a bez niej do zamknięcia przeglądarki. Usuwa go przycisk „Usuń klucz”, wylogowanie na wszystkich urządzeniach, zmiana albo reset hasła i usunięcie konta. Przy każdym zapytaniu serwer Content AI przekazuje klucz dostawcy AI i nie zapisuje go ani na dysku, ani w dziennikach.</p></details>
+        <details><summary>Gdzie trafia mój klucz API?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Trzyma go tylko Twoja przeglądarka, w zaszyfrowanym ciasteczku przypisanym do Twojego konta. Inne konto go nie odczyta. Z opcją „Zapamiętaj w tej przeglądarce” klucz zostaje przez 30 dni, także po wylogowaniu, a bez niej do zamknięcia przeglądarki. Usuwa go przycisk „Usuń klucz”, wylogowanie na wszystkich urządzeniach, zmiana albo reset hasła i usunięcie konta. Przy każdym zapytaniu serwer Content AI przekazuje klucz dostawcy AI i nie zapisuje go ani na dysku, ani w dziennikach.</p></details>
         <details><summary>Skąd model bierze fakty?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Z bazy wiedzy. Przy włączonym wyszukiwaniu w sieci brakujące informacje pochodzą ze stron wymienionych pod artykułem. Informacje o Twojej firmie zawsze tylko z bazy.</p></details>
         <details><summary>Czy tekst będzie wolny od błędów?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Żadne narzędzie AI tego nie gwarantuje. Content AI ogranicza ryzyko: liczby i linki pochodzą ze źródeł, a kontrola faktów wypisuje zdania, których źródła nie potwierdzają, z cytatem fragmentu. Ostatnie słowo zawsze należy do człowieka.</p></details>
         <details><summary>Jak płacę za pakiet?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Pakiety płatne opłacasz przez Stripe, co miesiąc z góry, w złotych albo w euro: walutę wybierasz w oknie zakupu. Dane karty wpisujesz na stronie Stripe, a Content AI ich nie widzi. Płatne pakiety są dostępne dla klientów z adresem rozliczeniowym w Unii Europejskiej. Po każdej płatności Stripe wysyła potwierdzenie na Twój adres e-mail.</p></details>
@@ -923,7 +923,7 @@
         <details><summary>Jak Content AI podchodzi do AI Act?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Content AI wspiera wymogi przejrzystości AI Act (art. 50): pobierane i publikowane pliki niosą informację, że treść powstała z pomocą AI, a widoczną etykietę dla czytelników możesz dodać przy eksporcie i publikacji. Za publikację odpowiada publikujący: realistyczne grafiki i nagrania oraz teksty informujące o sprawach publicznych bez przeglądu redakcyjnego trzeba oznaczyć. Szczegóły są na stronie <a class="link" href="/ai-act/">„AI Act i przejrzystość”</a>.</p></details>
         <details><summary>Gdzie trafiają moje dokumenty?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Dokumenty bazy wiedzy leżą na serwerze Content AI i widzi je tylko Twoje konto. Przy pisaniu dostawca modelu dostaje z nich tylko fragmenty pasujące do tematu. Gotowe teksty i ich historia zostają w Twojej przeglądarce.</p></details>
         <details><summary>Jakich modeli AI używa Content AI?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Teksty, oceny i kontrolę faktów przygotowują modele firmy Anthropic. Grafiki, lektor i transkrypcja korzystają z modeli OpenAI, a lepszy lektor z ElevenLabs. Każdy z tych dostawców rozlicza zużycie na Twoim kluczu API.</p></details>
-        <details><summary>Skąd pochodzą dane SERP?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Analizę wyników Google robi model z wyszukiwaniem w sieci, na Twoim kluczu API. To szacunek wyników, a nie pomiar pozycji. Analiza SERP jest dostępna od pakietu Standard.</p></details>
+        <details><summary>Skąd pochodzą dane analizy wyników Google?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Analizę wyników Google robi AI z wyszukiwaniem w sieci, na Twoim kluczu API. To szacunek wyników, a nie pomiar pozycji. Analiza wyników Google jest dostępna od pakietu Standard.</p></details>
         <details><summary>W jakich językach działa Content AI?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Interfejs jest po polsku i po angielsku. Treści powstają po polsku, angielsku, niemiecku i czesku.</p></details>
       </div>
     </div>

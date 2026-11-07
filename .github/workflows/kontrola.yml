@@ -69,13 +69,15 @@ jobs:
           done
           npx eslint .eslint-tmp/keys.js .eslint-tmp/proxy.js .eslint-tmp/owner.js
 
-      # Dwie kontrole, które łapią klasy błędów milczące aż do spotkania
+      # Kontrole, które łapią klasy błędów milczące aż do spotkania
       # z użytkownikiem: brak klucza tłumaczenia (t() po cichu schodzi na polski,
-      # więc angielski interfejs pokazuje polskie zdanie) i przycisk wołający
-      # nieistniejącą funkcję (w interfejsie po prostu nic się nie dzieje).
-      - name: Aplikacja - tłumaczenia i uchwyty zdarzeń
+      # więc angielski interfejs pokazuje polskie zdanie), klucz słownika, którego
+      # kod nie używa (poprawka tekstu trafia w próżnię, porządki 2026-11-07)
+      # i przycisk wołający nieistniejącą funkcję (w interfejsie nic się nie dzieje).
+      - name: Aplikacja - tłumaczenia, nieużywane klucze i uchwyty zdarzeń
         run: |
           python3 narzedzia/audyt_i18n.py
+          python3 narzedzia/audyt_klucze.py
           python3 narzedzia/audyt_uchwyty.py
 
       # Zapadka kolorow: twardy hex poza tokenami (cai-tokeny) nie idzie za motywem.

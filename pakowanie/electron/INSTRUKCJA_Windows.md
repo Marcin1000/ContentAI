@@ -79,9 +79,9 @@ Po zakończeniu pliki gotowe są w `electron\dist\`:
    ostrzeżenie. Kliknij "Więcej informacji" > "Uruchom mimo to".
    Aby usunąć to ostrzeżenie na stałe, trzeba kupić certyfikat do podpisu kodu (opcjonalne).
 3. Po uruchomieniu otworzy się panel Klucze API. Wpisz swoje klucze:
-   - Anthropic (wymagany, z console.anthropic.com),
+   - Anthropic (artykuły, wymagany, z console.anthropic.com),
    - OpenAI (grafiki, audio, transkrypcja),
-   - ElevenLabs (głos premium, opcjonalny).
+   - ElevenLabs (lepszy lektor, opcjonalny).
    Klucze możesz później zmienić: ikona ustawień > Klucze API.
 
 

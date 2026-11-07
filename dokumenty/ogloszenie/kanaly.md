@@ -128,17 +128,17 @@ z 14.10 pierwszy artykuł powstaje bez klucza, więc film najpierw pokazuje wyni
 |---|---|---|---|
 | 0:00-0:15 | plansza | „Konto i pierwszy artykuł ze źródłami w 5 minut, bez klucza API. Potem 10 minut na klucz przed kolejnymi.” | oczekiwanie „za darmo, więc bez płacenia” |
 | 0:15-0:45 | content-ai.net, „Załóż konto” | e-mail, hasło (min. 10 znaków), dwie zgody. Potwierdzenie adresu linkiem z e-maila. „Bez potwierdzenia pierwszy artykuł bez klucza nie ruszy.” | mail w spamie |
-| 0:45-1:00 | kreator, krok 1 z 4 | „Pierwszy artykuł napiszesz bez klucza. Kliknij »Dalej bez klucza«.” | - |
+| 0:45-1:00 | Konfiguracja konta, krok 1 z 4 | „Pierwszy artykuł bez klucza. Kliknij »Dalej bez klucza«.” | - |
 | 1:00-1:15 | krok 2: firma | „Nazwa, strona i jedno zdanie o firmie. Trafią do każdego artykułu.” | - |
 | 1:15-1:40 | krok 3: dokumenty firmy | „Wgraj 1-3 dokumenty: ofertę, cennik, FAQ. W pakiecie Darmowym zmieszczą się trzy.” | brak dokumentów, tekst ze stron w sieci |
-| 1:40-2:15 | krok 4: temat, „Napisz artykuł” | „Szukanie w sieci podaje źródła pod tekstem.” Czas generowania prawdziwy (albo z licznikiem). | czekanie bez informacji |
-| 2:15-2:40 | Oceń, Fakty, „Popraw zdania bez źródła” | „Content AI pokazuje zdania bez pokrycia w źródłach i poprawia je jednym kliknięciem, bez nowych faktów.” | - |
+| 1:40-2:15 | krok 4: temat, „Wygeneruj artykuł” | „Szukanie w sieci podaje źródła pod tekstem.” Czas generowania prawdziwy (albo z licznikiem). | czekanie bez informacji |
+| 2:15-2:40 | Oceń, Fakty, „Popraw wskazane zdania” | „Content AI pokazuje zdania bez pokrycia w źródłach i poprawia je jednym kliknięciem, bez nowych faktów.” | - |
 | 2:40-2:55 | Eksport DOCX | „Plik z informacją o AI i listą źródeł.” | - |
 | 2:55-3:10 | karta „Darmowy artykuł jest gotowy”, „Podłącz klucz” | „Kolejne artykuły powstają na Twoim kluczu API Anthropic. Zobacz, jak go zdobyć.” | - |
 | 3:10-3:40 | platform.claude.com, rejestracja | „To osobne konto. Subskrypcja czatu Claude nie daje klucza API.” | mylenie czatu z API |
 | 3:40-4:15 | Settings, Billing, Buy credits | „API działa na przedpłacie. Na start wystarczy kilka dolarów. Ustaw też limit wydatków.” | karta, kwota minimalna, obawa przed kosztem |
 | 4:15-4:40 | API keys, Create key | „Nazwij go »Content AI«. Klucz zobaczysz tylko raz: skopiuj go od razu.” | zgubiony klucz |
-| 4:40-5:00 | kreator: wklej, „Sprawdź i zapisz”, Historia | „»Klucz działa i jest zapisany«. Koszt każdego tekstu widzisz w Historii. Zostały Ci 2 artykuły w pakiecie Darmowym.” | klucz bez doładowania |
+| 4:40-5:00 | Konfiguracja konta: wklej, „Sprawdź i zapisz”, Historia | „»Klucz działa i jest zapisany w tej przeglądarce«. Koszt każdego tekstu widzisz w Historii. Zostały Ci 2 artykuły w pakiecie Darmowym.” | klucz bez doładowania |
 
 Tytuł tutorialu (67 znaków):
 

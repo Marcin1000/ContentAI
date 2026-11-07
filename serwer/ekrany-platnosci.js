@@ -37,7 +37,7 @@ const T = {
     podsumowanie: 'Pakiet {pakiet}: {cena} miesięcznie. Płatność z góry, subskrypcja odnawia się automatycznie co miesiąc, dopóki z niej nie zrezygnujesz. Zrezygnować możesz w każdej chwili w ustawieniach konta. Pakiet działa do końca opłaconego miesiąca. Cena jest ceną końcową. Do generowania potrzebny jest Twój klucz API. Opłaty u dostawców AI nie są wliczone w cenę.',
     zgodaRegulaminPrzed: 'Akceptuję ',
     regulamin: 'Regulamin',
-    zgodaRegulaminSrodek: ' i zapoznałem się z ',
+    zgodaRegulaminSrodek: ' i potwierdzam zapoznanie się z ',
     pouczenie: 'pouczeniem o prawie odstąpienia',
     zgodaRegulaminPo: '.',
     zgodaWykonanie: 'Żądam rozpoczęcia świadczenia usługi przed upływem 14 dni na odstąpienie od umowy. Wiem, że jeśli odstąpię od umowy, zapłacę za okres, w którym pakiet był dostępny.',

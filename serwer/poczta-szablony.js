@@ -176,14 +176,14 @@ const TRESCI = {
         podglad: (d) => (d.bezKlucza ? 'Dokumenty i temat. Klucz API dopiero przed kolejnym artykułem.' : 'Klucz API, dokumenty, temat.'),
         akapity: (d, k) => {
           const klucz = (d.bezKlucza
-            ? `Kolejne artykuły powstają na Twoim kluczu API Anthropic, a koszt modelu${d.kosztArtykulu ? `, orientacyjnie ${d.kosztArtykulu} za artykuł,` : ''} rozlicza Twoje konto u Anthropic.`
-            : `1. Podłącz klucz API Anthropic. Na nim powstają teksty, a koszt modelu${d.kosztArtykulu ? `, orientacyjnie ${d.kosztArtykulu} za artykuł,` : ''} rozlicza Twoje konto u Anthropic.`)
+            ? `Kolejne artykuły powstają na Twoim kluczu API Anthropic, a koszt AI${d.kosztArtykulu ? `, orientacyjnie ${d.kosztArtykulu} za artykuł,` : ''} rozlicza Twoje konto u Anthropic.`
+            : `1. Podłącz klucz API Anthropic. Na nim powstają artykuły, a koszt AI${d.kosztArtykulu ? `, orientacyjnie ${d.kosztArtykulu} za artykuł,` : ''} rozlicza Twoje konto u Anthropic.`)
             + ' To osobne konto w konsoli Anthropic: subskrypcja czatu Claude nie daje klucza API. Konto, doładowanie i klucz to około 10 minut, najwygodniej przy komputerze.'
             + (bezpiecznyOdnosnik(d.odnosnikKlucza) ? ` Instrukcja krok po kroku: ${d.odnosnikKlucza}` : '');
           const n = d.bezKlucza ? 1 : 2;
           return [
             `Twoje konto w Content AI jest aktywne.${d.pakiet ? ` Masz pakiet ${d.pakiet}${d.artykulow ? `: ${d.artykulow} ${odmiana(Number(d.artykulow), ['artykuł', 'artykuły', 'artykułów'])} na start` : ''}.` : ''}`,
-            d.bezKlucza ? 'Pierwszy artykuł napiszesz bez klucza API: koszt modelu tego jednego tekstu pokrywamy my. Do pierwszego artykułu są dwa kroki:' : 'Do pierwszego artykułu są trzy kroki:',
+            d.bezKlucza ? 'Pierwszy artykuł napiszesz bez klucza API: koszt AI tego jednego artykułu pokrywamy my. Do pierwszego artykułu są dwa kroki:' : 'Do pierwszego artykułu są trzy kroki:',
             ...(d.bezKlucza ? [] : [klucz]),
             `${n}. Wgraj do bazy wiedzy 1-3 dokumenty firmy: ofertę, cennik, opis usług. Wtedy artykuł powstanie z nich, a kontrola faktów porówna go z nimi. Bez dokumentów fakty przyjdą ze stron w sieci.`,
             `${n + 1}. Wpisz temat i kliknij „Wygeneruj treść”. Potem sprawdź oceny i kontrolę faktów.`,
@@ -334,14 +334,14 @@ const TRESCI = {
         podglad: (d) => (d.bezKlucza ? 'Documents and a topic. The API key only before your next article.' : 'API key, documents, topic.'),
         akapity: (d, k) => {
           const klucz = (d.bezKlucza
-            ? `Your next articles run on your own Anthropic API key, and model usage${d.kosztArtykulu ? `, roughly ${d.kosztArtykulu} per article,` : ''} is billed to your Anthropic account.`
-            : `1. Connect your Anthropic API key. It powers your drafts, and model usage${d.kosztArtykulu ? `, roughly ${d.kosztArtykulu} per article,` : ''} is billed to your Anthropic account.`)
+            ? `Your next articles run on your own Anthropic API key, and AI usage${d.kosztArtykulu ? `, roughly ${d.kosztArtykulu} per article,` : ''} is billed to your Anthropic account.`
+            : `1. Connect your Anthropic API key. It powers your articles, and AI usage${d.kosztArtykulu ? `, roughly ${d.kosztArtykulu} per article,` : ''} is billed to your Anthropic account.`)
             + ' It is a separate account in the Anthropic console: a Claude chat subscription does not include an API key. The account, credit and key take about 10 minutes, easiest on a computer.'
             + (bezpiecznyOdnosnik(d.odnosnikKlucza) ? ` Step-by-step guide: ${d.odnosnikKlucza}` : '');
           const n = d.bezKlucza ? 1 : 2;
           return [
             `your Content AI account is active.${d.pakiet ? ` You are on the ${d.pakiet} plan${d.artykulow ? `: ${d.artykulow} ${Number(d.artykulow) === 1 ? 'article' : 'articles'} to start` : ''}.` : ''}`,
-            d.bezKlucza ? 'You can write your first article without an API key: we cover the model cost of that one draft. Your first article takes two steps:' : 'Your first article takes three steps:',
+            d.bezKlucza ? 'You can write your first article without an API key: we cover the AI cost of that one article. Your first article takes two steps:' : 'Your first article takes three steps:',
             ...(d.bezKlucza ? [] : [klucz]),
             `${n}. Upload 1-3 company documents to the knowledge base: your offer, pricing, service descriptions. The article is then written from them, and the fact check compares it with them. Without documents, the facts come from web pages.`,
             `${n + 1}. Enter a topic and click “Generate content”. Then check the scores and the fact check.`,

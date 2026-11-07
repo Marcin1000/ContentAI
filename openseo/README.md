@@ -84,7 +84,7 @@ człowiek bada i taguje frazy
 **W aplikacji:** w formularzu artykułu, obok pola „Słowa kluczowe", pojawia się przycisk 📈.
 Otwiera listę fraz zapisanych w projekcie OpenSEO - z wolumenem, trudnością i tagami.
 Zaznaczasz, klikasz „Dodaj zaznaczone" i lądują w polu fraz. W tym samym oknie jest ruch
-powrotny: „Oddaj frazy tego artykułu do OpenSEO" zapisuje je z tagiem `content-ai`.
+powrotny: „Zapisz w OpenSEO” zapisuje je z tagiem `content-ai`.
 
 Przycisk pokazuje się tylko wtedy, gdy OpenSEO faktycznie odpowiada.
 

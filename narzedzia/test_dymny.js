@@ -2548,7 +2548,7 @@ async function wariantUwagiTestuPremiery(b) {
   await krok('R9-T okno zakupu', s.waitForSelector('#zakup-zgoda-regulamin', { timeout: 5000 }));
   const z1 = await zgoda(s, 2);
   wynik('komputer: R9-T zgoda przy zakupie jednym zdaniem (najwyzej 2 linie) z linkami do regulaminu i pouczenia',
-    !z1.brak && z1.linie <= z1.maks && z1.linki === 2 && /^Akceptuję Regulamin i zapoznałem się z pouczeniem o prawie odstąpienia\.$/.test(z1.tekst), JSON.stringify(z1));
+    !z1.brak && z1.linie <= z1.maks && z1.linki === 2 && /^Akceptuję Regulamin i potwierdzam zapoznanie się z pouczeniem o prawie odstąpienia\.$/.test(z1.tekst), JSON.stringify(z1));
   await zamknijOkna();
   await s.evaluate(() => otworzKreatorKlucza('anthropic'));
   await krok('R9-T kreator klucza', s.waitForSelector('#start-pole-anthropic', { state: 'visible', timeout: 5000 }));

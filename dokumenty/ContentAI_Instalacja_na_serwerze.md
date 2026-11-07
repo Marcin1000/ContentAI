@@ -503,7 +503,7 @@ Do wyboru: `darmowy`, `standard`, `premium`. Konto bez nadanego pakietu dostaje 
 | Grafiki | - | 50/mies. | bez limitu |
 | Audio, transkrypcja | - | 20/mies. | bez limitu |
 | Dokumenty w bazie wiedzy | 3 | 50 | bez limitu |
-| Analiza SERP | - | tak | tak |
+| Analiza wyników Google (SERP) | - | tak | tak |
 | Dane z OpenSEO | - | - | tak |
 
 **Ty jako admin zawsze działasz jak premium**, niezależnie od wpisu - żebyś nie mógł
@@ -629,7 +629,7 @@ Dokładasz je wtedy, kiedy ich potrzebujesz.
 
 ### Realne dane z Google zamiast szacowanych
 
-Domyślnie analiza SERP opiera się na tym, co model wyszuka i oszacuje. Konto na
+Domyślnie analiza wyników Google (SERP) opiera się na tym, co model wyszuka i oszacuje. Konto na
 dataforseo.com daje dane mierzone. Dopisz do `/etc/contentai/srodowisko`:
 
 ```ini

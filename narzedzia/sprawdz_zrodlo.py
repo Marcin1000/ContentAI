@@ -2273,8 +2273,8 @@ KONTROLE += [
      "escapeHtml(_t('rep-metodyka').replace('{n}', rep.iterations))", "(en ? 'Latest snapshot' : 'Ostatni snapshot')", None),
     ("UI-C/raport-tak-nie", "okno Raport widocznosci: obecnosc 'Tak' / 'Nie' z kluczy odp-* (w EN bylo 'Tak')",
      "escapeHtml(r.present ? tak : nie)", "const yes = en ? 'Tak' : 'Tak'", None),
-    ("UI-C/raport-powody", "okno Raport widocznosci: powody priorytetow z kluczy rep-powod-* (plik TXT bez zmian)",
-     "p.rodzaj === 'niestabilny' ? _t('rep-powod-niestabilny').replace('{k}', p.k).replace('{n}', p.n)", None, None),
+    ("UI-C/raport-powody", "okno Raport widocznosci: powody priorytetow z kluczy rep-powod-* (runda na czysto: wspolna funkcja dla okna i plikow)",
+     "p.rodzaj === 'niestabilny' ? tekstZ('rep-powod-niestabilny', { k: p.k, n: p.n })", None, None),
     ("UI-C/dane-marki", "Dane marki: placeholdery z kluczy ph-llms-* i pomoc pod obszarami dzialalnosci",
      "data-i18n-ph=\"ph-llms-lines\"></textarea>", "const PODP = currentLang === 'en'", None),
     ("UI-C/grafika-ponawiam", "grafika: ponowienie z klucza img-ponawiam (kod HTTP i timeout w konsoli)",
@@ -2354,6 +2354,23 @@ KONTROLE += [
 # Porzadki tekstow interfejsu (2026-11-07), koordynator: nazwy po zmianie i informacje,
 # ktore przy upraszczaniu zniknely, a kontrola lidera jezykowego je przywrocila.
 KONTROLE += [
+    # Runda „na czysto” (2026-11-07)
+    ("UI-Z/raport-bez-zargonu", "raport widocznosci (okno, TXT, DOCX, PDF): zdania z kluczy rep-*, bez zargonu i 'Snapshot'",
+     "function powodPriorytetu(p) {", "re:Benchmarkuj narrację|treść AI-ready|i schema dla|definicje encji|Trend vs poprzedni|Per zapytanie|'Snapshot: '", None),
+    ("UI-Z/raport-wnioski", "raport widocznosci: wnioski i zalecenia z kluczy (jeden tekst w oknie i w plikach)",
+     "findings.push(tekstZ(score < pct ? 'rep-u-wskaznik-nizej' : 'rep-u-wskaznik', { wynik: score, pct: pct }));", None, None),
+    ("UI-Z/raport-pliki", "raport widocznosci: tytul pliku z klucza, bez ' - ' jako myslnika",
+     "L.push(tekstZ('rep-plik-tytul', { marka: rep.last.brand || nazwaMarki() }).toUpperCase());", "'RAPORT WIDOCZNOŚCI AI - '", None),
+    ("UI-Z/llms-obszary", "llms.txt: naglowek 'Obszary dzialalnosci' jak pole w Danych marki (bez 'Linie biznesowe (rozroznienie dla modeli AI)')",
+     "linie: 'Obszary działalności',", "Linie biznesowe (rozróżnienie dla modeli AI)", None),
+    ("UI-Z/llms-obszary-en", "llms.txt EN: naglowek 'Business areas'",
+     "linie: 'Business areas',", "Business lines (disambiguation for AI models)", None),
+    ("UI-Z/transkrypcja-rozmiar", "plik tuz ponad limitem transkrypcji: rozmiar w gore do 0,1 MB i 'mniej niz 25 MB' (nie '25 MB' obok 'najwyzej 25 MB')",
+     "function rozmiarPlikuMb(bajty) { return formatujLiczbe(Math.ceil(bajty / 1048576 * 10) / 10, 1); }", "przyjmuje najwyżej 25 MB", None),
+    ("UI-Z/marka-niezapisane", "Dane marki: zamkniecie okna z niezapisanymi zmianami pyta, czy zamknac bez zapisu",
+     "if (okno.classList.contains('open') && stanPolMarki && odczytPolMarki() !== stanPolMarki && !window.confirm(_t('llms-niezapisane'))) return;", None, None),
+    ("UI-Z/zgoda-zakup", "zgoda przy zakupie bez formy rodzajowej ('potwierdzam zapoznanie sie', jak na ekranie platnosci serwera)",
+     "'zakup-zgoda-1b':' i potwierdzam zapoznanie się z ',", "zapoznałem się z", ("proxy",)),
     ("UI/serp-nazwa", "SERP w interfejsie to analiza wynikow Google (przelacznik i funkcja pakietu)",
      "'toggle-serp':'Analiza wyników Google',", "re:'(toggle-serp|pakiet-fn-serp)':'Analiza SERP", None),
     ("UI/serp-nazwa-en", "SERP w interfejsie EN to Google results analysis",
@@ -2382,6 +2399,17 @@ KONTROLE += [
      "Baza wiedzy, Historia i Widoczność AI są w górnym pasku (na telefonie w dolnym i w Koncie).", None, ("proxy",)),
 ]
 
+# Porzadki: nieuzywane klucze slownika (2026-11-07). 69 kluczy bez uzycia w kodzie usuniete z PL i EN;
+# narzedzia/audyt_klucze.py pilnuje calego slownika, a te sygnatury kilku reprezentatywnych kluczy.
+KONTROLE += [
+    ("UI-K/stary-przycisk", "slownik bez starego klucza przycisku samokorekty (btn-premium-active, kod uzywa btn-premium)",
+     None, "'btn-premium-active':", None),
+    ("UI-K/stary-pusty-stan", "slownik bez starych tekstow pustego wyniku (out-placeholder*, zastapione pustym stanem)",
+     None, "re:'out-placeholder(-sub|-sub-full)?':", None),
+    ("UI-K/klucz-jak-id", "slownik bez kluczy, ktore byly tylko identyfikatorami elementow (gap-improve-btn, tab-generator)",
+     None, "re:'(gap-improve-btn|tab-generator|serp-phrases)':", None),
+]
+
 KONTROLE_BIBLIOTEK = [
     ("R9-B/docx-h2", "DOCX: Heading2 20 pt nad i 12 pt pod (wczesniej 18 i 6 pt)", "docx-natywny-4.js",
      '<w:spacing w:before="400" w:after="240" w:line="264" w:lineRule="auto"/><w:outlineLvl w:val="1"/>', None),
@@ -2399,6 +2427,24 @@ KONTROLE_BIBLIOTEK = [
 
 # Pliki serwera i narzedzi (sciezka od katalogu repozytorium): (kod, opis, plik, jest, niema).
 KONTROLE_PLIKOW = [
+    ("UI-Z/email-koszt-ai", "e-mail powitalny: koszt AI tego jednego artykulu (jak w aplikacji, nie 'koszt modelu tego jednego tekstu')",
+     "serwer/poczta-szablony.js", "koszt AI tego jednego artykułu pokrywamy my.", "koszt modelu tego jednego tekstu"),
+    ("UI-Z/ekrany-dane-marki", "usuwanie konta: 'dane marki' i kopia historii w Historii (jak w aplikacji)",
+     "serwer/ekrany-kont.js", "Usuniemy konto, bazę wiedzy i dane marki.", "re:dane firmy|wyeksportuj"),
+    ("UI-Z/konta-kopia-historii", "eksport danych konta: kopia historii w aplikacji, w Historii (nie 'wyeksportujesz')",
+     "serwer/konta.js", "Kopię historii pobierzesz w aplikacji, w Historii.", "Historię wyeksportujesz w aplikacji."),
+    ("UI-Z/polityka-nazwy", "polityka prywatnosci: nazwy z aplikacji (Zapamietaj w tej przegladarce, analiza wynikow Google, dane marki)",
+     "dokumenty-prawne/prywatnosc.pl.md", "z opcją „Zapamiętaj w tej przeglądarce” 30 dni", "re:Zapamiętaj na tym urządzeniu|frazy z analizy SERP|wpiszesz dane firmy"),
+    ("UI-Z/polityka-nazwy-en", "privacy policy EN: app names (Remember in this browser, Google results analysis, brand details)",
+     "dokumenty-prawne/prywatnosc.en.md", "with \"Remember in this browser\" 30 days", "re:Remember on this device|SERP analysis keywords|enter company details"),
+    ("UI-Z/polityka-wersja", "polityka prywatnosci: nowa wersja po zmianie tresci (CAI_POLITYKA_WERSJA na serwerze ta sama)",
+     "dokumenty-prawne/prywatnosc.pl.md", "wersja: 2026-11-v1", "wersja: 2026-10-v2"),
+    ("UI-Z/strona-nazwy", "strona produktowa: nazwy funkcji jak w aplikacji (bez 'Analiza SERP', 'Zapamietaj na tym urzadzeniu')",
+     "showcase/zrodlo/teksty.json", None, "re:Analiza SERP|SERP analysis|Zapamiętaj na tym urządzeniu|Remember on this device|Sprawdź klucz|Twierdzenie szersze niż źródło"),
+    ("UI-Z/ogloszenia-nazwy", "szkice ogloszen: nazwy przyciskow jak w aplikacji",
+     "dokumenty/ogloszenie/kanaly.md", "„Popraw wskazane zdania”", "re:Popraw zdania bez źródła|„Napisz artykuł”"),
+    ("UI-Z/zgoda-serwer", "ekran platnosci serwera: zgoda bez formy rodzajowej, ten sam tekst co w aplikacji",
+     "serwer/ekrany-platnosci.js", "zgodaRegulaminSrodek: ' i potwierdzam zapoznanie się z ',", "zapoznałem się z"),
     ("UI/serwer-serp", "komunikat serwera o pakiecie nazywa funkcje jak interfejs (analiza wynikow Google)",
      "serwer/server.js", "error: { komunikat: 'Analiza wyników Google jest dostępna od pakietu Standard.' },", "Analiza SERP jest dostępna od pakietu Standard."),
     # Runda B: test w przegladarce i atrapa redaktora "Dopisz do tekstu".
@@ -2570,6 +2616,8 @@ KONTROLE_PLIKOW = [
      "serwer/start.js", "const WZOR_KLUCZA = WZOR_KLUCZA_ANTHROPIC;", "const WZOR_KLUCZA = /^sk-ant-api"),
     ("SB/cli-nie-dziala", "cli.sh start: klucz odrzucony przez Anthropic to naglowek NIE DZIALA, nie 'wlaczony'",
      "serwer/uzytkownicy.js", "console.log('Pierwszy artykuł bez klucza: NIE DZIAŁA (Anthropic odrzuca klucz startu).');", None),
+    ("UI-K/audyt-ci", "CI uruchamia audyt nieuzywanych kluczy slownika (porzadki 2026-11-07)",
+     ".github/workflows/kontrola.yml", "python3 narzedzia/audyt_klucze.py", None),
 ]
 
 
@@ -2583,9 +2631,12 @@ def sprawdz_tresc_plikow(cicho=False):
             powod = "brak pliku " + plik
         elif jest is not None or niema is not None:
             tresc = sciezka.read_text(encoding="utf-8")
-            if jest is not None and jest not in tresc:
+            # Wzorzec "re:..." to wyrazenie regularne, jak w KONTROLE.
+            def jest_w(wzor):
+                return re.search(wzor[3:], tresc) is not None if wzor.startswith("re:") else wzor in tresc
+            if jest is not None and not jest_w(jest):
                 powod = "brak sladu poprawki"
-            elif niema is not None and niema in tresc:
+            elif niema is not None and jest_w(niema):
                 powod = "wrocil stan sprzed poprawki"
         if powod:
             bledy.append((kod, opis, powod))

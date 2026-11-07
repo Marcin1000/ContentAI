@@ -3218,7 +3218,7 @@ async function scenariuszTekstyA(b) {
     const stan = () => {
       const bl = document.getElementById('au-plik-blad'), r = document.getElementById('au-plik-rada');
       return { blad: widac(bl) ? bl.textContent : '', rada: widac(r) ? r.textContent : '', nazwa: (document.getElementById('au-fname') || {}).textContent || '',
-        oczekiwane: [_t('err-transkrypcja-za-duzy').replace('{mb}', formatujLiczbe(f.size / 1048576, 1)), _t('err-transkrypcja-za-duzy-jak')] };
+        oczekiwane: [_t('err-transkrypcja-za-duzy').replace('{mb}', rozmiarPlikuMb(f.size)), _t('err-transkrypcja-za-duzy-jak')] };
     };
     const pl = stan();
     ustawJezyk('en');
@@ -3509,6 +3509,106 @@ async function scenariuszPoEtapie7(b) {
   }
 }
 
+// Porzadki „na czysto” (2026-11-07): naglowek llms.txt jak pole w Danych marki, rozmiar pliku tuz ponad limitem
+// transkrypcji, pytanie o niezapisane zmiany w Danych marki, zgoda przy zakupie bez formy rodzajowej (aplikacja i serwer).
+async function scenariuszCzysto(b) {
+  // Zgoda przy zakupie: ten sam tekst w aplikacji (wariant z serwerem) i na ekranie platnosci serwera, bez „zapoznałem”.
+  const proxyHtml = fs.readFileSync(path.join(REPO, 'app', 'web-proxy.html'), 'utf8');
+  const ekranPlatnosci = fs.readFileSync(path.join(REPO, 'serwer', 'ekrany-platnosci.js'), 'utf8');
+  const zgodaApp = (proxyHtml.match(/'zakup-zgoda-1b':'([^']*)'/) || [])[1];
+  const zgodaSerwer = (ekranPlatnosci.match(/zgodaRegulaminSrodek: '([^']*)'/) || [])[1];
+  wynik('Na czysto: zgoda przy zakupie bez formy rodzajowej, identyczna w aplikacji i na ekranie platnosci serwera',
+    !!zgodaApp && zgodaApp === zgodaSerwer && !/zapoznałem|zapoznałam/.test(zgodaApp + ekranPlatnosci), JSON.stringify({ zgodaApp, zgodaSerwer }));
+
+  for (const jezyk of ['pl', 'en']) {
+    const { k, s, bledyJs } = await nowaStrona(b, jezyk, {});
+    const J = jezyk.toUpperCase();
+    const w = await s.evaluate(() => {
+      const wynik = {};
+      // Naglowek pliku llms.txt idzie za jezykiem tekstu (pole „Język tekstu”), nie interfejsu.
+      const jez = document.getElementById('lang');
+      const zapasJez = jez.value;
+      jez.value = 'Polski'; wynik.llmsPl = naglowkiLlms().linie;
+      jez.value = 'English'; wynik.llmsEn = naglowkiLlms().linie;
+      jez.value = zapasJez;
+      // Transkrypcja: plik o 12 KB mniejszy od 25 MB jest juz ponad limitem (zapas na reszte zapytania).
+      const typ = document.getElementById('au-type');
+      if (typ) { typ.value = 'transcription'; audioSetType(); }
+      const pole = document.getElementById('au-file');
+      const plik = new File([new Uint8Array(LIMIT_PLIKU_TRANSKRYPCJI + 4096)], 'nagranie.mp3', { type: 'audio/mpeg' });
+      const dt = new DataTransfer(); dt.items.add(plik); pole.files = dt.files;
+      audioFileLabel();
+      wynik.transkrypcja = (document.getElementById('au-plik-blad') || {}).textContent || '';
+      // Dane marki: zamkniecie bez zmian nie pyta, ze zmiana pyta (Anuluj zostawia okno, OK zamyka bez zapisu).
+      const zapasConfirm = window.confirm;
+      const pytania = [];
+      const otwarte = () => document.getElementById('llms-modal').classList.contains('open');
+      try {
+        window.confirm = (t) => { pytania.push(t); return false; };
+        openLlmsModal(); closeLlmsModal();
+        wynik.bezZmian = { pytan: pytania.length, otwarte: otwarte() };
+        openLlmsModal();
+        const opis = document.getElementById('llms-desc');
+        opis.value = opis.value + ' zmiana testowa';
+        closeLlmsModal();
+        wynik.anuluj = { pytan: pytania.length, otwarte: otwarte(), tekst: pytania[0] || '' };
+        window.confirm = (t) => { pytania.push(t); return true; };
+        closeLlmsModal();
+        wynik.ok = { pytan: pytania.length, otwarte: otwarte(), zapisane: (getLlmsConfig().description || '').indexOf('zmiana testowa') !== -1 };
+      } finally { window.confirm = zapasConfirm; }
+      wynik.pytanie = _t('llms-niezapisane');
+      return wynik;
+    });
+    wynik('Na czysto (' + J + '): naglowek llms.txt „Obszary działalności” / “Business areas” (jak pole w Danych marki)',
+      w.llmsPl === 'Obszary działalności' && w.llmsEn === 'Business areas', JSON.stringify({ pl: w.llmsPl, en: w.llmsEn }));
+    wynik('Na czysto (' + J + '): plik tuz ponad limitem transkrypcji nie pokazuje „25 MB” obok „najwyzej 25 MB”',
+      w.transkrypcja !== '' && !/(najwyżej|at most) 25 MB/.test(w.transkrypcja) && /(mniej niż|less than) 25 MB/.test(w.transkrypcja), w.transkrypcja);
+    wynik('Na czysto (' + J + '): Dane marki - bez zmian zamyka bez pytania, ze zmiana pyta (Anuluj zostawia okno, OK zamyka bez zapisu)',
+      w.bezZmian.pytan === 0 && !w.bezZmian.otwarte && w.anuluj.pytan === 1 && w.anuluj.otwarte && w.anuluj.tekst === w.pytanie && !!w.pytanie
+        && w.ok.pytan === 2 && !w.ok.otwarte && !w.ok.zapisane, JSON.stringify(w));
+    // Raport widocznosci AI: okno i pliki (TXT, DOCX) z kluczy rep-*, bez zargonu, „ - ” i „...”; w EN bez polskich liter.
+    const r = await s.evaluate(() => {
+      const teraz = Date.now();
+      const wiersz = (q, k, poz, konk) => ({ prompt: q, iterations: 3, presentCount: k, present: k > 0, avgPosition: poz, competitors: konk ? ['Rival X'] : [], sources: [] });
+      const runs = [
+        { ts: teraz - 86400000, brand: 'TestBrand', iterations: 3, results: [wiersz('query A', 3, 2, true), wiersz('query B', 3, 1, false), wiersz('query C', 3, 2, false), wiersz('query D', 0, null, true)] },
+        { ts: teraz, brand: 'TestBrand', iterations: 3, results: [wiersz('query A', 3, 5, true), wiersz('query B', 0, null, true), wiersz('query C', 2, 2, false), wiersz('query D', 0, null, true)] },
+      ];
+      const zapas = magazyn.getItem('cai-vis-runs');
+      magazyn.setItem('cai-vis-runs', JSON.stringify(runs));
+      try {
+        const rep = buildReport();
+        const txt = repToText(rep);
+        const div = document.createElement('div'); div.innerHTML = repToHtml(rep);
+        return {
+          txt, html: div.textContent, summary: rep.summaryText, findings: rep.findings, recs: rep.recommendations, powody: rep.pri.map((p) => p.reason),
+          oczek: {
+            tytul: tekstZ('rep-plik-tytul', { marka: 'TestBrand' }).toUpperCase(),
+            opublikuj: tekstZ('rep-z-opublikuj', { q: 'query B' }),
+            konkurent: tekstZ('rep-z-konkurent', { nazwa: 'Rival X', pct: 75 }),
+            wniosekKonk: tekstZ('rep-u-konkurent-czesciej', { nazwa: 'Rival X', pct: 75 }),
+            metodyka: tekstZ('rep-metodyka', { n: 3 }),
+            podsumowanie: _t('rep-podsumowanie'),
+            powodBrak: _t('rep-powod-brak'),
+          },
+        };
+      } finally { if (zapas == null) magazyn.removeItem('cai-vis-runs'); else magazyn.setItem('cai-vis-runs', zapas); }
+    });
+    const wszystko = [r.txt, r.html, r.summary, ...r.findings, ...r.recs, ...r.powody].join('\n');
+    // „ - ” w zdaniu (punktor listy w TXT na poczatku wiersza jest w porzadku).
+    const zargon = /AI-ready|schema|encji|entity|Benchmark|iteracj|iteration|Snapshot|Trend vs|Per zapytanie|Per query|b\.d\.|n\/a|\S - \S|\.\.\./;
+    wynik('Na czysto (' + J + '): raport widocznosci - tytul, wnioski, zalecenia, powody i metodyka z kluczy rep-* (okno i pliki TXT/DOCX)',
+      r.txt.indexOf(r.oczek.tytul) === 0 && r.recs.indexOf(r.oczek.opublikuj) !== -1 && r.recs.indexOf(r.oczek.konkurent) !== -1 && r.findings.indexOf(r.oczek.wniosekKonk) !== -1
+        && r.txt.indexOf(r.oczek.metodyka) !== -1 && r.html.indexOf(r.oczek.podsumowanie) !== -1 && r.powody.indexOf(r.oczek.powodBrak) !== -1,
+      JSON.stringify({ poczatek: r.txt.slice(0, 80), recs: r.recs, findings: r.findings }));
+    wynik('Na czysto (' + J + '): raport widocznosci bez zargonu, „ - ” jako myslnika i „...”' + (jezyk === 'en' ? ', po angielsku bez polskich liter' : ''),
+      !zargon.test(wszystko) && (jezyk !== 'en' || !/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/.test(wszystko)), (wszystko.match(zargon) || [''])[0] + ' | ' + wszystko.slice(0, 300));
+    wynik('Na czysto (' + J + '): bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+    if (bledow) await zrzut(s, 'czysto-' + jezyk);
+    await k.close();
+  }
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
@@ -3523,6 +3623,7 @@ const SCENARIUSZE = [
   ['r9f-pokrycie', scenariuszR9FPokrycie], ['opus55', scenariuszOpus55], ['runda-a', scenariuszRundaA], ['runda-b', scenariuszRundaB],
   ['srodtytuly', scenariuszSrodtytuly], ['po-etapie-7', scenariuszPoEtapie7],
   ['teksty-a', scenariuszTekstyA], ['teksty-b', scenariuszTekstyB], ['teksty-c', scenariuszTekstyC],
+  ['czysto', scenariuszCzysto],
 ];
 (async () => {
   let b;
