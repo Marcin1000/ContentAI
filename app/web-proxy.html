@@ -9241,7 +9241,10 @@ async function extractDOCX(file) {
 // ─── DOCS ─────────────────────────────────────────────────────────────────────
 function addDoc(name, content, icon, url) {
   const words = content.split(/\s+/).filter(Boolean).length;
-  docs.push({ name, content, icon: icon || '📄', words, added: new Date(), selected: true, url: url || null });
+  // added rosnie scisle (+1 ms przy kilku plikach dodanych w tej samej chwili): po nim "Cofnij" przy usuwaniu
+  // odtwarza kolejnosc listy (miejscePrzywracanegoDokumentu).
+  const ostatni = docs.reduce((m, d) => Math.max(m, czasDodania(d) || 0), 0);
+  docs.push({ name, content, icon: icon || '📄', words, added: new Date(Math.max(Date.now(), ostatni + 1)), selected: true, url: url || null });
   renderDocs();
   saveState();
 }
@@ -9318,10 +9321,24 @@ function delDoc(e, i) {
   // przycisk byl niewidoczny (dalo sie go dotknac przypadkiem). Powiadomienie z "Cofnij" przywraca dokument
   // na to samo miejsce (dokument na serwerze usuwa sie po potwierdzeniu - nie da sie go przywrocic).
   if (usuniety) pokazPowiadomienie(tekstZ('kb-usunieto', { nazwa: usuniety.name }), 'info', 0, { etykieta: _t('kb-cofnij'), akcja: function () {
-    docs.splice(Math.min(i, docs.length), 0, usuniety);
+    docs.splice(miejscePrzywracanegoDokumentu(usuniety, i), 0, usuniety);
     renderDocs();
     saveState();
   } });
+}
+function czasDodania(d) { return new Date(d && d.added).getTime(); }
+// Miejsce dokumentu przy "Cofnij": lista stoi w kolejnosci dodania (added), wiec dokument wraca miedzy
+// dodane wczesniej i pozniej. Sam zapamietany indeks sie dezaktualizuje, gdy przed cofnieciem usunieto inne
+// dokumenty (z [A, B, C] usun B, potem A, cofnij B, potem A: wychodzilo [A, C, B] - uwaga z przegladu PR #83).
+// Indeks rozstrzyga tylko remis (ten sam czas dodania w starszych danych). Dokument bez czasu (np. tymczasowy
+// tekst z okna Popraw) nie jest punktem odniesienia.
+function miejscePrzywracanegoDokumentu(d, indeks) {
+  const t = czasDodania(d);
+  if (!isFinite(t)) return Math.min(indeks, docs.length);
+  let od = docs.findIndex((x) => czasDodania(x) >= t), doo = docs.findIndex((x) => czasDodania(x) > t);
+  if (od === -1) od = docs.length;
+  if (doo === -1) doo = docs.length;
+  return Math.min(Math.max(indeks, od), doo);
 }
 
 // ─── KEYWORDS ─────────────────────────────────────────────────────────────────

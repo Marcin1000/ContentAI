@@ -3709,6 +3709,23 @@ async function scenariuszDotyk(b) {
     wynik('Dotyk (412 px): "Cofnij" przywraca dokument na to samo miejsce (lista i panel na telefonie)',
       JSON.stringify(poCofnieciu.docs) === JSON.stringify(przedUsunieciem.docs) && JSON.stringify(poCofnieciu.tel) === JSON.stringify(przedUsunieciem.docs),
       JSON.stringify({ przedUsunieciem, poCofnieciu }));
+    // Uwaga z przegladu PR #83: dwa usuniecia i cofniecia w innej kolejnosci. Z [A, B, C] usun B, potem A,
+    // cofnij B, potem A - ma wrocic [A, B, C], a nie [A, C, B] (zapamietany indeks sie dezaktualizowal).
+    const kolejnosc = await s.evaluate(async () => {
+      const czekaj = (ms) => new Promise((r) => setTimeout(r, ms));
+      document.querySelectorAll('.powiadomienie').forEach((p) => p.remove());
+      docs.length = 0;
+      ['A.txt', 'B.txt', 'C.txt'].forEach((n) => addDoc(n, 'Tresc dokumentu ' + n + '. '.repeat(20), 'file-text'));
+      const zdarzenie = { stopPropagation() {} };
+      delDoc(zdarzenie, docs.findIndex((d) => d.name === 'B.txt'));
+      delDoc(zdarzenie, docs.findIndex((d) => d.name === 'A.txt'));
+      const cofnij = (n) => { const p = [...document.querySelectorAll('.powiadomienie')].find((e) => e.textContent.indexOf(n) !== -1); if (p) p.querySelector('.powiadomienie-akcja').click(); };
+      cofnij('B.txt'); await czekaj(50);
+      cofnij('A.txt'); await czekaj(300);
+      return { docs: docs.map((d) => d.name), tel: [...document.querySelectorAll('#kb-list-mobile .kb-item .kb-name')].map((n) => n.firstChild.textContent) };
+    });
+    wynik('Dotyk (412 px): dwa usuniecia cofniete w innej kolejnosci przywracaja kolejnosc [A, B, C]',
+      JSON.stringify(kolejnosc.docs) === '["A.txt","B.txt","C.txt"]' && JSON.stringify(kolejnosc.tel) === '["A.txt","B.txt","C.txt"]', JSON.stringify(kolejnosc));
     wynik('Dotyk (412 px): bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
     if (bledow) await zrzut(s, 'dotyk-412');
     await k.close();
