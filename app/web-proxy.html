@@ -5873,7 +5873,7 @@ var I18N = {
     'pakiet-limit-odnawialny-wlasne':'Limit odnowi się {DATA}. Jeśli potrzebujesz więcej teraz, przejdź na wyższy pakiet.','pakiet-zmien':'Zmień pakiet','pakiet-cennik':'Porównaj pakiety',
     'odznaka-darmowe':'Darmowe: {n} z {m}','odznaka-darmowe-koniec':'Brak darmowych','odznaka-wybierz':'Wybierz pakiet','odznaka-zalegla':'płatność zaległa',
     'odznaka-do':'do {DATA}','zakup-tytul':'Wybierz pakiet','zakup-waluta':'Waluta','zakup-polecany':'polecany','zakup-cena-miesiac':'{CENA} / miesiąc','zakup-podsumowanie':'Pakiet {PAKIET}: {CENA} miesięcznie. Płatność z góry, subskrypcja odnawia się automatycznie co miesiąc, dopóki z niej nie zrezygnujesz. Zrezygnować możesz w każdej chwili w ustawieniach konta. Pakiet działa do końca opłaconego miesiąca. Cena jest ceną końcową. Do generowania potrzebny jest Twój klucz API. Opłaty u dostawców AI nie są wliczone w cenę.',
-    'zakup-zgoda-1a':'Akceptuję ','zakup-regulamin':'Regulamin','zakup-zgoda-1b':' i zapoznałem się z ','zakup-pouczenie':'pouczeniem o prawie odstąpienia','zakup-zgoda-1c':'.',
+    'zakup-zgoda-1a':'Akceptuję ','zakup-regulamin':'Regulamin','zakup-zgoda-1b':' i potwierdzam zapoznanie się z ','zakup-pouczenie':'pouczeniem o prawie odstąpienia','zakup-zgoda-1c':'.',
     'zakup-zgoda-2':'Żądam rozpoczęcia świadczenia usługi przed upływem 14 dni na odstąpienie od umowy. Wiem, że jeśli odstąpię od umowy, zapłacę za okres, w którym pakiet był dostępny.',
     'zakup-zgoda-2-pelny':'Żądam rozpoczęcia świadczenia usługi przed upływem 14 dni na odstąpienie od umowy. Wiem, że mogę odstąpić od umowy w ciągu 14 dni i otrzymać zwrot całej kwoty.',
     'zakup-przejdz':'Przejdź do płatności · {CENA}','zakup-stopka':'Cena dotyczy narzędzia: za pracę AI płacisz dostawcy na swoim kluczu. Potwierdzenie płatności wysyła Stripe. Rachunek wystawimy na prośbę: {EMAIL}.',
@@ -6093,7 +6093,7 @@ var I18N = {
     'err-za-dlugi':'Za dużo tekstu naraz dla AI. Odznacz część dokumentów w bazie wiedzy albo skróć tekst.',
     'err-za-duze':'Zapytanie jest za duże dla dostawcy AI, zwykle przez duże pliki w bazie wiedzy. Odznacz część dokumentów.',
     'err-za-duze-plik':'Plik jest za duży dla dostawcy AI. Skróć nagranie albo zapisz je w mniejszym pliku i spróbuj jeszcze raz.',
-    'err-transkrypcja-za-duzy':'Plik ma {mb} MB, a transkrypcja przyjmuje najwyżej 25 MB. Podziel nagranie na części albo zapisz je w niższej jakości.',
+    'err-transkrypcja-za-duzy':'Plik ma {mb} MB, a transkrypcja przyjmuje mniej niż 25 MB. Podziel nagranie na części albo zapisz je w niższej jakości.',
     'err-transkrypcja-za-duzy-jak':'Mniejszy plik dostaniesz, zapisując nagranie jako mono w jakości 64 kb/s.',
     'err-model':'Klucz API nie ma dostępu do potrzebnego modelu. Sprawdź dostęp w konsoli dostawcy albo zgłoś to administratorowi.',
     'err-moderacja':'Dostawca AI odrzucił zapytanie ze względu na swoje zasady dotyczące treści. Zmień opis albo wytyczne.',
@@ -6301,6 +6301,38 @@ var I18N = {
     'audio-czesc':'część {n}/{m}',
     'audio-transkrypcja-etykieta':'Transkrypcja (edytowalna)',
     'audio-bez-tytulu':'Bez tytułu',
+    // Porzadki „na czysto” (2026-11-07): raport Widocznosci AI, Dane marki.
+    'llms-niezapisane':'Masz niezapisane zmiany w Danych marki. Zamknąć okno bez zapisywania?',
+    'rep-pods-wynik':'{marka}: wskaźnik widoczności {wynik}/100. Marka jest w {k} z {n} odpowiedzi ({pct}%), średnia pozycja: {p}.',
+    'rep-pods-zmiana':'Od poprzedniego pomiaru: {zmiana} pkt.',
+    'rep-pods-reszta':'Najczęściej cytowany konkurent: {nazwa}. Zapytania, na których warto się skupić: {liczba}.',
+    'rep-brak-danych':'brak danych',
+    'rep-u-wskaznik':'Wskaźnik widoczności (ważony pozycją): {wynik}/100.',
+    'rep-u-wskaznik-nizej':'Wskaźnik widoczności (ważony pozycją): {wynik}/100. To mniej niż sama obecność ({pct}%), bo marka ma dalsze pozycje albo nie pojawia się w każdym powtórzeniu.',
+    'rep-u-obecnosc':'Marka jest w {k} z {n} odpowiedzi ({pct}%): {poziom}.',
+    'rep-u-obecnosc-poz':'Marka jest w {k} z {n} odpowiedzi ({pct}%): {poziom}, średnia pozycja {p}.',
+    'rep-poziom-silna':'silna obecność',
+    'rep-poziom-srednia':'umiarkowana obecność',
+    'rep-poziom-slaba':'słaba obecność',
+    'rep-u-poza-trojka':'Średnia pozycja jest poza pierwszą trójką, więc AI rzadko podaje markę jako pierwsze źródło.',
+    'rep-u-nieobecna':'Zapytania bez marki: {n} ({lista}).',
+    'rep-u-dalsza':'Zapytania z marką na pozycji 4 albo dalszej: {n}.',
+    'rep-u-niestabilna':'Zapytania, w których marka jest tylko w części powtórzeń: {n}.',
+    'rep-u-konkurent':'Główny konkurent, {nazwa}, pojawia się w {pct}% zapytań.',
+    'rep-u-konkurent-czesciej':'Główny konkurent, {nazwa}, pojawia się w {pct}% zapytań, częściej niż Twoja marka.',
+    'rep-z-opublikuj':'Opublikuj artykuł, który wprost odpowiada na zapytanie „{q}”.',
+    'rep-z-aeo':'Popraw artykuł na temat „{q}” w trybie AEO, żeby był chętniej cytowany przez AI (teraz pozycja {p}).',
+    'rep-z-aeo-lider':'Popraw artykuł na temat „{q}” w trybie AEO, żeby był chętniej cytowany przez AI (teraz pozycja {p}, prowadzi {lider}).',
+    'rep-z-stabilizuj':'W artykule na temat „{q}” dodaj konkretne liczby i definicje pojęć, żeby marka była w każdej odpowiedzi (teraz w {k} z {n} powtórzeń).',
+    'rep-z-konkurent':'Sprawdź, co AI pisze o {nazwa} (w {pct}% zapytań), i opisz tematy, w których ta firma prowadzi.',
+    'rep-z-utrzymaj':'Utrzymaj obecność i dodaj nowe zapytania do sprawdzania, żeby wcześnie zauważyć luki.',
+    'rep-plik-tytul':'Raport widoczności AI: {marka}',
+    'rep-podsumowanie':'Podsumowanie',
+    'rep-konkurenci-ai':'Konkurenci cytowani przez AI',
+    'rep-obecnosc-etykieta':'Obecność marki',
+    'rep-sr-pozycja':'Średnia pozycja',
+    'rep-wiersz-obecna':'marka obecna',
+    'rep-wiersz-brak':'bez marki',
   },
   en: {
     // ekran startowy (E9)
@@ -7164,7 +7196,7 @@ var I18N = {
     'err-za-dlugi':'Too much text at once for the AI. Deselect some documents in the knowledge base or shorten the text.',
     'err-za-duze':'The request is too big for the AI provider, usually due to large files in the knowledge base. Deselect some documents.',
     'err-za-duze-plik':'The file is too large for the AI provider. Shorten the recording or save it as a smaller file, then try again.',
-    'err-transkrypcja-za-duzy':'The file is {mb} MB, but transcription accepts at most 25 MB. Split the recording or save it at a lower quality.',
+    'err-transkrypcja-za-duzy':'The file is {mb} MB, but transcription accepts less than 25 MB. Split the recording or save it at a lower quality.',
     'err-transkrypcja-za-duzy-jak':'For a smaller file, save the recording as mono at 64 kbps.',
     'err-model':'The API key has no access to the required model. Check access in the provider console or tell your administrator.',
     'err-moderacja':'The AI provider rejected the request under its content policy. Change the description or guidelines.',
@@ -7306,6 +7338,38 @@ var I18N = {
     'audio-czesc':'part {n}/{m}',
     'audio-transkrypcja-etykieta':'Transcript (editable)',
     'audio-bez-tytulu':'Untitled',
+    // Porzadki „na czysto” (2026-11-07): raport Widocznosci AI, Dane marki.
+    'llms-niezapisane':'You have unsaved changes in Brand details. Close without saving?',
+    'rep-pods-wynik':'{marka}: visibility score {wynik}/100. The brand appears in {k} of {n} answers ({pct}%), average position: {p}.',
+    'rep-pods-zmiana':'Since the previous check: {zmiana} pts.',
+    'rep-pods-reszta':'Most cited competitor: {nazwa}. Queries worth focusing on: {liczba}.',
+    'rep-brak-danych':'no data',
+    'rep-u-wskaznik':'Visibility score (position-weighted): {wynik}/100.',
+    'rep-u-wskaznik-nizej':'Visibility score (position-weighted): {wynik}/100. That is below the plain presence ({pct}%) because the brand ranks lower or does not appear in every repeat.',
+    'rep-u-obecnosc':'The brand appears in {k} of {n} answers ({pct}%): {poziom}.',
+    'rep-u-obecnosc-poz':'The brand appears in {k} of {n} answers ({pct}%): {poziom}, average position {p}.',
+    'rep-poziom-silna':'strong presence',
+    'rep-poziom-srednia':'moderate presence',
+    'rep-poziom-slaba':'weak presence',
+    'rep-u-poza-trojka':'The average position is outside the top 3, so the AI rarely cites the brand first.',
+    'rep-u-nieobecna':'Queries without the brand: {n} ({lista}).',
+    'rep-u-dalsza':'Queries with the brand at position 4 or lower: {n}.',
+    'rep-u-niestabilna':'Queries where the brand appears in only some repeats: {n}.',
+    'rep-u-konkurent':'The top competitor, {nazwa}, appears in {pct}% of queries.',
+    'rep-u-konkurent-czesciej':'The top competitor, {nazwa}, appears in {pct}% of queries, more often than your brand.',
+    'rep-z-opublikuj':'Publish an article that directly answers “{q}”.',
+    'rep-z-aeo':'Improve the article on “{q}” in AEO mode so the AI cites it more readily (now position {p}).',
+    'rep-z-aeo-lider':'Improve the article on “{q}” in AEO mode so the AI cites it more readily (now position {p}, {lider} leads).',
+    'rep-z-stabilizuj':'In the article on “{q}”, add specific figures and definitions so the brand appears in every answer (now in {k} of {n} repeats).',
+    'rep-z-konkurent':'Check what the AI says about {nazwa} (in {pct}% of queries) and cover the topics where they lead.',
+    'rep-z-utrzymaj':'Keep your presence and add new queries to check, so you spot gaps early.',
+    'rep-plik-tytul':'AI visibility report: {marka}',
+    'rep-podsumowanie':'Summary',
+    'rep-konkurenci-ai':'Competitors cited by the AI',
+    'rep-obecnosc-etykieta':'Brand presence',
+    'rep-sr-pozycja':'Average position',
+    'rep-wiersz-obecna':'brand present',
+    'rep-wiersz-brak':'brand absent',
   }
 };
 
@@ -17825,6 +17889,13 @@ function getLlmsConfig() {
   return Object.assign({}, LLMS_DEFAULTS);
 }
 
+// Pola okna Dane marki (wspolne dla wariantow: blokada edycji w proxy i pytanie o niezapisane zmiany).
+const POLA_MARKI = ['llms-name', 'llms-legal', 'llms-url', 'llms-desc',
+                    'llms-services', 'llms-lines', 'llms-domains', 'llms-blocked'];
+// Porzadki (2026-11-07): stan pol przy otwarciu i po zapisie. Zamkniecie okna z innym stanem pyta,
+// czy zamknac bez zapisywania (jedyny zapis to przycisk „Zapisz i pokaz pliki”).
+let stanPolMarki = '';
+function odczytPolMarki() { return POLA_MARKI.map(function (id) { const e = document.getElementById(id); return e ? e.value : ''; }).join('\u0000'); }
 // Czy zalogowany moze zmieniac konfiguracje marki. Konfiguracja jest jedna dla
 // calego wdrozenia, wiec pisze ja wylacznie administrator - reszta widzi te
 // sama i tylko ja czyta.
@@ -17889,8 +17960,6 @@ async function zapiszMarkeNaSerwerze(konf) {
 // z serwera, a uzytkownik nie jest administratorem, jego zmiany i tak nie
 // weszlyby do promptow (serwer wygrywa) - wiec zamiast milczaco je gubic,
 // blokujemy pola i mowimy, kto to ustawia.
-const POLA_MARKI = ['llms-name', 'llms-legal', 'llms-url', 'llms-desc',
-                    'llms-services', 'llms-lines', 'llms-domains', 'llms-blocked'];
 
 function ustawTrybEdycjiMarki() {
   const tylkoOdczyt = Boolean(markaZSerwera) && !markaAdmin;
@@ -17924,10 +17993,15 @@ function openLlmsModal() {
   document.getElementById('llms-out-full-ta').value = '';
   document.getElementById('llms-urls-hint').textContent = '';
   ustawTrybEdycjiMarki();
+  stanPolMarki = odczytPolMarki();
   document.getElementById('llms-modal').classList.add('open');
 }
 
-function closeLlmsModal() { document.getElementById('llms-modal').classList.remove('open'); }
+function closeLlmsModal() {
+  const okno = document.getElementById('llms-modal');
+  if (okno.classList.contains('open') && stanPolMarki && odczytPolMarki() !== stanPolMarki && !window.confirm(_t('llms-niezapisane'))) return;
+  okno.classList.remove('open');
+}
 
 function saveLlmsConfig() {
   const c = {
@@ -17942,6 +18016,7 @@ function saveLlmsConfig() {
   };
   Object.assign(c, bezPrzykladu(c));
   magazyn.setItem('cai-llms', JSON.stringify(c));
+  stanPolMarki = odczytPolMarki();
   odswiezLicznikDomen();
   // Administrator zapisuje dla calego zespolu. Gdy konfiguracja juz jest na
   // serwerze, a piszacy nie jest administratorem, nie wysylamy zadania, ktore
@@ -17988,9 +18063,9 @@ function harvestKbUrls() {
 // R9-F (KOD8-18): naglowki pliku w jezyku tekstu (strona anglojezyczna dostawala "## O firmie").
 function naglowkiLlms() {
   return ((document.getElementById('lang') || {}).value || 'Polski') === 'Polski'
-    ? { firma: 'O firmie', nazwa: 'Pełna nazwa', strona: 'Strona', linie: 'Linie biznesowe (rozróżnienie dla modeli AI)', uslugi: 'Kluczowe usługi',
+    ? { firma: 'O firmie', nazwa: 'Pełna nazwa', strona: 'Strona', linie: 'Obszary działalności', uslugi: 'Kluczowe usługi',
       strony: 'Ważne strony', kontekst: 'Kontekst marki (pełne źródła)', brak: 'Brak dokumentów w bazie wiedzy.' }
-    : { firma: 'About the company', nazwa: 'Legal name', strona: 'Website', linie: 'Business lines (disambiguation for AI models)', uslugi: 'Key services',
+    : { firma: 'About the company', nazwa: 'Legal name', strona: 'Website', linie: 'Business areas', uslugi: 'Key services',
       strony: 'Important pages', kontekst: 'Brand context (full sources)', brak: 'No documents in the knowledge base.' };
 }
 
@@ -18613,10 +18688,23 @@ function renderNarrative(brand, narrative, ev, noKb) {
 function _repRuns() { try { return JSON.parse(magazyn.getItem('cai-vis-runs') || '[]'); } catch (e) { return []; } }
 function _repDate(ts) { try { return new Date(ts).toLocaleString(currentLang === 'en' ? 'en-GB' : 'pl-PL'); } catch (e) { return ''; } }
 
+// Porzadki „na czysto” (2026-11-07): zdania raportu widocznosci z kluczy rep-* (okno, TXT, DOCX, PDF), bez zargonu
+// i bez „ - ” jako myslnika. tekstZ podstawia {nazwa} w tekscie klucza, powod priorytetu jest jeden dla okna i plikow.
+function tekstZ(klucz, wartosci) {
+  let t = _t(klucz);
+  Object.keys(wartosci || {}).forEach(function (k) { t = t.split('{' + k + '}').join(String(wartosci[k])); });
+  return t;
+}
+function pozycjaRaportu(p) { return p == null ? _t('rep-brak-danych') : '#' + formatujLiczbe(p); }
+function powodPriorytetu(p) {
+  return p.rodzaj === 'brak' ? _t('rep-powod-brak')
+    : p.rodzaj === 'niestabilny' ? tekstZ('rep-powod-niestabilny', { k: p.k, n: p.n })
+    : p.rodzaj === 'pozycja' ? tekstZ('rep-powod-pozycja', { p: pozycjaRaportu(p.p) })
+    : '';
+}
 function buildReport() {
   const runs = _repRuns();
   if (!runs.length) return null;
-  const en = currentLang === 'en';
   const last = runs[runs.length - 1];
   const prev = runs.length > 1 ? runs[runs.length - 2] : null;
   const n = last.results.length;
@@ -18657,52 +18745,49 @@ function buildReport() {
   }
 
   const pri = last.results.map(r => {
-    let score = 0, reason = '';
-    // Porzadki tekstow (2026-11-07): rodzaj powodu dla okna raportu (powod w pliku TXT/DOCX bez zmian, osobne zadanie).
+    let score = 0;
+    // Rodzaj powodu: tekst z kluczy rep-powod-* (powodPriorytetu), ten sam w oknie i w plikach.
     let rodzaj = '';
-    if (!r.present) { score = 100; reason = en ? 'absent' : 'nieobecny'; rodzaj = 'brak'; }
+    if (!r.present) { score = 100; rodzaj = 'brak'; }
     else {
       const stab = r.iterations > 1 ? r.presentCount / r.iterations : 1;
-      if (stab < 1) { score = 60 + (1 - stab) * 30; reason = (en ? 'unstable ' : 'niestabilny ') + r.presentCount + '/' + r.iterations; rodzaj = 'niestabilny'; }
-      else if (r.avgPosition && r.avgPosition > 3) { score = 40; reason = (en ? 'low position #' : 'niska pozycja #') + r.avgPosition; rodzaj = 'pozycja'; }
+      if (stab < 1) { score = 60 + (1 - stab) * 30; rodzaj = 'niestabilny'; }
+      else if (r.avgPosition && r.avgPosition > 3) { score = 40; rodzaj = 'pozycja'; }
     }
-    return { prompt: r.prompt, score, reason, rodzaj, k: r.presentCount, n: r.iterations, p: r.avgPosition };
+    const wpis = { prompt: r.prompt, score, rodzaj, k: r.presentCount, n: r.iterations, p: r.avgPosition };
+    wpis.reason = powodPriorytetu(wpis);
+    return wpis;
   }).filter(p => p.score > 0).sort((a, b) => b.score - a.score).slice(0, 8);
 
-  const topCompName = topComp.length ? topComp[0][0] : (en ? 'no data' : 'brak danych');
-  const summaryText = (en
-    ? `${last.brand || nazwaMarki()} scored ${score}/100 on the position-weighted visibility index, appearing in ${present} of ${n} control queries (${pct}% presence) at an average position of ${avgPosition == null ? 'n/a' : '#' + formatujLiczbe(avgPosition)}.`
-      + (trend ? ` Change vs previous measurement: ${trend.scoreDelta > 0 ? '+' : ''}${trend.scoreDelta} pts.` : '')
-      + ` Most cited competitor: ${topCompName}. Queries to improve: ${pri.length}.`
-    : `${last.brand || nazwaMarki()} uzyskała ${score}/100 we wskaźniku widoczności ważonym pozycją, pojawiając się w ${present} z ${n} kontrolnych zapytań (${pct}% obecności) na średniej pozycji ${avgPosition == null ? 'b.d.' : '#' + formatujLiczbe(avgPosition)}.`
-      + (trend ? ` Zmiana względem poprzedniego pomiaru: ${trend.scoreDelta > 0 ? '+' : ''}${trend.scoreDelta} pkt.` : '')
-      + ` Najczęściej cytowany konkurent: ${topCompName}. Zapytań do poprawy: ${pri.length}.`);
+  const topCompName = topComp.length ? topComp[0][0] : _t('rep-brak-danych');
+  const summaryText = tekstZ('rep-pods-wynik', { marka: last.brand || nazwaMarki(), wynik: score, k: present, n: n, pct: pct, p: pozycjaRaportu(avgPosition) })
+    + (trend ? ' ' + tekstZ('rep-pods-zmiana', { zmiana: (trend.scoreDelta > 0 ? '+' : '') + trend.scoreDelta }) : '')
+    + ' ' + tekstZ('rep-pods-reszta', { nazwa: topCompName, liczba: pri.length });
 
-  // ── Kluczowe ustalenia (deterministyczne)
+  // ── Najwazniejsze wnioski (deterministyczne)
   const absentQ = last.results.filter(r => !r.present).map(r => r.prompt);
   const unstableQ = last.results.filter(r => r.present && r.iterations > 1 && r.presentCount < r.iterations);
   const lowPosQ = last.results.filter(r => r.present && r.avgPosition && r.avgPosition > 3);
   const brandMentions = present;
   const compLead = topComp.length ? topComp[0] : null;
-  const band = pct >= 70 ? (en ? 'strong presence' : 'silna obecność')
-            : pct >= 40 ? (en ? 'moderate presence' : 'umiarkowana obecność')
-            : (en ? 'weak presence' : 'słaba obecność');
+  const poziom = _t(pct >= 70 ? 'rep-poziom-silna' : pct >= 40 ? 'rep-poziom-srednia' : 'rep-poziom-slaba');
   const findings = [];
-  findings.push((en ? 'Position-weighted visibility score: ' : 'Wskaźnik widoczności ważony pozycją: ') + score + '/100' + (score < pct ? (en ? ' - lower than ' + pct + '% raw presence because of weak positions or instability.' : ' - niżej niż ' + pct + '% surowej obecności z powodu dalszych pozycji lub niestabilności.') : '.'));
-  findings.push((en ? 'Presence: ' : 'Obecność: ') + pct + '% (' + present + '/' + n + ') - ' + band + (avgPosition != null ? (en ? ', average position #' : ', średnia pozycja #') + formatujLiczbe(avgPosition) : ''));
-  if (avgPosition != null && avgPosition > 3) findings.push(en ? 'Average position is outside the top 3, so the brand is rarely the first source AI cites.' : 'Średnia pozycja jest poza pierwszą trójką, więc marka rzadko jest pierwszym źródłem cytowanym przez AI.');
-  if (absentQ.length) findings.push((en ? 'Absent in ' : 'Nieobecna w ') + absentQ.length + (en ? ' query(ies): ' : ' zapytaniach: ') + absentQ.slice(0, 3).join(' · ') + (absentQ.length > 3 ? '...' : ''));
-  if (lowPosQ.length) findings.push((en ? 'Ranked #4 or lower in ' : 'Pozycja #4 lub dalej w ') + lowPosQ.length + (en ? ' query(ies).' : ' zapytaniach.'));
-  if (unstableQ.length) findings.push((en ? 'Unstable presence in ' : 'Niestabilna obecność w ') + unstableQ.length + (en ? ' query(ies) across iterations.' : ' zapytaniach między iteracjami.'));
-  if (compLead) findings.push((en ? 'Top competitor ' : 'Główny konkurent ') + compLead[0] + (en ? ' is cited in ' : ' jest cytowany w ') + compLead[2] + '% ' + (en ? 'of queries' : 'zapytań') + (compLead[1] > brandMentions ? (en ? ', more often than your brand.' : ', częściej niż Twoja marka.') : '.'));
+  findings.push(tekstZ(score < pct ? 'rep-u-wskaznik-nizej' : 'rep-u-wskaznik', { wynik: score, pct: pct }));
+  findings.push(tekstZ(avgPosition != null ? 'rep-u-obecnosc-poz' : 'rep-u-obecnosc', { k: present, n: n, pct: pct, poziom: poziom, p: pozycjaRaportu(avgPosition) }));
+  if (avgPosition != null && avgPosition > 3) findings.push(_t('rep-u-poza-trojka'));
+  if (absentQ.length) findings.push(tekstZ('rep-u-nieobecna', { n: absentQ.length, lista: absentQ.slice(0, 3).join(' · ') + (absentQ.length > 3 ? ' …' : '') }));
+  if (lowPosQ.length) findings.push(tekstZ('rep-u-dalsza', { n: lowPosQ.length }));
+  if (unstableQ.length) findings.push(tekstZ('rep-u-niestabilna', { n: unstableQ.length }));
+  if (compLead) findings.push(tekstZ(compLead[1] > brandMentions ? 'rep-u-konkurent-czesciej' : 'rep-u-konkurent', { nazwa: compLead[0], pct: compLead[2] }));
 
-  // ── Rekomendacje (deterministyczne, wyprowadzone z danych)
+  // ── Zalecane dzialania (deterministyczne, wyprowadzone z danych)
   const recommendations = [];
-  absentQ.slice(0, 4).forEach(q => recommendations.push((en ? 'Publish AI-ready content that directly answers: ' : 'Opublikuj treść AI-ready wprost odpowiadającą na: ') + '"' + q + '"'));
-  lowPosQ.slice(0, 3).forEach(r => recommendations.push((en ? 'Improve citability (AEO mode) and schema for: ' : 'Wzmocnij cytowalność (tryb AEO) i schema dla: ') + '"' + r.prompt + '" (' + (en ? 'pos #' : 'poz #') + formatujLiczbe(r.avgPosition) + (r.competitors && r.competitors[0] ? ', ' + (en ? 'leader: ' : 'lider: ') + r.competitors[0] : '') + ')'));
-  unstableQ.slice(0, 3).forEach(r => recommendations.push((en ? 'Stabilise presence for: ' : 'Ustabilizuj obecność dla: ') + '"' + r.prompt + '" - ' + (en ? 'add concrete numbers and entity definitions' : 'dodaj konkretne liczby i definicje encji') + ' (' + r.presentCount + '/' + r.iterations + ')'));
-  if (compLead && compLead[2] >= 50) recommendations.push((en ? 'Benchmark ' : 'Benchmarkuj narrację ') + compLead[0] + (en ? ' (cited in ' : ' (cytowany w ') + compLead[2] + (en ? '% of queries) and cover the topics where they lead.' : '% zapytań) i pokryj tematy, w których prowadzi.'));
-  if (!recommendations.length) recommendations.push(en ? 'Maintain current presence and expand the monitored query set to detect new gaps.' : 'Utrzymaj obecność i rozszerz zestaw monitorowanych zapytań, aby wykrywać nowe luki.');
+  absentQ.slice(0, 4).forEach(q => recommendations.push(tekstZ('rep-z-opublikuj', { q: q })));
+  lowPosQ.slice(0, 3).forEach(r => recommendations.push(tekstZ(r.competitors && r.competitors[0] ? 'rep-z-aeo-lider' : 'rep-z-aeo',
+    { q: r.prompt, p: pozycjaRaportu(r.avgPosition), lider: r.competitors && r.competitors[0] ? r.competitors[0] : '' })));
+  unstableQ.slice(0, 3).forEach(r => recommendations.push(tekstZ('rep-z-stabilizuj', { q: r.prompt, k: r.presentCount, n: r.iterations })));
+  if (compLead && compLead[2] >= 50) recommendations.push(tekstZ('rep-z-konkurent', { nazwa: compLead[0], pct: compLead[2] }));
+  if (!recommendations.length) recommendations.push(_t('rep-z-utrzymaj'));
 
   return { last, prev, n, present, pct, score, avgPosition, iterations, topComp, rows, trend, pri, summaryText, findings, recommendations };
 }
@@ -18720,10 +18805,7 @@ function renderRepModal(rep) {
   // Porzadki tekstow (2026-11-07): naglowki, kolumny, powody i notka o metodzie z kluczy rep-* (bez pogrubien w zdaniach).
   const color = rep.score >= 60 ? 'var(--c-sukces)' : rep.score >= 30 ? 'var(--c-uwaga)' : 'var(--red)';
   const tak = _t('odp-tak'), nie = _t('odp-nie');
-  const powod = (p) => p.rodzaj === 'brak' ? _t('rep-powod-brak')
-    : p.rodzaj === 'niestabilny' ? _t('rep-powod-niestabilny').replace('{k}', p.k).replace('{n}', p.n)
-    : p.rodzaj === 'pozycja' ? _t('rep-powod-pozycja').replace('{p}', '#' + formatujLiczbe(p.p))
-    : p.reason;
+  const powod = powodPriorytetu;
   let h = '';
   h += '<div class="tekst-pomoc" style="margin-bottom:8px">' + escapeHtml(_t('rep-ostatni')) + ': ' + _repDate(rep.last.ts) + '</div>';
   h += '<div style="display:flex;gap:14px;align-items:center;background:var(--surface2);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">';
@@ -18767,83 +18849,87 @@ function renderRepModal(rep) {
 }
 
 function repToText(rep) {
-  const en = currentLang === 'en';
   const L = [];
-  L.push((en ? 'AI VISIBILITY REPORT - ' : 'RAPORT WIDOCZNOŚCI AI - ') + (rep.last.brand || nazwaMarki()));
-  L.push('Snapshot: ' + _repDate(rep.last.ts));
+  L.push(tekstZ('rep-plik-tytul', { marka: rep.last.brand || nazwaMarki() }).toUpperCase());
+  L.push(_t('rep-ostatni') + ': ' + _repDate(rep.last.ts));
   L.push('');
   L.push(rep.summaryText);
   L.push('');
-  if (rep.findings && rep.findings.length) { L.push(en ? 'KEY FINDINGS:' : 'KLUCZOWE USTALENIA:'); rep.findings.forEach(f => L.push('  - ' + f)); L.push(''); }
-  L.push((en ? 'Visibility score (position-weighted): ' : 'Wskaźnik widoczności (ważony pozycją): ') + rep.score + '/100');
-  L.push((en ? 'Share of presence: ' : 'Obecność marki: ') + rep.pct + '% (' + rep.present + '/' + rep.n + '), ' + (en ? 'avg position: ' : 'śr. pozycja: ') + (rep.avgPosition == null ? (en ? 'n/a' : 'b.d.') : formatujLiczbe(rep.avgPosition)));
+  if (rep.findings && rep.findings.length) { L.push(_t('rep-ustalenia').toUpperCase() + ':'); rep.findings.forEach(f => L.push('  - ' + f)); L.push(''); }
+  L.push(tekstZ('rep-u-wskaznik', { wynik: rep.score }));
+  L.push(tekstZ('rep-obecnosc', { k: rep.present, n: rep.n, procent: rep.pct, p: pozycjaRaportu(rep.avgPosition) }));
   if (rep.trend) {
     const s = rep.trend.scoreDelta > 0 ? '+' : '';
-    L.push((en ? 'Trend vs previous: ' : 'Trend vs poprzedni: ') + s + rep.trend.scoreDelta + ' pkt');
-    if (rep.trend.newlyPresent.length) L.push('  + ' + (en ? 'newly present: ' : 'nowo obecne: ') + rep.trend.newlyPresent.join(' · '));
-    if (rep.trend.newlyAbsent.length) L.push('  - ' + (en ? 'newly absent: ' : 'nowo nieobecne: ') + rep.trend.newlyAbsent.join(' · '));
+    L.push(_t('rep-zmiana') + ': ' + s + rep.trend.scoreDelta + ' ' + _t('rep-pkt'));
+    if (rep.trend.newlyPresent.length) L.push('  + ' + _t('rep-teraz-z-marka') + ': ' + rep.trend.newlyPresent.join(' · '));
+    if (rep.trend.newlyAbsent.length) L.push('  - ' + _t('rep-teraz-bez-marki') + ': ' + rep.trend.newlyAbsent.join(' · '));
   }
   L.push('');
   if (rep.topComp.length) {
-    L.push(en ? 'Competitors (mentions, % of queries):' : 'Konkurenci (wzmianki, % zapytań):');
+    L.push(_t('rep-konkurenci-ai') + ' (' + _t('rep-kol-wzmianki').toLowerCase() + ', ' + _t('rep-kol-procent') + '):');
     rep.topComp.forEach(x => L.push('  - ' + x[0] + ': ' + x[1] + ' (' + x[2] + '%)'));
     L.push('');
   }
-  L.push(en ? 'Per query:' : 'Per zapytanie:');
-  rep.rows.forEach(r => L.push('  - ' + r.prompt + ' | ' + (r.present ? (en ? 'present' : 'obecna') : (en ? 'absent' : 'nieobecna')) + ' | ' + (en ? 'pos ' : 'poz ') + (r.avgPosition ? formatujLiczbe(r.avgPosition) : '-') + (r.topCompetitor ? ' | ' + (en ? 'top: ' : 'gł.: ') + r.topCompetitor : '')));
+  L.push(_t('rep-wyniki-zapytan') + ':');
+  rep.rows.forEach(r => L.push('  - ' + r.prompt + ' | ' + _t(r.present ? 'rep-wiersz-obecna' : 'rep-wiersz-brak')
+    + (r.avgPosition ? ' | ' + _t('rep-kol-pozycja') + ' ' + formatujLiczbe(r.avgPosition) : '') + (r.topCompetitor ? ' | ' + _t('rep-kol-lider') + ': ' + r.topCompetitor : '')));
   L.push('');
   if (rep.pri.length) {
-    L.push(en ? 'Priorities:' : 'Priorytety:');
+    L.push(_t('rep-priorytety') + ':');
     rep.pri.forEach((p, i) => L.push('  ' + (i + 1) + '. ' + p.prompt + ' (' + p.reason + ')'));
   }
   if (rep.recommendations && rep.recommendations.length) {
     L.push('');
-    L.push(en ? 'RECOMMENDED ACTIONS:' : 'REKOMENDOWANE DZIAŁANIA:');
+    L.push(_t('rep-zalecenia').toUpperCase() + ':');
     rep.recommendations.forEach((x, i) => L.push('  ' + (i + 1) + '. ' + x));
   }
+  L.push('');
+  L.push(tekstZ('rep-metodyka', { n: rep.iterations }));
   return L.join('\n');
 }
 
 // kolory-eksportu:start (stale kolory dokumentu, nie motywu)
 function repToHtml(rep) {
-  const en = currentLang === 'en';
-  const yes = en ? 'Yes' : 'Tak', no = en ? 'No' : 'Nie';
+  const yes = _t('odp-tak'), no = _t('odp-nie');
   const thS = 'background:#F7EEDD;color:#1B1A17;text-align:left;padding:6px 8px;font-size:10pt;border:1px solid #F7D295';
   const tdS = 'padding:6px 8px;font-size:10pt;border:1px solid #ddd';
+  const kafel = (wartosc, podpis) => '<td style="background:#F7EEDD;border:1px solid #F7D295;padding:8pt;text-align:center;width:33%"><div style="font-size:18pt;font-weight:bold;color:#1B1A17">'
+    + wartosc + '</div><div style="font-size:9pt;color:#67635B">' + _visEsc(podpis) + '</div></td>';
+  const wielka = (t) => t.charAt(0).toUpperCase() + t.slice(1);
   let b = '';
-  b += '<h1>' + (en ? 'AI Visibility Report' : 'Raport widoczności AI') + ' - ' + _visEsc(rep.last.brand || nazwaMarki()) + '</h1>';
-  b += '<p style="color:#67635B"><em>Snapshot: ' + _repDate(rep.last.ts) + '</em></p>';
+  b += '<h1>' + _visEsc(tekstZ('rep-plik-tytul', { marka: rep.last.brand || nazwaMarki() })) + '</h1>';
+  b += '<p style="color:#67635B"><em>' + _visEsc(_t('rep-ostatni')) + ': ' + _repDate(rep.last.ts) + '</em></p>';
   b += '<table style="border-collapse:collapse;width:100%;margin:10pt 0"><tr>'
-    + '<td style="background:#F7EEDD;border:1px solid #F7D295;padding:8pt;text-align:center;width:33%"><div style="font-size:18pt;font-weight:bold;color:#1B1A17">' + rep.score + '</div><div style="font-size:9pt;color:#67635B">' + (en ? 'Visibility score' : 'Wskaźnik widoczności') + '</div></td>'
-    + '<td style="background:#F7EEDD;border:1px solid #F7D295;padding:8pt;text-align:center;width:33%"><div style="font-size:18pt;font-weight:bold;color:#1B1A17">' + rep.pct + '%</div><div style="font-size:9pt;color:#67635B">' + (en ? 'Presence' : 'Obecność') + ' (' + rep.present + '/' + rep.n + ')</div></td>'
-    + '<td style="background:#F7EEDD;border:1px solid #F7D295;padding:8pt;text-align:center;width:33%"><div style="font-size:18pt;font-weight:bold;color:#1B1A17">' + (rep.avgPosition == null ? (en ? 'n/a' : 'b.d.') : '#' + rep.avgPosition) + '</div><div style="font-size:9pt;color:#67635B">' + (en ? 'Avg position' : 'Śr. pozycja') + '</div></td>'
+    + kafel(rep.score, _t('vis-wskaznik'))
+    + kafel(rep.pct + '%', _t('rep-obecnosc-etykieta') + ' (' + rep.present + '/' + rep.n + ')')
+    + kafel(_visEsc(pozycjaRaportu(rep.avgPosition)), _t('rep-sr-pozycja'))
     + '</tr></table>';
-  b += '<h2>' + (en ? 'Summary' : 'Podsumowanie') + '</h2>';
+  b += '<h2>' + _visEsc(_t('rep-podsumowanie')) + '</h2>';
   b += '<p>' + _visEsc(rep.summaryText) + '</p>';
-  b += '<p>' + (en ? 'Visibility score (position-weighted)' : 'Wskaźnik widoczności (ważony pozycją)') + ': <strong>' + rep.score + '/100</strong></p>';
-  b += '<p>' + (en ? 'Share of presence' : 'Obecność marki') + ': <strong>' + rep.pct + '%</strong> (' + rep.present + '/' + rep.n + '), ' + (en ? 'average position' : 'średnia pozycja') + ': <strong>' + (rep.avgPosition == null ? (en ? 'n/a' : 'b.d.') : rep.avgPosition) + '</strong></p>';
   if (rep.findings && rep.findings.length) {
-    b += '<h2>' + (en ? 'Key findings' : 'Kluczowe ustalenia') + '</h2><ul>' + rep.findings.map(f => '<li>' + _visEsc(f) + '</li>').join('') + '</ul>';
+    b += '<h2>' + _visEsc(_t('rep-ustalenia')) + '</h2><ul>' + rep.findings.map(f => '<li>' + _visEsc(f) + '</li>').join('') + '</ul>';
   }
   if (rep.trend) {
     const s = rep.trend.scoreDelta > 0 ? '+' : '';
-    b += '<p>' + (en ? 'Trend vs previous' : 'Trend vs poprzedni') + ' (' + _repDate(rep.trend.prevTs) + '): <strong>' + s + rep.trend.scoreDelta + ' pkt</strong></p>';
-    if (rep.trend.newlyPresent.length) b += '<p>' + (en ? 'Newly present' : 'Nowo obecne') + ': ' + rep.trend.newlyPresent.map(_visEsc).join(' · ') + '</p>';
-    if (rep.trend.newlyAbsent.length) b += '<p>' + (en ? 'Newly absent' : 'Nowo nieobecne') + ': ' + rep.trend.newlyAbsent.map(_visEsc).join(' · ') + '</p>';
+    b += '<p>' + _visEsc(_t('rep-zmiana')) + ' (' + _repDate(rep.trend.prevTs) + '): <strong>' + s + rep.trend.scoreDelta + ' ' + _visEsc(_t('rep-pkt')) + '</strong></p>';
+    if (rep.trend.newlyPresent.length) b += '<p>' + _visEsc(wielka(_t('rep-teraz-z-marka'))) + ': ' + rep.trend.newlyPresent.map(_visEsc).join(' · ') + '</p>';
+    if (rep.trend.newlyAbsent.length) b += '<p>' + _visEsc(wielka(_t('rep-teraz-bez-marki'))) + ': ' + rep.trend.newlyAbsent.map(_visEsc).join(' · ') + '</p>';
   }
   if (rep.topComp.length) {
-    b += '<h2>' + (en ? 'Competitors cited by AI' : 'Konkurenci cytowani przez AI') + '</h2>';
-    b += '<table style="border-collapse:collapse;width:100%"><thead><tr><th style="' + thS + '">' + (en ? 'Competitor' : 'Konkurent') + '</th><th style="' + thS + '">' + (en ? 'Mentions' : 'Wzmianki') + '</th><th style="' + thS + '">% ' + (en ? 'of queries' : 'zapytań') + '</th></tr></thead><tbody>';
+    b += '<h2>' + _visEsc(_t('rep-konkurenci-ai')) + '</h2>';
+    b += '<table style="border-collapse:collapse;width:100%"><thead><tr><th style="' + thS + '">' + _visEsc(_t('rep-kol-konkurent')) + '</th><th style="' + thS + '">' + _visEsc(_t('rep-kol-wzmianki'))
+      + '</th><th style="' + thS + '">' + _visEsc(_t('rep-kol-procent')) + '</th></tr></thead><tbody>';
     b += rep.topComp.map(x => '<tr><td style="' + tdS + '">' + _visEsc(x[0]) + '</td><td style="' + tdS + '">' + x[1] + '</td><td style="' + tdS + '">' + x[2] + '%</td></tr>').join('');
     b += '</tbody></table>';
   }
-  b += '<h2>' + (en ? 'Results per query' : 'Wyniki per zapytanie') + '</h2>';
-  b += '<table style="border-collapse:collapse;width:100%"><thead><tr><th style="' + thS + '">' + (en ? 'Query' : 'Zapytanie') + '</th><th style="' + thS + '">' + (en ? 'Present' : 'Obecność') + '</th><th style="' + thS + '">' + (en ? 'Position' : 'Pozycja') + '</th><th style="' + thS + '">' + (en ? 'Top competitor' : 'Główny konkurent') + '</th></tr></thead><tbody>';
+  b += '<h2>' + _visEsc(_t('rep-wyniki-zapytan')) + '</h2>';
+  b += '<table style="border-collapse:collapse;width:100%"><thead><tr><th style="' + thS + '">' + _visEsc(_t('rep-kol-zapytanie')) + '</th><th style="' + thS + '">' + _visEsc(_t('rep-kol-obecnosc'))
+    + '</th><th style="' + thS + '">' + _visEsc(_t('rep-kol-pozycja')) + '</th><th style="' + thS + '">' + _visEsc(_t('rep-kol-lider')) + '</th></tr></thead><tbody>';
   b += rep.rows.map(r => '<tr><td style="' + tdS + '">' + _visEsc(r.prompt) + '</td><td style="' + tdS + '">' + (r.present ? yes : no) + '</td><td style="' + tdS + '">' + (r.avgPosition || '-') + '</td><td style="' + tdS + '">' + _visEsc(r.topCompetitor) + '</td></tr>').join('');
   b += '</tbody></table>';
-  if (rep.pri.length) b += '<h2>' + (en ? 'Priorities' : 'Priorytety') + '</h2><ol>' + rep.pri.map(p => '<li>' + _visEsc(p.prompt) + ' (' + _visEsc(p.reason) + ')</li>').join('') + '</ol>';
-  if (rep.recommendations && rep.recommendations.length) b += '<h2>' + (en ? 'Recommended actions' : 'Rekomendowane działania') + '</h2><ol>' + rep.recommendations.map(x => '<li>' + _visEsc(x) + '</li>').join('') + '</ol>';
-  b += '<p style="color:#8D897F;font-size:9pt;margin-top:14pt">' + (en ? 'Method: on-demand measurement, Claude with web search, ' : 'Metodyka: pomiar na żądanie, Claude z wyszukiwaniem w sieci, ') + rep.iterations + (en ? ' iteration(s) per query. Model self-assessment, not a multi-model or traffic measurement.' : ' iteracji na zapytanie. Samoocena modelu, nie pomiar wielomodelowy ani pomiar ruchu.') + '</p>';
+  if (rep.pri.length) b += '<h2>' + _visEsc(_t('rep-priorytety')) + '</h2><ol>' + rep.pri.map(p => '<li>' + _visEsc(p.prompt) + ' (' + _visEsc(p.reason) + ')</li>').join('') + '</ol>';
+  if (rep.recommendations && rep.recommendations.length) b += '<h2>' + _visEsc(_t('rep-zalecenia')) + '</h2><ol>' + rep.recommendations.map(x => '<li>' + _visEsc(x) + '</li>').join('') + '</ol>';
+  b += '<p style="color:#8D897F;font-size:9pt;margin-top:14pt">' + _visEsc(tekstZ('rep-metodyka', { n: rep.iterations })) + '</p>';
   return b;
 }
 // kolory-eksportu:koniec
@@ -18856,7 +18942,7 @@ async function dlReportDocx() {
   const en = currentLang === 'en';
   const el = document.createElement('div');
   el.innerHTML = repToHtml(rep);
-  const tytul = (en ? 'AI Visibility Report' : 'Raport widoczności AI') + ' - ' + (rep.last.brand || nazwaMarki());
+  const tytul = tekstZ('rep-plik-tytul', { marka: rep.last.brand || nazwaMarki() });
   try {
     await pobierzDocx(el, { tytul: tytul, autor: nazwaMarki() || '', opis: rep.summaryText || '',
       jezyk: en ? 'en-US' : 'pl-PL', naglowek: nazwaMarki() || '', stopka: skrotTekstu(tytul, 70) }, nazwaRaportu('docx'));
@@ -18873,52 +18959,53 @@ function nazwaRaportu(rozszerzenie) {
 function dlReportPdf() {
   const rep = buildReport(); if (!rep) return;
   const en = currentLang === 'en';
-  const tytulRaportu = () => (en ? 'AI Visibility Report' : 'Raport widoczności AI') + ' - ' + (rep.last.brand || nazwaMarki());
+  const tytulRaportu = () => tekstZ('rep-plik-tytul', { marka: rep.last.brand || nazwaMarki() });
   function content() {
     const c = [];
     c.push({ text: tytulRaportu(), style: 'h1' });
-    c.push({ text: 'Snapshot: ' + _repDate(rep.last.ts), style: 'meta2', margin: [0, 0, 0, 10] });
+    c.push({ text: _t('rep-ostatni') + ': ' + _repDate(rep.last.ts), style: 'meta2', margin: [0, 0, 0, 10] });
     c.push({ table: { widths: ['*', '*', '*'], body: [[
-      { stack: [{ text: '' + rep.score, fontSize: 16, bold: true, alignment: 'center' }, { text: (en ? 'Visibility score' : 'Wskaźnik widoczności'), fontSize: 8, color: '#67635B', alignment: 'center' }], fillColor: DRUK.tloMeta, margin: [4, 6, 4, 6] },
-      { stack: [{ text: rep.pct + '% (' + rep.present + '/' + rep.n + ')', fontSize: 16, bold: true, alignment: 'center' }, { text: (en ? 'Presence' : 'Obecność'), fontSize: 8, color: '#67635B', alignment: 'center' }], fillColor: DRUK.tloMeta, margin: [4, 6, 4, 6] },
-      { stack: [{ text: (rep.avgPosition == null ? (en ? 'n/a' : 'b.d.') : '#' + rep.avgPosition), fontSize: 16, bold: true, alignment: 'center' }, { text: (en ? 'Avg position' : 'Śr. pozycja'), fontSize: 8, color: '#67635B', alignment: 'center' }], fillColor: DRUK.tloMeta, margin: [4, 6, 4, 6] }
+      { stack: [{ text: '' + rep.score, fontSize: 16, bold: true, alignment: 'center' }, { text: _t('vis-wskaznik'), fontSize: 8, color: '#67635B', alignment: 'center' }], fillColor: DRUK.tloMeta, margin: [4, 6, 4, 6] },
+      { stack: [{ text: rep.pct + '% (' + rep.present + '/' + rep.n + ')', fontSize: 16, bold: true, alignment: 'center' }, { text: _t('rep-obecnosc-etykieta'), fontSize: 8, color: '#67635B', alignment: 'center' }], fillColor: DRUK.tloMeta, margin: [4, 6, 4, 6] },
+      { stack: [{ text: pozycjaRaportu(rep.avgPosition), fontSize: 16, bold: true, alignment: 'center' }, { text: _t('rep-sr-pozycja'), fontSize: 8, color: '#67635B', alignment: 'center' }], fillColor: DRUK.tloMeta, margin: [4, 6, 4, 6] }
     ]] }, layout: { hLineColor: () => DRUK.linia, vLineColor: () => DRUK.linia, hLineWidth: () => 0.5, vLineWidth: () => 0.5 }, margin: [0, 0, 0, 10] });
-    c.push({ text: en ? 'Summary' : 'Podsumowanie', fontSize: 13, bold: true, margin: [0, 4, 0, 4] });
+    c.push({ text: _t('rep-podsumowanie'), fontSize: 13, bold: true, margin: [0, 4, 0, 4] });
     c.push({ text: rep.summaryText, fontSize: 10, margin: [0, 0, 0, 6] });
-    c.push({ text: (en ? 'Visibility score (position-weighted): ' : 'Wskaźnik widoczności (ważony pozycją): ') + rep.score + '/100', fontSize: 11, bold: true, margin: [0, 0, 0, 2] });
-    c.push({ text: (en ? 'Share of presence: ' : 'Obecność marki: ') + rep.pct + '% (' + rep.present + '/' + rep.n + '), ' + (en ? 'avg position: ' : 'śr. pozycja: ') + (rep.avgPosition == null ? (en ? 'n/a' : 'b.d.') : rep.avgPosition), fontSize: 11, bold: true, margin: [0, 0, 0, 8] });
+    c.push({ text: tekstZ('rep-u-wskaznik', { wynik: rep.score }), fontSize: 11, bold: true, margin: [0, 0, 0, 2] });
+    c.push({ text: tekstZ('rep-obecnosc', { k: rep.present, n: rep.n, procent: rep.pct, p: pozycjaRaportu(rep.avgPosition) }), fontSize: 11, bold: true, margin: [0, 0, 0, 8] });
     if (rep.findings && rep.findings.length) {
-      c.push({ text: en ? 'Key findings' : 'Kluczowe ustalenia', fontSize: 12, bold: true, margin: [0, 4, 0, 4] });
+      c.push({ text: _t('rep-ustalenia'), fontSize: 12, bold: true, margin: [0, 4, 0, 4] });
       c.push({ ul: rep.findings, fontSize: 9, margin: [0, 0, 0, 8] });
     }
     if (rep.trend) {
       const s = rep.trend.scoreDelta > 0 ? '+' : '';
-      c.push({ text: (en ? 'Trend vs previous: ' : 'Trend vs poprzedni: ') + s + rep.trend.scoreDelta + ' pkt', fontSize: 10, margin: [0, 0, 0, 4] });
-      if (rep.trend.newlyPresent.length) c.push({ text: (en ? 'Newly present: ' : 'Nowo obecne: ') + rep.trend.newlyPresent.join(' · '), fontSize: 9, color: '#1B7042', margin: [0, 0, 0, 2] });
-      if (rep.trend.newlyAbsent.length) c.push({ text: (en ? 'Newly absent: ' : 'Nowo nieobecne: ') + rep.trend.newlyAbsent.join(' · '), fontSize: 9, color: '#B72B29', margin: [0, 0, 0, 6] });
+      const wielka = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+      c.push({ text: _t('rep-zmiana') + ': ' + s + rep.trend.scoreDelta + ' ' + _t('rep-pkt'), fontSize: 10, margin: [0, 0, 0, 4] });
+      if (rep.trend.newlyPresent.length) c.push({ text: wielka(_t('rep-teraz-z-marka')) + ': ' + rep.trend.newlyPresent.join(' · '), fontSize: 9, color: '#1B7042', margin: [0, 0, 0, 2] });
+      if (rep.trend.newlyAbsent.length) c.push({ text: wielka(_t('rep-teraz-bez-marki')) + ': ' + rep.trend.newlyAbsent.join(' · '), fontSize: 9, color: '#B72B29', margin: [0, 0, 0, 6] });
     }
     const hcell = t => ({ text: t, style: 'th', fillColor: DRUK.tloTabeli, margin: [2, 3, 2, 3] });
     const tblLayout = { hLineColor: () => DRUK.linia, vLineColor: () => DRUK.linia, hLineWidth: () => 0.5, vLineWidth: () => 0 };
     if (rep.topComp.length) {
-      c.push({ text: en ? 'Competitors cited by AI' : 'Konkurenci cytowani przez AI', fontSize: 12, bold: true, margin: [0, 8, 0, 4] });
+      c.push({ text: _t('rep-konkurenci-ai'), fontSize: 12, bold: true, margin: [0, 8, 0, 4] });
       c.push({ table: { headerRows: 1, widths: ['*', 'auto', 'auto'], body: [
-        [hcell(en ? 'Competitor' : 'Konkurent'), hcell(en ? 'Mentions' : 'Wzmianki'), hcell('%')],
+        [hcell(_t('rep-kol-konkurent')), hcell(_t('rep-kol-wzmianki')), hcell(_t('rep-kol-procent'))],
         ...rep.topComp.map(x => [{ text: x[0], fontSize: 9, margin: [2, 2, 2, 2] }, { text: '' + x[1], fontSize: 9, margin: [2, 2, 2, 2] }, { text: x[2] + '%', fontSize: 9, margin: [2, 2, 2, 2] }])
       ] }, layout: tblLayout, margin: [0, 0, 0, 8] });
     }
-    c.push({ text: en ? 'Results per query' : 'Wyniki per zapytanie', fontSize: 12, bold: true, margin: [0, 8, 0, 4] });
+    c.push({ text: _t('rep-wyniki-zapytan'), fontSize: 12, bold: true, margin: [0, 8, 0, 4] });
     c.push({ table: { headerRows: 1, widths: ['*', 'auto', 'auto', 'auto'], body: [
-      [hcell(en ? 'Query' : 'Zapytanie'), hcell(en ? 'Present' : 'Obecność'), hcell(en ? 'Pos.' : 'Poz.'), hcell(en ? 'Top competitor' : 'Gł. konkurent')],
+      [hcell(_t('rep-kol-zapytanie')), hcell(_t('rep-kol-obecnosc')), hcell(_t('rep-kol-pozycja')), hcell(_t('rep-kol-lider'))],
       ...rep.rows.map(r => [
         { text: r.prompt, fontSize: 8, margin: [2, 2, 2, 2] },
-        { text: r.present ? (en ? 'Yes' : 'Tak') : (en ? 'No' : 'Nie'), fontSize: 8, color: r.present ? '#1B7042' : '#B72B29', margin: [2, 2, 2, 2] },
+        { text: r.present ? _t('odp-tak') : _t('odp-nie'), fontSize: 8, color: r.present ? '#1B7042' : '#B72B29', margin: [2, 2, 2, 2] },
         { text: '' + (r.avgPosition || '-'), fontSize: 8, margin: [2, 2, 2, 2] },
         { text: r.topCompetitor || '', fontSize: 8, margin: [2, 2, 2, 2] }
       ])
     ] }, layout: tblLayout, margin: [0, 0, 0, 8] });
-    if (rep.pri.length) { c.push({ text: en ? 'Priorities' : 'Priorytety', fontSize: 12, bold: true, margin: [0, 8, 0, 4] }); c.push({ ol: rep.pri.map(p => p.prompt + ' (' + p.reason + ')'), fontSize: 9, margin: [0, 0, 0, 8] }); }
-    if (rep.recommendations && rep.recommendations.length) { c.push({ text: en ? 'Recommended actions' : 'Rekomendowane działania', fontSize: 12, bold: true, margin: [0, 8, 0, 4] }); c.push({ ol: rep.recommendations, fontSize: 9, margin: [0, 0, 0, 8] }); }
-    c.push({ text: (en ? 'Method: on-demand measurement, Claude with web search, ' : 'Metodyka: pomiar na żądanie, Claude z wyszukiwaniem w sieci, ') + rep.iterations + (en ? ' iteration(s) per query. Model self-assessment, not a multi-model or traffic measurement.' : ' iteracji na zapytanie. Samoocena modelu, nie pomiar wielomodelowy ani pomiar ruchu.'), fontSize: 8, color: '#8D897F', margin: [0, 10, 0, 0] });
+    if (rep.pri.length) { c.push({ text: _t('rep-priorytety'), fontSize: 12, bold: true, margin: [0, 8, 0, 4] }); c.push({ ol: rep.pri.map(p => p.prompt + ' (' + p.reason + ')'), fontSize: 9, margin: [0, 0, 0, 8] }); }
+    if (rep.recommendations && rep.recommendations.length) { c.push({ text: _t('rep-zalecenia'), fontSize: 12, bold: true, margin: [0, 8, 0, 4] }); c.push({ ol: rep.recommendations, fontSize: 9, margin: [0, 0, 0, 8] }); }
+    c.push({ text: tekstZ('rep-metodyka', { n: rep.iterations }), fontSize: 8, color: '#8D897F', margin: [0, 10, 0, 0] });
     return c;
   }
   function run() {
@@ -21067,7 +21154,7 @@ function audioFileLabel(){
   if(i&&s) s.textContent=f?f.name:_t('audio-no-file');
   // Grupa A: za duzy plik widac od razu pod nazwa: zdanie z err-transkrypcja-za-duzy i rada w drugiej linii (bez rozwijki).
   var za=!!f && f.size > LIMIT_PLIKU_TRANSKRYPCJI, b=document.getElementById('au-plik-blad'), r=document.getElementById('au-plik-rada');
-  if(b){ b.hidden=!za; b.textContent=za ? _t('err-transkrypcja-za-duzy').replace('{mb}', formatujLiczbe(f.size / 1048576, 1)) : ''; }
+  if(b){ b.hidden=!za; b.textContent=za ? _t('err-transkrypcja-za-duzy').replace('{mb}', rozmiarPlikuMb(f.size)) : ''; }
   if(r) r.hidden=!za;
 }
 
@@ -21268,10 +21355,12 @@ function newsletterPromptBlock() {
 // R9-F (KOD8-16): limit dostawcy na plik (25 MB) z zapasem na reszte zapytania. Wiekszy plik konczyl sie
 // komunikatem "blad serwera (500) ... bez analizy SERP", a ponowienie niczego nie zmienia.
 const LIMIT_PLIKU_TRANSKRYPCJI = 25 * 1024 * 1024 - 16 * 1024;
+// Rozmiar w MB zaokraglony w gore do 0,1: plik tuz ponad limitem nie pokazuje sie jako „25 MB” obok „mniej niz 25 MB”.
+function rozmiarPlikuMb(bajty) { return formatujLiczbe(Math.ceil(bajty / 1048576 * 10) / 10, 1); }
 async function transcribeMedia(file) {
   var key = voiceOAKey();
   if (!voiceIsProxy() && !key) { powiadomBrakKlucza(_t('voice-no-key'), 'openai'); throw new Error('no key'); }
-  if (file && file.size > LIMIT_PLIKU_TRANSKRYPCJI) throw new Error(_t('err-transkrypcja-za-duzy').replace('{mb}', formatujLiczbe(file.size / 1048576, 1)));
+  if (file && file.size > LIMIT_PLIKU_TRANSKRYPCJI) throw new Error(_t('err-transkrypcja-za-duzy').replace('{mb}', rozmiarPlikuMb(file.size)));
   var fd = new FormData();
   fd.append('file', file, file.name || 'audio.webm');
   fd.append('model', 'gpt-4o-transcribe');

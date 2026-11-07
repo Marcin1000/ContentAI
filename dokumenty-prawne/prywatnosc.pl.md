@@ -1,7 +1,7 @@
 ---
 tytul: Polityka prywatności Content AI
-wersja: 2026-10-v2
-data: 2026-10-14
+wersja: 2026-11-v1
+data: 2026-11-07
 ---
 <!--
 Szablon renderuje serwer aplikacji pod /dokumenty/prywatnosc. Źródło: szkic roli prawo z rundy 8
@@ -11,6 +11,8 @@ DataForSEO i klucza ElevenLabs po stronie serwera). Bloki w podwójnych nawiasac
 gdy dana usługa jest włączona w konfiguracji serwera (NVIDIA_KEY, DATAFORSEO_LOGIN, ELEVEN_KEY).
 Wersja 2026-10-v2 (14.10.2026): pierwszy artykuł bez klucza API (Regulamin § 3 ust. 4, serwer/start.js) - skrót adresu
 e-mail, cel i podstawa (art. 6 ust. 1 lit. f), okres 12 miesięcy, Anthropic na naszym kluczu przy tym artykule.
+Wersja 2026-11-v1 (7.11.2026): tylko nazwy z aplikacji po porządkach tekstów interfejsu (pole „Zapamiętaj w tej
+przeglądarce”, „analiza wyników Google (SERP)”, „dane marki”). Zakres danych, cele, podstawy i okresy bez zmian.
 DO PRZEGLĄDU PRZEZ PRAWNIKA. Ta sama wersja musi być w CAI_POLITYKA_WERSJA.
 -->
 
@@ -24,7 +26,7 @@ Administratorem danych osobowych jest WSTAW_TUTAJ_IMIE_I_NAZWISKO, adres: WSTAW_
 
 **Strona content-ai.net.** Strona nie ładuje skryptów, fontów ani analityki z obcych serwerów i nie ustawia ciasteczek. Zapamiętuje tylko wybór motywu jasnego lub ciemnego, w Twojej przeglądarce. Stronę dostarcza sieć Cloudflare, która przetwarza przy tym techniczne dane połączenia, takie jak adres IP.
 
-**Konto.** Adres e-mail i informacja, czy został potwierdzony, skrót hasła (samego hasła nie przechowujemy; skrót jest liczony algorytmem scrypt z losową solą), data założenia konta, język interfejsu, wybrany pakiet i jego stan, liczniki użycia pakietu, zapis akceptacji regulaminu i polityki prywatności oraz oświadczeń złożonych przy zakupie (z datą i wersją dokumentu), identyfikator klienta i subskrypcji w systemie płatności Stripe. Jeśli wpiszesz dane firmy (nazwa, opis, domeny, głos marki), też je przechowujemy.
+**Konto.** Adres e-mail i informacja, czy został potwierdzony, skrót hasła (samego hasła nie przechowujemy; skrót jest liczony algorytmem scrypt z losową solą), data założenia konta, język interfejsu, wybrany pakiet i jego stan, liczniki użycia pakietu, zapis akceptacji regulaminu i polityki prywatności oraz oświadczeń złożonych przy zakupie (z datą i wersją dokumentu), identyfikator klienta i subskrypcji w systemie płatności Stripe. Jeśli wpiszesz dane marki (nazwa, opis, domeny, głos marki), też je przechowujemy.
 
 **Baza wiedzy.** Dokumenty, które dodasz do bazy wiedzy na serwerze, ich nazwy i fragmenty tekstu. Wyszukujemy w nich po słowach kluczowych.
 {{?nvidia}}
@@ -43,7 +45,7 @@ Dla kont zespołu, które założyliśmy przed udostępnieniem samodzielnej reje
 
 **Korespondencja i zgłoszenia.** Treść wiadomości do nas, reklamacje, oświadczenia o odstąpieniu od umowy, zgłoszenia nielegalnych treści.
 
-**Dane techniczne.** Techniczny dziennik serwera nie zawiera adresów IP zwykłych zapytań ani kluczy API, ale może zawierać na przykład frazy z analizy SERP i komunikaty o błędach. W wyjątkowych sytuacjach związanych z ochroną przed nadużyciami może zawierać fragment adresu sieci. Do ochrony logowania i rejestracji serwer liczy próby z danego adresu IP i blokuje je czasowo po przekroczeniu limitu.
+**Dane techniczne.** Techniczny dziennik serwera nie zawiera adresów IP zwykłych zapytań ani kluczy API, ale może zawierać na przykład frazy z analizy wyników Google (SERP) i komunikaty o błędach. W wyjątkowych sytuacjach związanych z ochroną przed nadużyciami może zawierać fragment adresu sieci. Do ochrony logowania i rejestracji serwer liczy próby z danego adresu IP i blokuje je czasowo po przekroczeniu limitu.
 
 **Prośby o dostęp wysłane dawnym formularzem.** Jeśli przed udostępnieniem samodzielnej rejestracji wysłałeś prośbę o dostęp przez formularz na stronie, przechowujemy: imię, adres e-mail, opcjonalnie nazwę firmy lub zespołu, wybrany pakiet, opcjonalną wiadomość, język strony, informację o zgodzie na kontakt oraz datę wysłania, adres IP i domenę strony, z której ją wysłano.
 
@@ -121,7 +123,7 @@ Aplikacja app.content-ai.net ustawia:
 |---|---|---|
 | cai_auth | sesja logowania | do wylogowania, najdłużej 14 dni |
 | cai_motyw | wybrany motyw jasny albo ciemny, ustawiany po zmianie motywu | rok |
-| __Secure-cai_k_a, __Secure-cai_k_o, __Secure-cai_k_e | zaszyfrowane klucze API Anthropic, OpenAI i ElevenLabs, przypisane do Twojego konta | z opcją „Zapamiętaj na tym urządzeniu” 30 dni, bez niej do zamknięcia przeglądarki |
+| __Secure-cai_k_a, __Secure-cai_k_o, __Secure-cai_k_e | zaszyfrowane klucze API Anthropic, OpenAI i ElevenLabs, przypisane do Twojego konta | z opcją „Zapamiętaj w tej przeglądarce” 30 dni, bez niej do zamknięcia przeglądarki |
 
 Ciasteczek z kluczami nie odczyta żaden skrypt na stronie ani inne konto. Zapamiętany klucz zostaje w przeglądarce także po zwykłym wylogowaniu; usuwa go przycisk „Usuń klucz”, wylogowanie na wszystkich urządzeniach, zmiana i reset hasła oraz usunięcie konta.
 

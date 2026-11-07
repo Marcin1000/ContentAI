@@ -502,9 +502,9 @@ na „5" albo dołożenie grafik do standardu to edycja jednej linii.
 | Artykuły | 3 (bez odnawiania) | 50/mies. | bez limitu |
 | Grafiki | - | 50/mies. | bez limitu |
 | Audio, transkrypcja | - | 20/mies. | bez limitu |
-| Wywołania modelu (sufit) | 30 (na własnym kluczu: 47) | 750/mies. | bez limitu |
+| Wywołania modelu (sufit, w aplikacji „Zapytania do AI”) | 30 (na własnym kluczu: 47) | 750/mies. | bez limitu |
 | Dokumenty w bazie | 3 | 50 | bez limitu |
-| Analiza SERP | - | tak | tak |
+| Analiza wyników Google (SERP) | - | tak | tak |
 | Dane z OpenSEO | - | - | tak |
 | Własny klucz API, CMS | - | tak | tak |
 
@@ -529,7 +529,7 @@ mają ten sam pakiet:
 - osobna pula zasobów opłacanych przez serwer, `limitySerwera` pakietu: `serp` (DataForSEO),
   `wektory` (wyszukiwanie po znaczeniu), `strony` (pobieranie stron i sprawdzanie odnośników),
   liczona w tej samej tabeli jako `serwer:<zasob>` (`plany.sprawdzLimitSerwera`, `plany.policzSerwer`).
-  `0` znaczy "niedostępne w pakiecie": tak jest z `wektory` we wszystkich pakietach (decyzja D-09,
+  `0` znaczy "poza pakietem": tak jest z `wektory` we wszystkich pakietach (decyzja D-09,
   konta samoobsługowe szukają w bazie po słowach kluczowych, bez NVIDIA). Liczby z projektu
   (20 / 1000 / 5000) wracają zmianą tej wartości w `plany.js`.
 
@@ -1434,7 +1434,7 @@ SEC8-04, decyzja M-10), testy `serwer/testy-byok.js`.
 **Gdzie leży klucz.** W zaszyfrowanym ciasteczku HttpOnly w przeglądarce użytkownika:
 `cai_k_a` (Anthropic), `cai_k_o` (OpenAI), `cai_k_e` (ElevenLabs), przy `CAI_COOKIE_SECURE=1`
 z przedrostkiem `__Secure-`; `Path=/api`, `SameSite=Strict`, bez `Domain` (nie trafia do `seo.`
-ani na stronę produktową). "Zapamiętaj na tym urządzeniu" (domyślnie) = 30 dni, inaczej do
+ani na stronę produktową). "Zapamiętaj w tej przeglądarce" (domyślnie) = 30 dni, inaczej do
 zamknięcia przeglądarki. Szyfr AES-256-GCM kluczem `CAI_KLUCZ_CIASTEK`, który jest tylko na
 serwerze; dane dodatkowe szyfru wiążą ciasteczko z loginem konta i z `sesje_od`. Skutki:
 - zwykłe wylogowanie nie usuwa zapamiętanych kluczy (M-10),

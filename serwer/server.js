@@ -1387,7 +1387,7 @@ async function obsluzSerp(body, zrodlo = KONF.serp, celModelu = KONF.dostawca) {
       status: 501,
       dane: {
         content: [],
-        error: { komunikat: 'Analiza SERP wymaga dostawcy anthropic albo CAI_SERP=dataforseo/openseo' },
+        error: { komunikat: 'Analiza wyników Google wymaga dostawcy anthropic albo CAI_SERP=dataforseo/openseo' },
       },
     };
   }

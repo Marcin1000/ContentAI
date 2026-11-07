@@ -50,7 +50,7 @@ zamiennik: `Marketing`.
 | Plik | Co pokazuje |
 |---|---|
 | `grafiki/ph-1-przeglad.png` | aplikacja z artykułem i oceną SEO 91, hasło „Content for Google and AI answers. Written from your sources.” |
-| `grafiki/ph-2-fakty.png` | panel Fakty: liczba bez pokrycia i twierdzenie szersze niż źródło, przycisk poprawy zdań |
+| `grafiki/ph-2-fakty.png` | panel Fakty: „Liczba bez potwierdzenia w źródłach” i „Artykuł mówi więcej niż źródło”, przycisk „Popraw wskazane zdania” |
 | `grafiki/ph-3-oceny.png` | ocena AEO z uwagami, cztery zakładki SEO, AIO, AEO i GEO |
 | `grafiki/ph-4-eksport.png` | menu Eksport: DOCX, PDF, TXT, JSON-LD i przełącznik oznaczenia AI |
 | `grafiki/ph-5-cennik.png` | trzy pakiety (€0, €19, €49), pierwszy artykuł bez klucza i koszt modelu na własnym kluczu |
@@ -248,7 +248,7 @@ That is not the goal. Content AI is built for accuracy and transparency: facts c
 **Does it work for agencies and teams?**
 
 ```text
-Plans are per account today. For agencies there is bulk generation from a list of topics, and from the Standard plan the SERP analysis with content gaps and publishing straight to WordPress or Drupal.
+Plans are per account today. For agencies there is bulk generation from a list of topics, and from the Standard plan the Google results analysis with content gaps and publishing straight to WordPress or Drupal.
 ```
 
 **Which languages?**

@@ -134,7 +134,7 @@
      "name": "Where does my API key go?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Only your browser keeps it, in an encrypted cookie bound to your account. No other account can read it. With “Remember on this device” the key stays for 30 days, also after you sign out. Without it, the key stays until you close the browser. It is removed by the “Remove key” button, signing out on all devices, changing or resetting your password and deleting your account. With each request the Content AI server passes the key to the AI provider and does not save it to disk or to logs."
+      "text": "Only your browser keeps it, in an encrypted cookie bound to your account. No other account can read it. With “Remember in this browser” the key stays for 30 days, also after you sign out. Without it, the key stays until you close the browser. It is removed by the “Remove key” button, signing out on all devices, changing or resetting your password and deleting your account. With each request the Content AI server passes the key to the AI provider and does not save it to disk or to logs."
      }
     },
     {
@@ -203,10 +203,10 @@
     },
     {
      "@type": "Question",
-     "name": "Where does the SERP data come from?",
+     "name": "Where does the Google results analysis data come from?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "The Google results analysis is run by the model with web search, on your API key. It is an estimate of the results, not a ranking measurement. SERP analysis is available from the Standard plan up."
+      "text": "The Google results analysis is run by the AI with web search, on your API key. It is an estimate of the results, not a ranking measurement. Google results analysis is available from the Standard plan up."
      }
     },
     {
@@ -370,8 +370,8 @@
               <div class="wynik"><span class="w-et">GEO</span><span class="w-liczba" data-cel="80">80</span><span class="w-pasek"><i class="w80"></i></span></div>
             </div>
             <p class="odczyt">FOG <b>10.4</b> · density <b>1.6%</b></p>
-            <div class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><div><b>Figure not found in the sources</b><span>“2 days”: none of the 3 documents says so</span></div></div>
-            <div class="notka notka-uw"><svg class="znacznik ik"><use href="#i-triangle-alert"/></svg><div><b>Claim wider than the source</b><span>the source only mentions a CSV file</span></div></div>
+            <div class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><div><b>Figure not confirmed by your sources</b><span>“2 days”: none of the 3 documents says so</span></div></div>
+            <div class="notka notka-uw"><svg class="znacznik ik"><use href="#i-triangle-alert"/></svg><div><b>Goes beyond the source</b><span>the source only mentions a CSV file</span></div></div>
           </div>
         </div>
         <ol class="ramka-kroki" aria-label="Example steps">
@@ -421,7 +421,7 @@
         <article class="problem wej">
           <div class="ilu ilu-3" aria-hidden="true">
             <span class="ilu-adres"><svg class="ik"><use href="#i-link"/></svg><s>example.com/report-2024</s></span>
-            <span class="ilu-nota"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg>Address does not respond</span>
+            <span class="ilu-nota"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg>Broken link</span>
           </div>
           <h3>Invented figures and links</h3>
           <p>Asked about something its sources do not cover, a model will happily fill in the gap. Here figures and addresses come from the sources, and the fact check flags sentences without support.</p>
@@ -493,7 +493,7 @@
           <div class="krok-tekst">
             <span class="krok-nr">3</span>
             <h3>Draft</h3>
-            <p>Content type, length, tone, audience and language. Optionally, a SERP analysis before writing and a web search with sources listed under the article.</p>
+            <p>Content type, length, tone, audience and language. Optionally, a Google results analysis before writing and a web search with sources listed under the article.</p>
             <p class="krok-cap">Type, length, tone, audience, language, web sources</p>
           </div>
         </li>
@@ -511,7 +511,7 @@
                 <li class="ok"><svg class="ik"><use href="#i-circle-check"/></svg><span>Keyword in the H1 and the first paragraph</span></li>
                 <li class="uw"><svg class="ik"><use href="#i-info"/></svg><span>Add an FAQ section: 5-7 questions</span></li>
               </ul>
-              <div class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><div><b>Figure not found in the sources</b><span>“2 days”: none of the 3 documents says so</span></div></div>
+              <div class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><div><b>Figure not confirmed by your sources</b><span>“2 days”: none of the 3 documents says so</span></div></div>
             </div>
           </div>
           <div class="krok-tekst">
@@ -626,8 +626,8 @@
         <article class="kartka kartka-duza fk-tekst">
           <p class="k-meta">A CRM for a small business: where to start</p>
           <p class="fk-akapit">
-            <span class="tw-w"><mark class="tw" tabindex="0" data-stan="ok" aria-describedby="dz-0">A CRM keeps contacts and conversation history in one place.</mark><span class="dymek" id="dz-0" role="tooltip"><b><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>Backed by the source</b>crm-offer.pdf, p. 1: “contacts, conversation history and sales stages in one view”</span></span>
-            <span class="tw-w"><mark class="tw" tabindex="0" data-stan="ok" aria-describedby="dz-1">The Start plan covers up to 5 users.</mark><span class="dymek" id="dz-1" role="tooltip"><b><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>Backed by the source</b>Source: “Start plan: up to 5 users, contact import from a CSV file.”</span></span>
+            <span class="tw-w"><mark class="tw" tabindex="0" data-stan="ok" aria-describedby="dz-0">A CRM keeps contacts and conversation history in one place.</mark><span class="dymek" id="dz-0" role="tooltip"><b><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>Confirmed by the source</b>crm-offer.pdf, p. 1: “contacts, conversation history and sales stages in one view”</span></span>
+            <span class="tw-w"><mark class="tw" tabindex="0" data-stan="ok" aria-describedby="dz-1">The Start plan covers up to 5 users.</mark><span class="dymek" id="dz-1" role="tooltip"><b><svg class="ik" aria-hidden="true"><use href="#i-circle-check"/></svg>Confirmed by the source</b>Source: “Start plan: up to 5 users, contact import from a CSV file.”</span></span>
             <mark class="tw" tabindex="0" data-stan="bl" data-nota="n-liczba" aria-describedby="n-liczba">Setup usually takes 2 days.</mark>
             <mark class="tw" tabindex="0" data-stan="uw" data-nota="n-zakres" aria-describedby="n-zakres">Data can be moved from any program.</mark>
             <mark class="tw" tabindex="0" data-stan="bl" data-nota="n-link" aria-describedby="n-link">Full pricing: example.com/pricing-2024</mark>
@@ -637,17 +637,17 @@
         <aside class="fk-margines" aria-label="Fact check result">
           <p class="fk-licznik">To review: 3. Most serious first.</p>
           <div class="nota nota-bl" id="n-liczba">
-            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-octagon-alert"/></svg>Figure not found in the sources</b>
+            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-octagon-alert"/></svg>Figure not confirmed by your sources</b>
             <q>Setup usually takes 2 days.</q>
             <span>The source only says: “Setup includes contact import and team training.”</span>
           </div>
           <div class="nota nota-bl" id="n-link">
-            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-octagon-alert"/></svg>Address does not respond</b>
+            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-octagon-alert"/></svg>Broken link</b>
             <q>Full pricing: example.com/pricing-2024</q>
             <span>The server checked the address live: the page does not respond.</span>
           </div>
           <div class="nota nota-uw" id="n-zakres">
-            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-triangle-alert"/></svg>Claim wider than the source</b>
+            <b><svg class="znacznik ik" aria-hidden="true"><use href="#i-triangle-alert"/></svg>Goes beyond the source</b>
             <q>Data can be moved from any program.</q>
             <span>The source only says: “contact import from a CSV file”.</span>
           </div>
@@ -655,7 +655,7 @@
         </aside>
       </div>
       <ul class="fk-dodatki wej">
-        <li><b>Addresses</b>not in the sources, with a made-up path, or dead, checked live by the server</li>
+        <li><b>Addresses</b>not in the sources, with a made-up path, or broken, checked live by the server</li>
         <li><b>Contradictions</b>two different values for the same thing in one draft</li>
         <li><b>Competitors</b>a recommendation of a company on the excluded list</li>
         <li><b>Link text</b>repeated or empty, like “click here”</li>
@@ -673,10 +673,10 @@
         <article class="kafel kb7 wej">
           <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-file-search"/></svg></span>
           <h3>Fact check</h3>
-          <p>Compares the draft with the selected sources and lists what they do not support: unsupported figures, claims wider than the source, contradictions and recommendations that point to a competitor. Among links, it catches addresses not in the sources, dead pages and anchors that say nothing.</p>
+          <p>Compares the article with the selected sources and lists what they do not support: figures not confirmed by your sources, sentences that go beyond the source, contradictions and recommendations of competitors. Among links, it catches addresses not in the sources, broken links and link text that says nothing.</p>
           <div class="podglad podglad-fakty" aria-hidden="true">
             <span class="pf-linia"><span class="pf-zdanie">Setup usually takes 2 days.</span></span>
-            <span class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><span><b>Figure not found in the sources</b></span></span>
+            <span class="notka notka-bl"><svg class="znacznik ik"><use href="#i-octagon-alert"/></svg><span><b>Figure not confirmed by your sources</b></span></span>
           </div>
           <a class="link kafel-link" href="#fakty">See a sample check<svg class="ik" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
         </article>
@@ -703,7 +703,7 @@
         </article>
         <article class="kafel kb4 wej">
           <span class="kafel-ik"><svg class="ik" aria-hidden="true"><use href="#i-chart-column"/></svg></span>
-          <h3>SERP and gaps</h3>
+          <h3>Google results analysis and gaps</h3>
           <p>Google results for your keyword and the topics your draft misses, added on request.</p>
           <span class="plan-tag">from the Standard plan</span>
         </article>
@@ -852,7 +852,7 @@
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>50 articles a month</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>50 images, 20 transcriptions and 20 audio segments a month (a segment is up to 2,400 characters of narrated text or one podcast turn)</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>up to 50 documents in the knowledge base</li>
-            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>SERP analysis and gaps</li>
+            <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>Google results analysis and gaps</li>
             <li><svg class="ik" aria-hidden="true"><use href="#i-check"/></svg>publishing to WordPress and Drupal</li>
           </ul>
           <a class="btn btn-glowny" href="https://app.content-ai.net/rejestracja?pakiet=standard&amp;lang=en">Choose Standard</a>
@@ -893,7 +893,7 @@
             <tr><th scope="row">SEO, AIO, AEO and GEO scores, fact check</th><td data-et="Free">yes</td><td data-et="Standard">yes</td><td data-et="Premium">yes</td></tr>
             <tr><th scope="row">Repurposing and export: DOCX, PDF, TXT, JSON-LD</th><td data-et="Free">yes</td><td data-et="Standard">yes</td><td data-et="Premium">yes</td></tr>
 
-            <tr><th scope="row">SERP analysis and gaps</th><td data-et="Free">no</td><td data-et="Standard">yes</td><td data-et="Premium">yes</td></tr>
+            <tr><th scope="row">Google results analysis and gaps</th><td data-et="Free">no</td><td data-et="Standard">yes</td><td data-et="Premium">yes</td></tr>
             <tr><th scope="row">Publishing to WordPress and Drupal</th><td data-et="Free">no</td><td data-et="Standard">yes</td><td data-et="Premium">yes</td></tr>
             <tr><th scope="row">Anthropic API key (text)</th><td data-et="Free">required</td><td data-et="Standard">required</td><td data-et="Premium">required</td></tr>
             <tr><th scope="row">OpenAI API key (images, voice-over, transcription)</th><td data-et="Free">not applicable</td><td data-et="Standard">optional</td><td data-et="Premium">optional</td></tr>
@@ -914,7 +914,7 @@
         <details><summary>How is Content AI different from an AI chat?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>A chat answers from the model's memory. Content AI writes from your knowledge base, goes to the web only for missing information and cites it, then scores the draft for SEO, AIO, AEO and GEO and checks the facts. All in one workspace, from topic to publication.</p></details>
         <details><summary>What do I need to get started?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>A Content AI account (email and password) and an Anthropic API key, which powers your drafts. You write your first article without a key, once you confirm your email address. After that you need the key on every plan, including Free. OpenAI keys (images, voice-over, transcription) and ElevenLabs keys (better voice-over) are optional. The Free plan gives you 3 articles to start, no card needed.</p></details>
         <details><summary>How do I get an API key, and what does the model cost?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>In the Anthropic console you create an account, add credit and create a key. It takes about 10 minutes. You pay the provider for the model on your own account, roughly <span class="nw">$0.20-0.40</span> for an article of about 800 words with scores and a fact check. A step-by-step guide and the calculation are on the <a class="link" href="/en/api-key/">“How to get an API key”</a> page.</p></details>
-        <details><summary>Where does my API key go?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Only your browser keeps it, in an encrypted cookie bound to your account. No other account can read it. With “Remember on this device” the key stays for 30 days, also after you sign out. Without it, the key stays until you close the browser. It is removed by the “Remove key” button, signing out on all devices, changing or resetting your password and deleting your account. With each request the Content AI server passes the key to the AI provider and does not save it to disk or to logs.</p></details>
+        <details><summary>Where does my API key go?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Only your browser keeps it, in an encrypted cookie bound to your account. No other account can read it. With “Remember in this browser” the key stays for 30 days, also after you sign out. Without it, the key stays until you close the browser. It is removed by the “Remove key” button, signing out on all devices, changing or resetting your password and deleting your account. With each request the Content AI server passes the key to the AI provider and does not save it to disk or to logs.</p></details>
         <details><summary>Where do the facts come from?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>From the knowledge base. With web search on, missing information comes from the pages listed under the article. Information about your company always comes from the base only.</p></details>
         <details><summary>Will the text be error-free?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>No AI tool can guarantee that. Content AI reduces the risk: figures and links come from the sources, and the fact check lists the sentences the sources do not support, quoting each one. A person always has the final say.</p></details>
         <details><summary>How do I pay for a plan?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>You pay for paid plans through Stripe, monthly in advance, in euros or Polish złoty: you choose the currency in the purchase window. You enter your card details on Stripe's page, and Content AI never sees them. Paid plans are available to customers with a billing address in the European Union. After each payment Stripe emails you a confirmation.</p></details>
@@ -923,7 +923,7 @@
         <details><summary>How does Content AI handle the EU AI Act?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Content AI supports the transparency requirements of the AI Act (Article 50): downloaded and published files carry a note that the content was created with AI, and you can add a visible label for readers when exporting and publishing. The publisher is responsible for the publication: realistic images and recordings, and texts informing the public on matters of public interest without editorial review, must be labelled. Details are on the <a class="link" href="/en/ai-act/">“AI Act and transparency”</a> page.</p></details>
         <details><summary>Where do my documents go?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Knowledge base documents are stored on the Content AI server and only your account can see them. When writing, the model provider receives only the passages that match the topic. Finished texts and their history stay in your browser.</p></details>
         <details><summary>Which AI models does Content AI use?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Drafts, scores and the fact check come from Anthropic models. Images, voice-over and transcription use OpenAI models, and the better voice-over uses ElevenLabs. Each provider bills usage to your own API key.</p></details>
-        <details><summary>Where does the SERP data come from?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>The Google results analysis is run by the model with web search, on your API key. It is an estimate of the results, not a ranking measurement. SERP analysis is available from the Standard plan up.</p></details>
+        <details><summary>Where does the Google results analysis data come from?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>The Google results analysis is run by the AI with web search, on your API key. It is an estimate of the results, not a ranking measurement. Google results analysis is available from the Standard plan up.</p></details>
         <details><summary>Which languages does Content AI support?<svg class="ik" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>The interface is in Polish and English. Content can be written in Polish, English, German and Czech.</p></details>
       </div>
     </div>

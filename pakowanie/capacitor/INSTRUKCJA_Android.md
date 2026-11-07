@@ -123,9 +123,9 @@ capacitor\android\app\build\outputs\apk\debug\app-debug.apk
 2. Na telefonie otwórz plik. Android zapyta o zgodę na instalację z nieznanego
    źródła - włącz "Zezwalaj z tego źródła" i wróć do instalacji.
 3. Po zainstalowaniu uruchom aplikację. Otworzy się panel Klucze API - wpisz:
-   - Anthropic (wymagany, z console.anthropic.com),
+   - Anthropic (artykuły, wymagany, z console.anthropic.com),
    - OpenAI (grafiki, audio, transkrypcja),
-   - ElevenLabs (głos premium, opcjonalny).
+   - ElevenLabs (lepszy lektor, opcjonalny).
 4. Przy pierwszym dyktowaniu telefon zapyta o dostęp do mikrofonu - zezwól.
 
 

@@ -593,8 +593,8 @@ function eksportDanych(kontekst, teraz = Date.now()) {
     bazaWiedzy: { prywatna: dokumentyEksportu(prywatne), wspolna: wspolne ? dokumentyEksportu(wspolne) : null },
     marka: markaOrg,
     uwagi: en
-      ? 'Article history, drafts, CMS settings and saved API keys are stored only in your browser, not on the server. Export the history in the app. The team knowledge base and brand of a team account belong to the team and are not included.'
-      : 'Historia artykułów, szkice, ustawienia CMS i zapamiętane klucze API są tylko w Twojej przeglądarce, nie na serwerze. Historię wyeksportujesz w aplikacji. Baza wspólna i marka konta zespołu należą do zespołu i nie wchodzą do eksportu.',
+      ? 'Article history, drafts, CMS settings and saved API keys are stored only in your browser, not on the server. Download a copy of your history in the app, in History. The team knowledge base and brand of a team account belong to the team and are not included.'
+      : 'Historia artykułów, szkice, ustawienia CMS i zapamiętane klucze API są tylko w Twojej przeglądarce, nie na serwerze. Kopię historii pobierzesz w aplikacji, w Historii. Baza wspólna i marka konta zespołu należą do zespołu i nie wchodzą do eksportu.',
   };
 }
 

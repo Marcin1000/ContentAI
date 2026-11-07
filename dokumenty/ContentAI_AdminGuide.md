@@ -78,7 +78,7 @@ niezależnie od wpisu, żebyś nie mógł sobie zablokować własnego narzędzia
 | Grafiki | - | 50/mies. | bez limitu |
 | Audio, transkrypcja | - | 20/mies. | bez limitu |
 | Dokumenty w bazie | 3 | 50 | bez limitu |
-| Analiza SERP | - | tak | tak |
+| Analiza wyników Google (SERP) | - | tak | tak |
 | Dane z OpenSEO | - | - | tak |
 
 Limity zmienia się w jednym miejscu: `serwer/plany.js`. To tabela danych - zmiana
@@ -170,7 +170,7 @@ Ich odpowiedniki open source wymagają własnego GPU, więc na VPS bez karty nie
 
 ## Dane SERP - realne zamiast szacowanych
 
-Analiza SERP przed generowaniem domyślnie prosi model, żeby wyszukał w Google. Działa to
+Analiza wyników Google (SERP) przed generowaniem domyślnie prosi model, żeby wyszukał w Google. Działa to
 **tylko przy dostawcy Anthropic** i daje dane szacowane, nie mierzone.
 
 Żeby mieć realne wyniki niezależnie od modelu, w `/etc/contentai/srodowisko`:
@@ -186,7 +186,7 @@ sudo systemctl restart contentai
 ```
 
 To samo źródło danych, z którego korzysta OpenSEO. **Płatne za zapytanie** - konto na
-dataforseo.com. Bez tego przy `CAI_DOSTAWCA=nvidia` analiza SERP zwróci błąd 501
+dataforseo.com. Bez tego przy `CAI_DOSTAWCA=nvidia` analiza wyników Google (SERP) zwróci błąd 501
 z komunikatem, zamiast po cichu podać zmyślone dane.
 
 ---
@@ -251,7 +251,7 @@ po napisaniu frazy wracają do OpenSEO, żeby dało się śledzić pozycje.**
 
 W formularzu artykułu, obok pola „Słowa kluczowe", jest przycisk 📈. Otwiera frazy zapisane
 w projekcie OpenSEO - z wolumenem, trudnością i tagami. W tym samym oknie działa ruch
-powrotny: „Oddaj frazy tego artykułu do OpenSEO" zapisuje je z tagiem `content-ai`.
+powrotny: „Zapisz w OpenSEO” zapisuje je z tagiem `content-ai`.
 
 **Praktyczny obieg pracy:** w OpenSEO zbadaj frazy i otaguj te do napisania (np. tagiem
 `do-napisania`). W Content AI filtrujesz po tym tagu, piszesz tekst, oddajesz frazy z powrotem.

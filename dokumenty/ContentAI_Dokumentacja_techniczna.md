@@ -289,4 +289,4 @@ obecność wszystkich poprawek oraz bilans `<style>`/`<script>`). Ręcznie:
 - Panele SEO / AIO / AEO / GEO otwierają się w tym samym miejscu
 - Uzupełnianie luk nie przewija na dół artykułu
 - Przeróbki, auto-poprawka i sekcja wniosków wychodzą w języku treści
-- Analiza SERP zwraca dane i pokazuje przycisk SERP
+- Analiza wyników Google (SERP) zwraca dane i pokazuje zakładkę Google
