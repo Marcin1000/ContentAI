@@ -2640,6 +2640,14 @@ body.is-mobile .nowy-artykul::before { content: ""; position: absolute; inset: -
   background: none; color: var(--c-akcent-mocny); font: inherit; font-weight: var(--g-mocny); cursor: pointer; }
 .powiadomienie-akcja:hover { background: var(--c-najazd); }
 body.is-mobile .powiadomienie-akcja { min-height: var(--h-dotyk); }
+/* Porzadki tekstow (2026-11-07): na telefonie przycisk powiadomienia w osobnym wierszu pod tekstem (obok przycisku
+   tekst mial okolo 110 px), wyrownany do tekstu (kropka 8 px + odstep, minus wlasny margines przycisku). */
+body.is-mobile .powiadomienie { flex-wrap: wrap; row-gap: var(--s-4); }
+body.is-mobile .powiadomienie-akcja { order: 3; flex: 1 1 calc(100% - 8px - var(--s-12)); align-self: auto; margin: 0 0 0 calc(8px + var(--s-12) - var(--s-6)); text-align: left; }
+/* Wiersz oceny z pamieci w tresci panelu, blad w oknie Dodaj strone */
+.ocena-z-pamieci { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-8); margin-bottom: var(--s-12); }
+.url-blad-akcje { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-8); margin-top: var(--s-8); }
+.url-blad-akcje > .rozwijka { flex-basis: 100%; }
 
 /* statystyki jako arkusz od dolu (ten sam element #article-stats) */
 body.is-mobile .article-stats.show { display: none; }
@@ -4251,7 +4259,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <div class="panel-podtytul" data-i18n="gap-covered">Omówione tematy</div>
               <div id="gap-present"></div>
             </div>
-            <div id="gap-no-serp" class="pusty-stan panel-tekst" style="display:none" data-i18n="gap-no-serp">Luki wymagają analizy wyników Google. Włącz ją w briefie i wygeneruj artykuł ponownie.</div>
+            <div id="gap-no-serp" class="pusty-stan" style="display:none"><b data-i18n="gap-no-serp-tytul">Tu pojawią się luki w artykule</b><p data-i18n="gap-no-serp">Luki wymagają analizy wyników Google. Włącz ją w briefie i wygeneruj artykuł ponownie.</p></div>
           </div>
 
           <!-- Panel sugestii linków -->
@@ -5236,7 +5244,10 @@ var magazyn = (function () {
 // Krotki komunikat w rogu ekranu zamiast systemowego okna alertu, ktore zatrzymuje
 // strone i wyglada inaczej w kazdej przegladarce. Czytniki ekranu dostaja go
 // przez aria-live; blad (rodzaj 'blad') czytany jest od razu.
-function pokazPowiadomienie(tekst, rodzaj, czas) {
+// Porzadki tekstow interfejsu (2026-11-07): opcjonalny przycisk akcji {etykieta, akcja} zamiast odsylania slowami
+// do miejsc w aplikacji. Klik wykonuje akcje i zamyka powiadomienie. Z przyciskiem powiadomienie zostaje dluzej
+// (15 s): czas na przeczytanie i klikniecie takze na telefonie, gdzie najechanie mysza nie zatrzymuje licznika.
+function pokazPowiadomienie(tekst, rodzaj, czas, akcja) {
   if (!document.body) return;
   var pojemnik = document.getElementById('powiadomienia');
   if (!pojemnik) {
@@ -5258,10 +5269,19 @@ function pokazPowiadomienie(tekst, rodzaj, czas) {
   x.textContent = '\u00d7';
   var zamknij = function () { el.classList.add('znika'); setTimeout(function () { el.remove(); }, 200); };
   x.onclick = zamknij;
-  el.appendChild(t); el.appendChild(x);
+  el.appendChild(t);
+  if (akcja && akcja.etykieta && typeof akcja.akcja === 'function') {
+    var a = document.createElement('button');
+    a.type = 'button';
+    a.className = 'powiadomienie-akcja';
+    a.textContent = akcja.etykieta;
+    a.onclick = function () { zamknij(); akcja.akcja(); };
+    el.appendChild(a);
+  }
+  el.appendChild(x);
   pojemnik.appendChild(el);
   while (pojemnik.children.length > 4) pojemnik.firstChild.remove();
-  var ms = czas || (rodzaj === 'blad' ? 9000 : 6000);
+  var ms = czas || (akcja ? 15000 : (rodzaj === 'blad' ? 9000 : 6000));
   var licznik = setTimeout(zamknij, ms);
   el.addEventListener('mouseenter', function () { clearTimeout(licznik); });
   el.addEventListener('mouseleave', function () { licznik = setTimeout(zamknij, 2500); });
@@ -6120,7 +6140,7 @@ var I18N = {
     'link-dialog-label':'Dodaj link',
     'err-api-generic':'Dostawca AI odrzucił zapytanie. Spróbuj ponownie za chwilę.',
     'msg-plik-pusty':'Pliku „{name}” nie dodano: brak w nim tekstu. Wklej treść ręcznie.',
-    'msg-plik-blad':'Nie udało się odczytać „{name}” ({msg}). Zapisz go jako DOCX albo PDF.',
+    'msg-plik-blad':'Nie udało się odczytać „{name}”. Zapisz go jako DOCX albo PDF z tekstem.',
     'msg-plik-pptx':'Prezentacji „{name}” nie da się odczytać. Wklej tekst ze slajdów.',
     'err-siec':'Brak połączenia z serwerem. Sprawdź internet i spróbuj ponownie.',
     'err-odpowiedz-zla':'Serwer zwrócił nieoczekiwaną odpowiedź (zwykle chwilowa przerwa). Spróbuj ponownie za chwilę.',
@@ -6145,7 +6165,7 @@ var I18N = {
     'err-cms-401-wp':'WordPress: niepoprawny login albo hasło aplikacji (Application Password). Sprawdź je i spróbuj ponownie.',
     'err-cms-401-drupal':'Drupal: niepoprawny login albo hasło. Sprawdź je i to, czy moduł Basic Auth jest włączony.',
     'err-cms-403':'{cms}: to konto nie ma uprawnień do publikowania wpisów. Nadaj mu uprawnienia albo użyj innego konta.','err-cms-404':'{cms}: pod tym adresem nie ma interfejsu API. Sprawdź adres strony.',
-    'err-cms-5xx':'{cms}: serwer strony zwrócił błąd ({status}). Spróbuj ponownie za chwilę.','err-cms-inny':'{cms}: strona odrzuciła zapytanie (HTTP {status}). Sprawdź dane połączenia i spróbuj ponownie.',
+    'err-cms-5xx':'{cms}: serwer strony zwrócił błąd. Spróbuj ponownie za chwilę.','err-cms-inny':'{cms}: strona odrzuciła zapytanie. Sprawdź dane połączenia i spróbuj ponownie.',
     'wp-zalogowano':'WordPress: zalogowano jako {name}',
 //@@IF proxy
     'err-klucz':'Dostawca AI odrzucił klucz API. Jeśli używasz własnego klucza, podłącz nowy. Jeśli nie, zgłoś to administratorowi.',
@@ -7227,7 +7247,7 @@ var I18N = {
     'text-modal-desc-full':'Paste text about your company, e.g. your offer, FAQ, service descriptions or terms. The AI will use it when writing.',
     'err-api-generic':'The AI provider rejected the request. Try again in a moment.',
     'msg-plik-pusty':'“{name}” was not added: it has no text. Paste the text manually.',
-    'msg-plik-blad':'Could not read “{name}” ({msg}). Save it as DOCX or PDF.',
+    'msg-plik-blad':'Could not read “{name}”. Save it as DOCX or a text-based PDF.',
     'msg-plik-pptx':'The presentation “{name}” cannot be read. Paste the slide text.',
     'err-siec':'No connection to the server. Check your internet connection and try again.',
     'err-odpowiedz-zla':'The server returned an unexpected response (usually a short outage). Try again in a moment.',
@@ -7252,7 +7272,7 @@ var I18N = {
     'err-cms-401-wp':'WordPress: incorrect username or application password. Check them and try again.',
     'err-cms-401-drupal':'Drupal: incorrect username or password. Check them and make sure the Basic Auth module is enabled.',
     'err-cms-403':'{cms}: this account is not allowed to publish posts. Grant it permission or use another account.','err-cms-404':'{cms}: there is no API at this address. Check the site address.',
-    'err-cms-5xx':'{cms}: the site server returned an error ({status}). Try again in a moment.','err-cms-inny':'{cms}: the site rejected the request (HTTP {status}). Check the connection details and try again.',
+    'err-cms-5xx':'{cms}: the site server returned an error. Try again in a moment.','err-cms-inny':'{cms}: the site rejected the request. Check the connection details and try again.',
     'wp-zalogowano':'WordPress: signed in as {name}',
 //@@IF proxy
     'err-klucz':'The AI provider rejected the API key. If you use your own key, connect a new one. If not, tell your administrator.',
@@ -8458,6 +8478,32 @@ function otworzUstawieniaKlucza(dostawca) {
   }
 //@@ENDIF
 }
+// Porzadki tekstow interfejsu (2026-11-07): komunikat o braku albo odrzuceniu klucza ma przycisk do miejsca, gdzie
+// sie go podlacza: wariant z serwerem - kreator na polu tego dostawcy, wariant z kluczami w przegladarce - okno
+// Klucze API. W wariancie owner klucz jest w pliku, wiec przycisku nie ma. W powiadomieniu krotka etykieta
+// "Podlacz klucz" (dostawce podaje zdanie), w bloku i pod polem pelna "Podlacz klucz {DOSTAWCA}".
+function moznaPodlaczycKlucz() {
+  return !KLUCZ_W_PLIKU && (typeof window.otworzKreatorKlucza === 'function' || typeof window.openKeysModal === 'function');
+}
+function akcjaPodlaczKlucz(dostawca) {
+  if (!moznaPodlaczycKlucz()) return null;
+  return { etykieta: _t('e1-podlacz'), akcja: function () { otworzUstawieniaKlucza(dostawca || 'anthropic'); } };
+}
+function powiadomBrakKlucza(tekst, dostawca) {
+  const akcja = akcjaPodlaczKlucz(dostawca);
+  return akcja ? pokazPowiadomienie(tekst, 'blad', 0, akcja) : powiadomBlad(tekst);
+}
+function przyciskPodlaczKlucz(dostawca, klasa) {
+  if (!moznaPodlaczycKlucz()) return '';
+  const d = NAZWY_DOSTAWCOW[dostawca] ? dostawca : 'anthropic';
+  return '<button type="button" class="' + (klasa || 'btn-secondary') + '" onclick="otworzUstawieniaKlucza(\'' + d + '\')">' + ikona('key-round')
+    + escapeHtml(_t('btn-podlacz-klucz').replace('{DOSTAWCA}', NAZWY_DOSTAWCOW[d])) + '</button>';
+}
+// "Wybierz pakiet" dla kazdego konta, ktore moze kupic pakiet (wczesniej tylko konto na wlasnych kluczach).
+function moznaWybracPakiet() {
+  return typeof window.otworzPakiet === 'function'
+    && (kontoNaWlasnychKluczach() || (typeof window.mozeKupicPakiet === 'function' && window.mozeKupicPakiet()));
+}
 // Blok bledu w artykule i panelach: zdanie ze slownika, szczegoly zwiniete,
 // przy zlym kluczu przejscie do miejsca, gdzie sie go wpisuje, a "Sprobuj
 // ponownie" tylko wtedy, gdy ponowienie moze pomoc.
@@ -8493,7 +8539,7 @@ function akcjeBleduKonta(r, e, ponow) {
   if (r === 'brak-klucza' && typeof window.otworzKreatorKlucza === 'function') {
     return '<button type="button" class="btn-secondary" onclick="otworzKreatorKlucza(\'' + d + '\')">' + ikona('key-round') + escapeHtml(_t('btn-podlacz-klucz').replace('{DOSTAWCA}', nazwa)) + '</button>';
   }
-  if (r === 'pakiet' && kontoNaWlasnychKluczach() && typeof window.otworzPakiet === 'function') {
+  if (r === 'pakiet' && moznaWybracPakiet()) {
     return '<button type="button" class="btn-secondary" onclick="otworzPakiet(\'zakup\')">' + ikona('package') + escapeHtml(_t('btn-wybierz-pakiet')) + '</button>';
   }
   if (r === 'email' && typeof window.wyslijPotwierdzenieEmail === 'function') {
@@ -8518,29 +8564,32 @@ function powiadomBladApi(e, zapas, kontekst, przedrostek) {
   const szczegol = r === 'inny' ? szczegolBledu(e) : '';
   if (szczegol) tekst += ' (' + szczegol.slice(0, 200) + ')';
   // R9-D (UX8-05): brak albo zly klucz w grafice i audio - powiadomienie z przyciskiem naprawy, dluzej na ekranie.
-  const naprawa = (r === 'klucz' || r === 'brak-klucza') && typeof window.otworzKreatorKlucza === 'function';
-  const el = naprawa ? pokazPowiadomienie((przedrostek || '') + tekst, 'blad', 60000) : powiadomBlad((przedrostek || '') + tekst);
-  if (naprawa && el) {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'powiadomienie-akcja';
-    b.textContent = _t('btn-podlacz-klucz').replace('{DOSTAWCA}', (e && e.dostawca) || NAZWY_DOSTAWCOW[(e && e.dostawcaKod) || 'anthropic']);
-    b.onclick = function () { el.remove(); window.otworzKreatorKlucza((e && e.dostawcaKod) || 'anthropic'); };
-    el.insertBefore(b, el.querySelector('.powiadomienie-zamknij'));
-  }
+  // Porzadki tekstow (2026-11-07): takze w wariancie z kluczami w przegladarce (okno Klucze API), krotka etykieta
+  // "Podlacz klucz" (dostawce podaje zdanie), wspolny przycisk powiadomienia.
+  const naprawa = (r === 'klucz' || r === 'brak-klucza') ? akcjaPodlaczKlucz((e && e.dostawcaKod) || 'anthropic') : null;
+  if (naprawa) pokazPowiadomienie((przedrostek || '') + tekst, 'blad', 60000, naprawa);
+  else powiadomBlad((przedrostek || '') + tekst);
 }
 // Bledy WordPressa i Drupala: status HTTP na zdanie ze slownika, odpowiedz CMS
 // (zwykle po angielsku) tylko w zwinietych szczegolach. Status 0 = brak polaczenia.
-function htmlBleduCms(status, szczegol, cms) {
+function htmlBleduCms(status, szczegol, cms, wOkniePublikacji) {
   const nazwa = cms === 'drupal' ? 'Drupal' : 'WordPress';
   const st = Number(status) || 0;
   const klucz = !st ? (cms === 'drupal' ? 'err-cms-siec-drupal' : 'err-cms-siec-wp')
     : st === 401 ? (cms === 'drupal' ? 'err-cms-401-drupal' : 'err-cms-401-wp')
     : st === 403 ? 'err-cms-403' : st === 404 ? 'err-cms-404'
     : st >= 500 ? 'err-cms-5xx' : 'err-cms-inny';
-  let h = '<span class="stan-blad">' + escapeHtml(_t(klucz).replace(/\{cms\}/g, nazwa).replace('{status}', String(st))) + '</span>';
-  if (szczegol) {
+  let h = '<span class="stan-blad">' + escapeHtml(_t(klucz).replace(/\{cms\}/g, nazwa)) + '</span>';
+  // Porzadki tekstow (2026-11-07): kod HTTP to szczegol techniczny (wczesniej w zdaniu: "(HTTP 418)").
+  const techniczne = [st ? 'HTTP ' + st : '', String(szczegol || '').slice(0, 400)].filter(Boolean).join(' · ');
+  if (techniczne) {
     h += '<details class="rozwijka"><summary>' + ikona('chevron-down') + escapeHtml(_t('err-szczegoly')) + '</summary>'
-      + '<div class="tekst-pomoc" style="overflow-wrap:anywhere">' + escapeHtml(String(szczegol).slice(0, 400)) + '</div></details>';
+      + '<div class="tekst-pomoc" style="overflow-wrap:anywhere">' + escapeHtml(techniczne) + '</div></details>';
+  }
+  // W oknie publikacji droga do Integracji z CMS przy zlym loginie albo adresie (w oknie integracji pola stoja obok).
+  if (wOkniePublikacji && (st === 401 || st === 404)) {
+    h += '<button type="button" class="btn-secondary btn-maly" onclick="closeWpPublishModal();openWpModal()">' + ikona('settings')
+      + escapeHtml(_t('btn-ustawienia-cms')) + '</button>';
   }
   return h;
 }
@@ -9238,7 +9287,7 @@ async function processFile(file) {
       text = await extractDOCX(file);
     } else if (['pptx','ppt'].includes(ext)) {
       // Prezentacji nie czytamy - zamiast udawanego dokumentu w bazie jasna informacja.
-      pokazPowiadomienie(_t('msg-plik-pptx').replace('{name}', name), 'uwaga');
+      pokazPowiadomienie(_t('msg-plik-pptx').replace('{name}', name), 'uwaga', 0, { etykieta: _t('btn-wklej-tekst'), akcja: function () { wklejTekstZamiast(name); } });
       return;
     } else {
       text = await file.text().catch(() => _t('file-read-err'));
@@ -9250,11 +9299,13 @@ async function processFile(file) {
     } else {
       // Skan PDF bez warstwy tekstu albo DOCX z samym osadzonym HTML: nic nie trafia do bazy,
       // ale autor musi wiedziec dlaczego.
-      pokazPowiadomienie(_t('msg-plik-pusty').replace('{name}', name), 'uwaga');
+      pokazPowiadomienie(_t('msg-plik-pusty').replace('{name}', name), 'uwaga', 0, { etykieta: _t('btn-wklej-tekst'), akcja: function () { wklejTekstZamiast(name); } });
     }
   } catch(e) {
     // Blad odczytu nie staje sie zaznaczonym zrodlem z trescia "[Blad odczytu...]".
-    powiadomBlad(_t('msg-plik-blad').replace('{name}', name).replace('{msg}', (e && e.message) || ''));
+    // Porzadki tekstow (2026-11-07): surowy komunikat wyjatku (zwykle po angielsku, czasem pusty) tylko w konsoli.
+    console.warn('[plik] ' + name + ':', (e && e.message) || e);
+    powiadomBlad(_t('msg-plik-blad').replace('{name}', name));
   } finally {
     hideProgress();
   }
@@ -9356,7 +9407,7 @@ function renderDocs() {
         <div class="kb-name">${escapeHtml(d.name)}${typeLabel}</div>
         <div class="kb-meta">${d.words.toLocaleString()} ${slowaLiczba(d.words)}</div>
       </div>
-      <button class="kb-del" title="${_t('title-remove')}" data-i18n-title="title-remove" onclick="delDoc(event,${i})" aria-label="${_t('okno-zamknij')}">${ikona('x', 'ikona-s')}</button>`;
+      <button type="button" class="kb-del" title="${_t('kb-usun-dokument')}" data-i18n-title="kb-usun-dokument" onclick="delDoc(event,${i})" aria-label="${_t('kb-usun-dokument')}" data-i18n-label="kb-usun-dokument">${ikona('x', 'ikona-s')}</button>`;
     list.appendChild(el);
   });
   updateStats();
@@ -9398,7 +9449,7 @@ function _doAddKw() {
 function removeKw(i) { keywords.splice(i, 1); renderKws(); updateSerpWarn(); }
 function renderKws() {
   document.getElementById('kw-tags').innerHTML = keywords.map((k, i) =>
-    `<div class="kw-tag">${escapeHtml(k)} <button type="button" onclick="removeKw(${i})" aria-label="${_t('okno-zamknij')}">${ikona('x', 'ikona-s')}</button></div>`).join('');
+    `<div class="kw-tag">${escapeHtml(k)} <button type="button" onclick="removeKw(${i})" title="${_t('kw-usun')}" data-i18n-title="kw-usun" aria-label="${_t('kw-usun')}" data-i18n-label="kw-usun">${ikona('x', 'ikona-s')}</button></div>`).join('');
   if (typeof zapiszSzkic === 'function') zapiszSzkic();
 }
 
@@ -9444,6 +9495,14 @@ function switchTab(name, el) {
 // R9-F (KOD8-03): fokus ustawia menedzer okien (pierwsze pole, bez kradziezy fokusu z pola, w ktorym juz
 // sie pisze). Drugi, opozniony focus() przenosil tekst wpisywany w Tresc do pola nazwy.
 function openTextModal() { document.getElementById('text-modal').classList.add('open'); bladPolaTekstu(null); }
+// Porzadki tekstow interfejsu (2026-11-07): "Wklej tekst" z komunikatu o pliku albo stronie, ktorej nie da sie
+// odczytac: okno tekstu z nazwa pliku albo strony w polu nazwy i fokusem na polu tresci.
+function wklejTekstZamiast(nazwa) {
+  openTextModal();
+  const n = document.getElementById('m-name'), t = document.getElementById('m-content');
+  if (n && nazwa) n.value = nazwa;
+  if (t) t.focus();
+}
 function closeTextModal() { document.getElementById('text-modal').classList.remove('open'); document.getElementById('m-name').value=''; document.getElementById('m-content').value=''; bladPolaTekstu(null); }
 // Komunikat przy pustym polu okna tekstu (pole = null czysci). Wczesniej Dodaj bez tresci nic nie robil i okno stalo bez slowa.
 function bladPolaTekstu(pole, klucz) {
@@ -9482,13 +9541,22 @@ function opisBleduPobierania(kod) {
 }
 
 function openUrlModal() {
+  wyczyscStanStrony();
   document.getElementById('url-modal').classList.add('open');
   document.getElementById('url-info').style.display = 'none';
   document.getElementById('url-save-btn').disabled = false;
   document.getElementById('url-fill').style.width = '0%';
   // R9-F (KOD8-03): fokus na adresie ustawia menedzer okien (bez opoznionego drugiego focus()).
 }
+// Porzadki tekstow (2026-11-07): pasek pobierania od nowa. Blad zostaje do kolejnej proby albo zamkniecia okna.
+function wyczyscStanStrony() {
+  const fill = document.getElementById('url-fill'), status = document.getElementById('url-status');
+  if (fill) { fill.style.width = '0%'; fill.style.background = ''; }
+  if (status) { ustawTekst(status, 'msg-fetching-page'); status.style.color = ''; }
+  document.querySelectorAll('#url-info .url-blad-akcje').forEach(function (a) { a.remove(); });
+}
 function closeUrlModal() {
+  wyczyscStanStrony();
   document.getElementById('url-modal').classList.remove('open');
   document.getElementById('u-url').value = '';
   document.getElementById('u-name').value = '';
@@ -9510,6 +9578,7 @@ async function saveUrl() {
   const status = document.getElementById('url-status');
   const saveBtn = document.getElementById('url-save-btn');
 
+  wyczyscStanStrony();
   infoBox.style.display = 'block';
   saveBtn.disabled = true;
 
@@ -9624,8 +9693,11 @@ async function saveUrl() {
 
       if (!extracted) {
         const powod = bledyNarzedzia.length ? opisBleduPobierania(bledyNarzedzia[0]) : '';
-        throw new Error(_t('err-url-fetch') + (powod ? ' ' + powod : '')
-          + (bladSerwera ? ' (' + bladSerwera + ')' : ''));
+        // Porzadki tekstow (2026-11-07): bez znanego powodu rada ze slownika, a surowy komunikat serwera (zwykle
+        // po angielsku) i kod bledu narzedzia tylko w "Szczegolach technicznych".
+        const bladStrony = new Error(_t('err-url-fetch') + ' ' + (powod || _t('err-url-fetch-rada')));
+        bladStrony.szczegolStrony = [bladSerwera, bledyNarzedzia.join(', ')].filter(Boolean).join(' · ');
+        throw bladStrony;
       }
     }
 
@@ -9644,16 +9716,26 @@ async function saveUrl() {
   } catch(e) {
     fill.style.width = '100%';
     fill.style.background = 'var(--red)';
+    // Porzadki tekstow (2026-11-07): blad zostaje do kolejnej proby (wczesniej znikal po 3 s), szczegol techniczny
+    // zwiniety, a przy stronie, ktorej nie da sie odczytac, przycisk "Wklej tekst" (okno tekstu z nazwa strony).
+    status.removeAttribute('data-i18n');
     status.textContent = _t('msg-blad-prefiks') + ' ' + komunikatBleduApi(e, 'err-url-extract');
     status.style.color = 'var(--red)';
     saveBtn.disabled = false;
-    setTimeout(() => {
-      fill.style.width = '0%';
-      fill.style.background = '';
-      status.textContent = _t('msg-fetching-page');
-      status.style.color = '';
-      infoBox.style.display = 'none';
-    }, 3000);
+    const szczegol = (e && e.szczegolStrony) || szczegolBledu(e);
+    const akcje = document.createElement('div');
+    akcje.className = 'url-blad-akcje';
+    if (szczegol) akcje.innerHTML = '<details class="rozwijka"><summary>' + ikona('chevron-down') + escapeHtml(_t('err-szczegoly')) + '</summary>'
+      + '<div class="tekst-pomoc" style="overflow-wrap:anywhere">' + escapeHtml(String(szczegol).slice(0, 400)) + '</div></details>';
+    if (['wlasny', 'inny', 'odpowiedz'].indexOf(rodzajBledu(e)) !== -1) {
+      const wklej = document.createElement('button');
+      wklej.type = 'button';
+      wklej.className = 'btn-secondary btn-maly';
+      wklej.innerHTML = ikona('file-text') + escapeHtml(_t('btn-wklej-tekst'));
+      wklej.onclick = function () { closeUrlModal(); wklejTekstZamiast(displayName); };
+      akcje.appendChild(wklej);
+    }
+    if (akcje.childNodes.length) infoBox.appendChild(akcje);
   }
 }
 
@@ -10010,11 +10092,11 @@ async function generate(skipPremiumModal = false, opcje = null) {
   const noneSelected = docs.length > 0 && !docs.some(d => d.selected) && !(window._bazaSerwerLiczba > 0);
   if ((liczbaDokumentow() === 0 || noneSelected) && !document.getElementById('use-web').checked && !skipSourceCheck) {
     const isEmpty = liczbaDokumentow() === 0;
-    document.getElementById('no-source-title').textContent = isEmpty ? _t('no-src-title-empty') : _t('no-src-title-none');
-    document.getElementById('no-source-msg').textContent = isEmpty
-      ? _t('no-src-desc-empty')
-      : _t('no-src-desc-none');
-    document.getElementById('no-source-kb-btn').textContent = isEmpty ? _t('btn-add-sources') : _t('btn-select-sources');
+    // Porzadki tekstow (2026-11-07): data-i18n na wlasciwym kluczu - po zmianie jezyka okno nie wraca do "Baza
+    // wiedzy jest pusta", gdy baza ma dokumenty, tylko zadnego nie zaznaczono (przycisk zachowuje ikone).
+    ustawTekst(document.getElementById('no-source-title'), isEmpty ? 'no-src-title-empty' : 'no-src-title-none');
+    ustawTekst(document.getElementById('no-source-msg'), isEmpty ? 'no-src-desc-empty' : 'no-src-desc-none');
+    ustawTekst(document.getElementById('no-source-kb-btn'), isEmpty ? 'btn-add-sources' : 'btn-select-sources');
     document.getElementById('no-source-modal').classList.add('open');
     return false;
   }
@@ -10575,6 +10657,8 @@ ${html}`;
     ustawTekst(ob, artykulUciety ? 'badge-uciety' : 'badge-done');
     ob.className = artykulUciety ? 'badge uwaga' : 'badge ready';
     ob.title = artykulUciety ? _t('msg-artykul-uciety') : '';
+    // Porzadki tekstow (2026-11-07): co zrobic z ucietym artykulem mowil tylko title (na telefonie niewidoczny).
+    if (artykulUciety) pokazPowiadomienie(_t('msg-artykul-uciety'), 'uwaga');
   }
   pokazPrzyciskiWyniku(true, ctype);
   document.getElementById('jsonld-code').textContent = '';
@@ -11334,7 +11418,8 @@ async function sprawdzCzyLinkiZyja(linki) {
       .filter(function (o) { return o.stan !== 'dziala'; })
       .map(function (o) {
         if (o.stan === 'martwy') {
-          return { rodzaj: 'link-martwy', cytat: o.adres, powod: 'HTTP ' + o.status };
+          // Porzadki tekstow (2026-11-07): pod nazwa uwagi zdanie ze slownika, kod HTTP w podpowiedzi linku.
+          return { rodzaj: 'link-martwy', cytat: o.adres, powod: '', status: o.status };
         }
         // Przekroczony czas, blad sieci albo odrzucony adres. Duze witryny za
         // CDN-em potrafia nie odpowiadac na zapytania automatow, wiec to nie
@@ -11943,13 +12028,17 @@ function pokazWynikFaktow(uwagi, stan) {
       // i link do strony z listy zrodel.
       const adresWCytacie = /^link-/.test(rodzaj) && /^https?:\/\/\S+$/i.test(cytat.trim());
       const linkStrony = rodzaj === 'strona' ? linkUwagi(u.adres, u.tytulStrony) : '';
+      // Porzadki tekstow (2026-11-07): kod HTTP niedzialajacego linku tylko w podpowiedzi (takze w wynikach
+      // zapisanych wczesniej z powodem "HTTP 404"), pod nazwa uwagi zdanie ze slownika.
+      const kodHttp = rodzaj === 'link-martwy' ? String(u.status || (/^HTTP (\d{3})$/.exec(String(u.powod || '')) || [])[1] || '') : '';
+      const powodUwagi = kodHttp && /^HTTP \d{3}$/.test(String(u.powod || '')) ? '' : String(u.powod || '');
       return '<div class="fakty-uwaga" data-rodzaj="' + escapeHtml(rodzaj) + '">'
         + '<div class="panel-podtytul">'
         + ikonaZEmoji(IKONY_UWAG[rodzaj] || '⚠') + ' ' + escapeHtml(_t('fakty-rodzaj-' + rodzaj) || rodzaj) + '</div>'
         + (adresWCytacie
-          ? '<div class="fakty-adres" style="margin:3px 0">' + linkUwagi(cytat.trim()) + '</div>'
+          ? '<div class="fakty-adres" style="margin:3px 0">' + linkUwagi(cytat.trim(), kodHttp ? cytat.trim() + ' (HTTP ' + kodHttp + ')' : '') + '</div>'
           : '<div class="cytat">' + (currentLang === 'en' ? '“' : '„') + escapeHtml(cytat) + '”</div>')
-        + '<div class="tekst-zwykly">' + escapeHtml(bezSrednikowTekst(String(u.powod || '')) || _t('fakty-powod-' + rodzaj) || '') + '</div>'
+        + '<div class="tekst-zwykly">' + escapeHtml(bezSrednikowTekst(powodUwagi) || _t('fakty-powod-' + rodzaj) || '') + '</div>'
         // Runda B: ogolnik (i liczba z inna wartoscia w zrodle) z fragmentem zrodla, ktory podaje konkret.
         + (String(u.zrodlo || '').trim() && (rodzaj === 'ogolnik' || rodzaj === 'liczba')
           ? '<div class="fakty-w-zrodle">' + escapeHtml(_t('fakty-w-zrodle')) + ' ' + cytatFaktow(String(u.zrodlo).trim()) + '</div>' : '')
@@ -12005,7 +12094,8 @@ async function redaktorPoFaktach(o) {
     if (!res.ok || data.error) throw bladOdpowiedzi(data, res.status);
     let html = (data.content || []).map(function (b) { return b.text || ''; }).join('')
       .replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
-    if (!html) throw new Error(_t(o.blad));
+    // Porzadki tekstow (2026-11-07): pusta odpowiedz ma wlasne zdanie (przedrostek o.blad dodaje powiadomienie).
+    if (!html) throw new Error(_t('err-empty-response'));
     html = bezSrednikow(oczyscHtmlModelu(html));
     if (kodJezykaArtykulu() === 'pl') html = html.replace(/[—–]/g, '-');
     html = wstawBlokZrodel(html, boxHtml);
@@ -12024,7 +12114,7 @@ async function redaktorPoFaktach(o) {
     uruchomKontroleFaktow(true);
     return true;
   } catch (e) {
-    if (!(e && e.name === 'AbortError')) powiadomBladApi(e, null, null, _t(o.blad));
+    if (!(e && e.name === 'AbortError')) powiadomBladApi(e, null, null, _t(o.blad) + ' ');
     if (btn && btn.isConnected) { btn.classList.remove('btn-working'); btn.innerHTML = ikona(o.ikona) + o.napis(); }
     przyciski.forEach(function (b) { if (b.isConnected) b.disabled = false; });
     return false;
@@ -12968,7 +13058,9 @@ function kopiaDoEksportu(zrodlo, cel) {
   });
   const luki = usunNotatkiLuk(kopia);
   // R6-F (E-02, E-17): pominieta tresc to ostrzezenie, nie informacja.
-  if (luki) pokazPowiadomienie(_t('eksport-pominiete-luki').replace('{n}', String(luki)), 'uwaga');
+  // Porzadki tekstow (2026-11-07): przycisk "Edytuj" w powiadomieniu (wczesniej "(Edytuj)" w zdaniu).
+  if (luki) pokazPowiadomienie(_t('eksport-pominiete-luki').replace('{n}', String(luki)), 'uwaga', 0,
+    editMode ? null : { etykieta: _t('btn-edit'), akcja: function () { if (!editMode) toggleEdit(); } });
   const j = jezykEtykiet();
   uporzadkujArtykul(kopia, j);
   kopia.querySelectorAll('.zrodla-box > .zrodla-label').forEach(function (l) { l.textContent = tekstWJezyku('eksport-zrodla', j); });
@@ -13905,6 +13997,20 @@ function getArticleSnapshot() {
   return simpleHash(text) + ':' + text.length;
 }
 
+// Porzadki tekstow interfejsu (2026-11-07): "Wlacz analize" w pustym stanie Luk zaznacza przelacznik analizy wynikow
+// Google i pokazuje go w briefie (na telefonie widok Brief). Artykulu nie generuje.
+function wlaczAnalizeGoogle() {
+  const p = document.getElementById('use-serp');
+  if (!p) return;
+  if (!p.checked && !p.disabled) { p.checked = true; p.dispatchEvent(new Event('change', { bubbles: true })); }
+  const zaaw = document.getElementById('brief-zaawansowane');
+  if (zaaw && !zaaw.open) zaaw.open = true;
+  if (document.body.classList.contains('is-mobile')) { inspektorZamknij(); ustawWidokMobilny('brief'); }
+  else if (document.body.classList.contains('brief-zwiniety')) przelaczBrief(false);
+  const wiersz = p.closest('.toggle-row') || p;
+  try { wiersz.scrollIntoView({ block: 'center' }); } catch (e) { /* stara przegladarka */ }
+  p.focus({ preventScroll: true });
+}
 function toggleGapPanel() {
   const panel = document.getElementById('gap-panel');
   gapOpen = !gapOpen;
@@ -14166,7 +14272,14 @@ async function runGapAnalysis() {
 
   const tematy = serpData ? (serpData.topics || []).map((t) => String(t).trim()).filter(Boolean) : [];
   if (!tematy.length) {
-    noSerp.textContent = _t(serpBlad ? 'gap-serp-blad' : 'gap-no-serp');
+    // Porzadki tekstow (2026-11-07): pusty stan wzorem .pusty-stan - tytul, opis i przycisk, ktory zaznacza
+    // analize wynikow Google i pokazuje brief (bez generowania). Po bledzie analizy przy pisaniu bez przycisku.
+    const kluczOpisu = serpBlad ? 'gap-serp-blad' : 'gap-no-serp';
+    let ukladPakietu = false;
+    noSerp.innerHTML = '<b data-i18n="gap-no-serp-tytul">' + escapeHtml(_t('gap-no-serp-tytul')) + '</b><p></p>'
+      + (serpBlad ? '' : '<button type="button" class="panel-akcja" id="gap-no-serp-btn" onclick="wlaczAnalizeGoogle()" data-i18n="gap-no-serp-btn" data-ikona="search">'
+        + ikona('search') + escapeHtml(_t('gap-no-serp-btn')) + '</button>');
+    ustawTekst(noSerp.querySelector('p'), kluczOpisu);
 //@@IF proxy
     // R9-F (KOD8-33): pakiet bez SERP (np. Darmowy, przelacznik zablokowany przez okno pakietu): "Wlacz
     // Analize SERP" nie da sie wykonac - mowimy, od ktorego pakietu sa Luki, z przejsciem do pakietow.
@@ -14174,9 +14287,11 @@ async function runGapAnalysis() {
     if (przelSerp && przelSerp.disabled && przelSerp.closest('.zablokowane')) {
       noSerp.innerHTML = '<span class="znacznik-pakietu">' + escapeHtml(_t('pakiet-od-standard-krotko')) + '</span> ' + escapeHtml(_t('gap-serp-pakiet'))
         + ' <button type="button" class="btn-link" onclick="otworzPakiet()">' + escapeHtml(_t('gap-serp-pakiet-btn')) + '</button>';
+      ukladPakietu = true;
     }
 //@@ENDIF
-    noSerp.style.display = 'block'; return;
+    // Uklad pakietu (znacznik, zdanie i link w jednym akapicie) jak dotad, pusty stan w kolumnie .pusty-stan.
+    noSerp.style.display = ukladPakietu ? 'block' : ''; return;
   }
   if (!art || !art.innerHTML.trim()) return;
   loadEl.textContent = _t('gap-loading');
@@ -14565,9 +14680,11 @@ async function improveFromGaps() {
       gapCache = { snapshot: getArticleSnapshot(), result: wynikPo, baseline: gapBaseline, selected: gapSelectedTopics, isDelta: true };
       if (lukiNaWierzchu) renderGapDelta(gapBaseline, wynikPo, gapSelectedTopics);
     } else if (lukiNaWierzchu) runGapAnalysis();
-    if (!lukiNaWierzchu) pokazPowiadomienie(_t('gap-dopisane').replace('{n}', String(pokryteTeraz.length)), 'ok');
+    // Porzadki tekstow (2026-11-07): przycisk "Otworz Luki" zamiast odsylania do zakladki, ktorej nie widac.
+    if (!lukiNaWierzchu) pokazPowiadomienie(_t('gap-dopisane').replace('{n}', String(pokryteTeraz.length)), 'ok', 0,
+      { etykieta: _t('gap-otworz'), akcja: function () { inspektorPokaz('luki'); } });
   } catch (e) {
-    if (nrArt === numerArtykulu && !(e && e.name === 'AbortError')) pokazBladLuk(komunikatBleduApi(e, 'gap-blad'));
+    if (nrArt === numerArtykulu && !(e && e.name === 'AbortError')) pokazBladLuk(komunikatBleduApi(e, 'gap-dopisz-blad'));
   } finally {
     komunikatPonawiania = null;
     if (przerwanieGenerowania === przerwanie) przerwanieGenerowania = null;
@@ -14665,11 +14782,20 @@ function toggleLinksPanel() {
   if (linksOpen) buildLinkSuggestions();
 }
 
+// Porzadki tekstow interfejsu (2026-11-07): jeden wzor pustego stanu zakladki Linki - tytul nad opisem, a gdy
+// brakuje stron firmy albo zadna nie pasuje, przycisk "Dodaj strone".
+function pustyStanLinkow(lista, klucz, zPrzyciskiem) {
+  lista.innerHTML = '<div class="pusty-stan"><b data-i18n="links-pusty-tytul">' + escapeHtml(_t('links-pusty-tytul')) + '</b><p></p>'
+    + (zPrzyciskiem ? '<button type="button" class="panel-akcja" onclick="piiConfirm(openUrlModal)" data-i18n="btn-add-page-txt" data-ikona="link">'
+      + ikona('link') + escapeHtml(_t('btn-add-page-txt')) + '</button>' : '')
+    + '</div>';
+  ustawTekst(lista.querySelector('.pusty-stan > p'), klucz);
+}
 function buildLinkSuggestions() {
   const listEl = document.getElementById('links-list');
   const art = document.getElementById('article');
   if (!art || !art.innerHTML.trim()) {
-    listEl.innerHTML = '<div class="pusty-stan"><p>' + _t('msg-no-art-analyze') + '</p></div>';
+    pustyStanLinkow(listEl, 'msg-no-art-analyze', false);
     return;
   }
 
@@ -14691,14 +14817,13 @@ function buildLinkSuggestions() {
     }
   });
   if (!urlDocs.length) {
-    listEl.innerHTML = '<div class="pusty-stan"><p>' + _t('msg-no-urls') + '</p>'
-      + '<button type="button" class="panel-akcja" onclick="piiConfirm(openUrlModal)">' + ikona('link') + escapeHtml(_t('sidebar-link')) + '</button></div>';
+    pustyStanLinkow(listEl, 'msg-no-urls', true);
     return;
   }
 
   const suggestions = propozycjeLinkow(art.innerText || '', urlDocs);
   if (!suggestions.length) {
-    listEl.innerHTML = '<div class="pusty-stan"><p>' + escapeHtml(_t('links-brak-dopasowan')) + '</p></div>';
+    pustyStanLinkow(listEl, 'links-brak-dopasowan', true);
     return;
   }
 
@@ -15091,11 +15216,32 @@ async function toggleSeoPanel(forceRefresh = false) {
   }
 }
 
+// Porzadki tekstow interfejsu (2026-11-07): naglowek panelu oceny jest w inspektorze ukryty, wiec przy ocenie
+// z pamieci wiersz "Ocena SEO (zapisana)" z przyciskiem "Ocen ponownie" stoi w tresci panelu (jak "Sprawdz
+// ponownie" w Faktach). Wczesniej "(cache) odswiez" w ukrytym naglowku, a klik zamykal panel (seoOpen=true).
+function wierszOcenyZPamieci(idTresci, kluczTytulu, ponow) {
+  const cel = document.getElementById(idTresci);
+  if (!cel) return;
+  cel.querySelectorAll(':scope > .ocena-z-pamieci').forEach(function (w) { w.remove(); });
+  if (!ponow) return;
+  const wiersz = document.createElement('div');
+  wiersz.className = 'ocena-z-pamieci';
+  const opis = document.createElement('span'), tytul = document.createElement('span'), stan = document.createElement('span');
+  opis.className = 'dopisek';
+  ustawTekst(tytul, kluczTytulu);
+  ustawTekst(stan, 'ocena-z-pamieci');
+  opis.append(tytul, ' ', stan);
+  const przycisk = document.createElement('button');
+  przycisk.type = 'button';
+  przycisk.className = 'panel-akcja';
+  przycisk.setAttribute('data-ikona', 'refresh-cw');
+  ustawTekst(przycisk, 'msg-refresh');
+  przycisk.onclick = ponow;
+  wiersz.append(opis, przycisk);
+  cel.prepend(wiersz);
+}
 function updateSeoHeader(fromCache) {
-  const head = document.querySelector('#seo-panel .seo-panel-head h4');
-  if (head) head.innerHTML = fromCache
-    ? '' + _t('seo-panel-title') + ' <span class="dopisek">(cache) <button type="button" class="btn-link" onclick="seoOpen=true;toggleSeoPanel(true)">↻ ' + _t('msg-refresh') + '</button></span>'
-    : _t('seo-panel-title');
+  wierszOcenyZPamieci('seo-content', 'seo-panel-title', fromCache ? function () { seoOpen = false; toggleSeoPanel(true); } : null);
 }
 
 // Jeden wzor naglowka dla czterech ocen (R3-26): duza liczba, skala "/100",
@@ -15218,10 +15364,7 @@ The 6 criteria to evaluate (give one item per criterion):
 }
 
 function updateAioHeader(fromCache) {
-  const head = document.querySelector('#aio-panel .aio-panel-head h4');
-  if (head) head.innerHTML = fromCache
-    ? '' + _t('aio-panel-title') + ' <span class="dopisek">(cache) <button type="button" class="btn-link" onclick="aioOpen=true;toggleAioPanel(true)">↻ ' + _t('msg-refresh') + '</button></span>'
-    : _t('aio-panel-title');
+  wierszOcenyZPamieci('aio-content', 'aio-panel-title', fromCache ? function () { aioOpen = false; toggleAioPanel(true); } : null);
 }
 
 function showAioResult(r) {
@@ -15984,7 +16127,7 @@ function syncMobileKbList() {
       : d.icon === '✏️'
       ? '<span class="kb-tag-text">' + _t('kb-tag-text') + '</span>'
       : '<span class="kb-tag-file">' + _t('kb-tag-file') + '</span>';
-    return `<div class="kb-item${d.selected?' selected':''}" onclick="toggleSelect(${i});syncMobileKbList()"><input type="checkbox" class="kb-check" ${d.selected?'checked':''} onclick="event.stopPropagation();toggleSelect(${i});syncMobileKbList()" style="cursor:pointer;flex-shrink:0;accent-color:var(--red)" /><div class="kb-icon">${ikonaZEmoji(d.icon)}</div><div class="kb-body"><div class="kb-name">${escapeHtml(d.name)}${typeLabel}</div><div class="kb-meta">${d.words.toLocaleString()} ${slowaLiczba(d.words)}</div></div><button class="kb-del" onclick="delDoc(event,${i})" aria-label="${_t('okno-zamknij')}">${ikona('x', 'ikona-s')}</button></div>`;
+    return `<div class="kb-item${d.selected?' selected':''}" onclick="toggleSelect(${i});syncMobileKbList()"><input type="checkbox" class="kb-check" ${d.selected?'checked':''} onclick="event.stopPropagation();toggleSelect(${i});syncMobileKbList()" style="cursor:pointer;flex-shrink:0;accent-color:var(--red)" /><div class="kb-icon">${ikonaZEmoji(d.icon)}</div><div class="kb-body"><div class="kb-name">${escapeHtml(d.name)}${typeLabel}</div><div class="kb-meta">${d.words.toLocaleString()} ${slowaLiczba(d.words)}</div></div><button type="button" class="kb-del" title="${_t('kb-usun-dokument')}" data-i18n-title="kb-usun-dokument" onclick="delDoc(event,${i})" aria-label="${_t('kb-usun-dokument')}" data-i18n-label="kb-usun-dokument">${ikona('x', 'ikona-s')}</button></div>`;
   }).join('');
 
   // sync stats
@@ -16128,7 +16271,9 @@ function saveState() {
     }
     if (!saveState._ostrzezono) {
       saveState._ostrzezono = true;
-      pokazPowiadomienie(_t('msg-magazyn-pelny').replace('{lista}', skrocone.join(', ') || '-'), 'uwaga', 12000);
+      // Porzadki tekstow (2026-11-07): przycisk "Zwolnij miejsce" otwiera baze wiedzy (dokumenty zajmuja najwiecej).
+      pokazPowiadomienie(_t('msg-magazyn-pelny').replace('{lista}', skrocone.join(', ') || '-'), 'uwaga', 15000,
+        { etykieta: _t('btn-zwolnij-miejsce'), akcja: otworzBazeWiedzy });
     }
   }
 }
@@ -16678,7 +16823,7 @@ async function publishToWordPress(title, content, excerpt, status, resEl) {
     resEl.innerHTML = '<span class="stan-ok">WordPress: ' + escapeHtml(label) + '. <a href="' + bezpiecznyHref(post.link) + '" target="_blank" rel="noopener" class="link-akcent">' + escapeHtml(_t('msg-open-link')) + '</a></span>';
   } else {
     const err = await r.json().catch(()=>({}));
-    resEl.innerHTML = htmlBleduCms(r.status, err.message || '', 'wp');
+    resEl.innerHTML = htmlBleduCms(r.status, err.message || '', 'wp', true);
   }
 }
 
@@ -16717,7 +16862,7 @@ async function publishToDrupal(title, content, excerpt, status, resEl) {
     resEl.innerHTML = '<span class="stan-ok">Drupal: ' + escapeHtml(label) + '. <a href="' + bezpiecznyHref(nodeUrl) + '" target="_blank" rel="noopener" class="link-akcent">' + escapeHtml(_t('msg-open-link')) + '</a></span>';
   } else {
     const err = await r.json().catch(()=>({}));
-    resEl.innerHTML = htmlBleduCms(r.status, err?.errors?.[0]?.detail || err?.message || '', 'drupal');
+    resEl.innerHTML = htmlBleduCms(r.status, err?.errors?.[0]?.detail || err?.message || '', 'drupal', true);
   }
 }
 
@@ -16792,8 +16937,11 @@ function rysujPropozycje() {
   if (!propozycjeTematow.length) { cel.innerHTML = ''; return; }
   cel.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px">'
     + '<span class="tekst-pomoc">' + _t('tematy-kliknij') + '</span>'
-    + '<button class="btn-secondary btn-maly" style="flex-shrink:0" onclick="kopiujTematy(this)">'
-    + _t('tematy-kopiuj') + '</button></div>'
+    // Porzadki tekstow (2026-11-07): w trybie demonstracyjnym zamiast "Kopiuj liste" przycisk do klucza Anthropic.
+    + (propozycjeTematow.some(function (t) { return t.demo; }) && moznaPodlaczycKlucz()
+      ? przyciskPodlaczKlucz('anthropic', 'btn-secondary btn-maly')
+      : '<button class="btn-secondary btn-maly" style="flex-shrink:0" onclick="kopiujTematy(this)">' + _t('tematy-kopiuj') + '</button>')
+    + '</div>'
     + propozycjeTematow.map(function(t, i) {
         return '<div style="display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border)">'
           + '<span class="tekst-pomoc num" style="padding-top:2px;min-width:18px">'
@@ -16856,7 +17004,7 @@ async function generujTematy() {
   var isDemo = API_KEY === 'WSTAW_TUTAJ_KLUCZ_API' || API_KEY === 'WSTAW_TUTAJ_NOWY_KLUCZ_API';
   if (isDemo) {
     propozycjeTematow = Array.from({ length: 10 }, function(_, i) {
-      return { temat: _t('tematy-demo-temat') + ' ' + (i + 1), dlaczego: _t('tematy-demo-dlaczego') };
+      return { temat: _t('tematy-demo-temat') + ' ' + (i + 1), dlaczego: _t('tematy-demo-dlaczego'), demo: true };
     });
     btn.disabled = false; btn.style.opacity = '';
     rysujPropozycje();
@@ -17110,7 +17258,11 @@ async function analyzeBrandVoice() {
   const articles = document.getElementById('bv-articles').value.trim();
   if (!articles) return;
   document.getElementById('bv-input-area').style.display = 'none';
-  document.getElementById('bv-loading').style.display = 'block';
+  // Porzadki tekstow (2026-11-07): po bledzie w #bv-loading zostawal blok bledu, wiec kolejna analiza znowu
+  // pokazywala blad zamiast napisu ladowania. Napis ze slownika przy kazdym starcie.
+  const ladowanieBv = document.getElementById('bv-loading');
+  ustawTekst(ladowanieBv, 'bv-loading');
+  ladowanieBv.style.display = 'block';
 
   const isDemo = API_KEY === 'WSTAW_TUTAJ_KLUCZ_API' || API_KEY === 'WSTAW_TUTAJ_NOWY_KLUCZ_API';
   if (isDemo) {
@@ -17132,7 +17284,9 @@ async function analyzeBrandVoice() {
     const raw = (d.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
     saveBrandVoice(parsujJsonModelu(raw));
   } catch(e) {
-    document.getElementById('bv-loading').innerHTML = blokBledu(e, 'analyzeBrandVoice()');
+    // Bez data-i18n: zmiana jezyka nie zamienia bloku bledu z powrotem na napis ladowania.
+    ladowanieBv.removeAttribute('data-i18n');
+    ladowanieBv.innerHTML = blokBledu(e, 'analyzeBrandVoice()');
   }
 }
 
@@ -17241,6 +17395,7 @@ async function runRepurpose(format) {
   const out = document.getElementById('repurpose-out');
   out.style.display = 'none';
   out.value = '';
+  document.getElementById('repurpose-klucz')?.remove();
 
   // R4 (kod-12): caly artykul bez zrodel i meta (limit 20 000 znakow zamiast 4000);
   // numer zadania - odpowiedz starszej przerobki nie nadpisze nowszej.
@@ -17339,7 +17494,7 @@ WAŻNE: Zwróć TYLKO tekst landing page, gotowy do wklejenia.`
 
   const noKey = !maDostepDoApi();
   if (noKey) {
-    setTimeout(() => { if (nrPrzerobki === runRepurpose.nr) showRepurpose(_t('rp-source-missing')); }, 800);
+    setTimeout(() => { if (nrPrzerobki === runRepurpose.nr) showRepurpose(_t('rp-source-missing'), true); }, 800);
     return;
   }
 
@@ -17364,11 +17519,17 @@ WAŻNE: Zwróć TYLKO tekst landing page, gotowy do wklejenia.`
 }
 runRepurpose.nr = 0;
 
-function showRepurpose(text) {
+function showRepurpose(text, bezKlucza) {
   document.getElementById('repurpose-loading').style.display = 'none';
   const out = document.getElementById('repurpose-out');
   out.value = text;
   out.style.display = 'block';
+  // Porzadki tekstow (2026-11-07): bez klucza pod polem przerobki przycisk do kluczy (pelna etykieta).
+  document.getElementById('repurpose-klucz')?.remove();
+  if (bezKlucza) {
+    const przycisk = przyciskPodlaczKlucz('anthropic', 'btn-secondary btn-maly');
+    if (przycisk) out.insertAdjacentHTML('afterend', '<div id="repurpose-klucz" style="margin-top:8px">' + przycisk + '</div>');
+  }
   // Auto-resize to show full content
   out.style.height = 'auto';
   out.style.height = Math.min(out.scrollHeight + 4, 500) + 'px';
@@ -18351,7 +18512,8 @@ async function runVisibility() {
     return;
   }
   if (!maDostepDoApi()) {
-    document.getElementById('vis-results').innerHTML = '<div class="gap-info blad">' + (en ? 'Anthropic API key is missing.' : 'Brak klucza API Anthropic.') + '</div>';
+    // Porzadki tekstow (2026-11-07): zdanie ze slownika i przycisk do kluczy (wczesniej tylko "Brak klucza API Anthropic.").
+    document.getElementById('vis-results').innerHTML = '<div class="gap-info blad">' + escapeHtml(_t('aiv-no-key')) + '</div>' + przyciskPodlaczKlucz('anthropic');
     return;
   }
   const c = saveVisConfig();
@@ -18507,11 +18669,10 @@ function renderVisResults(run) {
 }
 
 async function runNarrative() {
-  const en = currentLang === 'en';
   const gptMode = (typeof USE_AZURE_GPT !== 'undefined' && USE_AZURE_GPT && typeof AZURE_OPENAI_CHAT_URL !== 'undefined' && AZURE_OPENAI_CHAT_URL && !AZURE_OPENAI_CHAT_URL.startsWith('WSTAW'));
   const out = document.getElementById('vis-results');
-  if (gptMode) { out.innerHTML = '<div class="gap-info blad">' + (en ? 'Web search is not available in the GPT-only mode.' : 'Wyszukiwanie w sieci nie działa w trybie GPT-only.') + '</div>'; return; }
-  if (!maDostepDoApi()) { out.innerHTML = '<div class="gap-info blad">' + (en ? 'Anthropic API key is missing.' : 'Brak klucza API Anthropic.') + '</div>'; return; }
+  if (gptMode) { out.innerHTML = '<div class="gap-info blad">' + escapeHtml(_t('aiv-gpt-na')) + '</div>'; return; }
+  if (!maDostepDoApi()) { out.innerHTML = '<div class="gap-info blad">' + escapeHtml(_t('aiv-no-key')) + '</div>' + przyciskPodlaczKlucz('anthropic'); return; }
   const brand = document.getElementById('vis-brand').value.trim() || nazwaMarki();
   const btn = document.getElementById('vis-narr-btn');
   const prog = document.getElementById('vis-progress');
@@ -20015,7 +20176,7 @@ function imgGetApiRatio(w, h) {
 async function generateImage() {
   const key = imgGetOpenAIKey();
   const isProxy = (key === 'proxy');
-  if (!key) { powiadomBlad(_t('msg-no-openai-key')); return; }
+  if (!key) { powiadomBrakKlucza(_t('msg-no-openai-key'), 'openai'); return; }
 
   const context = document.getElementById('img-context')?.value?.trim() || '';
   if (!context && !imgRefBase64 && !imgRefIsUrl) {
@@ -20367,7 +20528,7 @@ async function aivQueryAI(q) {
 
 async function aivCheckOne(i, btn) {
   if (aivIsGpt()) { powiadomBlad(_t('aiv-gpt-na')); return; }
-  if (!aivHasApi()) { powiadomBlad(_t('aiv-no-key')); return; }
+  if (!aivHasApi()) { powiadomBrakKlucza(_t('aiv-no-key'), 'anthropic'); return; }
   var c = aivCfg(); var q = c.queries[i]; if (!q) return;
   var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; btn.innerHTML = '...'; }
   try {
@@ -20380,7 +20541,7 @@ async function aivCheckOne(i, btn) {
 }
 async function aivCheckAll(btn) {
   if (aivIsGpt()) { powiadomBlad(_t('aiv-gpt-na')); return; }
-  if (!aivHasApi()) { powiadomBlad(_t('aiv-no-key')); return; }
+  if (!aivHasApi()) { powiadomBrakKlucza(_t('aiv-no-key'), 'anthropic'); return; }
   var c = aivCfg(); if (!c.queries.length) return;
   var old = btn ? btn.innerHTML : ''; if (btn) { btn.disabled = true; }
   for (var i = 0; i < c.queries.length; i++) {
@@ -20508,7 +20669,7 @@ function setTtsBtn(btn, state) {
 /* ── Silniki TTS (zwracają mp3 Blob) ── */
 async function oaTTS(text, voiceOverride) {
   var key = voiceOAKey();
-  if (!voiceIsProxy() && !key) { powiadomBlad(_t('voice-no-key')); throw new Error('no key'); }
+  if (!voiceIsProxy() && !key) { powiadomBrakKlucza(_t('voice-no-key'), 'openai'); throw new Error('no key'); }
   var headers = { 'Content-Type': 'application/json' };
   if (!voiceIsProxy()) headers['Authorization'] = 'Bearer ' + key;
   var res = await fetchZadania(OPENAI_TTS_ENDPOINT, { method:'POST', headers, body: JSON.stringify({
@@ -20525,7 +20686,7 @@ async function oaTTS(text, voiceOverride) {
 async function elevenTTS(text, voiceOverride) {
   var vid = voiceOverride || voiceCfg.elevenVoice || '21m00Tcm4TlvDq8ikWAM';
   var proxy = voiceElevenProxy(), key = voiceElevenKey();
-  if (!proxy && !key) { powiadomBlad(_t('voice-no-eleven-key')); throw new Error('no eleven key'); }
+  if (!proxy && !key) { powiadomBrakKlucza(_t('voice-no-eleven-key'), 'eleven'); throw new Error('no eleven key'); }
   var url, headers, body;
   if (proxy) {
     url = ELEVEN_TTS_ENDPOINT;
@@ -20615,7 +20776,7 @@ function voiceStop(btn) {
 async function ttsDownloadMp3(btn) {
   var text = voiceArticleText();
   if (!text.trim()) return;
-  if (voiceCfg.engine === 'web') { powiadomBlad(_t('voice-no-key')); return; }
+  if (voiceCfg.engine === 'web') { powiadomZmienSilnik(_t('audio-mp3-silnik'), openVoiceSettings); return; }
   var old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="au-spin"></span>';
   try {
     var sig = audioReadSig(text);
@@ -20678,7 +20839,7 @@ function stopDictate() {
 }
 async function oaTranscribe(blob) {
   var key = voiceOAKey();
-  if (!voiceIsProxy() && !key) { powiadomBlad(_t('voice-no-key')); throw new Error('no key'); }
+  if (!voiceIsProxy() && !key) { powiadomBrakKlucza(_t('voice-no-key'), 'openai'); throw new Error('no key'); }
   var fd = new FormData();
   fd.append('file', blob, 'audio.webm');
   fd.append('model', 'gpt-4o-transcribe');
@@ -20779,7 +20940,7 @@ function setPodBtn(btn, st) {
 }
 async function podcastSpeak(btn) {
   if (ttsState.playing) { voiceStop(btn); setPodBtn(btn, 'idle'); return; }
-  if (voiceCfg.engine === 'web') { powiadomBlad(_t('pod-need-ai')); return; }
+  if (voiceCfg.engine === 'web') { powiadomZmienSilnik(_t('pod-need-ai'), openVoiceSettings); return; }
   var units = podUnits(); if (!units.length) return;
   ttsState.playing = true; ttsState.cancel = false; setPodBtn(btn, 'loading');
   ttsState.btn = btn; ttsState.chunkTotal = units.length; ttsState.chunkIdx = 0;
@@ -20795,7 +20956,7 @@ async function podcastSpeak(btn) {
   ttsState.playing = false; setPodBtn(btn, 'idle'); audioBarHide();
 }
 async function podcastDownload(btn) {
-  if (voiceCfg.engine === 'web') { powiadomBlad(_t('pod-need-ai')); return; }
+  if (voiceCfg.engine === 'web') { powiadomZmienSilnik(_t('pod-need-ai'), openVoiceSettings); return; }
   var units = podUnits(); if (!units.length) return;
   var old = btn.innerHTML; btn.disabled = true; btn.innerHTML = ikona('loader', 'kreci');
   try {
@@ -20876,6 +21037,17 @@ var AUDIO_MODELS = {
     {id:'tts-1-hd', name:'tts-1-hd', tag:'audio-m-hd'}
   ]
 };
+// Porzadki tekstow interfejsu (2026-11-07): glos przegladarki nie tworzy pliku MP3 ani podcastu na kilka glosow.
+// Powiadomienie z przyciskiem "Zmien silnik": przy czytaniu na glos okno ustawien glosu, w module Audio pole silnika.
+function powiadomZmienSilnik(tekst, akcja) {
+  return pokazPowiadomienie(tekst, 'uwaga', 0, { etykieta: _t('btn-zmien-silnik'), akcja: akcja });
+}
+function pokazWyborSilnikaAudio() {
+  const s = document.getElementById('au-engine');
+  if (!s) return;
+  try { s.scrollIntoView({ block: 'center' }); } catch (e) { /* stara przegladarka */ }
+  s.focus({ preventScroll: true });
+}
 function audioEng(){ var e=voiceCfg.audioEngine; return (e==='eleven'||e==='openai'||e==='web')?e:'eleven'; }
 function _audioFirstG(list,g){ for(var i=0;i<list.length;i++){ if((list[i].g||'N')===g) return list[i].id; } return null; }
 function audioRenderModel(){
@@ -21158,7 +21330,7 @@ async function audioPlay(btn){
   if(audioActiveBtn && audioActiveBtn!==btn) audioSetPlayBtn(audioActiveBtn,'idle');
   audioInline=true; audioActiveBtn=btn;
   if(audioEng()==='web'){
-    if(audioType()==='podcast'){ powiadomBlad(_t('pod-need-ai')); return; }
+    if(audioType()==='podcast'){ powiadomZmienSilnik(_t('pod-need-ai'), pokazWyborSilnikaAudio); return; }
     var ss=window.speechSynthesis;
     if(ss && ss.speaking && !ss.paused){ ss.pause(); audioSetPlayBtn(btn,'paused'); return; }
     if(ss && ss.paused){ ss.resume(); audioSetPlayBtn(btn,'playing'); return; }
@@ -21193,7 +21365,7 @@ async function audioDownloadDocx(btn){
   btn.innerHTML=old; btn.disabled=false;
 }
 async function audioDownload(btn){
-  if(audioEng()==='web'){ powiadomBlad(_t('pod-need-ai')); return; }
+  if(audioEng()==='web'){ powiadomZmienSilnik(_t('audio-mp3-silnik'), pokazWyborSilnikaAudio); return; }
   var old=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="au-spin"></span>';
   try{ await audioBuild(); var a=document.createElement('a'); a.href=AUDIO.url; a.download=audioFileName(); document.body.appendChild(a); a.click(); a.remove(); }
   catch(e){ if((e&&e.message)!=='cancel'&&(e&&e.message)!=='empty') powiadomBladApi(e, null, 'audio'); }
@@ -21238,7 +21410,7 @@ function newsletterPromptBlock() {
 const LIMIT_PLIKU_TRANSKRYPCJI = 25 * 1024 * 1024 - 16 * 1024;
 async function transcribeMedia(file) {
   var key = voiceOAKey();
-  if (!voiceIsProxy() && !key) { powiadomBlad(_t('voice-no-key')); throw new Error('no key'); }
+  if (!voiceIsProxy() && !key) { powiadomBrakKlucza(_t('voice-no-key'), 'openai'); throw new Error('no key'); }
   if (file && file.size > LIMIT_PLIKU_TRANSKRYPCJI) throw new Error(_t('err-transkrypcja-za-duzy').replace('{mb}', formatujLiczbe(file.size / 1048576, 1)));
   var fd = new FormData();
   fd.append('file', file, file.name || 'audio.webm');
@@ -21784,15 +21956,22 @@ async function kbAudioTranscribeAndOpen(file) {
     btn.textContent = etykieta;
   };
 
+  // Porzadki tekstow (2026-11-07): dokument znikal od razu, bez pytania (u administratora takze wspolny dokument
+  // zespolu), a blad przechodzil po cichu. Teraz pytanie jak przy usuwaniu z Historii i komunikat bledu.
   window.usunZBazySerwera = async function(id, zakres){
+    var dok = (window._bazaSerwer || []).filter(function(d){ return String(d.id) === String(id); })[0];
+    if (!window.confirm(tekst('bazas-usun-pytanie', '').replace('{nazwa}', dok && dok.nazwa ? dok.nazwa : ''))) return;
     try {
-      await fetch('/api/baza/usun', {
+      var odp = await fetch('/api/baza/usun', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: id, zakres: zakres })
       });
-      await odswiezListeBazy();
-    } catch(e){}
+      if (!odp.ok) powiadomBlad(tekst('bazas-blad', 'Nie udało się połączyć z serwerem.'));
+    } catch(e){
+      powiadomBlad(tekst('bazas-blad', 'Nie udało się połączyć z serwerem.'));
+    }
+    await odswiezListeBazy();
   };
 
   // Wolane przy generowaniu: zwraca gotowy blok wiedzy albo pusty ciag.
@@ -23378,6 +23557,7 @@ async function kbAudioTranscribeAndOpen(file) {
   }
   window.dataOdnowieniaPakietu = dataOdnowienia;
   function mozeKupic(){ var pl = stan() && stan().platnosci; return !!(pl && pl.wlaczone && pl.mozeKupic && pl.sprzedaz !== false); }
+  window.mozeKupicPakiet = mozeKupic; // Porzadki tekstow (2026-11-07): przycisk "Wybierz pakiet" w komunikatach (moznaWybracPakiet)
   function rysujKarte(){
     var karta = el('konto-karta'); if (!karta) return;
     var rodzaj = '', a = stanArtykulow();
@@ -23636,6 +23816,11 @@ async function kbAudioTranscribeAndOpen(file) {
     postJson('/api/platnosci/panel', {}).then(function(w){
       if (w.o.ok && w.d.url) { location.assign(w.d.url); return; }
       var kod = kodOdpowiedzi(w.o, w.d);
+      // Porzadki tekstow (2026-11-07): konto bez subskrypcji dostaje w powiadomieniu przycisk "Wybierz pakiet".
+      if (kod === 'brak-subskrypcji' && mozeKupic()) {
+        pokazPowiadomienie(tekst('zakup-bl-brak-subskrypcji', ''), 'blad', 0, { etykieta: tekst('btn-wybierz-pakiet', ''), akcja: function(){ window.otworzPakiet('zakup'); } });
+        return;
+      }
       powiadomBlad(tekst(kod === 'brak-subskrypcji' ? 'zakup-bl-brak-subskrypcji' : kod === 'dostawca-platnosci-niedostepny' ? 'zakup-bl-stripe' : 'zakup-bl-inny', ''));
     }).catch(function(){ powiadomBlad(tekst('err-siec', '')); });
   };
