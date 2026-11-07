@@ -2399,6 +2399,17 @@ KONTROLE += [
      "Baza wiedzy, Historia i Widoczność AI są w górnym pasku (na telefonie w dolnym i w Koncie).", None, ("proxy",)),
 ]
 
+# Porzadki: nieuzywane klucze slownika (2026-11-07). 69 kluczy bez uzycia w kodzie usuniete z PL i EN;
+# narzedzia/audyt_klucze.py pilnuje calego slownika, a te sygnatury kilku reprezentatywnych kluczy.
+KONTROLE += [
+    ("UI-K/stary-przycisk", "slownik bez starego klucza przycisku samokorekty (btn-premium-active, kod uzywa btn-premium)",
+     None, "'btn-premium-active':", None),
+    ("UI-K/stary-pusty-stan", "slownik bez starych tekstow pustego wyniku (out-placeholder*, zastapione pustym stanem)",
+     None, "re:'out-placeholder(-sub|-sub-full)?':", None),
+    ("UI-K/klucz-jak-id", "slownik bez kluczy, ktore byly tylko identyfikatorami elementow (gap-improve-btn, tab-generator)",
+     None, "re:'(gap-improve-btn|tab-generator|serp-phrases)':", None),
+]
+
 KONTROLE_BIBLIOTEK = [
     ("R9-B/docx-h2", "DOCX: Heading2 20 pt nad i 12 pt pod (wczesniej 18 i 6 pt)", "docx-natywny-4.js",
      '<w:spacing w:before="400" w:after="240" w:line="264" w:lineRule="auto"/><w:outlineLvl w:val="1"/>', None),
@@ -2605,6 +2616,8 @@ KONTROLE_PLIKOW = [
      "serwer/start.js", "const WZOR_KLUCZA = WZOR_KLUCZA_ANTHROPIC;", "const WZOR_KLUCZA = /^sk-ant-api"),
     ("SB/cli-nie-dziala", "cli.sh start: klucz odrzucony przez Anthropic to naglowek NIE DZIALA, nie 'wlaczony'",
      "serwer/uzytkownicy.js", "console.log('Pierwszy artykuł bez klucza: NIE DZIAŁA (Anthropic odrzuca klucz startu).');", None),
+    ("UI-K/audyt-ci", "CI uruchamia audyt nieuzywanych kluczy slownika (porzadki 2026-11-07)",
+     ".github/workflows/kontrola.yml", "python3 narzedzia/audyt_klucze.py", None),
 ]
 
 
