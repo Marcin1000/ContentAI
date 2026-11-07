@@ -3609,6 +3609,166 @@ async function scenariuszCzysto(b) {
   }
 }
 
+// Ikona sama w kafelku (kwadrat albo kolko z tlem lub ramka) stoi na srodku: bez odstepu z prawej, ktory
+// regula „span > .ikona:first-child” daje ikonom obok tekstu. Klodka przy dokumencie z bazy na serwerze stala
+// 4 px od lewej i 10 px od prawej krawedzi kwadratu (zgloszenie 2026-11-07), awatar konta bez inicjalow tak samo.
+async function scenariuszIkony(b) {
+  for (const [w, h] of [[412, 900], [1440, 900]]) {
+    const { k, s, bledyJs } = await nowaStrona(b, 'pl', {}, { viewport: { width: w, height: h } });
+    const r = await s.evaluate(() => {
+      const telefon = document.body.classList.contains('is-mobile');
+      if (telefon) { const nav = document.getElementById('mnav-kb'); if (nav) nav.click(); }
+      // Dokument z bazy na serwerze (wariant z serwerem rysuje go tak samo w rysujBazeWPanelu).
+      const lista = document.getElementById(telefon ? 'kb-list-mobile' : 'kb-list');
+      const wiersz = document.createElement('div');
+      wiersz.innerHTML = '<div class="kb-item kb-item-serwer"><span class="kb-icon" aria-hidden="true">' + ikona('lock') + '</span>'
+        + '<div class="kb-body"><div class="kb-name">dokument.docx</div><div class="kb-meta">12 fragm.</div></div></div>';
+      if (lista) lista.prepend(wiersz);
+      const zle = [], sprawdzone = [];
+      document.querySelectorAll('span > svg.ikona:only-child').forEach((sv) => {
+        const sp = sv.parentElement;
+        if ((sp.textContent || '').trim()) return;
+        const st = getComputedStyle(sp);
+        const kafel = st.backgroundColor !== 'rgba(0, 0, 0, 0)' || parseFloat(st.borderTopWidth) > 0;
+        const a = sp.getBoundingClientRect(), c = sv.getBoundingClientRect();
+        if (!kafel || a.width < 12 || c.width === 0) return;
+        const l = c.left - a.left, p = a.right - c.right;
+        sprawdzone.push(sp.className || sp.id);
+        if (Math.abs(l - p) > 1.5) zle.push((sp.className || sp.id) + ': ' + l.toFixed(1) + ' / ' + p.toFixed(1) + ' px');
+      });
+      return { zle, sprawdzone: [...new Set(sprawdzone)] };
+    });
+    wynik('Ikony (' + w + ' px): ikona sama w kafelku na srodku (klodka dokumentu z bazy na serwerze i inne kafelki)',
+      r.zle.length === 0 && r.sprawdzone.indexOf('kb-icon') !== -1, JSON.stringify(r));
+    wynik('Ikony (' + w + ' px): bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+    if (bledow) await zrzut(s, 'ikony-' + w);
+    await k.close();
+  }
+}
+
+// Uwaga z telefonu (2026-11-07): "Jak to dziala?" mialo nierowne podswietlenie, ktore zostawalo po zwinieciu.
+// Na ekranie dotykowym :hover zostaje na ostatnio dotknietym elemencie, wiec kazda regula z :hover musi stac
+// w @media (hover: hover). Rozwijka: ramka w kolumnie tekstu i rowne odstepy po obu stronach.
+async function scenariuszDotyk(b) {
+  // 1) Telefon: zasada w CSS, rozwijki po dwukrotnym dotknieciu, przycisk usuwania dokumentu.
+  {
+    const { k, s, bledyJs } = await nowaStrona(b, 'pl', {}, { viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true });
+    const css = await s.evaluate(() => {
+      const zle = [];
+      let wszystkie = 0;
+      const przejdz = (reguly, wHover) => {
+        for (const r of reguly) {
+          if (r.selectorText !== undefined) {
+            if (r.selectorText.indexOf(':hover') !== -1) { wszystkie++; if (!wHover) zle.push(r.selectorText.slice(0, 80)); }
+            if (r.cssRules && r.cssRules.length) przejdz(r.cssRules, wHover);
+          } else if (r.cssRules) {
+            const warunek = r.media ? r.media.mediaText : (r.conditionText || '');
+            przejdz(r.cssRules, wHover || /\(\s*hover\s*:\s*hover\s*\)/.test(warunek));
+          }
+        }
+      };
+      for (const arkusz of document.styleSheets) { try { przejdz(arkusz.cssRules, false); } catch (e) { /* arkusz z innej domeny */ } }
+      return { wszystkie, zle };
+    });
+    wynik('Dotyk: kazda regula z :hover w @media (hover: hover) - na telefonie najazd nie zostaje po dotknieciu',
+      css.wszystkie >= 80 && css.zle.length === 0, 'regul z :hover: ' + css.wszystkie + ', poza (hover: hover): ' + css.zle.length + ' ' + JSON.stringify(css.zle.slice(0, 6)));
+    for (const [opis, sel] of [['rozwijka "Jak to dziala?"', 'details.rozwijka-jak:has(> p[data-i18n="toggle-web-hint-jak"]) > summary'], ['Ustawienia zaawansowane', 'details.zaawansowane > summary']]) {
+      const loc = s.locator(sel).first();
+      await loc.scrollIntoViewIfNeeded();
+      const styl = () => loc.evaluate((el) => { const cs = getComputedStyle(el); return { tlo: cs.backgroundColor, kolor: cs.color, otwarta: el.parentElement.open }; });
+      const przed = await styl();
+      await loc.tap(); await s.waitForTimeout(250);
+      await loc.tap(); await s.waitForTimeout(250);
+      const po = await styl();
+      wynik('Dotyk (412 px): ' + opis + ' po rozwinieciu i zwinieciu wyglada jak przed dotknieciem',
+        !po.otwarta && po.tlo === przed.tlo && po.kolor === przed.kolor, JSON.stringify({ przed, po }));
+    }
+    const del = await s.evaluate(async () => {
+      addDoc('oferta-uslug.txt', 'Tekst oferty. '.repeat(60), 'file-text');
+      document.getElementById('mnav-kb').click();
+      await new Promise((r) => setTimeout(r, 400));
+      const d = document.querySelector('#kb-list-mobile .kb-item .kb-del');
+      return d ? { op: getComputedStyle(d).opacity, w: d.getBoundingClientRect().width } : null;
+    });
+    wynik('Dotyk (412 px): przycisk usuwania dokumentu lokalnego jest widoczny (bez najazdu nie bylo go widac)',
+      !!del && del.op === '1' && del.w > 0, JSON.stringify(del));
+    // Usuniecie bez potwierdzenia: powiadomienie z "Cofnij" przywraca dokument na to samo miejsce.
+    await s.evaluate(() => addDoc('cennik-2026.txt', 'Cennik uslug. '.repeat(40), 'file-text'));
+    await s.waitForTimeout(200);
+    const lista = () => s.evaluate(() => ({ docs: docs.map((d) => d.name), tel: [...document.querySelectorAll('#kb-list-mobile .kb-item .kb-name')].map((n) => n.firstChild.textContent) }));
+    const przedUsunieciem = await lista();
+    await s.locator('#kb-list-mobile .kb-item .kb-del').first().tap();
+    await s.waitForTimeout(300);
+    const poUsunieciu = await lista();
+    const pow = await s.evaluate(() => { const p = [...document.querySelectorAll('.powiadomienie')].pop(); return p ? { tekst: p.querySelector('.powiadomienie-tekst').textContent, akcja: (p.querySelector('.powiadomienie-akcja') || {}).textContent || '' } : null; });
+    wynik('Dotyk (412 px): usuniecie dokumentu pokazuje powiadomienie z "Cofnij"',
+      poUsunieciu.docs.length === przedUsunieciem.docs.length - 1 && !!pow && pow.tekst === 'Usunięto z bazy wiedzy: ' + przedUsunieciem.docs[0] && pow.akcja === 'Cofnij',
+      JSON.stringify({ przedUsunieciem, poUsunieciu, pow }));
+    if (pow) { await s.locator('.powiadomienie-akcja').last().tap(); await s.waitForTimeout(300); }
+    const poCofnieciu = await lista();
+    wynik('Dotyk (412 px): "Cofnij" przywraca dokument na to samo miejsce (lista i panel na telefonie)',
+      JSON.stringify(poCofnieciu.docs) === JSON.stringify(przedUsunieciem.docs) && JSON.stringify(poCofnieciu.tel) === JSON.stringify(przedUsunieciem.docs),
+      JSON.stringify({ przedUsunieciem, poCofnieciu }));
+    // Uwaga z przegladu PR #83: dwa usuniecia i cofniecia w innej kolejnosci. Z [A, B, C] usun B, potem A,
+    // cofnij B, potem A - ma wrocic [A, B, C], a nie [A, C, B] (zapamietany indeks sie dezaktualizowal).
+    const kolejnosc = await s.evaluate(async () => {
+      const czekaj = (ms) => new Promise((r) => setTimeout(r, ms));
+      document.querySelectorAll('.powiadomienie').forEach((p) => p.remove());
+      docs.length = 0;
+      ['A.txt', 'B.txt', 'C.txt'].forEach((n) => addDoc(n, 'Tresc dokumentu ' + n + '. '.repeat(20), 'file-text'));
+      const zdarzenie = { stopPropagation() {} };
+      delDoc(zdarzenie, docs.findIndex((d) => d.name === 'B.txt'));
+      delDoc(zdarzenie, docs.findIndex((d) => d.name === 'A.txt'));
+      const cofnij = (n) => { const p = [...document.querySelectorAll('.powiadomienie')].find((e) => e.textContent.indexOf(n) !== -1); if (p) p.querySelector('.powiadomienie-akcja').click(); };
+      cofnij('B.txt'); await czekaj(50);
+      cofnij('A.txt'); await czekaj(300);
+      return { docs: docs.map((d) => d.name), tel: [...document.querySelectorAll('#kb-list-mobile .kb-item .kb-name')].map((n) => n.firstChild.textContent) };
+    });
+    wynik('Dotyk (412 px): dwa usuniecia cofniete w innej kolejnosci przywracaja kolejnosc [A, B, C]',
+      JSON.stringify(kolejnosc.docs) === '["A.txt","B.txt","C.txt"]' && JSON.stringify(kolejnosc.tel) === '["A.txt","B.txt","C.txt"]', JSON.stringify(kolejnosc));
+    wynik('Dotyk (412 px): bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+    if (bledow) await zrzut(s, 'dotyk-412');
+    await k.close();
+  }
+  // 2) Komputer: najazd dziala, ramka w kolumnie, odstepy rowne (zamknieta i otwarta).
+  {
+    const { k, s, bledyJs } = await nowaStrona(b, 'pl', {}, { viewport: { width: 1440, height: 900 } });
+    const sel = 'details.rozwijka-jak:has(> p[data-i18n="toggle-web-hint-jak"]) > summary';
+    const loc = s.locator(sel);
+    await loc.scrollIntoViewIfNeeded();
+    for (const otwarta of [false, true]) {
+      await loc.evaluate((el, o) => { el.parentElement.open = o; }, otwarta);
+      await s.mouse.move(5, 5);
+      const box = await loc.boundingBox();
+      await s.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await s.waitForTimeout(250);
+      const g = await loc.evaluate((el) => {
+        const r = el.getBoundingClientRect(), ik = el.querySelector('svg.ikona').getBoundingClientRect();
+        const kolumna = el.parentElement.previousElementSibling.getBoundingClientRect().left;
+        const tn = [...el.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+        const zakres = document.createRange(); zakres.selectNodeContents(tn);
+        const t = zakres.getBoundingClientRect();
+        const wzor = document.createElement('span'); wzor.style.background = 'var(--c-najazd)'; document.body.appendChild(wzor);
+        const najazd = getComputedStyle(wzor).backgroundColor; wzor.remove();
+        // Szewron (chevron-down: punkty 6,9 / 12,15 / 18,9 w polu 24, kreska 1,5 px) w ikonie 16 px:
+        // zamkniety (obrot -90 st.) zaczyna sie 5,25 px od lewej krawedzi ikony, otwarty 3,25 px.
+        const tusz = el.parentElement.open ? 3.25 : 5.25;
+        return { tlo: getComputedStyle(el).backgroundColor, najazd, ramkaOdKolumny: +(r.left - kolumna).toFixed(2),
+          lewy: +(ik.left + tusz - r.left).toFixed(2), prawy: +(r.right - t.right).toFixed(2) };
+      });
+      const stan = otwarta ? 'otwarta' : 'zamknieta';
+      wynik('Dotyk (1440 px): rozwijka ' + stan + ' - najazd mysza podswietla etykiete', g.tlo === g.najazd, JSON.stringify(g));
+      wynik('Dotyk (1440 px): rozwijka ' + stan + ' - ramka podswietlenia zaczyna sie w kolumnie tekstu (nie wystaje w lewo)',
+        Math.abs(g.ramkaOdKolumny) <= 0.5, JSON.stringify(g));
+      wynik('Dotyk (1440 px): rozwijka ' + stan + ' - odstep od krawedzi do szewronu i od etykiety do krawedzi rowny (do 1,5 px)',
+        Math.abs(g.lewy - g.prawy) <= 1.5 && g.prawy >= 6, JSON.stringify(g));
+    }
+    wynik('Dotyk (1440 px): bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+    if (bledow) await zrzut(s, 'dotyk-1440');
+    await k.close();
+  }
+}
+
 // Scenariusze po kolei, kazdy osobno: wyjatek w jednym (KOD8-03) nie pomija nastepnych.
 // CAI_TEST_TYLKO=nazwa,nazwa uruchamia wybrane (np. CAI_TEST_TYLKO=r9f-keys).
 const SCENARIUSZE = [
@@ -3623,7 +3783,7 @@ const SCENARIUSZE = [
   ['r9f-pokrycie', scenariuszR9FPokrycie], ['opus55', scenariuszOpus55], ['runda-a', scenariuszRundaA], ['runda-b', scenariuszRundaB],
   ['srodtytuly', scenariuszSrodtytuly], ['po-etapie-7', scenariuszPoEtapie7],
   ['teksty-a', scenariuszTekstyA], ['teksty-b', scenariuszTekstyB], ['teksty-c', scenariuszTekstyC],
-  ['czysto', scenariuszCzysto],
+  ['czysto', scenariuszCzysto], ['ikony', scenariuszIkony], ['dotyk', scenariuszDotyk],
 ];
 (async () => {
   let b;
