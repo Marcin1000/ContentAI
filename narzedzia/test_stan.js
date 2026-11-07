@@ -979,7 +979,7 @@ async function scenariuszR9FWidocznosc(b) {
     const w = await pomiar('najlepsza pompa ciepla krakow\nmontaz pompy ciepla opinie');
     const wzor = await s.evaluate((kl) => _t(kl), klucz);
     wynik('R9-F KOD8-22: Widocznosc - wszystkie zapytania z bledem ' + blad + ': komunikat z powodem zamiast wyniku 0',
-      w.blad.indexOf(wzor) !== -1 && !/obecność w 0\/2/.test(w.tekst) && w.ponow === ponow && w.klucze === klucze, JSON.stringify(w));
+      w.blad.indexOf(wzor) !== -1 && !/obecność w 0\/2|Marka w 0 z 2 odpowiedzi/.test(w.tekst) && w.ponow === ponow && w.klucze === klucze, JSON.stringify(w));
     wynik('R9-F KOD8-22: Widocznosc - pomiar z samych bledow (' + blad + ') nie trafia do historii pomiarow', w.pomiarow === 0, JSON.stringify(w));
     await s.evaluate(() => closeVisModal());
   }
@@ -987,7 +987,8 @@ async function scenariuszR9FWidocznosc(b) {
   const czesc = await pomiar('najlepsza pompa ciepla krakow\nawaria zapytania o montaz');
   const notka = await s.evaluate(() => _t('vis-czesc-bledow').split('{')[0]);
   wynik('R9-F KOD8-22: Widocznosc - czesc zapytan z bledem: wynik z udanych (obecnosc w N/1) i informacja, ile sie nie udalo',
-    /obecność w [01]\/1 /.test(czesc.tekst) && !!notka && czesc.tekst.indexOf(notka) !== -1 && czesc.pomiarow === 1, JSON.stringify(czesc));
+    // Porzadki tekstow (2026-11-07): zdanie z klucza vis-podsumowanie ("Marka w 1 z 1 odpowiedzi", wczesniej "obecnosc w 1/1").
+    /Marka w [01] z 1 odpowiedzi/.test(czesc.tekst) && !!notka && czesc.tekst.indexOf(notka) !== -1 && czesc.pomiarow === 1, JSON.stringify(czesc));
   wynik('R9-F KOD8-22: bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
   if (bledow) await zrzut(s, 'r9f-widocznosc');
   await k.close();
@@ -1833,7 +1834,134 @@ async function scenariuszOpus55(b) {
 // PDF: greka i symbole w krojach, znaki spoza kroju wypadaja, sigma w naglowku tabeli z Literaty.
 // Porzadki tekstow interfejsu (2026-11-07), grupa C: teksty wpisane na sztywno w slowniku (PL i EN), slownik wariantow, szablony, raport.
 async function scenariuszTekstyC(b) {
-  void b;
+  // Dane testowe bez polskich liter: w interfejsie EN polska litera oznacza tekst wpisany na sztywno.
+  const POLSKIE = /[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/;
+  const zbierz = async (s) => s.evaluate(async () => {
+    const jedna = (t) => String(t || '').replace(/\s+/g, ' ').trim();
+    const tekst = (sel) => { const e = document.querySelector(sel); return e ? jedna(e.textContent) : '?'; };
+    const atr = (sel, a) => { const e = document.querySelector(sel); return e ? (e.getAttribute(a) || '') : '?'; };
+    const w = {};
+    // Szablon: temat wbudowanego szablonu.
+    applyTemplate(0); w.szablon = document.getElementById('topic').value;
+    // Pola: CMS, Dodaj strone, slowa kluczowe, adres grafiki wzorcowej, pasek odtwarzania.
+    w.cms = [tekst('label[for="wp-url"]'), atr('#wp-url', 'placeholder'), tekst('label[for="wp-pass"]'), atr('#drupal-url', 'placeholder'), atr('#u-url', 'placeholder')];
+    w.kwTitle = atr('#kw-input', 'title');
+    w.grafikaAdres = atr('#img-ref-url-input', 'aria-label');
+    w.audioPasek = [atr('#audio-bar', 'aria-label'), atr('#audio-bar-play', 'aria-label'), atr('#audio-bar-play', 'title'), atr('#audio-bar-close', 'aria-label')];
+    // Dane marki: placeholdery i pomoc pod obszarami dzialalnosci.
+    openLlmsModal();
+    w.marka = [atr('#llms-name', 'placeholder'), atr('#llms-url', 'placeholder'), atr('#llms-lines', 'placeholder'), tekst('[data-i18n="llms-h-lines"]')];
+    closeLlmsModal();
+    // Obecnosc marki w AI: pola i wynik.
+    w.visPola = [atr('#vis-prompts', 'placeholder'), tekst('#vis-prompts-pomoc'), tekst('#vis-iter-pomoc')];
+    renderVisResults({ ts: Date.now(), brand: 'TestBrand', iterations: 3, results: [
+      { prompt: 'query A', iterations: 3, presentCount: 2, present: true, avgPosition: 2, competitors: ['Rival X'], sources: ['example.com'] },
+      { prompt: 'query B', iterations: 3, presentCount: 0, present: false, avgPosition: null, competitors: ['Rival X'], sources: [] }] });
+    w.vis = tekst('#vis-results');
+    w.visPogrubienia = document.querySelectorAll('#vis-results .tekst-2 strong').length;
+    renderNarrative('TestBrand', 'Brand description.', { alignment: 60, factual_issues: ['issue 1'], missing_strengths: ['strength 1'] }, true);
+    w.narracja = tekst('#vis-results');
+    // Raport widocznosci: pusty stan i dwa pomiary.
+    magazyn.setItem('cai-vis-runs', '[]'); openRepModal(); w.raportPusty = tekst('#rep-results'); closeRepModal();
+    const pomiar = (ts, a, bb) => ({ ts, brand: 'TestBrand', iterations: 3, results: [
+      { prompt: 'query A', iterations: 3, presentCount: a, present: a > 0, avgPosition: a > 0 ? 1 : null, competitors: ['Rival X'], sources: [] },
+      { prompt: 'query B', iterations: 3, presentCount: bb, present: bb > 0, avgPosition: bb > 0 ? 2 : null, competitors: ['Rival X'], sources: [] },
+      { prompt: 'query C', iterations: 3, presentCount: 3, present: true, avgPosition: 4.5, competitors: ['Rival Y'], sources: [] }] });
+    magazyn.setItem('cai-vis-runs', JSON.stringify([pomiar(Date.now() - 86400000, 3, 3), pomiar(Date.now(), 1, 0)]));
+    openRepModal();
+    const rr = document.getElementById('rep-results');
+    w.raport = jedna(rr.textContent);
+    w.raportKolumny = [...rr.querySelectorAll('th')].map((e) => jedna(e.textContent));
+    w.raportTakNie = [...rr.querySelectorAll('td span.stan-ok, td span.stan-blad')].map((e) => jedna(e.textContent));
+    w.raportPowody = [...rr.querySelectorAll('ol li .dopisek')].map((e) => jedna(e.textContent));
+    w.pozycja = formatujLiczbe(4.5);
+    closeRepModal(); magazyn.removeItem('cai-vis-runs');
+    // Plan artykulu: brak luk, jednostka wyszukan i podpowiedz OpenSEO.
+    window.briefZSeo = { 'test phrase': 1200 };
+    showBrief({ keywords: ['test phrase'], h2: ['Section'], gap: '', words: '800-1000' });
+    w.plan = tekst('#brief-content');
+    w.planTitle = atr('#brief-content .brief-kw[title]', 'title');
+    window.briefZSeo = undefined;
+    // Pomiar ruchu z AI: zly adres.
+    document.getElementById('trk-utm-base').value = 'not an address';
+    buildUtm(); w.utm = document.getElementById('trk-utm-out').value;
+    // Audio: wpis bez tematu i etykieta pola po transkrypcji.
+    const zrodlo = document.getElementById('au-source'), skrypt = document.getElementById('au-script');
+    const zz = zrodlo.value, zs = skrypt.innerHTML; zrodlo.value = ''; skrypt.innerHTML = '';
+    w.audioTytuly = [audioHistTopic('transcription'), audioHistTopic('podcast')];
+    zrodlo.value = zz; skrypt.innerHTML = zs;
+    const typ = document.getElementById('au-type');
+    typ.value = 'transcription'; audioSetType(); w.audioEtykieta = [tekst('#au-script-etykieta')];
+    typ.value = 'podcast'; audioSetType(); w.audioEtykieta.push(tekst('#au-script-etykieta'));
+    // Znacznik strony w bazie wiedzy (dokument dodany z adresu).
+    docs.push({ name: 'example.com/offer', content: 'Offer text.', icon: '🔗', url: 'https://example.com/offer', words: 2, selected: false });
+    renderDocs(); w.znacznikStrony = tekst('.kb-tag-url');
+    docs.pop(); renderDocs();
+    // Ekran braku klucza (wariant z kluczami w przegladarce): przycisk do Kluczy API, bez linii z pliku.
+    document.getElementById('topic').value = 'Test topic';
+    document.getElementById('use-web').checked = true;
+    const zapasKlucza = API_KEY; API_KEY = 'WSTAW_TUTAJ_NOWY_KLUCZ_API';
+    try { await generate(true); } finally { API_KEY = zapasKlucza; }
+    const art = document.getElementById('article');
+    w.brakKlucza = { tekst: jedna(art.textContent), kod: !!art.querySelector('code'), przycisk: jedna((art.querySelector('button[onclick="openKeysModal()"]') || {}).textContent) };
+    return w;
+  });
+
+  for (const jezyk of ['en', 'pl']) {
+    const { k, s, bledyJs } = await nowaStrona(b, jezyk, {});
+    const w = await zbierz(s);
+    const T = await s.evaluate((j) => I18N[j], jezyk);
+    const J = jezyk.toUpperCase();
+    const bezPolskich = (lista) => jezyk === 'pl' || !lista.some((x) => POLSKIE.test(x));
+    wynik('Porzadki C (' + J + '): temat wbudowanego szablonu z klucza tpl-hybrid-topic',
+      w.szablon === T['tpl-hybrid-topic'] && bezPolskich([w.szablon]), w.szablon);
+    wynik('Porzadki C (' + J + '): pola CMS, Dodaj strone, slowa kluczowe, adres grafiki i pasek audio ze slownika',
+      w.cms[0] === T['cms-url-label'] && w.cms[1] === T['cms-url-ph'] && w.cms[2] === T['wp-pass-label'] && w.cms[3] === T['cms-url-ph'] && w.cms[4] === T['url-ph']
+        && w.kwTitle === T['ph-kw-title'] && w.grafikaAdres === T['img-url-etykieta']
+        && w.audioPasek[0] === T['audio-pasek'] && w.audioPasek[1] === T['audio-pasek-pauza'] && w.audioPasek[2] === T['audio-pasek-pauza'] && w.audioPasek[3] === T['okno-zamknij']
+        && bezPolskich([...w.cms, w.kwTitle, w.grafikaAdres, ...w.audioPasek]),
+      JSON.stringify({ cms: w.cms, kw: w.kwTitle, grafika: w.grafikaAdres, audio: w.audioPasek }));
+    wynik('Porzadki C (' + J + '): Dane marki - placeholdery ph-llms-* i pomoc pod obszarami dzialalnosci',
+      w.marka[0] === T['ph-llms-name'] && w.marka[1] === T['ph-llms-url'] && w.marka[2] === T['ph-llms-lines'] && w.marka[3] === T['llms-h-lines'] && bezPolskich(w.marka),
+      JSON.stringify(w.marka));
+    const podsumowanie = T['vis-podsumowanie'].replace('{k}', 1).replace('{n}', 2).replace('{p}', '#2');
+    wynik('Porzadki C (' + J + '): obecnosc marki w AI - pola i wynik z kluczy vis-* (bez pogrubien w zdaniu)',
+      w.visPola[0] === T['vis-f-prompts-ph'] && w.visPola[1] === T['vis-f-prompts-pomoc'] && w.visPola[2] === T['vis-f-iter-pomoc']
+        && w.vis.indexOf(T['vis-wskaznik']) !== -1 && w.vis.indexOf(podsumowanie) !== -1 && w.vis.indexOf(T['vis-konkurenci']) !== -1
+        && w.vis.indexOf('(' + T['vis-powtorzenia'].replace('{k}', 2).replace('{n}', 3) + ', 67%)') !== -1
+        && w.vis.indexOf(T['vis-polecani'] + ': ') !== -1 && w.vis.indexOf(T['vis-zrodla'] + ': ') !== -1 && w.visPogrubienia === 0
+        && bezPolskich([w.visPola[1], w.visPola[2], w.vis]),
+      JSON.stringify({ pola: w.visPola, wynik: w.vis.slice(0, 300), pogrubienia: w.visPogrubienia }));
+    wynik('Porzadki C (' + J + '): opis marki w AI - naglowki i notka o pustej bazie z kluczy vis-*',
+      [T['vis-zgodnosc'], T['vis-bez-bazy'], T['vis-bledy'], T['vis-pominiete'], T['vis-opis-ai']].every((x) => w.narracja.indexOf(x) !== -1) && bezPolskich([w.narracja]),
+      w.narracja.slice(0, 300));
+    const kolumny = ['rep-kol-konkurent', 'rep-kol-wzmianki', 'rep-kol-procent', 'rep-kol-zapytanie', 'rep-kol-obecnosc', 'rep-kol-pozycja', 'rep-kol-lider'].map((x) => T[x]);
+    const powody = ['(' + T['rep-powod-brak'] + ')', '(' + T['rep-powod-niestabilny'].replace('{k}', 1).replace('{n}', 3) + ')', '(' + T['rep-powod-pozycja'].replace('{p}', '#' + w.pozycja) + ')'];
+    wynik('Porzadki C (' + J + '): raport widocznosci - pusty stan, naglowki, kolumny, Tak/Nie, powody i metoda z kluczy rep-*',
+      w.raportPusty === T['rep-pusto']
+        && [T['rep-ostatni'] + ': ', T['vis-wskaznik'], T['rep-ustalenia'], T['rep-zmiana'] + ' (', ' ' + T['rep-pkt'], T['vis-konkurenci'], T['rep-wyniki-zapytan'], T['rep-priorytety'], T['rep-zalecenia'], T['rep-metodyka'].replace('{n}', 3)]
+          .every((x) => w.raport.indexOf(x) !== -1)
+        && JSON.stringify(w.raportKolumny) === JSON.stringify(kolumny)
+        && JSON.stringify(w.raportTakNie) === JSON.stringify([T['odp-tak'], T['odp-nie'], T['odp-tak']])
+        && JSON.stringify(w.raportPowody) === JSON.stringify(powody)
+        && !/snapshot/i.test(w.raport) && (jezyk === 'pl' || !/\bTak\b/.test(w.raport)),
+      JSON.stringify({ pusty: w.raportPusty, kolumny: w.raportKolumny, takNie: w.raportTakNie, powody: w.raportPowody, poczatek: w.raport.slice(0, 200) }));
+    wynik('Porzadki C (' + J + '): Plan artykulu - brak luk, jednostka wyszukan i podpowiedz OpenSEO z kluczy',
+      w.plan.indexOf(T['brief-gap-brak']) !== -1 && w.plan.indexOf('1200' + T['brief-kw-mies']) !== -1 && w.planTitle === T['brief-kw-openseo'],
+      JSON.stringify({ plan: w.plan.slice(0, 200), title: w.planTitle }));
+    wynik('Porzadki C (' + J + '): pomiar ruchu z AI - blad adresu z klucza trk-utm-blad', w.utm === T['trk-utm-blad'], w.utm);
+    wynik('Porzadki C (' + J + '): audio - wpis bez tematu to "Bez tytulu", etykieta pola po transkrypcji, znacznik strony w bazie',
+      w.audioTytuly[0] === T['audio-bez-tytulu'] && w.audioTytuly[1] === T['audio-bez-tytulu']
+        && w.audioEtykieta[0] === T['audio-transkrypcja-etykieta'] && w.audioEtykieta[1] === T['audio-script'] && w.znacznikStrony === T['kb-tag-url'],
+      JSON.stringify({ tytuly: w.audioTytuly, etykieta: w.audioEtykieta, znacznik: w.znacznikStrony }));
+    wynik('Porzadki C (' + J + '): ekran braku klucza - zdania ze slownika, przycisk do Kluczy API, bez linii z pliku aplikacji',
+      w.brakKlucza.tekst.indexOf(T['nokey-line1']) !== -1 && w.brakKlucza.tekst.indexOf(T['nokey-line2']) !== -1 && !w.brakKlucza.kod
+        && w.brakKlucza.przycisk === T['konto-dodaj'] && bezPolskich([w.brakKlucza.tekst]),
+      JSON.stringify(w.brakKlucza));
+    wynik('Porzadki C (' + J + '): bez bledow JavaScript', !bledyJs.length, bledyJs.join(' | '));
+    if (bledow) await zrzut(s, 'teksty-c-' + jezyk);
+    await k.close();
+  }
 }
 
 async function scenariuszRundaA(b) {

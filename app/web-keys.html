@@ -3657,7 +3657,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
           <div class="field">
             <label for="kw-input" class="field-label" data-i18n="label-kw">Słowa kluczowe</label>
             <div class="pole-wiersz">
-              <input type="text" id="kw-input" autocomplete="off" placeholder="Wpisz frazę i naciśnij Enter…" data-i18n="ph-kw" onkeydown="addKw(event)" onkeyup="addKwMobile(event)" />
+              <input type="text" id="kw-input" autocomplete="off" placeholder="np. pompa ciepła do domu" data-i18n="ph-kw" title="Enter albo + dodaje słowo kluczowe" data-i18n-title="ph-kw-title" onkeydown="addKw(event)" onkeyup="addKwMobile(event)" />
               <button type="button" class="mic-btn" onclick="dictate('kw-input', this)" data-i18n-title="voice-dictate-title" title="Dyktuj"><svg class="ikona" aria-hidden="true"><use href="#i-mic"/></svg></button>
               <button type="button" class="pole-ikonowe" onclick="addKwBtn()" title="Dodaj słowo kluczowe" aria-label="Dodaj frazę" data-i18n-title="title-kw-add" data-i18n-label="title-kw-add"><svg class="ikona" aria-hidden="true"><use href="#i-plus"/></svg></button>
             </div>
@@ -4272,7 +4272,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
     <p data-i18n="url-modal-desc-short">Wklej adres strony, np. z ofertą albo cennikiem. Jej treść trafi do bazy wiedzy, a AI użyje jej przy pisaniu.</p>
     <div class="field" style="margin-bottom:10px">
       <label for="u-url" class="field-label" data-i18n="url-label">Adres strony</label>
-      <input type="text" id="u-url" placeholder="https://www.twojafirma.pl/oferta" />
+      <input type="text" id="u-url" placeholder="np. https://twojafirma.pl/oferta" data-i18n-ph="url-ph" />
     </div>
     <div class="field" style="margin-bottom:10px">
       <label for="u-name" class="field-label" data-i18n="url-name-label">Nazwa (opcjonalnie)</label>
@@ -4341,27 +4341,28 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
     <p data-i18n="llms-desc">Generuje llms.txt i llms-full.txt na podstawie konfiguracji encji i URL-i z bazy wiedzy. Wgraj pliki w katalogu głównym domeny (np. /llms.txt).</p>
     <div class="field" style="margin-bottom:10px">
       <label for="llms-name" class="field-label" data-i18n="llms-f-name">Nazwa encji</label>
-      <input type="text" id="llms-name" />
+      <input type="text" id="llms-name" placeholder="np. Twoja Firma" data-i18n-ph="ph-llms-name" />
     </div>
     <div class="field" style="margin-bottom:10px">
       <label for="llms-legal" class="field-label" data-i18n="llms-f-legal">Pełna nazwa prawna</label>
-      <input type="text" id="llms-legal" />
+      <input type="text" id="llms-legal" placeholder="np. Twoja Firma Sp. z o.o." data-i18n-ph="ph-llms-legal" />
     </div>
     <div class="field" style="margin-bottom:10px">
       <label for="llms-url" class="field-label" data-i18n="llms-f-url">Domena bazowa</label>
-      <input type="text" id="llms-url" />
+      <input type="text" id="llms-url" placeholder="np. https://twojafirma.pl" data-i18n-ph="ph-llms-url" />
     </div>
     <div class="field" style="margin-bottom:10px">
       <label for="llms-desc" class="field-label" data-i18n="llms-f-desc">Opis (1-3 zdania)</label>
-      <textarea id="llms-desc" rows="3"></textarea>
+      <textarea id="llms-desc" rows="3" placeholder="Czym zajmuje się firma, dla kogo i co ją wyróżnia." data-i18n-ph="ph-llms-desc"></textarea>
     </div>
     <div class="field" style="margin-bottom:10px">
       <label for="llms-services" class="field-label" data-i18n="llms-f-services">Kluczowe usługi</label>
-      <textarea id="llms-services" rows="4"></textarea>
+      <textarea id="llms-services" rows="4" placeholder="Pierwsza usługa&#10;Druga usługa&#10;Trzecia usługa" data-i18n-ph="ph-llms-services"></textarea>
     </div>
     <div class="field" style="margin-bottom:10px">
       <label for="llms-lines" class="field-label" data-i18n="llms-f-lines">Obszary działalności</label>
-      <textarea id="llms-lines" rows="4"></textarea>
+      <textarea id="llms-lines" rows="4" placeholder="Sprzedaż pomp ciepła: dobór i montaż&#10;Serwis: przeglądy i naprawy" data-i18n-ph="ph-llms-lines"></textarea>
+      <div class="tekst-pomoc" style="margin-top:4px" data-i18n="llms-h-lines">Każdy w osobnej linii. AI nie pomyli ich ze sobą w artykułach.</div>
     </div>
     <!-- Domeny byly dotad tylko w kodzie, wiec kazda marka wymagala przebudowy
          pliku. Teraz ustawia sie je tutaj i zapisuja razem z reszta encji. -->
@@ -4378,7 +4379,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
     </div>
     <div class="tekst-pomoc" id="llms-stan-zapisu" style="margin-top:4px"></div>
     <div class="modal-footer">
-      <button class="btn-generate" style="width:auto" onclick="generateLlms()" data-i18n="llms-generate">Generuj pliki</button>
+      <button class="btn-generate" style="width:auto" onclick="generateLlms()" data-i18n="llms-generate">Zapisz i pokaż pliki</button>
     </div>
     <div class="tekst-pomoc" id="llms-urls-hint" style="margin-top:4px"></div>
     <div style="margin-top:14px">
@@ -4424,11 +4425,13 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
     </div>
     <div class="field" style="margin-bottom:10px">
       <label for="vis-prompts" class="field-label" data-i18n="vis-f-prompts">Zapytania do sprawdzenia</label>
-      <textarea id="vis-prompts" rows="6"></textarea>
+      <textarea id="vis-prompts" rows="6" placeholder="np. najlepsze biuro rachunkowe w Krakowie&#10;biuro rachunkowe dla startupu" data-i18n-ph="vis-f-prompts-ph" aria-describedby="vis-prompts-pomoc"></textarea>
+      <div class="tekst-pomoc" id="vis-prompts-pomoc" style="margin-top:4px" data-i18n="vis-f-prompts-pomoc">Każde zapytanie w osobnej linii.</div>
     </div>
     <div class="field" style="margin-bottom:10px;max-width:260px">
       <label for="vis-iter" class="field-label" data-i18n="vis-f-iter">Powtórzenia zapytania</label>
-      <input type="number" id="vis-iter" min="1" max="5" step="1" value="1" />
+      <input type="number" id="vis-iter" min="1" max="5" step="1" value="1" aria-describedby="vis-iter-pomoc" />
+      <div class="tekst-pomoc" id="vis-iter-pomoc" style="margin-top:4px" data-i18n="vis-f-iter-pomoc">Więcej powtórzeń to pewniejszy wynik, ale też więcej płatnych wyszukiwań.</div>
     </div>
     <div class="modal-footer" style="gap:8px">
       <button class="btn-generate" id="vis-run-btn" style="width:auto" onclick="runVisibility()" data-i18n="vis-run">Sprawdź widoczność</button>
@@ -4523,15 +4526,15 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
     <!-- WordPress fields -->
     <div id="cms-wp-fields">
       <p class="tekst-pomoc" style="margin-bottom:14px" data-i18n="wp-hint">Użyj Application Password (WP 5.6+): Użytkownicy  Twój profil  Hasła aplikacji</p>
-      <div class="field" style="margin-bottom:10px"><label for="wp-url" class="field-label">Adres WordPress (np. https://twojafirma.pl)</label><input type="text" id="wp-url" placeholder="https://twoja-strona.pl" /></div>
+      <div class="field" style="margin-bottom:10px"><label for="wp-url" class="field-label" data-i18n="cms-url-label">Adres strony</label><input type="text" id="wp-url" placeholder="np. https://twojafirma.pl" data-i18n-ph="cms-url-ph" /></div>
       <div class="field" style="margin-bottom:10px"><label for="wp-user" class="field-label" data-i18n="wp-login">Login (nazwa użytkownika)</label><input type="text" id="wp-user" placeholder="admin" /></div>
-      <div class="field" style="margin-bottom:14px"><label for="wp-pass" class="field-label">Application Password</label><input type="password" autocomplete="new-password" id="wp-pass" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx" /></div>
+      <div class="field" style="margin-bottom:14px"><label for="wp-pass" class="field-label" data-i18n="wp-pass-label">Hasło aplikacji</label><input type="password" autocomplete="new-password" id="wp-pass" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx" /></div>
     </div>
 
     <!-- Drupal fields -->
     <div id="cms-drupal-fields" style="display:none">
       <p class="tekst-pomoc" style="margin-bottom:14px" data-i18n="cms-drupal-hint-short">Wymagany moduł Basic Auth (wbudowany w Drupal 8/9/10). Włącz w: Extend  Basic Authentication.</p>
-      <div class="field" style="margin-bottom:10px"><label for="drupal-url" class="field-label" data-i18n="cms-drupal-url-label">Adres strony</label><input type="text" id="drupal-url" placeholder="https://twoja-strona.pl" /></div>
+      <div class="field" style="margin-bottom:10px"><label for="drupal-url" class="field-label" data-i18n="cms-drupal-url-label">Adres strony</label><input type="text" id="drupal-url" placeholder="np. https://twojafirma.pl" data-i18n-ph="cms-url-ph" /></div>
       <div class="field" style="margin-bottom:10px"><label for="drupal-user" class="field-label" data-i18n="wp-login">Login (nazwa użytkownika)</label><input type="text" id="drupal-user" placeholder="admin" /></div>
       <div class="field" style="margin-bottom:10px"><label for="drupal-pass" class="field-label" data-i18n="wp-password">Hasło</label><input type="password" autocomplete="new-password" id="drupal-pass" placeholder="hasło do konta Drupal" data-i18n-ph="wp-pass-ph" /></div>
       <div class="row2" style="margin-bottom:14px">
@@ -4932,7 +4935,7 @@ body.konto-samoobslugowe #bazas-zakres { display: none; }
                 <button type="button" onclick="document.getElementById('img-ref-file').click()" class="btn-secondary" data-i18n="img-upload-btn" data-ikona="upload"><svg class="ikona" aria-hidden="true"><use href="#i-upload"/></svg>Wgraj grafikę</button>
                 <input type="file" id="img-ref-file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="imgLoadReferenceFile(this)">
                 <div class="img-ref-adres">
-                  <input type="text" id="img-ref-url-input" aria-label="lub wklej URL…" data-i18n-label="img-url-ph" placeholder="lub wklej URL…" data-i18n="img-url-ph" onkeydown="if(event.key==='Enter')imgLoadReferenceUrl()">
+                  <input type="text" id="img-ref-url-input" aria-label="Adres grafiki" data-i18n-label="img-url-etykieta" placeholder="lub wklej adres…" data-i18n="img-url-ph" onkeydown="if(event.key==='Enter')imgLoadReferenceUrl()">
                   <button type="button" onclick="imgLoadReferenceUrl()" class="btn-secondary" data-i18n="img-url-add">Dodaj</button>
                 </div>
               </div>
@@ -5559,7 +5562,7 @@ var I18N = {
     'ozn-rp-przelacznik':'Dodaj informację o AI',
     'msg-no-article':'Najpierw wygeneruj artykuł.',
     'msg-bad-url':'Adres grafiki jest niepełny. Wpisz go razem z https:// na początku.',
-    'msg-no-openai-key':'Brak klucza OpenAI. Wpisz go w menu ustawień → Klucze API.',
+    'msg-no-openai-key':'Ta funkcja potrzebuje klucza OpenAI. Podłącz go i spróbuj ponownie.',
     'msg-no-img-topic':'Wpisz temat artykułu lub wczytaj artykuł przed generowaniem grafiki.',
     'msg-gen-error':'Błąd generowania: ',
     'msg-copy-fail':'Kopiowanie nie powiodło się. Pobierz plik ręcznie.',
@@ -5706,7 +5709,7 @@ var I18N = {
     'lbl-repurpose-out':'Gotowa przeróbka',
     'lbl-length-custom':'Własna długość w słowach',
     'bulk-gotowe-1':'Gotowe. Wygenerowano {n} artykuł. Sprawdź Historię.','bulk-gotowe-2':'Gotowe. Wygenerowano {n} artykuły. Sprawdź Historię.','bulk-gotowe-5':'Gotowe. Wygenerowano {n} artykułów. Sprawdź Historię.',
-    'bulk-gotowe-czesc':'Gotowe. Wygenerowano {ok} z {n}, nie powiodło się: {bad}. Sprawdź Historię.','bulk-zatrzymano':'Zatrzymano. Wygenerowano {ok} z {n}. Sprawdź Historię.','bulk-zatrzymuje':'Zatrzymuję…','bulk-zatrzymaj':'Zatrzymaj','bulk-ponow':'Ponów nieudane','msg-generowanie-trwa':'Generowanie już trwa. Poczekaj na koniec albo je przerwij.','msg-premium-blad':'Poprawa tekstu nie powiodła się: ',
+    'bulk-gotowe-czesc':'Gotowe. Wygenerowano {ok} z {n}, nie powiodło się: {bad}. Sprawdź Historię.','bulk-zatrzymano':'Zatrzymano. Wygenerowano {ok} z {n}. Sprawdź Historię.','bulk-zatrzymuje':'Zatrzymuję…','bulk-zatrzymaj':'Zatrzymaj','bulk-ponow':'Ponów nieudane','msg-generowanie-trwa':'Generowanie już trwa. Poczekaj na koniec albo je przerwij.','msg-premium-blad':'Samokorekta nie powiodła się: ',
     'tematy-slowo-1':'temat','tematy-slowo-2':'tematy','tematy-slowo-5':'tematów',
     'skip-link':'Przejdź do treści',
     'btn-uzyj-h1':'Użyj tytułu','msg-tytul-ustawiony':'W artykule','msg-tytul-h1':'Tytuł artykułu zmieniony. Ocena SEO policzy się od nowa.',
@@ -5790,7 +5793,7 @@ var I18N = {
     'jsonld-hint-full':'Wklej ten kod w sekcji &lt;head&gt; lub przed &lt;/body&gt; na stronie z artykułem.',
     'out-placeholder-sub-full':'AI napisze go na podstawie Twojej bazy wiedzy.',
     'premium-more-time':'2 do 3 razy więcej czasu',
-    'nokey-title':'Brak klucza API','nokey-line1':'Kliknij ikonę ustawień i wybierz Klucze API.','nokey-line2':'Wpisz klucz Anthropic z console.anthropic.com i zapisz.','badge-nokey':'brak klucza',
+    'nokey-title':'Brak klucza API','nokey-line1':'Bez klucza API Anthropic AI nie napisze artykułu.','nokey-line2':'Klucz założysz w konsoli Anthropic (platform.claude.com).','badge-nokey':'brak klucza',
     'hist-docs-base':'Dokumenty','hist-cost':'Szac. koszt API','hist-cost-wlasne':'Twój szac. koszt','hist-cost-wczesniej':'wcześniej','hist-koszt-wpisu':'Szacunkowy koszt artykułu: pisanie, oceny, kontrola faktów, poprawki i przeróbki',
     'hist-filter-all':'Wszystkie','hist-filter-hybrid':'Hybryda',
     'bulk-gen-all-txt':'Wygeneruj wszystkie','improve-action-txt':'Popraw tekst',
@@ -5814,7 +5817,7 @@ var I18N = {
     'tpl-service-name':'Opis usługi','tpl-service-desc':'Krótki opis na stronę usługi',
     'tpl-own-label':'(własny)',
     // ── Repurpose ──
-    'rp-source-missing':'Brak klucza API. Wpisz go w menu ustawień → Klucze API, żeby korzystać z przeróbek.',
+    'rp-source-missing':'Przeróbki wymagają klucza API Anthropic. Podłącz klucz i spróbuj ponownie.',
     // ── WP/Drupal status ──
     'drupal-ok':'Drupal: połączenie działa',
     // ── Image generator statusy ──
@@ -5875,9 +5878,9 @@ var I18N = {
     'err-cms-403':'{cms}: to konto nie ma uprawnień do publikowania wpisów. Nadaj mu uprawnienia albo użyj innego konta.','err-cms-404':'{cms}: pod tym adresem nie ma interfejsu API. Sprawdź adres strony.',
     'err-cms-5xx':'{cms}: serwer strony zwrócił błąd ({status}). Spróbuj ponownie za chwilę.','err-cms-inny':'{cms}: strona odrzuciła zapytanie (HTTP {status}). Sprawdź dane połączenia i spróbuj ponownie.',
     'wp-zalogowano':'WordPress: zalogowano jako {name}',
-    'err-srodki':'Na koncie u dostawcy AI zabrakło środków. Doładuj konto w panelu dostawcy albo użyj innego klucza API.',
-    'err-uprawnienia':'Klucz API nie ma uprawnień do tej funkcji albo modelu. Sprawdź ustawienia klucza w panelu dostawcy AI.','btn-otworz-klucze':'Otwórz Klucze API',
-    'err-klucz':'Dostawca AI odrzucił klucz API: jest nieprawidłowy, wyłączony albo wygasł. Sprawdź go w menu ustawień → Klucze API.',
+    'err-srodki':'Na koncie u dostawcy AI zabrakło środków. Doładuj konto w konsoli dostawcy albo podłącz inny klucz API.',
+    'err-uprawnienia':'Klucz API nie ma uprawnień do tej funkcji albo modelu. Sprawdź ustawienia klucza w konsoli dostawcy AI.','btn-otworz-klucze':'Podłącz nowy klucz',
+    'err-klucz':'Dostawca AI odrzucił klucz API: jest nieprawidłowy, wyłączony albo wygasł. Podłącz nowy klucz.',
     'btn-sprobuj-ponownie':'Spróbuj ponownie',
     'err-brak-klucza':'Ta funkcja potrzebuje klucza {DOSTAWCA}. Podłącz go i spróbuj ponownie.','err-email-niepotwierdzony':'Najpierw potwierdź adres e-mail: link jest w wiadomości od Content AI.',
     'err-zgoda-wymagana':'Zmieniliśmy regulamin. Przeczytaj i zaakceptuj nową wersję, żeby dalej korzystać z aplikacji.','err-limit-wydatkow-wlasny':'Zapytanie zatrzymał limit wydatków ustawiony w konsoli {DOSTAWCA}. Podnieś go albo poczekaj do nowego miesiąca.',
@@ -6439,7 +6442,7 @@ var I18N = {
     'ozn-rp-przelacznik':'Add AI disclosure',
     'msg-no-article':'Generate an article first.',
     'msg-bad-url':'The image URL is incomplete. Enter it with https:// at the start.',
-    'msg-no-openai-key':'Missing OpenAI key. Enter it in the settings menu → API keys.',
+    'msg-no-openai-key':'This feature needs an OpenAI key. Connect it and try again.',
     'msg-no-img-topic':'Enter an article topic or load an article before generating an image.',
     'msg-gen-error':'Generation error: ',
     'msg-copy-fail':'Copying failed. Download the file manually.',
@@ -6586,7 +6589,7 @@ var I18N = {
     'lbl-repurpose-out':'Repurposed content',
     'lbl-length-custom':'Custom length in words',
     'bulk-gotowe-1':'Done. Generated {n} article. Check History.','bulk-gotowe-2':'Done. Generated {n} articles. Check History.','bulk-gotowe-5':'Done. Generated {n} articles. Check History.',
-    'bulk-gotowe-czesc':'Done. Generated {ok} of {n}, failed: {bad}. Check History.','bulk-zatrzymano':'Stopped. Generated {ok} of {n}. Check History.','bulk-zatrzymuje':'Stopping…','bulk-zatrzymaj':'Stop','bulk-ponow':'Retry failed','msg-generowanie-trwa':'Generation is already running. Wait for it to finish or stop it.','msg-premium-blad':'Improving the text failed: ',
+    'bulk-gotowe-czesc':'Done. Generated {ok} of {n}, failed: {bad}. Check History.','bulk-zatrzymano':'Stopped. Generated {ok} of {n}. Check History.','bulk-zatrzymuje':'Stopping…','bulk-zatrzymaj':'Stop','bulk-ponow':'Retry failed','msg-generowanie-trwa':'Generation is already running. Wait for it to finish or stop it.','msg-premium-blad':'Self-review failed: ',
     'tematy-slowo-1':'topic','tematy-slowo-2':'topics','tematy-slowo-5':'topics',
     'skip-link':'Skip to content',
     'btn-uzyj-h1':'Use this title','msg-tytul-ustawiony':'In the article','msg-tytul-h1':'Article title changed. The SEO score will be recalculated.',
@@ -6731,7 +6734,7 @@ var I18N = {
     'jsonld-hint-full':'Paste this code in the &lt;head&gt; section or before &lt;/body&gt; on the page with the article.',
     'out-placeholder-sub-full':'The AI writes it based on your knowledge base.',
     'premium-more-time':'2-3 times longer',
-    'nokey-title':'Missing API key','nokey-line1':'Click the settings icon and choose API keys.','nokey-line2':'Enter your Anthropic key from console.anthropic.com and save.','badge-nokey':'no key',
+    'nokey-title':'Missing API key','nokey-line1':'Without an Anthropic API key, the AI cannot write the article.','nokey-line2':'You can create a key in the Anthropic console (platform.claude.com).','badge-nokey':'no key',
     'hist-docs-base':'Documents','hist-cost':'Est. API cost','hist-cost-wlasne':'Your est. cost','hist-cost-wczesniej':'earlier','hist-koszt-wpisu':'Estimated article cost: writing, scores, fact check, fixes and repurposing',
     'hist-filter-all':'All','hist-filter-hybrid':'Hybrid',
     'bulk-gen-all-txt':'Generate all','improve-action-txt':'Improve text',
@@ -6755,7 +6758,7 @@ var I18N = {
     'tpl-service-name':'Service description','tpl-service-desc':'Short copy for a service page',
     'tpl-own-label':'(custom)',
     // ── Repurpose ──
-    'rp-source-missing':'Missing API key. Enter it in the settings menu → API keys to use repurposing.',
+    'rp-source-missing':'Repurposing needs an Anthropic API key. Connect your key and try again.',
     // ── WP/Drupal ──
     'drupal-ok':'Drupal: connection works',
     // ── Image generator ──
@@ -6819,9 +6822,9 @@ var I18N = {
     'err-cms-403':'{cms}: this account is not allowed to publish posts. Grant it permission or use another account.','err-cms-404':'{cms}: there is no API at this address. Check the site address.',
     'err-cms-5xx':'{cms}: the site server returned an error ({status}). Try again in a moment.','err-cms-inny':'{cms}: the site rejected the request (HTTP {status}). Check the connection details and try again.',
     'wp-zalogowano':'WordPress: signed in as {name}',
-    'err-srodki':'The AI provider account has run out of credit. Top it up in the provider dashboard or use a different API key.',
-    'err-uprawnienia':'The API key has no permission for this feature or model. Check the key settings in the AI provider dashboard.','btn-otworz-klucze':'Open API keys',
-    'err-klucz':'The AI provider rejected the API key: it is invalid, disabled or expired. Check it in the settings menu → API keys.',
+    'err-srodki':'The AI provider account has run out of credit. Top it up in the provider console or connect a different API key.',
+    'err-uprawnienia':'The API key has no permission for this feature or model. Check the key settings in the AI provider console.','btn-otworz-klucze':'Connect a new key',
+    'err-klucz':'The AI provider rejected the API key: it is invalid, disabled or expired. Connect a new key.',
     'btn-sprobuj-ponownie':'Try again',
     'err-brak-klucza':'This feature needs a key from {DOSTAWCA}. Connect it and try again.','err-email-niepotwierdzony':'Confirm your email address first: the link is in the message from Content AI.',
     'err-zgoda-wymagana':'We have changed the Terms of Service. Read and accept the new version to keep using the app.','err-limit-wydatkow-wlasny':'The request was stopped by the spend limit you set in the {DOSTAWCA} console. Raise it or wait for the new month.',
@@ -8773,7 +8776,7 @@ function renderDocs() {
     const el = document.createElement('div');
     el.className = 'kb-item' + (d.selected ? ' selected' : '');
     const typeLabel = d.icon === '🔗'
-      ? '<span class="kb-tag-url">URL</span>'
+      ? '<span class="kb-tag-url">' + _t('kb-tag-url') + '</span>'
       : d.icon === '✏️'
       ? '<span class="kb-tag-text">' + _t('kb-tag-text') + '</span>'
       : '<span class="kb-tag-file">' + _t('kb-tag-file') + '</span>';
@@ -8946,7 +8949,7 @@ async function saveUrl() {
   if (isDemo) {
     var demoSteps; function getDemoSteps(){ return [[20,_t('url-demo-connect')],[50,_t('url-demo-fetch')],[80,_t('url-demo-process')],[100,_t('url-demo-done')]]; }
     for (const [p, m] of getDemoSteps()) { fill.style.width = p+'%'; status.textContent = m; await new Promise(r=>setTimeout(r,500)); }
-    addDoc(displayName, `[Źródło: ${url}]\n\nTreść strony nie mogła zostać odczytana automatycznie. Spróbuj ponownie lub dodaj treść ręcznie.`, '🔗', url);
+    addDoc(displayName, `[Źródło: ${url}]\n\n` + _t('url-demo-tresc'), '🔗', url);
     closeUrlModal();
     return;
   }
@@ -9497,12 +9500,17 @@ async function generate(skipPremiumModal = false, opcje = null) {
     przerwanieGenerowania = null;
     document.getElementById('spinner').style.display = 'none';
     const art = document.getElementById('article');
+    // Porzadki tekstow (2026-11-07): data-i18n, zeby ekran przelaczal sie z jezykiem interfejsu.
+    // Wariant z kluczami w przegladarce: przycisk do Kluczy API zamiast linii z pliku aplikacji
+    // (konto-dodaj, bo e1-podlacz jest tylko w slowniku wariantu z serwerem; ten sam napis).
+    let wskazowkaKlucza;
+    wskazowkaKlucza = `<div class="tekst-2" data-i18n="nokey-line1">${_t('nokey-line1')}</div>
+      <div class="tekst-2" data-i18n="nokey-line2">${_t('nokey-line2')}</div>
+      <button type="button" class="btn-generate" onclick="openKeysModal()">${ikona('key-round')}<span data-i18n="konto-dodaj">${escapeHtml(_t('konto-dodaj'))}</span></button>`;
     art.innerHTML = `<div class="modul-pusty">
       <div class="pusty-kafel">${ikona('key-round', 'ikona-l')}</div>
-      <div class="tekst-tytul">${_t('nokey-title')}</div>
-      <div class="tekst-2">${_t('nokey-line1')}</div>
-      <code>const API_KEY = 'WSTAW_TUTAJ_NOWY_KLUCZ_API'</code>
-      <div class="tekst-2">${_t('nokey-line2')}</div>
+      <div class="tekst-tytul" data-i18n="nokey-title">${_t('nokey-title')}</div>
+      ${wskazowkaKlucza}
     </div>`;
     art.style.display = 'block';
     ustawTekst(document.getElementById('out-badge'), 'badge-nokey');
@@ -9800,7 +9808,7 @@ The meta description must be COMPLETE (150-160 characters) and placed exactly he
         needsAioFix ? `AIO ${aioResult.score}/100` : null,
       ].filter(Boolean).join(', ');
 
-      document.getElementById('spin-label').textContent = (currentLang==='en'?'Improving (was ':'Poprawiam (było ') + scores + ')...';
+      document.getElementById('spin-label').textContent = _t('spin-poprawiam').replace('{oceny}', scores);
       document.getElementById('spin-sub').textContent = _t('msg-spin-regen-fixes');
 
       // Policz słowa oryginału żeby wymóc podobną długość
@@ -14397,11 +14405,12 @@ async function toggleSeoPanel(forceRefresh = false) {
   const isDemo = API_KEY === 'WSTAW_TUTAJ_KLUCZ_API' || API_KEY === 'WSTAW_TUTAJ_NOWY_KLUCZ_API';
   if (isDemo) {
     setTimeout(() => showSeoResult({score:72, items:[
-      {ok:true,  text: currentLang==='en'?'H1 present and contains article topic':'H1 obecny i zawiera temat artykułu'},
-      {ok:true,  text: currentLang==='en'?'Meta description filled in':'Opis meta wypełniony'},
-      {ok:false, text: currentLang==='en'?'Keywords could be used more often in the text':'Słowa kluczowe mogą być użyte częściej w tekście'},
-      {ok:true,  text: currentLang==='en'?'H2 heading structure is correct':'Struktura nagłówków H2 jest poprawna'},
-      {ok:false, text: currentLang==='en'?'Consider expanding the article beyond 1000 words':'Rozważ rozbudowanie artykułu powyżej 1000 słów'},
+      // Porzadki tekstow (2026-11-07): przykladowe uwagi trybu demonstracyjnego z kluczy hint-*.
+      {ok:true,  text: _t('hint-h1-ok')},
+      {ok:true,  text: _t('hint-meta-ok')},
+      {ok:false, text: _t('hint-kw-more')},
+      {ok:true,  text: _t('hint-h2-ok')},
+      {ok:false, text: _t('hint-length')},
     ]}), 1500);
     return;
   }
@@ -14512,12 +14521,12 @@ async function toggleAioPanel(forceRefresh = false) {
   const isDemo = API_KEY === 'WSTAW_TUTAJ_KLUCZ_API' || API_KEY === 'WSTAW_TUTAJ_NOWY_KLUCZ_API';
   if (isDemo) {
     setTimeout(() => showAioResult({score: 58, items: [
-      {ok:false, text: currentLang==='en'?'No direct answer in the first paragraph':'Brak bezpośredniej odpowiedzi w pierwszym akapicie'},
-      {ok:true,  text: currentLang==='en'?'Heading structure facilitates AI extraction':'Struktura nagłówków ułatwia ekstrakcję przez AI'},
-      {ok:false, text: currentLang==='en'?'Passages too long - difficult to cite by AI':'Fragmenty za długie - trudne do zacytowania przez AI'},
-      {ok:true,  text: currentLang==='en'?'Topic covered completely':'Temat pokryty kompletnie'},
-      {ok:false, text: currentLang==='en'?'Missing definitions of key concepts (entities)':'Brak definicji kluczowych pojęć (encji)'},
-      {ok:true,  text: currentLang==='en'?'Natural language, readable for the user':'Język naturalny, czytelny dla użytkownika'},
+      {ok:false, text: _t('hint-aio-no-answer')},
+      {ok:true,  text: _t('hint-aio-h2-ok')},
+      {ok:false, text: _t('hint-aio-too-long')},
+      {ok:true,  text: _t('hint-aio-topic-ok')},
+      {ok:false, text: _t('hint-aio-no-def')},
+      {ok:true,  text: _t('hint-aio-natural')},
     ]}), 1500);
     return;
   }
@@ -14577,13 +14586,13 @@ function showAioResult(r) {
 
 // ─── TEMPLATES ────────────────────────────────────────────────────────────────
 const DEFAULT_TEMPLATES = [
-  { nameKey:'tpl-hybrid-name', descKey:'tpl-hybrid-desc', name:'Hybryda SEO+AIO - produkt', desc:'Balans SEO, AIO i czytelności', topic:'[Produkt/usługa] - kompleksowy przewodnik', type:'Hybryda SEO + AIO', length:'~800 słów', tone:'Profesjonalny' },
-  { nameKey:'tpl-seo-name', descKey:'tpl-seo-desc', name:'Artykuł SEO - produkt', desc:'Opis produktu/usługi', topic:'Jak działa [produkt]', type:'Artykuł SEO', length:'~800 słów', tone:'Profesjonalny' },
-  { nameKey:'tpl-faq-name', descKey:'tpl-faq-desc', name:'FAQ strona', desc:'Pytania i odpowiedzi', topic:'Często zadawane pytania o [temat]', type:'FAQ page', length:'~800 słów', tone:'Przyjazny' },
-  { nameKey:'tpl-landing-name', descKey:'tpl-landing-desc', name:'Landing page', desc:'Tekst strony docelowej', topic:'Dlaczego warto wybrać [markę] do [segmentu]', type:'Landing page copy', length:'~800 słów', tone:'Ekspercki' },
-  { nameKey:'tpl-intl-name', descKey:'tpl-intl-desc', name:'Ekspansja zagraniczna', desc:'Blog o sprzedaży za granicą', topic:'Jak wejść na rynek [kraj] z e-commerce', type:'Wpis blogowy', length:'~1500 słów', tone:'Profesjonalny' },
-  { nameKey:'tpl-aio-name', descKey:'tpl-aio-desc', name:'AIO - optymalizacja', desc:'Treść pod AI Overviews', topic:'[Temat] - kompleksowy przewodnik', type:'Treść AIO', length:'~1500 słów', tone:'Ekspercki' },
-  { nameKey:'tpl-service-name', descKey:'tpl-service-desc', name:'Opis usługi', desc:'Karta produktowa', topic:'Pełna charakterystyka [usługi]', type:'Opis produktu/usługi', length:'~400 słów', tone:'Profesjonalny' },
+  { nameKey:'tpl-hybrid-name', descKey:'tpl-hybrid-desc', topicKey:'tpl-hybrid-topic', name:'Hybryda SEO+AIO - produkt', desc:'Balans SEO, AIO i czytelności', topic:'[Produkt lub usługa]: kompletny przewodnik', type:'Hybryda SEO + AIO', length:'~800 słów', tone:'Profesjonalny' },
+  { nameKey:'tpl-seo-name', descKey:'tpl-seo-desc', topicKey:'tpl-seo-topic', name:'Artykuł SEO - produkt', desc:'Opis produktu/usługi', topic:'Jak działa [produkt]', type:'Artykuł SEO', length:'~800 słów', tone:'Profesjonalny' },
+  { nameKey:'tpl-faq-name', descKey:'tpl-faq-desc', topicKey:'tpl-faq-topic', name:'FAQ strona', desc:'Pytania i odpowiedzi', topic:'Często zadawane pytania o [temat]', type:'FAQ page', length:'~800 słów', tone:'Przyjazny' },
+  { nameKey:'tpl-landing-name', descKey:'tpl-landing-desc', topicKey:'tpl-landing-topic', name:'Landing page', desc:'Tekst strony docelowej', topic:'Dlaczego warto wybrać [markę] do [segmentu]', type:'Landing page copy', length:'~800 słów', tone:'Ekspercki' },
+  { nameKey:'tpl-intl-name', descKey:'tpl-intl-desc', topicKey:'tpl-intl-topic', name:'Ekspansja zagraniczna', desc:'Blog o sprzedaży za granicą', topic:'Jak wejść na rynek [kraj] ze sklepem internetowym', type:'Wpis blogowy', length:'~1500 słów', tone:'Profesjonalny' },
+  { nameKey:'tpl-aio-name', descKey:'tpl-aio-desc', topicKey:'tpl-aio-topic', name:'AIO - optymalizacja', desc:'Treść pod AI Overviews', topic:'[Temat]: kompletny przewodnik', type:'Treść AIO', length:'~1500 słów', tone:'Ekspercki' },
+  { nameKey:'tpl-service-name', descKey:'tpl-service-desc', topicKey:'tpl-service-topic', name:'Opis usługi', desc:'Karta produktowa', topic:'Pełna charakterystyka [usługi]', type:'Opis produktu/usługi', length:'~400 słów', tone:'Profesjonalny' },
 ];
 let templates = [...DEFAULT_TEMPLATES];
 (function loadTemplates() {
@@ -14612,7 +14621,8 @@ function opcjaSzablonu(sel, wartosc) {
 }
 function applyTemplate(i) {
   const t = templates[i];
-  document.getElementById('topic').value = t.topic;
+  // Porzadki tekstow (2026-11-07): temat wbudowanego szablonu w jezyku interfejsu (wlasne szablony bez zmian).
+  document.getElementById('topic').value = t.topicKey ? _t(t.topicKey) : t.topic;
   const ctSel = document.getElementById('ctype');
   const ctOpt = opcjaSzablonu(ctSel, t.type);
   if (ctOpt) { ctSel.value = ctOpt.value; if (typeof onContentTypeChange === 'function') onContentTypeChange(); }
@@ -15321,7 +15331,7 @@ function syncMobileKbList() {
     : '';
   mList.innerHTML = empty + docs.map((d, i) => {
     const typeLabel = d.icon === '🔗'
-      ? '<span class="kb-tag-url">URL</span>'
+      ? '<span class="kb-tag-url">' + _t('kb-tag-url') + '</span>'
       : d.icon === '✏️'
       ? '<span class="kb-tag-text">' + _t('kb-tag-text') + '</span>'
       : '<span class="kb-tag-file">' + _t('kb-tag-file') + '</span>';
@@ -15892,7 +15902,7 @@ function openWpPublish() {
   const hasActive = activeCms === 'wp' ? wpSettings.url : drupalSettings.url;
   if (!hasActive) { openWpModal(); return; }
   const cms = activeCms === 'drupal' ? 'Drupal' : 'WordPress';
-  document.getElementById('pub-modal-title').textContent = (currentLang === 'en' ? 'Publish to ' : 'Publikuj w ') + cms;
+  document.getElementById('pub-modal-title').textContent = _t('pub-modal-title').replace('{cms}', cms);
   // R9-D (PR8-19): przelacznik etykiety AI, przypomnienie o art. 50 ust. 4 i uwaga o formacie Drupala.
   rysujPrzelacznikiOznaczen();
   const wiecej = document.getElementById('ozn-cms-wiecej'); if (wiecej) wiecej.href = adresInformacjiAI();
@@ -16012,7 +16022,7 @@ async function publishToWordPress(title, content, excerpt, status, resEl) {
   if (r.ok) {
     const post = await r.json();
     const label = status === 'publish' ? _t('wp-published') : _t('wp-draft');
-    resEl.innerHTML = '<span class="stan-ok">WordPress - ' + label + '! <a href="' + bezpiecznyHref(post.link) + '" target="_blank" rel="noopener" class="link-akcent">' + _t('msg-open-link') + '</a></span>';
+    resEl.innerHTML = '<span class="stan-ok">WordPress: ' + escapeHtml(label) + '. <a href="' + bezpiecznyHref(post.link) + '" target="_blank" rel="noopener" class="link-akcent">' + escapeHtml(_t('msg-open-link')) + '</a></span>';
   } else {
     const err = await r.json().catch(()=>({}));
     resEl.innerHTML = htmlBleduCms(r.status, err.message || '', 'wp');
@@ -16051,7 +16061,7 @@ async function publishToDrupal(title, content, excerpt, status, resEl) {
     const nid = d?.data?.attributes?.drupal_internal__nid || '';
     const nodeUrl = nid ? `${drupalSettings.url}/node/${nid}` : drupalSettings.url;
     const label = status === 'publish' ? _t('wp-published') : _t('wp-draft');
-    resEl.innerHTML = '<span class="stan-ok">Drupal - ' + label + '! <a href="' + bezpiecznyHref(nodeUrl) + '" target="_blank" rel="noopener" class="link-akcent">' + _t('msg-open-link') + '</a></span>';
+    resEl.innerHTML = '<span class="stan-ok">Drupal: ' + escapeHtml(label) + '. <a href="' + bezpiecznyHref(nodeUrl) + '" target="_blank" rel="noopener" class="link-akcent">' + escapeHtml(_t('msg-open-link')) + '</a></span>';
   } else {
     const err = await r.json().catch(()=>({}));
     resEl.innerHTML = htmlBleduCms(r.status, err?.errors?.[0]?.detail || err?.message || '', 'drupal');
@@ -16346,12 +16356,12 @@ function refreshBriefKwList() {
     var wolumen = (typeof window.briefZSeo === 'object' && window.briefZSeo) ? window.briefZSeo[k] : undefined;
     var zweryfikowana = wolumen !== undefined;
     var etykieta = zweryfikowana && wolumen !== null
-      ? ' <span class="dopisek">' + escapeHtml(String(wolumen)) + '/mc</span>'
+      ? ' <span class="dopisek">' + escapeHtml(String(wolumen) + _t('brief-kw-mies')) + '</span>'
       : '';
     return '<span class="brief-kw"' +
       (added ? ' style="opacity:.45;cursor:default;text-decoration:line-through" onclick=""'
              : (zweryfikowana
-                 ? ' style="border-color:var(--accent2)" title="Sprawdzona w OpenSEO" onclick="addKeywordFromBriefIdx(' + i + ')"'
+                 ? ' style="border-color:var(--accent2)" title="' + escapeHtml(_t('brief-kw-openseo')) + '" data-i18n-title="brief-kw-openseo" onclick="addKeywordFromBriefIdx(' + i + ')"'
                  : ' onclick="addKeywordFromBriefIdx(' + i + ')"')) +
       '>' + (added ? '\u2713 ' : '+ ') + escapeHtml(k) + etykieta + '</span>';
   }).join('');
@@ -16372,7 +16382,7 @@ function showBrief(b, zapamietanyCzas) {
     '<div class="brief-section"><h4>' + _t('brief-h2-section') + '</h4>' +
     (b.h2||[]).map(function(h,i){ return '<div class="brief-h2-item"><span class="brief-num">'+(i+1)+'</span>'+escapeHtml(h)+'</div>'; }).join('') +
     '</div><div class="brief-section"><h4>' + _t('brief-gap-section') + '</h4>' +
-    '<p class="tekst-2">'+escapeHtml(b.gap || (currentLang === 'en' ? 'No data' : 'Brak danych'))+'</p></div>' +
+    (b.gap ? '<p class="tekst-2">' + escapeHtml(b.gap) + '</p></div>' : '<p class="tekst-2" data-i18n="brief-gap-brak">' + escapeHtml(_t('brief-gap-brak')) + '</p></div>') +
     '<div class="brief-section"><h4>' + _t('brief-words-section') + '</h4>' +
     '<p class="tekst-2">'+escapeHtml(slowa)+' ' + _t('brief-words-suffix') + '</p></div>';
   refreshBriefKwList();
@@ -16793,7 +16803,7 @@ async function startBulkGenerate() {
       continue;
     }
     item.querySelector('.bulk-icon').innerHTML = ikona('loader', 'kreci');
-    status.textContent = (currentLang==='en'?'Generating ':'Generuję ') + (i+1) + (currentLang==='en'?' of ':' z ') + topics.length + '...';
+    status.textContent = _t('bulk-generuje').replace('{k}', String(i + 1)).replace('{n}', String(topics.length));
 
     // Temat i frazy wprost do generate(): pole Temat w briefie zostaje takie, jak
     // je zostawil autor, a frazy z briefu nie trafiaja do kazdego tematu.
@@ -16847,7 +16857,7 @@ async function runImprove() {
 
   // Uruchom normalny generate() ale z istniejącą treścią jako bazą
   const kbBackup = [...docs];
-  const tempDoc = { name: 'Istniejący artykuł do poprawy', content: existing, icon: '✍️', words: existing.split(/\s+/).length, selected: true };
+  const tempDoc = { name: _t('improve-source-label'), content: existing, icon: '✍️', words: existing.split(/\s+/).length, selected: true };
   docs.unshift(tempDoc);
 
   // R4 (UX4-10, kod-08): temat z okna Popraw albo domyslny, nie stary temat briefu.
@@ -17136,11 +17146,8 @@ function getLlmsConfig() {
 
 function openLlmsModal() {
   const c = getLlmsConfig();
-  // Przyklady jako podpowiedz w pustym polu, nigdy jako wartosc.
-  const PODP = currentLang === 'en'
-    ? { 'llms-name': 'Your Company', 'llms-legal': 'Your Company Ltd.', 'llms-url': 'https://www.yourcompany.com', 'llms-desc': 'A short description: what the company does, for whom and what sets it apart.', 'llms-services': 'First service\nSecond service\nThird service' }
-    : { 'llms-name': 'Twoja Firma', 'llms-legal': 'Twoja Firma Sp. z o.o.', 'llms-url': 'https://www.twojafirma.pl', 'llms-desc': 'Krótki opis działalności: czym się zajmuje firma, dla kogo i co ją wyróżnia.', 'llms-services': 'Pierwsza usługa\nDruga usługa\nTrzecia usługa' };
-  Object.keys(PODP).forEach(id => { document.getElementById(id).placeholder = PODP[id]; });
+  // Przyklady jako podpowiedz w pustym polu, nigdy jako wartosc. Porzadki tekstow (2026-11-07):
+  // placeholdery z kluczy ph-llms-* (data-i18n-ph), wiec przelaczaja sie z jezykiem interfejsu.
   document.getElementById('llms-name').value = c.name;
   document.getElementById('llms-legal').value = c.legalName;
   document.getElementById('llms-url').value = c.siteUrl;
@@ -17575,7 +17582,7 @@ async function runVisibility() {
   const en = currentLang === 'en';
   const gptMode = (typeof USE_AZURE_GPT !== 'undefined' && USE_AZURE_GPT && typeof AZURE_OPENAI_CHAT_URL !== 'undefined' && AZURE_OPENAI_CHAT_URL && !AZURE_OPENAI_CHAT_URL.startsWith('WSTAW'));
   if (gptMode) {
-    document.getElementById('vis-results').innerHTML = '<div class="gap-info blad">' + (en ? 'Web search is not available in the GPT-only mode. Use direct Anthropic or Azure Foundry (Claude) mode.' : 'Wyszukiwanie w sieci nie działa w trybie GPT-only. Użyj trybu bezpośredniego Anthropic lub Azure Foundry (Claude).') + '</div>';
+    document.getElementById('vis-results').innerHTML = '<div class="gap-info blad">' + escapeHtml(_t('aiv-gpt-na')) + '</div>';
     return;
   }
   if (!maDostepDoApi()) {
@@ -17599,7 +17606,7 @@ async function runVisibility() {
     let presentCount = 0, errCount = 0;
     const positions = [], compFreq = {}, srcSet = {};
     for (let k = 0; k < iters; k++) {
-      prog.textContent = (en ? 'Checking ' : 'Sprawdzam ') + (i + 1) + '/' + prompts.length + (iters > 1 ? ' (' + (k + 1) + '/' + iters + ')' : '') + ': ' + prompts[i];
+      prog.textContent = _t('aiv-checking') + ' ' + (i + 1) + '/' + prompts.length + (iters > 1 ? ' (' + (k + 1) + '/' + iters + ')' : '') + ': ' + prompts[i];
       let r;
       try { r = await visQuery(prompts[i], brand, c.competitors); }
       catch (e) { ostatniBlad = e; r = { present: false, position: null, competitors: [], sources: [], error: true }; }
@@ -17678,7 +17685,6 @@ function visibilityScore(results) {
 }
 
 function renderVisResults(run) {
-  const en = currentLang === 'en';
   const results = run.results;
   const n = results.filter(r => !r.error).length; // R9-F (KOD8-22): tylko udane zapytania
   const present = results.filter(r => r.present).length;
@@ -17695,7 +17701,10 @@ function renderVisResults(run) {
   let html = '';
   html += '<div style="display:flex;gap:14px;align-items:center;background:var(--surface2);border-radius:var(--radius);padding:12px 14px;margin-bottom:6px">';
   html += '<div class="hstat-val" style="color:' + color + '">' + score + '</div>';
-  html += '<div class="tekst-2">' + (en ? 'Visibility score (position-weighted)' : 'Wskaźnik widoczności (ważony pozycją)') + '<br>' + (en ? 'present in' : 'obecność w') + ' <strong>' + present + '/' + n + '</strong> ' + (en ? 'queries, avg position' : 'zapytań, śr. pozycja') + ' <strong>' + (avgPos == null ? (en ? 'n/a' : 'b.d.') : '#' + formatujLiczbe(avgPos)) + '</strong><br>' + _visEsc(run.brand) + '</div></div>';
+  // Porzadki tekstow (2026-11-07): zdanie z klucza z placeholderami, bez pogrubien w srodku zdania.
+  const podsumowanie = _t('vis-podsumowanie').replace('{k}', present).replace('{n}', n)
+    .replace('{p}', avgPos == null ? _t('aeo-linie-brak') : '#' + formatujLiczbe(avgPos));
+  html += '<div class="tekst-2">' + escapeHtml(_t('vis-wskaznik')) + '<br>' + escapeHtml(podsumowanie) + '<br>' + _visEsc(run.brand) + '</div></div>';
   html += '<div class="tekst-pomoc" style="margin:0 0 12px">' + escapeHtml(_t('vis-obecnosc-opis').replace('{pct}', pct)) + '</div>';
   // R9-F (KOD8-22): czesc zapytan sie nie udala - ile i dlaczego (wynik liczony z udanych).
   const nieudane = results.length - n;
@@ -17705,7 +17714,7 @@ function renderVisResults(run) {
   }
 
   if (topComp.length) {
-    html += '<div class="tekst-2" style="margin-bottom:6px"><strong>' + (en ? 'Competitors most cited' : 'Najczęściej cytowani konkurenci') + ':</strong> ';
+    html += '<div class="panel-podtytul">' + escapeHtml(_t('vis-konkurenci')) + '</div><div class="tekst-2" style="margin-bottom:6px">';
     html += topComp.map(([name, cnt]) => _visEsc(name) + ' (' + cnt + ')').join(', ') + '</div>';
   }
 
@@ -17716,15 +17725,15 @@ function renderVisResults(run) {
     let stab = '';
     if (r.iterations > 1) {
       const sp = Math.round(r.presentCount / r.iterations * 100);
-      stab = ' <span class="tekst-pomoc">[' + r.presentCount + '/' + r.iterations + ' ' + (en ? 'iter' : 'iter') + ', ' + sp + '%]</span>';
+      stab = ' <span class="tekst-pomoc">(' + escapeHtml(_t('vis-powtorzenia').replace('{k}', r.presentCount).replace('{n}', r.iterations)) + ', ' + sp + '%)</span>';
     }
     const comps = (r.competitors || []).slice(0, 6).map(_visEsc).join(', ');
     const srcs = (r.sources || []).slice(0, 4).map(_visEsc).join(', ');
     html += '<div style="border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px">';
     html += '<div class="panel-tytul">' + icon + ' ' + _visEsc(r.prompt) + pos + stab + '</div>';
     if (r.error) html += '<div class="tekst-pomoc" style="margin-top:3px">' + ikona('triangle-alert', 'uwaga') + ' ' + escapeHtml(_t('vis-zapytanie-blad')) + '</div>'; // R9-F (KOD8-22)
-    if (comps) html += '<div class="tekst-pomoc" style="margin-top:3px">' + (en ? 'Recommended' : 'Polecani') + ': ' + comps + '</div>';
-    if (srcs) html += '<div class="tekst-pomoc" style="margin-top:2px">' + (en ? 'Sources' : 'Źródła') + ': ' + srcs + '</div>';
+    if (comps) html += '<div class="tekst-pomoc" style="margin-top:3px">' + escapeHtml(_t('vis-polecani')) + ': ' + comps + '</div>';
+    if (srcs) html += '<div class="tekst-pomoc" style="margin-top:2px">' + escapeHtml(_t('vis-zrodla')) + ': ' + srcs + '</div>';
     html += '</div>';
   });
   html += '</div>';
@@ -17744,7 +17753,7 @@ async function runNarrative() {
   btn.disabled = true; btn.style.opacity = '0.6';
   out.innerHTML = '';
   try {
-    prog.textContent = en ? 'Step 1/2: how AI describes the brand...' : 'Krok 1/2: jak AI opisuje markę...';
+    prog.textContent = _t('vis-krok-1');
     // R9-F (KOD8-23): narracja w jezyku tekstu (wczesniej "in Polish" i "Opowiedz o marce" takze dla klienta EN).
     const jezykNarracji = jezykDlaModelu((document.getElementById('lang') || {}).value);
     const sys1 = 'You are an AI assistant. A user asks about the brand "' + brand + '". Using web search, write how you would describe ' + brand + ' to that user: what it does, main strengths, who it is for, and pricing positioning. 120 to 180 words, in ' + jezykNarracji + ', plain text only, no markdown.';
@@ -17757,8 +17766,8 @@ async function runNarrative() {
     // R9-F (KOD8-23): blad API (zly klucz, 529) z powodem, nie "Brak odpowiedzi z narracja".
     if (!r1.ok || (d1 && d1.error)) throw bladOdpowiedzi(d1, r1.status);
     const narrative = (d1 && d1.content ? d1.content.filter(b => b.type === 'text').map(b => b.text).join('') : '').trim();
-    if (!narrative) { out.innerHTML = '<div class="gap-info blad">' + (en ? 'No narrative returned.' : 'Brak odpowiedzi z narracją.') + '</div>'; prog.textContent = ''; btn.disabled = false; btn.style.opacity = '1'; return; }
-    prog.textContent = en ? 'Step 2/2: comparing with knowledge base...' : 'Krok 2/2: porównanie z bazą wiedzy...';
+    if (!narrative) { out.innerHTML = '<div class="gap-info blad">' + escapeHtml(_t('vis-brak-opisu')) + '</div>'; prog.textContent = ''; btn.disabled = false; btn.style.opacity = '1'; return; }
+    prog.textContent = _t('vis-krok-2');
     // R9-F (KOD8-23): prawda o firmie takze z Bazy na serwerze (w wariancie z serwerem tam sa dokumenty).
     let kb = _visKb();
     if (typeof wiedzaZSerwera === 'function' && (window._bazaSerwerLiczba || 0) > 0) {
@@ -17799,7 +17808,6 @@ function _visKb() {
 }
 
 function renderNarrative(brand, narrative, ev, noKb) {
-  const en = currentLang === 'en';
   const a = (typeof ev.alignment === 'number') ? ev.alignment : null;
   const color = a == null ? 'var(--text3)' : a >= 75 ? 'var(--c-sukces)' : a >= 50 ? 'var(--c-uwaga)' : 'var(--red)';
   const issues = Array.isArray(ev.factual_issues) ? ev.factual_issues : [];
@@ -17807,17 +17815,17 @@ function renderNarrative(brand, narrative, ev, noKb) {
   let html = '';
   html += '<div style="display:flex;gap:14px;align-items:center;background:var(--surface2);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px">';
   html += '<div class="hstat-val" style="color:' + color + '">' + (a == null ? '?' : a) + '</div>';
-  html += '<div class="tekst-2">' + (en ? 'Message alignment with company truth' : 'Zgodność przekazu z prawdą o firmie') + '<br>' + _visEsc(brand) + '</div></div>';
-  if (noKb) html += '<div class="tekst-pomoc" style="margin-bottom:8px">' + (en ? 'No knowledge base documents: alignment is limited.' : 'Brak dokumentów w bazie wiedzy: ocena zgodności ograniczona.') + '</div>';
+  html += '<div class="tekst-2">' + escapeHtml(_t('vis-zgodnosc')) + '<br>' + _visEsc(brand) + '</div></div>';
+  if (noKb) html += '<div class="tekst-pomoc" style="margin-bottom:8px">' + escapeHtml(_t('vis-bez-bazy')) + '</div>';
   if (issues.length) {
-    html += '<div class="panel-podtytul blad">' + (en ? 'Factual issues' : 'Błędy faktograficzne') + ':</div>';
+    html += '<div class="panel-podtytul blad">' + escapeHtml(_t('vis-bledy')) + '</div>';
     html += '<ul class="tekst-2" style="margin:0 0 10px;padding-left:18px">' + issues.map(x => '<li>' + _visEsc(x) + '</li>').join('') + '</ul>';
   }
   if (missing.length) {
-    html += '<div class="panel-podtytul uwaga">' + (en ? 'Missing strengths' : 'Pominięte przewagi') + ':</div>';
+    html += '<div class="panel-podtytul uwaga">' + escapeHtml(_t('vis-pominiete')) + '</div>';
     html += '<ul class="tekst-2" style="margin:0 0 10px;padding-left:18px">' + missing.map(x => '<li>' + _visEsc(x) + '</li>').join('') + '</ul>';
   }
-  html += '<div class="tekst-pomoc" style="margin-bottom:4px">' + (en ? 'How AI describes the brand' : 'Jak AI opisuje markę') + ':</div>';
+  html += '<div class="panel-podtytul">' + escapeHtml(_t('vis-opis-ai')) + '</div>';
   html += '<div class="gap-info"><p class="tekst-2">' + _visEsc(narrative) + '</p></div>';
   document.getElementById('vis-results').innerHTML = html;
 }
@@ -17873,13 +17881,15 @@ function buildReport() {
 
   const pri = last.results.map(r => {
     let score = 0, reason = '';
-    if (!r.present) { score = 100; reason = en ? 'absent' : 'nieobecny'; }
+    // Porzadki tekstow (2026-11-07): rodzaj powodu dla okna raportu (powod w pliku TXT/DOCX bez zmian, osobne zadanie).
+    let rodzaj = '';
+    if (!r.present) { score = 100; reason = en ? 'absent' : 'nieobecny'; rodzaj = 'brak'; }
     else {
       const stab = r.iterations > 1 ? r.presentCount / r.iterations : 1;
-      if (stab < 1) { score = 60 + (1 - stab) * 30; reason = (en ? 'unstable ' : 'niestabilny ') + r.presentCount + '/' + r.iterations; }
-      else if (r.avgPosition && r.avgPosition > 3) { score = 40; reason = (en ? 'low position #' : 'niska pozycja #') + r.avgPosition; }
+      if (stab < 1) { score = 60 + (1 - stab) * 30; reason = (en ? 'unstable ' : 'niestabilny ') + r.presentCount + '/' + r.iterations; rodzaj = 'niestabilny'; }
+      else if (r.avgPosition && r.avgPosition > 3) { score = 40; reason = (en ? 'low position #' : 'niska pozycja #') + r.avgPosition; rodzaj = 'pozycja'; }
     }
-    return { prompt: r.prompt, score, reason };
+    return { prompt: r.prompt, score, reason, rodzaj, k: r.presentCount, n: r.iterations, p: r.avgPosition };
   }).filter(p => p.score > 0).sort((a, b) => b.score - a.score).slice(0, 8);
 
   const topCompName = topComp.length ? topComp[0][0] : (en ? 'no data' : 'brak danych');
@@ -17923,55 +17933,59 @@ function buildReport() {
 function openRepModal() {
   const rep = buildReport();
   const out = document.getElementById('rep-results');
-  const en = currentLang === 'en';
-  if (!rep) out.innerHTML = '<div class="pusty-stan"><p>' + (en ? 'No visibility snapshots yet. Run a visibility check first.' : 'Brak snapshotów widoczności. Najpierw uruchom sprawdzenie widoczności.') + '</p></div>';
+  if (!rep) out.innerHTML = '<div class="pusty-stan"><p>' + escapeHtml(_t('rep-pusto')) + '</p></div>';
   else renderRepModal(rep);
   document.getElementById('rep-modal').classList.add('open');
 }
 function closeRepModal() { document.getElementById('rep-modal').classList.remove('open'); }
 
 function renderRepModal(rep) {
-  const en = currentLang === 'en';
+  // Porzadki tekstow (2026-11-07): naglowki, kolumny, powody i notka o metodzie z kluczy rep-* (bez pogrubien w zdaniach).
   const color = rep.score >= 60 ? 'var(--c-sukces)' : rep.score >= 30 ? 'var(--c-uwaga)' : 'var(--red)';
-  const yes = en ? 'Tak' : 'Tak', no = en ? 'Nie' : 'Nie';
-  const yesL = en ? 'Yes' : 'Tak', noL = en ? 'No' : 'Nie';
+  const tak = _t('odp-tak'), nie = _t('odp-nie');
+  const powod = (p) => p.rodzaj === 'brak' ? _t('rep-powod-brak')
+    : p.rodzaj === 'niestabilny' ? _t('rep-powod-niestabilny').replace('{k}', p.k).replace('{n}', p.n)
+    : p.rodzaj === 'pozycja' ? _t('rep-powod-pozycja').replace('{p}', '#' + formatujLiczbe(p.p))
+    : p.reason;
   let h = '';
-  h += '<div class="tekst-pomoc" style="margin-bottom:8px">' + (en ? 'Latest snapshot' : 'Ostatni snapshot') + ': ' + _repDate(rep.last.ts) + '</div>';
+  h += '<div class="tekst-pomoc" style="margin-bottom:8px">' + escapeHtml(_t('rep-ostatni')) + ': ' + _repDate(rep.last.ts) + '</div>';
   h += '<div style="display:flex;gap:14px;align-items:center;background:var(--surface2);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">';
   h += '<div class="hstat-val" style="color:' + color + '">' + rep.score + '</div>';
-  h += '<div class="tekst-2">' + (en ? 'Visibility score (position-weighted)' : 'Wskaźnik widoczności (ważony pozycją)') + '<br>' + (en ? 'presence' : 'obecność') + ' <strong>' + rep.pct + '%</strong> (' + rep.present + '/' + rep.n + ') &middot; ' + (en ? 'avg position' : 'śr. pozycja') + ' <strong>' + (rep.avgPosition == null ? (en ? 'n/a' : 'b.d.') : '#' + formatujLiczbe(rep.avgPosition)) + '</strong></div></div>';
+  const obecnosc = _t('rep-obecnosc').replace('{k}', rep.present).replace('{n}', rep.n).replace('{procent}', rep.pct)
+    .replace('{p}', rep.avgPosition == null ? _t('aeo-linie-brak') : '#' + formatujLiczbe(rep.avgPosition));
+  h += '<div class="tekst-2">' + escapeHtml(_t('vis-wskaznik')) + '<br>' + escapeHtml(obecnosc) + '</div></div>';
   h += '<p class="tekst-2" style="margin:0 0 12px">' + _visEsc(rep.summaryText) + '</p>';
   if (rep.findings && rep.findings.length) {
-    h += '<div class="panel-podtytul">' + (en ? 'Key findings' : 'Kluczowe ustalenia') + '</div>';
+    h += '<div class="panel-podtytul">' + escapeHtml(_t('rep-ustalenia')) + '</div>';
     h += '<ul class="tekst-2" style="margin:0 0 12px;padding-left:18px">' + rep.findings.map(f => '<li>' + _visEsc(f) + '</li>').join('') + '</ul>';
   }
   if (rep.trend) {
     const t = rep.trend; const sign = t.scoreDelta > 0 ? '+' : '';
     const dc = t.scoreDelta > 0 ? 'var(--c-sukces)' : t.scoreDelta < 0 ? 'var(--red)' : 'var(--text3)';
-    h += '<div class="tekst-2" style="margin-bottom:4px"><strong>' + (en ? 'Trend vs previous' : 'Trend vs poprzedni') + '</strong> (' + _repDate(t.prevTs) + '): <span style="color:' + dc + '">' + sign + t.scoreDelta + ' pkt</span></div>';
-    if (t.newlyPresent.length) h += '<div class="tekst-2"><span class="stan-ok">+ ' + (en ? 'newly present' : 'nowo obecne') + ': ' + t.newlyPresent.map(_visEsc).join(' · ') + '</span></div>';
-    if (t.newlyAbsent.length) h += '<div class="tekst-2"><span class="stan-blad">- ' + (en ? 'newly absent' : 'nowo nieobecne') + ': ' + t.newlyAbsent.map(_visEsc).join(' · ') + '</span></div>';
+    h += '<div class="tekst-2" style="margin-bottom:4px">' + escapeHtml(_t('rep-zmiana')) + ' (' + _repDate(t.prevTs) + '): <span style="color:' + dc + '">' + sign + t.scoreDelta + ' ' + escapeHtml(_t('rep-pkt')) + '</span></div>';
+    if (t.newlyPresent.length) h += '<div class="tekst-2"><span class="stan-ok">+ ' + escapeHtml(_t('rep-teraz-z-marka')) + ': ' + t.newlyPresent.map(_visEsc).join(' · ') + '</span></div>';
+    if (t.newlyAbsent.length) h += '<div class="tekst-2"><span class="stan-blad">- ' + escapeHtml(_t('rep-teraz-bez-marki')) + ': ' + t.newlyAbsent.map(_visEsc).join(' · ') + '</span></div>';
     h += '<div style="height:10px"></div>';
   }
   if (rep.topComp.length) {
-    h += '<div class="panel-podtytul">' + (en ? 'Competitors cited by AI' : 'Konkurenci cytowani przez AI') + '</div>';
-    h += '<table class="tabela-mala"><thead><tr><th>' + (en ? 'Competitor' : 'Konkurent') + '</th><th>' + (en ? 'Mentions' : 'Wzmianki') + '</th><th>% ' + (en ? 'of queries' : 'zapytań') + '</th></tr></thead><tbody>';
+    h += '<div class="panel-podtytul">' + escapeHtml(_t('vis-konkurenci')) + '</div>';
+    h += '<table class="tabela-mala"><thead><tr><th>' + escapeHtml(_t('rep-kol-konkurent')) + '</th><th>' + escapeHtml(_t('rep-kol-wzmianki')) + '</th><th>' + escapeHtml(_t('rep-kol-procent')) + '</th></tr></thead><tbody>';
     h += rep.topComp.map(x => '<tr><td>' + _visEsc(x[0]) + '</td><td>' + x[1] + '</td><td>' + x[2] + '%</td></tr>').join('');
     h += '</tbody></table>';
   }
-  h += '<div class="panel-podtytul">' + (en ? 'Per query' : 'Per zapytanie') + '</div>';
-  h += '<table class="tabela-mala"><thead><tr><th>' + (en ? 'Query' : 'Zapytanie') + '</th><th>' + (en ? 'Present' : 'Obecność') + '</th><th>' + (en ? 'Pos.' : 'Poz.') + '</th><th>' + (en ? 'Top competitor' : 'Gł. konkurent') + '</th></tr></thead><tbody>';
-  h += rep.rows.map(r => '<tr><td>' + _visEsc(r.prompt) + '</td><td><span class="' + (r.present ? 'stan-ok' : 'stan-blad') + '">' + (r.present ? yesL : noL) + '</span></td><td>' + (r.avgPosition ? formatujLiczbe(r.avgPosition) : '-') + '</td><td>' + _visEsc(r.topCompetitor) + '</td></tr>').join('');
+  h += '<div class="panel-podtytul">' + escapeHtml(_t('rep-wyniki-zapytan')) + '</div>';
+  h += '<table class="tabela-mala"><thead><tr><th>' + escapeHtml(_t('rep-kol-zapytanie')) + '</th><th>' + escapeHtml(_t('rep-kol-obecnosc')) + '</th><th>' + escapeHtml(_t('rep-kol-pozycja')) + '</th><th>' + escapeHtml(_t('rep-kol-lider')) + '</th></tr></thead><tbody>';
+  h += rep.rows.map(r => '<tr><td>' + _visEsc(r.prompt) + '</td><td><span class="' + (r.present ? 'stan-ok' : 'stan-blad') + '">' + escapeHtml(r.present ? tak : nie) + '</span></td><td>' + (r.avgPosition ? formatujLiczbe(r.avgPosition) : '-') + '</td><td>' + _visEsc(r.topCompetitor) + '</td></tr>').join('');
   h += '</tbody></table>';
   if (rep.pri.length) {
-    h += '<div class="panel-podtytul">' + (en ? 'Priorities' : 'Priorytety') + '</div>';
-    h += '<ol class="tekst-2" style="margin:0 0 10px;padding-left:18px">' + rep.pri.map(p => '<li>' + _visEsc(p.prompt) + ' <span class="dopisek">(' + _visEsc(p.reason) + ')</span></li>').join('') + '</ol>';
+    h += '<div class="panel-podtytul">' + escapeHtml(_t('rep-priorytety')) + '</div>';
+    h += '<ol class="tekst-2" style="margin:0 0 10px;padding-left:18px">' + rep.pri.map(p => '<li>' + _visEsc(p.prompt) + ' <span class="dopisek">(' + _visEsc(powod(p)) + ')</span></li>').join('') + '</ol>';
   }
   if (rep.recommendations && rep.recommendations.length) {
-    h += '<div class="panel-podtytul">' + (en ? 'Recommended actions' : 'Rekomendowane działania') + '</div>';
+    h += '<div class="panel-podtytul">' + escapeHtml(_t('rep-zalecenia')) + '</div>';
     h += '<ol class="tekst-2" style="margin:0 0 12px;padding-left:18px">' + rep.recommendations.map(x => '<li>' + _visEsc(x) + '</li>').join('') + '</ol>';
   }
-  h += '<div class="tekst-pomoc" style="border-top:1px solid var(--border);padding-top:8px">' + (en ? 'Method: on-demand measurement, Claude with web search, ' : 'Metodyka: pomiar na żądanie, Claude z wyszukiwaniem w sieci, ') + rep.iterations + (en ? ' iteration(s) per query. Model self-assessment, not a multi-model or traffic measurement.' : ' iteracji na zapytanie. Samoocena modelu, nie pomiar wielomodelowy ani pomiar ruchu.') + '</div>';
+  h += '<div class="tekst-pomoc" style="border-top:1px solid var(--border);padding-top:8px">' + escapeHtml(_t('rep-metodyka').replace('{n}', rep.iterations)) + '</div>';
   document.getElementById('rep-results').innerHTML = h;
 }
 
@@ -18177,13 +18191,12 @@ function downloadRobots() {
 }
 
 function buildUtm() {
-  const en = currentLang === 'en';
   const base = document.getElementById('trk-utm-base').value.trim();
   const source = document.getElementById('trk-utm-source').value;
   const medium = document.getElementById('trk-utm-medium').value.trim() || 'ai_referral';
   const campaign = document.getElementById('trk-utm-campaign').value.trim();
   let url;
-  try { url = new URL(base); } catch (e) { document.getElementById('trk-utm-out').value = (en ? 'Invalid URL' : 'Niepoprawny URL'); return; }
+  try { url = new URL(base); } catch (e) { document.getElementById('trk-utm-out').value = _t('trk-utm-blad'); return; }
   url.searchParams.set('utm_source', source);
   url.searchParams.set('utm_medium', medium);
   if (campaign) url.searchParams.set('utm_campaign', campaign);
@@ -19135,7 +19148,7 @@ function imgLoadReferenceUrl() {
     thumb.src = '';
     document.getElementById('img-ref-label').textContent = _t('img-ref-brak-podgladu');
   };
-  const short = url.length > 55 ? url.substring(0, 52) + '...' : url;
+  const short = url.length > 55 ? url.substring(0, 54) + '…' : url;
   document.getElementById('img-ref-label').textContent     = short;
   document.getElementById('img-ref-empty').style.display   = 'none';
   document.getElementById('img-ref-preview').style.display = 'block';
@@ -19249,9 +19262,6 @@ async function generateImage() {
   }
   const brand   = document.getElementById('img-brand')?.value   || 'brand_color';
   const quality = document.getElementById('img-quality')?.value || 'medium';
-  // R5: w napisie postepu nazwa jakosci ze slownika (wczesniej surowe 'medium' takze po polsku)
-  const qSel = document.getElementById('img-quality');
-  const jakoscOpis = qSel && qSel.selectedIndex >= 0 ? qSel.options[qSel.selectedIndex].text.toLowerCase() : quality;
   const extra   = document.getElementById('img-extra')?.value?.trim()   || '';
   const { w, h, label } = imgSelectedFormat;
 
@@ -19269,7 +19279,9 @@ async function generateImage() {
     const aiPrompt = await imgBuildAIPrompt(context, brand, extra, w, h);
 
     document.getElementById('img-spin-label').textContent = _t('msg-spin-img');
-    document.getElementById('img-spin-sub').textContent   = (currentLang==='en'?`Step 2 of 2: format ${imgSelectedFormat && imgSelectedFormat.shortKey ? _t(imgSelectedFormat.shortKey) : label} • quality ${jakoscOpis}`:`Krok 2 z 2: format ${imgSelectedFormat && imgSelectedFormat.shortKey ? _t(imgSelectedFormat.shortKey) : label} • jakość ${jakoscOpis}`);
+    // Porzadki tekstow (2026-11-07): napis z klucza. Format i jakosc widac w stopce grafiki
+    // (R5: bez surowego 'medium'), kod HTTP i timeout ida do konsoli.
+    document.getElementById('img-spin-sub').textContent   = _t('img-step2');
 
     // Krok 2: GPT Image generuje (z timeoutem 180s i retry 2x na błędy sieciowe)
     const useAzureImg = (USE_AZURE && AZURE_OPENAI_IMG_URL && !AZURE_OPENAI_IMG_URL.startsWith('WSTAW'));
@@ -19299,7 +19311,7 @@ async function generateImage() {
       const tInt   = setInterval(() => {
         const sec = Math.floor((Date.now() - tStart) / 1000);
         const subEl = document.getElementById('img-spin-sub');
-        if (subEl) subEl.textContent = (currentLang==='en'?`Step 2 of 2: format ${imgSelectedFormat && imgSelectedFormat.shortKey ? _t(imgSelectedFormat.shortKey) : label} • quality ${jakoscOpis} • ${sec}s`:`Krok 2 z 2: format ${imgSelectedFormat && imgSelectedFormat.shortKey ? _t(imgSelectedFormat.shortKey) : label} • jakość ${jakoscOpis} • ${sec}s`);
+        if (subEl) subEl.textContent = _t('img-step2-czas').replace('{s}', sec);
       }, 1000);
       const tOut = setTimeout(() => ctrl.abort(), IMG_TIMEOUT_MS);
       try {
@@ -19312,9 +19324,10 @@ async function generateImage() {
           const podglad = await imgRes.clone().json().catch(() => ({}));
           if (!czyPonowic(bladOdpowiedzi(podglad, imgRes.status, 'OpenAI'))) break;
           const wait = (attempt + 1) * 5;
+          console.warn('[grafika] serwer zwrocil HTTP ' + imgRes.status + ', ponowienie ' + (attempt + 2) + '/' + (IMG_MAX_RETRIES + 1));
           for (let s = wait; s > 0; s--) {
             const subEl = document.getElementById('img-spin-sub');
-            if (subEl) subEl.textContent = (currentLang==='en'?`Server error ${imgRes.status}, retrying in ${s}s (attempt ${attempt + 2} of ${IMG_MAX_RETRIES + 1})`:`Błąd serwera ${imgRes.status}, ponawiam za ${s}s (próba ${attempt + 2} z ${IMG_MAX_RETRIES + 1})`);
+            if (subEl) subEl.textContent = _t('img-ponawiam').replace('{s}', s).replace('{n}', attempt + 2).replace('{m}', IMG_MAX_RETRIES + 1);
             await new Promise(r => setTimeout(r, 1000));
           }
           continue;
@@ -19327,10 +19340,10 @@ async function generateImage() {
         const isNetErr = fetchErr.name === 'AbortError' || fetchErr.name === 'TypeError' || /failed to fetch|network/i.test(fetchErr.message || '');
         if (isNetErr && attempt < IMG_MAX_RETRIES) {
           const wait = (attempt + 1) * 5;
-          const reason = fetchErr.name === 'AbortError' ? 'timeout 180s' : _t('img-net-err-short');
+          console.warn('[grafika] ' + (fetchErr.name === 'AbortError' ? 'timeout 180 s' : 'blad sieci: ' + (fetchErr.message || fetchErr.name)) + ', ponowienie ' + (attempt + 2) + '/' + (IMG_MAX_RETRIES + 1));
           for (let s = wait; s > 0; s--) {
             const subEl = document.getElementById('img-spin-sub');
-            if (subEl) subEl.textContent = (currentLang==='en' ? `${reason}, retrying in ${s}s (attempt ${attempt+2} of ${IMG_MAX_RETRIES+1})` : `${reason}, ponawiam za ${s}s (próba ${attempt+2} z ${IMG_MAX_RETRIES+1})`);
+            if (subEl) subEl.textContent = _t('img-ponawiam').replace('{s}', s).replace('{n}', attempt + 2).replace('{m}', IMG_MAX_RETRIES + 1);
             await new Promise(r => setTimeout(r, 1000));
           }
           continue;
@@ -19422,7 +19435,7 @@ function imgShowResult(blob, label, w, h, prompt) {
 
   const preview = document.getElementById('img-preview');
   preview.src   = url;
-  preview.alt   = `Grafika ${label}`;
+  preview.alt   = _t('img-alt').replace('{f}', imgSelectedFormat && imgSelectedFormat.shortKey ? _t(imgSelectedFormat.shortKey) : label);
 
   document.getElementById('img-result-label').textContent = (imgSelectedFormat && imgSelectedFormat.shortKey ? _t(imgSelectedFormat.shortKey) : label);
   document.getElementById('img-result-size').textContent  = `${w}×${h} px · ${(blob.size/1024).toFixed(0)} KB PNG`;
@@ -19659,7 +19672,7 @@ function audioBarUpdate(){
   fill.style.width=(overall*100).toFixed(1)+'%';
   if(pct) pct.textContent=Math.round(overall*100)+'%';
   if(left){
-    if(ttsState.chunkTotal>1) left.textContent=(currentLang==='en'?'part ':'część ')+(ttsState.chunkIdx+1)+'/'+ttsState.chunkTotal;
+    if(ttsState.chunkTotal>1) left.textContent=_t('audio-czesc').replace('{n}', ttsState.chunkIdx+1).replace('{m}', ttsState.chunkTotal);
     else left.textContent=_fmtT(a.currentTime)+' / '+_fmtT(dur);
   }
 }
@@ -20164,8 +20177,12 @@ function audioSeek(pr){ if(!AUDIO.buffer) return; var off=Math.max(0,Math.min(1,
 // MP3 z modulu audio (M7): {tytul}-podcast.mp3 albo {tytul}-audio.mp3; tytul z H1 skryptu,
 // rezerwowo temat z pola zrodla.
 function audioFileName(){ var sc=document.getElementById('au-script'); var hh=sc?sc.querySelector('h1'):null; var tytul=(hh&&hh.textContent)?hh.textContent.trim():''; if(!tytul){ var s=document.getElementById('au-source'); tytul=(s&&s.value)?s.value.trim():''; } return nazwaPlikuEksportu(tytul, 'mp3', audioType()==='podcast' ? '-podcast' : '-audio'); }
-function audioHistTopic(){ var s=document.getElementById('au-source'); var v=(s&&s.value)?s.value.trim():''; if(v) return v.slice(0,60); var sc=document.getElementById('au-script'); var hh=sc?sc.querySelector('h1'):null; return (hh&&hh.textContent)?hh.textContent.trim().slice(0,60):_t('audio-hist'); }
-function audioHistSave(type, html, cost){ var e={ topic:audioHistTopic(), type:type, html:html, ts:new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}), sig:null, blob:null, buffer:null, dur:0, cost:cost||0 }; audioHistory.unshift(e); if(audioHistory.length>20) audioHistory.length=20; audioCurEntry=e; audioRenderHistory(); }
+// Porzadki tekstow (2026-11-07): wpis bez tematu dostaje nazwe pliku nagrania (transkrypcja) albo "Bez tytulu",
+// a nie naglowek listy (audio-hist).
+function audioHistTopic(type){ if(type==='transcription'){ var fi=document.getElementById('au-file'); var f=(fi&&fi.files&&fi.files[0])?fi.files[0]:null; return (f&&f.name)?f.name.slice(0,60):_t('audio-bez-tytulu'); } var s=document.getElementById('au-source'); var v=(s&&s.value)?s.value.trim():''; if(v) return v.slice(0,60); var sc=document.getElementById('au-script'); var hh=sc?sc.querySelector('h1'):null; return (hh&&hh.textContent)?hh.textContent.trim().slice(0,60):_t('audio-bez-tytulu'); }
+// Etykieta pola wyniku: skrypt albo transkrypcja (ustawTekst, wiec przelacza sie z jezykiem).
+function audioEtykietaSkryptu(t){ ustawTekst(document.getElementById('au-script-etykieta'), t==='transcription'?'audio-transkrypcja-etykieta':'audio-script'); }
+function audioHistSave(type, html, cost){ var e={ topic:audioHistTopic(type), type:type, html:html, ts:new Date().toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'}), sig:null, blob:null, buffer:null, dur:0, cost:cost||0 }; audioHistory.unshift(e); if(audioHistory.length>20) audioHistory.length=20; audioCurEntry=e; audioRenderHistory(); }
 function audioHistAttach(buffer, blob, dur, sig, ttsCost){ var e=audioCurEntry; if(!e) return; e.buffer=buffer; e.blob=blob; e.dur=dur; e.sig=sig; e.cost=(e.cost||0)+(ttsCost||0); var sc=document.getElementById('au-script'); if(sc) e.html=sc.innerHTML; audioRenderHistory(); }
 // R5: wpis historii to przycisk (klawiatura); ikona zamiast emoji, rodzaj po polsku/angielsku zamiast surowej wartosci
 function audioRenderHistory(){ var w=document.getElementById('au-history-wrap'); if(!w) return; if(!audioHistory.length){ w.style.display='none'; w.innerHTML=''; return; } w.style.display='block'; var rows=audioHistory.map(function(e,i){ var ico=ikona(e.buffer?'volume-2':'notebook-pen'); var c=e.cost?(' \u00B7 '+kwotaUsd(e.cost)):''; return '<button type="button" class="au-hist-item" onclick="audioHistLoad('+i+')"><span class="au-hist-ikona">'+ico+'</span><span class="au-hist-tekst"><span class="au-hist-topic">'+escapeHtml(e.topic||'-')+'</span><span class="au-hist-meta">'+escapeHtml(_t('au-typ-'+e.type))+' \u00B7 '+e.ts+c+'</span></span></button>'; }).join(''); w.innerHTML='<div class="field-label">'+_t('audio-hist')+'</div><div class="au-hist-lista">'+rows+'</div>'; }
@@ -20244,6 +20261,7 @@ function audioSetType(){
   var gi=document.getElementById('au-gen-icon'); if(gi) gi.innerHTML=ikona((t==='transcription')?'mic':'notebook-pen');
   var gl=document.getElementById('au-gen-label'); if(gl) gl.textContent=_t(t==='transcription'?'audio-transcribe':'audio-gen-script');
   var rw=document.getElementById('au-result-wrap'); if(rw) rw.style.display=(audioResultType && audioResultType===t)?'block':'none';
+  audioEtykietaSkryptu(t);
   audioRenderVoices(); audioRenderModel(); audioRenderHistory();
 }
 // R5: na telefonie wynik lezy pod formularzem - po wygenerowaniu przewijamy do niego (jak w grafice)
@@ -20293,11 +20311,15 @@ async function audioGenerate(btn){
     if(!res.ok || !data.content){ throw bladOdpowiedzi(data, res.status); }
     var scriptCost=0; if(data.usage){ try{ scriptCost=kosztOdpowiedzi(data); /* do sumy dolicza juz apiFetch */ }catch(e){} }
     var html=(data.content||[]).map(function(c){return c.text||'';}).join('').trim();
-    var sc=document.getElementById('au-script'); html=bezSrednikow(oczyscHtmlModelu(html)); sc.innerHTML=html||'<p>(brak treści)</p>';
+    var sc=document.getElementById('au-script'); html=bezSrednikow(oczyscHtmlModelu(html));
+    if(!html){ powiadomBlad(_t('audio-skrypt-pusty')); }
+    else {
+    sc.innerHTML=html;
     document.getElementById('au-result-wrap').style.display='block';
     var sa=document.getElementById('au-script-actions'); if(sa) sa.style.display='flex';
     var ta=document.getElementById('au-trans-actions'); if(ta) ta.style.display='none';
-    audioResultType=t; audioHistSave(t, sc.innerHTML, scriptCost); audioPokazWynik();
+    audioResultType=t; audioEtykietaSkryptu(t); audioHistSave(t, sc.innerHTML, scriptCost); audioPokazWynik();
+    }
   }catch(e){ powiadomBladApi(e, 'err-audio-skrypt'); }
   window._audioBusy=false; if(sp) sp.textContent=oldsp; if(gIco) gIco.innerHTML=oldIco; btn.disabled=false; btn.classList.remove('btn-working');
 }
@@ -20420,7 +20442,7 @@ async function audioTranscribe(btn){
     document.getElementById('au-result-wrap').style.display='block';
     var sa=document.getElementById('au-script-actions'); if(sa) sa.style.display='none';
     var ta=document.getElementById('au-trans-actions'); if(ta) ta.style.display='flex';
-    audioResultType='transcription'; audioHistSave('transcription', sc.innerHTML, 0); audioPokazWynik();
+    audioResultType='transcription'; audioEtykietaSkryptu('transcription'); audioHistSave('transcription', sc.innerHTML, 0); audioPokazWynik();
   }catch(e){ powiadomBladApi(e, null, 'audio'); }
   window._audioBusy=false; if(sp) sp.textContent=oldsp; if(gIco) gIco.innerHTML=oldIco; btn.disabled=false; btn.classList.remove('btn-working');
 }
@@ -20678,13 +20700,13 @@ async function kbAudioTranscribeAndOpen(file) {
   </div>
 </div>
 
-<div id="audio-bar" role="group" aria-label="Odtwarzanie audio">
-  <button id="audio-bar-play" type="button" title="Pauza/Wznów" aria-label="Pauza/Wznów" onclick="audioBarPlayPause()">&#10073;&#10073;</button>
+<div id="audio-bar" role="group" aria-label="Odtwarzanie audio" data-i18n-label="audio-pasek">
+  <button id="audio-bar-play" type="button" title="Wstrzymaj albo wznów" aria-label="Wstrzymaj albo wznów" data-i18n-title="audio-pasek-pauza" data-i18n-label="audio-pasek-pauza" onclick="audioBarPlayPause()">&#10073;&#10073;</button>
   <div id="audio-bar-main">
     <div id="audio-bar-track" onpointerdown="audioBarScrubStart(event)"><div id="audio-bar-fill"></div></div>
     <div id="audio-bar-meta"><span id="audio-bar-left">0:00 / 0:00</span><span id="audio-bar-ai" data-i18n="ozn-audio-glos">Syntetyczny głos AI</span><span id="audio-bar-pct">0%</span></div>
   </div>
-  <button id="audio-bar-close" type="button" title="Zamknij" aria-label="Zamknij" onclick="audioBarClose()">&#10005;</button>
+  <button id="audio-bar-close" type="button" title="Zamknij" aria-label="Zamknij" data-i18n-title="okno-zamknij" data-i18n-label="okno-zamknij" onclick="audioBarClose()">&#10005;</button>
 </div>
 
 <!-- PANEL KLUCZY API (i18n PL/EN) -->
