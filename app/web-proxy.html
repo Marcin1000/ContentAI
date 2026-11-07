@@ -21108,7 +21108,8 @@ async function audioGenerate(btn){
     var scriptCost=0; if(data.usage){ try{ scriptCost=kosztOdpowiedzi(data); /* do sumy dolicza juz apiFetch */ }catch(e){} }
     var html=(data.content||[]).map(function(c){return c.text||'';}).join('').trim();
     var sc=document.getElementById('au-script'); html=bezSrednikow(oczyscHtmlModelu(html));
-    if(!html){ powiadomBlad(_t('audio-skrypt-pusty')); }
+    // Pusty skrypt: poprzedni wynik znika z ekranu (zostaje w historii audio), zeby nie udawal nowego.
+    if(!html){ sc.innerHTML=''; document.getElementById('au-result-wrap').style.display='none'; audioResultType=null; powiadomBlad(_t('audio-skrypt-pusty')); }
     else {
     sc.innerHTML=html;
     document.getElementById('au-result-wrap').style.display='block';

@@ -1904,6 +1904,15 @@ async function scenariuszTekstyC(b) {
     try { await generate(true); } finally { API_KEY = zapasKlucza; }
     const art = document.getElementById('article');
     w.brakKlucza = { tekst: jedna(art.textContent), kod: !!art.querySelector('code'), przycisk: jedna((art.querySelector('button[onclick="openKeysModal()"]') || {}).textContent) };
+    // Audio: pusta odpowiedz przy ponownym generowaniu nie zostawia poprzedniego skryptu jako wyniku (uwaga z przegladu PR).
+    typ.value = 'podcast'; audioSetType();
+    skrypt.innerHTML = '<p>OLD SCRIPT</p>'; document.getElementById('au-result-wrap').style.display = 'block'; audioResultType = 'podcast';
+    const zrodloAudio = zrodlo.value; zrodlo.value = 'Test topic';
+    const zapasFetch = window.apiFetch;
+    window.apiFetch = async () => new Response(JSON.stringify({ content: [{ type: 'text', text: '  ' }], usage: { input_tokens: 1, output_tokens: 1 } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try { await audioGenerate(document.createElement('button')); } finally { window.apiFetch = zapasFetch; zrodlo.value = zrodloAudio; }
+    w.audioPusty = { wynik: getComputedStyle(document.getElementById('au-result-wrap')).display, skrypt: skrypt.innerHTML, typ: audioResultType,
+      powiadomienie: [...document.querySelectorAll('.powiadomienie')].map((p) => jedna(p.textContent)).join(' | ') };
     return w;
   });
 
@@ -1912,6 +1921,9 @@ async function scenariuszTekstyC(b) {
     const w = await zbierz(s);
     const T = await s.evaluate((j) => I18N[j], jezyk);
     const J = jezyk.toUpperCase();
+    wynik('Porzadki C (' + J + '): pusty skrypt audio chowa poprzedni wynik (zostaje w historii), powiadomienie audio-skrypt-pusty',
+      w.audioPusty.wynik === 'none' && w.audioPusty.skrypt === '' && w.audioPusty.typ === null && w.audioPusty.powiadomienie.indexOf(T['audio-skrypt-pusty']) !== -1,
+      JSON.stringify(w.audioPusty));
     const bezPolskich = (lista) => jezyk === 'pl' || !lista.some((x) => POLSKIE.test(x));
     wynik('Porzadki C (' + J + '): temat wbudowanego szablonu z klucza tpl-hybrid-topic',
       w.szablon === T['tpl-hybrid-topic'] && bezPolskich([w.szablon]), w.szablon);

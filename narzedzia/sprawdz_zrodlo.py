@@ -2306,7 +2306,7 @@ KONTROLE += [
      "addDoc(displayName, `[Źródło: ${url}]\\n\\n` + _t('url-demo-tresc'), '🔗', url);",
      "Treść strony nie mogła zostać odczytana automatycznie. Spróbuj ponownie lub dodaj treść ręcznie.", None),
     ("UI-C/audio-skrypt", "audio: pusty skrypt jako powiadomienie, etykieta transkrypcji, wpis historii bez tematu",
-     "if(!html){ powiadomBlad(_t('audio-skrypt-pusty')); }", "'<p>(brak treści)</p>'", None),
+     "powiadomBlad(_t('audio-skrypt-pusty')); }", "'<p>(brak treści)</p>'", None),
     ("UI-C/audio-historia", "audio: wpis historii bez tematu to nazwa pliku albo 'Bez tytulu' (nie naglowek listy)",
      "return (hh&&hh.textContent)?hh.textContent.trim().slice(0,60):_t('audio-bez-tytulu'); }", ":_t('audio-hist'); }", None),
 ]
@@ -2376,6 +2376,8 @@ KONTROLE += [
      "'byok-niepelny':'Ten klucz jest niepełny. Pełny klucz Anthropic jest dużo dłuższy i zaczyna się od „sk-ant-usr-” albo „sk-ant-api03-”.", None, ("proxy",)),
     ("UI/znaczniki-calosc", "nanoszenie tekstow do znacznikow nie skleja tagow (przycisk w przycisku, atrybut bez wartosci)",
      None, "re:<button [^>]*<button|<[a-z]+ [a-z-]+=<", None),
+    ("UI/audio-pusty-skrypt", "pusty skrypt audio chowa poprzedni wynik i zeruje typ wyniku (nie udaje nowego, uwaga z przegladu PR)",
+     "if(!html){ sc.innerHTML=''; document.getElementById('au-result-wrap').style.display='none'; audioResultType=null; powiadomBlad(_t('audio-skrypt-pusty')); }", None, None),
     ("UI/start-gdzie", "ostatni krok konfiguracji mowi, gdzie sa Baza wiedzy, Historia i Widocznosc AI (przywrocone po kontroli)",
      "Baza wiedzy, Historia i Widoczność AI są w górnym pasku (na telefonie w dolnym i w Koncie).", None, ("proxy",)),
 ]
